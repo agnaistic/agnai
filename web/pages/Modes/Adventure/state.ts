@@ -191,6 +191,18 @@ export const gameStore = createStore<GameState>(
     },
     updateTemplate({ template: game }, update: Partial<GuidedTemplate>) {
       const next = { ...game, ...update }
+
+      const fields = new Set(next.fields.filter((f) => !!f.list).map((f) => f.list))
+      const lists: Record<string, string[]> = {}
+      for (const [name, list] of Object.entries(next.lists)) {
+        if (!list.length && !fields.has(name)) {
+          continue
+        }
+        lists[name] = list.map(toTrimmed)
+      }
+
+      next.lists = lists
+
       return { template: next }
     },
 
@@ -244,8 +256,6 @@ export const gameStore = createStore<GameState>(
     },
 
     async *send({ template, state }, text: string, onSuccess: () => void) {
-      yield { busy: true }
-
       const missing: string[] = []
       for (const manual of template.manual || []) {
         if (manual in state.overrides) continue
@@ -259,6 +269,26 @@ export const gameStore = createStore<GameState>(
           )}. Fill them out in the configuration pane.`
         )
       }
+
+      for (const field of template.fields) {
+        if (!field.list) continue
+
+        const list = template.lists[field.list]
+        if (!list?.length) {
+          missing.push(field.list)
+          continue
+        }
+      }
+
+      if (missing.length) {
+        return toastStore.error(
+          `Referenced lists are empty: ${missing.join(
+            ', '
+          )}. Fill them out in the configuration pane.`
+        )
+      }
+
+      yield { busy: true }
 
       const { ast } = parseTemplateV2(replaceTags(template.history, state.format))
       const history: string[] = []
@@ -512,4 +542,8 @@ function sortByAge(left: GuidedSession, right: GuidedSession) {
   const l = new Date(left.updated ?? 0).valueOf()
   const r = new Date(right.updated ?? 0).valueOf()
   return r - l
+}
+
+function toTrimmed(value: string) {
+  return value.trim()
 }
