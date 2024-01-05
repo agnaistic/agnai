@@ -20,6 +20,7 @@ const emptyTemplate: GuidedTemplate = {
 
   fields: [],
   lists: {},
+  manual: [],
 }
 
 export function exportTemplate(id: string) {
