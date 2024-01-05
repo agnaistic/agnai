@@ -187,7 +187,7 @@ const PromptEditor: Component<
 
   const togglePreview = async () => {
     const opts = await getExampleOpts(props.inherit)
-    const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
+    const template = props.noDummyPreview ? input() : ensureValidTemplate(input())
     let { parsed } = await parseTemplate(template, opts)
 
     if (props.inherit?.modelFormat) {

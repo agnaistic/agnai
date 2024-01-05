@@ -99,7 +99,7 @@ export type TemplateOpts = {
   limit?: {
     context: number
     encoder: TokenCounter
-    output?: Record<string, string[]>
+    output?: Record<string, { src: string; lines: string[] }>
     history?: {
       id: string
       lines: string[]
@@ -126,6 +126,7 @@ export async function parseTemplate(
   inserts: Map<number, string>
   length?: number
   linesAddedCount: number
+  history?: string[]
 }> {
   if (opts.limit) {
     opts.limit.output = {}
@@ -151,7 +152,8 @@ export async function parseTemplate(
    * Typically for embeddings (chat or user)
    */
   if (opts.limit && opts.limit.output) {
-    for (const [id, lines] of Object.entries(opts.limit.output)) {
+    for (const [id, { lines, src }] of Object.entries(opts.limit.output)) {
+      src
       const filled = await fillPromptWithLines({
         encoder: opts.limit.encoder,
         tokenLimit: opts.limit.context,
@@ -202,6 +204,7 @@ export async function parseTemplate(
     inserts: opts.inserts ?? new Map(),
     length: await opts.limit?.encoder?.(result),
     linesAddedCount,
+    history: opts.limit?.history?.lines,
   }
 }
 
@@ -501,7 +504,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   if (isHistory && opts.limit) {
     const id = '__' + v4() + '__'
-    opts.limit.output![id] = output
+    opts.limit.history = { id, lines: output }
     return id
   }
 

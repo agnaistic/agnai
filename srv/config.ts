@@ -123,6 +123,7 @@ export const config = {
     patreon: !!env('PATREON', ''),
     policies: !!env('SHOW_POLICIES', ''),
     inject: env('INJECT', ''),
+    chatCounts: !!env('CHAT_COUNTS', ''),
   },
 
   patreon: {

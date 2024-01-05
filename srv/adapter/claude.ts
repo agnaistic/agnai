@@ -264,10 +264,7 @@ async function createClaudePrompt(opts: AdapterProps) {
   const enc = encoder()
 
   const { parsed: rawGaslight, inserts } = await injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
-      'history',
-      'post',
-    ]),
+    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, ['history', 'post']),
     {
       opts,
       parts,

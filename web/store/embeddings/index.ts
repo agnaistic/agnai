@@ -220,7 +220,10 @@ async function query(chatId: string, text: string, before?: string): Promise<Que
   }
 
   const promise = new Promise<QueryResult>((resolve) => {
-    const timer = setTimeout(() => resolve({ type: 'result', requestId, messages: [] }), 1000)
+    const timer = setTimeout(() => {
+      console.warn('Embedding request timed out')
+      resolve({ type: 'result', requestId, messages: [] })
+    }, 1000)
     embedCallbacks.set(requestId, (msg) => {
       clearTimeout(timer)
       resolve(msg)

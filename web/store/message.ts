@@ -520,20 +520,6 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request image: ${res.error}`)
       }
     },
-    async generateActions({ msgs }) {
-      const last = msgs.slice(-1)[0]
-      if (!last) return
-      const res = await msgsApi.generateActions()
-      if (!res?.result) return
-
-      const next = msgs.map((msg) => {
-        if (msg._id !== last._id) return msg
-        msg.actions = res.result!.actions
-        return msg
-      })
-
-      return { msgs: next }
-    },
   }
 })
 
