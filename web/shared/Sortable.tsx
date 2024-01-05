@@ -1,24 +1,65 @@
-import { Component, For, JSX, createSignal, onMount } from 'solid-js'
+import { Component, Index, JSX, createMemo, createSignal, onMount } from 'solid-js'
 import Sort from 'sortablejs'
 import { FormLabel } from './FormLabel'
 import { Menu } from 'lucide-solid'
 
 export { Sortable as default }
 
-export type SortItem = { id: number | string; label: string; enabled?: boolean }
+export type SortItem = { id: number; value: string | number; label: string; enabled?: boolean }
 
 const Sortable: Component<{
   items: SortItem[]
   label?: JSX.Element | string
   helperText?: JSX.Element
-  onChange: (order: number[]) => void
-  setSorter?: (sort: Sort) => void
+  onChange: (items: SortItem[]) => void
   onItemClick?: (id: number) => void
-  enabled?: number[]
+  setSorter?: (sort: Sort) => void
 }> = (props) => {
   let ref: HTMLUListElement
 
   const [_sort, setSort] = createSignal<Sort>()
+  const [items, setItems] = createSignal(props.items)
+
+  const enabled = createMemo(() => {
+    const state: { [id: number]: boolean } = {}
+
+    for (const item of items()) {
+      if (item.enabled === undefined) continue
+      state[item.id] = item.enabled
+    }
+
+    return state
+  })
+
+  const updateOrder = (ev: number[]) => {
+    const order = ev.reduce((prev, curr, i) => {
+      prev.set(curr, i)
+      return prev
+    }, new Map<number, number>())
+
+    console.log(ev.join(','))
+    const next = items()
+      .slice()
+      .sort((left, right) => order.get(left.id)! - order.get(right.id)!)
+
+    setItems(next)
+    props.onChange(next)
+  }
+
+  const onClick = (id: number) => {
+    const prev = items()
+    const match = prev.find((p) => p.id === id)
+
+    if (match?.enabled === undefined) return
+
+    console.log(match?.value, match?.enabled, '-->', !match?.enabled)
+    const next = prev.map((o) => {
+      if (o.id !== id) return o
+      return { ...o, enabled: !o.enabled }
+    })
+    setItems(next)
+    props.onChange(next)
+  }
 
   onMount(() => {
     const s = Sort.create(ref, {
@@ -30,11 +71,11 @@ const Sortable: Component<{
           const attr = child.getAttribute('data-id')
           order.push(+attr!)
         }
-        props.onChange(order)
+        updateOrder(order)
       },
     })
-    props.setSorter?.(s)
     setSort(s)
+    props.setSorter?.(s)
   })
 
   return (
@@ -42,22 +83,27 @@ const Sortable: Component<{
       <div>
         <FormLabel label={props.label} helperText={props.helperText} />
         <ul ref={ref!}>
-          <For each={props.items}>
-            {(item) => (
-              <li
-                class="flex h-10 cursor-pointer items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2"
-                data-id={item.id}
-                onClick={() => props.onItemClick?.(+item.id)}
-                classList={{
-                  'bg-800': !props.enabled || props.enabled?.includes(+item.id),
-                  'bg-900': props.enabled?.includes(+item.id) === false,
-                  'text-[var(--coolgray-800)]': props.enabled?.includes(+item.id) === false,
-                }}
-              >
-                <Menu size={16} color="var(--bg-500)" /> {item.label}
-              </li>
-            )}
-          </For>
+          <Index each={items()}>
+            {(item) => {
+              const match = items().find((i) => i.id === item().id)
+              if (!match) return null
+              return (
+                <li
+                  class="flex h-10 items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2"
+                  data-id={match.id}
+                  onClick={() => onClick(+match.id)}
+                  classList={{
+                    'cursor-pointer': item().enabled !== undefined,
+                    'bg-800': enabled()[match.id] !== undefined ? true : !enabled()[match.id],
+                    'bg-900': enabled()[match.id] === false,
+                    'text-[var(--coolgray-800)]': enabled()[match.id] === false,
+                  }}
+                >
+                  <Menu size={16} color="var(--bg-500)" /> {match.label}
+                </li>
+              )
+            }}
+          </Index>
         </ul>
       </div>
     </>

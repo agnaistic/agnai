@@ -21,11 +21,13 @@ import { GuidanceNode, parseTemplateV2 } from '/common/guidance/v2'
 import { GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
-import { Card } from '/web/shared/Card'
+import { Card, SolidCard } from '/web/shared/Card'
 import { exportTemplate } from './util'
 import { useSearchParams } from '@solidjs/router'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
+import { FormLabel } from '/web/shared/FormLabel'
+import { neat } from '/common/util'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -82,6 +84,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
 }
 
 export const GamePane: Component<{ close: () => void }> = (props) => {
+  let templateRef: HTMLSelectElement
   const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
   const [over, setOver] = createStore<Record<string, string>>(state.state.overrides || {})
   const [store, setState] = createStore({
@@ -89,15 +92,26 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
     seen: {} as Record<string, boolean>,
   })
 
-  const templateId = createMemo<string>((prev) => {
-    return state.template._id
-  })
+  const [templateId, setTemplateId] = createSignal(state.list[0]?._id)
 
   createEffect((id) => {
     if (state.state._id === id) return
     setOver(state.state.overrides)
     return state.state._id
   }, state.state._id)
+
+  createEffect(() => {
+    const first = state.list[0]
+
+    if (!templateId() && first) {
+      setTemplateId(first._id)
+    }
+  })
+
+  const loadTemplate = () => {
+    console.log(templateRef.value, templateId())
+    gameStore.loadTemplate(templateId())
+  }
 
   const lists = createMemo(() => {
     const list = Object.entries(state.template.lists)
@@ -131,20 +145,23 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
     on(diff, () => {
       const lists = { ...state.template.lists }
       const seen: Record<string, boolean> = {}
+      const holders: string[] = []
       const errors: string[] = []
       const newFields: GuidedField[] = []
 
       const nodes: GuidanceNode[] = []
 
       try {
-        const ast = parseTemplateV2(state.template.init || '')
+        const { ast, placeholders } = parseTemplateV2(state.template.init || '')
+        holders.push(...placeholders)
         nodes.push(...ast)
       } catch (ex: any) {
         errors.push('Init:', ex.message)
       }
 
       try {
-        const ast = parseTemplateV2(state.template.loop || '')
+        const { ast, placeholders } = parseTemplateV2(state.template.loop || '')
+        holders.push(...placeholders)
         nodes.push(...ast)
       } catch (ex: any) {
         errors.push('Loop:', ex.message)
@@ -183,8 +200,18 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
         seen[field.name] ? field : { ...field, visible: false }
       )
 
+      const manual = new Set(holders)
+      for (const field of next) {
+        if (field.name in seen === false) continue
+        manual.delete(field.name)
+      }
+
+      manual.delete('history')
+      manual.delete('input')
+      manual.delete('response')
+
       setState({ errors, seen })
-      gameStore.updateTemplate({ fields: next, lists })
+      gameStore.updateTemplate({ fields: next, lists, manual: Array.from(manual.values()) })
     })
   )
 
@@ -226,14 +253,27 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
     <Convertible kind="partial" close={props.close} footer={Footer}>
       <div class="flex flex-col gap-4">
         <Show when={state.list.length > 0}>
+          <SolidCard>
+            <FormLabel label="Current Template" helperText={state.template.name} />
+          </SolidCard>
+
           <Card bg={bg} bgOpacity={opacity}>
-            <Select
-              fieldName="templateId"
-              label="Open Template"
-              items={items()}
-              value={templateId()}
-              onChange={(ev) => gameStore.loadTemplate(ev.value)}
-            />
+            <div class="font-bold">
+              Load Template{' '}
+              <a class="link ml-2 text-sm" onClick={gameStore.createTemplate}>
+                New Template
+              </a>
+            </div>
+            <div class="flex gap-1">
+              <Select
+                fieldName="templateId"
+                items={items()}
+                value={templateId()}
+                onChange={(ev) => setTemplateId(ev.value)}
+                ref={(ref) => (templateRef = ref)}
+              />
+              <Button onClick={loadTemplate}>Load</Button>
+            </div>
           </Card>
         </Show>
 
@@ -330,8 +370,33 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
         <For each={store.errors}>
           {(error) => <div class="my-1 font-bold text-red-500">{error}</div>}
         </For>
+
         <div class="flex flex-col gap-1">
-          <b>Fields</b>
+          <FormLabel
+            label="Manual Fields"
+            helperMarkdown={`These fields are required to be filled out by you`}
+          />
+          <Index each={state.template.manual}>
+            {(field, i) => (
+              <ManualField
+                field={field()}
+                override={over[field()]}
+                setOverride={(text) => updateOver(field(), text)}
+                session={state.state}
+              />
+            )}
+          </Index>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <FormLabel
+            label="Fields"
+            helperMarkdown={neat`
+          **Toggle**: Controls whether the field appears in the chat window.
+          **Label**: When enabled, how the field will be named in the chat window.
+          **Value**: Override the value instead of generating it.
+          `}
+          />
           <Index each={state.template.fields.filter((f) => store.seen[f.name])}>
             {(field, i) => (
               <Field
@@ -366,6 +431,33 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
         </div>
       </div>
     </Convertible>
+  )
+}
+
+const ManualField: Component<{
+  field: string
+  override?: string
+  setOverride: (text: string) => void
+  session: GuidedSession
+}> = (props) => {
+  return (
+    <div
+      class="grid gap-0 rounded-md border-[1px] bg-[var(--hl-700)]"
+      classList={{
+        'border-[var(--bg-600)]': !!props.override,
+        'border-[var(--red-600)]': !props.override,
+      }}
+      style={{ 'grid-template-columns': '1fr 3.5fr' }}
+    >
+      <div class="flex items-center justify-center pl-2">{props.field}</div>
+      <TextInput
+        fieldName="override"
+        value={props.override}
+        class="h-[28px] rounded-l-none rounded-r-md"
+        placeholder={props.override ? props.override : '(Required) value'}
+        onInput={(ev) => props.setOverride(ev.currentTarget.value)}
+      />
+    </div>
   )
 }
 

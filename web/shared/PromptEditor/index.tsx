@@ -27,7 +27,7 @@ import { isDefaultTemplate, replaceTags } from '../../../common/presets/template
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
-import Sortable from '../Sortable'
+import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 
 type Placeholder = {
@@ -407,40 +407,37 @@ export const BasicPromptTemplate: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   hide?: boolean
 }> = (props) => {
+  let ref: HTMLInputElement
   const items = ['Alpaca', 'Vicuna', 'Metharme', 'ChatML', 'Pyg/Simple'].map((label) => ({
     label: `Format: ${label}`,
     value: label,
   }))
 
-  const [original, setOrder] = createSignal(
+  const [mod, setMod] = createSignal(
     props.inherit?.promptOrder?.map((o) => ({
       ...BASIC_LABELS[o.placeholder],
       value: o.placeholder,
       enabled: o.enabled,
     })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
   )
-  const [mod, setMod] = createSignal(original())
 
-  const updateOrder = (ev: number[]) => {
-    const order = ev.reduce((prev, curr, i) => {
-      prev.set(curr, i)
-      return prev
-    }, new Map<number, number>())
-
-    const next = original()
-      .slice()
-      .sort((left, right) => order.get(left.id)! - order.get(right.id)!)
-
-    setMod(next)
+  const updateRef = (items: SortItem[]) => {
+    ref.value = items.map((n) => `${n.value}=${n.enabled ? 'on' : 'off'}`).join(',')
   }
 
   const onClick = (id: number) => {
-    const next = original().map((o) => {
+    const prev = mod()
+    const next = prev.map((o) => {
       if (o.id !== id) return o
       return { ...o, enabled: !o.enabled }
     })
-    setOrder(next)
+    setMod(next)
+    updateRef(next)
   }
+
+  onMount(() => {
+    updateRef(mod())
+  })
 
   return (
     <Card border hide={props.hide}>
@@ -455,20 +452,12 @@ export const BasicPromptTemplate: Component<{
           items={items}
           value={props.inherit?.promptOrderFormat || 'Alpaca'}
         />
-        <Sortable
-          items={original()}
-          onChange={updateOrder}
-          onItemClick={onClick}
-          enabled={original()
-            .filter((o) => o.enabled)
-            .map((o) => o.id)}
-        />
+        <Sortable items={mod()} onChange={updateRef} onItemClick={onClick} />
         <TextInput
           fieldName="promptOrder"
           parentClass="hidden"
-          value={mod()
-            .map((o) => `${o.value}=${o.enabled ? 'on' : 'off'}`)
-            .join(',')}
+          ref={(ele) => (ref = ele)}
+          // value={''}
         />
       </div>
     </Card>

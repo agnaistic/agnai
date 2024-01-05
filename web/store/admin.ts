@@ -1,4 +1,4 @@
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { AppSchema, Patreon } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { api, isImpersonating, revertAuth, setAltAuth } from './api'
@@ -17,6 +17,7 @@ type UserInfo = {
   sub: AppSchema.User['sub']
   billing: AppSchema.User['billing']
   patreon: AppSchema.User['patreon']
+  stripeSessions?: string[]
 }
 
 type AdminState = {
@@ -120,6 +121,11 @@ export const adminStore = createStore<AdminState>('admin', {
       })
       if (res.error) toastStore.error(res.error)
       if (res.result) toastStore.success(`Successfully assigned subscription`)
+    },
+    async viewSession(_, sessionId: string, cb: (session: Stripe.Checkout.Session) => void) {
+      const res = await api.post(`/admin/billing/subscribe/session`, { sessionId })
+      if (res.error) return toastStore.error(res.error)
+      if (res.result) cb(res.result)
     },
     async createTier(
       _,

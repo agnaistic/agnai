@@ -22,7 +22,10 @@ export const startCheckout = handle(async ({ body, userId }) => {
     throw new StatusError(`Invalid checkout callback URL`, 400)
   }
 
+  const user = await store.users.getUser(userId)
+
   const session = await stripe.checkout.sessions.create({
+    customer: user?.billing?.customerId,
     success_url: `${domain}/checkout/success?session_id={CHECKOUT_SESSION_ID}&request_id=${requestId}`,
     cancel_url: `${domain}/checkout/cancel?session_id={CHECKOUT_SESSION_ID}&request_id=${requestId}`,
     mode: 'subscription',
@@ -39,7 +42,23 @@ export const startCheckout = handle(async ({ body, userId }) => {
     userId,
   })
 
+  if (user) {
+    const sessions = user.stripeSessions || []
+    sessions.push(session.id)
+    await store.users.updateUser(userId, { stripeSessions: sessions })
+  }
+
   return { requestId, sessionUrl: session.url }
+})
+
+export const viewSession = handle(async ({ body }) => {
+  assertValid({ sessionId: 'string' }, body)
+
+  const session = await stripe.checkout.sessions.retrieve(body.sessionId)
+  if (!session) {
+    throw new StatusError(`Session not found`, 404)
+  }
+  return session
 })
 
 export const manualSubscribe = handle(async ({ body, log }) => {

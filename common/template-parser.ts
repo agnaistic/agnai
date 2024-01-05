@@ -100,6 +100,10 @@ export type TemplateOpts = {
     context: number
     encoder: TokenCounter
     output?: Record<string, string[]>
+    history?: {
+      id: string
+      lines: string[]
+    }
   }
 
   /**
@@ -107,7 +111,7 @@ export type TemplateOpts = {
    */
   repeatable?: boolean
   inserts?: Map<number, string>
-  lowpriority?: { idToReplace: string; content: string }[]
+  lowpriority?: Array<{ id: string; content: string }>
 }
 
 /**
@@ -138,33 +142,42 @@ export async function parseTemplate(
   }
 
   const ast = parser.parse(template, {}) as PNode[]
-  readInserts(template, opts, ast)
+  readInserts(opts, ast)
   let output = render(template, opts, ast)
   let unusedTokens = 0
   let linesAddedCount = 0
 
+  /**
+   * Typically for embeddings (chat or user)
+   */
   if (opts.limit && opts.limit.output) {
-    // const lastIndex = Object.keys(opts.limit.output).reduce((prev, curr) => {
-    //   const index = output.lastIndexOf(curr) + curr.length
-    //   return index > prev ? index : prev
-    // }, -1)
-
-    // if (lastIndex > -1 && opts.continue) {
-    //   output = output.slice(0, lastIndex)
-    // }
-
     for (const [id, lines] of Object.entries(opts.limit.output)) {
-      const filled = await fillPromptWithLines(
-        opts.limit.encoder,
-        opts.limit.context,
-        output,
+      const filled = await fillPromptWithLines({
+        encoder: opts.limit.encoder,
+        tokenLimit: opts.limit.context,
+        context: output,
         lines,
-        opts.inserts,
-        opts.lowpriority
-      )
+        optional: opts.lowpriority,
+      })
+      unusedTokens = filled.unusedTokens
+      output = output.replace(id, filled.adding.join('\n'))
+    }
+
+    /**
+     * We ensure that history is done last
+     */
+    if (opts.limit.history) {
+      const filled = await fillPromptWithLines({
+        encoder: opts.limit.encoder,
+        tokenLimit: opts.limit.context,
+        context: output,
+        lines: opts.limit.history.lines,
+        inserts: opts.inserts,
+        optional: opts.lowpriority,
+      })
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.slice().reverse()
-      output = output.replace(id, trimmed.join('\n'))
+      output = output.replace(opts.limit.history.id, trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
     }
 
@@ -172,12 +185,12 @@ export async function parseTemplate(
     // now that we inserted the conversation history.
     // We start from the bottom (somewhat arbitrary design choice),
     // hence the reverse().
-    for (const { idToReplace, content } of (opts.lowpriority ?? []).reverse()) {
-      const contentLength = await opts.limit!.encoder(content)
+    for (const { id, content } of (opts.lowpriority ?? []).reverse()) {
+      const contentLength = await opts.limit.encoder(content)
       if (contentLength > unusedTokens) {
-        output = output.replace(idToReplace, '')
+        output = output.replace(id, '')
       } else {
-        output = output.replace(idToReplace, content)
+        output = output.replace(id, content)
         unusedTokens -= contentLength
       }
     }
@@ -192,9 +205,8 @@ export async function parseTemplate(
   }
 }
 
-function readInserts(template: string, opts: TemplateOpts, existingAst?: PNode[]): void {
+function readInserts(opts: TemplateOpts, ast: PNode[]): void {
   if (opts.inserts) return
-  const ast = existingAst ?? (parser.parse(template, {}) as PNode[])
 
   const inserts = ast.filter(
     (node) => typeof node !== 'string' && node.kind === 'history-insert'
@@ -204,13 +216,12 @@ function readInserts(template: string, opts: TemplateOpts, existingAst?: PNode[]
   if (opts.char.insert) {
     opts.inserts.set(opts.char.insert.depth, opts.char.insert.prompt)
   }
+
   for (const insert of inserts) {
-    const oldInsert = opts.inserts.get(insert.values)
-    opts.inserts.set(
-      insert.values,
-      // If multiple inserts are in the same depth, we want to combine them
-      (oldInsert ? oldInsert + '\n' : '') + renderNodes(insert.children, opts)
-    )
+    const prev = opts.inserts.get(insert.values)
+    // If multiple inserts are in the same depth, we want to combine them
+    const prefix = prev ? `${prev}\n` : ''
+    opts.inserts.set(insert.values, prefix + renderNodes(insert.children, opts))
   }
 }
 
@@ -311,7 +322,7 @@ function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts) {
   }
   opts.lowpriority = opts.lowpriority ?? []
   const lowpriorityBlockId = '__' + v4() + '__'
-  opts.lowpriority.push({ idToReplace: lowpriorityBlockId, content: output.join('') })
+  opts.lowpriority.push({ id: lowpriorityBlockId, content: output.join('') })
   return lowpriorityBlockId
 }
 
@@ -543,7 +554,10 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
     case 'history': {
       if (opts.limit) {
         const id = `__${v4()}__`
-        opts.limit.output![id] = opts.lines || []
+        opts.limit.history = {
+          id,
+          lines: opts.lines || [],
+        }
         return id
       }
 

@@ -558,6 +558,7 @@ const PromptSettings: Component<
             (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
             items={FORMATS}
             value={props.inherit?.modelFormat || 'Alpaca'}
+            hide={useAdvanced() === 'basic'}
           />
           <Select
             fieldName="useAdvancedPrompt"
@@ -1164,8 +1165,8 @@ const SamplerOrder: Component<{
     }
   })
 
-  const updateValue = (next: number[]) => {
-    setValue(next.join(','))
+  const updateValue = (next: SortItem[]) => {
+    setValue(next.map((n) => n.value).join(','))
   }
 
   const toggleSampler = (id: number) => {
@@ -1193,6 +1194,7 @@ const SamplerOrder: Component<{
     for (const item of order) {
       list.push({
         id: id++,
+        value: item,
         label: settingLabels[item]!,
       })
     }

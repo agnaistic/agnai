@@ -59,6 +59,8 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
   let values: any = {}
   const previous: any = opts.previous || {}
 
+  const reruns = new Set(opts.reguidance || [])
+
   const done = new Set<string>()
 
   for (const node of nodes) {
@@ -92,8 +94,10 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
         prompt += value
         values[name] = value
 
+        reruns.delete(name)
+
         /** If all re-guidance values have been fulfilled, return  */
-        if (opts.reguidance && done.size === opts.reguidance.length) {
+        if (opts.reguidance && reruns.size === 0) {
           break
         }
 

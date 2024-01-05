@@ -10,6 +10,7 @@ import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 import { A } from '@solidjs/router'
 import { elapsedSince } from '/common/util'
+import type Stripe from 'stripe'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -116,6 +117,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   let subId: any
   const state = adminStore()
   const tiers = userStore((s) => ({ list: s.tiers }))
+  const [session, setSession] = createSignal<Stripe.Checkout.Session>()
 
   const assignSub = () => {
     const id = subId.value
@@ -181,6 +183,20 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                 </div>
               </td>
             </tr>
+            <Show when={state.info?.stripeSessions?.length}>
+              <tr>
+                <th>Session IDs</th>
+                <td>
+                  <For each={state.info?.stripeSessions}>
+                    {(id) => (
+                      <Button size="pill" onClick={() => adminStore.viewSession(id, setSession)}>
+                        {id.slice(8, 16)}...
+                      </Button>
+                    )}
+                  </For>
+                </td>
+              </tr>
+            </Show>
             <tr>
               <th>Subscription Level</th>
               <td>
@@ -247,6 +263,18 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                   )
                 }}
               </For>
+            </Show>
+            <Show when={!!session()}>
+              <tr>
+                <td colSpan={2}>
+                  <div class="bg-700 mt-4 flex justify-center">Session: {session()?.id}</div>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2}>
+                  <pre class="text-xs">{JSON.stringify(session(), null, 2)}</pre>
+                </td>
+              </tr>
             </Show>
           </tbody>
         </table>

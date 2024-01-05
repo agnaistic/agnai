@@ -268,9 +268,15 @@ export const characterStore = createStore<CharacterState>(
       const res = await charsApi.setFavorite(characterId, favorite)
       if (res.error) return toastStore.error(`Failed to set favorite character`)
       if (res.result) {
+        const prev = list.find((ch) => ch._id === characterId)
+        if (!prev) return
+
+        const nextChar = { ...prev }
+        nextChar.favorite = favorite
+        events.emit('character-updated', nextChar, 'updated')
         return {
           characters: {
-            list: list.map((ch) => (ch._id === characterId ? { ...ch, favorite } : ch)),
+            list: list.map((ch) => (ch._id === characterId ? nextChar : ch)),
             map: replace(map, characterId, { favorite }),
             loaded,
           },

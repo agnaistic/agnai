@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { isAdmin, loggedIn } from '../auth'
-import { finishCheckout, manualSubscribe, startCheckout } from './checkout'
+import { finishCheckout, manualSubscribe, startCheckout, viewSession } from './checkout'
 import { cancelSubscription } from './cancel'
 import { modifySubscription, subscriptionStatus, verifySubscription } from './modify'
 import { resumeSubscription } from './resume'
@@ -15,6 +15,7 @@ router.post('/verify', verifySubscription)
 router.post('/resume', resumeSubscription)
 router.get('/status', subscriptionStatus)
 router.post('/admin-manual', isAdmin, manualSubscribe)
+router.post('/session', isAdmin, viewSession)
 
 export { router as default }
 export { stripe } from './stripe'

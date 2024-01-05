@@ -72,7 +72,7 @@ const TagInput: Component<TagInputProps> = (props) => {
   return (
     <div class="relative">
       <FormLabel label={props.label} helperText={props.helperText} />
-      <div class="form-field focusable-field flex w-full flex-wrap rounded-xl px-2 py-1">
+      <div class="focusable-field flex w-full flex-wrap rounded-xl px-2 py-1">
         <For each={tags()}>
           {(tag) => (
             <span class="btn-primary m-1 flex items-center rounded px-2 py-1 text-sm text-white">
@@ -85,7 +85,7 @@ const TagInput: Component<TagInputProps> = (props) => {
         </For>
         <input
           name={props.fieldName}
-          class="my-1 flex-1 bg-transparent outline-none"
+          class="form-field my-1 flex-1 bg-transparent outline-none"
           value={inputValue()}
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}

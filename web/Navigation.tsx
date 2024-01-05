@@ -4,7 +4,6 @@ import {
   Bell,
   Book,
   ChevronRight,
-  FlaskConical,
   HeartHandshake,
   HelpCircle,
   LogIn,
@@ -19,6 +18,7 @@ import {
   VenetianMask,
   Volume2,
   VolumeX,
+  Wand2,
   X,
 } from 'lucide-solid'
 import {
@@ -202,9 +202,9 @@ const UserNavigation: Component = () => {
       <ChatLink />
 
       <Show when={guidance()}>
-        <Item href="/mode/preview/" ariaLabel="Mode Preview">
-          <FlaskConical aria-hidden="true" />
-          Mode Preview
+        <Item href="/mode/preview/" ariaLabel="Sagas Preview">
+          <Wand2 aria-hidden="true" />
+          Sagas Preview
         </Item>
       </Show>
 

@@ -432,23 +432,23 @@ export async function buildPromptParts(
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const { adding: fit } = await fillPromptWithLines(
+    const { adding: fit } = await fillPromptWithLines({
       encoder,
-      opts.settings?.memoryUserEmbedLimit || 500,
-      '',
-      embeds
-    )
+      tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
+      context: '',
+      lines: embeds,
+    })
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const { adding: fit } = await fillPromptWithLines(
+    const { adding: fit } = await fillPromptWithLines({
       encoder,
-      opts.settings?.memoryChatEmbedLimit || 500,
-      '',
-      embeds
-    )
+      tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
+      context: '',
+      lines: embeds,
+    })
     parts.chatEmbeds = fit
   }
 
@@ -562,7 +562,12 @@ export async function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const { adding: lines } = await fillPromptWithLines(encoder, maxContext, '', history)
+  const { adding: lines } = await fillPromptWithLines({
+    encoder,
+    tokenLimit: maxContext,
+    context: '',
+    lines: history,
+  })
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)
@@ -585,21 +590,26 @@ export function formatInsert(insert: string): string {
  * - srv/adapter/chat-completion.ts toChatCompletionPayload
  * - srv/adapter/claude.ts createClaudePrompt
  */
-export async function fillPromptWithLines(
-  encoder: TokenCounter,
-  tokenLimit: number,
-  amble: string,
-  lines: string[],
-  inserts: Map<number, string> = new Map(),
-  lowpriority: { idToReplace: string; content: string }[] = []
-) {
-  const insertsCost = await encoder([...inserts.values()].join(' '))
+export async function fillPromptWithLines(opts: {
+  encoder: TokenCounter
+  tokenLimit: number
+  context: string
+  lines: string[]
+
+  /** Nodes to be inserted at a particular depth in the `lines` */
+  inserts?: Map<number, string>
+  optional?: Array<{ id: string; content: string }>
+}) {
+  const { encoder, tokenLimit, context, lines, inserts = new Map(), optional = [] } = opts
+  const insertsCost = await encoder(Array.from(inserts.values()).join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
-  const ambleWithoutLowPriorityPlaceholders = lowpriority.reduce(
-    (amble, { idToReplace }) => amble.replace(idToReplace, ''),
-    amble
-  )
-  let count = await encoder(ambleWithoutLowPriorityPlaceholders)
+
+  /**
+   * Optional placeholders do not count towards token counts.
+   * They are optional after everything else has been inserted therefore we remove them from the prompt
+   */
+  const cleanContext = optional.reduce((amble, { id }) => amble.replace(id, ''), context)
+  let count = await encoder(cleanContext)
   const adding: string[] = []
 
   let linesAddedCount = 0

@@ -158,10 +158,11 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.charUpdated, (char: AppSchema.Character, action: 'created' | 'updated') => {
     const { active, allChars } = get()
-    const list =
-      action === 'created'
-        ? allChars.list.concat(char)
-        : allChars.list.map((ch) => (ch._id === char._id ? char : ch))
+
+    const isCreated = allChars.list.every((ch) => ch._id !== char._id)
+    const list = isCreated
+      ? allChars.list.concat(char)
+      : allChars.list.map((ch) => (ch._id === char._id ? char : ch))
 
     const map = Object.assign({}, allChars.map, { [char._id]: char })
     if (active?.char?._id !== char._id) {

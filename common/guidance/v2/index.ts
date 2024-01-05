@@ -35,7 +35,7 @@ const parser = peggy.generate(grammar.trim(), {
  * This cannot be used for guidance yet
  */
 
-export function parseTemplateV2(template: string): GuidanceNode[] {
+export function parseTemplateV2(template: string) {
   const ast = parser.parse(template, {}) as GuidanceNode[]
 
   for (const node of ast) {
@@ -48,5 +48,16 @@ export function parseTemplateV2(template: string): GuidanceNode[] {
       }
     }
   }
-  return ast
+
+  const placeholders: string[] = []
+
+  const matches = template.match(/{{[a-zA-Z0-9_-]+}}/g)
+  if (!matches) return { ast, placeholders }
+
+  for (const match of matches) {
+    const name = match.replace(/({|}| )/g, '')
+    placeholders.push(name)
+  }
+
+  return { ast, placeholders }
 }

@@ -1,5 +1,4 @@
 import { neat, now } from '/common/util'
-import { storage } from '/web/shared/util'
 import { createStore } from '/web/store/create'
 import { GuidedSession, GuidedTemplate, guidedApi } from '/web/store/data/guided'
 import { parseTemplateV2 } from '/common/guidance/v2'
@@ -24,18 +23,8 @@ const init: GameState = {
   templates: [],
   busy: false,
   template: {
+    ...blankTemplate(),
     _id: '',
-    name: '',
-    byline: '',
-    description: '',
-    init: '',
-    response: '',
-    display: '',
-    introduction: `{{response}}`,
-    history: '{{response}}',
-    loop: '',
-    fields: [],
-    lists: {},
   },
   showModal: 'none',
   state: {
@@ -53,28 +42,32 @@ export const gameStore = createStore<GameState>(
   init
 )((get, set) => {
   return {
-    init: async ({ inited, ...prev }) => {
-      if (inited) return
+    async *init({ inited }, id?: string) {
+      if (!inited) {
+        const templates = await guidedApi.getTemplates()
+        const sessions = await guidedApi.getSessions()
 
-      const templates = await guidedApi.getTemplates()
-      const sessions = await guidedApi.getSessions()
+        if (!templates.result.templates.length) {
+          const res = await guidedApi.createTemplate(exampleTemplate())
+          if (res.error) {
+            toastStore.error(`Could not initialise modes: ${res.error}`)
+            return
+          }
 
-      if (!templates.result.templates.length) {
-        const res = await guidedApi.createTemplate(exampleTemplate())
-        if (res.error) {
-          toastStore.error(`Could not initialise modes: ${res.error}`)
-          return
+          if (res.result) {
+            templates.result.templates.push(res.result)
+          }
         }
 
-        if (res.result) {
-          templates.result.templates.push(res.result)
+        yield {
+          sessions: sessions.result.sessions.sort(sortByAge),
+          templates: templates.result.templates,
+          inited: true,
         }
       }
 
-      return {
-        sessions: sessions.result.sessions.sort(sortByAge),
-        templates: templates.result.templates,
-        inited: true,
+      if (id) {
+        gameStore.loadSession(id)
       }
     },
     async *loadTemplate({ templates, state }, id: string) {
@@ -146,36 +139,40 @@ export const gameStore = createStore<GameState>(
       const next = state.responses.map((m, i) => (index === i ? msg : m))
       return { state: { ...state, responses: next } }
     },
-    async *newSession(
-      { sessions, state },
-      templateId: string,
-      onDone?: (sessionId: string) => void
-    ) {
-      const session = blankSession(templateId, { overrides: state.overrides, init: state.init })
-      const res = await guidedApi.saveSession(session)
-      if (res.result) {
-        yield { sessions: [res.result.session].concat(sessions), state: res.result.session }
-        onDone?.(res.result.session._id)
-        return
-      }
+    async *newSession({ state }, templateId: string) {
+      const init = state.gameId === templateId ? state.init : undefined
+      const session = blankSession(templateId, {
+        init,
+        gameId: state.gameId,
+        format: state.format,
+        responses: [],
+        overrides: state.overrides,
+        _id: 'new',
+      })
+      yield { state: session }
     },
-    saveSession: async ({ state }) => {
+    async *saveSession({ state }, onSave?: (session: GuidedSession) => void) {
       const next = { ...state, updated: now() }
       const res = await guidedApi.saveSession(next)
       if (res.result) {
-        storage.localSetItem('rpg-last-template', res.result.session._id)
-        return { sessions: res.result.sessions, state: res.result.session }
+        yield { sessions: res.result.sessions, state: res.result.session }
+        onSave?.(res.result.session)
       }
     },
-    loadSession: async ({ sessions, templates, inited }, id: string) => {
+    loadSession: async ({ sessions, templates, inited, template: current }, id: string) => {
       if (!inited) return
+
+      if (id === 'new') {
+        const session = blankSession(current._id)
+        return { state: session }
+      }
+
       const session = sessions.find((s) => s._id === id)
       if (!session) {
         toastStore.error(`Session not found: ${id}`)
         return
       }
 
-      storage.localSetItem('rpg-last-template', session._id)
       if (!session.format) {
         session.format = 'Alpaca'
       }
@@ -202,7 +199,7 @@ export const gameStore = createStore<GameState>(
       return { state: next }
     },
     async *start({ template, state }) {
-      yield { busy: true }
+      yield { busy: true, state: { ...state, init: undefined, responses: [], updated: now() } }
       const previous: any = {}
 
       for (const [key, value] of Object.entries(state.overrides)) {
@@ -210,8 +207,9 @@ export const gameStore = createStore<GameState>(
         previous[key] = value
       }
 
+      const init = insertPlaceholders(template.init, template, state.overrides)
       const result = await msgsApi.guidance({
-        prompt: replaceTags(template.init, state.format),
+        prompt: replaceTags(init, state.format),
         previous,
         lists: template.lists,
       })
@@ -247,7 +245,22 @@ export const gameStore = createStore<GameState>(
 
     async *send({ template, state }, text: string, onSuccess: () => void) {
       yield { busy: true }
-      const ast = parseTemplateV2(replaceTags(template.history, state.format))
+
+      const missing: string[] = []
+      for (const manual of template.manual || []) {
+        if (manual in state.overrides) continue
+        missing.push(manual)
+      }
+
+      if (missing.length) {
+        return toastStore.error(
+          `Required fields are missing: ${missing.join(
+            ', '
+          )}. Fill them out in the configuration pane.`
+        )
+      }
+
+      const { ast } = parseTemplateV2(replaceTags(template.history, state.format))
       const history: string[] = []
 
       if (state.init) {
@@ -323,18 +336,56 @@ function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): G
 
 function blankTemplate(): GuidedTemplate {
   return {
-    _id: '',
+    _id: v4(),
     name: 'New Template',
     byline: '',
     description: '',
     fields: [],
-    init: '',
-    loop: '',
-    history: '',
-    introduction: `{{response}}`,
-    response: '`{{response}}',
+    history: '{{response}}',
+    introduction: `{{scene}}`,
+    response: `{{response}}`,
     display: '',
     lists: {},
+    manual: [],
+    ...newTemplate(),
+  }
+}
+
+function newTemplate() {
+  return {
+    init: neat`
+    Generate the game details for a "{{title}}" story roleplay RPG
+
+    First name of the main character: "[main_char | temp=0.4 | stop="]"
+
+    First name of the secondary character (the main character's friend): "[alt_char | temp=0.4 | stop="]"
+
+    First name of the antagonist character: "[villain | temp=0.4 | stop="]"
+
+    Write the opening scene of the roleplay to begin the RPG: "[scene | temp=0.4 | tokens=300 | stop="]"
+    `,
+    loop: neat`
+    "{{title}}" story roleplay RPG
+
+    The main character is: {{main_char}}.
+    The secondary character (the main character's friend) is: {{alt_char}}.
+    The antagonist of the story is: {{villain}}.
+
+    <user>The opening scene of the roleplay story:
+    {{scene}}</user>
+
+    And then the story roleplay begins:
+
+    {{history}}
+
+    <user>{{main_char}}: {{input}}</user>
+
+    <bot>
+    [response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
+    
+    <user>
+
+  `,
   }
 }
 
@@ -350,6 +401,7 @@ function exampleTemplate(): GuidedTemplate {
     response: '{{response}}',
     display: '',
     lists: {},
+    manual: [],
     init: neat`
       Generate the game details for a "detective who-dunnit" RPG.
 
@@ -442,6 +494,17 @@ export function formatResponse(
   }
 
   const output = outputs.join('\n')
+  return output
+}
+
+function insertPlaceholders(prompt: string, template: GuidedTemplate, values: Record<string, any>) {
+  let output = prompt
+  for (const manual of template.manual || []) {
+    const value = values[manual] || ''
+    const re = new RegExp(`{{${manual}}}`, 'gi')
+    output = output.replace(re, value)
+  }
+
   return output
 }
 
