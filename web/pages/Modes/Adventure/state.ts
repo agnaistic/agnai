@@ -497,33 +497,18 @@ export function formatResponse(
   session: GuidedSession,
   values: Record<string, any>
 ) {
-  const format = template || '{{response}}'
-  const lines = format.split('\n')
-  const outputs: string[] = []
+  let output = template || '{{response}}'
 
-  for (let line of lines) {
-    const trim = line.trim()
-    const isPlaceholderOnly = trim.startsWith('{{') && trim.endsWith('}}') && !trim.includes(' ')
+  const matches = output.match(/{{[a-z0-9_-]+}}/gi)
 
-    const re = /{{[a-zA-Z0-9_-]+}}/g
-
-    while (true) {
-      const match = re.exec(line)
-      if (!match) break
-      const key = match[0].replace('{{', '').replace('}}', '').trim()
-      if (!key) continue
-      const value = session.overrides[key] || values[key] || session.init?.[key] || ''
-      line = line.replace(match[0], `${value}`)
-    }
-
-    if (!line.trim() && isPlaceholderOnly) {
-      continue
-    }
-
-    outputs.push(line)
+  if (!matches) return output
+  for (const match of matches) {
+    const key = match.replace('{{', '').replace('}}', '').trim()
+    if (!key) continue
+    const value = session.overrides[key] || values[key] || session.init?.[key] || ''
+    output = output.replace(match, `${value}`)
   }
 
-  const output = outputs.join('\n')
   return output
 }
 
