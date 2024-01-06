@@ -190,7 +190,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
   const sessions = gameStore((g) => {
     const templates = toMap(g.templates)
     const sessions = g.sessions
-      .filter((sess) => sess.gameId in templates === true)
+      .filter((sess) => sess.gameId in templates === true && !!sess.updated)
       .map((sess) => ({
         _id: sess._id,
         name: templates[sess.gameId].name,

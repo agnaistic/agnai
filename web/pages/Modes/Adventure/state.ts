@@ -301,7 +301,7 @@ export const gameStore = createStore<GameState>(
         let line = ''
         for (const node of ast) {
           if (node.kind === 'text') {
-            line += node.text
+            line += formatResponse(node.text, state, resp)
             continue
           }
 
