@@ -373,7 +373,9 @@ function blankTemplate(): GuidedTemplate {
     fields: [],
     history: '{{response}}',
     introduction: `{{scene}}`,
-    response: `{{response}}`,
+    response: neat`<user>{{input}}</user>
+
+    <bot>{{response}}</bot>`,
     display: '',
     lists: {},
     manual: [],
@@ -428,7 +430,9 @@ function exampleTemplate(): GuidedTemplate {
     byline: 'Solve AI generated crimes',
     description: '',
     introduction: `Introduction:\n{{intro}}\n\nOpening:\n{{scene}}`,
-    response: '{{response}}',
+    response: neat`<user>{{input}}</user>
+
+    <bot>{{response}}</bot>`,
     display: '',
     lists: {},
     manual: [],
