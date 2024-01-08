@@ -196,6 +196,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
         name: templates[sess.gameId].name,
         age: new Date(sess.updated ?? new Date()),
       }))
+      .sort((l, r) => r.age.valueOf() - l.age.valueOf())
     return sessions
   })
   const load = (id: string) => {
@@ -363,9 +364,16 @@ const Msg: Component<{
           <Button size="pill" schema="clear" onClick={edit} classList={{ hidden: editing() }}>
             <Pencil size={20} />
           </Button>
-          <Button size="pill" schema="clear" onClick={deleteMsg} classList={{ hidden: editing() }}>
-            <Trash size={20} />
-          </Button>
+          <Show when={!props.user}>
+            <Button
+              size="pill"
+              schema="clear"
+              onClick={deleteMsg}
+              classList={{ hidden: editing() }}
+            >
+              <Trash size={20} />
+            </Button>
+          </Show>
 
           <Show when={canRetry()}>
             <Button

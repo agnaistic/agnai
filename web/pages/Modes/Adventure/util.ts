@@ -37,6 +37,7 @@ export function exportTemplate(id: string) {
 
 export function validateTemplate(template: any): asserts template is GuidedTemplate {
   const missing: string[] = []
+
   for (const key of Object.keys(emptyTemplate)) {
     if (key in template === false) {
       missing.push(key)
@@ -49,6 +50,7 @@ export function validateTemplate(template: any): asserts template is GuidedTempl
 }
 
 export function importTemplate(template: any) {
+  template.manual ??= []
   validateTemplate(template)
 
   const next = {

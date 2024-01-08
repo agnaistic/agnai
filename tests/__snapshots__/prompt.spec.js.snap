@@ -219,12 +219,6 @@ Object {
     "userEmbeds": Array [],
   },
   "template": Object {
-    "history": Array [
-      "MainChar: bot response",
-      "How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>",
-    ],
     "inserts": Map {},
     "length": 48,
     "linesAddedCount": 2,

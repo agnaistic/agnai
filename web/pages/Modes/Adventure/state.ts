@@ -242,8 +242,7 @@ export const gameStore = createStore<GameState>(
       if (!state.responses.length) return
 
       const head = state.responses.slice(0, index)
-      const tail = state.responses.slice(index + 1)
-      gameStore.update({ responses: head.concat(tail) })
+      gameStore.update({ responses: head })
     },
     async *retry({ state }) {
       if (!state.responses.length) return
