@@ -58,7 +58,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
     top_p: gen.topP ?? 1,
-    stop: [`\n${handle}:`].concat(gen.stopSequences!),
+    stop: [`\n${handle}:`].concat(gen.stopSequences ?? []),
   }
 
   const useChat =

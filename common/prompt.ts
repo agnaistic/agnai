@@ -263,25 +263,36 @@ type InjectOpts = {
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  // Automatically inject example conversation if not included in the prompt
-  /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
-  // const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
-  // const sampleChat = parts.sampleChat?.join('\n')
-  // if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
-  //   const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
+  /* Automatically inject example conversation if not included in the prompt
+   * don't do it on no-validation though
+   * (unless it's openai or claude in which case we do it because they don't
+   * support V2 parser, particularly {{#lowpriority}})
+   */
+  const doesntSupportV2Parser =
+    opts.settings?.service === 'openai' || opts.settings?.service === 'claude'
 
-  //   const svc = opts.settings?.service
-  //   const postSample =
-  //     svc === 'openai' || svc === 'openrouter' || svc === 'scale' ? SAMPLE_CHAT_MARKER : '<START>'
+  const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
+  const sampleChat = parts.sampleChat?.join('\n')
+  if (
+    !template.match(HOLDERS.sampleChat) &&
+    sampleChat &&
+    hist &&
+    (opts.settings?.useAdvancedPrompt !== 'no-validation' || doesntSupportV2Parser)
+  ) {
+    const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
-  //   const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
-  //     .replace(BOT_REPLACE, opts.replyAs.name)
-  //     .replace(SELF_REPLACE, sender)
-  //   if (hist.order === 'asc') next.unshift(msg)
-  //   else next.push(msg)
+    const svc = opts.settings?.service
+    const postSample =
+      svc === 'openai' || svc === 'openrouter' || svc === 'scale' ? SAMPLE_CHAT_MARKER : '<START>'
 
-  //   hist.lines = next
-  // }
+    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
+      .replace(BOT_REPLACE, opts.replyAs.name)
+      .replace(SELF_REPLACE, sender)
+    if (hist.order === 'asc') next.unshift(msg)
+    else next.push(msg)
+
+    hist.lines = next
+  }
 
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
 
