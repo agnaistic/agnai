@@ -61,6 +61,25 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
+  const useTabby = isThirdParty && gen.thirdPartyFormat === 'tabby'
+
+  if (useTabby) {
+    body.top_k = gen.topK
+    body.top_a = gen.topA
+    body.min_p = gen.minP
+    body.tfs = gen.tailFreeSampling
+    body.typical = gen.typicalP
+    body.repetition_penalty = gen.repetitionPenalty
+    body.repetition_penalty_range = gen.repetitionPenaltyRange
+    body.mirostat_mode = gen.mirostatToggle ? 2 : 0
+    body.mirostat_tau = gen.mirostatTau
+    body.mirostat_eta = gen.mirostatLR
+    body.add_bos_token = gen.addBosToken
+    body.ban_eos_token = gen.banEosToken
+    body.cfg_scale = gen.cfgScale
+    body.negative_prompt = gen.cfgOppose
+  }
+
   const useChat =
     (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
 

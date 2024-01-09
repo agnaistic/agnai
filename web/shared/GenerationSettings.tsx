@@ -124,6 +124,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'Aphrodite', value: 'aphrodite' },
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
+              { label: 'TabbyAPI', value: 'tabby' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             service={service()}
