@@ -6,10 +6,12 @@ import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
 import { getClientPreset } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
+import { usePaneManager } from './hooks'
 
 const NavBar: Component = () => {
   const cfg = settingStore()
   const location = useLocation()
+  const pane = usePaneManager()
   const chats = chatStore((s) => ({
     chat: s.active?.chat,
     char: s.active?.char,
@@ -30,7 +32,7 @@ const NavBar: Component = () => {
 
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
-    chatStore.option('pane', chatStore.getState().opts.pane === paneType ? undefined : paneType)
+    pane.update(paneType)
   }
 
   const Title = (

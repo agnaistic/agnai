@@ -1,7 +1,7 @@
 import './mode.scss'
-import { Component, JSX, Match, Show, Switch, createEffect, createMemo } from 'solid-js'
+import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
-import { chatStore, settingStore, userStore } from '/web/store'
+import { settingStore, userStore } from '/web/store'
 import { getHeaderBg } from '/web/pages/Chat/helpers'
 import { usePane, useResizeObserver } from '../hooks'
 import Slot from '../Slot'
@@ -22,9 +22,9 @@ export const ModeDetail: Component<{
   const user = userStore()
   const mode = usePane()
 
-  createEffect(() => {
-    chatStore.option('pane', props.showPane ? 'other' : undefined)
-  })
+  // createEffect(() => {
+  //   chatStore.option('pane', props.showPane ? 'other' : undefined)
+  // })
 
   const viewHeight = createMemo(() => {
     const percent = props.splitHeight ?? 40
@@ -122,7 +122,7 @@ export const ModeDetail: Component<{
           <section
             class="pane ml-2"
             style={{ 'grid-area': 'pane' }}
-            classList={{ hidden: !props.pane }}
+            classList={{ hidden: !props.showPane }}
           >
             {props.pane}
           </section>

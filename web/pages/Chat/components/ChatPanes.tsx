@@ -8,9 +8,8 @@ import {
   createMemo,
   createSignal,
   onCleanup,
-  onMount,
 } from 'solid-js'
-import { ChatRightPane, characterStore, chatStore, toastStore } from '/web/store'
+import { characterStore, chatStore, toastStore } from '/web/store'
 import Convertible from '../Convertible'
 import { useParams, useSearchParams } from '@solidjs/router'
 import { getActiveBots } from '../util'
@@ -23,18 +22,40 @@ import Button from '/web/shared/Button'
 import UISettings from '../../Settings/UISettings'
 import { wait } from '/common/util'
 import CharacterSelect from '/web/shared/CharacterSelect'
-import { isValid } from '/common/valid'
 import ChatSettings from '../ChatSettings'
 import ChatMemoryModal from './MemoryModal'
 import { getClientPreset } from '/web/shared/adapter'
+import { usePaneManager } from '/web/shared/hooks'
 
 export { ChatPanes as default }
+
+export const useValidChatPane = () => {
+  const [search] = useSearchParams()
+
+  const isValidPane = createMemo(() => {
+    switch (search.pane) {
+      case 'character':
+      case 'preset':
+      case 'participants':
+      case 'ui':
+      case 'chat-settings':
+      case 'memory':
+      case 'other':
+        return true
+
+      default:
+        return false
+    }
+  })
+
+  return isValidPane
+}
 
 const ChatPanes: Component<{
   setShowOpts: (state: boolean) => void
 }> = (props) => {
   const params = useParams()
-  const [search, setSearch] = useSearchParams()
+  const pane = usePaneManager()
 
   const chars = characterStore((s) => ({
     chatBots: s.characters.list,
@@ -56,16 +77,7 @@ const ChatPanes: Component<{
   const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
   const [editId, setEditId] = createSignal<string>()
 
-  onMount(() => {
-    if (
-      isValid(
-        { pane: ['character', 'preset', 'participants', 'ui', 'chat-settings', 'memory'] },
-        search
-      )
-    ) {
-      togglePane(search.pane)
-    }
-  })
+  const isValidPane = useValidChatPane()
 
   onCleanup(() => {
     closeCharEditor(false)
@@ -110,16 +122,9 @@ const ChatPanes: Component<{
     setEditId(char._id)
   }
 
-  const togglePane = (paneType: ChatRightPane) => {
-    props.setShowOpts(false)
-    chatStore.option('pane', chats.opts.pane === paneType ? undefined : paneType)
-    setSearch({ pane: paneType })
-  }
-
   const closePane = (search = true) => {
-    chatStore.option('pane', undefined)
     if (search) {
-      setSearch({ pane: undefined })
+      pane.update()
     }
   }
 
@@ -136,9 +141,9 @@ const ChatPanes: Component<{
   }
 
   return (
-    <Show when={!!chats.opts.pane}>
+    <Show when={isValidPane()}>
       <Switch>
-        <Match when={chats.opts.pane === 'character'}>
+        <Match when={pane.pane === 'character'}>
           <Convertible
             kind="partial"
             title="Edit Character"
@@ -172,7 +177,7 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={chats.opts.pane === 'preset'}>
+        <Match when={pane.pane === 'preset'}>
           <Convertible kind="partial" close={closePane} footer={paneFooter()}>
             <ModeGenSettings
               presetId={clientPreset()?._id}
@@ -183,17 +188,17 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={chats.opts.pane === 'memory'}>
+        <Match when={pane.pane === 'memory'}>
           <Convertible kind="partial" close={closePane} footer={paneFooter()}>
             <ChatMemoryModal chat={chats.chat!} close={closePane} footer={setPaneFooter} />
           </Convertible>
         </Match>
 
-        <Match when={chats.opts.pane === 'participants'}>
+        <Match when={pane.pane === 'participants'}>
           <MemberModal show chat={chats.chat!} charId={chats?.char?._id!} close={closePane} />
         </Match>
 
-        <Match when={chats.opts.pane === 'ui'}>
+        <Match when={pane.pane === 'ui'}>
           <Convertible
             kind="partial"
             close={closePane}
@@ -204,7 +209,7 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={chats.opts.pane === 'chat-settings'}>
+        <Match when={pane.pane === 'chat-settings'}>
           <Convertible kind="partial" close={closePane} title="Chat Settings" footer={paneFooter()}>
             <ChatSettings footer={setPaneFooter} close={closePane} />
           </Convertible>

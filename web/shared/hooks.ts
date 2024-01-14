@@ -3,6 +3,7 @@ import { createSignal, createRenderEffect } from 'solid-js'
 import { getSettingColor, userStore } from '../store'
 import { hexToRgb } from './util'
 import { RootModal, rootModalStore } from '../store/root-modal'
+import { useSearchParams } from '@solidjs/router'
 
 export function useWindowSize(): {
   width: Accessor<number>
@@ -97,6 +98,13 @@ export function useEffect(callback: () => void | Function): void {
 
     return
   })
+}
+
+export const usePaneManager = () => {
+  const [search, setSearch] = useSearchParams()
+
+  const isShowing = createMemo(() => search.pane !== undefined && typeof search.pane === 'string')
+  return { showing: isShowing, update: (pane?: string) => setSearch({ pane }), pane: search.pane }
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {

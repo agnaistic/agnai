@@ -37,7 +37,7 @@ type SendModes =
   | 'self'
   | 'send-noreply'
 
-type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
+export type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
 
 export type MsgState = {
   activeChatId: string

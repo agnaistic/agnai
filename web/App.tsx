@@ -25,8 +25,7 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
-import { chatStore } from './store'
-import { usePane } from './shared/hooks'
+import { usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getMaxChatWidth } from './shared/util'
@@ -151,12 +150,10 @@ const Layout: Component = () => {
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
-  const chat = chatStore()
-  const paneOrPopup = usePane()
-  const isPaneOpen = createMemo(() => paneOrPopup() === 'pane' && !!chat.opts.pane)
+  const pane = usePaneManager()
 
   const maxW = createMemo((): string => {
-    if (isPaneOpen()) return 'max-w-full'
+    if (pane.showing()) return 'max-w-full'
 
     return getMaxChatWidth(state.ui.chatWidth)
   })
