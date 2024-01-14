@@ -1,51 +1,22 @@
 import './convertible.scss'
-import { Component, JSX, Show, Switch } from 'solid-js'
+import { Component, JSX, Switch } from 'solid-js'
 import { X } from 'lucide-solid'
-import { useBgStyle, usePane } from '../../shared/hooks'
-import Modal from '../../shared/Modal'
+import { useBgStyle, usePane } from '../hooks'
+import Modal from '../Modal'
 import { Match } from 'solid-js'
 import { Card } from '/web/shared/Card'
 import PageHeader from '/web/shared/PageHeader'
 
 /** Content that can be a side pane, a modal, or a regular page */
-
-type PageProps = {
-  title?: string
-  paneAndPageTitle?: JSX.Element
-  children: JSX.Element
-  footer?: JSX.Element
-  kind: 'page'
-  wrapper?: (body: JSX.Element) => JSX.Element
-}
-
-type PartialProps = {
+export type ConvertibleProps = {
   title?: string | JSX.Element
   children: JSX.Element
   footer?: JSX.Element
-  kind: 'partial'
   close: () => void
   wrapper?: (body: JSX.Element) => JSX.Element
 }
 
-export type ConvertibleProps = PageProps | PartialProps
-
-const Convertible: Component<ConvertibleProps> = (props) => (
-  <Switch>
-    <Match when={props.kind === 'page'}>
-      <div class="mr-2 flex flex-col gap-2">
-        <Show when={props.title}>{props.title}</Show>
-        {props.children}
-        <Footer>{props.footer}</Footer>
-      </div>
-    </Match>
-
-    <Match when={true}>
-      <WithinPage {...(props as PartialProps)} />
-    </Match>
-  </Switch>
-)
-
-const WithinPage: Component<PartialProps> = (props) => {
+export const Convertible: Component<ConvertibleProps> = (props) => {
   const rightPaneBgStyles = useBgStyle({
     hex: 'bg-800',
     blur: true,

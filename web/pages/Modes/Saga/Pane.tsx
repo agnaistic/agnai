@@ -13,7 +13,7 @@ import {
   onMount,
 } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
-import Convertible from '../../Chat/Convertible'
+import Convertible from '../../../shared/Mode/Convertible'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { sagaStore } from './state'
@@ -70,7 +70,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
       </Match>
 
       <Match when={params.pane === 'preset'}>
-        <Convertible kind="partial" close={closePane} footer={paneFooter()}>
+        <Convertible close={closePane} footer={paneFooter()}>
           <ModeGenSettings
             footer={setPaneFooter}
             presetId={state.presetId}
@@ -250,7 +250,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
   )
 
   return (
-    <Convertible kind="partial" close={props.close} footer={Footer}>
+    <Convertible close={props.close} footer={Footer}>
       <div class="flex flex-col gap-4">
         <Show when={state.list.length > 0}>
           <SolidCard>
