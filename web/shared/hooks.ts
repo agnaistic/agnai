@@ -102,9 +102,17 @@ export function useEffect(callback: () => void | Function): void {
 
 export const usePaneManager = () => {
   const [search, setSearch] = useSearchParams()
+  const [showing, setShowing] = createSignal(
+    search.pane !== undefined && typeof search.pane === 'string'
+  )
+  const [pane, setPane] = createSignal(search.pane)
 
-  const isShowing = createMemo(() => search.pane !== undefined && typeof search.pane === 'string')
-  return { showing: isShowing, update: (pane?: string) => setSearch({ pane }), pane: search.pane }
+  createEffect(() => {
+    const next = search.pane !== undefined && typeof search.pane === 'string'
+    setShowing(next)
+    setPane(search.pane)
+  })
+  return { showing, update: (pane?: string) => setSearch({ pane }), pane }
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {

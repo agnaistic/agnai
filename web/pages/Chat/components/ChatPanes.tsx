@@ -77,7 +77,7 @@ const ChatPanes: Component<{
   const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
   const [editId, setEditId] = createSignal<string>()
 
-  const isValidPane = useValidChatPane()
+  // const isValidPane = useValidChatPane()
 
   onCleanup(() => {
     closeCharEditor(false)
@@ -141,9 +141,9 @@ const ChatPanes: Component<{
   }
 
   return (
-    <Show when={isValidPane()}>
+    <Show when={pane.showing()}>
       <Switch>
-        <Match when={pane.pane === 'character'}>
+        <Match when={pane.pane() === 'character'}>
           <Convertible title="Edit Character" close={closeCharEditor} footer={paneFooter()}>
             <Show when={editId() !== ''}>
               <CreateCharacterForm
@@ -172,7 +172,7 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={pane.pane === 'preset'}>
+        <Match when={pane.pane() === 'preset'}>
           <Convertible close={closePane} footer={paneFooter()}>
             <ModeGenSettings
               presetId={clientPreset()?._id}
@@ -183,17 +183,17 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={pane.pane === 'memory'}>
+        <Match when={pane.pane() === 'memory'}>
           <Convertible close={closePane} footer={paneFooter()}>
             <ChatMemoryModal chat={chats.chat!} close={closePane} footer={setPaneFooter} />
           </Convertible>
         </Match>
 
-        <Match when={pane.pane === 'participants'}>
+        <Match when={pane.pane() === 'participants'}>
           <MemberModal show chat={chats.chat!} charId={chats?.char?._id!} close={closePane} />
         </Match>
 
-        <Match when={pane.pane === 'ui'}>
+        <Match when={pane.pane() === 'ui'}>
           <Convertible
             close={closePane}
             title="UI Settings"
@@ -203,7 +203,7 @@ const ChatPanes: Component<{
           </Convertible>
         </Match>
 
-        <Match when={pane.pane === 'chat-settings'}>
+        <Match when={pane.pane() === 'chat-settings'}>
           <Convertible close={closePane} title="Chat Settings" footer={paneFooter()}>
             <ChatSettings footer={setPaneFooter} close={closePane} />
           </Convertible>
