@@ -41,8 +41,8 @@ import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 import { markdown } from './shared/markdown'
 import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
-import { SagaDetail } from './pages/Modes/Saga/Detail'
-import { SagaList } from './pages/Modes/Saga/List'
+import { SagaDetail } from './pages/Saga/Detail'
+import { SagaList } from './pages/Saga/List'
 
 const App: Component = () => {
   const state = userStore()
@@ -63,8 +63,8 @@ const App: Component = () => {
           <Route path="/chats" component={CharacterChats} />
           <Route path="/chat" component={ChatDetail} />
           <Show when={cfg.config.guidanceAccess || state.user?.admin}>
-            <Route path="/mode/preview" component={SagaList} />
-            <Route path="/mode/preview/:id" component={SagaDetail} />
+            <Route path="/saga" component={SagaList} />
+            <Route path="/saga/:id" component={SagaDetail} />
           </Show>
           <Route path="/chat/:id" component={ChatDetail} />
           <Route path={['/info', '/']} component={HomePage} />

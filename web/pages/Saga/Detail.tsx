@@ -37,7 +37,7 @@ import Loading from '/web/shared/Loading'
 import { DropMenu } from '/web/shared/DropMenu'
 
 export function toSessionUrl(id: string) {
-  return `/mode/preview/${id}${location.search}`
+  return `/saga/${id}${location.search}`
 }
 
 export const SagaDetail: Component = (props) => {

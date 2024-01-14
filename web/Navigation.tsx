@@ -201,7 +201,7 @@ const UserNavigation: Component = () => {
       <ChatLink />
 
       <Show when={guidance()}>
-        <Item href="/mode/preview/" ariaLabel="Sagas Preview">
+        <Item href="/saga" ariaLabel="Sagas Preview">
           <Wand2 aria-hidden="true" />
           Sagas Preview
         </Item>

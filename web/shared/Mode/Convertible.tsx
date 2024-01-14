@@ -35,11 +35,7 @@ export const Convertible: Component<ConvertibleProps> = (props) => {
             {props.title ?? <PageHeader title={props.title} subPage />}
           </div>
           <div style={{ 'grid-area': 'content' }} class="overflow-y-auto px-2">
-            <div
-              // style={{ 'grid-area': 'header' }}
-              class="sticky top-0 float-right"
-              onClick={props.close}
-            >
+            <div class="sticky top-0 float-right" onClick={props.close}>
               <div class="ml-[-32px] cursor-pointer">
                 <X />
               </div>

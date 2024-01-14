@@ -13,7 +13,7 @@ import {
   onMount,
 } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
-import Convertible from '../../../shared/Mode/Convertible'
+import Convertible from '../../shared/Mode/Convertible'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { sagaStore } from './state'
