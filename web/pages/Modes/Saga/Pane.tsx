@@ -16,9 +16,9 @@ import TextInput from '/web/shared/TextInput'
 import Convertible from '../../Chat/Convertible'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 import { GuidanceNode, parseTemplateV2 } from '/common/guidance/v2'
-import { GuidedField, GuidedSession } from '/web/store/data/guided'
+import { SagaField, SagaSession } from '/web/store/data/saga'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 import { Card, SolidCard } from '/web/shared/Card'
@@ -32,7 +32,7 @@ import { neat } from '/common/util'
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const SidePane: Component<{ show: (show: boolean) => void }> = (props) => {
-  const state = gameStore((s) => s.state)
+  const state = sagaStore((s) => s.state)
   const [params, setParams] = useSearchParams()
   const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
 
@@ -66,7 +66,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
   return (
     <Switch>
       <Match when={params.pane === 'prompt'}>
-        <GamePane close={closePane} />
+        <SagaPane close={closePane} />
       </Match>
 
       <Match when={params.pane === 'preset'}>
@@ -75,7 +75,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
             footer={setPaneFooter}
             presetId={state.presetId}
             close={closePane}
-            onPresetChanged={(presetId) => gameStore.update({ presetId })}
+            onPresetChanged={(presetId) => sagaStore.update({ presetId })}
           />
         </Convertible>
       </Match>
@@ -83,9 +83,9 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
   )
 }
 
-export const GamePane: Component<{ close: () => void }> = (props) => {
+export const SagaPane: Component<{ close: () => void }> = (props) => {
   let templateRef: HTMLSelectElement
-  const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
+  const state = sagaStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
   const [over, setOver] = createStore<Record<string, string>>(state.state.overrides || {})
   const [store, setState] = createStore({
     errors: [] as string[],
@@ -110,7 +110,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
 
   const loadTemplate = () => {
     console.log(templateRef.value, templateId())
-    gameStore.loadTemplate(templateId())
+    sagaStore.loadTemplate(templateId())
   }
 
   const lists = createMemo(() => {
@@ -134,7 +134,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
   const updateOver = (field: string, value: string) => {
     const next = { ...over, [field]: value }
     setOver(next)
-    gameStore.update({ overrides: next })
+    sagaStore.update({ overrides: next })
   }
 
   const diff = createMemo(() => {
@@ -147,7 +147,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
       const seen: Record<string, boolean> = {}
       const holders: string[] = []
       const errors: string[] = []
-      const newFields: GuidedField[] = []
+      const newFields: SagaField[] = []
 
       const nodes: GuidanceNode[] = []
 
@@ -211,27 +211,27 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
       manual.delete('response')
 
       setState({ errors, seen })
-      gameStore.updateTemplate({ fields: next, lists, manual: Array.from(manual.values()) })
+      sagaStore.updateTemplate({ fields: next, lists, manual: Array.from(manual.values()) })
     })
   )
 
-  const updateName: FormHandler = (ev) => gameStore.updateTemplate({ name: ev.currentTarget.value })
-  const updateInit: FormHandler = (ev) => gameStore.updateTemplate({ init: ev.currentTarget.value })
-  const updateLoop: FormHandler = (ev) => gameStore.updateTemplate({ loop: ev.currentTarget.value })
+  const updateName: FormHandler = (ev) => sagaStore.updateTemplate({ name: ev.currentTarget.value })
+  const updateInit: FormHandler = (ev) => sagaStore.updateTemplate({ init: ev.currentTarget.value })
+  const updateLoop: FormHandler = (ev) => sagaStore.updateTemplate({ loop: ev.currentTarget.value })
   const updateList = (name: string, items: string[]) => {
     const next = { ...state.template.lists }
     next[name] = items
-    gameStore.updateTemplate({ lists: next })
+    sagaStore.updateTemplate({ lists: next })
   }
 
   const updateHistory: FormHandler = (ev) =>
-    gameStore.updateTemplate({ history: ev.currentTarget.value })
+    sagaStore.updateTemplate({ history: ev.currentTarget.value })
 
-  const onFieldChange = (name: string) => (next: Partial<GuidedField>) => {
+  const onFieldChange = (name: string) => (next: Partial<SagaField>) => {
     const fields = state.template.fields.map((prev) =>
       prev.name === name ? { ...prev, ...next } : prev
     )
-    gameStore.updateTemplate({ fields })
+    sagaStore.updateTemplate({ fields })
   }
 
   const bg = 'bg-700'
@@ -239,13 +239,13 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
 
   const Footer = (
     <div class="flex flex-wrap gap-1">
-      <Button onClick={gameStore.createTemplate}>New</Button>
-      <Button onClick={gameStore.saveTemplate}>Save</Button>
+      <Button onClick={sagaStore.createTemplate}>New</Button>
+      <Button onClick={sagaStore.saveTemplate}>Save</Button>
       <Show when={state.template._id !== ''}>
-        <Button onClick={gameStore.saveTemplateCopy}>Copy</Button>
+        <Button onClick={sagaStore.saveTemplateCopy}>Copy</Button>
         <Button onClick={() => exportTemplate(state.template._id)}>Export</Button>
       </Show>
-      <Button onClick={() => gameStore.setState({ showModal: 'import' })}>Import</Button>
+      <Button onClick={() => sagaStore.setState({ showModal: 'import' })}>Import</Button>
     </div>
   )
 
@@ -260,7 +260,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
           <Card bg={bg} bgOpacity={opacity}>
             <div class="font-bold">
               Load Template{' '}
-              <a class="link ml-2 text-sm" onClick={gameStore.createTemplate}>
+              <a class="link ml-2 text-sm" onClick={sagaStore.createTemplate}>
                 New Template
               </a>
             </div>
@@ -292,7 +292,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
             label="Format"
             items={FORMATS}
             value={state.state.format}
-            onChange={(item) => gameStore.update({ format: item.value as any })}
+            onChange={(item) => sagaStore.update({ format: item.value as any })}
           />
         </Card>
 
@@ -314,7 +314,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
             helperMarkdown="How to format your introduction. .\n\nYou can use any field derived from your **Initial Template**."
             placeholder="E.g. {{response}}"
             value={state.template.introduction}
-            onInputText={(ev) => gameStore.updateTemplate({ introduction: ev })}
+            onInputText={(ev) => sagaStore.updateTemplate({ introduction: ev })}
             isMultiline
           />
         </Card>
@@ -327,7 +327,7 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
            You can use any field derived from your templates."
             placeholder="E.g. {{response}}"
             value={state.template.display}
-            onInputText={(ev) => gameStore.updateTemplate({ display: ev })}
+            onInputText={(ev) => sagaStore.updateTemplate({ display: ev })}
             isMultiline
           />
         </Card>
@@ -425,7 +425,7 @@ const ManualField: Component<{
   field: string
   override?: string
   setOverride: (text: string) => void
-  session: GuidedSession
+  session: SagaSession
 }> = (props) => {
   return (
     <div
@@ -449,11 +449,11 @@ const ManualField: Component<{
 }
 
 const Field: Component<{
-  field: GuidedField
-  onChange: (next: Partial<GuidedField>) => void
+  field: SagaField
+  onChange: (next: Partial<SagaField>) => void
   override?: string
   setOverride: (text: string) => void
-  session: GuidedSession
+  session: SagaSession
 }> = (props) => {
   const value = createMemo(() => {
     const name = props.field.name

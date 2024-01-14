@@ -2,7 +2,7 @@ import Modal from '/web/shared/Modal'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { importTemplate } from './util'
 import { toastStore } from '/web/store'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 
 export const ImportTemplate = () => {
   const onChange = async (files: FileInputResult[]) => {
@@ -15,7 +15,7 @@ export const ImportTemplate = () => {
       const parsed = JSON.parse(content)
       importTemplate(parsed)
       toastStore.success('Successfully imported template')
-      gameStore.setState({ showModal: 'none' })
+      sagaStore.setState({ showModal: 'none' })
     } catch (ex: any) {
       toastStore.error(ex.message)
       return
@@ -23,7 +23,7 @@ export const ImportTemplate = () => {
   }
 
   return (
-    <Modal show close={() => gameStore.setState({ showModal: 'none' })} title="Import Template">
+    <Modal show close={() => sagaStore.setState({ showModal: 'none' })} title="Import Template">
       <FileInput fieldName="file" label="Template JSON" onUpdate={onChange} />
     </Modal>
   )

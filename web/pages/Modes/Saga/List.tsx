@@ -1,5 +1,5 @@
 import { Component, For, createEffect, createMemo, onMount } from 'solid-js'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 import { Pill, SolidCard } from '/web/shared/Card'
 import { toDuration, toEntityMap } from '/web/shared/util'
 import PageHeader from '/web/shared/PageHeader'
@@ -11,11 +11,11 @@ import { neat } from '/common/util'
 import Button from '/web/shared/Button'
 import { PlusIcon } from 'lucide-solid'
 
-export const AdventureList: Component = (props) => {
-  const state = gameStore()
+export const SagaList: Component = (props) => {
+  const state = sagaStore()
   const nav = useNavigate()
 
-  onMount(() => gameStore.init())
+  onMount(() => sagaStore.init())
 
   const sessions = createMemo(() => {
     const temps = toEntityMap(state.templates)
@@ -66,7 +66,7 @@ export const AdventureList: Component = (props) => {
     const template = state.templates[0]
     if (!template) return
 
-    gameStore.newSession(template._id)
+    sagaStore.newSession(template._id)
   })
 
   return (
@@ -84,7 +84,7 @@ export const AdventureList: Component = (props) => {
         <div>
           <Button
             onClick={() => {
-              gameStore.createTemplate()
+              sagaStore.createTemplate()
               nav(toSessionUrl('new'))
             }}
           >
@@ -98,8 +98,8 @@ export const AdventureList: Component = (props) => {
             return (
               <a
                 onClick={() => {
-                  if (!sess?._id) gameStore.loadTemplate(template._id)
-                  else gameStore.loadSession(sess._id)
+                  if (!sess?._id) sagaStore.loadTemplate(template._id)
+                  else sagaStore.loadSession(sess._id)
                   nav(url)
                 }}
               >

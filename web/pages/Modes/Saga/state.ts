@@ -1,23 +1,23 @@
 import { neat, now } from '/common/util'
 import { createStore } from '/web/store/create'
-import { GuidedSession, GuidedTemplate, guidedApi } from '/web/store/data/guided'
+import { SagaSession, SagaTemplate, sagaApi } from '/web/store/data/saga'
 import { parseTemplateV2 } from '/common/guidance/v2'
 import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
 import { v4 } from 'uuid'
 import { replaceTags } from '/common/presets/templates'
 
-type GameState = {
-  template: GuidedTemplate
-  state: GuidedSession
-  templates: GuidedTemplate[]
-  sessions: GuidedSession[]
+type SagaState = {
+  template: SagaTemplate
+  state: SagaSession
+  templates: SagaTemplate[]
+  sessions: SagaSession[]
   inited: boolean
   busy: boolean
   showModal: 'help' | 'import' | 'none'
 }
 
-const init: GameState = {
+const init: SagaState = {
   inited: false,
   sessions: [],
   templates: [],
@@ -37,18 +37,18 @@ const init: GameState = {
   },
 }
 
-export const gameStore = createStore<GameState>(
+export const sagaStore = createStore<SagaState>(
   'game',
   init
 )((get, set) => {
   return {
     async *init({ inited }, id?: string) {
       if (!inited) {
-        const templates = await guidedApi.getTemplates()
-        const sessions = await guidedApi.getSessions()
+        const templates = await sagaApi.getTemplates()
+        const sessions = await sagaApi.getSessions()
 
         if (!templates.result.templates.length) {
-          const res = await guidedApi.createTemplate(exampleTemplate())
+          const res = await sagaApi.createTemplate(exampleTemplate())
           if (res.error) {
             toastStore.error(`Could not initialise modes: ${res.error}`)
             return
@@ -67,7 +67,7 @@ export const gameStore = createStore<GameState>(
       }
 
       if (id) {
-        gameStore.loadSession(id)
+        sagaStore.loadSession(id)
       }
     },
     async *loadTemplate({ templates, state }, id: string) {
@@ -100,16 +100,16 @@ export const gameStore = createStore<GameState>(
       }
     },
     saveTemplate: async ({ templates, template: game }) => {
-      const res = await guidedApi.saveTemplate(game)
+      const res = await sagaApi.saveTemplate(game)
       if (res.result) {
         const template = res.result
         const next = templates.filter((t) => t._id !== template._id).concat(template)
         return { template: res.result, templates: next }
       }
     },
-    importTemplate: async ({ templates }, importing: GuidedTemplate) => {
+    importTemplate: async ({ templates }, importing: SagaTemplate) => {
       importing.name = `${importing.name} (imported)`
-      const res = await guidedApi.saveTemplate(importing)
+      const res = await sagaApi.saveTemplate(importing)
       if (res.result) {
         const next = templates.concat(res.result)
         return { templates: next }
@@ -119,7 +119,7 @@ export const gameStore = createStore<GameState>(
       const copy = { ...game }
       copy._id = v4()
       copy.name = `${game.name} (Copy)`
-      const res = await guidedApi.saveTemplate(copy)
+      const res = await sagaApi.saveTemplate(copy)
 
       if (res.result) {
         const template = res.result
@@ -151,9 +151,9 @@ export const gameStore = createStore<GameState>(
       })
       yield { state: session }
     },
-    async *saveSession({ state }, onSave?: (session: GuidedSession) => void) {
+    async *saveSession({ state }, onSave?: (session: SagaSession) => void) {
       const next = { ...state, updated: now() }
-      const res = await guidedApi.saveSession(next)
+      const res = await sagaApi.saveSession(next)
       if (res.result) {
         yield { sessions: res.result.sessions, state: res.result.session }
         onSave?.(res.result.session)
@@ -189,7 +189,7 @@ export const gameStore = createStore<GameState>(
       const game = blankTemplate()
       return { template: game }
     },
-    updateTemplate({ template: game }, update: Partial<GuidedTemplate>) {
+    updateTemplate({ template: game }, update: Partial<SagaTemplate>) {
       const next = { ...game, ...update }
 
       const fields = new Set(next.fields.filter((f) => !!f.list).map((f) => f.list))
@@ -206,7 +206,7 @@ export const gameStore = createStore<GameState>(
       return { template: next }
     },
 
-    update({ state }, update: Partial<GuidedSession>) {
+    update({ state }, update: Partial<SagaSession>) {
       const next = { ...state, ...update, updated: now() }
       return { state: next }
     },
@@ -236,13 +236,13 @@ export const gameStore = createStore<GameState>(
         },
       }
 
-      gameStore.saveSession()
+      sagaStore.saveSession()
     },
     deleteResponse({ state }, index: number) {
       if (!state.responses.length) return
 
       const head = state.responses.slice(0, index)
-      gameStore.update({ responses: head })
+      sagaStore.update({ responses: head })
     },
     async *retry({ state }) {
       if (!state.responses.length) return
@@ -250,8 +250,8 @@ export const gameStore = createStore<GameState>(
       const responses = state.responses.slice(0, -1)
       const last = state.responses.slice(-1)[0]
 
-      gameStore.update({ responses })
-      gameStore.send(`${last.input}`, () => {})
+      sagaStore.update({ responses })
+      sagaStore.send(`${last.input}`, () => {})
     },
 
     async *send({ template, state }, text: string, onSuccess: () => void) {
@@ -346,12 +346,12 @@ export const gameStore = createStore<GameState>(
         busy: false,
         state: Object.assign({}, state, { responses: next }),
       }
-      gameStore.saveSession()
+      sagaStore.saveSession()
     },
   }
 })
 
-function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): GuidedSession {
+function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): SagaSession {
   return {
     _id: v4(),
     format: 'Alpaca',
@@ -363,7 +363,7 @@ function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): G
   }
 }
 
-function blankTemplate(): GuidedTemplate {
+function blankTemplate(): SagaTemplate {
   return {
     _id: v4(),
     name: 'New Template',
@@ -419,7 +419,7 @@ function newTemplate() {
   }
 }
 
-function exampleTemplate(): GuidedTemplate {
+function exampleTemplate(): SagaTemplate {
   return {
     _id: '',
     fields: [],
@@ -493,7 +493,7 @@ function exampleTemplate(): GuidedTemplate {
 
 export function formatResponse(
   template: string,
-  session: GuidedSession,
+  session: SagaSession,
   values: Record<string, any>
 ) {
   let output = template || '{{response}}'
@@ -511,7 +511,7 @@ export function formatResponse(
   return output
 }
 
-function insertPlaceholders(prompt: string, template: GuidedTemplate, values: Record<string, any>) {
+function insertPlaceholders(prompt: string, template: SagaTemplate, values: Record<string, any>) {
   let output = prompt
   for (const manual of template.manual || []) {
     const value = values[manual] || ''
@@ -522,7 +522,7 @@ function insertPlaceholders(prompt: string, template: GuidedTemplate, values: Re
   return output
 }
 
-function sortByAge(left: GuidedSession, right: GuidedSession) {
+function sortByAge(left: SagaSession, right: SagaSession) {
   const l = new Date(left.updated ?? 0).valueOf()
   const r = new Date(right.updated ?? 0).valueOf()
   return r - l

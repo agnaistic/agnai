@@ -12,12 +12,12 @@ import {
   onMount,
 } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
-import { AdventureInput } from './Input'
+import { SagaInput } from './Input'
 import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
-import { formatResponse, gameStore } from './state'
+import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
-import { GuidedResponse, GuidedSession, GuidedTemplate } from '/web/store/data/guided'
+import { SagaResponse, SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import {
@@ -40,8 +40,8 @@ export function toSessionUrl(id: string) {
   return `/mode/preview/${id}${location.search}`
 }
 
-export const AdventureDetail: Component = (props) => {
-  const state = gameStore()
+export const SagaDetail: Component = (props) => {
+  const state = sagaStore()
   const params = useParams()
   const [search, setSearch] = useSearchParams()
 
@@ -51,11 +51,11 @@ export const AdventureDetail: Component = (props) => {
 
   const trimResult = (i: number) => () => {
     const msg = state.state.responses[i]
-    gameStore.updateResponse(i, trim(msg.response))
+    sagaStore.updateResponse(i, trim(msg.response))
   }
 
   onMount(() => {
-    gameStore.init(params.id)
+    sagaStore.init(params.id)
     if (params.id === 'new' && !search.pane) {
       setSearch({ pane: 'prompt' })
     }
@@ -137,7 +137,7 @@ export const AdventureDetail: Component = (props) => {
 
 const LoadModal: Component<{ close: () => void }> = (props) => {
   const nav = useNavigate()
-  const sessions = gameStore((g) => {
+  const sessions = sagaStore((g) => {
     const templates = toMap(g.templates)
     const sessions = g.sessions
       .filter((sess) => sess.gameId in templates === true && !!sess.updated)
@@ -150,7 +150,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
     return sessions
   })
   const load = (id: string) => {
-    gameStore.loadSession(id)
+    sagaStore.loadSession(id)
     nav(toSessionUrl(id))
     props.close()
   }
@@ -170,7 +170,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
   )
 }
 
-const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = (props) => {
+const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (props) => {
   const [_, setParams] = useSearchParams()
   return (
     <div class="flex w-full justify-between rounded-md p-1">
@@ -182,7 +182,7 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
         <Button onClick={() => setParams({ pane: 'preset' })}>
           <Sliders />
         </Button>
-        <Button onClick={() => gameStore.setState({ showModal: 'help' })}>
+        <Button onClick={() => sagaStore.setState({ showModal: 'help' })}>
           <HelpCircle />
         </Button>
       </div>
@@ -191,11 +191,11 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
 }
 
 const Footer: Component<{ load: () => void }> = (props) => {
-  const state = gameStore()
+  const state = sagaStore()
   const params = useParams()
   const nav = useNavigate()
 
-  const onSave = (session: GuidedSession) => {
+  const onSave = (session: SagaSession) => {
     if (session._id !== params.id) {
       nav(toSessionUrl(session._id))
     }
@@ -204,11 +204,11 @@ const Footer: Component<{ load: () => void }> = (props) => {
   return (
     <div class="flex flex-col gap-2">
       <div class="flex gap-2">
-        <Button size="pill" disabled={state.busy} onClick={gameStore.start}>
+        <Button size="pill" disabled={state.busy} onClick={sagaStore.start}>
           {state.state.init ? 'Restart' : 'Start'}
         </Button>
         <Show when={state.state.init}>
-          <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
+          <Button size="pill" onClick={() => sagaStore.newSession(state.template._id)}>
             Reset
           </Button>
         </Show>
@@ -220,7 +220,7 @@ const Footer: Component<{ load: () => void }> = (props) => {
         </Show>
 
         <Show when={state.state.init}>
-          <Button size="pill" onClick={() => gameStore.saveSession(onSave)} disabled={state.busy}>
+          <Button size="pill" onClick={() => sagaStore.saveSession(onSave)} disabled={state.busy}>
             Save
           </Button>
         </Show>
@@ -238,7 +238,7 @@ const Footer: Component<{ load: () => void }> = (props) => {
           )}
         </For>
       </div>
-      <AdventureInput onEnter={gameStore.send} loading={state.busy} />
+      <SagaInput onEnter={sagaStore.send} loading={state.busy} />
     </div>
   )
 }
@@ -257,7 +257,7 @@ const MainMenu = () => {
         <div class="flex flex-col gap-1 p-2">
           <Button onClick={() => setParams({ pane: 'prompt' })}>Prompts</Button>
           <Button onClick={() => setParams({ pane: 'preset' })}>Preset</Button>
-          <Button onClick={() => gameStore.setState({ showModal: 'help' })}>Help</Button>
+          <Button onClick={() => sagaStore.setState({ showModal: 'help' })}>Help</Button>
         </div>
       </DropMenu>
     </>
@@ -269,7 +269,7 @@ const Msg: Component<{
   trim?: () => void
   index?: number
   user?: boolean
-  msg?: GuidedResponse
+  msg?: SagaResponse
   siblings?: number
 }> = (props) => {
   let ref: HTMLDivElement
@@ -302,7 +302,7 @@ const Msg: Component<{
   }
 
   const deleteMsg = () => {
-    gameStore.deleteResponse(props.index!)
+    sagaStore.deleteResponse(props.index!)
   }
 
   const cancel = () => {
@@ -314,9 +314,9 @@ const Msg: Component<{
   const save = () => {
     const candidate = ref.innerText
     if (props.user) {
-      gameStore.updateInput(props.index!, candidate)
+      sagaStore.updateInput(props.index!, candidate)
     } else {
-      gameStore.updateResponse(props.index!, candidate)
+      sagaStore.updateResponse(props.index!, candidate)
     }
     setEdit(false)
   }
@@ -382,7 +382,7 @@ const Msg: Component<{
             <Button
               size="pill"
               schema="clear"
-              onClick={gameStore.retry}
+              onClick={sagaStore.retry}
               classList={{ hidden: editing() }}
             >
               <RefreshCw size={20} />

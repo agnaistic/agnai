@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 import { downloadJson } from '/web/shared/util'
 import { toastStore } from '/web/store'
 import { GuidedTemplate } from '/web/store/data/guided'
@@ -24,7 +24,7 @@ const emptyTemplate: GuidedTemplate = {
 }
 
 export function exportTemplate(id: string) {
-  const { templates } = gameStore.getState()
+  const { templates } = sagaStore.getState()
   const template = templates.find((t) => t._id === id)
 
   if (!template) {
@@ -58,6 +58,6 @@ export function importTemplate(template: any) {
     _id: v4(),
   }
 
-  gameStore.importTemplate(next)
+  sagaStore.importTemplate(next)
   return next
 }
