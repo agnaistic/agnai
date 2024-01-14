@@ -321,19 +321,6 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
 
         <Card bg={bg} bgOpacity={opacity}>
           <TextInput
-            fieldName="responseFormat"
-            label="Response Prompt Format"
-            helperMarkdown="How to format responses for **prompting** (`{{history}}*`).
-          You can use any field derived from your templates."
-            placeholder="E.g. {{response}}"
-            value={state.template.response}
-            onInputText={(ev) => gameStore.updateTemplate({ response: ev })}
-            isMultiline
-          />
-        </Card>
-
-        <Card bg={bg} bgOpacity={opacity}>
-          <TextInput
             fieldName="displayFormat"
             label="Response Display Format (Optional)"
             helperMarkdown="How to display responses for **display** (Uses **Response Prompt Format** if empty)

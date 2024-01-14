@@ -44,7 +44,6 @@ export const AdventureDetail: Component = (props) => {
   const state = gameStore()
   const params = useParams()
   const [search, setSearch] = useSearchParams()
-  const nav = useNavigate()
 
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
@@ -61,12 +60,6 @@ export const AdventureDetail: Component = (props) => {
       setSearch({ pane: 'prompt' })
     }
   })
-
-  const onSave = (session: GuidedSession) => {
-    if (session._id !== params.id) {
-      nav(toSessionUrl(session._id))
-    }
-  }
 
   // PoC auto-image generation
   // createEffect((prev) => {
@@ -94,6 +87,7 @@ export const AdventureDetail: Component = (props) => {
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
+        footer={<Footer load={() => setLoad(true)} />}
         showPane={pane()}
         pane={<SidePane show={setPane} />}
         // split={headerImage()}
@@ -115,11 +109,7 @@ export const AdventureDetail: Component = (props) => {
                   index={i()}
                   siblings={state.state.responses.length}
                   trim={trimResult(i())}
-                  text={formatResponse(
-                    state.template.display || state.template.response || '{{response}}',
-                    state.state,
-                    res
-                  )}
+                  text={formatResponse(state.template.display || '{{response}}', state.state, res)}
                 />
               </>
             )}
@@ -127,46 +117,6 @@ export const AdventureDetail: Component = (props) => {
           <Show when={state.busy}>
             <Loading type="flashing" />
           </Show>
-          <div class="flex gap-2">
-            <Button size="pill" disabled={state.busy} onClick={gameStore.start}>
-              {state.state.init ? 'Restart' : 'Start'}
-            </Button>
-            <Show when={state.state.init}>
-              <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
-                Reset
-              </Button>
-            </Show>
-
-            <Show when={state.sessions.length > 0}>
-              <Button size="pill" onClick={() => setLoad(true)}>
-                Load
-              </Button>
-            </Show>
-
-            <Show when={state.state.init}>
-              <Button
-                size="pill"
-                onClick={() => gameStore.saveSession(onSave)}
-                disabled={state.busy}
-              >
-                Save
-              </Button>
-            </Show>
-            <MainMenu />
-          </div>
-          <div class="flex flex-wrap gap-1">
-            <For each={state.template.fields.filter((f) => f.visible)}>
-              {(field) => (
-                <Label label={field.label || field.name}>
-                  {(state.state.overrides?.[field.name] ||
-                    state.state.responses.slice(-1)[0]?.[field.name]) ??
-                    state.state.init?.[field.name] ??
-                    '...'}
-                </Label>
-              )}
-            </For>
-          </div>
-          <AdventureInput onEnter={gameStore.send} loading={state.busy} />
         </div>
       </ModeDetail>
       <Show when={load()}>
@@ -223,7 +173,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = (props) => {
   const [_, setParams] = useSearchParams()
   return (
-    <div class="bg-800 flex w-full justify-between rounded-md px-1 py-2">
+    <div class="bg-800 flex w-full justify-between rounded-md p-1">
       <div class="flex items-center font-bold">{props.template.name || 'Untitled Template'}</div>
       <div class="flex gap-2">
         <Button onClick={() => setParams({ pane: 'prompt' })}>
@@ -237,6 +187,59 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
         </Button>
       </div>
     </div>
+  )
+}
+
+const Footer: Component<{ load: () => void }> = (props) => {
+  const state = gameStore()
+  const params = useParams()
+  const nav = useNavigate()
+
+  const onSave = (session: GuidedSession) => {
+    if (session._id !== params.id) {
+      nav(toSessionUrl(session._id))
+    }
+  }
+
+  return (
+    <>
+      <div class="flex gap-2">
+        <Button size="pill" disabled={state.busy} onClick={gameStore.start}>
+          {state.state.init ? 'Restart' : 'Start'}
+        </Button>
+        <Show when={state.state.init}>
+          <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
+            Reset
+          </Button>
+        </Show>
+
+        <Show when={state.sessions.length > 0}>
+          <Button size="pill" onClick={props.load}>
+            Load
+          </Button>
+        </Show>
+
+        <Show when={state.state.init}>
+          <Button size="pill" onClick={() => gameStore.saveSession(onSave)} disabled={state.busy}>
+            Save
+          </Button>
+        </Show>
+        <MainMenu />
+      </div>
+      <div class="flex flex-wrap gap-1">
+        <For each={state.template.fields.filter((f) => f.visible)}>
+          {(field) => (
+            <Label label={field.label || field.name}>
+              {(state.state.overrides?.[field.name] ||
+                state.state.responses.slice(-1)[0]?.[field.name]) ??
+                state.state.init?.[field.name] ??
+                '...'}
+            </Label>
+          )}
+        </For>
+      </div>
+      <AdventureInput onEnter={gameStore.send} loading={state.busy} />
+    </>
   )
 }
 

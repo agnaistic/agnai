@@ -25,7 +25,7 @@ export type GuidedTemplate = {
   name: string
   byline: string
   description: string
-  response: string
+  // response: string
   display: string
   introduction: string
   init: string

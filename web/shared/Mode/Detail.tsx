@@ -11,6 +11,7 @@ export const ModeDetail: Component<{
   showPane: boolean
   pane?: JSX.Element
   header?: JSX.Element
+  footer?: JSX.Element
   split?: JSX.Element
 
   /** Percentage of content pane height */
@@ -48,7 +49,7 @@ export const ModeDetail: Component<{
       <Show when={!props.loading}>
         <main class="mx-auto flex w-full justify-between gap-4">
           <div
-            class="chat-detail flex flex-col gap-1 pb-1 xs:flex sm:gap-2 sm:py-2"
+            class="chat-detail flex flex-col gap-1 pb-1 xs:flex sm:gap-2"
             classList={{
               // Chat Width
               'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
@@ -59,7 +60,7 @@ export const ModeDetail: Component<{
             }}
           >
             <header
-              class="hidden h-9 items-center justify-between rounded-md sm:flex"
+              class="hidden items-center justify-between rounded-md sm:flex"
               classList={{ 'sm:flex': !!props.header }}
               style={header()}
             >
@@ -74,7 +75,7 @@ export const ModeDetail: Component<{
                   props.showPane && mode() === 'pane',
               }}
             >
-              <section class="flex h-full w-full flex-col justify-end gap-2 sm:pr-2">
+              <section class="flex h-full w-full flex-col justify-end gap-2">
                 <div
                   ref={(ref) => {
                     slotContainer = ref
@@ -114,6 +115,7 @@ export const ModeDetail: Component<{
                 >
                   {props.children}
                 </section>
+                {props.footer}
               </section>
               {props.pane}
             </section>
