@@ -1,3 +1,4 @@
+import './convertible.scss'
 import { Component, JSX, Show, Switch } from 'solid-js'
 import { X } from 'lucide-solid'
 import { useBgStyle, usePane } from '../../shared/hooks'
@@ -56,16 +57,24 @@ const WithinPage: Component<PartialProps> = (props) => {
       <Match when={paneOrPopup() === 'pane'}>
         <div
           data-pane
-          class="hidden w-full min-w-[448px] max-w-[650px] overflow-y-auto py-3 xs:block"
+          class="convertible-pane w-full min-w-[448px] max-w-[650px] overflow-y-auto"
           style={rightPaneBgStyles()}
         >
-          <div onClick={props.close} class="sticky top-0 float-right cursor-pointer">
-            <div class="ml-[-32px]">
-              <X />
-            </div>
+          <div style={{ 'grid-area': 'title' }} class="pl-2">
+            {props.title ?? <PageHeader title={props.title} subPage />}
           </div>
-          <div class="pl-2">{props.title ?? <PageHeader title={props.title} subPage />}</div>
-          <div class="px-2">{body}</div>
+          <div style={{ 'grid-area': 'content' }} class="overflow-y-auto px-2">
+            <div
+              // style={{ 'grid-area': 'header' }}
+              class="sticky top-0 float-right"
+              onClick={props.close}
+            >
+              <div class="ml-[-32px] cursor-pointer">
+                <X />
+              </div>
+            </div>
+            {body}
+          </div>
           <Footer>{props.footer}</Footer>
         </div>
       </Match>
@@ -79,7 +88,7 @@ const WithinPage: Component<PartialProps> = (props) => {
 }
 
 const Footer: Component<{ children: JSX.Element }> = (props) => (
-  <div class={`sticky bottom-0 mr-2 mt-4 text-right`}>
+  <div style={{ 'grid-area': 'footer' }} class={`flex justify-end`}>
     <Card class="inline-flex justify-end gap-2" bg="bg-900" bgOpacity={1}>
       {props.children}
     </Card>

@@ -173,7 +173,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = (props) => {
   const [_, setParams] = useSearchParams()
   return (
-    <div class="bg-800 flex w-full justify-between rounded-md p-1">
+    <div class="flex w-full justify-between rounded-md p-1">
       <div class="flex items-center font-bold">{props.template.name || 'Untitled Template'}</div>
       <div class="flex gap-2">
         <Button onClick={() => setParams({ pane: 'prompt' })}>
@@ -202,7 +202,7 @@ const Footer: Component<{ load: () => void }> = (props) => {
   }
 
   return (
-    <>
+    <div class="flex flex-col gap-2">
       <div class="flex gap-2">
         <Button size="pill" disabled={state.busy} onClick={gameStore.start}>
           {state.state.init ? 'Restart' : 'Start'}
@@ -239,7 +239,7 @@ const Footer: Component<{ load: () => void }> = (props) => {
         </For>
       </div>
       <AdventureInput onEnter={gameStore.send} loading={state.busy} />
-    </>
+    </div>
   )
 }
 

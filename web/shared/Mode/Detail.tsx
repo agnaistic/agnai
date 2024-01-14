@@ -1,3 +1,4 @@
+import './mode.scss'
 import { Component, JSX, Match, Show, Switch, createEffect, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { chatStore, settingStore, userStore } from '/web/store'
@@ -47,80 +48,85 @@ export const ModeDetail: Component<{
       </Show>
 
       <Show when={!props.loading}>
-        <main class="mx-auto flex w-full justify-between gap-4">
-          <div
-            class="chat-detail flex flex-col gap-1 pb-1 xs:flex sm:gap-2"
-            classList={{
-              // Chat Width
-              'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
-              'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
-              // Chat Margin
-              'xs:mr-auto mx-auto': props.showPane,
-              'mx-auto': !props.showPane,
-            }}
-          >
-            <header
+        <section class="mode">
+          <header class="flex flex-col gap-2" style={{ 'grid-area': 'header' }}>
+            <div
               class="hidden items-center justify-between rounded-md sm:flex"
               classList={{ 'sm:flex': !!props.header }}
               style={header()}
             >
               {props.header}
-            </header>
-
-            <section
-              class="flex w-full flex-row justify-end gap-1 overflow-y-auto"
-              classList={{
-                'justify-center': !props.showPane || mode() === 'popup',
-                'justify-end gap-1 justify-self-center flex-row flex':
-                  props.showPane && mode() === 'pane',
+            </div>
+            <div
+              ref={(ref) => {
+                slotContainer = ref
+                slots.load(ref)
               }}
+              class="sticky top-0 flex h-fit w-full justify-center"
+              classList={{ hidden: cfg.config.tier?.disableSlots }}
             >
-              <section class="flex h-full w-full flex-col justify-end gap-2">
-                <div
-                  ref={(ref) => {
-                    slotContainer = ref
-                    slots.load(ref)
-                  }}
-                  class="sticky top-0 flex h-fit w-full justify-center"
-                  classList={{ hidden: cfg.config.tier?.disableSlots }}
-                >
-                  <Switch>
-                    <Match when={slots.size().w === 0}>{null}</Match>
-                    <Match when={slotContainer!}>
-                      <Slot sticky="always" slot="leaderboard" parent={slotContainer!} />
-                    </Match>
-                  </Switch>
-                </div>
+              <Switch>
+                <Match when={slots.size().w === 0}>{null}</Match>
+                <Match when={slotContainer!}>
+                  <Slot sticky="always" slot="leaderboard" parent={slotContainer!} />
+                </Match>
+              </Switch>
+            </div>
 
-                <Show when={!!props.split}>
-                  <section
-                    data-avatar-container
-                    class="flex items-end justify-center"
-                    style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
-                  >
-                    {props.split}
-                  </section>
-                </Show>
-
-                <section
-                  data-messages
-                  class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"
-                  classList={{
-                    'max-w-6xl': width() === 'xl',
-                    'max-w-7xl': width() === '2xl',
-                    'max-w-8xl': width() === '3xl',
-                    'max-w-none': width() === 'fill',
-                    'max-w-5xl': width() === 'fill' || width() === 'narrow' || !width(),
-                  }}
-                >
-                  {props.children}
-                </section>
-                {props.footer}
+            <Show when={!!props.split}>
+              <section
+                data-avatar-container
+                class="flex items-end justify-center"
+                style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
+              >
+                {props.split}
               </section>
-              {props.pane}
+            </Show>
+          </header>
+
+          <section
+            style={{ 'grid-area': 'content' }}
+            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto"
+            classList={{
+              'justify-center': !props.showPane || mode() === 'popup',
+              'justify-end gap-1 justify-self-center flex-row flex':
+                props.showPane && mode() === 'pane',
+            }}
+          >
+            <section class="flex h-full w-full justify-end gap-2">
+              <section
+                data-messages
+                class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"
+                classList={{
+                  'max-w-6xl': width() === 'xl',
+                  'max-w-7xl': width() === '2xl',
+                  'max-w-8xl': width() === '3xl',
+                  'max-w-none': width() === 'fill',
+                  'max-w-5xl': width() === 'fill' || width() === 'narrow' || !width(),
+                }}
+                // classList={{
+                //   // Chat Width
+                //   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
+                //   'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
+                //   // Chat Margin
+                //   'xs:mr-auto mx-auto': props.showPane,
+                //   'mx-auto': !props.showPane,
+                // }}
+              >
+                {props.children}
+              </section>
             </section>
-          </div>
-        </main>
+          </section>
+
+          <footer style={{ 'grid-area': 'footer' }}>{props.footer}</footer>
+          <section
+            class="pane ml-2"
+            style={{ 'grid-area': 'pane' }}
+            classList={{ hidden: !props.pane }}
+          >
+            {props.pane}
+          </section>
+        </section>
       </Show>
     </>
   )

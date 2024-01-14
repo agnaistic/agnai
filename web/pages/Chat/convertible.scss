@@ -1,0 +1,14 @@
+.convertible-pane {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    'header'
+    'title'
+    'content'
+    'footer';
+}
