@@ -7,7 +7,7 @@ import { useNavigate, useParams } from '@solidjs/router'
 import { announceStore, toastStore } from '/web/store'
 import { elapsedSince, now } from '/common/util'
 import { Toggle } from '/web/shared/Toggle'
-import { getStrictForm } from '/web/shared/util'
+import { getStrictForm, toLocalTime } from '/web/shared/util'
 import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
@@ -196,16 +196,4 @@ const Announcement: Component<{}> = (props) => {
       </form>
     </>
   )
-}
-
-function toLocalTime(date: string) {
-  const d = new Date(date)
-  const Y = d.getFullYear()
-  const M = (d.getMonth() + 1).toString().padStart(2, '0')
-  const D = d.getDate().toString().padStart(2, '0')
-
-  const h = d.getHours().toString().padStart(2, '0')
-  const m = d.getMinutes().toString().padStart(2, '0')
-
-  return `${Y}-${M}-${D}T${h}:${m}`
 }

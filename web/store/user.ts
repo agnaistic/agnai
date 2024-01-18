@@ -60,7 +60,11 @@ export type UserState = {
       activeAt: string
     }
   }
-  sub?: { level: number; type: 'native' | 'patreon'; tier: AppSchema.SubscriptionTier }
+  sub?: {
+    level: number
+    type: AppSchema.SubscriptionType
+    tier: AppSchema.SubscriptionTier
+  }
 }
 
 export const userStore = createStore<UserState>(

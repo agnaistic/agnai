@@ -20,6 +20,13 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
       tierId,
     })
     switch (ev.type) {
+      // We don't alter the aggregate here, admin-manual events are purely for record keeping
+      case 'admin-manual': {
+        return {
+          ...prev,
+          history,
+        }
+      }
       case 'admin-subscribe':
       case 'subscribed': {
         return {
@@ -38,7 +45,12 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
         endAt.setFullYear(meta.timestamp.getFullYear())
         endAt.setMonth(meta.timestamp.getMonth() + 1)
         if (endAt.valueOf() > Date.now()) {
-          return { state: 'active', cancelledAt: meta.timestamp, downgrade: undefined, history }
+          return {
+            state: 'active',
+            cancelledAt: meta.timestamp,
+            downgrade: prev.downgrade,
+            history,
+          }
         }
 
         return {

@@ -15,6 +15,7 @@ type UserInfo = {
   state: SubsAgg
   username: string
   sub: AppSchema.User['sub']
+  manualSub: AppSchema.User['manualSub']
   billing: AppSchema.User['billing']
   patreon: AppSchema.User['patreon']
   stripeSessions?: string[]
@@ -114,10 +115,19 @@ export const adminStore = createStore<AdminState>('admin', {
       if (res.error) toastStore.error(`Failed to update user: ${res.error}`)
       if (res.result) toastStore.success(`User updated`)
     },
-    async manualSubscription(_, userId: string, subscriptionId: string) {
+    async assignSubscription(_, userId: string, subscriptionId: string) {
       const res = await api.post(`/admin/billing/subscribe/admin-manual`, {
         userId,
         subscriptionId,
+      })
+      if (res.error) toastStore.error(res.error)
+      if (res.result) toastStore.success(`Successfully assigned subscription`)
+    },
+    async assignGift(_, userId: string, tierId: string, expiresAt: Date) {
+      const res = await api.post(`/admin/billing/subscribe/admin-gift`, {
+        userId,
+        tierId,
+        expiresAt: expiresAt.toISOString(),
       })
       if (res.error) toastStore.error(res.error)
       if (res.result) toastStore.success(`Successfully assigned subscription`)

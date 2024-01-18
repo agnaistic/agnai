@@ -61,7 +61,7 @@ export const viewSession = handle(async ({ body }) => {
   return session
 })
 
-export const manualSubscribe = handle(async ({ body, log }) => {
+export const assignSubscription = handle(async ({ body, log }) => {
   assertValid({ subscriptionId: 'string', userId: 'string' }, body)
 
   const subscription = await stripe.subscriptions.retrieve(body.subscriptionId)
