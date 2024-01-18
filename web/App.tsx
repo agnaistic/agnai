@@ -168,7 +168,7 @@ const Layout: Component = () => {
   })
 
   const isChat = createMemo(() => {
-    return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/mode/')
+    return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
 
   const bg = createMemo(() => {

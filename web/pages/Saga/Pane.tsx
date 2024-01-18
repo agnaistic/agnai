@@ -23,20 +23,20 @@ import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 import { Card, SolidCard } from '/web/shared/Card'
 import { exportTemplate } from './util'
-import { useSearchParams } from '@solidjs/router'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { FormLabel } from '/web/shared/FormLabel'
 import { neat } from '/common/util'
+import { usePaneManager } from '/web/shared/hooks'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const SidePane: Component<{ show: (show: boolean) => void }> = (props) => {
   const state = sagaStore((s) => s.state)
-  const [params, setParams] = useSearchParams()
   const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
+  const pane = usePaneManager()
 
-  const closePane = () => setParams({ pane: '' })
+  const closePane = () => pane.update()
 
   const updatePane = (pane: string) => {
     switch (pane) {
@@ -48,28 +48,21 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
 
     props.show(false)
   }
-
-  onMount(() => {
-    updatePane(params.pane)
+  createEffect(() => {
+    updatePane(pane.pane())
   })
 
-  createEffect(
-    on(
-      () => params.pane,
-      () => {
-        const pane = params.pane
-        updatePane(pane)
-      }
-    )
-  )
+  onMount(() => {
+    updatePane(pane.pane())
+  })
 
   return (
     <Switch>
-      <Match when={params.pane === 'prompt'}>
+      <Match when={pane.pane() === 'prompt'}>
         <SagaPane close={closePane} />
       </Match>
 
-      <Match when={params.pane === 'preset'}>
+      <Match when={pane.pane() === 'preset'}>
         <Convertible close={closePane} footer={paneFooter()}>
           <ModeGenSettings
             footer={setPaneFooter}

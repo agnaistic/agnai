@@ -139,17 +139,19 @@ export const sagaStore = createStore<SagaState>(
       const next = state.responses.map((m, i) => (index === i ? msg : m))
       return { state: { ...state, responses: next } }
     },
-    async *newSession({ state }, templateId: string) {
+    async *newSession({ state }, templateId: string, onSuccess?: (id: string) => void) {
       const init = state.gameId === templateId ? state.init : undefined
+      const id = v4()
       const session = blankSession(templateId, {
         init,
         gameId: state.gameId,
         format: state.format,
         responses: [],
         overrides: state.overrides,
-        _id: 'new',
+        _id: id,
       })
       yield { state: session }
+      onSuccess?.(id)
     },
     async *saveSession({ state }, onSave?: (session: SagaSession) => void) {
       const next = { ...state, updated: now() }

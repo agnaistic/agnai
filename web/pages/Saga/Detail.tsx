@@ -208,7 +208,10 @@ const Footer: Component<{ load: () => void }> = (props) => {
           {state.state.init ? 'Restart' : 'Start'}
         </Button>
         <Show when={state.state.init}>
-          <Button size="pill" onClick={() => sagaStore.newSession(state.template._id)}>
+          <Button
+            size="pill"
+            onClick={() => sagaStore.newSession(state.template._id, (id) => nav(toSessionUrl(id)))}
+          >
             Reset
           </Button>
         </Show>
