@@ -297,6 +297,10 @@ export async function validateSubscription(user: AppSchema.User) {
   const { type, tier, level } = sub
   if (!tier.enabled) return tier.level ?? -1
 
+  if (type === 'manual') {
+    return sub.level
+  }
+
   if (type === 'patreon') {
     if (!user.patreon) return -1
 

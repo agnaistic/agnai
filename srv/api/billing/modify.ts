@@ -5,6 +5,7 @@ import { resyncSubscription, stripe } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 import { domain } from '/srv/domains'
 import { getSafeUserConfig } from '../user/settings'
+import { getCachedTiers } from '/srv/db/subscriptions'
 
 export const modifySubscription = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string' }, body)
@@ -94,4 +95,46 @@ export const subscriptionStatus = handle(async ({ userId, params, user }) => {
     downgrading: agg.downgrade,
     customerId: agg.customerId,
   }
+})
+
+export const adminGift = handle(async ({ userId, body, params }) => {
+  assertValid({ tierId: 'string', expiresAt: 'string', userId: 'string' }, body)
+
+  const user = await store.users.getUser(body.userId)
+  if (!user) {
+    throw new StatusError('User not found', 404)
+  }
+
+  if (!body.tierId) {
+    await subsCmd.adminManual(body.userId, {
+      byAdminId: userId,
+      expiresAt: '',
+      tierId: '',
+    })
+
+    await store.users.updateUser(body.userId, { manualSub: null as any })
+
+    return { success: true }
+  }
+
+  const tier = getCachedTiers().find((t) => t._id === body.tierId)
+  if (!tier) {
+    throw new StatusError('Tier not found', 404)
+  }
+
+  await subsCmd.adminManual(body.userId, {
+    byAdminId: userId,
+    expiresAt: body.expiresAt,
+    tierId: body.tierId,
+  })
+
+  await store.users.updateUser(body.userId, {
+    manualSub: {
+      expiresAt: body.expiresAt,
+      level: tier.level,
+      tierId: tier._id,
+    },
+  })
+
+  return { success: true }
 })

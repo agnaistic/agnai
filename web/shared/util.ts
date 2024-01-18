@@ -63,6 +63,14 @@ export const storage = {
   test,
 }
 
+export function isExpired(date?: string | Date) {
+  if (!date) return true
+  const comp = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(comp.valueOf())) return true
+
+  return Date.now() >= comp.valueOf()
+}
+
 async function getItem(key: string): Promise<string | null> {
   try {
     return lf.getItem(key)
@@ -708,4 +716,16 @@ export function isUsableService(
   }
 
   return false
+}
+
+export function toLocalTime(date: string) {
+  const d = new Date(date)
+  const Y = d.getFullYear()
+  const M = (d.getMonth() + 1).toString().padStart(2, '0')
+  const D = d.getDate().toString().padStart(2, '0')
+
+  const h = d.getHours().toString().padStart(2, '0')
+  const m = d.getMinutes().toString().padStart(2, '0')
+
+  return `${Y}-${M}-${D}T${h}:${m}`
 }

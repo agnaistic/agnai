@@ -176,6 +176,8 @@ export namespace AppSchema {
     avatar?: string
   }
 
+  export type SubscriptionType = 'native' | 'patreon' | 'manual'
+
   export interface User {
     _id: string
 
@@ -238,10 +240,16 @@ export namespace AppSchema {
     ui?: UISettings
 
     sub?: {
-      type?: 'native' | 'patreon' | 'manual'
+      type?: SubscriptionType
       tierId: string
       level: number
       last?: string
+    }
+
+    manualSub?: {
+      tierId: string
+      level: number
+      expiresAt: string
     }
 
     patreonUserId?: string | null

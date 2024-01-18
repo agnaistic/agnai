@@ -23,6 +23,7 @@ export type SubsEvt =
       priceId: string
       periodStart: string
     }
+  | { type: 'admin-manual'; tierId: string; expiresAt: string; byAdminId: string }
 
 export type SubsCmd =
   | {
@@ -47,6 +48,7 @@ export type SubsCmd =
       productId: string
       subscription: Stripe.Subscription
     }
+  | { type: 'adminManual'; tierId: string; expiresAt: string; byAdminId: string }
 
 export type SubsAgg = {
   state: 'active' | 'cancelled' | 'cancelling' | 'new'

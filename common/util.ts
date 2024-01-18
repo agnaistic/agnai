@@ -293,9 +293,15 @@ export function deepClone<T extends object>(obj: T): T {
   return copy
 }
 
-export function getUserSubscriptionTier(user: AppSchema.User, tiers: AppSchema.SubscriptionTier[]) {
+export function getUserSubscriptionTier(
+  user: Pick<AppSchema.User, 'patreon' | 'billing' | 'sub' | 'manualSub' | '_id' | 'username'>,
+  tiers: AppSchema.SubscriptionTier[]
+) {
   let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
   let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
+
+  const manualId = !isExpired(user.manualSub?.expiresAt) ? user.manualSub?.tierId : null
+  let manualTier = manualId ? tiers.find((t) => t._id === manualId) : undefined
 
   const nativeExpired = isExpired(user.billing?.validUntil) || user.billing?.status === 'cancelled'
   const patronExpired =
@@ -310,21 +316,17 @@ export function getUserSubscriptionTier(user: AppSchema.User, tiers: AppSchema.S
     patronTier = undefined
   }
 
-  if (!nativeTier && !patronTier) return
+  if (!nativeTier && !patronTier && !manualTier) return
 
-  if (!nativeTier || !patronTier) {
-    const tier = nativeTier || patronTier
-    const level = tier!.level
-    const type: 'native' | 'patreon' = nativeTier ? 'native' : 'patreon'
+  const highest = getHighestTier(
+    { source: 'native', tier: nativeTier },
+    { source: 'patreon', tier: patronTier },
+    { source: 'manual', tier: manualTier }
+  )
 
-    return { tier: tier!, level, type }
-  }
-
-  const type: 'native' | 'patreon' = nativeTier.level >= patronTier.level ? 'native' : 'patreon'
-  const tier = type === 'native' ? nativeTier : patronTier
-  const level = tier.level
-
-  return { type, tier, level }
+  const result = { type: highest.source, tier: highest.tier, level: highest.tier.level }
+  console.log(user.username, result.type, result.level)
+  return result
 }
 
 function isExpired(expiresAt?: string) {
@@ -340,4 +342,11 @@ export function isPastDate(date: Date | string) {
 
   if (Date.now() > ms) return true
   return false
+}
+
+function getHighestTier(
+  ...tiers: Array<{ source: AppSchema.SubscriptionType; tier?: AppSchema.SubscriptionTier }>
+): { source: AppSchema.SubscriptionType; tier: AppSchema.SubscriptionTier } {
+  const sorted = tiers.filter((t) => !!t.tier).sort((l, r) => r.tier!.level - l.tier!.level)
+  return sorted[0] as any
 }

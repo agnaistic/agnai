@@ -96,4 +96,12 @@ export const subsCmd = createCommands<SubsEvt, SubsAgg, SubsCmd>(domain.subscrip
 
     return { type: 'cancelled' }
   },
+  async adminManual(cmd, agg) {
+    return {
+      type: 'admin-manual',
+      tierId: cmd.tierId,
+      byAdminId: cmd.byAdminId,
+      expiresAt: cmd.expiresAt,
+    }
+  },
 })
