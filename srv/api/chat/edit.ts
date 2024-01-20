@@ -132,20 +132,21 @@ export const swapMessage = handle(async ({ body, log, params, userId }) => {
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     message: update.msg || prev.msg.msg,
-    translatedMessage: update.translateMsg,
+    translatedMessage: update.translatedMsg,
     extras: body.extras || prev.msg.extras,
   })
 
   return message
 })
 
-export const updateMessageProps = handle(async ({ body, params, userId }) => {
+export const updateMessageProps = handle(async ({ body, log, params, userId }) => {
   assertValid(
     { imagePrompt: 'string?', msg: 'string?', extras: ['string?'], retries: ['string?'] },
     body
   )
 
   const prev = await store.chats.getMessageAndChat(params.id)
+  const translation = await store.users.getTranslation(userId)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
