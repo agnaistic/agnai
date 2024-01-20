@@ -11,6 +11,7 @@ import { getStrictForm, toLocalTime } from '/web/shared/util'
 import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { AnnoucementPage as default }
 
@@ -31,6 +32,8 @@ const AnnoucementPage: Component = () => {
 }
 
 const AnnoucementList: Component = (props) => {
+  const [t] = useTransContext()
+
   const state = announceStore()
   const nav = useNavigate()
 
@@ -48,10 +51,10 @@ const AnnoucementList: Component = (props) => {
 
   return (
     <>
-      <PageHeader title="Manage Announcements" />
+      <PageHeader title={t('manage_announcements')} />
       <div class="flex w-full justify-end">
         <Button onClick={() => nav('/admin/announcements/new')}>
-          Create <Plus />
+          {t('create')} <Plus />
         </Button>
       </div>
 
@@ -71,21 +74,21 @@ const AnnoucementList: Component = (props) => {
               >
                 <div class="font-bold">{item.title}</div>
                 <div class="flex gap-1">
-                  <Pill>Created: {new Date(item.showAt).toLocaleString()}</Pill>
-                  <Pill>{elapsedSince(new Date(item.showAt))} ago</Pill>
+                  <Pill>{t('created_x', { time: new Date(item.showAt).toLocaleString() })}</Pill>
+                  <Pill>{t('x_ago', { time: elapsedSince(new Date(item.showAt)) })}</Pill>
                   {Label(item)}
                 </div>
               </div>
               <div class="flex min-w-fit gap-2">
                 <Show when={!item.hide}>
                   <Button onClick={() => hide(item._id)}>
-                    <Eye /> Hide
+                    <Eye /> {t('hide')}
                   </Button>
                 </Show>
 
                 <Show when={item.hide}>
                   <Button schema="gray" onClick={() => unhide(item._id)}>
-                    <EyeOff /> Unhide
+                    <EyeOff /> {t('unhide')}
                   </Button>
                 </Show>
               </div>
@@ -98,15 +101,19 @@ const AnnoucementList: Component = (props) => {
 }
 
 function Label(item: AppSchema.Announcement) {
+  const [t] = useTransContext()
+
   const date = new Date(item.showAt)
 
-  if (item.deletedAt) return <Pill type="rose">Deleted</Pill>
-  if (item.hide) return <Pill type="coolgray">Hidden</Pill>
-  if (date.valueOf() >= Date.now()) return <Pill type="premium">Pending</Pill>
-  return <Pill type="green">Active</Pill>
+  if (item.deletedAt) return <Pill type="rose">{t('deleted')}</Pill>
+  if (item.hide) return <Pill type="coolgray">{t('hidden')}</Pill>
+  if (date.valueOf() >= Date.now()) return <Pill type="premium">{t('pending')}</Pill>
+  return <Pill type="green">{t('active')}</Pill>
 }
 
 const Announcement: Component<{}> = (props) => {
+  const [t] = useTransContext()
+
   let ref: HTMLFormElement
 
   const nav = useNavigate()
@@ -132,7 +139,7 @@ const Announcement: Component<{}> = (props) => {
 
     const showAt = new Date(body.showAt)
     if (isNaN(showAt.valueOf())) {
-      toastStore.error(`"Display At" is required`)
+      toastStore.error(t('display_at_is_required'))
       return
     }
 
@@ -149,29 +156,29 @@ const Announcement: Component<{}> = (props) => {
 
   return (
     <>
-      <PageHeader title="Announcement" />
+      <PageHeader title={t('announcement')} />
 
       <form ref={ref!} class="flex flex-col gap-2">
-        <TextInput fieldName="id" disabled value={params.id} label="ID" />
+        <TextInput fieldName="id" disabled value={params.id} label={t('id')} />
 
         <TextInput
           fieldName="title"
-          label="Title"
+          label={t('title')}
           value={state.item?.title}
           onInput={(ev) => setTitle(ev.currentTarget.value)}
         />
         <TextInput
           fieldName="content"
-          label="Content"
+          label={t('content')}
           value={state.item?.content}
           isMultiline
           class="min-h-[80px]"
           onInput={(ev) => setContent(ev.currentTarget.value)}
         />
-        <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
+        <Toggle fieldName="hide" label={t('hide_announcement')} value={state.item?.hide} />
         <TextInput
           type="datetime-local"
-          label="Display At"
+          label={t('display_at')}
           fieldName="showAt"
           value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
           onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
@@ -179,14 +186,14 @@ const Announcement: Component<{}> = (props) => {
 
         <div class="flex justify-end gap-2">
           <Button onClick={onSave}>
-            <Save /> {params.id === 'new' ? 'Create' : 'Update'}
+            <Save /> {params.id === 'new' ? t('create') : t('update')}
           </Button>
         </div>
 
         <div class="w-full rounded-md border-[1px] border-[var(--bg-600)] sm:w-1/2">
           <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
             <div class="text-lg font-bold">{title()}</div>
-            <div class="text-700 text-xs">{elapsedSince(showAt())} ago</div>
+            <div class="text-700 text-xs">{t('x_ago', { time: t(elapsedSince(showAt())) })}</div>
           </div>
           <div
             class="rendered-markdown bg-900 rounded-b-md p-2"

@@ -10,6 +10,7 @@ import { settingStore, userStore } from '../store'
 import { isUsableService } from './util'
 import { defaultPresets } from '/common/default-preset'
 import { isDefaultPreset } from '/common/presets'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -20,6 +21,8 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [filter, setFilter] = createSignal('')
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
@@ -63,24 +66,24 @@ export const PresetSelect: Component<{
       <Modal
         show={showSelectModal()}
         close={() => setShowSelectModal(false)}
-        title="Choose a preset"
+        title={t('choose_a_preset')}
       >
         <div class="flex flex-col gap-4">
           <div class="sticky top-0">
             <TextInput
               fieldName="__filter"
-              placeholder="Type to filter presets..."
+              placeholder={t('type_to_filter_presets')}
               onKeyUp={(e) => setFilter(e.currentTarget.value)}
             />
           </div>
           <div class="flex flex-wrap gap-2 pr-3">
-            <h4>Custom presets</h4>
+            <h4>{t('custom_presets')}</h4>
             <OptionList
               options={custom()}
               onSelect={selectIdAndCloseModal}
               selected={props.selected}
             />
-            <h4>Built-in presets</h4>
+            <h4>{t('built_in_presets')}</h4>
             <OptionList
               options={builtin()}
               onSelect={selectIdAndCloseModal}
@@ -105,8 +108,10 @@ export const PresetSelect: Component<{
         <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
       </Show>
 
-      <Button onClick={() => setShowSelectModal(true)} class="w-fit">
-        Selected: <strong>{selectedLabel()}</strong>
+      <Button onClick={() => setShowSelectModal(true)}>
+        <Trans key="selected_x" options={{ name: selectedLabel() }}>
+          Selected: <strong>{'{{name}}'}</strong>
+        </Trans>
       </Button>
 
       {props.warning ?? <></>}

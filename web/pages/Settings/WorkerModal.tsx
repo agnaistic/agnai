@@ -6,12 +6,15 @@ import Modal from '../../shared/Modal'
 import MultiDropdown from '../../shared/MultiDropdown'
 import { settingStore, userStore } from '../../store'
 import { Option } from '../../shared/Select'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const WorkerModal: Component<{
   show: boolean
   close: () => void
   save: (items: Option[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const cfg = settingStore((s) => ({
     workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
   }))
@@ -34,14 +37,14 @@ const WorkerModal: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Specify AI Horde Workers"
+      title={t('specify_ai_horde_workers')}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+            <X /> {t('cancel')}
           </Button>
           <Button onClick={save}>
-            <Save /> Select Workers
+            <Save /> {t('select_workers')}
           </Button>
         </>
       }
@@ -50,17 +53,19 @@ const WorkerModal: Component<{
         <MultiDropdown
           fieldName="workers"
           items={cfg.workers}
-          label="Select Workers"
-          helperText="To use any worker de-select all workers"
+          label={t('select_workers')}
+          helperText={t('to_use_any_worker_deselect_all_workers')}
           onChange={setSelected}
           values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
         />
         <div class="flex items-center justify-between gap-4">
           <div>
-            Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}
+            {t('workers_selected_x', {
+              workers: selected()?.length || state.user?.hordeWorkers?.length || '0',
+            })}
           </div>
           <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-            De-select All
+            {t('deselect_all')}
           </Button>
         </div>
       </div>

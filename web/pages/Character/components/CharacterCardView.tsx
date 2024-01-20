@@ -7,6 +7,7 @@ import { getAssetUrl } from '/web/shared/util'
 import { Copy, Download, Edit, Menu, MessageCircle, Star, Trash, VenetianMask } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const CharacterCardView: Component<ViewProps> = (props) => {
   return (
@@ -42,6 +43,8 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
 }
 
 const Character: Component<CardProps> = (props) => {
+  const [t] = useTransContext()
+
   const [opts, setOpts] = createSignal(false)
   const nav = useNavigate()
 
@@ -114,14 +117,14 @@ const Character: Component<CardProps> = (props) => {
                 alignLeft
               >
                 <Show when={props.char.favorite}>
-                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+                  <Star class="text-900 fill-[var(--text-900)]" /> {t('unfavorite')}
                 </Show>
                 <Show when={!props.char.favorite}>
-                  <Star /> Favorite
+                  <Star /> {t('favorite')}
                 </Show>
               </Button>
               <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
-                <MessageCircle /> Chat
+                <MessageCircle /> {t('chat')}
               </Button>
               <Button
                 alignLeft
@@ -131,17 +134,17 @@ const Character: Component<CardProps> = (props) => {
                   props.download()
                 }}
               >
-                <Download /> Download
+                <Download /> {t('download')}
               </Button>
               <Button alignLeft onClick={props.edit} size="sm">
-                <Edit /> Edit
+                <Edit /> {t('edit')}
               </Button>
               <Button
                 alignLeft
                 onClick={() => nav(`/character/create/${props.char._id}`)}
                 size="sm"
               >
-                <Copy /> Duplicate
+                <Copy /> {t('duplicate')}
               </Button>
               <Button
                 alignLeft
@@ -152,7 +155,7 @@ const Character: Component<CardProps> = (props) => {
                   props.delete()
                 }}
               >
-                <Trash /> Delete
+                <Trash /> {t('delete')}
               </Button>
             </div>
           </DropMenu>

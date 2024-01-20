@@ -9,12 +9,15 @@ import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import EmbedContent from '../../Memory/EmbedContent'
 import { A } from '@solidjs/router'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
   close: () => void
   footer?: (children: JSX.Element) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = memoryStore((s) => ({
     books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
@@ -77,11 +80,11 @@ const ChatMemoryModal: Component<{
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
-        Close
+        {t('close')}
       </Button>
       <Button disabled={id() === ''} type="submit" onClick={onSubmit}>
         <Save />
-        Save Memory Book
+        {t('save_memory_book')}
       </Button>
     </>
   )
@@ -100,15 +103,15 @@ const ChatMemoryModal: Component<{
     <>
       <div class="flex gap-4">
         <A class="link" href="/guides/memory">
-          Memory Guide
+          {t('memory_guide')}
         </A>
       </div>
       <div class="flex flex-col gap-2">
         <Select
           fieldName="memoryId"
-          label="Chat Memory Book"
-          helperText="The memory book your chat will use"
-          items={[{ label: 'None', value: '' }].concat(state.items)}
+          label={t('chat_memory_book')}
+          helperText={t('the_memory_book_your_chat_will_use')}
+          items={[{ label: t('none'), value: '' }].concat(state.items)}
           value={id()}
           onChange={(item) => {
             changeBook(item.value)
@@ -116,15 +119,15 @@ const ChatMemoryModal: Component<{
           }}
         />
         <div>
-          <Button onClick={createMemoryBook}>Create New Memory Book</Button>
+          <Button onClick={createMemoryBook}>{t('create_new_memory_book')}</Button>
         </div>
 
         <Divider />
         <Show when={state.embeds.length > 0}>
           <Select
             fieldName="embedId"
-            label="Embedding"
-            helperText="Which user-created embedding to use."
+            label={t('embedding')}
+            helperText={t('which_user_created_embedding_to_use')}
             items={embeds()}
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}
@@ -135,7 +138,7 @@ const ChatMemoryModal: Component<{
             onClick={useUserEmbed}
           >
             <Save />
-            Use Embedding
+            {t('use_embedding')}
           </Button>
           <Divider />
         </Show>

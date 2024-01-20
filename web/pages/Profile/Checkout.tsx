@@ -4,8 +4,11 @@ import { Pill, SolidCard } from '/web/shared/Card'
 import Button from '/web/shared/Button'
 import { useSearchParams } from '@solidjs/router'
 import { userStore } from '/web/store'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 export const CheckoutSuccess: Component = (props) => {
+  const [t] = useTransContext()
+
   const [query] = useSearchParams()
 
   onMount(() => {
@@ -19,20 +22,27 @@ export const CheckoutSuccess: Component = (props) => {
       <PageHeader title="Checkout Success" />
       <div class="flex flex-col items-center gap-4">
         <SolidCard class="flex flex-col items-center gap-4">
-          <p class="font-bold">Thank you for subscribing!</p>
+          <p class="font-bold">{t('thank_you_for_subscribing')}</p>
 
           <p>
-            Start using your subscription by creating and using an <Pill type="hl">Agnaistic</Pill>{' '}
-            preset.
+            <Trans
+              key="start_using_your_subscription_message"
+              options={{ app_name: t('app_name') }}
+            >
+              Start using your subscription by creating and using an
+              <Pill type="hl">{'{{ app_name }}'}</Pill> preset.
+            </Trans>
           </p>
         </SolidCard>
-        <Button onClick={() => window.close()}>Close Window</Button>
+        <Button onClick={() => window.close()}>{t('close_window')}</Button>
       </div>
     </>
   )
 }
 
 export const CheckoutCancel: Component = (props) => {
+  const [t] = useTransContext()
+
   const [query] = useSearchParams()
 
   onMount(() => {
@@ -45,9 +55,9 @@ export const CheckoutCancel: Component = (props) => {
 
       <div class="flex flex-col items-center gap-4">
         <SolidCard class="flex flex-col items-center gap-4" bg="orange-600">
-          <p>Your attempt to subscribe was cancelled. You have not been charged.</p>
+          <p>{t('your_attempt_to_subscribe_was_cancelled')}</p>
         </SolidCard>
-        <Button onClick={() => window.close()}>Close Window</Button>
+        <Button onClick={() => window.close()}>{t('close_window')}</Button>
       </div>
     </>
   )

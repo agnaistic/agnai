@@ -10,6 +10,7 @@ import { AppSchema } from '/common/types'
 import ChubImportCharModal from './ChubImportChar'
 import ChubImportBookModal from './ChubImportBook'
 import { useNavigate, useParams } from '@solidjs/router'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const chubTabs = {
   characters: 'Characters',
@@ -20,6 +21,8 @@ const chubTabs = {
 type Tab = keyof typeof chubTabs
 
 const Chub: Component = () => {
+  const [t] = useTransContext()
+
   const params = useParams()
   const nav = useNavigate()
   const tabs: Tab[] = ['characters', 'lorebooks', 'filter']
@@ -35,13 +38,13 @@ const Chub: Component = () => {
   })
 
   const currentTab = createMemo(() => tabs[tab()])
-  setComponentPageTitle('CHUB')
+  setComponentPageTitle(t('chub'))
 
   const tabClass = `flex flex-col gap-4`
 
   return (
     <>
-      <PageHeader title="Character Hub" />
+      <PageHeader title={t('character_hub')} />
 
       <div class="my-2">
         <Tabs
@@ -74,11 +77,13 @@ const Chub: Component = () => {
       <div>
         <sub>
           <em>
-            Disclaimer: Characters are owned and managed by{' '}
-            <a class="link" href="https://chub.ai" target="_blank">
-              CHUB.ai
-            </a>
-            .
+            <Trans key="chub_disclaimer">
+              Disclaimer: Characters are owned and managed by
+              <a class="link ml-2 mr-2" href="https://chub.ai" target="_blank">
+                CHUB.ai
+              </a>
+              .
+            </Trans>
           </em>
         </sub>
       </div>

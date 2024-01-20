@@ -35,11 +35,13 @@ import PageHeader from '/web/shared/PageHeader'
 import { isLoggedIn } from '/web/store/api'
 import { AppSchema } from '/common/types'
 import { isEligible } from './util'
+import { TFunction } from 'i18next'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
-const options = [
-  { value: 'wpp', label: 'W++' },
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'sbf', label: 'SBF' },
+const options = (t: TFunction) => [
+  { value: 'wpp', label: t('w++') },
+  { value: 'boostyle', label: t('boostyle') },
+  { value: 'sbf', label: t('sbf') },
 ]
 
 const CreateChatForm: Component<{
@@ -47,6 +49,8 @@ const CreateChatForm: Component<{
   close?: () => void
   charId?: string
 }> = (props) => {
+  const [t] = useTransContext()
+
   const params = useParams()
   let ref: any
 
@@ -65,9 +69,9 @@ const CreateChatForm: Component<{
   const [scenario, setScenario] = createSignal<AppSchema.ScenarioBook>()
 
   const currScenarios = createMemo(() => {
-    if (!scenarios.length) return [{ value: '', label: 'You have no scenarios' }]
+    if (!scenarios.length) return [{ value: '', label: t('you_have_no_scenarios') }]
     return [
-      { value: '', label: 'None' },
+      { value: '', label: t('none') },
       ...scenarios.map((s) => ({ label: s.name, value: s._id })),
     ]
   })
@@ -99,9 +103,11 @@ const CreateChatForm: Component<{
   )
   const presets = presetStore((s) => s.presets)
   const presetOptions = createMemo(() => {
-    const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
+    const opts = getPresetOptions(t, presets, { builtin: true }).filter(
+      (pre) => pre.value !== 'chat'
+    )
     return [
-      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+      { label: t('system_built_in_preset_horde'), value: AutoPreset.service, custom: false },
     ].concat(opts)
   })
 
@@ -172,12 +178,12 @@ const CreateChatForm: Component<{
     <>
       <Button schema="secondary" onClick={props.close}>
         <X />
-        Close
+        {t('close')}
       </Button>
 
       <Button onClick={onCreate} disabled={!state.char}>
         <Check />
-        Create
+        {t('create')}
       </Button>
     </>
   )
@@ -190,13 +196,8 @@ const CreateChatForm: Component<{
     <>
       <PageHeader title={`Create Chat with ${state.char?.name}`} />
       <form ref={ref}>
-        <div class="mb-2 text-sm">
-          Optionally modify some of the conversation context. You can override other aspects of the
-          character's persona from the conversation after it is created.
-        </div>
-        <div class="mb-4 text-sm">
-          The information provided here is only applied to the newly created conversation.
-        </div>
+        <div class="mb-2 text-sm">{t('optionally_modify_some_of_the_conversation_context')}</div>
+        <div class="mb-4 text-sm">{t('the_information_provided_here_is_only_applied')}</div>
         <div class="flex flex-col gap-3">
           <Show when={!props.charId}>
             <Card>
@@ -205,8 +206,8 @@ const CreateChatForm: Component<{
                 items={state.chars}
                 value={state.char}
                 fieldName="character"
-                label="Character"
-                helperText="The conversation's main character"
+                label={t('character')}
+                helperText={t('the_conversations_main_character')}
                 onChange={(c) => setSelected(c?._id)}
                 ignoreActive
               />
@@ -224,22 +225,26 @@ const CreateChatForm: Component<{
           <Card>
             <Select
               fieldName="mode"
-              label="Chat Mode"
+              label={t('chat_mode')}
               helperText={
                 <div class="flex flex-col gap-2">
                   <TitleCard>
-                    <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale). This
-                    may not work as intended with other models.
+                    <Trans key="adventure_works_best_with_instruct_models">
+                      <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale).
+                      This may not work as intended with other models.
+                    </Trans>
                   </TitleCard>
                   <TitleCard>
-                    <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,
-                    Retry Message, Delete Messages, etc.
+                    <Trans key="companion_everything_is_permanent">
+                      <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,
+                      Retry Message, Delete Messages, etc.
+                    </Trans>
                   </TitleCard>
                 </div>
               }
               items={[
-                { label: 'Conversation', value: 'standard' },
-                { label: 'Companion', value: 'companion' },
+                { label: t('conversation'), value: 'standard' },
+                { label: t('companion'), value: 'companion' },
               ]}
               value={'standard'}
             />
@@ -249,13 +254,15 @@ const CreateChatForm: Component<{
             <TextInput
               class="text-sm"
               fieldName="name"
-              label="Conversation Name"
+              label={t('conversation_name')}
               helperText={
                 <span>
-                  A name for the conversation. This is purely for labelling. <i>(Optional)</i>
+                  <Trans key="a_name_for_the_conversation_this_is_purely_for_labelling">
+                    A name for the conversation. This is purely for labelling. <i>(Optional)</i>
+                  </Trans>
                 </span>
               }
-              placeholder="Untitled"
+              placeholder={t('untitled')}
             />
           </Card>
           <Card>
@@ -263,8 +270,8 @@ const CreateChatForm: Component<{
               fieldName="useOverrides"
               value={useOverrides()}
               onChange={(use) => setUseOverrides(use)}
-              label="Override Character Definitions"
-              helperText="Overrides will only apply to the newly created conversation."
+              label={t('override_character_definitions')}
+              helperText={t('overrides_will_only_apply_to_the_newly_created_conversation')}
             />
           </Card>
 
@@ -272,8 +279,8 @@ const CreateChatForm: Component<{
 
           <Select
             fieldName="scenarioId"
-            label="Scenario"
-            helperText="The scenario to use for this conversation"
+            label={t('scenario')}
+            helperText={t('the_scenario_to_use_for_this_conversation')}
             items={currScenarios()}
             onChange={(option) => setScenarioById(option.value)}
             disabled={scenarios.length === 0}
@@ -283,7 +290,7 @@ const CreateChatForm: Component<{
             <TextInput
               isMultiline
               fieldName="greeting"
-              label="Greeting"
+              label={t('greeting')}
               value={state.char?.greeting}
               class="text-xs"
               disabled={!useOverrides()}
@@ -293,7 +300,7 @@ const CreateChatForm: Component<{
             <TextInput
               isMultiline
               fieldName="scenario"
-              label="Scenario"
+              label={t('scenario')}
               value={state.char?.scenario}
               class="text-xs"
               disabled={!useOverrides()}
@@ -304,7 +311,7 @@ const CreateChatForm: Component<{
             <TextInput
               isMultiline
               fieldName="sampleChat"
-              label="Sample Chat"
+              label={t('sample_chat')}
               value={state.char?.sampleChat}
               class="text-xs"
               disabled={!useOverrides()}
@@ -316,8 +323,8 @@ const CreateChatForm: Component<{
               <Select
                 class="mb-2 text-sm"
                 fieldName="schema"
-                label="Persona"
-                items={options}
+                label={t('persona')}
+                items={options(t)}
                 value={state.char?.persona.kind || 'wpp'}
                 disabled={!useOverrides()}
               />
@@ -327,7 +334,7 @@ const CreateChatForm: Component<{
               <Select
                 class="mb-2 text-sm"
                 fieldName="schema"
-                label="Persona"
+                label={t('persona')}
                 items={[{ label: 'Plain text', value: 'text' }]}
                 value={'text'}
                 disabled={!useOverrides()}

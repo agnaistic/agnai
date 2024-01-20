@@ -8,13 +8,16 @@ import Divider from '/web/shared/Divider'
 import { slugify } from '/common/util'
 import { embedApi } from '/web/store/embeddings'
 import Select from '/web/shared/Select'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { EmbedContent as default }
 
 const EmbedContent: Component = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
 
-  const options = ['Article', 'PDF', 'Text file', 'Plain Text']
+  const options = [t('article'), t('pdf'), t('text_file'), t('plain_text')]
   const [type, setType] = createSignal(options[0])
 
   const [loading, setLoading] = createSignal(false)
@@ -26,7 +29,7 @@ const EmbedContent: Component = (props) => {
     try {
       const { wiki } = getStrictForm(ref, { wiki: 'string' })
       await embedApi.embedArticle(wiki)
-      toastStore.success('Successfully created embedding')
+      toastStore.success(t('successfully_created_embedding'))
       setLoading(false)
     } finally {
       setLoading(false)
@@ -38,34 +41,34 @@ const EmbedContent: Component = (props) => {
     try {
       const { embedName } = getStrictForm(ref, { embedName: 'string' })
       const embedType = type()
-      const docNeeded = embedType === 'PDF' || embedType === 'Text file'
+      const docNeeded = embedType === t('pdf') || embedType === t('text_file')
       const doc = file()
       if (!doc && docNeeded) {
-        toastStore.error(`No PDF loaded`)
+        toastStore.error(t('no_pdf_loaded'))
         return
       }
 
       const slug = slugify(embedName)
       switch (embedType) {
-        case 'PDF':
+        case t('pdf'):
           await embedApi.embedPdf(slug, doc!)
           break
 
-        case 'Text file':
+        case t('text_file'):
           await embedApi.embedFile(slug, doc!)
           break
 
-        case 'Plain Text': {
+        case t('plain-text'): {
           const { embedText } = getStrictForm(ref, { embedText: 'string' })
           if (!embedText) {
-            toastStore.warn(`Embedding content is empty`)
+            toastStore.warn(t('embedding_content_is_empty'))
             return
           }
           await embedApi.embedPlainText(slug, embedText)
           break
         }
       }
-      toastStore.success(`Successfully created embedding: ${slug}`)
+      toastStore.success(t('successfully_created_embedding_x', { slug: slug }))
     } finally {
       setLoading(false)
     }
@@ -88,82 +91,82 @@ const EmbedContent: Component = (props) => {
   return (
     <form ref={ref} class="flex flex-col gap-2">
       <Select
-        items={options.map((value) => ({ label: `Embed: ${value}`, value }))}
+        items={options.map((value) => ({ label: t('embed_x', { value: value }), value }))}
         fieldName="embed-type"
         value={type()}
         onChange={(ev) => setType(ev.value)}
       />
 
       <Switch>
-        <Match when={type() === 'Article'}>
+        <Match when={type() === t('article')}>
           <TextInput
             fieldName="wiki"
-            label="Embed Wikipedia Article"
-            helperText="Create an embedding using the content from a Wikipedia article"
-            placeholder="URL. E.g. https://en.wikipedia.org/wiki/Taylor_Swift"
+            label={t('embed_wikipedia_article')}
+            helperText={t('create_an_embedding_using_the_content_from_wikipedia')}
+            placeholder={t('wikipedia_url_example')}
           />
           <Button class="mt-2 w-fit" disabled={loading()} onClick={embedWiki}>
-            Embed Article
+            {t('embed_article')}
           </Button>
         </Match>
 
-        <Match when={type() === 'PDF'}>
+        <Match when={type() === t('pdf')}>
           <TextInput
             fieldName="embedName"
-            label="Name"
-            helperText='(Optional) An identifier for your embedding. This will become a "slug". E.g. "Hello World" will become "hello-world"'
+            label={t('name')}
+            helperText={t('embedding_name_message')}
             value={filename()}
           />
 
           <FileInput
             fieldName="pdf"
-            label="Embed PDF"
+            label={t('embed_pdf')}
             onUpdate={onFile}
-            helperText="This may take a long time depending on the size of the PDF."
+            helperText={t('this_may_take_a_long_time_depending_on_the_size_of_the_pdf')}
             accept="application/pdf"
           />
           <Button class="mt-2 w-fit" disabled={loading() || !file()} onClick={embedFile}>
-            Embed PDF
+            {t('embed_pdf')}
           </Button>
         </Match>
 
-        <Match when={type() === 'Text file'}>
+        <Match when={type() === t('text_file')}>
           <TextInput
             fieldName="embedName"
-            label="Name"
-            helperText='(Optional) An identifier for your embedding. This will become a "slug". E.g. "Hello World" will become "hello-world"'
+            label={t('name')}
+            helperText={t('embedding_name_message')}
             value={filename()}
           />
 
           <FileInput
             fieldName="pdf"
-            label="Embed File"
+            label={t('embed_file')}
             onUpdate={onFile}
-            helperText="This may take a long time depending on the size of the file."
+            helperText={t('this_may_take_a_long_time_depending_on_the_size_of_the_file')}
             accept="text/plain"
           />
           <Button class="mt-2 w-fit" disabled={loading() || !file()} onClick={embedFile}>
-            Embed File
+            {t('embed_file')}
           </Button>
         </Match>
 
-        <Match when={type() === 'Plain Text'}>
+        <Match when={type() === t('plain_text')}>
           <TextInput
             fieldName="embedName"
-            label="Name"
-            helperText='An identifier for your embedding. This will become a "slug". E.g. "Hello World" will become "hello-world"'
+            label={t('name')}
+            helperText={t('embedding_name_message')}
             value={filename()}
           />
 
           <TextInput
             fieldName="embedText"
-            label="Content"
-            helperText="The content to be embedded. Use line breaks to seperate lines."
+            label={t('content')}
+            helperText={t('the_content_to_be_embedded')}
             isMultiline
           />
 
           <Button class="mt-2 w-fit" onClick={embedFile}>
-            Embed Content
+            {t('embed_content')}
           </Button>
         </Match>
       </Switch>

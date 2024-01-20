@@ -6,6 +6,7 @@ import { characterStore, NewCharacter, toastStore } from '../../store'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { SUPPORTED_FORMATS, downloadCharacterHub, importCharacterFile } from './port'
 import Button from '/web/shared/Button'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const MAX_SHOWN_IMPORTS = 3
 
@@ -16,6 +17,8 @@ const ImportCharacterModal: Component<{
   charhubPath?: string
   single?: boolean
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = characterStore()
   const [imported, setImported] = createSignal<NewCharacter[]>([])
   const [images, setImages] = createSignal<Array<File | undefined>>([])
@@ -25,19 +28,19 @@ const ImportCharacterModal: Component<{
   onMount(async () => {
     if (!props.charhubPath) return
     try {
-      const { json } = await downloadCharacterHub(props.charhubPath)
+      const { json } = await downloadCharacterHub(t, props.charhubPath)
       setImported([json])
-      toastStore.success('Successfully downloaded from Character Hub')
+      toastStore.success(t('successfully_downloaded_from_character_hub'))
       setReady(true)
     } catch (ex: any) {
-      toastStore.error(`Character Hub download failed: ${ex.message}`)
+      toastStore.error(t('character_hub_download_failed_with_message_x', { message: ex.message }))
     }
   })
 
   const processFiles = async (files: FileInputResult[]) => {
     reset()
 
-    const results = await Promise.allSettled(files.map(importCharacterFile))
+    const results = await Promise.allSettled(files.map((file) => importCharacterFile(t, file)))
     for (let i = 0; i < results.length; i++) {
       const result = results[i]
       if (result.status === 'rejected') {
@@ -71,28 +74,28 @@ const ImportCharacterModal: Component<{
   return (
     <Modal
       show={props.show}
-      title="Import Character"
+      title={t('import_character')}
       close={cancel}
       footer={
         <>
           <Button schema="secondary" onClick={cancel}>
             <X />
-            Cancel
+            {t('cancel')}
           </Button>
 
           <Button onClick={onImport} disabled={state.creating || !ready()}>
             <Import />
-            Import
+            {t('import')}
           </Button>
         </>
       }
     >
       <div class="flex flex-col gap-2">
         <FileInput
-          label="Avatar or JSON file"
+          label={t('avatar_or_json_file')}
           fieldName="file"
           accept="text/json,application/json,image/png,image/jpeg,image/webp"
-          helperText={`Supported formats: ${SUPPORTED_FORMATS}`}
+          helperText={t('supported_formats_x', { format: SUPPORTED_FORMATS(t) })}
           required
           multiple={!props.single}
           onUpdate={processFiles}
@@ -100,7 +103,7 @@ const ImportCharacterModal: Component<{
       </div>
 
       <Show when={imported().length}>
-        <div class="mt-2 text-lg">Characters to import:</div>
+        <div class="mt-2 text-lg">{t('character_to_import')}</div>
         <div class="markdown">
           <ul>
             <For each={imported().slice(0, MAX_SHOWN_IMPORTS)}>
@@ -112,27 +115,27 @@ const ImportCharacterModal: Component<{
               )}
             </For>
             <Show when={imported().length === MAX_SHOWN_IMPORTS + 1}>
-              <li>... and one other</li>
+              <li>{t('and_one_other')}</li>
             </Show>
             <Show when={imported().length > MAX_SHOWN_IMPORTS + 1}>
-              <li>... and {imported().length - MAX_SHOWN_IMPORTS} others</li>
+              <li>{t('and_x_others', { count: imported().length - MAX_SHOWN_IMPORTS })}</li>
             </Show>
           </ul>
         </div>
       </Show>
 
       <Show when={failed().length}>
-        <div class="mt-2 text-lg">Failed character imports:</div>
+        <div class="mt-2 text-lg">{t('failed_character_imports')}</div>
         <div class="markdown">
           <ul>
             <For each={failed().slice(0, MAX_SHOWN_IMPORTS)}>
               {(i) => <li>{i ?? 'Unnamed'}</li>}
             </For>
             <Show when={failed().length === MAX_SHOWN_IMPORTS + 1}>
-              <li>... and one other</li>
+              <li>{t('and_one_other')}</li>
             </Show>
             <Show when={failed().length > MAX_SHOWN_IMPORTS + 1}>
-              <li>... and {failed().length - MAX_SHOWN_IMPORTS} others</li>
+              <li>{t('and_x_others', { count: failed().length - MAX_SHOWN_IMPORTS })}</li>
             </Show>
           </ul>
         </div>

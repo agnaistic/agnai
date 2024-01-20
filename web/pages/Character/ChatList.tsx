@@ -24,16 +24,20 @@ import {
 } from './util'
 import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
-const sortOptions = [
-  { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
-  { value: 'bot-activity', label: 'Bot Activity', kind: 'chat' },
-  { value: 'chat-created', label: 'Chat Created', kind: 'chat' },
-  { value: 'character-name', label: 'Bot Name', kind: 'bot' },
-  { value: 'character-created', label: 'Bot Created', kind: 'bot' },
+const sortOptions = (t: TFunction) => [
+  { value: 'chat-updated', label: t('chat_activity'), kind: 'chat' },
+  { value: 'bot-activity', label: t('bot_activity'), kind: 'chat' },
+  { value: 'chat-created', label: t('chat_created'), kind: 'chat' },
+  { value: 'character-name', label: t('bot_name'), kind: 'bot' },
+  { value: 'character-created', label: t('bot_created'), kind: 'bot' },
 ]
 
 const CharacterChats: Component = () => {
+  const [t] = useTransContext()
+
   const params = useParams()
   const cache = getListCache()
   const chars = characterStore((s) => ({
@@ -66,12 +70,12 @@ const CharacterChats: Component = () => {
 
   createEffect(() => {
     if (!params.id) {
-      setComponentPageTitle(`Chats`)
+      setComponentPageTitle(t('chats'))
       return
     }
 
     const char = chars.list.find((c) => c._id === params.id)
-    setComponentPageTitle(char ? `${char.name} chats` : 'Chats')
+    setComponentPageTitle(char ? t('x_chats', { name: char.name }) : t('chats'))
   })
 
   createEffect(() => {
@@ -126,21 +130,21 @@ const CharacterChats: Component = () => {
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
         onClick={() => setImport(true)}
       >
-        <Import /> <span class="hidden sm:inline">Import</span>
+        <Import /> <span class="hidden sm:inline">{t('import')}</span>
       </button>
       <Show when={!!params.id}>
         <button
           class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
           onClick={() => nav(`/character/${params.id}/edit`)}
         >
-          <Edit /> <span class="hidden sm:inline">Edit</span>
+          <Edit /> <span class="hidden sm:inline">{t('edit')}</span>
         </button>
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
         onClick={() => nav(`/chats/create/${params.id || ''}`)}
       >
-        <Plus /> <span class="hidden sm:inline">New</span>
+        <Plus /> <span class="hidden sm:inline">{t('new')}</span>
       </button>
     </>
   )
@@ -150,7 +154,7 @@ const CharacterChats: Component = () => {
       <PageHeader
         title={
           <div class="flex w-full justify-between">
-            <div>Chats</div>
+            <div>{t('chats')}</div>
             <div class="flex gap-1 text-base">
               <Options />
             </div>
@@ -163,7 +167,7 @@ const CharacterChats: Component = () => {
           <div>
             <TextInput
               fieldName="search"
-              placeholder="Search..."
+              placeholder={t('search_placeholder')}
               onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
@@ -172,7 +176,7 @@ const CharacterChats: Component = () => {
             class="w-48"
             fieldName="char"
             items={chars.list}
-            emptyLabel="All Characters"
+            emptyLabel={t('all_characters')}
             value={charId()}
             onChange={(char) => setCharId(char?._id)}
           />
@@ -181,7 +185,7 @@ const CharacterChats: Component = () => {
             <Select
               class="bg-[var(--bg-600)]"
               fieldName="sortBy"
-              items={sortOptions.filter((opt) => (charId() ? opt.kind === 'chat' : true))}
+              items={sortOptions(t).filter((opt) => (charId() ? opt.kind === 'chat' : true))}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortType)}
             />
@@ -241,6 +245,8 @@ const Chats: Component<{
   sortDirection: SortDirection
   charId?: string
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [showDelete, setDelete] = createSignal('')
 
   const groups = createMemo(() => {
@@ -263,7 +269,7 @@ const Chats: Component<{
                 <div class="font-bold">{char!.name}</div>
               </Show>
               <Show when={chats.length === 0}>
-                <div>No conversations</div>
+                <div>{t('no_conversations')}</div>
               </Show>
               <For each={chats}>
                 {(chat) => (
@@ -327,13 +333,15 @@ const Chats: Component<{
         show={!!showDelete()}
         close={() => setDelete('')}
         confirm={confirmDelete}
-        message="Are you sure wish to delete the conversation?"
+        message={t('are_you_sure_you_wish_to_delete_the_conversation?')}
       />
     </div>
   )
 }
 
 const NoChats: Component<{ character?: string }> = (props) => {
+  const [t] = useTransContext()
+
   const state = chatStore()
   return (
     <Show
@@ -346,9 +354,11 @@ const NoChats: Component<{ character?: string }> = (props) => {
     >
       <div class="mt-4 flex w-full justify-center text-xl">
         <div>
-          <Show when={!props.character}>You have no conversations yet.</Show>
+          <Show when={!props.character}>{t('you_have_no_conversations_yet')}</Show>
           <Show when={props.character}>
-            You have no conversations with <i>{props.character}</i>.
+            <Trans key="you_have_no_conversation_with_x" options={{ name: props.character }}>
+              You have no conversations with <i>{'{{name}}'}</i>.
+            </Trans>
           </Show>
         </div>
       </div>

@@ -19,6 +19,7 @@ import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const tokenizers = [
   { label: 'None', value: '' },
@@ -31,7 +32,9 @@ const tokenizers = [
 ]
 
 export const Subscription: Component = () => {
-  const { updateTitle } = setComponentPageTitle('Subscription')
+  const [t] = useTransContext()
+
+  const { updateTitle } = setComponentPageTitle(t('subscription'))
   let ref: any
 
   const params = useParams()
@@ -70,9 +73,9 @@ export const Subscription: Component = () => {
     if (params.id === 'new') {
       const copySource = query.preset
       if (copySource) {
-        updateTitle(`Copy subscription ${copySource}`)
+        updateTitle(t('copy_subscription_x', { source: copySource }))
       } else {
-        updateTitle(`Create subscription`)
+        updateTitle(t('create_subscription'))
       }
       setEditing()
       await Promise.resolve()
@@ -130,7 +133,7 @@ export const Subscription: Component = () => {
     }
 
     if (params.id && subscription) {
-      updateTitle(`Edit subscription ${subscription.name}`)
+      updateTitle(t('edit_subscription_x', { name: subscription.name }))
     }
   })
 
@@ -168,7 +171,7 @@ export const Subscription: Component = () => {
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
     if (!body.service) {
-      toastStore.error(`You must select an AI service before saving`)
+      toastStore.error(t('you_must_select_an_ai_service_before_saving'))
       return
     }
 
@@ -202,7 +205,7 @@ export const Subscription: Component = () => {
       <PageHeader
         title={
           <A class="link" href="/admin/subscriptions">
-            Subscription
+            {t('subscription')}
           </A>
         }
       />
@@ -217,18 +220,18 @@ export const Subscription: Component = () => {
                 <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
                   <div class="flex gap-4">
                     <Show when={state.subs.length > 1}>
-                      <Button onClick={() => setEdit(true)}>Load Preset</Button>
+                      <Button onClick={() => setEdit(true)}>{t('load_preset')}</Button>
                     </Show>
                     <Button onClick={startNew}>
                       <Plus />
-                      New Subscription
+                      {t('new_subscription')}
                     </Button>
                     <Button onClick={() => setReplacing(true)} schema="red">
-                      Replace/Supercede
+                      {t('replace_or_supercede')}
                     </Button>
                   </div>
                   <div class="flex flex-col">
-                    <div>ID: {editing()?._id || 'New Subscription'}</div>
+                    <div>ID: {editing()?._id || t('new_subscription')}</div>
                     <TextInput
                       fieldName="id"
                       value={editing()?._id || ''}
@@ -237,9 +240,9 @@ export const Subscription: Component = () => {
                     />
                     <TextInput
                       fieldName="name"
-                      label="Name"
-                      helperText="A name or short description of your preset"
-                      placeholder="E.g. Premium+++++"
+                      label={t('name')}
+                      helperText={t('a_name_or_short_description_for_your_preset')}
+                      placeholder={t('e_g_premium_+')}
                       value={editing()?.name}
                       required
                       parentClass="mb-2"
@@ -247,10 +250,10 @@ export const Subscription: Component = () => {
 
                     <TextInput
                       fieldName="subApiKey"
-                      label="API Key"
-                      helperText="(Optional) API Key for your AI service if applicable."
+                      label={t('api_key')}
+                      helperText={t('optional_api_key_for_your_ai_service')}
                       placeholder={
-                        editing()?.subApiKeySet ? 'API Key is set' : 'API Key is not set'
+                        editing()?.subApiKeySet ? t('api_key_is_set') : t('api_key_is_not_set')
                       }
                       type="password"
                       value={editing()?.subApiKey || ''}
@@ -261,8 +264,8 @@ export const Subscription: Component = () => {
                     <TextInput
                       type="number"
                       fieldName="subLevel"
-                      label="Subscription Level"
-                      helperText='Anything above -1 requires a "subscription". All users by default are -1.'
+                      label={t('subscription_level')}
+                      helperText={t('subscription_level_message')}
                       placeholder="0"
                       value={editing()?.subLevel ?? 0}
                       required
@@ -271,8 +274,8 @@ export const Subscription: Component = () => {
                     <Card hide={service() !== 'agnaistic'} class="mt-4">
                       <TextInput
                         fieldName="subModel"
-                        label="Model"
-                        helperText="Agnaistic service only"
+                        label={t('model')}
+                        helperText={t('agnaistic_service_only')}
                         placeholder=""
                         value={editing()?.subModel}
                         required
@@ -281,9 +284,9 @@ export const Subscription: Component = () => {
 
                       <TextInput
                         fieldName="subServiceUrl"
-                        label="Model Service URL"
-                        helperText="Agnaistic service only"
-                        placeholder="https://..."
+                        label={t('model_service_url')}
+                        helperText={t('agnaistic_service_only')}
+                        placeholder={t('https...')}
                         value={editing()?.subServiceUrl}
                         required
                         parentClass="mb-2"
@@ -300,23 +303,21 @@ export const Subscription: Component = () => {
                     <Card class="mt-4 flex flex-col gap-2">
                       <Toggle
                         fieldName="subDisabled"
-                        label="Subscription Disabled"
-                        helperText="Disable the use of this subscription"
+                        label={t('subscription_disabled')}
+                        helperText={t('disable_the_use_of_this_subscription')}
                         value={editing()?.subDisabled ?? false}
                       />
                       <Toggle
                         fieldName="isDefaultSub"
-                        label="Is Default Subscription"
-                        helperText="Is chosen as fallback when no subscription is provided with a request"
+                        label={t('is_default_subscription')}
+                        helperText={t('is_default_subscription_message')}
                         value={editing()?.isDefaultSub ?? false}
                       />
 
                       <Toggle
                         fieldName="allowGuestUsage"
-                        label="Allow Guest Usage"
-                        helperText={
-                          'Typically for default subscriptions. Require users to sign in to use this subscription.'
-                        }
+                        label={t('allow_guest_usage')}
+                        helperText={t('allow_guest_usage_message')}
                         value={editing()?.allowGuestUsage === false ? false : true}
                       />
                     </Card>
@@ -326,8 +327,8 @@ export const Subscription: Component = () => {
                     fieldName="tokenizer"
                     items={tokenizers}
                     value={editing()?.tokenizer}
-                    label="Tokenizer Override"
-                    helperText="Optional. For use with custom models."
+                    label={t('tokenizer_override')}
+                    helperText={t('optional_for_use_with_custom_models')}
                   />
 
                   <GenerationSettings
@@ -338,7 +339,7 @@ export const Subscription: Component = () => {
                   />
                   <div class="flex flex-row justify-end">
                     <Button disabled={state.saving} onClick={onSave}>
-                      <Save /> Save
+                      <Save /> {t('save')}
                     </Button>
                   </div>
                 </form>
@@ -354,7 +355,7 @@ export const Subscription: Component = () => {
         show={deleting()}
         close={() => setDeleting(false)}
         confirm={deletePreset}
-        message="Are you sure you wish to delete this preset?"
+        message={t('are_you_sure_you_want_to_delete_this_preset')}
       />
       <ConfirmModal
         show={!!missingPlaceholder()}
@@ -363,13 +364,15 @@ export const Subscription: Component = () => {
         message={
           <div class="flex flex-col items-center gap-2 text-sm">
             <div>
-              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
-              almost never what you want. It is recommended for your gaslight to contain the
-              placeholders:
-              <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
+              <Trans key="missing_gaslight_message">
+                Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
+                almost never what you want. It is recommended for your gaslight to contain the
+                placeholders:
+              </Trans>
+              <br /> <code>{t('personality_scenario_and_memory')}</code>
             </div>
 
-            <p>Are you sure you wish to proceed?</p>
+            <p>{t('are_you_sure_you_wish_to_proceed?')}</p>
           </div>
         }
       />
@@ -381,6 +384,8 @@ export default Subscription
 
 const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) => {
   let form: any
+
+  const [t] = useTransContext()
 
   const params = useParams()
   const nav = useNavigate()
@@ -405,10 +410,10 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
-        Cancel
+        {t('cancel')}
       </Button>
       <Button schema="green" onClick={onSubmit}>
-        Replace
+        {t('replace')}
       </Button>
     </>
   )
@@ -421,8 +426,8 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
           <Select
             items={replacements()}
             fieldName="replacementId"
-            label="Replacement Subscription"
-            helperText="The subscription that will supercede the current subscription"
+            label={t('replacement_subscription')}
+            helperText={t('replacement_subscription_message')}
           />
         </form>
       </Modal>
@@ -452,6 +457,8 @@ const EditPreset: Component<{
   close: () => void
   select: (preset: AppSchema.SubscriptionPreset) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const params = useParams()
 
   let ref: any
@@ -468,14 +475,14 @@ const EditPreset: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Load Preset"
+      title={t('load_preset')}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+            <X /> {t('cancel')}
           </Button>
           <Button onClick={select}>
-            <Edit /> Load Preset
+            <Edit /> {t('load_preset')}
           </Button>
         </>
       }
@@ -483,8 +490,8 @@ const EditPreset: Component<{
       <form ref={ref}>
         <Select
           fieldName="preset"
-          label="Preset"
-          helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
+          label={t('preset')}
+          helperText={t('select_a_preset_to_start_editing_message')}
           items={state.presets
             .filter((pre) => pre._id !== params.id)
             .map((pre) => ({ label: pre.name, value: pre._id }))}

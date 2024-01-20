@@ -47,8 +47,9 @@ import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
-const MobileNavHeader = () => {
+const MobileNavHeader: Component = () => {
   const user = userStore()
   const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
@@ -56,7 +57,6 @@ const MobileNavHeader = () => {
     <div class="flex min-h-[2rem] justify-between sm:hidden">
       <div class="w-8"></div>
       <div>
-        {' '}
         <span class="w-full text-center text-[1rem]">
           Agn<span class="text-[var(--hl-500)]">ai</span>
           {suffix()}
@@ -169,6 +169,8 @@ const Navigation: Component = () => {
 }
 
 const UserNavigation: Component = () => {
+  const [t] = useTransContext()
+
   const user = userStore()
   const menu = settingStore()
   const toasts = toastStore()
@@ -212,7 +214,7 @@ const UserNavigation: Component = () => {
       <MultiItem>
         <Item href="/presets" ariaLabel="Presets">
           <Sliders aria-hidden="true" />
-          <span aria-hidden="true">Presets</span>
+          <span aria-hidden="true">{t('presets')}</span>
         </Item>
         <EndItem>
           <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
@@ -228,20 +230,20 @@ const UserNavigation: Component = () => {
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics" ariaLabel="Manage">
           <Activity aria-hidden="true" />
-          <span aria-hidden="true">Manage</span>
+          <span aria-hidden="true">{t('manage')}</span>
         </Item>
         <SubMenu>
-          <SubItem href="/admin/configuration" parent="/admin/" ariaLabel="Configuration">
-            Configuration
+          <SubItem href="/admin/configuration" parent="/admin/" ariaLabel={t('configuration')}>
+            {t('configuration')}
           </SubItem>
-          <SubItem href="/admin/users" parent="/admin/" ariaLabel="Users">
-            Users
+          <SubItem href="/admin/users" parent="/admin/" ariaLabel={t('users')}>
+            {t('users')}
           </SubItem>
-          <SubItem href="/admin/subscriptions" parent="/admin/" ariaLabel="Subscriptions">
-            Subscriptions
+          <SubItem href="/admin/subscriptions" parent="/admin/" ariaLabel={t('subscriptions')}>
+            {t('subscriptions')}
           </SubItem>
-          <SubItem href="/admin/announcements" parent="/admin/" ariaLabel="Announcements">
-            Announcements
+          <SubItem href="/admin/announcements" parent="/admin/" ariaLabel={t('announcements')}>
+            {t('announcements')}
           </SubItem>
         </SubMenu>
       </Show>
@@ -261,7 +263,7 @@ const UserNavigation: Component = () => {
         </Item>
 
         <Item
-          ariaLabel="Toggle between light and dark mode"
+          ariaLabel={t('toggle_between_light_and_dark_mode')}
           onClick={() => {
             userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
@@ -276,14 +278,14 @@ const UserNavigation: Component = () => {
             if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
-          ariaLabel="Show notification list"
+          ariaLabel={t('show_notification_list')}
         >
           <Switch>
             <Match when={count() > 0}>
               <div
                 class="relative flex"
                 role="status"
-                aria-label={`Status: You have ${count()} new notifications`}
+                aria-label={t('status_you_have_x_new_notifications', { count: count() })}
               >
                 <Bell fill="var(--bg-100)" aria-hidden="true" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
@@ -305,6 +307,8 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
+  const [t] = useTransContext()
+
   const toasts = toastStore()
   const user = userStore()
   const menu = settingStore((s) => ({
@@ -319,7 +323,7 @@ const GuestNavigation: Component = () => {
       <Show when={menu.config.canAuth}>
         <Item
           href="/login"
-          ariaLabel="Login to the application"
+          ariaLabel={t('login_to_the_application')}
           onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
         >
           <LogIn /> Login
@@ -334,7 +338,7 @@ const GuestNavigation: Component = () => {
         <Show when={menu.flags.chub}>
           <Item href="/chub" ariaLabel="Character hub">
             <ShoppingBag aria-hidden="true" />
-            CHUB
+            {t('chub')}
           </Item>
         </Show>
 
@@ -345,13 +349,18 @@ const GuestNavigation: Component = () => {
         <MultiItem>
           <Item
             href="/presets"
-            ariaLabel="Presets"
+            ariaLabel={t('presets')}
             onClick={() => soundEmitter.emit('menu-item-clicked', 'presets')}
           >
-            <Sliders /> Presets
+            <Sliders /> {t('presets')}
           </Item>
           <EndItem>
-            <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
+            <A
+              class="icon-button"
+              href="/presets/new"
+              role="button"
+              aria-label={t('add_a_new_preset')}
+            >
               <Plus aria-hidden="true" />
             </A>
           </EndItem>
@@ -363,12 +372,12 @@ const GuestNavigation: Component = () => {
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
-        <Item href="/faq" ariaLabel="Open FAQ page">
+        <Item href="/faq" ariaLabel={t('open_faq_page')}>
           <HelpCircle aria-hidden="true" />
         </Item>
 
         <Show when={menu.config.patreon}>
-          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel={t('patreon')}>
             <HeartHandshake aria-hidden="true" />
           </ExternalLink>
         </Show>
@@ -378,7 +387,7 @@ const GuestNavigation: Component = () => {
         </Item>
 
         <Item
-          ariaLabel="Toggle between light and dark mode"
+          ariaLabel={t('toggle_between_light_and_dark_mode')}
           onClick={() => {
             userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
@@ -393,14 +402,14 @@ const GuestNavigation: Component = () => {
             if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
-          ariaLabel="Show notification list"
+          ariaLabel={t('show_notification_list')}
         >
           <Switch>
             <Match when={toasts.unseen > 0}>
               <div
                 class="relative flex"
                 role="status"
-                aria-label={`Status: You have ${toasts.unseen} new notifications`}
+                aria-label={t('status_you_have_x_new_notifications', { count: toasts.unseen })}
               >
                 <Bell fill="var(--bg-100)" aria-hidden="true" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
@@ -410,7 +419,11 @@ const GuestNavigation: Component = () => {
             </Match>
 
             <Match when={!toasts.unseen}>
-              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
+              <Bell
+                color="var(--bg-500)"
+                role="status"
+                aria-label={t('status_no_new_notifications')}
+              />
             </Match>
           </Switch>
         </Item>
@@ -512,27 +525,31 @@ const ExternalLink: Component<{
 )
 
 const Library: Component<{}> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
       <Item
         href="/memory"
-        ariaLabel="Library"
+        ariaLabel={t('library')}
         onClick={() => soundEmitter.emit('menu-item-clicked', 'library')}
       >
         <Book aria-hidden="true" />
-        <span aria-hidden="true"> Library </span>
+        <span aria-hidden="true">{t('library')}</span>
       </Item>
     </div>
   )
 }
 
 const Sounds: Component<{}> = (props) => {
+  const [t] = useTransContext()
+
   const audioSettings = audioStore()
 
   return (
     <MultiItem>
       <Item href="/sounds" onClick={() => soundEmitter.emit('menu-item-clicked', 'sounds')}>
-        <Speaker /> Sounds
+        <Speaker /> {t('sounds')}
       </Item>
       <EndItem>
         <a class="icon-button" onClick={() => audioStore.toggleMuteTrack('master')}>
@@ -548,19 +565,21 @@ const Sounds: Component<{}> = (props) => {
   )
 }
 
-const CharacterLink = () => {
+const CharacterLink: Component = () => {
+  const [t] = useTransContext()
+
   return (
     <MultiItem>
       <Item
         href="/character/list"
-        ariaLabel="Characters"
+        ariaLabel={t('characters')}
         onClick={() => soundEmitter.emit('menu-item-clicked', 'characters')}
       >
         <WizardIcon aria-hidden="true" />
-        <span aria-hidden="true"> Characters </span>
+        <span aria-hidden="true">{t('characters')}</span>
       </Item>
       <EndItem>
-        <A class="icon-button" href="/editor" role="button" aria-label="Add a new character">
+        <A class="icon-button" href="/editor" role="button" aria-label={t('add_a_new_character')}>
           <Plus aria-hidden="true" />
         </A>
       </EndItem>
@@ -568,19 +587,26 @@ const CharacterLink = () => {
   )
 }
 
-const ChatLink = () => {
+const ChatLink: Component = () => {
+  const [t] = useTransContext()
+
   return (
     <MultiItem>
       <Item
         href="/chats"
-        ariaLabel="Chats"
+        ariaLabel={t('chats')}
         onClick={() => soundEmitter.emit('menu-item-clicked', 'chats')}
       >
         <MessageCircle fill="var(--bg-100)" aria-hidden="true" />
-        <span aria-hidden="true"> Chats </span>
+        <span aria-hidden="true">{t('chats')}</span>
       </Item>
       <EndItem>
-        <A class="icon-button" href="/chats/create" role="button" aria-label="Create a new chat">
+        <A
+          class="icon-button"
+          href="/chats/create"
+          role="button"
+          aria-label={t('create_a_new_chat')}
+        >
           <Plus aria-hidden="true" />
         </A>
       </EndItem>
@@ -588,7 +614,9 @@ const ChatLink = () => {
   )
 }
 
-const UserProfile = () => {
+const UserProfile: Component = () => {
+  const [t] = useTransContext()
+
   const chars = characterStore()
   const user = userStore()
   const menu = settingStore()
@@ -602,7 +630,7 @@ const UserProfile = () => {
         }}
       >
         <Item
-          ariaLabel="Edit user profile"
+          ariaLabel={t('edit_user_profile')}
           onClick={() => {
             if (menu.showMenu) settingStore.closeMenu()
             soundEmitter.emit('menu-item-clicked', 'profile')
@@ -630,7 +658,7 @@ const UserProfile = () => {
           <a
             href="#"
             role="button"
-            aria-label="Open impersonation menu"
+            aria-label={t('open_impersonation_menu')}
             class="icon-button"
             onClick={() => {
               settingStore.toggleImpersonate(true)

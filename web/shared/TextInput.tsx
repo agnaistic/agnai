@@ -5,6 +5,7 @@ import { createDebounce, isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 import { markdown } from './markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const MIN_HEIGHT = 40
 
@@ -51,6 +52,8 @@ const TextInput: Component<{
   format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
+  const [t] = useTransContext()
+
   let inputRef: any
   const [tokens, setTokens] = createSignal(0)
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
@@ -149,7 +152,7 @@ const TextInput: Component<{
             <div class="flex items-center gap-1" classList={{ 'pb-1': !props.helperText }}>
               {props.label}{' '}
               <Show when={props.tokenCount}>
-                <em class="ml-1 text-xs">({tokens()} tokens)</em>
+                <em class="ml-1 text-xs">({t('x_tokens', { count: tokens() })})</em>
               </Show>
               <Show when={props.isMultiline}>
                 <IsVisible onEnter={resize} />

@@ -1,11 +1,14 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const NovelGuide: Component = () => {
+  const [t] = useTransContext()
+
   return (
     <>
-      <PageHeader title="NovelAI Guide"></PageHeader>
+      <PageHeader title={t('novel_ai_guide')}></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
     </>
   )

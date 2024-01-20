@@ -2,10 +2,13 @@ import { Component, Show, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { msgStore } from '../../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
   props
 ) => {
+  const [t] = useTransContext()
+
   const state = msgStore((s) => ({
     msgs: s.msgs,
     msg: s.msgs.find((msg) => msg._id === props.messageId),
@@ -25,32 +28,32 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
 
   return (
     <Modal
-      title="Confirm Delete"
+      title={t('confirm_delete')}
       show={props.show}
       close={props.close}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Show when={count() > 1 && state.msg?.adapter !== 'image'}>
-            <Button onClick={() => confirm(true)}>Delete One</Button>
+            <Button onClick={() => confirm(true)}>{t('delete_one')}</Button>
           </Show>
           <Button schema="red" onClick={() => confirm(false)}>
-            Delete {count()}
+            {t('delete_x', { count: count() })}
           </Button>
         </>
       }
     >
       <Show when={state.msg?.adapter !== 'image'}>
-        Are you sure wish to delete the one or the last {count()} messages?
+        {t('are_you_sure_you_wish_to_delete_messages?', { count: count() })}
         <Show when={count() > 1}>
           <br />
-          Deleteing "one" will delete the selected message only.
+          {t('deleting_one_will_delete_the_selected_message_only')}
         </Show>
       </Show>
       <Show when={state.msg?.adapter === 'image'}>
-        Are you sure wish to delete 1 image message?
+        {t('are_you_sure_you_wish_to_delete_image_message?')}
       </Show>
     </Modal>
   )

@@ -3,8 +3,11 @@ import { Component, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { chatStore, msgStore } from '../../store'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
+  const [t] = useTransContext()
+
   const chats = chatStore()
   const msgs = msgStore()
 
@@ -13,7 +16,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
     const messages = msgs.msgs.slice()
 
     const json = {
-      name: 'Exported',
+      name: t('exported'),
       greeting: chat?.greeting || '',
       sampleChat: chat?.sampleChat || '',
       scenario: chat?.scenario || '',
@@ -32,7 +35,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
-        Close
+        {t('close')}
       </Button>
       <a
         href={`data:text/json:charset=utf-8,${json()}`}
@@ -40,20 +43,22 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
         onClick={props.close}
       >
         <Button>
-          <Download /> Download
+          <Download /> {t('download')}
         </Button>
       </a>
     </>
   )
 
   return (
-    <Modal show={props.show} close={props.close} title="Export Chat" footer={Footer}>
-      <p class="text-xl font-bold">Note</p>
-      <p>This will only export the conversation that you currently have loaded.</p>
-      <p>
-        If you want to export the entire chat, you will need to scroll up in the chat until the
-        entire conversation it loaded.
-      </p>
+    <Modal show={props.show} close={props.close} title={t('export_chat')} footer={Footer}>
+      <Trans key="export_chat_note">
+        <p class="text-xl font-bold">Note</p>
+        <p>This will only export the conversation that you currently have loaded.</p>
+        <p>
+          If you want to export the entire chat, you will need to scroll up in the chat until the
+          entire conversation it loaded.
+        </p>
+      </Trans>
     </Modal>
   )
 }

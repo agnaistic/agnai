@@ -5,6 +5,7 @@ import { SolidCard, TitleCard } from './shared/Card'
 import Button from './shared/Button'
 import WizardIcon from './icons/WizardIcon'
 import InvitesPage from './pages/Invite/InvitesPage'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const bgColor = {
   default: 'bg-500',
@@ -15,6 +16,8 @@ const bgColor = {
 } satisfies { [key in Toast['type']]: string }
 
 const Toasts: Component = () => {
+  const [t] = useTransContext()
+
   const state = toastStore()
 
   return (
@@ -32,7 +35,7 @@ const Toasts: Component = () => {
       >
         <InvitesPage />
         <SolidCard border class="mt-2 flex flex-col gap-2 font-bold">
-          <Show when={state.history.length === 0}>You have no notifications.</Show>
+          <Show when={state.history.length === 0}>{t('you_have_no_notifications')}</Show>
           <Show when={state.history.length > 0}>
             <div class="flex justify-center">
               <Button

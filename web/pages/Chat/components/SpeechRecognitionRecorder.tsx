@@ -15,6 +15,7 @@ import { defaultCulture } from '../../../shared/CultureCodes'
 import { msgStore, toastStore, userStore } from '../../../store'
 import { AppSchema } from '../../../../common/types/schema'
 import { createDebounce } from '/web/shared/util'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const win: any = window
 
@@ -55,6 +56,8 @@ export const SpeechRecognitionRecorder: Component<{
   cleared: Accessor<number>
   listening: (state: boolean) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const settings = userStore((s) => ({ ...defaultSettings, ...s.user?.speechtotext }))
 
   const [scripts, setScripts] = createSignal<string[]>([])
@@ -84,7 +87,7 @@ export const SpeechRecognitionRecorder: Component<{
       if (!Speech) return
       speech = new Speech()
     } catch (e: any) {
-      toastStore.error(`Could not initialize speech recognition: ${e.message}`)
+      toastStore.error(t('could_not_initialize_speech_recognition_x', { message: e.message }))
       return
     }
 

@@ -34,6 +34,7 @@ const index = resolve(baseFolder, 'dist', 'index.html')
 
 app.use('/v1', keyedRouter)
 app.use('/api', api)
+app.use('/locales', express.static(config.localeFolder))
 
 if (config.pipelineProxy) {
   app.use('/pipeline', pipeline)

@@ -8,8 +8,11 @@ import TextInput from '/web/shared/TextInput'
 import { getStrictForm } from '/web/shared/util'
 import { SaveIcon } from 'lucide-solid'
 import Button from '/web/shared/Button'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ServerConfiguration: Component = () => {
+  const [t] = useTransContext()
+
   let form: HTMLFormElement
   const user = userStore()
   const nav = useNavigate()
@@ -45,40 +48,40 @@ const ServerConfiguration: Component = () => {
 
   return (
     <>
-      <PageHeader title="Server Configuration" />
+      <PageHeader title={t('server_configuration')} />
 
       <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
         <Select
           fieldName="apiAccess"
-          label="API Access Level"
+          label={t('api_access_level')}
           items={[
-            { label: 'Off', value: 'off' },
-            { label: 'All Users', value: 'users' },
-            { label: 'Subscribers', value: 'subscribers' },
-            { label: 'Adminstrators', value: 'admins' },
+            { label: t('off'), value: 'off' },
+            { label: t('all_users'), value: 'users' },
+            { label: t('subscribers'), value: 'subscribers' },
+            { label: t('administrators'), value: 'admins' },
           ]}
-          value={state.serverConfig?.apiAccess || 'off'}
+          value={state.serverConfig?.apiAccess || t('off')}
         />
 
         <Toggle
           fieldName="maintenance"
-          label="Maintenace Mode Enabled"
-          helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
+          label={t('maintenance_mode_enabled')}
+          helperText={t('maintenance_mode_message')}
           value={state.serverConfig?.maintenance}
         />
 
         <TextInput
           fieldName="maintenanceMessage"
           isMultiline
-          label="Maintenance Message"
-          helperText="Markdown is supported"
+          label={t('maintenance_message')}
+          helperText={t('markdown_is_supported')}
           value={state.serverConfig?.maintenanceMessage}
         />
 
         <TextInput
           fieldName="slots"
-          label="Slots Configuration"
-          helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
+          label={t('slots_configuration')}
+          helperText={t('slots_configuration_message')}
           value={slots()}
           onInput={formatSlots}
           isMultiline
@@ -86,30 +89,30 @@ const ServerConfiguration: Component = () => {
 
         <Toggle
           fieldName="policiesEnabled"
-          label="Enable Policies"
-          helperText="Display TOS and Privacy Statements"
+          label={t('enable_policies')}
+          helperText={t('display_tos_and_privacy_statements')}
           disabled
           class="hidden"
         />
 
         <TextInput
           fieldName="termsOfService"
-          label="Terms of Service"
-          helperText="Not yet implemented"
+          label={t('terms_of_service')}
+          helperText={t('not_yet_implemented')}
           isMultiline
           disabled
         />
         <TextInput
           fieldName="privacyStatement"
-          label="PrivacyStatement"
-          helperText="Not yet implemented"
+          label={t('privacy_policy')}
+          helperText={t('not_yet_implemented')}
           isMultiline
           disabled
         />
 
         <div class="flex justify-end">
           <Button onClick={submit} class="w-fit">
-            <SaveIcon /> Save
+            <SaveIcon /> {t('save')}
           </Button>
         </div>
       </form>

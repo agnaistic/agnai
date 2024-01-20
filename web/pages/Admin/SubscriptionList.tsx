@@ -9,13 +9,16 @@ import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import Divider from '/web/shared/Divider'
 import { SolidCard } from '/web/shared/Card'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const SubscriptionList: Component = () => {
-  setComponentPageTitle('Subscriptions')
+  const [t] = useTransContext()
+
+  setComponentPageTitle(t('subscriptions'))
   const nav = useNavigate()
   const state = presetStore((s) => ({
     subs: s.subs
-      .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
+      .map((pre) => ({ ...pre, label: `[${getServiceName(t, pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
 
@@ -40,28 +43,28 @@ const SubscriptionList: Component = () => {
     <>
       <PageHeader title="Subscriptions" />
       <A href="/admin/metrics" class="link">
-        ← Back to Manage
+        {t('back_to_manage')}
       </A>
       <div class="mb-4 flex w-full justify-end gap-2">
         <A href="/admin/tiers/new">
           <Button>
             <Plus />
-            Subscription Tier
+            {t('subscription_tier')}
           </Button>
         </A>
         <A href="/admin/subscriptions/new">
           <Button>
             <Plus />
-            Subscription Preset
+            {t('subscription_preset')}
           </Button>
         </A>
       </div>
       <div class="flex flex-col items-center gap-2">
         <Show when={cfg.tiers.length === 0}>
-          <div class="flex justify-center text-xl font-bold">No Tiers</div>
+          <div class="flex justify-center text-xl font-bold">{t('no_tiers')}</div>
         </Show>
         <Show when={cfg.tiers.length > 0}>
-          <div class="flex justify-center text-xl font-bold">Tiers</div>
+          <div class="flex justify-center text-xl font-bold">{t('tiers')}</div>
           <div class="flex w-full flex-col gap-2">
             <For each={cfg.tiers}>
               {(each) => (
@@ -74,17 +77,21 @@ const SubscriptionList: Component = () => {
                     >
                       {each.name}
                       <Show when={each.cost > 0 && !!each.priceId}>
-                        <span class="text-600 ml-2 text-xs italic">Stripe: ${each.cost / 100}</span>
+                        <span class="text-600 ml-2 text-xs italic">
+                          {t('stripe_x_cost', { cost: each.cost / 1000 })}
+                        </span>
                       </Show>
 
                       <Show when={each.patreon?.cost! > 0}>
                         <span class="text-600 ml-2 text-xs italic">
-                          Patreon: ${(each.patreon?.cost! / 100).toFixed(2)}
+                          {t('patreon_x_cost', { cost: (each.patreon?.cost! / 100).toFixed(2) })}
                         </span>
                       </Show>
 
                       <Show when={!each.enabled}>
-                        <span class="text-600 ml-2 text-xs italic">disabled</span>
+                        <span class="text-600 ml-2 text-xs italic">
+                          {t('disabled').toLowerCase()}
+                        </span>
                       </Show>
                     </SolidCard>
                   </A>
@@ -94,7 +101,7 @@ const SubscriptionList: Component = () => {
                         schema="green"
                         onClick={() => adminStore.updateTier(each._id, { enabled: false })}
                       >
-                        Enabled
+                        {t('enabled')}
                       </Button>
                     </Show>
                     <Show when={!each.enabled}>
@@ -102,7 +109,7 @@ const SubscriptionList: Component = () => {
                         schema="red"
                         onClick={() => adminStore.updateTier(each._id, { enabled: true })}
                       >
-                        Disabled
+                        {t('disabled')}
                       </Button>
                     </Show>
                   </div>
@@ -112,7 +119,7 @@ const SubscriptionList: Component = () => {
           </div>
         </Show>
         <Divider />
-        <div class="flex justify-center font-bold">Subscription Presets</div>
+        <div class="flex justify-center font-bold">{t('subscription_presets')}</div>
         <For each={state.subs}>
           {(sub) => (
             <div class="flex w-full items-center gap-2">
@@ -129,12 +136,15 @@ const SubscriptionList: Component = () => {
                 <div class="ml-4 flex w-full items-center">
                   <div>
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      [Level: {sub.subLevel}] {getServiceName(sub.service)}
+                      {t('level_sub_level_x_service_x', {
+                        sub_level: sub.subLevel,
+                        service_name: getServiceName(t, sub.service),
+                      })}
                     </span>
                     {sub.name}
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      {sub.isDefaultSub ? ' default' : ''}
-                      {sub.subDisabled ? ' (disabled)' : ''}
+                      {sub.isDefaultSub ? ` ${t('default').toLowerCase()}` : ''}
+                      {sub.subDisabled ? ` ${t('(disabled)')}` : ''}
                     </span>
                   </div>
                 </div>
@@ -163,7 +173,7 @@ const SubscriptionList: Component = () => {
         show={!!deleting()}
         close={() => setDeleting()}
         confirm={deleteSub}
-        message="Are you sure you wish to delete this subscription?"
+        message={t('are_you_sure_you_want_to_delete_subscription?')}
       />
     </>
   )

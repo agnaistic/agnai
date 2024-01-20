@@ -26,9 +26,13 @@ import { v4 } from 'uuid'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
+
 import { presetStore } from '/web/store'
 import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
+
 
 type Placeholder = {
   required: boolean
@@ -69,45 +73,40 @@ const v2placeholders = {
   lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
 } satisfies Record<string, Placeholder>
 
-const helpers: { [key in InterpAll]?: JSX.Element | string } = {
-  char: 'Character name',
-  user: `Your character's or profile name`,
+const helpers: (t: TFunction) => { [key in InterpAll]?: JSX.Element | string } = (
+  t: TFunction
+) => ({
+  char: t('helpers_char'),
+  user: t('helpers_user'),
 
-  system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
-  ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
+  system_prompt: t('helpers_system_prompt'),
+  ujb: t('helpers_ujb'),
 
-  impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
-  chat_age: `The age of your chat (time elapsed since chat created)`,
-  idle_duration: `The time elapsed since you last sent a message`,
-  all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
-  post: 'The "post-amble" text. This gives specific instructions on how the model should respond. E.g. Typically reads: `{{char}}:`',
-
+  impersonating: t('helpers_impersonating'),
+  chat_age: t('helpers_chat_age'),
+  idle_duration: t('helpers_idle_duration'),
+  all_personalities: t('helpers_all_personalities'),
+  post: t('helpers_post_amble'),
   insert:
     "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
-
-  longterm_memory:
-    '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',
-  user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
-  roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
-  random:
-    'Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`',
+  longterm_memory: t('helpers_long_term_memory'),
+  user_embed: t('helpers_user_embed'),
+  roll: t('helpers_roll'),
+  random: t('helpers_random'),
   'each bot': (
-    <>
-      Supported properties: <code>{`{{.name}} {{.persona}}`}</code>
-      <br />
+    <Trans key="helpers_each_bot">
+      Suported properties: <code>{`{{.name}} {{.persona}}`}</code>
       Example: <code>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</code>
-    </>
+    </Trans>
   ),
   'each message': (
-    <>
-      {' '}
+    <Trans key="helpers_each_message">
       Supported properties: <code>{`{{.msg}} {{.name}} {{.isuser}} {{.isbot}} {{.i}}`}</code> <br />
-      You can use <b>conditions</b> for isbot and isuser. E.g.{' '}
+      You can use <b>conditions</b> for isbot and isuser. E.g.
       <code>{`{{#if .isuser}} ... {{/if}}`}</code>
-      <br />
-      Full example:{' '}
+      Full example:
       <code>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</code>
-    </>
+    </Trans>
   ),
   'each chat_embed': (
     <>
@@ -126,6 +125,7 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
     </>
   ),
 }
+})
 
 type Optionals = { exclude: InterpAll[] } | { include: InterpAll[] } | {}
 
@@ -151,6 +151,8 @@ const PromptEditor: Component<
     noDummyPreview?: boolean
   } & Optionals
 > = (props) => {
+  const [t] = useTransContext()
+
   let ref: HTMLTextAreaElement = null as any
 
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
@@ -285,26 +287,26 @@ const PromptEditor: Component<
           label={
             <>
               <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
-                Prompt Template{' '}
+                {t('prompt_template')}
                 <div class="link flex items-center gap-1">
-                  <span class="link">Help</span>
+                  <span class="link">{t('help')}</span>
                   <HelpCircle size={14} />
                 </div>
               </div>
               <div class="flex gap-2">
                 <Button size="sm" onClick={togglePreview}>
-                  Toggle Preview
+                  {t('toggle_preview')}
                 </Button>
                 <Show when={props.showTemplates}>
                   <Show when={!props.inherit?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
-                      Use Library Template
+                      {t('use_library_template')}
                     </Button>
                   </Show>
 
                   <Show when={!!props.inherit?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
-                      Update Library Template
+                      {t('update_library_template')}
                     </Button>
                   </Show>
 
@@ -315,7 +317,7 @@ const PromptEditor: Component<
                       ref.value = props.inherit?.gaslight || ''
                     }}
                   >
-                    Use Preset's Template
+                    {t('use_preset_template')}
                   </Button>
                 </Show>
               </div>
@@ -324,11 +326,11 @@ const PromptEditor: Component<
           helperText={
             <Show when={!props.hideHelperText}>
               <div>
-                Placeholders will{' '}
-                <b>
-                  <u>not</u>
-                </b>{' '}
-                be automatically included if you do not include them.
+                <Trans key="placeholders_will_not_be_automatically_included">
+                  Placeholders will
+                  <b>not</b>
+                  be automatically included if you do not include them.
+                </Trans>
               </div>
             </Show>
           }
@@ -387,38 +389,48 @@ const PromptEditor: Component<
 
 export default PromptEditor
 
-const BASIC_LABELS: Record<string, { label: string; id: number }> = {
-  system_prompt: { label: 'System Prompt', id: 0 },
-  scenario: { label: 'Scenario', id: 100 },
-  personality: { label: 'Personality', id: 200 },
-  impersonating: { label: 'Impersonate Personality', id: 300 },
-  chat_embed: { label: 'Long-term Memory', id: 350 },
-  memory: { label: 'Memory', id: 400 },
-  example_dialogue: { label: 'Example Dialogue', id: 500 },
-  history: { label: 'Chat History', id: 600 },
-  ujb: { label: 'Jailbreak (UJB)', id: 700 },
-}
+const BASIC_LABELS: (t: TFunction) => Record<string, { label: string; id: number }> = (
+  t: TFunction
+) => ({
+  system_prompt: { label: t('system_prompt'), id: 0 },
+  scenario: { label: t('scenario'), id: 100 },
+  personality: { label: t('personality'), id: 200 },
+  impersonating: { label: t('impersonate_personality'), id: 300 },
+  chat_embed: { label: t('long_term_memory'), id: 350 },
+  memory: { label: t('memory'), id: 400 },
+  example_dialogue: { label: t('example_dialogue'), id: 500 },
+  history: { label: t('chat_history'), id: 600 },
+  ujb: { label: t('jailbreak_ujb'), id: 700 },
+})
 
-const SORTED_LABELS = Object.entries(BASIC_LABELS)
-  .map(([value, spec]) => ({ id: spec.id, label: spec.label, value: value }))
-  .sort((l, r) => l.id - r.id)
+const SORTED_LABELS = (t: TFunction) =>
+  Object.entries(BASIC_LABELS(t))
+    .map(([value, spec]) => ({ id: spec.id, label: spec.label, value: value }))
+    .sort((l, r) => l.id - r.id)
 
 export const BasicPromptTemplate: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   hide?: boolean
 }> = (props) => {
+
   let ref: HTMLInputElement
-  const items = ['Alpaca', 'Vicuna', 'Metharme', 'ChatML', 'Pyg/Simple'].map((label) => ({
-    label: `Format: ${label}`,
-    value: label,
-  }))
+
+  const [t] = useTransContext()
+
+  const items = [t('alpaca'), t('vicuna'), t('metharme'), t('chat_ml'), t('pyg_simple')].map(
+    (label) => ({
+      label: t('format_x', { name: label }),
+      value: label,
+    })
+  )
+
 
   const [mod, setMod] = createSignal(
     props.inherit?.promptOrder?.map((o) => ({
-      ...BASIC_LABELS[o.placeholder],
+      ...BASIC_LABELS(t)[o.placeholder],
       value: o.placeholder,
       enabled: o.enabled,
-    })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
+    })) || SORTED_LABELS(t).map((h) => ({ ...h, enabled: true }))
   )
 
   const updateRef = (items: SortItem[]) => {
@@ -442,15 +454,11 @@ export const BasicPromptTemplate: Component<{
   return (
     <Card border hide={props.hide}>
       <div class="flex flex-col gap-1">
-        <FormLabel
-          label="Prompt Order"
-          helperMarkdown="Ordering of elements within your prompt. Click on an element to exclude it.
-          Enable **Advanced Prompting** for full control and customization."
-        />
+        <FormLabel label={t('prompt_order')} helperMarkdown={t('prompt_order_message')} />
         <Select
           fieldName="promptOrderFormat"
           items={items}
-          value={props.inherit?.promptOrderFormat || 'Alpaca'}
+          value={props.inherit?.promptOrderFormat || t('alpaca')}
         />
         <Sortable items={mod()} onChange={updateRef} onItemClick={onClick} />
         <TextInput
@@ -543,22 +551,22 @@ const HelpModal: Component<{
   return null
 }
 
-async function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
-  const char = toChar('Rory', {
-    scenario: 'Rory is strolling in the park',
-    persona: toPersona('Rory is very talkative.'),
+async function getExampleOpts(t: TFunction, inherit?: Partial<AppSchema.GenSettings>) {
+  const char = toChar(t('example_char_name'), {
+    scenario: t('example_scenario'),
+    persona: toPersona(t('example_persona')),
   })
-  const replyAs = toChar('Robot', { persona: toPersona('Robot likes coffee') })
-  const profile = toProfile('Author')
-  const { user } = toUser('Author')
+  const replyAs = toChar(t('example_bot_name'), { persona: toPersona(t('example_bot_persona')) })
+  const profile = toProfile(t('example_author'))
+  const { user } = toUser(t('example_author'))
   const chat = toChat(char)
 
   const characters = toMap([char, replyAs])
   const history = [
-    toBotMsg(char, 'Hi, nice to meet you!'),
-    toUserMsg(profile, 'Nice to meet you too.'),
-    toBotMsg(replyAs, 'I am also here.'),
-    toUserMsg(profile, `I'm glad you're here.`),
+    toBotMsg(char, t('example_message_1')),
+    toUserMsg(profile, t('example_message_2')),
+    toBotMsg(replyAs, t('example_message_3')),
+    toUserMsg(profile, t('example_message_4')),
   ]
 
   const lines = history.map((hist) => {

@@ -23,8 +23,11 @@ import { useNavigate } from '@solidjs/router'
 import { isLoggedIn } from '/web/store/api'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 export const ProfileModal: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
   const tabs = useTabs(['Profile', 'Subscription'], 0)
@@ -55,8 +58,8 @@ export const ProfileModal: Component = () => {
       fixedHeight
       maxWidth="half"
       tabs={displayTabs() ? tabs : undefined}
-      ariaLabel="Your profile"
-      ariaDescription="Update your profile information."
+      ariaLabel={t('your_profile')}
+      ariaDescription={t('update_your_profile_information')}
     >
       <Switch>
         <Match when={!displayTabs()}>
@@ -75,8 +78,9 @@ export const ProfileModal: Component = () => {
 
 const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => {
   let formRef: HTMLFormElement
+  const [t] = useTransContext()
 
-  setComponentPageTitle('My profile')
+  setComponentPageTitle(t('my_profile'))
   const nav = useNavigate()
   const state = userStore()
   const admin = adminStore()
@@ -108,14 +112,14 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const footer = (
     <Button onClick={submit} ariaLabel="Update profile">
       <Save aria-hidden="true" />
-      <span aria-hidden="true">Update Profile</span>
+      <span aria-hidden="true">{t('update_profile')}</span>
     </Button>
   )
 
   return (
     <>
-      <PageHeader title="Your Profile" subPage />
-      <form ref={formRef!} onSubmit={submit} aria-label="Edit profile">
+      <PageHeader title={t('your_profile')} subPage />
+      <form ref={formRef!} onSubmit={submit} aria-label={t('edit_profile')}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <div class="flex flex-row gap-2">
@@ -124,59 +128,60 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </div>
 
-          <TitleCard type="orange" ariaRole="note" ariaLabel="Impersonate">
+          <TitleCard type="orange" ariaRole="note" ariaLabel={t('impersonate')}>
             <div class="flex flex-wrap items-center">
-              You can{' '}
-              <div class="inline">
+              <Trans key="you_can_impersonate_characters_message_1">
+                You can
                 <Button class="mx-1" size="sm" onClick={() => settingStore.toggleImpersonate(true)}>
                   Impersonate
-                </Button>{' '}
-              </div>
-              characters by clicking the <VenetianMask size={16} class="mx-1" aria-hidden="true" />{' '}
-              icon at the top of the main menu.
+                </Button>
+                characters by clicking the
+              </Trans>
+              <VenetianMask size={16} class="mx-1" aria-hidden="true" />
+              {t('you_can_impersonate_characters_message_2')}
             </div>
           </TitleCard>
 
           <TextInput
-            label="ID"
-            helperText="Your user ID. This is used by others to send you chat invitations."
+            label={t('id')}
+            helperText={t('your_user_id_message')}
             fieldName="userid"
             value={state.user?._id}
             disabled
           />
 
           <TextInput
-            label="Username"
-            helperText="Your username. This cannot be changed. You never need to share your username."
+            label={t('username')}
+            helperText={t('your_user_name_message')}
             fieldName="username"
             value={state.user?.username}
             disabled
           />
 
           <TextInput
-            label="Display Name"
-            helperText="This is your publicly visible name."
+            label={t('display_name')}
+            helperText={t('display_name_message')}
             fieldName="handle"
             value={state.profile?.handle}
           />
 
           <FileInput
-            label="Profile Image"
+            label={t('profile_image')}
             fieldName="avatar"
             accept="image/jpeg,image/png"
-            helperText={'File size limit of 2MB'}
+            helperText={t('profile_image_message')}
             onUpdate={onAvatar}
           />
 
           <div>
-            <Button onClick={() => setPass(true)}>Change Password</Button>
+            <Button onClick={() => setPass(true)}>{t('change_password')}</Button>
           </div>
 
           <Show when={state.user?._id !== 'anon'}>
             <div class="flex justify-center gap-4">
               <Show when={admin.impersonating}>
                 <Button schema="warning" onClick={() => adminStore.unimpersonate()}>
-                  Unimpersonate
+                  {t('un_impersonate')}
                 </Button>
               </Show>
               <Show when={!admin.impersonating}>
@@ -187,12 +192,12 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                     nav('/')
                   }}
                 >
-                  Logout
+                  {t('logout')}
                 </Button>
               </Show>
 
               <Button schema="red" onClick={() => setDel(true)}>
-                <AlertTriangle /> Delete Account <AlertTriangle />
+                <AlertTriangle /> {t('delete_account')} <AlertTriangle />
               </Button>
             </div>
           </Show>

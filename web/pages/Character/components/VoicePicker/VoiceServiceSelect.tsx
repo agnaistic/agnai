@@ -2,11 +2,14 @@ import { Component, createEffect, createSignal, on, onMount } from 'solid-js'
 import { TTSService } from '/common/types'
 import Select, { Option } from '/web/shared/Select'
 import { voiceStore } from '/web/store/voice'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const VoiceServiceSelect: Component<{
   value: TTSService | undefined
   onChange: (service: TTSService) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const services = voiceStore((s) => s.services)
   const [options, setOptions] = createSignal<Option<TTSService | ''>[]>([])
 
@@ -38,7 +41,7 @@ export const VoiceServiceSelect: Component<{
         fieldName="ttsService"
         items={options()}
         value={props.value}
-        label="Voice Service"
+        label={t('voice_service')}
         onChange={(ev) => props.onChange((ev.value as TTSService) || '' || undefined)}
       ></Select>
     </>

@@ -47,9 +47,12 @@ import ChatPanes from './components/ChatPanes'
 import { useAppContext } from '/web/store/context'
 import { embedApi } from '/web/store/embeddings'
 import Loading from '/web/shared/Loading'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ChatDetail: Component = () => {
-  const { updateTitle } = setComponentPageTitle('Chat')
+  const [t] = useTransContext()
+
+  const { updateTitle } = setComponentPageTitle(t('chat'))
 
   let container: HTMLDivElement
   let slotContainer: HTMLDivElement
@@ -289,7 +292,7 @@ const ChatDetail: Component = () => {
 
     const { name, adapter, isThirdParty, presetLabel } = ctx.info
 
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+    const label = `${ADAPTER_LABELS(t)[adapter]}${isThirdParty ? ' ' + t('3rd_party') : ''} - ${
       name || presetLabel
     }`
     return label
@@ -297,7 +300,7 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     const charName = chats.char?.name
-    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
+    updateTitle(charName ? t('chat_with_x', { name: charName }) : t('chat'))
 
     if (!params.id) {
       if (!chats.lastId) return nav('/character/list')
@@ -562,13 +565,15 @@ const ChatDetail: Component = () => {
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
                       <div class="mb-4 flex flex-col items-center text-[var(--text-500)]">
-                        <div class="font-bold">Notes from the creator of {chats.char?.name}</div>
+                        <div class="font-bold">
+                          {t('notes_from_the_creator_of_x', { name: chats.char?.name })}
+                        </div>
                         {descriptionText()}
                       </div>
                     </Show>
                     <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                       <div class="flex justify-center">
-                        <Button onClick={generateFirst}>Generate Message</Button>
+                        <Button onClick={generateFirst}>{t('generate_message')}</Button>
                       </div>
                     </Show>
                     {/* Original Slot location */}
@@ -631,7 +636,7 @@ const ChatDetail: Component = () => {
 
                 <Show when={isSelfRemoved()}>
                   <div class="flex w-full justify-center">
-                    You have been removed from the conversation
+                    {t('you_have_been_removed_from_the_conversation')}
                   </div>
                 </Show>
                 <Show when={isOwner() && ctx.activeBots.length > 1}>

@@ -5,15 +5,18 @@ import ScenarioList from '../Scenario/ScenarioList'
 import PromptTemplates from '../PromptTemplates'
 import { BooksTab, EmbedsTab } from './Memory'
 import { useSearchParams } from '@solidjs/router'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { Library as default }
 
 const Library: Component = () => {
+  const [t] = useTransContext()
+
   const [params, setParams] = useSearchParams()
-  setComponentPageTitle('Library')
+  setComponentPageTitle(t('library'))
 
   const allowed = createMemo(() => {
-    const base = ['Memories', 'Scenarios', 'Prompt Templates', 'Embeddings']
+    const base = [t('memories'), t('scenarios'), t('prompt_templates'), t('embeddings')]
 
     return base
   })
@@ -30,19 +33,19 @@ const Library: Component = () => {
       <Tabs tabs={tabs.tabs} select={tabs.select} selected={tabs.selected} />
 
       <Switch>
-        <Match when={tabs.current() === 'Memories'}>
+        <Match when={tabs.current() === t('memories')}>
           <BooksTab />
         </Match>
 
-        <Match when={tabs.current() === 'Scenarios'}>
+        <Match when={tabs.current() === t('scenarios')}>
           <ScenarioList />
         </Match>
 
-        <Match when={tabs.current() === 'Prompt Templates'}>
+        <Match when={tabs.current() === t('prompt_templates')}>
           <PromptTemplates />
         </Match>
 
-        <Match when={tabs.current() === 'Embeddings'}>
+        <Match when={tabs.current() === t('embeddings')}>
           <EmbedsTab />
         </Match>
       </Switch>

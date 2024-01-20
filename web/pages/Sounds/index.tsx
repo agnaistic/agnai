@@ -6,8 +6,11 @@ import { Card } from '../../shared/Card'
 import SoundpackPreview from './SoundpackPreview'
 import { audioStore } from '/web/store'
 import { SoundpackPicker } from './SoundpackPicker'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const SoundsPage: Component<{}> = (props) => {
+  const [t] = useTransContext()
+
   const audio = audioStore()
 
   return (
@@ -18,8 +21,8 @@ const SoundsPage: Component<{}> = (props) => {
         <VolumeControl
           trackId="master"
           parentClass="w-full"
-          label="Master Volume"
-          helperText="Adjust the overall volume of the application."
+          label={t('master_volume')}
+          helperText={t('adjust_the_overall_volume_of_the_application')}
         />
       </Card>
       <Divider />
@@ -28,29 +31,29 @@ const SoundsPage: Component<{}> = (props) => {
         <VolumeControl
           trackId="background"
           parentClass="w-full"
-          label="Background Ambience"
-          helperText="Adjust the volume of the continuous background music and ambient sounds."
+          label={t('background_ambience')}
+          helperText={t('adjust_the_volume_of_the_continuous_background')}
         />
 
         <VolumeControl
           trackId="randomAmbient"
           parentClass="w-full"
-          label="Random Ambient Events"
-          helperText="Adjust the volume of randomly occurring ambient sounds."
+          label={t('random_ambient_events')}
+          helperText={t('adjust_the_volume_of_randomly_occurring_ambient_sounds')}
         />
 
         <VolumeControl
           trackId="interaction"
           parentClass="w-full"
-          label="Interaction Sound Effects"
-          helperText="Adjust the volume of sound effects triggered by user interactions."
+          label={t('interaction_sound_effects')}
+          helperText={t('adjust_the_volume_of_sound_effects')}
         />
 
         <VolumeControl
           trackId="speech"
           parentClass="w-full"
-          label="Narration & Speech"
-          helperText="Adjust the volume of text-to-speech narration and character dialogues."
+          label={t('narration_and_speech')}
+          helperText={t('adjust_the_volume_of_text_to_speech')}
         />
       </Card>
 
@@ -60,8 +63,8 @@ const SoundsPage: Component<{}> = (props) => {
         <Card class="flex flex-row">
           <SoundpackPicker
             fieldName="globalSoundpackPicker"
-            label="Global Soundpack"
-            helperText="Choose a predefined sound theme for the entire application, customizable per scenario, chat or character. Explore and download more packs, or create your own for a unique experience."
+            label={t('global_sound_pack')}
+            helperText={t('choose_a_predefined_sound_theme_for_the_entire_application')}
             level="global"
           />
         </Card>

@@ -26,11 +26,14 @@ import { SolidCard, TitleCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
   onHordeModelsChange: (models: string[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [query] = useSearchParams()
   const state = userStore()
   const cfg = settingStore()
@@ -62,7 +65,7 @@ const AISettings: Component<{
         }
         return false
       })
-      .map((a) => ADAPTER_LABELS[a] || a)
+      .map((a) => ADAPTER_LABELS(t)[a] || a)
 
     setTabs(tabs)
 
@@ -83,10 +86,10 @@ const AISettings: Component<{
     return next
   })
   const presetOptions = createMemo(() => {
-    const opts = getPresetOptions(presets, { builtin: true }).filter(
+    const opts = getPresetOptions(t, presets, { builtin: true }).filter(
       (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
     )
-    return [{ label: 'None', value: '', custom: false }].concat(opts)
+    return [{ label: t('none'), value: '', custom: false }].concat(opts)
   })
   const [presetId, setPresetId] = createSignal(state.user?.defaultPreset || '')
 
@@ -95,15 +98,15 @@ const AISettings: Component<{
   return (
     <>
       <Show when={!ready()}>
-        <div>Loading...</div>
+        <div>{t('loading')}</div>
       </Show>
 
       <Show when={ready()}>
         <Show when={!cfg.config.apiAccess}>
           <PresetSelect
             fieldName="defaultPreset"
-            label="Default Preset"
-            helperText="The initially selected preset when creating a new chat. "
+            label={t('default_preset')}
+            helperText={t('the_initial_selected_preset')}
             options={presetOptions()}
             selected={presetId()}
             setPresetId={setPresetId}
@@ -113,8 +116,8 @@ const AISettings: Component<{
         <Show when={cfg.config.apiAccess}>
           <PresetSelect
             fieldName="defaultPreset"
-            label="Default/API Access Preset"
-            helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
+            label={t('default_api_access_preset')}
+            helperText={t('preset_used_when_using_api_access')}
             options={presetOptions()}
             selected={presetId()}
             setPresetId={setPresetId}
@@ -126,72 +129,71 @@ const AISettings: Component<{
               <div class="text-900 flex gap-1">
                 <Show when={apiKey().includes('***')}>
                   <Button size="pill" onClick={revealKey}>
-                    Reveal Key
+                    {t('reveal_key')}
                   </Button>
                 </Show>
                 <Show when={apiKey() === 'Not set'}>
                   <Button size="pill" onClick={generateKey}>
-                    Generate Key
+                    {t('generate_key')}
                   </Button>
                 </Show>
                 <Show when={apiKey() !== 'Not set'}>
                   <Button size="pill" onClick={generateKey}>
-                    Regenerate Key
+                    {t('regenerate_key')}
                   </Button>
                 </Show>
               </div>
             }
             ref={keyRef}
-            label="API Key"
+            label={t('api_key')}
             readonly
-            placeholder="API Key Hidden"
+            placeholder={t('api_key_hidden')}
             value={apiKey()}
           />
         </Show>
 
         <div class="my-2">
           <SolidCard bg="orange-500" class="mb-2">
-            Are you using an external AI service such as OpenAI, NovelAI, or Horde? Provide your API
-            key below.
+            {t('are_you_using_an_external_ai_service')}
           </SolidCard>
           <Tabs tabs={tabs()} selected={tab} select={setTab} />
         </div>
       </Show>
 
-      <div class={currentTab() === ADAPTER_LABELS.horde ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).horde ? tabClass : 'hidden'}>
         <HordeAISettings
           onHordeWorkersChange={props.onHordeWorkersChange}
           onHordeModelsChange={props.onHordeModelsChange}
         />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).kobold ? tabClass : 'hidden'}>
         <KoboldAISettings />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.ooba ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).ooba ? tabClass : 'hidden'}>
         <OobaAISettings />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.openai ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).openai ? tabClass : 'hidden'}>
         <OpenAISettings />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.scale ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).scale ? tabClass : 'hidden'}>
         <ScaleSettings />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.novel ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).novel ? tabClass : 'hidden'}>
         <NovelAISettings />
       </div>
 
-      <div class={currentTab() === ADAPTER_LABELS.claude ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS(t).claude ? tabClass : 'hidden'}>
         <ClaudeSettings />
       </div>
 
       <For each={cfg.config.registered}>
         {(each) => (
-          <div class={currentTab() === ADAPTER_LABELS[each.name] ? tabClass : 'hidden'}>
+          <div class={currentTab() === ADAPTER_LABELS(t)[each.name] ? tabClass : 'hidden'}>
             {/** Optionally show adapter specific information for registered adapters */}
             <Switch>
               <Match when={each.name === 'openrouter'}>
@@ -200,11 +202,13 @@ const AISettings: Component<{
 
               <Match when={each.name === 'replicate'}>
                 <TitleCard>
-                  Head to{' '}
-                  <a class="link" target="_blank" href="https://replicate.com/">
-                    Replicate.com
-                  </a>{' '}
-                  to get started.
+                  <Trans key="head_to_replicate_com_to_get_started">
+                    Head to
+                    <a class="link" target="_blank" href="https://replicate.com/">
+                      Replicate.com
+                    </a>
+                    to get started.
+                  </Trans>
                 </TitleCard>
               </Match>
             </Switch>

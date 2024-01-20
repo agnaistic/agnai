@@ -1,4 +1,5 @@
 import { AppSchema } from './types/schema'
+import { TFunction } from 'i18next'
 
 export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
@@ -225,21 +226,23 @@ export type HordeWorker = {
   bridge_agent: string
 }
 
-export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
-  horde: 'Horde',
-  kobold: 'Self-host / 3rd Party',
-  novel: 'NovelAI',
-  ooba: 'Textgen',
-  openai: 'OpenAI',
-  scale: 'Scale',
-  claude: 'Claude',
-  goose: 'Goose AI',
-  replicate: 'Replicate',
-  openrouter: 'OpenRouter',
-  mancer: 'Mancer',
-  petals: 'Petals',
-  agnaistic: 'Agnaistic',
-}
+export const ADAPTER_LABELS: (t: TFunction | undefined) => { [key in AIAdapter]: string } = (
+  t: TFunction | undefined
+) => ({
+  horde: t != null ? t('horde') : 'Horde',
+  kobold: t != null ? t('self_host_or_third_party') : 'Self-host or 3rd Party',
+  novel: t != null ? t('novel_ai') : 'NovelAI',
+  ooba: t != null ? t('text_gen') : 'Textgen',
+  openai: t != null ? t('open_ai') : 'OpenAI',
+  scale: t != null ? t('scale') : 'Scale',
+  claude: t != null ? t('claude') : 'Claude',
+  goose: t != null ? t('goose_ai') : 'Goose AI',
+  replicate: t != null ? t('replicate') : 'Replicate',
+  openrouter: t != null ? t('open_router') : 'OpenRouter',
+  mancer: t != null ? t('mancer') : 'Mancer',
+  petals: t != null ? t('petals') : 'Petals',
+  agnaistic: t != null ? t('agnaistic') : 'Agnaistic',
+})
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
   openai: true,

@@ -1,17 +1,20 @@
 import { Component } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const OobaAISettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
 
   return (
     <>
       <TextInput
         fieldName="oobaUrl"
-        label="Text-Generation-WebUI Compatible URL"
-        helperText="This URL must be publicly accessible. Overriden by 'Third Party URL' in presets."
-        placeholder="E.g. https://random-cloudflare-generated-words.trycloudflare.com"
+        label={t('text_generation_compatible_url')}
+        helperText={t('this_url_must_be_publicly_accessible')}
+        placeholder={t('text_generation_example')}
         value={state.user?.oobaUrl}
       />
     </>

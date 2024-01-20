@@ -11,10 +11,14 @@ import Select from '/web/shared/Select'
 import { A } from '@solidjs/router'
 import { elapsedSince, getUserSubscriptionTier, now } from '/common/util'
 import type Stripe from 'stripe'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+
 
 const UsersPage: Component = () => {
+  const [t] = useTransContext()
+
   let ref: any
-  setComponentPageTitle('Users')
+  setComponentPageTitle(t('users'))
   const state = adminStore()
   const config = userStore()
 
@@ -43,10 +47,10 @@ const UsersPage: Component = () => {
   })
 
   const subTiers = createMemo(() => {
-    const base = [{ label: '[-1] None', value: '-1' }]
+    const base = [{ label: t('[-1]_none'), value: '-1' }]
     const tiers =
       config.tiers.map((tier) => ({
-        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(disabled)' : ''}`,
+        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? t('(disabled)') : ''}`,
         value: tier._id,
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
@@ -54,20 +58,20 @@ const UsersPage: Component = () => {
 
   return (
     <div>
-      <PageHeader title="User Management" />
+      <PageHeader title={t('user_management')} />
 
       <A href="/admin/metrics" class="link">
-        ← Back to Manage
+        {t('back_to_manage')}
       </A>
 
       <div class="flex flex-col gap-2 pb-4">
         <form ref={ref} class="flex justify-between" onSubmit={search}>
           <div class="flex flex-wrap gap-2">
-            <TextInput class="text-xs" fieldName="username" placeholder="Username" />
-            <TextInput class="text-xs" fieldName="customerId" placeholder="Customer ID" />
-            <ToggleButton fieldName="subscribed">Subscribed</ToggleButton>
+            <TextInput class="text-xs" fieldName="username" placeholder={t('username')} />
+            <TextInput class="text-xs" fieldName="customerId" placeholder={t('customer_id')} />
+            <ToggleButton fieldName="subscribed">{t('subscribed')}</ToggleButton>
           </div>
-          <Button onClick={search}>Search</Button>
+          <Button onClick={search}>{t('search')}</Button>
         </form>
         <For each={state.users}>
           {(user) => (
@@ -89,10 +93,10 @@ const UsersPage: Component = () => {
                   }}
                 />
                 <Button size="sm" onClick={() => setPw(user)}>
-                  Set Password
+                  {t('set_password')}
                 </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
-                  Info
+                  {t('info')}
                 </Button>
               </div>
             </div>
@@ -115,7 +119,11 @@ export default UsersPage
 const InfoModel: Component<{ show: boolean; close: () => void; userId: string; name: string }> = (
   props
 ) => {
+
   let subId: any
+
+  const [t] = useTransContext()
+
   const state = adminStore()
   const tiers = userStore((s) => ({ list: s.tiers }))
   const [session, setSession] = createSignal<Stripe.Checkout.Session>()
@@ -147,7 +155,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
       show={props.show}
       close={props.close}
       title={`${props.name}: ${state.info?.handle || '...'}`}
-      footer={<Button onClick={props.close}>Close</Button>}
+      footer={<Button onClick={props.close}>{t('close')}</Button>}
       maxWidth="half"
     >
       <div class="flex flex-col items-center gap-4">
@@ -156,31 +164,33 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
             <img src={getAssetUrl(state.info?.avatar!)} class="h-[128px]" />
           </div>
         </Show>
-        <Button onClick={() => adminStore.impersonate(state.info?.userId!)}>Impersonate</Button>
+        <Button onClick={() => adminStore.impersonate(state.info?.userId!)}>
+          {t('impersonate')}
+        </Button>
         <table class="w-full table-auto">
           <tbody>
             <tr>
-              <th>User ID</th>
+              <th>{t('user_id')}</th>
               <td>{state.info?.userId}</td>
             </tr>
 
             <tr>
-              <th>Handle</th>
+              <th>{t('handle')}</th>
               <td>{state.info?.handle}</td>
             </tr>
 
             <tr>
-              <th>Characters</th>
+              <th>{t('characters')}</th>
               <td>{state.info?.characters}</td>
             </tr>
             <tr>
-              <th>Chats</th>
+              <th>{t('chats')}</th>
               <td>{state.info?.chats}</td>
             </tr>
 
             <tr>
               <td colSpan={2}>
-                <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
+                <div class="bg-700 mt-4 flex justify-center">{t('subscription_details')}</div>
               </td>
             </tr>
             <tr>
@@ -236,33 +246,35 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               </tr>
             </Show>
             <tr>
-              <th>Subscription Level</th>
+              <th>{t('subscription_level')}</th>
               <td>
-                Native:{state.info?.sub?.level ?? '-1'} / Patreon:
-                {state.info?.patreon?.sub?.level ?? '-1'}
+                {t('native_x_or_patreon_x', {
+                  sub_level: state.info?.sub?.level ?? '-1',
+                  patreon_sub_level: state.info?.patreon?.sub?.level ?? '-1',
+                })}
               </td>
             </tr>
 
             <Show when={state.info?.billing}>
               <tr>
-                <th>Customer ID</th>
+                <th>{t('customer_id')}</th>
                 <td>{state.info?.billing?.customerId}</td>
               </tr>
 
               <tr>
-                <th>Period Start</th>
+                <th>{t('period_start')}</th>
                 <td>{new Date(state.info?.billing?.lastRenewed!).toLocaleString()}</td>
               </tr>
 
               <tr>
                 <th>
                   {state.info?.state.downgrade
-                    ? 'Downgrading at'
+                    ? t('downgrading_at')
                     : state.info?.state.state === 'cancelled'
-                    ? 'Cancelled at'
+                    ? t('canceled_at')
                     : state.info?.billing?.cancelling
-                    ? 'Cancels at'
-                    : 'Renews at'}
+                    ? t('cancels_at')
+                    : t('renews_at')}
                 </th>
                 <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
               </tr>
@@ -270,12 +282,12 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
 
             <Show when={state.info?.state.history.length ?? 0 > 0}>
               <tr>
-                <th>State</th>
+                <th>{t('state')}</th>
                 <td>{state.info?.state.state}</td>
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <div class="bg-700 mt-4 flex justify-center">History</div>
+                  <div class="bg-700 mt-4 flex justify-center">{t('history')}</div>
                 </td>
               </tr>
               <For each={state.info?.state.history}>
@@ -288,13 +300,18 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                       <th>
                         {new Date(item.time).toLocaleString()}{' '}
                         <span class="text-500 text-xs">
-                          {elapsedSince(new Date(item.time!))} ago
+                          {t('x_ago', { time: elapsedSince(new Date(item.time!)) })}
                         </span>
                       </th>
                       <td>
                         {item.type}{' '}
                         <span class="text-[var(--hl-700)]">
-                          {tier ? `(tier #${tier.level} ${tier.name})` : ''}
+                          {tier
+                            ? t('tier_level_x_name_x', {
+                                level: tier.level,
+                                name: tier.name,
+                              })
+                            : ''}
                         </span>
                       </td>
                     </tr>
@@ -324,6 +341,8 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
 const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (
   props
 ) => {
+  const [t] = useTransContext()
+
   let ref: any
   const save = () => {
     const body = getStrictForm(ref, { newPassword: 'string' })
@@ -334,21 +353,23 @@ const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () 
     <Modal
       show={props.show}
       close={props.close}
-      title="Change Password"
+      title={t('change_password')}
       footer={
         <>
           {' '}
           <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+            <X /> {t('cancel')}
           </Button>
           <Button onClick={save}>
-            <Save /> Update
+            <Save /> {t('update')}
           </Button>
         </>
       }
     >
       <div>
-        Update password for: <b>{props.user.username}</b>
+        <Trans key="update_password_for_x" options={{ username: props.user.username }}>
+          Update password for: <b>{'{{username}}'}</b>
+        </Trans>
       </div>
       <div>
         <form ref={ref}>

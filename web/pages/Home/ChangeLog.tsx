@@ -2,6 +2,7 @@ import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const text = `
 _9 Sept 2023_
@@ -84,10 +85,12 @@ _21 Apr 2023_
 - Added change log`
 
 const ChangeLog: Component = () => {
-  setComponentPageTitle('Changelog')
+  const [t] = useTransContext()
+
+  setComponentPageTitle(t('change_log'))
   return (
     <>
-      <PageHeader title="Change Log" />
+      <PageHeader title={t('change_log')} />
 
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
     </>

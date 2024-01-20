@@ -3,8 +3,11 @@ import { settingStore, userStore } from '/web/store'
 import Button from '/web/shared/Button'
 import { useNavigate } from '@solidjs/router'
 import { Pill, SolidCard } from '/web/shared/Card'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const PatreonOauth: Component = () => {
+  const [t] = useTransContext()
+
   const nav = useNavigate()
 
   const [state, setState] = createSignal<'success' | 'error' | undefined>()
@@ -43,19 +46,19 @@ const PatreonOauth: Component = () => {
     <SolidCard>
       <div class="flex flex-col items-center gap-2">
         <Switch>
-          <Match when={!state()}>Verifying Patreon account...</Match>
+          <Match when={!state()}>{t('verifying_patreon_account')}</Match>
 
           <Match when={state() === 'error'}>
-            <div class="text-red-500">Unable to verify Patreon account</div>
+            <div class="text-red-500">{t('unable_to_verify_patreon_account')}</div>
             <div>{message()}</div>
             <div>
-              <Button onClick={() => nav('/settings')}>Return to Settings</Button>
+              <Button onClick={() => nav('/settings')}>{t('return_to_settings')}</Button>
             </div>
           </Match>
 
           <Match when={state() === 'success'}>
-            <div class="text-green-500">Patreon account verified</div>
-            <div>Redirecting to Settings page...</div>
+            <div class="text-green-500">{t('patreon_account_verified')}</div>
+            <div>{t('redirecting_to_setting_page')}</div>
           </Match>
         </Switch>
       </div>
@@ -64,6 +67,8 @@ const PatreonOauth: Component = () => {
 }
 
 export const PatreonControls: Component = () => {
+  const [t] = useTransContext()
+
   const config = settingStore((s) => s.config)
   const state = userStore()
 
@@ -72,16 +77,16 @@ export const PatreonControls: Component = () => {
       <div class="flex w-full justify-center">
         <Show when={!state.user?.patreon}>
           <div class="flex flex-col items-center gap-1">
-            <Pill type="green">Link your Patreon account to receive subscriber benefits</Pill>
+            <Pill type="green">{t('link_your_patreon_account')}</Pill>
             <Button class="w-fit" onClick={authorizePatreon}>
-              Link Patreon Account
+              {t('link_patreon_account')}
             </Button>
           </div>
         </Show>
         <Show when={state.user?.patreon}>
           <div class="flex gap-2">
             <Button class="w-fit" onClick={userStore.unverifyPatreon}>
-              Unlink Patreon Account
+              {t('unlink_patreon_account')}
             </Button>
           </div>
         </Show>

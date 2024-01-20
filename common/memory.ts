@@ -1,6 +1,7 @@
 import { TokenCounter, AppSchema } from './types'
 import { defaultPresets } from './presets'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
+import { TFunction } from 'i18next'
 
 export const BUNDLED_CHARACTER_BOOK_ID = '__bundled__characterbook__'
 
@@ -319,7 +320,7 @@ export const emptyBook = (): AppSchema.MemoryBook => ({
   userId: '',
 })
 
-export const emptyBookWithEmptyEntry = (): AppSchema.MemoryBook => ({
+export const emptyBookWithEmptyEntry = (t: TFunction): AppSchema.MemoryBook => ({
   ...emptyBook(),
-  entries: [{ ...emptyEntry(), name: 'New Entry' }],
+  entries: [{ ...emptyEntry(), name: t('new_entry') }],
 })

@@ -14,22 +14,26 @@ import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
-const formatOptions = [
-  { value: 'attributes', label: 'Attributes' },
-  { value: 'text', label: 'Plain text' },
+const formatOptions = (t: TFunction) => [
+  { value: 'attributes', label: t('attributes') },
+  { value: 'text', label: t('plain_text') },
 ]
 
-const backupFormats: any = {
-  sbf: { value: 'sbf', label: 'SBF' },
-  wpp: { value: 'wpp', label: 'W++' },
-  boostyle: { value: 'boostyle', label: 'Boostyle' },
-}
+const backupFormats: any = (t: TFunction) => ({
+  sbf: { value: 'sbf', label: t('sbf') },
+  wpp: { value: 'wpp', label: t('w++') },
+  boostyle: { value: 'boostyle', label: t('boostyle') },
+})
 
 const ChatSettings: Component<{
   close: () => void
   footer: (children: any) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
   const user = userStore()
   const cfg = settingStore()
@@ -42,9 +46,9 @@ const ChatSettings: Component<{
   const personaFormats = createMemo(() => {
     const format = kind()
 
-    if (!format || format in formatOptions === false) return formatOptions
+    if (!format || !(format in formatOptions(t))) return formatOptions(t)
 
-    return formatOptions.concat(backupFormats[format])
+    return formatOptions(t).concat(backupFormats(t)[format])
   })
 
   const activePreset = createMemo(() => {
@@ -81,7 +85,7 @@ const ChatSettings: Component<{
   })
 
   const scenarios = createMemo(() => {
-    const noScenario = [{ value: '', label: "None (use character's scenario)" }]
+    const noScenario = [{ value: '', label: t('none_use_characters_scenario') }]
     if (scenarioState.loading || scenarioState.partial) {
       return noScenario.concat(
         (state.chat?.scenarioIds ?? []).map((id) => ({
@@ -91,7 +95,10 @@ const ChatSettings: Component<{
       )
     } else {
       return noScenario.concat(
-        scenarioState.scenarios.map((s) => ({ label: s.name || 'Untitled scenario', value: s._id }))
+        scenarioState.scenarios.map((s) => ({
+          label: s.name || t('untitled_scenario'),
+          value: s._id,
+        }))
       )
     }
   })
@@ -140,14 +147,14 @@ const ChatSettings: Component<{
       <div class="flex w-full justify-between gap-2">
         <div>
           <Button schema="secondary" onClick={revert}>
-            Reset Character
+            {t('reset_character')}
           </Button>
         </div>
         <div class="flex gap-2">
           <Button schema="secondary" onClick={props.close}>
-            Cancel
+            {t('cancel')}
           </Button>
-          <Button onClick={onSave}>Save</Button>
+          <Button onClick={onSave}>{t('save')}</Button>
         </div>
       </div>
     </>
@@ -159,9 +166,10 @@ const ChatSettings: Component<{
     if (!state.chat || !user.user) return
     const preset = getChatPreset(state.chat, user.user, presets)
     if (!preset.service) return
-    const text = `Currently: ${ADAPTER_LABELS[preset.service]}. Inherited from: ${
-      preset.name || 'Chat'
-    }`
+    const text = t('currently_inherited_from_x', {
+      name: ADAPTER_LABELS(t)[preset.service],
+      preset: preset.name || t('chat'),
+    })
     return {
       text,
       service: preset.service!,
@@ -185,13 +193,13 @@ const ChatSettings: Component<{
           <Select
             class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
             fieldName="adapter"
-            helperText={`Default is set to: ${
-              ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
-            }`}
-            label="AI Service"
+            helperText={t('default_is_set_to_x', {
+              name: ADAPTER_LABELS(t)[user.user?.defaultAdapter || 'horde'],
+            })}
+            label={t('ai_service')}
             value={state.chat?.adapter}
             items={[
-              { label: 'Default', value: 'default' },
+              { label: t('default'), value: 'default' },
               ...adaptersToOptions(cfg.config.adapters),
             ]}
           />
@@ -202,39 +210,41 @@ const ChatSettings: Component<{
         <Card>
           <Select
             fieldName="mode"
-            label="Chat Mode"
+            label={t('chat_mode')}
             helperText={
               <>
-                <p>
-                  Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo
-                </p>
+                <p>{t('adventure_mode_is_only_available_for_instruct_capable_models')}</p>
                 <Show when={state.chat?.mode !== 'companion' && mode() === 'companion'}>
                   <TitleCard type="orange">
-                    Warning! Switching to COMPANION mode is irreversible! You will no longer be able
-                    to: retry messages, delete chats, edit chat settings.
+                    {t('warning_switching_to_companion_mode_is_irreversible')}
                   </TitleCard>
                 </Show>
               </>
             }
             onChange={(ev) => setMode(ev.value as any)}
             items={[
-              { label: 'Conversation', value: 'standard' },
-              { label: 'Companion', value: 'companion' },
+              { label: t('conversation'), value: 'standard' },
+              { label: t('companion'), value: 'companion' }
             ]}
             value={state.chat?.mode || 'standard'}
           />
         </Card>
       </Show>
       <Card>
-        <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
+        <TextInput
+          fieldName="name"
+          class="text-sm"
+          value={state.chat?.name}
+          label={t('chat_name')}
+        />
       </Card>
       <Card>
         <Toggle
           fieldName="useOverrides"
           value={useOverrides()}
           onChange={(use) => setUseOverrides(use)}
-          label="Override Character Definitions"
-          helperText="Overrides apply to this chat only. If you want to edit the original character, open the 'Character' link in the Chat Menu instead."
+          label={t('override_character_definitions')}
+          helperText={t('override_character_definitions_message')}
         />
       </Card>
 
@@ -242,8 +252,8 @@ const ChatSettings: Component<{
         <Card>
           <Select
             fieldName="scenarioId"
-            label="Scenario"
-            helperText="The scenario to use for this conversation"
+            label={t('scenario')}
+            helperText={t('the_scenario_to_use_for_this_conversation')}
             items={scenarios()}
             value={scenarioId()}
             onChange={(option) => setScenarioId(option.value)}
@@ -254,8 +264,8 @@ const ChatSettings: Component<{
               availableTags={[]}
               onSelect={(tags) => setStates(tags)}
               fieldName="scenarioStates"
-              label="The current state of the scenario"
-              helperText="What flags have been set in the chat by the scenario so far"
+              label={t('the_current_state_of_the_scenario')}
+              helperText={t('what_flats_have_been_set_in_the_chat_by_the_scenario')}
               value={state.chat?.scenarioStates ?? []}
             />
           </Show>
@@ -269,7 +279,7 @@ const ChatSettings: Component<{
             class="text-sm"
             isMultiline
             value={state.chat?.greeting || state.char?.greeting}
-            label="Greeting"
+            label={t('greeting')}
           />
 
           <TextInput
@@ -278,7 +288,7 @@ const ChatSettings: Component<{
             isMultiline
             value={scenarioText()}
             onChange={(ev) => setScenarioText(ev.currentTarget.value)}
-            label="Scenario"
+            label={t('scenario')}
           />
 
           <TextInput
@@ -286,26 +296,26 @@ const ChatSettings: Component<{
             class="text-sm"
             isMultiline
             value={state.chat?.sampleChat || state.char?.sampleChat}
-            label="Sample Chat"
+            label={t('sample_chat')}
           />
 
           <TextInput
             fieldName="systemPrompt"
             class="text-sm"
-            label="Character System Prompt"
+            label={t('character_system_prompt')}
             value={state.chat?.systemPrompt}
           />
 
           <TextInput
             fieldName="postHistoryInstructions"
             class="text-sm"
-            label="Character Post-History Instructions"
+            label={t('character_post_history_instructions')}
             value={state.chat?.postHistoryInstructions}
           />
 
           <Select
             fieldName="schema"
-            label="Persona"
+            label={t('persona')}
             items={personaFormats()}
             value={kind()}
             onChange={(ev) => setKind(ev.value as any)}

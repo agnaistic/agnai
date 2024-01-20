@@ -86,7 +86,7 @@ export function elapsedSince(date: string | Date, offsetMs: number = 0) {
   if (!date) return 'unknown'
   const diff = Date.now() - new Date(date).valueOf() + offsetMs
   const elapsed = Math.floor(diff / 1000)
-  if (elapsed < 60) return 'a moment'
+  if (elapsed < 60) return 'a_moment'
   return toDuration(Math.floor(elapsed))
 }
 

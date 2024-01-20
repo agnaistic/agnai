@@ -1,11 +1,14 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const MemoryGuide: Component = () => {
+  const [t] = useTransContext()
+
   return (
     <>
-      <PageHeader title="Memory Books"></PageHeader>
+      <PageHeader title={t('memory_books')}></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
     </>
   )

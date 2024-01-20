@@ -4,9 +4,12 @@ import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { inviteStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
 import { SolidCard } from '/web/shared/Card'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const InvitesPage: Component = () => {
-  setComponentPageTitle('Invites')
+  const [t] = useTransContext()
+
+  setComponentPageTitle(t('invites'))
   const state = inviteStore()
   const nav = useNavigate()
 
@@ -28,15 +31,15 @@ const InvitesPage: Component = () => {
   return (
     <SolidCard border>
       <Show when={!state.invites.length}>
-        <div class="text-md font-bold">You have no pending chat invitations</div>
+        <div class="text-md font-bold">{t('you_have_no_pending_chat_invitations')}</div>
       </Show>
 
       <Show when={state.invites.length}>
         <div class="flex flex-col gap-4">
           <div class="bg-900 flex flex-row gap-2 rounded-xl p-2 text-lg font-bold">
-            <div class="w-3/12">From</div>
-            <div class="w-3/12">Character</div>
-            <div class="w-3/12">Sent</div>
+            <div class="w-3/12">{t('from')}</div>
+            <div class="w-3/12">{t('character')}</div>
+            <div class="w-3/12">{t('sent')}</div>
             <div class="w-3/12"></div>
           </div>
 
@@ -44,10 +47,10 @@ const InvitesPage: Component = () => {
             {(invite) => (
               <div class="bg-900 flex flex-row gap-2 rounded-xl p-2">
                 <div class="w-3/12">
-                  {state.profiles[invite.byUserId]?.handle ?? 'Unknown User'}
+                  {state.profiles[invite.byUserId]?.handle ?? t('unknown_user')}
                 </div>
                 <div class="w-3/12">
-                  {state.chars[invite.characterId]?.name ?? 'Unknown Character'}
+                  {state.chars[invite.characterId]?.name ?? t('unknown_character')}
                 </div>
                 <div class="w-3/12">{toDuration(new Date(invite.createdAt))}</div>
                 <div class="flex w-3/12 justify-end gap-4">

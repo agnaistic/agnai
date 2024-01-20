@@ -3,47 +3,54 @@ import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const KoboldAISettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
 
   return (
     <>
       <TextInput
         fieldName="koboldUrl"
-        label="Kobold-compatible or 3rd-party URL"
-        helperText="Fully qualified URL. Typically for Kobold, Textgen, Llama.cpp, or OpenAI compatible APIs. This URL must be publicly accessible."
-        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+        label={t('kobold_compatible_or_third_party_url')}
+        helperText={t('fully_qualified_url_typically_for_kobold')}
+        placeholder={t('kobold_example')}
         value={state.user?.koboldUrl}
       />
       <Select
         fieldName="thirdPartyFormat"
-        label="Kobold / 3rd-party Format"
-        helperText="Re-formats the prompt to the desired output format."
+        label={t('kobold_or_third_party_format')}
+        helperText={t('reformat_the_prompt_to_the_desired_output_format')}
         items={[
-          { label: 'None', value: '' },
-          { label: 'Kobold', value: 'kobold' },
-          { label: 'OpenAI', value: 'openai' },
-          { label: 'Aphrodite', value: 'aphrodite' },
-          { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
-          { label: 'Claude', value: 'claude' },
-          { label: 'Textgen (Ooba)', value: 'ooba' },
-          { label: 'Llama.cpp', value: 'llamacpp' },
-          { label: 'ExLlamaV2', value: 'exllamav2' },
-          { label: 'KoboldCpp', value: 'koboldcpp' },
+          { label: t('none'), value: '' },
+          { label: t('kobold'), value: 'kobold' },
+          { label: t('open_ai'), value: 'openai' },
+          { label: t('aphrodite'), value: 'aphrodite' },
+          { label: t('open_ai_chat'), value: 'openai-chat' },
+          { label: t('claude'), value: 'claude' },
+          { label: t('textgen_ooba'), value: 'ooba' },
+          { label: t('llama_cpp'), value: 'llamacpp' },
+          { label: t('exllamaV2'), value: 'exllamav2' },
+          { label: t('kobold_cpp'), value: 'koboldcpp' },
         ]}
         value={state.user?.thirdPartyFormat ?? 'kobold'}
       />
       <TextInput
         fieldName="thirdPartyPassword"
-        label="3rd-party password if applicable"
-        helperText="(NEVER put an OpenAI API key here, this would expose your personal information to third parties)"
-        placeholder={state.user?.thirdPartyPasswordSet ? 'Password is set' : 'E.g. p4ssw0rd123'}
+        label={t('third_party_password_if_applicable')}
+        helperText={t('never_put_an_openai_api_key_here')}
+        placeholder={
+          state.user?.thirdPartyPasswordSet
+            ? t('password_is_set')
+            : t('third_party_password_example')
+        }
         type="password"
         value={''}
       />
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('third-party')}>
-        Delete third-party password
+        {t('delete_third_party_password')}
       </Button>
     </>
   )

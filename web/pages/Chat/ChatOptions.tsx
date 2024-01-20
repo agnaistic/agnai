@@ -19,6 +19,7 @@ import { domToPng } from 'modern-screenshot'
 import { getRootRgb } from '../../shared/util'
 import { ConfirmModal } from '/web/shared/Modal'
 import { Card, TitleCard } from '/web/shared/Card'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export type ChatModal =
   | 'export'
@@ -36,6 +37,8 @@ const ChatOptions: Component<{
   togglePane: (pane: ChatRightPane) => void
   close: () => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const chats = chatStore((s) => ({
     ...s.active,
     opts: s.opts,
@@ -66,7 +69,7 @@ const ChatOptions: Component<{
     if (chats.opts.screenshot) return
     const ele = document.getElementById('chat-messages')
     if (!ele) {
-      toastStore.error(`Screenshot failed: Couldn't find messages element`)
+      toastStore.error(t('screenshot_failed_could_not_find_message_element'))
       return
     }
     toggleScreenshot(true)
@@ -86,7 +89,7 @@ const ChatOptions: Component<{
       })
       .catch((err) => {
         console.error(err)
-        toastStore.error(`Screenshot failed: error logged in console`)
+        toastStore.error(t('screenshot_failed_error_logged_in_console'))
         toggleScreenshot(false)
       })
   }
@@ -94,13 +97,13 @@ const ChatOptions: Component<{
   return (
     <>
       <Show when={chats.chat?.mode}>
-        <Card>Mode: {chats.chat?.mode}</Card>
+        <Card>{t('mode_x', { mode: chats.chat?.mode })}</Card>
       </Show>
       <div class="flex w-72 flex-col gap-2 p-2">
         <Show when={chats.members.length > 1}>
           <Option onClick={toggleOocMessages}>
             <div class="flex w-full items-center justify-between">
-              <div>Hide OOC messages</div>
+              <div>{t('hide_ooc_messages')}</div>
               <Toggle
                 class="h-50 flex items-center"
                 fieldName="editChat"
@@ -113,7 +116,7 @@ const ChatOptions: Component<{
 
         <Option onClick={toggleEditing} hide={!isOwner()}>
           <div class="flex w-full items-center justify-between">
-            <div>Enable Chat Editing</div>
+            <div>{t('enable_chat_editing')}</div>
             <Toggle
               class="flex items-center"
               fieldName="editChat"
@@ -124,56 +127,59 @@ const ChatOptions: Component<{
         </Option>
 
         <Option onClick={() => props.togglePane('character')} hide={!isOwner()}>
-          <User /> Character
+          <User /> {t('character')}
         </Option>
 
         <Option onClick={() => props.togglePane('participants')} hide={!isOwner()}>
-          <Users /> Participants
+          <Users /> {t('participants')}
         </Option>
 
         <Row>
           <Item onClick={() => props.togglePane('chat-settings')} hide={!isOwner()}>
-            <Settings /> Edit Chat
+            <Settings /> {t('edit_chat')}
           </Item>
           <Item onClick={() => props.togglePane('preset')} hide={!isOwner()}>
-            <Sliders /> Preset
+            <Sliders /> {t('preset')}
           </Item>
         </Row>
         <Row>
           <Item onClick={screenshotChat}>
             <Camera />
-            <Show when={!chats.opts.screenshot}>Screenshot</Show>
+            <Show when={!chats.opts.screenshot}>{t('screenshot')}</Show>
             <Show when={chats.opts.screenshot}>
-              <em>Loading, please wait...</em>
+              <em>{t('loading_please_wait')}</em>
             </Show>
           </Item>
           <Item onClick={() => props.togglePane('memory')} hide={!isOwner()}>
-            <Book /> Memory
+            <Book /> {t('memory')}
           </Item>
         </Row>
 
         <Row>
-          <Item schema={cfg.anonymize ? 'primary' : 'grey'} onClick={settingStore.toggleAnonymize}>
-            <VenetianMask /> Anonymize
+          <Item
+            schema={cfg.anonymize ? 'primary' : 'grey'}
+            onClick={settingStore.toggleAnonymize}
+          >
+            <VenetianMask /> {t('anonymize')}
           </Item>
           <Item onClick={() => props.togglePane('ui')}>
-            <Palette /> UI
+            <Palette /> {t('ui')}
           </Item>
         </Row>
 
         <Row>
           <Item onClick={() => props.setModal('export')}>
-            <Download /> Export
+            <Download /> {t('export')}
           </Item>
           <Item onClick={() => props.setModal('delete')} hide={!isOwner()}>
-            <Trash /> Delete
+            <Trash /> {t('delete')}
           </Item>
         </Row>
 
         <Show when={chats.chat}>
           <Row>
             <Item onClick={() => setRestart(true)} center hide={!isOwner()}>
-              <AlertTriangle /> Restart Chat <AlertTriangle />
+              <AlertTriangle /> {t('restart_chat')} <AlertTriangle />
             </Item>
           </Row>
         </Show>
@@ -184,8 +190,8 @@ const ChatOptions: Component<{
       <ConfirmModal
         message={
           <TitleCard type="rose" class="flex flex-col gap-4">
-            <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
+            <div class="flex justify-center font-bold">{t('are_you_sure?')}</div>
+            <div>{t('this_will_delete_all_messages_in_this_conversation')}</div>
           </TitleCard>
         }
         show={restart()}

@@ -4,6 +4,7 @@ import { Toggle } from '../../shared/Toggle'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { chubStore } from '../../store/chub'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const sorts = [
   'Download Count',
@@ -17,6 +18,8 @@ const sorts = [
 ]
 
 const FilterSettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = chubStore()
 
   const update = () => {
@@ -29,8 +32,8 @@ const FilterSettings: Component = () => {
     <>
       <Toggle
         fieldName="nsfw"
-        label="NSFW"
-        helperText="Allow NSFW characters/lorebooks to appear in results."
+        label={t('nsfw')}
+        helperText={t('allow_nsfw_characters_to_appear_in_results')}
         value={state.nsfw}
         onChange={(v) => {
           chubStore.setNSFW(v)
@@ -39,9 +42,9 @@ const FilterSettings: Component = () => {
       />
       <TextInput
         fieldName="tags"
-        label="Query Tags"
-        helperText="A comma-separated list of tags to include."
-        placeholder="E.g. blue_archive,female,anime"
+        label={t('query_tags')}
+        helperText={t('a_comma_separated_list_of_tags_to_include')}
+        placeholder={t('query_tags_example')}
         value={state.tags}
         onChange={(ev) => {
           chubStore.setTags(ev.currentTarget.value)
@@ -50,8 +53,8 @@ const FilterSettings: Component = () => {
       />
       <TextInput
         fieldName="excludeTags"
-        label="Exclude Tags"
-        helperText="A comma-separated list of tags to exclude."
+        label={t('exclude_tags')}
+        helperText={t('a_comma_separated_list_of_tags_to_exclude')}
         value={state.excludeTags}
         onChange={(ev) => {
           chubStore.setExcludeTags(ev.currentTarget.value)
@@ -60,7 +63,7 @@ const FilterSettings: Component = () => {
       />
       <Select
         fieldName="sort"
-        label="Sort By"
+        label={t('sort_by')}
         items={toDropdownItems(sorts)}
         value={state.sort}
         onChange={(v) => {

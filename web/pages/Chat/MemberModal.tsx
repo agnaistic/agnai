@@ -15,6 +15,7 @@ import Divider from '/web/shared/Divider'
 import Convertible from './Convertible'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
 import Accordian from '/web/shared/Accordian'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
@@ -24,6 +25,8 @@ const MemberModal: Component<{
   charId: string
   chat: AppSchema.Chat
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [view, setView] = createSignal<View>('list')
   const [editCharId, setEditCharId] = createSignal<string>()
   const [footer, setFooter] = createSignal<any>()
@@ -38,20 +41,20 @@ const MemberModal: Component<{
             setView('temp_character')
           }}
         >
-          <Plus size={16} /> Temp Character
+          <Plus size={16} /> {t('temp_character')}
         </Button>
         <Button schema="primary" onClick={() => setView('add_character')}>
-          <Plus size={16} /> Character
+          <Plus size={16} /> {t('character')}
         </Button>
         <Show when={isLoggedIn()}>
           <Button schema="primary" onClick={() => setView('invite_user')}>
-            <Plus size={16} /> User
+            <Plus size={16} /> {t('user')}
           </Button>
         </Show>
       </Show>
       <Show when={view() !== 'list'}>
         <Button schema="secondary" onClick={() => setView('list')}>
-          <ArrowBigLeft size={16} /> Back
+          <ArrowBigLeft size={16} /> {t('back')}
         </Button>
       </Show>
     </>
@@ -116,6 +119,8 @@ const ParticipantsList: Component<{
   charId: string
   edit: (charId: string) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const self = userStore()
   const chars = characterStore((s) => s.characters)
   const state = chatStore()
@@ -188,7 +193,7 @@ const ParticipantsList: Component<{
 
       <Show when={temps().active.length > 0 || temps().inactive.length > 0}>
         <Divider />
-        <h3>Temporary Characters</h3>
+        <h3>{t('temporary_characters')}</h3>
       </Show>
 
       <For each={temps().active}>
@@ -224,7 +229,7 @@ const ParticipantsList: Component<{
       <Show when={temps().deleted.length > 0}>
         <Accordian
           open={false}
-          title={<span class="text-600">Deleted Temporary Characters</span>}
+          title={<span class="text-600">{t('deleted_temporary_characters')}</span>}
           class="bg-800"
         >
           <For each={temps().deleted}>
@@ -246,13 +251,15 @@ const ParticipantsList: Component<{
         show={!!deleting()}
         close={() => setDeleting()}
         confirm={remove}
-        message={`Are you sure you wish to remove "${deleting()?.handle}"?`}
+        message={t('are_you_sure_you_wish_to_remove_x', { handle: deleting()?.handle })}
       />
     </>
   )
 }
 
 const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
+  const [t] = useTransContext()
+
   const state = chatStore()
   const chars = characterStore()
 
@@ -288,12 +295,16 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
     <>
       <Show
         when={characters().length}
-        fallback={<div class="text-red-500">You don't have any other characters to invite</div>}
+        fallback={
+          <div class="text-red-500">{t('you_do_not_have_any_other_characters_to_invite')}</div>
+        }
       >
-        <p class="pb-1 text-sm text-[var(--text-700)]">Select a character to add to the chat</p>
+        <p class="pb-1 text-sm text-[var(--text-700)]">
+          {t('select_a_character_to_add_to_the_chat')}
+        </p>
         <Show
           when={!!characters().length}
-          fallback={<p>You don't have any characters available to add</p>}
+          fallback={<p>{t('you_do_not_have_any_characters_available_to_add')}</p>}
         >
           <CharacterSelectList items={characters()} onSelect={add} />
         </Show>
@@ -303,6 +314,8 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
 }
 
 const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
   const state = chatStore()
 
@@ -311,7 +324,7 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
     const chatId = state.active.chat._id
     const body = getStrictForm(ref, { userId: 'string' })
     if (!body.userId) {
-      toastStore.warn('No user ID provided')
+      toastStore.warn(t('no_user_id_provided'))
       return
     }
     return chatStore.inviteUser(chatId, body.userId, () => props.setView('list'))
@@ -323,15 +336,15 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
         <TextInput
           class="text-sm"
           fieldName="userId"
-          label="Invite User"
-          helperText="The ID of the user to invite. The user should provide this to you"
-          placeholder={`E.g. ${v4()}`}
+          label={t('invite_user')}
+          helperText={t('the_id_of_the_user_to_invite')}
+          placeholder={t('example_x', { examples: v4() })}
         />
 
         <div class="mt-4">
           <Button class="h-[36px] w-full" onClick={invite}>
             <Mail />
-            Send Invite
+            {t('send_invite')}
           </Button>
         </div>
       </form>
@@ -345,6 +358,8 @@ const UserParticipant: Component<{
   canRemove: boolean
   isOwner: boolean
 }> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="flex items-center gap-2">
@@ -356,7 +371,7 @@ const UserParticipant: Component<{
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.member.handle}</div>
           <div class="text-xs italic text-[var(--text-600)]">
-            {props.isOwner ? 'Chat Owner' : 'User'} {props.member.userId.slice(0, 8)}
+            {props.isOwner ? t('chat_owner') : t('user')} {props.member.userId.slice(0, 8)}
           </div>
         </div>
       </div>
@@ -384,6 +399,8 @@ const CharacterParticipant: Component<{
   chat?: AppSchema.Chat
   edit?: (charId: string) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const isTemp = createMemo(() => props.char._id.startsWith('temp-'))
 
   const toggleTempChar = (state: boolean) => {
@@ -423,10 +440,10 @@ const CharacterParticipant: Component<{
           </div>
           <div class="text-xs italic text-[var(--text-600)]">
             {props.isMain
-              ? 'Main Character'
+              ? t('main_character')
               : props.char._id.startsWith('temp-')
-              ? 'Temporary Character'
-              : 'Character'}
+              ? t('temporary_character')
+              : t('character')}
           </div>
         </div>
       </div>

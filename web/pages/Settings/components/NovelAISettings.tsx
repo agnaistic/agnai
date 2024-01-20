@@ -4,8 +4,11 @@ import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select from '../../../shared/Select'
 import Divider from '/web/shared/Divider'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const NovelAISettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
 
   const novelVerified = createMemo(
@@ -17,11 +20,11 @@ const NovelAISettings: Component = () => {
     <>
       <Select
         fieldName="novelModel"
-        label="Default NovelAI Model"
-        helperText="This will be used for inferencing. E.g. Generating characters, CYOA, Generating Actions, etc."
+        label={t('default_novel_ai_model')}
+        helperText={t('this_will_be_used_for_inference')}
         items={[
-          { label: 'Kayra', value: 'kayra-v1' },
-          { label: 'Clio', value: 'clio-v1' },
+          { label: t('kayra'), value: 'kayra-v1' },
+          { label: t('clio'), value: 'clio-v1' },
         ]}
         value={state.user?.novelModel}
       />
@@ -30,12 +33,12 @@ const NovelAISettings: Component = () => {
 
       <TextInput
         fieldName="novelApiKey"
-        label="Novel API Key"
+        label={t('novel_api_key')}
         type="password"
         value={''}
         helperText={
-          <>
-            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.{' '}
+          <Trans key="never_share_this_with_anybody">
+            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
             <a
               class="link"
               target="_blank"
@@ -44,14 +47,14 @@ const NovelAISettings: Component = () => {
               Instructions
             </a>
             .
-          </>
+          </Trans>
         }
         placeholder={novelVerified()}
       />
 
       <Show when={state.user?.novelVerified}>
         <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
-          Delete Novel API Key
+          {t('delete_novel_api_key')}
         </Button>
       </Show>
     </>

@@ -9,9 +9,12 @@ import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const LoginPage: Component = () => {
-  setComponentPageTitle('Login')
+  const [t] = useTransContext()
+
+  setComponentPageTitle(t('login_title'))
   const store = userStore()
   const cfg = settingStore()
 
@@ -21,27 +24,29 @@ const LoginPage: Component = () => {
   const loginError = createMemo(() => {
     if (!store.error) return null
     if (store.error.includes('NetworkError')) {
-      return "We couldn't reach our servers."
+      return t('we_could_not_reach_our_servers')
     }
 
-    return 'Something went wrong.'
+    return t('something_went_wrong')
   })
 
   return (
     <div class="flex w-full flex-col items-center">
       <div class="my-4 border-b border-white/5" />
       <PageHeader
-        title={<div class="flex w-full justify-center">Welcome</div>}
+        title={<div class="flex w-full justify-center">{t('welcome')}</div>}
         subtitle={
           <div class="flex flex-wrap items-center justify-center">
-            <Button size="pill" onClick={() => setRegister(false)}>
-              Login
-            </Button>
-            &nbsp; to your account or&nbsp;
-            <Button size="pill" onClick={() => setRegister(true)}>
-              Register
-            </Button>
-            &nbsp;or continue as a guest.
+            <Trans key="login_or_register_or_continue_as_guest">
+              <Button size="pill" class="mr-2" onClick={() => setRegister(false)}>
+                Login
+              </Button>
+              to your account
+              <Button size="pill" class="ml-2 mr-2" onClick={() => setRegister(true)}>
+                Register
+              </Button>
+              or continue as guest.
+            </Trans>
           </div>
         }
       />
@@ -54,7 +59,7 @@ const LoginPage: Component = () => {
         </Show>
         <Show when={loginError()}>
           <Divider />
-          <Alert schema="error" title="Failed to log in.">
+          <Alert schema="error" title={t('failed_to_login')}>
             {loginError()}
           </Alert>
         </Show>
@@ -62,29 +67,23 @@ const LoginPage: Component = () => {
 
       <Show when={cfg.config.policies}>
         <div class="mt-2">
-          By logging in or registering, you agree that you are 18 years or older and agree to the{' '}
+          {t('agree_to_tnc')}{' '}
           <A class="link" href="/terms-of-service">
-            Terms
+            {t('terms')}
           </A>{' '}
-          and{' '}
+          {t('and')}{' '}
           <A class="link" href="/privacy-policy">
-            Privacy Policy
+            {t('privacy_policy')}
           </A>
           .
         </div>
       </Show>
 
       <div class="mt-8 w-full gap-4">
-        <p class="flex justify-center text-xl text-[var(--hl-400)]">Why register?</p>
+        <p class="flex justify-center text-xl text-[var(--hl-400)]">{t('why_register_?')}</p>
         <div class="flex flex-col items-center">
-          <p>
-            You don't need to register to use Agnaistic. You can use it anonymously and no data will
-            be stored on any servers.
-          </p>
-          <p>
-            If you choose to register your data will be stored and accessible on any devices you
-            login with.
-          </p>
+          <p>{t('you_dont_need_to_register_option', { app_name: t('app_name') })}</p>
+          <p>{t('register_benefit')}</p>
         </div>
       </div>
     </div>
@@ -96,6 +95,8 @@ export default LoginPage
 type FormProps = { isLoading: boolean }
 
 const RegisterForm: Component<FormProps> = (props) => {
+  const [t] = useTransContext()
+
   const navigate = useNavigate()
   const register = (evt: Event) => {
     const { username, password, confirm, handle } = getStrictForm(evt, {
@@ -107,7 +108,7 @@ const RegisterForm: Component<FormProps> = (props) => {
 
     if (!handle || !username || !password) return
     if (password !== confirm) {
-      toastStore.warn('Passwords do not match', 2)
+      toastStore.warn(t('passwords_do_not_match'), 2)
       return
     }
 
@@ -117,26 +118,43 @@ const RegisterForm: Component<FormProps> = (props) => {
   return (
     <form onSubmit={register} class="flex flex-col gap-6">
       <div class="flex flex-col gap-2">
-        <TextInput label="Display Name" fieldName="handle" placeholder="Display name" required />
-        <TextInput label="Username" fieldName="username" placeholder="Username" required />
         <TextInput
-          label="Password"
+          label={t('display_name')}
+          fieldName="handle"
+          placeholder={t('display_name')}
+          required
+        />
+        <TextInput
+          label={t('username')}
+          fieldName="username"
+          placeholder={t('username')}
+          required
+        />
+        <TextInput
+          label={t('password')}
           fieldName="password"
-          placeholder="Password"
+          placeholder={t('password')}
           type="password"
           required
         />
-        <TextInput fieldName="confirm" placeholder="Confirm Password" type="password" required />
+        <TextInput
+          fieldName="confirm"
+          placeholder={t('confirm_password')}
+          type="password"
+          required
+        />
       </div>
 
       <Button type="submit" disabled={props.isLoading}>
-        {props.isLoading ? 'Registering...' : 'Register'}
+        {props.isLoading ? t('registering') : t('register')}
       </Button>
     </form>
   )
 }
 
 const LoginForm: Component<FormProps> = (props) => {
+  const [t] = useTransContext()
+
   const navigate = useNavigate()
   const [query] = useSearchParams()
   const loc = useLocation()
@@ -150,7 +168,7 @@ const LoginForm: Component<FormProps> = (props) => {
       for (const authUrl of state.config.authUrls) {
         if (query.callback.startsWith(authUrl)) return handleLogin()
       }
-      setError('Invalid callback URL')
+      setError(t('invalid_callback_url'))
       return
     }
   })
@@ -180,11 +198,11 @@ const LoginForm: Component<FormProps> = (props) => {
       <div class="flex flex-col gap-2">
         <TextInput
           fieldName="username"
-          placeholder="Username"
+          placeholder={t('username')}
           required
           value={loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''}
         />
-        <TextInput fieldName="password" placeholder="Password" type="password" required />
+        <TextInput fieldName="password" placeholder={t('password')} type="password" required />
       </div>
 
       <Show when={error()}>
@@ -192,7 +210,7 @@ const LoginForm: Component<FormProps> = (props) => {
       </Show>
 
       <Button type="submit" disabled={props.isLoading || !!error()}>
-        {props.isLoading ? 'Logging in...' : 'Login'}
+        {props.isLoading ? t('logging_in') : t('login')}
       </Button>
     </form>
   )

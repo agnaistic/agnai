@@ -3,12 +3,15 @@ import { AIAdapter } from '/common/adapters'
 import { settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 import { AppSchema } from '/common/types'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const AgnaisticSettings: Component<{
   service: AIAdapter
   onSave: () => void
   inherit?: Partial<AppSchema.UserGenPreset>
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = userStore((s) => ({ user: s.user, tiers: s.tiers, sub: s.sub }))
   const config = settingStore((s) => s.config)
 
@@ -25,7 +28,7 @@ export const AgnaisticSettings: Component<{
   return (
     <Show when={props.service === 'agnaistic'}>
       <Select
-        label="Model"
+        label={t('model')}
         items={opts()}
         fieldName="registered.agnaistic.subscriptionId"
         onChange={props.onSave}

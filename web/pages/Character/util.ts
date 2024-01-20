@@ -6,6 +6,7 @@ import { exportCharacter } from '/common/characters'
 import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
+import { TFunction } from 'i18next'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -140,6 +141,7 @@ export function toCharacterMap(bots: AppSchema.Character[]) {
 }
 
 export async function downloadCharCard(
+  t: TFunction,
   input: string | AppSchema.Character,
   format: string,
   schema: string
@@ -149,7 +151,7 @@ export async function downloadCharCard(
   if (typeof input === 'string') {
     const res = await charsApi.getCharacterDetail(input)
     if (res.error) {
-      return toastStore.error(`Failed to download character: ${res.error}`)
+      return toastStore.error(t('failed_to_download_character_x', { message: res.error }))
     } else {
       char = res.result!
     }

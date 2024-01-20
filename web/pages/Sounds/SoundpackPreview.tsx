@@ -8,10 +8,14 @@ import Accordian from '/web/shared/Accordian'
 import { EventId, Sound, SoundId, SoundpackId } from '/web/shared/Audio/soundpack'
 import { audioStore } from '/web/store'
 import { SoundPreview, getSoundSource } from './SoundPreview'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
 const SoundpackPreview: Component<{
   soundpackId?: SoundpackId
 }> = (props) => {
+  const [t] = useTransContext()
+
   const audio = audioStore()
 
   let soundpack = createMemo(() => audio.soundpacks.find((sp) => sp.id === props.soundpackId))
@@ -26,27 +30,27 @@ const SoundpackPreview: Component<{
         <Card class="flex flex-col gap-5">
           <div>
             <FormLabel
-              label="Play/Pause"
-              helperText="Play/pause all sounds from the current soundpack."
+              label={t('play_or_pause')}
+              helperText={t('play_or_pause_all_sounds_from_the_current_sound_pack')}
             />
             <Button>
               <Play />
             </Button>
           </div>
-          <p>Author: {soundpack()?.author}</p>
+          <p>{t('author_x', { author: soundpack()?.author })}</p>
           <p class="text-[var(--text-600)]">{soundpack()?.description}</p>
         </Card>
 
         <Show when={soundpack()?.backgroundAmbience}>
           <Card class="flex flex-col gap-3">
-            <div>Background Ambience</div>
+            <div>{t('background_ambience')}</div>
             <BackgroundAmbience sound={getSound(soundpack()?.backgroundAmbience)} />
           </Card>
         </Show>
 
         <Show when={soundpack()?.randomAmbientSounds?.length}>
           <Card class="flex flex-col gap-3">
-            <div>Random Ambient Sounds</div>
+            <div>{t('random_ambient_sounds')}</div>
 
             <For each={soundpack()?.randomAmbientSounds || []}>
               {(amb, _) => (
@@ -62,7 +66,7 @@ const SoundpackPreview: Component<{
 
         <Show when={soundpack()?.interactionSounds?.length}>
           <Card class="flex flex-col gap-3">
-            <div>Interaction Sound Effects</div>
+            <div>{t('interaction_sound_effects')}</div>
 
             <For each={soundpack()?.interactionSounds || []}>
               {(int, _) => (
@@ -103,6 +107,8 @@ const RandomAmbientEvent: Component<{
   frequencyMinSecs: number
   frequencyMaxSecs: number
 }> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <div class="flex w-full flex-row gap-5">
       <Accordian title={props.sound?.name} open={false} class="grow">
@@ -119,7 +125,7 @@ const RandomAmbientEvent: Component<{
             fieldName="audioRandomEventFreqMin"
             type="number"
             readonly={true}
-            label="Minimum interval (seconds)"
+            label={t('minimum_interval_seconds')}
             value={props.frequencyMinSecs}
             parentClass="grow"
           />
@@ -127,7 +133,7 @@ const RandomAmbientEvent: Component<{
             fieldName="audioRandomEventFreqMax"
             type="number"
             readonly={true}
-            label="Maximum interval (seconds)"
+            label={t('maximum_interval_seconds')}
             value={props.frequencyMaxSecs}
             parentClass="grow"
           />
@@ -142,10 +148,12 @@ const InteractionSoundEffect: Component<{
   eventId: string
   sound: Sound | undefined
 }> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <div class="flex w-full flex-row gap-5">
       <Accordian
-        title={`${getEventDescription(props.eventId)} - ${props.sound?.name}`}
+        title={`${getEventDescription(t, props.eventId)} - ${props.sound?.name}`}
         open={false}
       >
         <TextInput
@@ -162,11 +170,11 @@ const InteractionSoundEffect: Component<{
   )
 }
 
-function getEventDescription(eventId: EventId) {
+function getEventDescription(t: TFunction, eventId: EventId) {
   switch (eventId) {
     case 'menu-item-clicked':
-      return 'Menu item clicked'
+      return t('menu_item_clicked')
     default:
-      return `[MISSING]: ${eventId}`
+      return t('missing_x', { name: eventId })
   }
 }

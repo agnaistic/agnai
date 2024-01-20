@@ -2,6 +2,7 @@ import { Component, Show, createMemo } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { SolidCard } from '/web/shared/Card'
 import { markdown } from '/web/shared/markdown'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 type TierPreview = OmitId<
   AppSchema.SubscriptionTier,
@@ -12,11 +13,14 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
   props
 ) => {
   const stripeCost = createMemo(() => {
+    const [t] = useTransContext()
+
     const prices: any[] = []
     if (props.tier.cost > 0) {
       const cost = (
         <div>
-          ${(props.tier.cost / 100).toFixed(2)}/mo <span class="text-600 text-xs">Stripe</span>
+          ${(props.tier.cost / 100).toFixed(2)}/mo{' '}
+          <span class="text-600 text-xs">{t('stripe')}</span>
         </div>
       )
       return cost
@@ -24,7 +28,7 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
 
     if (props.tier.patreon?.cost) {
       const cost = (props.tier.patreon?.cost / 100).toFixed(2)
-      prices.push(`Patreon: $${cost}/mo`)
+      prices.push(t('patreon_x_per_month', { cost: cost }))
     }
 
     return null
@@ -34,7 +38,11 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
     if (props.tier.patreon?.cost) {
       const cost = (
         <div>
-          ${(props.tier.patreon.cost / 100).toFixed(2)}/mo{' '}
+          <Trans
+            key="x_per_month_patreon"
+            options={{ cost: (props.tier.patreon.cost / 100).toFixed(2) }}
+          ></Trans>
+          '${(props.tier.patreon.cost / 100).toFixed(2)}/mo' '
           <span class="text-600 text-xs">Patreon</span>
         </div>
       )

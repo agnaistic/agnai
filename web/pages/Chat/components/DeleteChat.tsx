@@ -5,6 +5,7 @@ import Button from '../../../shared/Button'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { useNavigate } from '@solidjs/router'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const DeleteChatModal: Component<{
   chat?: AppSchema.Chat
@@ -12,6 +13,8 @@ const DeleteChatModal: Component<{
   redirect?: boolean
   close: () => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const nav = useNavigate()
 
   const onDelete = () => {
@@ -24,23 +27,23 @@ const DeleteChatModal: Component<{
   return (
     <Modal
       show={props.show && !!props.chat}
-      title="Confirm Deletion"
+      title={t('confirm_deletion')}
       close={props.close}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
             <X />
-            Cancel
+            {t('cancel')}
           </Button>
 
           <Button schema="red" onClick={onDelete}>
-            <Trash /> Delete
+            <Trash /> {t('delete')}
           </Button>
         </>
       }
     >
       <div class="flex flex-col items-center gap-4">
-        <div>Are you sure you wish to delete this chat?</div>
+        <div>{t('are_you_sure_you_wish_to_delete_this_chat?')}</div>
         <div class="flex justify-center gap-4">{props.chat!.name}</div>
       </div>
     </Modal>

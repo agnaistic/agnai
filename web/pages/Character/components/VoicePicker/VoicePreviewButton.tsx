@@ -8,6 +8,7 @@ import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
 import { AudioSource } from '../../../../shared/Audio/audio-source'
 import { createSpeech } from '/web/shared/Audio/speech'
 import { voiceApi } from '/web/store/data/voice'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const VoicePreviewButton: Component<{
   service: TTSService
@@ -15,6 +16,8 @@ export const VoicePreviewButton: Component<{
   culture?: string
   voiceSettings?: any
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = voiceStore((s) => s.voices)
 
   const [voicePreviewUrl, setVoicePreviewUrl] = createSignal<string>()
@@ -72,7 +75,7 @@ export const VoicePreviewButton: Component<{
         <div class="flex items-center">
           <div class="relative overflow-hidden rounded-xl bg-transparent">
             <Button onClick={playVoicePreview}>
-              <Play /> Preview
+              <Play /> {t('preview')}
             </Button>
           </div>
         </div>

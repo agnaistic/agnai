@@ -30,6 +30,7 @@ import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
 import { embedApi } from '/web/store/embeddings'
 import AvatarIcon from '/web/shared/AvatarIcon'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -44,6 +45,8 @@ const InputBar: Component<{
   more: (msg: string) => void
   request: (charId: string) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: HTMLTextAreaElement
 
   const [ctx] = useAppContext()
@@ -104,9 +107,12 @@ const InputBar: Component<{
   }
 
   const placeholder = createMemo(() => {
-    if (props.ooc) return 'Send a message... (OOC)'
-    if (chats.replyAs) return `Send a message to ${ctx.allBots[chats.replyAs]?.name}...`
-    return `Send a message...`
+    if (props.ooc) return t('send_a_message_ooc')
+    if (chats.replyAs)
+      return t('send_a_message_to_x', {
+        name: ctx.allBots[chats.replyAs]?.name,
+      })
+    return t('send_a_message')
   })
 
   const [saveDraft, disposeSaveDraftDebounce] = createDebounce((text: string) => {
@@ -127,7 +133,7 @@ const InputBar: Component<{
     if (!value) return
 
     if (props.swiped) {
-      return toastStore.warn(`Confirm or cancel swiping before sending`)
+      return toastStore.warn(t('confirm_or_cancel_swiping_before_sending'))
     }
 
     props.send(value, props.ooc, () => {
@@ -160,7 +166,7 @@ const InputBar: Component<{
     }, undefined)
 
     if (!lastTextMsg) {
-      toastStore.warn(`Could not play voice: No character message found`)
+      toastStore.warn(t('could_not_play_voice_no_character_message_found'))
       return
     }
 
@@ -201,7 +207,7 @@ const InputBar: Component<{
 
     const buffer = await getFileAsDataURL(file.file)
     const caption = await embedApi.captionImage(buffer.content)
-    setText(`*{{user}} shows {{char}} a picture that contains: ${caption}*`)
+    setText(t('user_shows_char_a_picture_that_contains_caption_x', { caption: caption }))
     send()
   }
 
@@ -222,7 +228,7 @@ const InputBar: Component<{
         <a
           href="#"
           role="button"
-          aria-label="Open impersonation menu"
+          aria-label={t('open_impersonation_menu')}
           class="icon-button"
           onClick={() => settingStore.toggleImpersonate(true)}
         >
@@ -281,7 +287,7 @@ const InputBar: Component<{
               Respond as Me
             </Button> */}
           <Show when={ctx.activeBots.length > 1}>
-            <div>Auto-reply</div>
+            <div>{t('auto_reply')}</div>
             <Button
               schema="secondary"
               size="sm"
@@ -311,23 +317,23 @@ const InputBar: Component<{
               class="flex items-center justify-between"
               onClick={toggleOoc}
             >
-              <div>Stop Bot Reply</div>
+              <div>{t('stop_bot_reply')}</div>
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
             </Button>
           </Show>
           <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
-            <ImagePlus size={18} /> Generate Image
+            <ImagePlus size={18} /> {t('generate_image')}
           </Button>
           <Show when={!!state.lastMsg?.characterId && isOwner()}>
             <Button schema="secondary" class="w-full" onClick={respondAgain} alignLeft>
-              <PlusCircle size={18} /> Respond Again
+              <PlusCircle size={18} /> {t('respond_again')}
             </Button>
             <Button schema="secondary" class="w-full" onClick={more} alignLeft>
-              <PlusCircle size={18} /> Generate More
+              <PlusCircle size={18} /> {t('generate_more')}
             </Button>
             <Show when={!!props.char?.voice?.service}>
               <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
-                <Megaphone size={18} /> Play Voice
+                <Megaphone size={18} /> {t('play_voice')}
               </Button>
             </Show>
             <Show
@@ -338,7 +344,7 @@ const InputBar: Component<{
               }
             >
               <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
-                <Zap /> Trigger Event
+                <Zap /> {t('trigger_event')}
               </Button>
             </Show>
           </Show>
@@ -350,7 +356,7 @@ const InputBar: Component<{
               accept="image/jpg,image/png,image/jpeg"
             />
             <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
-              Send Image
+              {t('send_image')}
             </LabelButton>
           </Show>
         </div>

@@ -12,14 +12,18 @@ import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
+import { TFunction } from 'i18next'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
-const imageTypes = [
-  { label: 'Horde', value: 'horde' },
-  { label: 'NovelAI', value: 'novel' },
-  { label: 'Stable Diffusion', value: 'sd' },
+const imageTypes = (t: TFunction) => [
+  { label: t('horde'), value: 'horde' },
+  { label: t('novel_ai'), value: 'novel' },
+  { label: t('stable_diffusion'), value: 'sd' },
 ]
 
 export const ImageSettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
 
   const [currentType, setType] = createSignal(state.user?.images?.type || 'horde')
@@ -29,7 +33,7 @@ export const ImageSettings: Component = () => {
     <div class="flex flex-col gap-4">
       <Select
         fieldName="imageType"
-        items={imageTypes}
+        items={imageTypes(t)}
         value={state.user?.images?.type || 'horde'}
         onChange={(value) => setType(value.value as any)}
       />
@@ -40,8 +44,8 @@ export const ImageSettings: Component = () => {
         max={128}
         step={1}
         value={state.user?.images?.steps ?? 28}
-        label="Sampling Steps"
-        helperText="(Novel Anlas Threshold: 28)"
+        label={t('sampling_steps')}
+        helperText={t('novel_anlas_threshold')}
       />
 
       <RangeInput
@@ -50,8 +54,8 @@ export const ImageSettings: Component = () => {
         max={1024}
         step={64}
         value={state.user?.images?.width ?? 384}
-        label="Image Width"
-        helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+        label={t('image_width')}
+        helperText={t('the_larger_the_image_the_less_that_can_be_retained')}
       />
 
       <RangeInput
@@ -60,53 +64,53 @@ export const ImageSettings: Component = () => {
         max={1024}
         step={64}
         value={state.user?.images?.height ?? 384}
-        label="Image Height"
-        helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
+        label={t('image_height')}
+        helperText={t('the_larger_the_image_the_less_that_can_be_retained')}
       />
 
       <TextInput
         fieldName="imageCfg"
         value={state.user?.images?.cfg ?? 9}
-        label="CFG Scale"
-        helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
+        label={t('cfg_scale')}
+        helperText={t('prompt_guidance_classifier_free_guidance_scale')}
       />
 
       <TextInput
         fieldName="imagePrefix"
         value={state.user?.images?.prefix}
-        label="Prompt Prefix"
-        helperText="(Optional) Text to prepend to your image prompt"
-        placeholder={`E.g.: best quality, masterpiece`}
+        label={t('prompt_prefix')}
+        helperText={t('text_to_prepend_to_your_image_prompt')}
+        placeholder={t('prompt_prefix_example')}
       />
 
       <TextInput
         fieldName="imageSuffix"
         value={state.user?.images?.suffix}
-        label="Prompt Suffix"
-        helperText="(Optional) Text to append to your image prompt"
-        placeholder={`E.g.: full body, visible legs, dramatic lighting`}
+        label={t('prompt_suffix')}
+        helperText={t('text_to_append_to_your_image_prompt')}
+        placeholder={t('prompt_suffix_example')}
       />
 
       <TextInput
         fieldName="imageNegative"
         value={state.user?.images?.negative}
-        label="Negative Prompt"
-        helperText="(Optional) Negative Prompt"
-        placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
+        label={t('negative_prompt')}
+        helperText={t('negative_prompt_message')}
+        placeholder={t('negative_prompt_example')}
       />
 
       <TextInput
         fieldName="summaryPrompt"
         value={state.user?.images?.summaryPrompt}
-        label="Summary Prompt"
-        helperText='If you use OpenAI or NovelAI, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
-        placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
+        label={t('summary_prompt')}
+        helperText={t('summary_prompt_message')}
+        placeholder={t('default_colon_x', { name: IMAGE_SUMMARY_PROMPT.other })}
       />
 
       <Toggle
         fieldName="summariseChat"
-        label="Summarise Chat"
-        helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (NovelAI, OpenAI, Claude, etc)"
+        label={t('summarise_chat')}
+        helperText={t('summarise_chat_message')}
         value={state.user?.images?.summariseChat}
       />
 
@@ -128,6 +132,8 @@ export const ImageSettings: Component = () => {
 }
 
 const NovelSettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
 
   const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({ label: key, value }))
@@ -137,26 +143,25 @@ const NovelSettings: Component = () => {
   }))
   return (
     <>
-      <div class="text-xl">NovelAI</div>
+      <div class="text-xl">{t('novel_ai')}</div>
       <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
-        <div class="font-bold text-red-600">
-          You do not have a valid NovelAI key set. You will not be able to generate images using
-          Novel.
-        </div>
+        <div class="font-bold text-red-600">{t('you_do_not_have_a_valid_novel_ai_key_set')}</div>
       </Show>
       <em>
-        Note: The <b>Anlas Threshold</b> means anything above this value is cost Anlas credits
+        <Trans key="note_the_anlas_threshold_means">
+          Note: The <b>Anlas Threshold</b> means anything above this value is cost Anlas credits
+        </Trans>
       </em>
       <Select
         fieldName="novelImageModel"
         items={models}
-        label="Model"
+        label={t('model')}
         value={state.user?.images?.novel.model}
       />
       <Select
         fieldName="novelSampler"
         items={samplers}
-        label="Sampler"
+        label={t('sampler')}
         value={state.user?.images?.novel.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
       />
     </>
@@ -164,6 +169,8 @@ const NovelSettings: Component = () => {
 }
 
 const HordeSettings: Component = () => {
+  const [t] = useTransContext()
+
   const state = userStore()
   const cfg = settingStore()
 
@@ -200,17 +207,17 @@ const HordeSettings: Component = () => {
   }))
   return (
     <>
-      <div class="text-xl">Horde</div>
+      <div class="text-xl">{t('horde')}</div>
       <Select
         fieldName="hordeImageModel"
         items={models()}
-        label="Model"
+        label={t('model')}
         value={state.user?.images?.horde.model || 'stable_diffusion'}
       />
       <Select
         fieldName="hordeSampler"
         items={samplers}
-        label="Sampler"
+        label={t('sampler')}
         value={state.user?.images?.horde.sampler || SD_SAMPLER['DPM++ 2M']}
       />
     </>

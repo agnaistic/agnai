@@ -7,8 +7,11 @@ import { TierCard } from './TierCard'
 import { ConfirmModal } from '/web/shared/Modal'
 import { PatreonControls } from '../Settings/PatreonOauth'
 import { getUserSubscriptionTier } from '/common/util'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const SubscriptionPage: Component = (props) => {
+  const [t] = useTransContext()
+
   const user = userStore()
   const cfg = userStore((s) => {
     const tier = s.user ? getUserSubscriptionTier(s.user, s.tiers) : null
@@ -62,14 +65,14 @@ export const SubscriptionPage: Component = (props) => {
   }
 
   const currentText = createMemo(() => {
-    if (cfg.type === 'manaul') return 'Valid until'
-    if (cfg.type === 'patreon') return `Patreon Subscriber`
+    if (cfg.type === 'manual') return t('valid_until')
+    if (cfg.type === 'patreon') return t('patreon_subscriber')
 
     if (user.user?.billing?.status === 'active') {
-      if (user.user?.billing?.cancelling) return 'Cancels at'
-      return `Renews at`
+      if (user.user?.billing?.cancelling) return t('cancels_at')
+      return t('renews_at')
     }
-    return 'Valid until'
+    return t('valid_until')
   })
 
   const canResume = createMemo(() => {
@@ -88,58 +91,53 @@ export const SubscriptionPage: Component = (props) => {
         <div class="flex w-full flex-col items-center gap-4">
           <SolidCard class="flex flex-col gap-2" border>
             <p class="flex flex-wrap justify-center text-[var(--hl-500)]">
-              <strong>Why subscribe?</strong>
+              <strong>{t('why_subscribe?')}</strong>
             </p>
-            <p>
-              Subscribing grants you access to higher quality models, quicker responses, and larger
-              contexts.
-            </p>
-            <p>
-              In the future you'll also have access to additional features! Such as: Image
-              generation, image storage, and with third-party apps like Discord, Slack, and
-              WhatsApp, and more!
-            </p>
-            <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
+            <p>{t('why_subscribe_benefit_1')}</p>
+            <p>{t('why_subscribe_benefit_2')}</p>
+            <p>{t('why_subscribe_benefit_3', { app_name: t('app_name') })}</p>
           </SolidCard>
 
           <PatreonControls />
 
           <Show when={cfg.tier && !hasExpired()}>
-            <h3 class="font-bold">Current Subscription</h3>
+            <h3 class="font-bold">{t('current_subscription')}</h3>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
                 <div class="text-700 text-sm italic">
                   {currentText()} {renews()}
                 </div>
                 <Pill type="green">
-                  Subscribed via{' '}
-                  {cfg.type === 'manual'
-                    ? 'Gift'
-                    : cfg.type === 'patreon'
-                    ? 'Patreon'
-                    : cfg.type === 'native'
-                    ? 'Stripe'
-                    : 'None'}
+                  {t('subscribed_via_x', {
+                    name:
+                    cfg.type === 'manual'
+                        ? t('gift')
+                        : cfg.type === 'patreon'
+                        ? t('patreon')
+                        : cfg.type === 'native'
+                        ? t('stripe')
+                        : 'None',
+                  })}
                 </Pill>
                 <Switch>
                   <Match when={cfg.downgrade && cfg.tier!._id !== cfg.downgrade}>
-                    Your subscription is set to downgrade
+                    {t('subscription_downgrade')}
                     <Button
                       schema="green"
                       onClick={() => userStore.modifySubscription(cfg.tier?._id!)}
                       disabled={user.billingLoading}
                     >
-                      Cancel Downgrade
+                      {t('cancel_downgrade')}
                     </Button>
                   </Match>
                   <Match when={canResume()}>
-                    Your subscription is currently scheduled to cancel
+                    {t('your_subscription_is_currently_scheduled_to_cancel')}
                     <Button
                       schema="green"
                       onClick={userStore.resumeSubscription}
                       disabled={user.billingLoading}
                     >
-                      Resume Subscription
+                      {t('resume_subscription')}
                     </Button>
                   </Match>
                   <Match when={cfg.type === 'manual'}>
@@ -155,7 +153,7 @@ export const SubscriptionPage: Component = (props) => {
                       bg="bg-700"
                       class="flex w-1/2 justify-center text-lg font-bold text-[var(--green-600)]"
                     >
-                      Subscribed!
+                      {t('subscribed!')}
                     </SolidCard>
                   </Match>
                 </Switch>
@@ -164,7 +162,7 @@ export const SubscriptionPage: Component = (props) => {
           </Show>
 
           <Show when={candidates().length > 0}>
-            <div class="font-bold">Subscription Options</div>
+            <div class="font-bold">{t('subscription_options')}</div>
           </Show>
           <div class="flex w-full flex-wrap justify-center gap-4">
             <For each={candidates()}>
@@ -182,7 +180,7 @@ export const SubscriptionPage: Component = (props) => {
                             disabled={canResume() || user.billingLoading}
                             onClick={() => setUpgrade(each)}
                           >
-                            Upgrade
+                            {t('upgrade')}
                           </Button>
                         </Match>
 
@@ -194,7 +192,7 @@ export const SubscriptionPage: Component = (props) => {
                             disabled
                             onClick={() => userStore.modifySubscription(each._id)}
                           >
-                            Downgrading...
+                            {t('downgrading')}
                           </Button>
                         </Match>
 
@@ -204,13 +202,13 @@ export const SubscriptionPage: Component = (props) => {
                             disabled={canResume() || user.billingLoading}
                             onClick={() => setDowngrade(each)}
                           >
-                            Downgrade
+                            {t('downgrade')}
                           </Button>
                         </Match>
 
                         <Match when={hasExpired() && each._id === cfg.tier?._id}>
                           <Button schema="success" onClick={() => onSubscribe(each._id)}>
-                            Re-subscribe
+                            {t('resubscribe')}
                           </Button>
                         </Match>
 
@@ -222,7 +220,7 @@ export const SubscriptionPage: Component = (props) => {
                             }
                             onClick={() => onSubscribe(each._id)}
                           >
-                            Subscribe
+                            {t('subscribe')}
                           </Button>
                         </Match>
                       </Switch>
@@ -233,7 +231,7 @@ export const SubscriptionPage: Component = (props) => {
             </For>
           </div>
 
-          <div class="flex justify-center">All prices are in USD</div>
+          <div class="flex justify-center">{t('all_prices_are_in_usd')}</div>
 
           <div class="mt-4 flex gap-4">
             {/* <Button onClick={userStore.validateSubscription} disabled={user.billingLoading}>
@@ -241,7 +239,7 @@ export const SubscriptionPage: Component = (props) => {
             </Button> */}
             <Show when={cfg.tier && !hasExpired()}>
               <Button schema="red" onClick={() => setUnsub(true)} disabled={user.billingLoading}>
-                Unsubscribe
+                {t('unsubscribe')}
               </Button>
             </Show>
           </div>
@@ -250,7 +248,7 @@ export const SubscriptionPage: Component = (props) => {
       <ConfirmModal
         show={showUnsub()}
         close={() => setUnsub(false)}
-        message="Are you sure you wish to unsubscribe?"
+        message={t('are_you_sure_you_wish_to_unsubscribe?')}
         confirm={userStore.stopSubscription}
       />
 
@@ -259,8 +257,8 @@ export const SubscriptionPage: Component = (props) => {
         close={() => setUpgrade()}
         message={
           <div class="flex flex-col items-center justify-center gap-2">
-            <p>You will be immediately charged upon confirm.</p>
-            <p>Are you sure you wish to upgrade now?</p>
+            <p>{t('you_will_be_immediately_charged_upon_confirm')}</p>
+            <p>{t('are_you_sure_you_wish_to_upgrade_now?')}</p>
           </div>
         }
         confirm={() => userStore.modifySubscription(showUpgrade()!._id)}
@@ -271,11 +269,8 @@ export const SubscriptionPage: Component = (props) => {
         close={() => setDowngrade()}
         message={
           <div class="flex flex-col items-center justify-center gap-2">
-            <p>
-              Your downgrade will take affect at the beginning of your next billing period. You will
-              retain access to your current subscription tier until your downgrade takes affect.
-            </p>
-            <p>Are you sure you wish to downgrade?</p>
+            <p>{t('your_downgrade_will_take_effect_message')}</p>
+            <p>{t('are_you_sure_you_wish_to_upgrade?')}</p>
           </div>
         }
         confirm={() => userStore.modifySubscription(showDowngrade()!._id)}

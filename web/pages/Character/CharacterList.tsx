@@ -2,7 +2,7 @@ import { Component, Match, Show, Switch, createEffect, createMemo, createSignal 
 import { NewCharacter, characterStore, chatStore, settingStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import Select, { Option } from '../../shared/Select'
+import Select from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../common/types/schema'
 import { Import, Plus, SortAsc, SortDesc, LayoutList, Image } from 'lucide-solid'
@@ -21,6 +21,8 @@ import { CharacterFolderView } from './components/CharacterFolderView'
 import Modal from '/web/shared/Modal'
 import { CreateCharacterForm } from './CreateCharacterForm'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -32,14 +34,16 @@ type ListCache = {
   }
 }
 
-const sortOptions: Option<SortField>[] = [
-  { value: 'modified', label: 'Last Modified' },
-  { value: 'created', label: 'Created' },
-  { value: 'name', label: 'Name' },
+const sortOptions = (t: TFunction) => [
+  { value: 'modified', label: t('last_modified') },
+  { value: 'created', label: t('created') },
+  { value: 'name', label: t('name') },
 ]
 
 const CharacterList: Component = () => {
-  setComponentPageTitle('Characters')
+  const [t] = useTransContext()
+
+  setComponentPageTitle(t('characters'))
 
   const cached = getListCache()
   const [query, setQuery] = useSearchParams()
@@ -140,19 +144,19 @@ const CharacterList: Component = () => {
       <PageHeader
         title={
           <div class="flex w-full justify-between">
-            <div>Characters</div>
+            <div>{t('characters')}</div>
             <div class="flex text-base">
               <div class="px-1">
                 <Button onClick={() => setImport(true)}>
                   <Import />
-                  <span class="hidden sm:inline">Import</span>
+                  <span class="hidden sm:inline">{t('import')}</span>
                 </Button>
               </div>
               <div class="px-1">
                 <A href="/character/create">
                   <Button>
                     <Plus />
-                    <span class="hidden sm:inline">Create</span>
+                    <span class="hidden sm:inline">{t('create')}</span>
                   </Button>
                 </A>
               </div>
@@ -166,7 +170,7 @@ const CharacterList: Component = () => {
           <div class="m-1 ml-0 mr-1">
             <TextInput
               fieldName="search"
-              placeholder="Search by name..."
+              placeholder={t('search_by_name')}
               onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
@@ -175,7 +179,7 @@ const CharacterList: Component = () => {
             <Select
               class="m-1 ml-0 bg-[var(--bg-600)]"
               fieldName="sortBy"
-              items={sortOptions}
+              items={sortOptions(t)}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortField)}
             />
@@ -202,13 +206,13 @@ const CharacterList: Component = () => {
             <Button schema="secondary" onClick={() => setView(getNextView())}>
               <Switch>
                 <Match when={getNextView() === 'list'}>
-                  <span class="hidden sm:block">List View</span> <LayoutList />
+                  <span class="hidden sm:block">{t('list_view')}</span> <LayoutList />
                 </Match>
                 <Match when={getNextView() === 'cards'}>
-                  <span class="hidden sm:block">Cards View</span> <Image />
+                  <span class="hidden sm:block">{t('cards_view')}</span> <Image />
                 </Match>
                 <Match when={getNextView() === 'folders'}>
-                  <span class="hidden sm:block">Folder View</span> <Image />
+                  <span class="hidden sm:block">{t('folder_view')}</span> <Image />
                 </Match>
               </Switch>
             </Button>
@@ -252,6 +256,8 @@ const Characters: Component<{
   sortField: SortField
   sortDirection: SortDirection
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [editChar, setEditChar] = createSignal<AppSchema.Character>()
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
@@ -275,7 +281,7 @@ const Characters: Component<{
   const [download, setDownload] = createSignal<AppSchema.Character>()
   return (
     <>
-      <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
+      <Switch fallback={<div>{t('failed_to_load_characters')}</div>}>
         <Match when={props.loading}>
           <div class="flex justify-center">
             <Loading />
@@ -338,11 +344,13 @@ const Characters: Component<{
 }
 
 const EditCharacter: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
+  const [t] = useTransContext()
+
   const [footer, setFooter] = createSignal<any>()
 
   return (
     <Modal
-      title={`Editing: ${props.char?.name}`}
+      title={t('editing_x', { name: props.char?.name })}
       show
       close={props.close}
       maxWidth="half"
@@ -395,14 +403,18 @@ function saveListCache(cache: ListCache) {
   storage.localSetItem(CACHE_KEY, JSON.stringify(cache))
 }
 
-const NoCharacters: Component = () => (
-  <div class="mt-16 flex w-full justify-center rounded-full text-xl">
-    No characters found&nbsp;
-    <A class="text-[var(--hl-500)]" href="/character/create">
-      Create a character
-    </A>
-    &nbsp;to get started!
-  </div>
-)
+const NoCharacters: Component = () => {
+  return (
+    <div class="mt-16 flex w-full justify-center rounded-full text-xl">
+      <Trans key="no_character_found_create_a_character">
+        No characters found
+        <A class="ml-2 mr-2 text-[var(--hl-500)]" href="/character/create">
+          Create a character
+        </A>
+        to get started!
+      </Trans>
+    </div>
+  )
+}
 
 export default CharacterList

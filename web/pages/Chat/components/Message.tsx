@@ -49,6 +49,8 @@ import { trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
 type MessageProps = {
   msg: SplitMessage
@@ -83,6 +85,8 @@ function getAnonName(entityId: string) {
 }
 
 const Message: Component<MessageProps> = (props) => {
+  const [t] = useTransContext()
+
   let editRef: HTMLDivElement
   let avatarRef: any
 
@@ -141,6 +145,7 @@ const Message: Component<MessageProps> = (props) => {
     }
     editRef?.focus()
   }
+
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
@@ -316,7 +321,7 @@ const Message: Component<MessageProps> = (props) => {
                       src={getAssetUrl(props.msg.msg)}
                       onClick={() =>
                         settingStore.showImage(props.msg.msg, [
-                          toImageDeleteButton(props.msg._id, 0),
+                          toImageDeleteButton(t, props.msg._id, 0),
                         ])
                       }
                     />
@@ -327,7 +332,7 @@ const Message: Component<MessageProps> = (props) => {
                           src={getAssetUrl(src)}
                           onClick={() =>
                             settingStore.showImage(src, [
-                              toImageDeleteButton(props.msg._id, i() + 1),
+                              toImageDeleteButton(t, props.msg._id, i() + 1),
                             ])
                           }
                         />
@@ -539,6 +544,8 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
 }
 
 const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
 
   if (!props.msg) return null
@@ -547,7 +554,7 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
   const updateImagePrompt = () => {
     const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
     msgStore.editMessageProp(props.msg._id, { imagePrompt }, () => {
-      toastStore.success('Image prompt updated')
+      toastStore.success(t('image_prompt_updated'))
     })
   }
 
@@ -558,7 +565,7 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
           <Show when={props.msg.adapter}>
             <tr>
               <td class="pr-2">
-                <b>Adapter</b>
+                <b>{t('adapter')}</b>
               </td>
               <td>{props.msg.adapter}</td>
             </tr>
@@ -580,12 +587,12 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
         <Card>
           <TextInput
             helperText={
-              <>
-                Image Prompt -{' '}
-                <span class="link" onClick={updateImagePrompt}>
+              <Trans key="image_prompt_helper">
+                Image Prompt -
+                <span class="link ml-2" onClick={updateImagePrompt}>
                   Save
                 </span>
-              </>
+              </Trans>
             }
             parentClass="text-sm"
             isMultiline
@@ -615,10 +622,10 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
 }
 
-function toImageDeleteButton(msgId: string, position: number) {
+function toImageDeleteButton(t: TFunction, msgId: string, position: number) {
   return {
     schema: 'red' as const,
-    text: 'Delete Image',
+    text: t('delete_image'),
     onClick: () => {
       msgStore.removeMessageImage(msgId, position)
       settingStore.clearImage()

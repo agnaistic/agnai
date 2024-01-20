@@ -6,8 +6,11 @@ import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
 import { getClientPreset } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const NavBar: Component = () => {
+  const [t] = useTransContext()
+
   const cfg = settingStore()
   const location = useLocation()
   const chats = chatStore((s) => ({
@@ -49,7 +52,7 @@ const NavBar: Component = () => {
 
     const { name, adapter, isThirdParty, presetLabel } = data
 
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+    const label = `${ADAPTER_LABELS(t)[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
       name || presetLabel
     }`
     return label
