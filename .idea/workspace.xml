@@ -5,152 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d82ae7f-efa0-4edc-a783-08a1d2bfac77" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Agnai.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/test_package.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/test_package1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/test_package2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/ts_commonjs_default_export.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/ts_commonjs_default_export1.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/ts_commonjs_default_export2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/prettier.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/locales/en-US/translation.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/locales/id-ID/translation.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/adapters.ts" beforeDir="false" afterPath="$PROJECT_DIR$/common/adapters.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/memory.ts" beforeDir="false" afterPath="$PROJECT_DIR$/common/memory.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/types/ui.ts" beforeDir="false" afterPath="$PROJECT_DIR$/common/types/ui.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/util.ts" beforeDir="false" afterPath="$PROJECT_DIR$/common/util.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/locales/en-US/translation.json" beforeDir="false" afterPath="$PROJECT_DIR$/locales/en-US/translation.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/locales/id-ID/translation.json" beforeDir="false" afterPath="$PROJECT_DIR$/locales/id-ID/translation.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/srv/adapter/replicate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/srv/adapter/replicate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/srv/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/srv/app.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/srv/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/srv/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/Navigation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/Toasts.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/Toasts.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/Announcements.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/Announcements.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/Configuration.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/Configuration.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/Metrics.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/Metrics.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/Subscription.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/Subscription.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/SubscriptionList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/SubscriptionList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/Tiers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/Tiers.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Admin/UsersPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Admin/UsersPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/CharacterList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/CharacterList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/ChatList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/ChatList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/CreateCharacter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/CreateCharacter.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/CreateCharacterForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/CreateCharacterForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/DeleteCharacter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/DeleteCharacter.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/DownloadModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/DownloadModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/GenerateAvatar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/GenerateAvatar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/ImpersonateModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/ImpersonateModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/ImportCharacter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/ImportCharacter.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/ImportChat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/ImportChat.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/card-utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/card-utils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/CharacterCardView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/CharacterCardView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/CharacterFolderView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/CharacterFolderView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/CharacterListView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/CharacterListView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/ElevenLabsSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/ElevenLabsSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/NovelTtsSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/NovelTtsSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoiceIdSelect.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoiceIdSelect.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoicePreviewButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoicePreviewButton.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoiceServiceSelect.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/VoiceServiceSelect.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/WebSpeechSynthesisSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/components/VoicePicker/WebSpeechSynthesisSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/editor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/editor.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/port.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/port.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Character/util.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Character/util.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ChatDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ChatDetail.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ChatExport.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ChatExport.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ChatGenSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ChatGenSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ChatOptions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ChatOptions.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ChatSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ChatSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/CreateChatForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/CreateChatForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/DeleteMsgModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/DeleteMsgModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/ForcePreset.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/ForcePreset.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/MemberModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/MemberModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/ChatPanes.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/ChatPanes.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/DeleteChat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/DeleteChat.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/Header.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/InputBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/InputBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/MemoryModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/MemoryModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/Message.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/Message.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/PromptModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/PromptModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chat/components/SpeechRecognitionRecorder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chat/components/SpeechRecognitionRecorder.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/Chub.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/Chub.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/ChubImportBook.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/ChubImportBook.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/ChubImportChar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/ChubImportChar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/ChubItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/ChubItem.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/ChubNavigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/ChubNavigation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Chub/FilterSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Chub/FilterSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/GenerationPresets/PresetList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/GenerationPresets/PresetList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/GenerationPresets/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/GenerationPresets/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Guides/Memory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Guides/Memory.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Guides/NovelAI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Guides/NovelAI.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Guides/Pipeline.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Guides/Pipeline.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Home/ChangeLog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Home/ChangeLog.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Home/FAQ.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Home/FAQ.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Home/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Home/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Invite/InvitesPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Invite/InvitesPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Login/OAuth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Login/OAuth.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Login/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Login/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Memory/EditMemory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Memory/EditMemory.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Memory/EditMemoryPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Memory/EditMemoryPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Memory/EmbedContent.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Memory/EmbedContent.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Memory/Library.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Memory/Library.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Memory/Memory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Memory/Memory.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Profile/Checkout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Profile/Checkout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Profile/SubscriptionPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Profile/SubscriptionPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Profile/TierCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Profile/TierCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Profile/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Profile/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/PromptTemplates/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/PromptTemplates/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Scenario/EditScenario.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Scenario/EditScenario.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Scenario/EditScenarioEvents.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Scenario/EditScenarioEvents.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Scenario/ScenarioList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Scenario/ScenarioList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Scenario/components/DownloadScenarioModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Scenario/components/DownloadScenarioModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Scenario/components/ImportScenarioModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Scenario/components/ImportScenarioModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/AISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/AISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Agnaistic.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Agnaistic.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Image/ImageSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Image/ImageSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/OpenRouterOauth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/OpenRouterOauth.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/PatreonOauth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/PatreonOauth.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/UISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/UISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Voice/ElevenLabsSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Voice/ElevenLabsSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Voice/NovelTtsSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Voice/NovelTtsSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Voice/VoiceSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Voice/VoiceSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/Voice/WebSpeechSynthesisSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/Voice/WebSpeechSynthesisSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/WorkerModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/WorkerModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/AIPreset.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/AIPreset.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/ChaiSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/ChaiSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/ClaudeSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/ClaudeSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/HordeAISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/HordeAISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/KoboldAISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/KoboldAISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/NovelAISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/NovelAISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/OobaAISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/OobaAISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/OpenAISettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/OpenAISettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/RegisteredSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/RegisteredSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/components/ScaleSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/components/ScaleSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Settings/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Settings/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Sounds/SoundpackPicker.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Sounds/SoundpackPicker.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Sounds/SoundpackPreview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Sounds/SoundpackPreview.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/pages/Sounds/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/pages/Sounds/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/GenerationSettings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/GenerationSettings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/Modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/Modal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/NavBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/NavBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/PersonaAttributes.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/PersonaAttributes.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/PhraseBias.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/PhraseBias.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/PresetSelect.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/PresetSelect.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/shared/PromptEditor/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/PromptEditor/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/TagSelect.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/TagSelect.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/TextInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/TextInput.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/shared/adapter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/shared/adapter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/store/data/chats.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/store/data/chats.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -179,7 +39,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "Rebasing feature/localization",
+    "git-widget-placeholder": "feature/localization",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/fandygotama/Projects/Python/Agnai/locales/id-ID",
     "node.js.detected.package.eslint": "true",
@@ -216,7 +76,7 @@
       <workItem from="1705247417399" duration="242000" />
       <workItem from="1705312726950" duration="30389000" />
       <workItem from="1705473710075" duration="598000" />
-      <workItem from="1705562554614" duration="22603000" />
+      <workItem from="1705562554614" duration="24039000" />
     </task>
     <servers />
   </component>

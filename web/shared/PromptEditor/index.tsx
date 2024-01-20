@@ -33,7 +33,6 @@ import { SelectTemplate } from './SelectTemplate'
 import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 import { TFunction } from 'i18next'
 
-
 type Placeholder = {
   required: boolean
   limit: number
@@ -87,8 +86,7 @@ const helpers: (t: TFunction) => { [key in InterpAll]?: JSX.Element | string } =
   idle_duration: t('helpers_idle_duration'),
   all_personalities: t('helpers_all_personalities'),
   post: t('helpers_post_amble'),
-  insert:
-    "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
+  insert: t('helpers_insert'),
   longterm_memory: t('helpers_long_term_memory'),
   user_embed: t('helpers_user_embed'),
   roll: t('helpers_roll'),
@@ -109,22 +107,18 @@ const helpers: (t: TFunction) => { [key in InterpAll]?: JSX.Element | string } =
     </Trans>
   ),
   'each chat_embed': (
-    <>
+    <Trans key="helpers_each_embed">
       Supported properties: <code>{`{{.name}} {{.text}}`}</code>
-      <br />
       Example: <code>{`{{#each chat_embed}}{{.name}} said: {{.text}}{{/each}}`}</code>
-    </>
+    </Trans>
   ),
   lowpriority: (
-    <>
+    <Trans key="helpers_low_priority">
       Text that is only inserted if there still is token budget remaining for it after inserting
-      conversation history.
-      <br />
-      Example:{' '}
+      conversation history. Example:
       <code>{`{{#if example_dialogue}}{{#lowpriority}}This is how {{char}} speaks: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</code>
-    </>
+    </Trans>
   ),
-}
 })
 
 type Optionals = { exclude: InterpAll[] } | { include: InterpAll[] } | {}
@@ -188,7 +182,7 @@ const PromptEditor: Component<
   })
 
   const togglePreview = async () => {
-    const opts = await getExampleOpts(props.inherit)
+    const opts = await getExampleOpts(t, props.inherit)
     const template = props.noDummyPreview ? input() : ensureValidTemplate(input())
     let { parsed } = await parseTemplate(template, opts)
 
@@ -412,7 +406,6 @@ export const BasicPromptTemplate: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   hide?: boolean
 }> = (props) => {
-
   let ref: HTMLInputElement
 
   const [t] = useTransContext()
@@ -423,7 +416,6 @@ export const BasicPromptTemplate: Component<{
       value: label,
     })
   )
-
 
   const [mod, setMod] = createSignal(
     props.inherit?.promptOrder?.map((o) => ({

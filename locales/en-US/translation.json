@@ -390,6 +390,7 @@
   "download_png": "Download (PNG)",
   "default_adapter_x": "Default ({{adapter}})",
   "agnaistic_x": "Agnaistic: {{name}}",
+  "aphrodite": "Aphrodite",
   "open_ai": "OpenAI",
   "open_ai_model": "OpenAI Model",
   "which_open_ai_model_to_use": "Which OpenAI model to use",
@@ -1154,9 +1155,12 @@
   "helpers_long_term_memory": "(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.",
   "helpers_user_embed": "Text retrieved from user-specified embeddings (Articles, PDFs, ...)",
   "helpers_roll": "Produces a random number. Defaults to \"d20\". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}",
+  "helpers_insert": "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
   "helpers_random": "Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`",
   "helpers_each_bot": "Suported properties: <1>{`{{.name}} {{.persona}}`}</1> Example: <3>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</3>",
   "helpers_each_message": "Supported properties: <1>{`{{.msg}} {{.name}} {{.isuser}} {{.isbot}} {{.i}}`}</1> You can use <3>conditions</3> for isbot and isuser. E.g. <5>{`{{#if .isuser}} ... {{/if}}`}</5> Full example: <7>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</7>",
+  "helpers_each_embed": "Supported properties: <1>{`{{.name}} {{.text}}`}</1> Example: <3>{`{{#each chat_embed}}{{.name}} said: {{.text}}{{/each}}`}</3>",
+  "helpers_low_priority": "Text that is only inserted if there still is token budget remaining for it after inserting conversation history. Example: <1>{`{{#if example_dialogue}}{{#lowpriority}}This is how {{char}} speaks: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</1>",
   "ai_settings": "AI Settings",
   "image_settings": "Image Settings",
   "voice_settings": "Voice Settings",
@@ -1197,5 +1201,6 @@
   "attributes_example": "{{char}} is a tall man who likes {{user}}.",
   "attributes_example_2": "Name. E.g. appearance",
   "attributes_example_3": "Comma separate attributes. E.g: tall, brunette, athletic",
-  "attributes_key_value": "Attributes (Key: value)"
+  "attributes_key_value": "Attributes (Key: value)",
+  "gift": "Gift"
 }

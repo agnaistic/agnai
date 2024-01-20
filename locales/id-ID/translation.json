@@ -391,6 +391,7 @@
   "download_png": "Unduh (PNG)",
   "default_adapter_x": "Default ({{adapter}})",
   "agnaistic_x": "Agnaistic: {{name}}",
+  "aphrodite": "Aphrodite",
   "open_ai": "OpenAI",
   "open_ai_model": "Model OpenAI",
   "which_open_ai_model_to_use": "Model OpenAI yang akan digunakan",
@@ -1156,9 +1157,12 @@
   "helpers_long_term_memory": "(Aka `chat_embed`) Teks diambil dari penyematan riwayat obrolan. Sesuaikan anggaran token di bagian `Memori` yang telah ditetapkan sebelumnya.",
   "helpers_user_embed": "Teks diambil dari penyematan yang ditentukan pengguna (Artikel, PDF, ...)",
   "helpers_roll": "Menghasilkan nomor acak. Defaultnya adalah \"d20\". Untuk menggunakan nomor khusus: {{roll [number]}}. Misalnya: {{putaran 1000}}",
+  "helpers_insert": "(Aka catatan penulis) Sisipkan teks pada kedalaman tertentu di prompt. Misalnya. `{{#insert=4}}Ini 4 baris dari bawah{{/insert}}`",
   "helpers_random": "Menghasilkan kata acak dari daftar yang dipisahkan koma. Misalnya: `{{acak senang, sedih, cemburu, marah}}`",
   "helpers_each_bot": "Properti yang didukung: <1>{`{{.name}} {{.persona}}`}</1> Contoh: <3>{`{{#each boy}}{{.name}} kepribadian: {{.persona}}{{/each}}`}</3>",
   "helpers_each_message": "Properti yang didukung: <1>{`{{.msg}} {{.name}} {{.isuser}} {{.isbot}} {{.i}}`}</1> Anda dapat menggunakan <3> ketentuan</3> untuk isbot dan isuser. Misalnya. <5>{`{{#if .isuser}} ... {{/if}}`}</5> Contoh lengkap: <7>{`{{#each msg}}{{#if .isuser} }Pengguna: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</7>",
+  "helpers_each_embed": "Properti yang didukung: <1>{`{{.name}} {{.text}}`}</1> Contoh: <3>{`{{#each chat_embed}}{{.name}} berkata: {{ .text}}{{/each}}`}</3>",
+  "helpers_low_priority": "Teks yang hanya disisipkan jika masih ada sisa anggaran token setelah memasukkan riwayat percakapan. Contoh: <1>{`{{#if example_dialogue}}{{#lowpriority}}Beginilah cara {{char}} berbicara: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</1>",
   "ai_settings": "Pengaturan AI",
   "image_settings": "Pengaturan Gambar",
   "voice_settings": "Pengaturan Suara",
@@ -1199,5 +1203,6 @@
   "attributes_example": "{{char}} adalah pria jangkung yang menyukai {{user}}.",
   "attributes_example_2": "Nama. Contoh: penampilan",
   "attributes_example_3": "Atribut yang dipisahkan tanda koma. Contoh: tinggi, atletik, gemuk",
-  "attributes_key_value": "Atribut (Key: value)"
+  "attributes_key_value": "Atribut (Key: value)",
+  "gift": "Hadiah"
 }
