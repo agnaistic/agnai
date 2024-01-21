@@ -72,6 +72,8 @@ const MobileNavHeader: Component = () => {
 }
 
 const Navigation: Component = () => {
+  const [t] = useTransContext()
+
   let parent: any
   let content: any
   const state = settingStore()
@@ -152,10 +154,10 @@ const Navigation: Component = () => {
           <Show when={state.config.policies}>
             <div class="text-500 flex w-full justify-center gap-4 text-xs">
               <div>
-                <A href="/terms-of-service">Term of Service</A>
+                <A href="/terms-of-service">{t('term_of_service')}</A>
               </div>
               <div>
-                <A href="/privacy-policy">Privacy Policy</A>
+                <A href="/privacy-policy">{t('privacy_policy')}</A>
               </div>
             </div>
           </Show>
@@ -195,7 +197,7 @@ const UserNavigation: Component = () => {
       <Show when={menu.flags.chub}>
         <Item href="/chub" ariaLabel="Character hub">
           <ShoppingBag aria-hidden="true" />
-          CHUB
+          {t('chub')}
         </Item>
       </Show>
 
@@ -206,7 +208,7 @@ const UserNavigation: Component = () => {
       <Show when={guidance()}>
         <Item href="/mode/preview/" ariaLabel="Sagas Preview">
           <Wand2 aria-hidden="true" />
-          Sagas Preview
+          {t('sagas_preview')}
         </Item>
       </Show>
 
@@ -326,7 +328,7 @@ const GuestNavigation: Component = () => {
           ariaLabel={t('login_to_the_application')}
           onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
         >
-          <LogIn /> Login
+          <LogIn /> {t('login')}
         </Item>
       </Show>
 
@@ -382,7 +384,7 @@ const GuestNavigation: Component = () => {
           </ExternalLink>
         </Show>
 
-        <Item href="/settings" ariaLabel="Open settings page">
+        <Item href="/settings" ariaLabel={t('open_settings_page')}>
           <Settings aria-hidden="true" />
         </Item>
 

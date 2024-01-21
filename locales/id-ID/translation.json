@@ -1204,5 +1204,6 @@
   "attributes_example_2": "Nama. Contoh: penampilan",
   "attributes_example_3": "Atribut yang dipisahkan tanda koma. Contoh: tinggi, atletik, gemuk",
   "attributes_key_value": "Atribut (Key: value)",
-  "gift": "Hadiah"
+  "gift": "Hadiah",
+  "sagas_preview": "Sagas Preview"
 }

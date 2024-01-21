@@ -1202,5 +1202,8 @@
   "attributes_example_2": "Name. E.g. appearance",
   "attributes_example_3": "Comma separate attributes. E.g: tall, brunette, athletic",
   "attributes_key_value": "Attributes (Key: value)",
-  "gift": "Gift"
+  "gift": "Gift",
+  "sagas_preview": "Sagas Preview",
+  "term_of_service": "Term of Service",
+
 }
