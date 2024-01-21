@@ -8,7 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/locales/en-US/translation.json" beforeDir="false" afterPath="$PROJECT_DIR$/locales/en-US/translation.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/locales/id-ID/translation.json" beforeDir="false" afterPath="$PROJECT_DIR$/locales/id-ID/translation.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/Navigation.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
