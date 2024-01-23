@@ -1,45 +1,46 @@
-import { Component } from 'solid-js'
+import { Component, Show, createEffect, createSignal } from 'solid-js'
 import { render } from 'solid-js/web'
 import App from './App'
-import { TransProvider } from '@mbarzda/solid-i18next'
+
 import i18next from 'i18next'
 import HttpBackend from 'i18next-http-backend'
 import { userStore } from '/web/store'
+import { TransProvider } from '@mbarzda/solid-i18next'
 
 const AppContainer: Component = () => {
+  const [isReady, setIsReady] = createSignal(false);
+	
   const state = userStore()
+  
+  createEffect(() => {
+    let localePath: string
 
-  const instance = i18next.createInstance(
-    {
-      lng: state.ui.language,
-      fallbackLng: state.ui.language,
-      defaultNS: 'translation',
-      debug: true,
-    },
-    (err, t) => {
-      if (err) return console.log('something went wrong loading', err)
-      t('key') // -> same as i18next.t
+    if (location.port === '1234' || location.port === '3001') {
+      localePath = `${location.protocol}//${location.hostname}:3001/locales/{{lng}}/{{ns}}.json`
+    } else {
+      localePath = 'locales/{{lng}}/{{ns}}.json'
     }
-  )
 
-  instance.use(HttpBackend)
-
-  let localePath: string
-
-  if (location.port === '1234' || location.port === '3001') {
-    localePath = `${location.protocol}//${location.hostname}:3001/locales/{{lng}}/{{ns}}.json`
-  } else {
-    localePath = 'locales/{{lng}}/{{ns}}.json'
-  }
-
-  const backend = {
-    loadPath: localePath,
-  }
+    i18next.use(HttpBackend).init({
+      lng: state.ui.language,
+      interpolation: {
+        escapeValue: true,
+      },
+      fallbackLng: state.ui.language,
+      ns: "translation",
+      backend: {
+        loadPath: localePath
+      }
+    }).then(() => setIsReady(true))
+		  .catch((err) => console.error(err));
+	});
 
   return (
-    <TransProvider instance={instance} options={{ backend }}>
-      <App />
-    </TransProvider>
+    <Show when={isReady()} fallback={<div>Loading...</div>}>
+      <TransProvider>
+        <App />
+      </TransProvider>
+    </Show>
   )
 }
 
