@@ -6,10 +6,11 @@ import { useRootModal } from './hooks'
 import Button from './Button'
 import Modal from './Modal'
 import { FormLabel } from './FormLabel'
-import { settingStore, userStore } from '../store'
+import { exportPreset, presetStore, settingStore, userStore } from '../store'
 import { isUsableService } from './util'
 import { defaultPresets } from '/common/default-preset'
 import { isDefaultPreset } from '/common/presets'
+import { DownloadIcon } from 'lucide-solid'
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -24,6 +25,8 @@ export const PresetSelect: Component<{
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
   )
+
+  const presets = presetStore((s) => s.presets)
   const config = settingStore((s) => s.config)
   const user = userStore((s) => ({ user: s.user }))
 
@@ -57,6 +60,14 @@ export const PresetSelect: Component<{
     setShowSelectModal(false)
     setFilter('')
   }
+
+  const downloadPreset = () => {
+    const preset = presets.find((p) => p._id === props.selected)
+    if (!preset) return
+
+    exportPreset(preset)
+  }
+
   useRootModal({
     id: 'presetSelect',
     element: (
@@ -105,9 +116,15 @@ export const PresetSelect: Component<{
         <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
       </Show>
 
-      <Button onClick={() => setShowSelectModal(true)} class="w-fit">
-        Selected: <strong>{selectedLabel()}</strong>
-      </Button>
+      <div class="flex w-full gap-2">
+        <Button onClick={() => setShowSelectModal(true)} class="w-fit">
+          Selected: <strong>{selectedLabel()}</strong>
+        </Button>
+
+        <Button onClick={downloadPreset} disabled={!props.selected}>
+          <DownloadIcon size={20} />
+        </Button>
+      </div>
 
       {props.warning ?? <></>}
     </div>

@@ -5,7 +5,6 @@ import { useBgStyle, usePane } from '../hooks'
 import Modal from '../Modal'
 import { Match } from 'solid-js'
 import { Card } from '/web/shared/Card'
-import PageHeader from '/web/shared/PageHeader'
 
 /** Content that can be a side pane, a modal, or a regular page */
 export type ConvertibleProps = {
@@ -23,6 +22,7 @@ export const Convertible: Component<ConvertibleProps> = (props) => {
   })
   const paneOrPopup = usePane()
   const body = props.wrapper?.(props.children) ?? props.children
+
   return (
     <Switch>
       <Match when={paneOrPopup() === 'pane'}>
@@ -31,15 +31,15 @@ export const Convertible: Component<ConvertibleProps> = (props) => {
           class="convertible-pane w-full min-w-[448px] max-w-[650px] overflow-y-auto"
           style={rightPaneBgStyles()}
         >
-          <div style={{ 'grid-area': 'title' }} class="pl-2">
-            {props.title ?? <PageHeader title={props.title} subPage />}
-          </div>
-          <div style={{ 'grid-area': 'content' }} class="overflow-y-auto px-2">
+          <div style={{ 'grid-area': 'title' }} class="flex justify-between py-2 pl-2">
+            <div>{props.title}</div>
             <div class="sticky top-0 float-right" onClick={props.close}>
               <div class="ml-[-32px] cursor-pointer">
                 <X />
               </div>
             </div>
+          </div>
+          <div style={{ 'grid-area': 'content' }} class="overflow-y-auto px-2">
             {body}
           </div>
           <Footer>{props.footer}</Footer>

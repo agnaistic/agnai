@@ -336,6 +336,35 @@ const ChatDetail: Component = () => {
     return () => document.removeEventListener('keydown', keyboardShortcuts)
   })
 
+  const split = createMemo(() => {
+    if (user.ui.viewMode !== 'split') return null
+
+    return (
+      <section
+        data-avatar-container
+        ref={container!}
+        class="flex items-end justify-center"
+        style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
+      >
+        <Show when={chats.char?.visualType === 'sprite'}>
+          <AvatarContainer
+            container={container!}
+            body={chars.botMap[chats.char?._id!]?.sprite}
+            expression={express.expr()}
+          />
+        </Show>
+        <Show when={chats.char?.visualType !== 'sprite' && chats.char?.avatar}>
+          <div class="flex h-full w-full justify-center">
+            <img
+              src={chats.char?.avatar!}
+              class="flex h-full justify-center rounded-lg object-cover"
+            />
+          </div>
+        </Show>
+      </section>
+    )
+  })
+
   onCleanup(clearScrollMonitor)
 
   return (
@@ -362,31 +391,8 @@ const ChatDetail: Component = () => {
         loading={!chats.loaded && !chats.chat}
         showPane={showPane()}
         pane={<ChatPanes setShowOpts={setShowOpts} />}
+        split={split()}
       >
-        <Show when={user.ui.viewMode === 'split'}>
-          <section
-            data-avatar-container
-            ref={container!}
-            class="flex items-end justify-center"
-            style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
-          >
-            <Show when={chats.char?.visualType === 'sprite'}>
-              <AvatarContainer
-                container={container!}
-                body={chars.botMap[chats.char?._id!]?.sprite}
-                expression={express.expr()}
-              />
-            </Show>
-            <Show when={chats.char?.visualType !== 'sprite' && chats.char?.avatar}>
-              <div class="flex h-full w-full justify-center">
-                <img
-                  src={chats.char?.avatar!}
-                  class="flex h-full justify-center rounded-lg object-cover"
-                />
-              </div>
-            </Show>
-          </section>
-        </Show>
         <section
           data-messages
           class={`mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto`}

@@ -267,12 +267,9 @@ const InputBar: Component<{
         }}
         onInput={updateText}
       />
-      <button
-        onClick={onButtonClick}
-        class="h-full rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] px-2 py-2 hover:bg-[var(--bg-700)]"
-      >
-        <MoreHorizontal />
-      </button>
+      <Button schema="clear" onClick={onButtonClick} class="h-full px-2 py-2">
+        <MoreHorizontal class="icon-button" />
+      </Button>
 
       <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
         <div class="flex w-48 flex-col gap-2 p-2">

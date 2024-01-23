@@ -11,7 +11,7 @@ import {
 } from 'solid-js'
 import { characterStore, chatStore, toastStore } from '/web/store'
 import Convertible from '../../../shared/Mode/Convertible'
-import { useParams, useSearchParams } from '@solidjs/router'
+import { A, useParams, useSearchParams } from '@solidjs/router'
 import { getActiveBots } from '../util'
 import { AppSchema } from '/common/types'
 import { CreateCharacterForm } from '../../Character/CreateCharacterForm'
@@ -184,7 +184,15 @@ const ChatPanes: Component<{
         </Match>
 
         <Match when={pane.pane() === 'memory'}>
-          <Convertible close={closePane} footer={paneFooter()}>
+          <Convertible
+            close={closePane}
+            footer={paneFooter()}
+            title={
+              <A class="link" href="/guides/memory">
+                Memory Guide
+              </A>
+            }
+          >
             <ChatMemoryModal chat={chats.chat!} close={closePane} footer={setPaneFooter} />
           </Convertible>
         </Match>
