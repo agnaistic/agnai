@@ -501,7 +501,7 @@
   "prompt_message": "<1>Ini adalah perkiraan. Ini mungkin berbeda dari perintah yang sebenarnya digunakan pada saat itu. Untuk pengguna yang diautentikasi, permintaan yang dibuat di server mungkin berisi lebih banyak konteks saat mengambil pesan dari database hingga bagian 'riwayat' dari permintaan Anda penuh. OpenAI Turbo memiliki payload yang berbeda dan hanya dihasilkan di sisi server.</1><2>Seluruh 'anggaran' mungkin tidak digunakan di sini karena jumlah token dapat berubah karena pemformatan. Misalnya, payload OpenAI Turbo dipecah menjadi beberapa pesan yang secara drastis mengubah jumlah token.</2>",
   "est_token_x": "Estimasi token: {{token}}",
   "could_not_initialize_speech_recognition_x": "Tidak dapat menginisialisasi pengenalan ucapan: {{message}}",
-  "notes_from_the_creator_of_x": "Catatan dari pencipta {name}",
+  "notes_from_the_creator_of_x": "Catatan dari pencipta {{name}}",
   "generate_message": "Ciptakan Pesan",
   "you_have_been_removed_from_the_conversation": "Anda telah dikeluarkan dari percakapan",
   "exported": "Diekspor",
