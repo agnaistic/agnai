@@ -327,7 +327,6 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
     _id,
     oaiModel,
     novelModel,
-    name,
     userId,
     claudeModel,
     images,
