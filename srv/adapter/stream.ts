@@ -10,6 +10,20 @@ export type ServerSentEvent = {
   index?: number
 }
 
+// this is an edited and inverted ver of https://stackoverflow.com/a/70385497
+function incompleteJson(data: string) {
+  if (data.startsWith('{') && !data.endsWith('}')) return true
+  try {
+    const parsed = JSON.parse(data)
+    if (parsed && typeof parsed === 'object') {
+      return false
+    }
+  } catch {
+    return true
+  }
+  return false
+}
+
 /**
  * Converts a Needle readable stream to an async generator which yields server-sent events.
  * Operates on Needle events, not NodeJS ReadableStream events.
@@ -64,7 +78,7 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
       }
 
       const data: string = event.data
-      if (typeof data === 'string' && data.startsWith('{') && !data.endsWith('}')) {
+      if (typeof data === 'string' && incompleteJson(data)) {
         incomplete = msg
         continue
       }
@@ -96,15 +110,14 @@ function parseAphrodite(msg: string, emitter: EventGenerator<ServerSentEvent>) {
       continue
     }
 
-    const prop = line.slice(0, pos)
-    const value = line.slice(pos + 1).trim()
-    event[prop] = prop === 'data' ? value.trimStart() : value.trim()
+    const toParse = line.substring(line.indexOf('{'))
 
-    if (event.data) {
-      try {
-        event.data = JSON.parse(event.data)
-      } catch {}
+    if (incompleteJson(toParse)) {
+      event['data'] = toParse
+      return event
     }
+
+    event['data'] = JSON.parse(toParse)
   }
 
   return event
