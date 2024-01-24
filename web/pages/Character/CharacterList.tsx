@@ -281,7 +281,7 @@ const Characters: Component<{
             <Loading />
           </div>
         </Match>
-        <Match when={props.characters.length === 0 && props.loaded}>
+        <Match when={props.characters.length === 0 && props.favorites.length === 0 && props.loaded}>
           <NoCharacters />
         </Match>
         <Match when={props.loaded}>
