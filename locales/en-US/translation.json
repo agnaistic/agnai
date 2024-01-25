@@ -1168,7 +1168,7 @@
   "choose_a_preset": "Choose a preset",
   "type_to_filter_presets": "Type to filter presets...",
   "custom_presets": "Custom presets",
-  "selected_x": "Selected: <1>{{name}}</1>",
+  "selected_x": "Selected:",
   "api_token": "API Token",
   "the_opacity_of_the_message_block_in_the_chat_window":"The opacity of the message block in the chat window.",
   "you_can_use_speech_recognition": "You can use speech recognition by using the microphone icon in the input text box.",

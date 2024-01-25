@@ -10,7 +10,7 @@ import { settingStore, userStore } from '../store'
 import { isUsableService } from './util'
 import { defaultPresets } from '/common/default-preset'
 import { isDefaultPreset } from '/common/presets'
-import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -109,9 +109,7 @@ export const PresetSelect: Component<{
       </Show>
 
       <Button onClick={() => setShowSelectModal(true)}>
-        <Trans key="selected_x" options={{ name: selectedLabel() }}>
-          Selected: <strong>{'{{name}}'}</strong>
-        </Trans>
+        {t('selected_x')} <strong>{selectedLabel()}</strong>
       </Button>
 
       {props.warning ?? <></>}

@@ -1170,7 +1170,7 @@
   "choose_a_preset": "Pilih preset",
   "type_to_filter_presets": "Ketik untuk memfilter preset...",
   "custom_presets": "Preset khusus",
-  "selected_x": "Terpilih: <1>{{name}}</1>",
+  "selected_x": "Terpilih:",
   "api_token": "Token API",
   "the_opacity_of_the_message_block_in_the_chat_window": "Opasitas blok pesan di jendela obrolan.",
   "you_can_use_speech_recognition": "Anda dapat menggunakan pengenalan ucapan dengan menggunakan ikon mikrofon di kotak teks masukan.",
