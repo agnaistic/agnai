@@ -142,6 +142,8 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       top_k: gen.topK,
       top_a: gen.topA,
       stop: getStoppingStrings(opts, stops),
+      dynatemp_range: gen.dynatemp_range,
+      dynatemp_exponent: gen.dynatemp_exponent,
 
       mirostat_mode: gen.mirostatToggle ? 2 : 0,
       mirostat_tau: gen.mirostatTau,

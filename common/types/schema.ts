@@ -483,6 +483,8 @@ export namespace AppSchema {
     service?: AIAdapter
 
     temp: number
+    dynatemp_range?: number
+    dynatemp_exponent?: number
     maxTokens: number
     maxContextLength?: number
     repetitionPenalty: number
