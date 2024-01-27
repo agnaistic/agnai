@@ -54,6 +54,7 @@ export type UISettings = {
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
   font: FontSetting
+  language: string
   imageWrap: boolean
 
   /** 0 -> 1. 0 = transparent. 1 = opaque */
@@ -112,6 +113,7 @@ export const defaultUIsettings: UISettings = {
   avatarSize: 'md',
   avatarCorners: 'circle',
   font: 'default',
+  language: 'en-US',
   msgOpacity: 0.8,
   mobileSendOnEnter: false,
 

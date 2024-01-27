@@ -4,11 +4,14 @@ import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { RefreshCw } from 'lucide-solid'
 import RangeInput from '/web/shared/RangeInput'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const NovelTtsSettings: Component<{
   settings: VoiceSettingForm<'novel'>
   onChange: (value: VoiceSettingForm<'novel'>) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const update = (diff: Partial<VoiceSettingForm<'novel'>>) => {
     props.onChange({ ...props.settings, ...diff })
   }
@@ -27,8 +30,8 @@ export const NovelTtsSettings: Component<{
       <div class="flex items-end">
         <TextInput
           fieldName="novelSeed"
-          label="Seed"
-          helperText="Allows you to create a custom voice using a seed of your choice. Overrides the voice."
+          label={t('seed')}
+          helperText={t('seed_message')}
           value={props.settings.seed ?? ''}
           onChange={(ev) => update({ seed: ev.currentTarget.value })}
         />
@@ -39,7 +42,7 @@ export const NovelTtsSettings: Component<{
 
       <RangeInput
         fieldName="novelRate"
-        label="Playback Rate"
+        label={t('playback_rate')}
         helperText=""
         min={0.5}
         max={2}

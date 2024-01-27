@@ -13,19 +13,22 @@ import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
 import { Save } from 'lucide-solid'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
 function noop() {}
 
 const UISettings: Component = () => {
+  const [t, { changeLanguage }] = useTransContext()
+
   const state = userStore()
   const chars = characterStore()
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
     const custom = state.current.bgCustom || ''
-    if (custom !== '') return [{ label: 'Custom', value: '' }]
+    if (custom !== '') return [{ label: t('custom'), value: '' }]
     return options
   })
 
@@ -44,22 +47,22 @@ const UISettings: Component = () => {
 
   return (
     <>
-      <h3 class="text-lg font-bold">Theme</h3>
+      <h3 class="text-lg font-bold">{t('theme')}</h3>
       <div class="flex flex-row justify-start gap-4">
         <Select
           fieldName="theme"
           items={themeOptions}
-          label="Color"
+          label={t('color')}
           value={state.ui.theme}
           onChange={(item) => userStore.saveUI({ theme: item.value as any })}
         />
 
         <Select
           fieldName="mode"
-          label="Mode"
+          label={t('mode')}
           items={[
-            { label: 'Dark', value: 'dark' },
-            { label: 'Light', value: 'light' },
+            { label: t('dark'), value: 'dark' },
+            { label: t('light'), value: 'light' },
           ]}
           value={state.ui.mode}
           onChange={(item) => userStore.saveUI({ mode: item.value as any })}
@@ -67,11 +70,11 @@ const UISettings: Component = () => {
       </div>
       <div class="flex flex-col">
         <FormLabel
-          label="Backgrounds"
+          label={t('backgrounds')}
           helperText={
             <>
               <span class="link" onClick={() => userStore.saveCustomUI({ bgCustom: '' })}>
-                Reset to Default
+                {t('reset_to_default')}
               </span>
             </>
           }
@@ -94,30 +97,45 @@ const UISettings: Component = () => {
 
       <FileInput
         fieldName="background"
-        label="Background Image"
+        label={t('background_image')}
         onUpdate={onBackground}
         accept="image/png,image/jpeg,image/jpg"
       />
       <div class="my-2 w-full justify-center">
-        <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
+        <Button onClick={() => userStore.setBackground(null)}>{t('remove_background')}</Button>
       </div>
 
       <Select
         fieldName="font"
-        label="Font"
+        label={t('font')}
         items={[
-          { label: 'Default', value: 'default' },
-          { label: 'Lato (Roko)', value: 'lato' },
+          { label: t('default'), value: 'default' },
+          { label: t('lato'), value: 'lato' },
         ]}
         value={state.ui.font}
         onChange={(item) => userStore.saveUI({ font: item.value as any })}
       />
 
+      <Select
+        fieldName="language"
+        label={t('language')}
+        items={[
+          { label: t('English (United States)'), value: 'en-US' },
+          { label: t('Indonesia'), value: 'id-ID' },
+        ]}
+        value={state.ui.language}
+        onChange={(item) => {
+          changeLanguage(item.value)
+
+          userStore.saveUI({ language: item.value as any })
+        }}
+      />
+
       <Divider />
-      <h3 class="text-md font-bold">Chat Settings</h3>
+      <h3 class="text-md font-bold">{t('chat_settings')}</h3>
 
       <Toggle
-        label="Trim Incomplete Sentences"
+        label={t('trim_incomplete_sentences')}
         fieldName="trimSentences"
         value={state.ui.trimSentences ?? false}
         onChange={(next) => userStore.saveUI({ trimSentences: next })}
@@ -125,8 +143,8 @@ const UISettings: Component = () => {
 
       <Toggle
         fieldName="mobileSendOnEnter"
-        label="Send Message on Enter on Mobile"
-        helperText='Instead of adding a line break, "Enter" will send the message (Mobile only)'
+        label={t('send_message_on_enter_on_mobile')}
+        helperText={t('instead_of_adding_a_line_break_enter_will_send_message')}
         value={state.ui.mobileSendOnEnter}
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
@@ -141,17 +159,21 @@ const UISettings: Component = () => {
 
       <Select
         fieldName="chatMode"
-        label="View Mode"
+        label={t('view_mode')}
         helperText={
           <>
-            <b>Standard</b>: Messages take up the entire chat screen.
+            <Trans key="standard_messages_take_up_the_entire_chat_screen">
+              <b>Standard</b>: Messages take up the entire chat screen.
+            </Trans>
             <br />
-            <b>Split</b>: Character's avatar appears at the top of the screen
+            <Trans key="split_characters_avatar_appears_at_the_top_of_the_screen">
+              <b>Split</b>: Character's avatar appears at the top of the screen
+            </Trans>
           </>
         }
         items={[
-          { label: 'Standard', value: 'standard' },
-          { label: 'Split', value: 'split' },
+          { label: t('standard'), value: 'standard' },
+          { label: t('split'), value: 'split' },
         ]}
         value={state.ui.viewMode || 'standard'}
         onChange={(next) => userStore.saveUI({ viewMode: next.value as any })}
@@ -164,8 +186,8 @@ const UISettings: Component = () => {
           min={25}
           max={65}
           step={1}
-          label="Split Height (%)"
-          helperText={`Maximum height of the character's avatar when in split mode`}
+          label={t('split_height')}
+          helperText={t('maximum_height_of_the_characters_avatar')}
           value={state.ui.viewHeight || 40}
           onChange={(value) => userStore.tryUI({ viewHeight: value })}
         />
@@ -177,14 +199,14 @@ const UISettings: Component = () => {
       <div class="flex flex-row justify-start gap-4">
         <Select
           fieldName="avatarSize"
-          label="Size"
+          label={t('size')}
           items={toDropdownItems(UI.AVATAR_SIZES)}
           value={state.ui.avatarSize}
           onChange={(item) => userStore.saveUI({ avatarSize: item.value as any })}
         />
         <Select
           fieldName="avatarCorners"
-          label="Corner Radius"
+          label={t('corner_radius')}
           items={toDropdownItems(UI.AVATAR_CORNERS)}
           value={state.ui.avatarCorners}
           onChange={(item) => userStore.saveUI({ avatarCorners: item.value as any })}
@@ -192,11 +214,11 @@ const UISettings: Component = () => {
       </div>
 
       <ColorPicker
-        label="Message Background Color"
+        label={t('message_background_color')}
         fieldName="messageColor"
         helperText={
           <span class="link" onClick={() => userStore.saveCustomUI({ msgBackground: 'bg-800' })}>
-            Reset to Default
+            {t('reset_to_default')}
           </span>
         }
         onInput={(color) => tryCustomUI({ msgBackground: color })}
@@ -205,15 +227,17 @@ const UISettings: Component = () => {
       />
 
       <ColorPicker
-        label="Bot Message Background Color"
+        label={t('bot_message_background_color')}
         fieldName="botMessageColor"
         helperText={
           <>
             <span class="link" onClick={() => userStore.saveCustomUI({ botBackground: 'bg-800' })}>
-              Reset to Default
+              {t('reset_to_default')}
             </span>
             <span>
-              . This will override the <b>Message Background</b>.{' '}
+              <Trans key="this_will_override_message_background">
+                . This will override the <b>Message Background</b>.
+              </Trans>
             </span>
           </>
         }
@@ -223,11 +247,11 @@ const UISettings: Component = () => {
       />
 
       <ColorPicker
-        label="Chat Text Color"
+        label={t('chat_text_color')}
         fieldName="chatTextColor"
         helperText={
           <span class="link" onClick={() => userStore.saveCustomUI({ chatTextColor: 'text-800' })}>
-            Reset to Default
+            {t('reset_to_default')}
           </span>
         }
         onInput={(color) => tryCustomUI({ chatTextColor: color })}
@@ -236,14 +260,14 @@ const UISettings: Component = () => {
       />
 
       <ColorPicker
-        label="Chat Emphasis Color"
+        label={t('chat_emphasis_color')}
         fieldName="chatEmphasisColor"
         helperText={
           <span
             class="link"
             onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}
           >
-            Reset to Default
+            {t('reset_to_default')}
           </span>
         }
         onInput={(color) => tryCustomUI({ chatEmphasisColor: color })}
@@ -252,11 +276,11 @@ const UISettings: Component = () => {
       />
 
       <ColorPicker
-        label="Chat Quote Color"
+        label={t('chat_quote_color')}
         fieldName="chatQuoteColor"
         helperText={
           <span class="link" onClick={() => userStore.saveCustomUI({ chatQuoteColor: 'text-800' })}>
-            Reset to Default
+            {t('reset_to_default')}
           </span>
         }
         onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
@@ -266,14 +290,14 @@ const UISettings: Component = () => {
 
       <Select
         fieldName="chatWidth"
-        label="Content Width"
+        label={t('content_width')}
         items={[
-          { label: 'Narrow', value: 'narrow' },
-          { label: 'Large', value: 'full' },
-          { label: 'X-Large', value: 'xl' },
-          { label: '2X-Large', value: '2xl' },
-          { label: '3X-Large', value: '3xl' },
-          { label: '100%', value: 'fill' },
+          { label: t('narrow'), value: 'narrow' },
+          { label: t('large'), value: 'full' },
+          { label: t('x_large'), value: 'xl' },
+          { label: t('2x_large'), value: '2xl' },
+          { label: t('3x_large'), value: '3xl' },
+          { label: t('100%'), value: 'fill' },
         ]}
         onChange={(item) => userStore.saveUI({ chatWidth: item.value as any })}
         value={state.ui.chatWidth}
@@ -282,8 +306,8 @@ const UISettings: Component = () => {
         fieldName="msgOpacity"
         value={state.ui.msgOpacity}
         step={0.05}
-        label="Message Opacity"
-        helperText="The opacity of the message block in the chat window."
+        label={t('message_opacity')}
+        helperText={t('the_opacity_of_the_message_block_in_the_chat_window')}
         min={0}
         max={1}
         onChange={(value) => userStore.saveUI({ msgOpacity: value })}
@@ -291,25 +315,21 @@ const UISettings: Component = () => {
 
       <Toggle
         fieldName="imageWrap"
-        label="Avatar Wrap Around"
-        helperText='Allow text in messages to "wrap around" avatars'
+        label={t('avatar_wrap_around')}
+        helperText={t('allow_text_in_messages_to_wrap_around_avatars')}
         onChange={(value) => userStore.saveUI({ imageWrap: value })}
         value={state.ui.imageWrap}
       />
 
       <Divider />
-      <div class="text-lg font-bold">Preview</div>
+      <div class="text-lg font-bold">{t('preview')}</div>
       <Show when={chars.characters.list.length > 0}>
         <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
             editing={false}
-            msg={toBotMsg(
-              chars.characters.list[0],
-              '*I wave excitedly* Hello world!\nHow are you today?',
-              {
-                _id: '1',
-              }
-            )}
+            msg={toBotMsg(chars.characters.list[0], t('preview_chat_example_1'), {
+              _id: '1',
+            })}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
@@ -318,11 +338,7 @@ const UISettings: Component = () => {
           <Show when={state.profile}>
             <Message
               editing={false}
-              msg={toUserMsg(
-                state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"',
-                { _id: '2' }
-              )}
+              msg={toUserMsg(state.profile!, t('preview_chat_example_2'), { _id: '2' })}
               onRemove={noop}
               sendMessage={() => {}}
               isPaneOpen={false}

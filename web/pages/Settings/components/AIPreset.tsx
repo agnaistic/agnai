@@ -4,8 +4,11 @@ import { defaultPresets } from '../../../../common/presets'
 import Select from '../../../shared/Select'
 import { userStore } from '../../../store'
 import { presetStore } from '../../../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const AIPreset: Component<{ adapter: AIAdapter }> = (props) => {
+  const [t] = useTransContext()
+
   const presets = presetStore((s) => ({ list: s.presets }))
   const user = userStore()
 
@@ -13,7 +16,7 @@ export const AIPreset: Component<{ adapter: AIAdapter }> = (props) => {
     const base = [{ label: 'None', value: '' }]
     const userPresets = presets.list.map((pre) => ({ label: pre.name, value: pre._id }))
     const defaults = Object.entries(defaultPresets).map(([name, cfg]) => ({
-      label: `Default: ${cfg.name}`,
+      label: t('default_:_x', { name: cfg.name }),
       value: name,
     }))
 
@@ -24,7 +27,7 @@ export const AIPreset: Component<{ adapter: AIAdapter }> = (props) => {
     <>
       <Select
         fieldName={`preset.${props.adapter}`}
-        label={`Default Preset (${ADAPTER_LABELS[props.adapter]})`}
+        label={t('default_preset_x', { name: ADAPTER_LABELS(t)[props.adapter] })}
         items={options()}
         value={user.user?.defaultPresets?.[props.adapter] || ''}
       />

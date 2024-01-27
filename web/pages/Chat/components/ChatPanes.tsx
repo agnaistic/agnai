@@ -27,12 +27,15 @@ import { isValid } from '/common/valid'
 import ChatSettings from '../ChatSettings'
 import ChatMemoryModal from './MemoryModal'
 import { getClientPreset } from '/web/shared/adapter'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { ChatPanes as default }
 
 const ChatPanes: Component<{
   setShowOpts: (state: boolean) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const params = useParams()
   const [search, setSearch] = useSearchParams()
 
@@ -141,7 +144,7 @@ const ChatPanes: Component<{
         <Match when={chats.opts.pane === 'character'}>
           <Convertible
             kind="partial"
-            title="Edit Character"
+            title={t('edit_character')}
             close={closeCharEditor}
             footer={paneFooter()}
           >
@@ -197,15 +200,20 @@ const ChatPanes: Component<{
           <Convertible
             kind="partial"
             close={closePane}
-            title="UI Settings"
-            footer={<Button onClick={() => closePane()}>Close</Button>}
+            title={t('ui_settings')}
+            footer={<Button onClick={() => closePane()}>{t('close')}</Button>}
           >
             <UISettings />
           </Convertible>
         </Match>
 
         <Match when={chats.opts.pane === 'chat-settings'}>
-          <Convertible kind="partial" close={closePane} title="Chat Settings" footer={paneFooter()}>
+          <Convertible
+            kind="partial"
+            close={closePane}
+            title={t('chat_settings')}
+            footer={paneFooter()}
+          >
             <ChatSettings footer={setPaneFooter} close={closePane} />
           </Convertible>
         </Match>

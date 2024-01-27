@@ -1,11 +1,14 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const FAQ: Component = () => {
+  const [t] = useTransContext()
+
   return (
     <>
-      <PageHeader title="FAQ" subtitle="Frequently Asked Questions"></PageHeader>
+      <PageHeader title={t('faq')} subtitle={t('frequently_asked_questions')}></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(faq)}></div>
     </>
   )

@@ -4,6 +4,7 @@ import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 interface Props {
   title?: string | JSX.Element
@@ -177,6 +178,8 @@ export const ConfirmModal: Component<{
   ariaLabel?: string
   ariaDescription?: string
 }> = (props) => {
+  const [t] = useTransContext()
+
   const confirm = () => {
     props.confirm()
     props.close()
@@ -186,15 +189,15 @@ export const ConfirmModal: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Confirmation"
+      title={t('confirmation')}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+            <X /> {t('cancel')}
           </Button>
 
           <Button onClick={confirm}>
-            <Check /> Confirm
+            <Check /> {t('confirm')}
           </Button>
         </>
       }

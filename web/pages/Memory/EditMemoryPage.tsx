@@ -10,9 +10,12 @@ import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import { Save } from 'lucide-solid'
 import { emptyBookWithEmptyEntry } from '/common/memory'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const EditMemoryPage = () => {
-  const { updateTitle } = setComponentPageTitle('Memory book')
+  const [t] = useTransContext()
+
+  const { updateTitle } = setComponentPageTitle(t('memory_book'))
   let ref: any
   const nav = useNavigate()
   const params = useParams()
@@ -27,14 +30,14 @@ const EditMemoryPage = () => {
 
   createEffect(() => {
     if (params.id === 'new') {
-      updateTitle('Create memory book')
-      setEditing(emptyBookWithEmptyEntry())
+      updateTitle(t('create_memory_book'))
+      setEditing(emptyBookWithEmptyEntry(t))
       return
     }
 
     const match = state.books.list.find((m) => m._id === params.id)
     if (match) {
-      updateTitle(`Edit ${match.name}`)
+      updateTitle(t('edit_x', { name: match.name }))
       setEditing(match)
     }
   })
@@ -66,13 +69,13 @@ const EditMemoryPage = () => {
 
   return (
     <>
-      <PageHeader title="Edit Memory Book" />
+      <PageHeader title={t('edit_memory_book')} />
       <Show when={!!editing()}>
         <form ref={ref} onSubmit={saveBook}>
           <div class="mt-4 flex justify-end">
             <Button type="submit">
               <Save />
-              {!editing()?._id ? 'Create Book' : 'Update Book'}
+              {!editing()?._id ? t('create_book') : t('update_book')}
             </Button>
           </div>
           <EditMemoryForm
@@ -84,45 +87,41 @@ const EditMemoryPage = () => {
           <div class="mt-4 flex justify-end">
             <Button type="submit">
               <Save />
-              {!editing()?._id ? 'Create Book' : 'Update Book'}
+              {!editing()?._id ? t('create_book') : t('update_book')}
             </Button>
           </div>
 
           <div class="mt-8 flex flex-col">
             <div class="flex flex-col gap-2">
-              <div class="text-lg font-bold">Definitions</div>
+              <div class="text-lg font-bold">{t('definitions')}</div>
               <FormLabel
                 fieldName="priorty"
-                label="Priority"
-                helperText="When deciding which entries to INCLUDE in the prompt, the higher the priority entries win."
+                label={t('priority')}
+                helperText={t('priority_message')}
               />
 
-              <FormLabel
-                fieldName="weight"
-                label="Weight"
-                helperText="When deciding how to ORDER entries, the higher the weight the closer to the bottom."
-              />
+              <FormLabel fieldName="weight" label={t('weight')} helperText={t('weight_message')} />
 
               <FormLabel
                 fieldName="keywords"
-                label="Keywords"
+                label={t('keywords')}
                 helperText={
-                  <>
+                  <Trans key="memory_keywords_message">
                     These are the terms that trigger the entry to be potentially included in the
-                    prompt. You can use <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code>{' '}
+                    prompt. You can use <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code>
                     placeholders here.
-                  </>
+                  </Trans>
                 }
               />
 
               <FormLabel
                 fieldName="entry"
-                label="Entry"
+                label={t('entry')}
                 helperText={
-                  <>
-                    This is the text that will be included in the prompt. You can use{' '}
+                  <Trans key="entry_message">
+                    This is the text that will be included in the prompt. You can use
                     <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders here.
-                  </>
+                  </Trans>
                 }
               />
             </div>

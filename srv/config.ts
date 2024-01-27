@@ -65,6 +65,7 @@ export const config = {
   port: +env('PORT', '3001'),
   assetUrl: env('ASSET_URL', ''),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
+  localeFolder: env('LOCALE_FOLDER', resolve(__dirname, '..', 'locales')),
   extraFolder: env('EXTRA_FOLDER', ''),
   billing: {
     private: env('STRIPE_PRIVATE_KEY', ''),
@@ -106,7 +107,7 @@ export const config = {
     'agnaistic,novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate,mancer'
   )
     .split(',')
-    .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],
+    .filter((i) => !!i && i in ADAPTER_LABELS(undefined)) as AIAdapter[],
   storage: {
     enabled: !!env('USE_S3', ''),
     id: env('AWS_ACCESS_KEY_ID', ''),

@@ -11,14 +11,17 @@ import { memoryStore, toastStore } from '../../store'
 import { SolidCard } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
 import { embedApi } from '/web/store/embeddings'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const EmbedsTab: Component = (props) => {
+  const [t] = useTransContext()
+
   const state = memoryStore()
   const [deleting, setDeleting] = createSignal<string>()
 
   return (
     <>
-      <PageHeader title="Memory - Embeddings" />
+      <PageHeader title={t('memory_dash_embeddings')} />
       <EmbedContent />
 
       <div class="my-2 flex flex-col gap-2">
@@ -44,13 +47,17 @@ export const EmbedsTab: Component = (props) => {
         confirm={() => embedApi.removeDocument(deleting()!)}
         show={!!deleting()}
         close={() => setDeleting()}
-        message={`Are you sure you wish to delete this embedding?\n\n${deleting()}`}
+        message={t('are_you_sure_you_wish_to_delete_this_embedding?', {
+          name: deleting(),
+        })}
       />
     </>
   )
 }
 
 export const BooksTab: Component = (props) => {
+  const [t] = useTransContext()
+
   const state = memoryStore()
   const [showImport, setImport] = createSignal(false)
   const [deleting, setDeleting] = createSignal<AppSchema.MemoryBook>()
@@ -66,16 +73,15 @@ export const BooksTab: Component = (props) => {
   return (
     <>
       <PageHeader
-        title="Memory - Books"
+        title={t('memory_dash_books')}
         subtitle={
           <>
-            {' '}
             <a
               href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
               target="_blank"
               class="link"
             >
-              Memory Book Guide
+              {t('memory_book_guide')}
             </a>
           </>
         }
@@ -83,12 +89,12 @@ export const BooksTab: Component = (props) => {
 
       <div class="flex w-full justify-end gap-4">
         <Button onClick={() => setImport(true)}>
-          <Upload /> Import Book
+          <Upload /> {t('import_book')}
         </Button>
         <A href="/memory/new">
           <Button>
             <Plus />
-            Create Book
+            {t('create_book')}
           </Button>
         </A>
       </div>
@@ -128,7 +134,7 @@ export const BooksTab: Component = (props) => {
       <ImportMemoryModal show={showImport()} close={() => setImport(false)} />
       <ConfirmModal
         confirm={() => removeBook(deleting()!)}
-        message={`Are you sure you wish to delete this memory book?\n\n${deleting()?.name}`}
+        message={t('are_you_sure_you_wish_to_delete_this_memory_book', { name: deleting()?.name })}
         close={() => setDeleting()}
         show={!!deleting()}
       />
@@ -136,9 +142,11 @@ export const BooksTab: Component = (props) => {
   )
 }
 
-const NoBooks = () => (
-  <div class="flex justify-center">You have no memory books yet. Click Create to get started.</div>
-)
+const NoBooks: Component = () => {
+  const [t] = useTransContext()
+
+  return <div class="flex justify-center">{t('you_have_no_memory_books_yet')}</div>
+}
 
 type ImportProps = {
   show: boolean
@@ -146,6 +154,8 @@ type ImportProps = {
 }
 
 const ImportMemoryModal: Component<ImportProps> = (props) => {
+  const [t] = useTransContext()
+
   const [json, setJson] = createSignal<any>()
 
   const updateJson = async (files: FileInputResult[]) => {
@@ -155,9 +165,9 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
       const json = JSON.parse(content)
       validateBookJson(json)
       setJson(json)
-      toastStore.success('Character file accepted')
+      toastStore.success(t('character_file_accepted'))
     } catch (ex: any) {
-      toastStore.warn(`Invalid memory book JSON. ${ex.message}`)
+      toastStore.warn(t('invalid_memory_book_json_with_message_x', { message: ex.message }))
     }
   }
 
@@ -169,21 +179,21 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
   const Footer = (
     <>
       <Button onClick={props.close}>
-        <X /> Cancel
+        <X /> {t('cancel')}
       </Button>
       <Button onClick={onImport}>
-        <Upload /> Import
+        <Upload /> {t('import')}
       </Button>
     </>
   )
 
   return (
-    <Modal show={props.show} close={props.close} title="Import Memory Book" footer={Footer}>
+    <Modal show={props.show} close={props.close} title={t('import_memory_book')} footer={Footer}>
       <FileInput
         fieldName="json"
-        label="JSON File"
+        label={t('json_file')}
         accept="text/json,application/json"
-        helperText="Only Agnaistic exported memory books are currently supported."
+        helperText={t('only_agnaistic_exported_memory_books_are_currently_supported')}
         required
         onUpdate={updateJson}
       />

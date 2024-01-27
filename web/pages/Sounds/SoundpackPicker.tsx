@@ -1,6 +1,7 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import Select from '../../shared/Select'
 import { SoundpackLevel, audioStore } from '/web/store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const __none_soundpack__ = '__none_soundpack__'
 
@@ -10,12 +11,14 @@ export const SoundpackPicker: Component<{
   helperText?: string
   level: SoundpackLevel
 }> = (props) => {
+  const [t] = useTransContext()
+
   const audio = audioStore()
   const [selectedId, setSelectedId] = createSignal<string>(__none_soundpack__)
 
   const getSoundpackOptions = createMemo(() => {
     return [
-      { value: __none_soundpack__, label: 'None' },
+      { value: __none_soundpack__, label: t('none') },
       ...audio.soundpacks.map((sp) => {
         return { value: sp.id, label: sp.name }
       }),

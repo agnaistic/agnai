@@ -6,10 +6,11 @@ import { slugify } from '/common/util'
 import { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { NewCharacter, toastStore } from '/web/store'
 import { CHUB_URL } from '/web/store/chub'
+import { TFunction } from 'i18next'
 
 type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
 
-export const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+export const SUPPORTED_FORMATS = (t: TFunction) => t('supported_formats')
 
 export const IMAGE_FORMATS: Record<string, boolean> = {
   apng: true,
@@ -23,30 +24,38 @@ export const TEXT_FORMATS: Record<string, boolean> = {
   json: true,
 }
 
-export async function importCharacterFile(file: FileInputResult) {
+export async function importCharacterFile(t: TFunction, file: FileInputResult) {
   try {
     const ext = file.file.name.split('.').slice(-1)[0]
     if (IMAGE_FORMATS[ext]) {
-      const char = await processImage(file)
+      const char = await processImage(t, file)
       return { char, image: file.file }
     }
 
     if (TEXT_FORMATS[ext]) {
-      const char = await processJSON(file)
+      const char = await processJSON(t, file)
       return { char, image: undefined }
     }
 
     throw new Error(
-      `Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`
+      t('invalid_file_format_x_supported_format_x', {
+        name: file.file.name,
+        formats: SUPPORTED_FORMATS(t),
+      })
     )
   } catch (ex: any) {
-    toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
+    toastStore.error(
+      t('failed_to_import_x_message_x', {
+        name: file.file.name,
+        message: ex.message,
+      })
+    )
     throw ex
   }
 }
 
-export function jsonToCharacter(json: any): NewCharacter {
-  const format = getImportFormat(json)
+export function jsonToCharacter(t: TFunction, json: any): NewCharacter {
+  const format = getImportFormat(t, json)
 
   if (format === 'agnai') {
     return json
@@ -127,9 +136,10 @@ export function jsonToCharacter(json: any): NewCharacter {
 }
 
 /**
+ * @param t
  * @param path Character `fullPath`
  */
-export async function downloadCharacterHub(path: string) {
+export async function downloadCharacterHub(t: TFunction, path: string) {
   const card = await fetch(`${CHUB_URL}/characters/download`, {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
@@ -137,19 +147,19 @@ export async function downloadCharacterHub(path: string) {
   }).then((res) => res.blob())
 
   const file = new File([card], `charhub_${slugify(path)}.png`, { type: 'image/png' })
-  const data = await extractCardData(file)
-  const json = jsonToCharacter(data)
+  const data = await extractCardData(t, file)
+  const json = jsonToCharacter(t, data)
   json.avatar = file
   return { card, file, json }
 }
 
-function getImportFormat(obj: any): ImportFormat {
+function getImportFormat(t: TFunction, obj: any): ImportFormat {
   if (obj.kind === 'character' || isNativeCharacter(obj)) return 'agnai'
   if ('char_name' in obj) return 'ooba'
   if (obj.spec === 'chara_card_v2') return 'tavernV2'
   if ('mes_example' in obj) return 'tavern'
 
-  throw new Error('Unknown import format')
+  throw new Error(t('unknown_import_format'))
 }
 
 function isNativeCharacter(obj: any): obj is AppSchema.Character {
@@ -162,24 +172,24 @@ function isNativeCharacter(obj: any): obj is AppSchema.Character {
   )
 }
 
-async function processImage(file: FileInputResult) {
-  const json = await extractCardData(file.file)
+async function processImage(t: TFunction, file: FileInputResult) {
+  const json = await extractCardData(t, file.file)
   if (!json) {
-    throw new Error('Invalid tavern image')
+    throw new Error(t('invalid_tavern_image'))
   }
-  const parsed = jsonToCharacter(json)
+  const parsed = jsonToCharacter(t, json)
   const character = Object.assign(parsed, { avatar: file.file }, { tags: parsed.tags || [] })
 
-  toastStore.success(`Tavern card accepted`)
+  toastStore.success(t('tavern_card_accepted'))
   return sanitiseCharacter(character)
 }
 
-async function processJSON(file: FileInputResult) {
+async function processJSON(t: TFunction, file: FileInputResult) {
   const content = await getFileAsString(file)
   const json = JSON.parse(content)
-  const char = jsonToCharacter(json)
+  const char = jsonToCharacter(t, json)
   char.tags = char.tags || []
-  toastStore.success('Character file accepted')
+  toastStore.success(t('character_file_accepted'))
   return sanitiseCharacter(char)
 }
 

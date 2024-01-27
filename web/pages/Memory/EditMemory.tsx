@@ -11,6 +11,8 @@ import { Toggle } from '../../shared/Toggle'
 import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
 import { emptyEntry } from '/common/memory'
 import { Card } from '/web/shared/Card'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -20,9 +22,9 @@ const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.Me
 
 export type EntrySort = 'creationDate' | 'alpha'
 
-const entrySortItems = [
-  { label: 'By creation date', value: 'creationDate' },
-  { label: 'Alphabetically', value: 'alpha' },
+const entrySortItems = (t: TFunction) => [
+  { label: t('by_creation_date'), value: 'creationDate' },
+  { label: t('alphabetically'), value: 'alpha' },
 ]
 
 const EditMemoryForm: Component<{
@@ -32,6 +34,8 @@ const EditMemoryForm: Component<{
   entrySort: EntrySort
   onChange?: (book: AppSchema.MemoryBook) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
 
@@ -61,14 +65,14 @@ const EditMemoryForm: Component<{
       <div class="flex flex-col gap-2">
         <FormLabel
           fieldName="id"
-          label="Id"
-          helperText={props.book._id === '' ? 'New book' : props.book._id}
+          label={t('id')}
+          helperText={props.book._id === '' ? t('new_book') : props.book._id}
         />
         <TextInput
           fieldName="name"
-          label="Book Name"
+          label={t('book_name')}
           value={editing().name}
-          placeholder="Name for your memory book"
+          placeholder={t('name_for_your_memory_book')}
           required
           onChange={(e) => {
             change({ ...editing(), name: e.currentTarget.value })
@@ -77,9 +81,9 @@ const EditMemoryForm: Component<{
 
         <TextInput
           fieldName="description"
-          label="Description"
+          label={t('description')}
           value={editing().description}
-          placeholder="(Optional) A description for your memory book"
+          placeholder={t('a_description_for_your_memory_book')}
           onChange={(e) => {
             change({ ...editing(), description: e.currentTarget.value })
           }}
@@ -87,9 +91,9 @@ const EditMemoryForm: Component<{
         <Divider />
         <div class="sticky top-0 w-full py-2">
           <Card class="flex w-full items-center justify-between" bgOpacity={0.5}>
-            <div class="text-lg font-bold">Entries</div>
+            <div class="text-lg font-bold">{t('entries')}</div>
             <Button onClick={addEntry}>
-              <Plus /> Entry
+              <Plus /> {t('entry')}
             </Button>
           </Card>
         </div>
@@ -97,13 +101,13 @@ const EditMemoryForm: Component<{
           <div class="max-w-[200px]">
             <TextInput
               fieldName="search"
-              placeholder="Filter by entry name..."
+              placeholder={t('filter_by_entry_name')}
               onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
           <Select
             fieldName="entry-sort"
-            items={entrySortItems}
+            items={entrySortItems(t)}
             onChange={props.updateEntrySort}
             value={props.entrySort}
             class="mx-1 my-1"
@@ -129,7 +133,7 @@ const EditMemoryForm: Component<{
           )}
         </Index>
         <Button onClick={addEntry}>
-          <Plus /> Entry
+          <Plus /> {t('entry')}
         </Button>
       </div>
     </>
@@ -145,6 +149,8 @@ const EntryCard: Component<{
   index: number
   onChange: (e: AppSchema.MemoryEntry) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const cls = createMemo(() =>
     props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
@@ -156,7 +162,7 @@ const EntryCard: Component<{
       title={
         <div class={`mb-1 flex w-full items-center gap-2`}>
           <TextInput
-            placeholder="Name of entry"
+            placeholder={t('name_of_entry')}
             required
             fieldName={`name.${props.index}`}
             class="w-full border-[1px]"
@@ -183,9 +189,9 @@ const EntryCard: Component<{
       <div class="flex flex-col gap-2">
         <TextInput
           fieldName={`keywords.${props.index}`}
-          label="Keywords"
+          label={t('keywords')}
           required
-          placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
+          placeholder={t('keywords_message')}
           class="border-[1px]"
           value={props.entry.keywords.map((k) => k.trim()).join(', ')}
           onChange={(e) => {
@@ -198,7 +204,7 @@ const EntryCard: Component<{
         <div class="flex flex-row gap-4">
           <TextInput
             fieldName={`priority.${props.index}`}
-            label="Priority"
+            label={t('priority')}
             required
             type="number"
             class="border-[1px]"
@@ -209,7 +215,7 @@ const EntryCard: Component<{
           />
           <TextInput
             fieldName={`weight.${props.index}`}
-            label="Weight"
+            label={t('weight')}
             required
             type="number"
             class="border-[1px]"
@@ -223,7 +229,7 @@ const EntryCard: Component<{
           fieldName={`entry.${props.index}`}
           isMultiline
           value={props.entry.entry}
-          placeholder="Memory entry. E.g. {{user}} likes fruit and vegetables"
+          placeholder={t('memory_entry_examples')}
           class="min-h-[64px] border-[1px]"
           required
           onKeyUp={(e) => {

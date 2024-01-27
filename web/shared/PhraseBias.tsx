@@ -7,12 +7,15 @@ import { MinusCircle } from 'lucide-solid'
 import Button from './Button'
 import { isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 export const PhraseBias: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   service?: AIAdapter
   format?: ThirdPartyFormat
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [biases, setBiases] = createSignal<Array<{ seq: string; bias: number }>>(
     props.inherit?.phraseBias || []
   )
@@ -37,14 +40,14 @@ export const PhraseBias: Component<{
     <div class={`${hide()} flex flex-col gap-2`}>
       <FormLabel
         label={
-          <>
-            Phrase Bias{' '}
+          <Trans key="phrase_bias">
+            Phrase Bias
             <a class="link" onClick={add}>
               Add +
             </a>
-          </>
+          </Trans>
         }
-        helperText="Increase or decrease the likelihood of certain text appearing in responses. Lower values decrease the chance."
+        helperText={t('phrase_bias_message')}
       />
       <For each={biases()}>
         {(each, i) => (
@@ -53,7 +56,7 @@ export const PhraseBias: Component<{
               parentClass="w-full"
               fieldName={`phraseBias.${i()}.seq`}
               value={each.seq}
-              placeholder="E.g. \nBob:"
+              placeholder={t('phrase_bias_example')}
             />
             {/* <TextInput
               parentClass="w-24"
@@ -84,6 +87,8 @@ export const StoppingStrings: Component<{
   service?: AIAdapter
   format?: ThirdPartyFormat
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [strings, setStrings] = createSignal<string[]>(props.inherit?.stopSequences || [''])
 
   const addString = () => {
@@ -107,13 +112,15 @@ export const StoppingStrings: Component<{
       <FormLabel
         label={
           <div class="flex gap-2">
-            Stop Sequences{' '}
-            <a class="link" onClick={addString}>
-              Add +
-            </a>
+            <Trans key="stop_sequences">
+              Stop Sequences
+              <a class="link" onClick={addString}>
+                Add +
+              </a>
+            </Trans>
           </div>
         }
-        helperText="Text that causes the response to complete early. All participant names are included by default."
+        helperText={t('stop_sequences_message')}
       />
       <div class="flex flex-col gap-2 text-sm">
         <For each={strings()}>
@@ -123,7 +130,7 @@ export const StoppingStrings: Component<{
                 fieldName={`stop.${i()}`}
                 value={each}
                 parentClass="w-full"
-                placeholder="E.g. \n<|user|>"
+                placeholder={t('stop_sequences_example')}
                 onChange={(ev) => {
                   const next = strings().map((t, idx) => (idx === i() ? ev.currentTarget.value : t))
                   setStrings(next)

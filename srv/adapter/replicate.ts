@@ -295,10 +295,10 @@ registerAdapter('replicate', handleReplicate, {
   settings: [
     {
       field: 'apiToken',
-      label: 'API Token',
-      helperText: 'You can get your key from https://replicate.com/account/api-tokens',
+      label: 'api_token',
+      helperText: 'replicate_message',
       secret: true,
-      setting: { type: 'text', placeholder: 'E.g. a0_Q45sfF...' },
+      setting: { type: 'text', placeholder: 'replicate_placeholder' },
     },
   ],
   options: ['temp', 'maxTokens', 'repetitionPenalty', 'topP'],

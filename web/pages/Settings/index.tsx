@@ -20,15 +20,17 @@ import { useSearchParams } from '@solidjs/router'
 import Modal from '/web/shared/Modal'
 import { THIRDPARTY_FORMATS } from '/common/adapters'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
-const settingTabs: Record<Tab, string> = {
-  ai: 'AI Settings',
-  ui: 'UI Settings',
-  image: 'Image Settings',
-  voice: 'Voice Settings',
-  guest: 'Guest Data',
-  subscription: 'Subscription',
-}
+const settingTabs: (t: TFunction) => Record<Tab, string> = (t: TFunction) => ({
+  ai: t('ai_settings'),
+  ui: t('ui_settings'),
+  image: t('image_settings'),
+  voice: t('voice_settings'),
+  guest: t('guest_data'),
+  subscription: t('Subscription'),
+})
 
 enum MainTab {
   ai = 0,
@@ -65,9 +67,11 @@ export const SettingsModal = () => {
 }
 
 const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
+  const [t] = useTransContext()
+
   let formRef: HTMLFormElement
 
-  setComponentPageTitle('Settings')
+  setComponentPageTitle(t('settings'))
   const state = userStore()
 
   const [query, setQuery] = useSearchParams()
@@ -182,14 +186,14 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   const footer = (
     <Button onClick={onSubmit}>
       <Save />
-      Update Settings
+      {t('update_settings')}
     </Button>
   )
 
   return (
     <>
       <PageHeader
-        title="Settings"
+        title={t('settings')}
         subtitle={
           <Show when={!!version}>
             <em>v.{version}</em>
@@ -200,7 +204,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
       <div class="my-2">
         <Tabs
-          tabs={tabs.map((t) => settingTabs[t])}
+          tabs={tabs.map((tab) => settingTabs(t)[tab])}
           selected={tab}
           select={(id) => {
             setTab(id)
@@ -232,9 +236,9 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
             <div class="mb-4 mt-8 flex w-full flex-col items-center justify-center">
-              <div>This cannot be undone!</div>
+              <div>{t('this_cannot_be_undone')}</div>
               <Button schema="red" onClick={userStore.clearGuestState}>
-                <AlertTriangle /> Delete Guest State <AlertTriangle />
+                <AlertTriangle /> {t('delete_guest_state')} <AlertTriangle />
               </Button>
             </div>
           </div>

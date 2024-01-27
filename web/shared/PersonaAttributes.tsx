@@ -7,6 +7,7 @@ import { getFormEntries } from './util'
 import { getEncoder } from '/common/tokenize'
 import { formatCharacter } from '/common/characters'
 import { AppSchema } from '/common/types'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 type Attr = { key: string; values: string }
 
@@ -25,6 +26,8 @@ const PersonaAttributes: Component<{
   form?: any
   disabled?: boolean
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
   const [tokens, setTokens] = createSignal(0)
@@ -88,19 +91,21 @@ const PersonaAttributes: Component<{
     <>
       <Show when={!props.hideLabel}>
         <FormLabel
-          label="Personality"
+          label={t('personality')}
           helperText={
             <>
               <span>
                 <Show when={!props.plainText}>
-                  It is highly recommended to always include the <b>personality</b> attribute.
-                  <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates,
-                  loves.
+                  <Trans key="personality_message">
+                    It is highly recommended to always include the <b>personality</b> attribute.
+                    <b>Example attributes</b>: mind, personality, appearance, likes, dislikes,
+                    hates, loves.
+                  </Trans>
                 </Show>
               </span>
               <Show when={props.tokenCount}>
                 <br />
-                <em class="text-xs">{tokens()} tokens</em>
+                <em class="text-xs">{t('x_tokens', { count: tokens() })}</em>
               </Show>
             </>
           }
@@ -114,7 +119,7 @@ const PersonaAttributes: Component<{
             class="text-input-min-h-override"
             value={props.value?.text?.[0]}
             isMultiline
-            placeholder="{{char}} is a tall man who likes {{user}}."
+            placeholder={t('attributes_example')}
             tokenCount={() => updateCount()}
             disabled={props.disabled}
           />
@@ -124,7 +129,7 @@ const PersonaAttributes: Component<{
         <div>
           <Button onClick={add} disabled={props.disabled}>
             <Plus size={16} />
-            Add Attribute
+            {t('add_attribute')}
           </Button>
         </div>
         <div class="mt-2 flex w-full flex-col gap-2">
@@ -152,12 +157,14 @@ const Attribute: Component<{
   remove: (i: number) => void
   disabled?: boolean
 }> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <div class="flex w-full flex-col gap-2 sm:flex-row">
       <div class="flex w-full items-start gap-1 sm:w-3/12">
         <TextInput
           fieldName={`attr-key.${props.index}`}
-          placeholder="Name. E.g. appearance"
+          placeholder={t('attributes_example_2')}
           value={props.attr.key}
           disabled={props.disabled}
         />
@@ -168,7 +175,7 @@ const Attribute: Component<{
       <div class="sm:w-9/12">
         <TextInput
           fieldName={`attr-value.${props.index}`}
-          placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
+          placeholder={t('attributes_example_3')}
           value={props.attr.values}
           onKeyUp={(ev) => props.onKey(ev.key, props.index)}
           isMultiline

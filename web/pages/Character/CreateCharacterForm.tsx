@@ -45,17 +45,19 @@ import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
 import { getAssetUrl } from '/web/shared/util'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
-const formatOptions = [
-  { value: 'attributes', label: 'Attributes (Key: value)' },
-  { value: 'text', label: 'Plain Text' },
+const formatOptions = (t: TFunction) => [
+  { value: 'attributes', label: t('attributes_key_value') },
+  { value: 'text', label: t('plain_text') },
 ]
 
-const backupFormats: any = {
-  sbf: { value: 'sbf', label: 'SBF' },
-  wpp: { value: 'wpp', label: 'W++' },
-  boostyle: { value: 'boostyle', label: 'Boostyle' },
-}
+const backupFormats = (t: TFunction): any => ({
+  sbf: { value: 'sbf', label: t('sbf') },
+  wpp: { value: 'wpp', label: t('w++') },
+  boostyle: { value: 'boostyle', label: t('boostyle') },
+})
 
 export const CreateCharacterForm: Component<{
   chat?: AppSchema.Chat
@@ -69,6 +71,8 @@ export const CreateCharacterForm: Component<{
   close?: () => void
   onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
   const nav = useNavigate()
   const isPage = props.close === undefined
@@ -87,7 +91,7 @@ export const CreateCharacterForm: Component<{
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
 
-  const editor = useCharEditor()
+  const editor = useCharEditor(t)
 
   const tagState = tagStore()
   const state = characterStore((s) => {
@@ -119,9 +123,9 @@ export const CreateCharacterForm: Component<{
   const [showImport, setImport] = createSignal(false)
 
   const personaFormats = createMemo(() => {
-    const options = formatOptions.slice()
-    if (editor.state.personaKind in backupFormats) {
-      options.push(backupFormats[editor.state.personaKind])
+    const options = formatOptions(t).slice()
+    if (editor.state.personaKind in backupFormats(t)) {
+      options.push(backupFormats(t)[editor.state.personaKind])
     }
     return options
   })
@@ -139,7 +143,7 @@ export const CreateCharacterForm: Component<{
   const generateCharacter = async (fields?: GenField[]) => {
     setCreating(true)
     try {
-      await editor.generateCharacter(genService(), fields)
+      await editor.generateCharacter(t, genService(), fields)
     } finally {
       setCreating(false)
     }
@@ -156,9 +160,9 @@ export const CreateCharacterForm: Component<{
     /* Character importing from CharacterHub */
     if (!query.import) return
     try {
-      const { file, json } = await downloadCharacterHub(query.import)
+      const { file, json } = await downloadCharacterHub(t, query.import)
       const imageData = await getImageData(file)
-      const char = jsonToCharacter(json)
+      const char = jsonToCharacter(t, json)
       editor.load(char)
       editor.update({
         book: json.characterBook,
@@ -168,9 +172,9 @@ export const CreateCharacterForm: Component<{
       })
 
       setImage(imageData)
-      toastStore.success(`Successfully downloaded from Character Hub`)
+      toastStore.success(t('successfully_downloaded_from_character_hub'))
     } catch (ex: any) {
-      toastStore.error(`Character Hub download failed: ${ex.message}`)
+      toastStore.error(t('character_hub_download_failed_with_message_x', { message: ex.message() }))
     }
   })
 
@@ -258,11 +262,11 @@ export const CreateCharacterForm: Component<{
     <>
       <Button onClick={cancel} schema="secondary">
         <X />
-        {props.close ? 'Close' : 'Cancel'}
+        {props.close ? t('close') : t('cancel')}
       </Button>
       <Button onClick={onSubmit} disabled={state.creating}>
         <Save />
-        {props.editId && !forceNew() ? 'Update' : 'Create'}
+        {props.editId && !forceNew() ? t('update') : t('create')}
       </Button>
     </>
   )
@@ -271,7 +275,7 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Basic', 'Advanced'], 0)
+  const tabs = useTabs([t('basic'), t('advanced')], 0)
 
   let spriteRef: any
 
@@ -280,13 +284,22 @@ export const CreateCharacterForm: Component<{
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           noslot={!!query.import}
-          title={`${
-            forceNew() ? 'Create' : props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'
-          } a Character`}
+          title={t('action_x_a_character', {
+            action: forceNew()
+              ? t('create')
+              : props.editId
+              ? t('edit')
+              : props.duplicateId
+              ? t('copy')
+              : t('create'),
+          })}
           subtitle={
             <div class="whitespace-normal">
               <em>
-                {totalTokens()} tokens, {totalPermanentTokens()} permanent
+                {t('x_tokens_x_permanent', {
+                  total_token: totalTokens(),
+                  total_permanent: totalPermanentTokens(),
+                })}
               </em>
             </div>
           }
@@ -307,8 +320,11 @@ export const CreateCharacterForm: Component<{
 
           <Show when={showWarning()}>
             <SolidCard bg="orange-600">
-              <b>Warning!</b> Your chat currently overrides your character definitions. These
-              changes won't affect your current chat until you disable them in the "Edit Chat" menu.
+              <Trans key="chat_override_warning">
+                <b>Warning!</b> Your chat currently overrides your character definitions. These
+                changes won't affect your current chat until you disable them in the "Edit Chat"
+                menu.
+              </Trans>
             </SolidCard>
           </Show>
 
@@ -316,25 +332,34 @@ export const CreateCharacterForm: Component<{
             <Show when={!isPage && paneOrPopup() === 'popup'}>
               <div>
                 <em>
-                  ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
+                  {t('x_tokens_x_permanent', {
+                    total_token: totalTokens(),
+                    total_permanent: totalPermanentTokens(),
+                  })}
                 </em>
               </div>
             </Show>
 
             <Show when={props.temp}>
               <TitleCard type="premium">
-                You are {props.editId ? 'editing' : 'creating'} a temporary character. A temporary
-                character exist within your current chat only.
+                <Trans
+                  key="you_are_action_x_temporary_character"
+                  options={{
+                    action: props.editId ? t('editing').toLowerCase() : t('creating').toLowerCase(),
+                  }}
+                ></Trans>
+                You are {'{{action}}'} a temporary character. A temporary character exist within
+                your current chat only.
               </TitleCard>
             </Show>
 
             <div class="flex justify-end gap-2 text-[1em]">
               <Button onClick={() => setImport(true)}>
-                <Import /> Import
+                <Import /> {t('import')}
               </Button>
 
               <Button onClick={() => setConverted(editor.convert())}>
-                <Download /> Export
+                <Download /> {t('export')}
               </Button>
 
               <Show when={state.edit}>
@@ -352,40 +377,45 @@ export const CreateCharacterForm: Component<{
 
             <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
 
-            <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Basic' }}>
+            {/* Error when <Trans> */}
+            <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== t('basic') }}>
               <Button
                 size="sm"
                 class="w-fit"
                 onClick={() => {
                   rootModalStore.info(
-                    'AI Character Generation',
+                    t('ai_character_generation'),
                     <>
-                      1. Fill out the <Pill small>Description</Pill> field
+                      {t('character_generation_list_1')} <Pill small>{t('description')}</Pill>{' '}
+                      {t('field').toLowerCase()}
                       <br />
-                      2. Select the Service you wish to use
+                      {t('character_generation_list_2')}
                       <br />
-                      3. Click{' '}
+                      {t('character_generation_list_3')}&nbsp;
                       <Pill inverse type="hl" small>
-                        Generate
+                        {t('generate')}
                       </Pill>
-                      &nbsp;- It may take 30-60 seconds to generate.
+                      &nbsp;
+                      {t('it_may_take_seconds_to_generate')}
                       <br />
-                      4. Adjust the <Pill small>Description</Pill> and click{' '}
+                      {t('character_generation_list_4')} <Pill small>{t('description')}</Pill>{' '}
+                      {t('and_click')}&nbsp;
                       <Pill type="hl" inverse small>
-                        Regenerate
+                        {t('regenerate')}
                       </Pill>
-                      &nbsp;to regenerate a specific field.
+                      &nbsp;
+                      {t('to_regenerate_specific_fields')}
                     </>
                   )
                 }}
               >
-                <HelpCircle size={16} /> AI Character Generation
+                <HelpCircle size={16} /> {t('ai_character_generation')}
               </Button>
               <Card>
                 <TextInput
                   fieldName="name"
                   required
-                  label="Character Name"
+                  label={t('character_name')}
                   placeholder=""
                   value={editor.state.name}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
@@ -394,13 +424,10 @@ export const CreateCharacterForm: Component<{
 
               <Card class="flex w-full flex-col">
                 <FormLabel
-                  label="Description / Creator's notes"
+                  label={t('description_or_creators_note')}
                   helperText={
                     <div class="flex flex-col">
-                      <span>
-                        A description, label, or notes for your character. This is will not
-                        influence your character in any way.
-                      </span>
+                      <span>{t('creators_note_message')}</span>
                     </div>
                   }
                 />
@@ -419,7 +446,7 @@ export const CreateCharacterForm: Component<{
                         onChange={(item) => setGenService(item.value)}
                       />
                       <Button onClick={() => generateCharacter()} disabled={creating()}>
-                        {creating() ? 'Generating...' : 'Generate'}
+                        {creating() ? t('generating') : t('generate')}
                       </Button>
                     </div>
                   </Show>
@@ -431,8 +458,8 @@ export const CreateCharacterForm: Component<{
                   availableTags={tagState.tags.map((t) => t.tag)}
                   value={editor.state.tags}
                   fieldName="tags"
-                  label="Tags"
-                  helperText="Used to help you organize and filter your characters."
+                  label={t('tags')}
+                  helperText={t('tags_message')}
                   onSelect={(tags) => editor.update({ tags })}
                 />
               </Card>
@@ -463,15 +490,15 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                   </Switch>
-                  <Button size="pill" class="w-fit" onClick={() => editor.createAvatar()}>
-                    Generate Image
+                  <Button size="pill" class="w-fit" onClick={() => editor.createAvatar(t)}>
+                    {t('generate_image')}
                   </Button>
                 </div>
                 <div class="flex w-full flex-col gap-2">
                   <ToggleButtons
                     items={[
-                      { value: 'avatar', label: 'Avatar' },
-                      { value: 'sprite', label: 'Sprite' },
+                      { value: 'avatar', label: t('avatar') },
+                      { value: 'sprite', label: t('sprite') },
                     ]}
                     onChange={(opt) => editor.update('visualType', opt.value)}
                     selected={editor.state.visualType}
@@ -482,7 +509,7 @@ export const CreateCharacterForm: Component<{
                       <FileInput
                         class="w-full"
                         fieldName="avatar"
-                        label="Avatar"
+                        label={t('avatar')}
                         accept="image/png,image/jpeg,image/apng"
                         onUpdate={updateFile}
                       />
@@ -501,15 +528,15 @@ export const CreateCharacterForm: Component<{
                               />
                             </>
                           }
-                          helperText={`Leave the prompt empty to use your character's persona "looks" / "appearance" attributes`}
-                          placeholder="Appearance Prompt (used for Avatar Generation)"
+                          helperText={t('avatar_message')}
+                          placeholder={t('appearance_prompt')}
                           value={editor.state.appearance}
                         />
                       </div>
                     </Match>
                     <Match when={true}>
                       <Button class="w-fit" onClick={() => setShowBuilder(true)}>
-                        Open Character Builder
+                        {t('open_character_builder')}
                       </Button>
                     </Match>
                   </Switch>
@@ -522,7 +549,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="scenario"
                   label={
                     <>
-                      Scenario{' '}
+                      {t('scenario')}{' '}
                       <Regenerate
                         fields={['scenario']}
                         service={genService()}
@@ -531,8 +558,8 @@ export const CreateCharacterForm: Component<{
                       />
                     </>
                   }
-                  helperText="The current circumstances and context of the conversation and the characters."
-                  placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
+                  helperText={t('scenario_message')}
+                  placeholder={t('scenario_example')}
                   value={editor.state.scenario}
                   isMultiline
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
@@ -544,7 +571,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="greeting"
                   label={
                     <>
-                      Greeting{' '}
+                      {t('greeting')}{' '}
                       <Regenerate
                         fields={['greeting']}
                         service={genService()}
@@ -553,10 +580,8 @@ export const CreateCharacterForm: Component<{
                       />
                     </>
                   }
-                  helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
-                  placeholder={
-                    "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
-                  }
+                  helperText={t('greeting_message')}
+                  placeholder={t('greeting_example')}
                   value={editor.state.greeting}
                   class="h-60"
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
@@ -571,7 +596,7 @@ export const CreateCharacterForm: Component<{
                   <FormLabel
                     label={
                       <div class="flex items-center gap-1">
-                        Persona Schema{' '}
+                        {t('persona_schema')}
                         <Regenerate
                           fields={['personality', 'behaviour']}
                           service={genService()}
@@ -581,14 +606,14 @@ export const CreateCharacterForm: Component<{
                       </div>
                     }
                     helperText={
-                      <>
+                      <Trans key="persona_message">
                         <p>If you do not know what this mean, you can leave this as-is.</p>
                         <p class="font-bold">
                           WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible.
                           Changing between them will cause data loss.
                         </p>
                         <p>Format to use for the character's format</p>
-                      </>
+                      </Trans>
                     }
                   />
                   <Select
@@ -613,7 +638,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="sampleChat"
                   label={
                     <>
-                      Sample Conversation{' '}
+                      {t('sample_conversation')}{' '}
                       <Regenerate
                         fields={['example1', 'example2']}
                         service={genService()}
@@ -622,13 +647,8 @@ export const CreateCharacterForm: Component<{
                       />
                     </>
                   }
-                  helperText={
-                    <span>
-                      Example chat between you and the character. This section is very important for
-                      teaching your character should speak.
-                    </span>
-                  }
-                  placeholder="{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
+                  helperText={<span>{t('sample_conversation_message')}</span>}
+                  placeholder={t('sample_conversation_example')}
                   value={editor.state.sampleChat}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
                 />
@@ -637,50 +657,42 @@ export const CreateCharacterForm: Component<{
 
             <div
               class={`flex flex-col gap-2`}
-              classList={{ hidden: tabs.current() !== 'Advanced' }}
+              classList={{ hidden: tabs.current() !== t('advanced') }}
             >
               <Card class="flex flex-col gap-2">
                 <TextInput
                   isMultiline
                   fieldName="systemPrompt"
-                  label="Character System Prompt (optional)"
-                  helperText={
-                    <span>
-                      {`System prompt to bundle with your character. You can use the {{original}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
-                    </span>
-                  }
-                  placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
+                  label={t('character_system_prompt')}
+                  helperText={<span>{t('character_system_prompt_message')}</span>}
+                  placeholder={t('character_system_prompt_example')}
                   value={editor.state.systemPrompt}
                 />
                 <TextInput
                   isMultiline
                   fieldName="postHistoryInstructions"
-                  label="Post-conversation History Instructions (optional)"
-                  helperText={
-                    <span>
-                      {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}
-                    </span>
-                  }
-                  placeholder="Write at least four paragraphs."
+                  label={t('post_conversation_history_instructions')}
+                  helperText={<span>{t('post_conversation_history_instructions_message')}</span>}
+                  placeholder={t('post_conversation_history_instructions_example')}
                   value={editor.state.postHistoryInstructions}
                 />
                 <TextInput
                   isMultiline
                   class="min-h-[80px]"
                   fieldName="insertPrompt"
-                  label="Insert / Depth Prompt"
-                  helperMarkdown={`A.k.a. Author's note. Prompt to be placed near the bottom of the chat history, **Insert Depth** messages from the bottom.`}
-                  placeholder={`E.g. ### Instruction: Write like James Joyce.`}
+                  label={t('insert_depth_prompt')}
+                  helperMarkdown={t('insert_depth_prompt_message')}
+                  placeholder={t('insert_depth_prompt_example')}
                   value={editor.state.insert?.prompt}
                 />
                 <RangeInput
                   fieldName="insertDepth"
-                  label="Insert Depth"
+                  label={t('insert_depth')}
                   helperText={
-                    <>
+                    <Trans key="insert_depth_message">
                       The number of messages that should exist below the <b>Insert Prompt</b>.
                       Between 1 and 5 is recommended.
-                    </>
+                    </Trans>
                   }
                   min={0}
                   max={10}
@@ -697,26 +709,26 @@ export const CreateCharacterForm: Component<{
               <Card>
                 <TextInput
                   fieldName="creator"
-                  label="Creator (optional)"
-                  placeholder="e.g. John1990"
+                  label={t('creator')}
+                  placeholder={t('creator_example')}
                   value={editor.state.creator}
                 />
               </Card>
               <Card>
                 <TextInput
                   fieldName="characterVersion"
-                  label="Character Version (optional)"
-                  placeholder="any text e.g. 1, 2, v1, v1fempov..."
+                  label={t('character_version')}
+                  placeholder={t('character_version_example')}
                   value={editor.state.characterVersion}
                 />
               </Card>
               <Card class="flex flex-col gap-3">
-                <h4 class="text-md font-bold">Voice</h4>
+                <h4 class="text-md font-bold">{t('voice')}</h4>
                 <Toggle
                   fieldName="voiceDisabled"
                   value={editor.state.voiceDisabled}
-                  label="Disable Character's Voice"
-                  helperText="Toggle on to disable this character from automatically speaking"
+                  label={t('disable_character_voice')}
+                  helperText={t('disable_character_voice_message')}
                 />
                 <div>
                   <VoicePicker
@@ -727,12 +739,13 @@ export const CreateCharacterForm: Component<{
                 </div>
                 <Select
                   fieldName="culture"
-                  label="Language"
-                  helperText={`The language this character speaks and understands.${
-                    editor.state.culture.startsWith('en') ?? true
-                      ? ''
-                      : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
-                  }`}
+                  label={t('language')}
+                  helperText={t('language_message', {
+                    note:
+                      editor.state.culture.startsWith('en') ?? true
+                        ? ''
+                        : ' ' + t('you_need_to_also_translate_gaslight'),
+                  })}
                   value={editor.state.culture}
                   items={CultureCodes}
                   onChange={(option) => editor.update('culture', option.value)}
@@ -790,6 +803,8 @@ const Regenerate: Component<{
   allowed: boolean
   children?: any
 }> = (props) => {
+  const [t] = useTransContext()
+
   return (
     <Switch>
       <Match when={!props.allowed}>{null}</Match>
@@ -812,10 +827,10 @@ const Regenerate: Component<{
         <Button
           size="pill"
           class="inline-block"
-          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+          onClick={() => props.editor.generateCharacter(t, props.service, props.fields)}
           disabled={props.editor.generating()}
         >
-          {props.children || 'Regenerate'}
+          {props.children || t('regenerate')}
         </Button>
       </Match>
     </Switch>
@@ -841,6 +856,8 @@ const AlternateGreetingsInput: Component<{
   greetings: string[]
   setGreetings: (next: string[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const addGreeting = () => props.setGreetings([...props.greetings, ''])
   const removeGreeting = (i: number) => {
     return props.setGreetings(props.greetings.slice(0, i).concat(props.greetings.slice(i + 1)))
@@ -860,7 +877,7 @@ const AlternateGreetingsInput: Component<{
             <TextInput
               isMultiline
               fieldName={`alternateGreeting${i() + 1}`}
-              placeholder="An alternate greeting for your character"
+              placeholder={t('alternate_greeting_message')}
               value={altGreeting}
               onChange={(ev) => onChange(ev, i())}
               parentClass="w-full"
@@ -874,7 +891,7 @@ const AlternateGreetingsInput: Component<{
       <div>
         <Button onClick={addGreeting}>
           <Plus size={16} />
-          Add Alternate Greeting
+          {t('add_alternate_greeting')}
         </Button>
       </div>
     </>
@@ -888,6 +905,8 @@ const SpriteModal: Component<{
   close: () => void
 }> = (props) => {
   let ref: any
+
+  const [t] = useTransContext()
 
   const [original, setOriginal] = createSignal(props.body)
   const [body, setBody] = createSignal(props.body || getRandomBody())
@@ -913,13 +932,13 @@ const SpriteModal: Component<{
         footer={
           <>
             <Button onClick={() => props.onChange(original()!)} schema="secondary">
-              Cancel
+              {t('cancel')}
             </Button>
-            <Button onClick={handleChange}>Confirm</Button>
+            <Button onClick={handleChange}>{t('confirm')}</Button>
           </>
         }
       >
-        <PageHeader title="Character Designer" />
+        <PageHeader title={t('character_designer')} />
         <div class="h-[28rem] w-full text-sm sm:h-[42rem]" ref={ref}>
           <AvatarBuilder body={body()} onChange={(body) => setBody(body)} bounds={ref} noHeader />
         </div>
@@ -934,6 +953,8 @@ const MemoryBookPicker: Component<{
   bundledBook: AppSchema.MemoryBook | undefined
   setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const memory = memoryStore()
   const [isModalShown, setIsModalShown] = createSignal(false)
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
@@ -945,7 +966,7 @@ const MemoryBookPicker: Component<{
 
   const NONE_VALUE = '__none_character_book__'
   const internalMemoryBookOptions = createMemo(() => [
-    { label: 'Import Memory Book', value: NONE_VALUE },
+    { label: t('import_memory_book'), value: NONE_VALUE },
     ...memory.books.list.map((book) => ({ label: book.name, value: book._id })),
   ])
   const pickInternalMemoryBook = (option: Option) => {
@@ -953,7 +974,7 @@ const MemoryBookPicker: Component<{
     props.setBundledBook(newBook ? { ...newBook, _id: BUNDLED_CHARACTER_BOOK_ID } : undefined)
   }
   const initBlankCharacterBook = () => {
-    props.setBundledBook(emptyBookWithEmptyEntry())
+    props.setBundledBook(emptyBookWithEmptyEntry(t))
   }
   const deleteBook = () => {
     props.setBundledBook(undefined)
@@ -961,11 +982,11 @@ const MemoryBookPicker: Component<{
   const ModalFooter = () => (
     <>
       <Button schema="secondary" onClick={() => setIsModalShown(false)}>
-        Close
+        {t('close')}
       </Button>
       <Button type="submit">
         <Save />
-        Save Character Book
+        {t('save_character_book')}
       </Button>
     </>
   )
@@ -980,7 +1001,7 @@ const MemoryBookPicker: Component<{
 
   const BookModal = (
     <Modal
-      title="Chat Memory"
+      title={t('chat_memory')}
       show={isModalShown()}
       close={() => setIsModalShown(false)}
       footer={<ModalFooter />}
@@ -1003,9 +1024,9 @@ const MemoryBookPicker: Component<{
 
   return (
     <div>
-      <h4 class="text-lg">Character Book</h4>
+      <h4 class="text-lg">{t('character_book')}</h4>
       <Show when={!props.bundledBook}>
-        <span class="text-sm"> This character doesn't have a Character Book. </span>
+        <span class="text-sm"> {t('this_character_does_not_have_character_book')} </span>
         <div class="flex flex-col gap-3 sm:flex-row">
           <Select
             fieldName="memoryBook"
@@ -1013,14 +1034,14 @@ const MemoryBookPicker: Component<{
             items={internalMemoryBookOptions()}
             onChange={pickInternalMemoryBook}
           />
-          <Button onClick={initBlankCharacterBook}>Create New Book</Button>
+          <Button onClick={initBlankCharacterBook}>{t('create_new_book')}</Button>
         </div>
       </Show>
       <Show when={props.bundledBook}>
-        <span class="text-sm">This character has a Character Book.</span>
+        <span class="text-sm">{t('this_character_has_character_book')}</span>
         <div class="mt-2 flex gap-3">
-          <Button onClick={() => setIsModalShown(true)}>Edit Book</Button>
-          <Button onClick={deleteBook}>Delete Book</Button>
+          <Button onClick={() => setIsModalShown(true)}>{t('edit_book')}</Button>
+          <Button onClick={deleteBook}>{t('delete_book')}</Button>
         </div>
       </Show>
     </div>

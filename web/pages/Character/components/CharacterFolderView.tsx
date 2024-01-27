@@ -19,6 +19,7 @@ import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { A, useNavigate } from '@solidjs/router'
 import Button from '/web/shared/Button'
 import { DropMenu } from '/web/shared/DropMenu'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -205,6 +206,8 @@ const CharacterListOptions: Component<{
   download: () => void
   toggleFavorite: (value: boolean) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
 
@@ -248,26 +251,26 @@ const CharacterListOptions: Component<{
         <div class="flex flex-col gap-2 p-2 font-bold">
           <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
             <Show when={props.char.favorite}>
-              <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+              <Star class="text-900 fill-[var(--text-900)]" /> {t('unfavorite')}
             </Show>
             <Show when={!props.char.favorite}>
-              <Star /> Favorite
+              <Star /> {t('favorite')}
             </Show>
           </Button>
           <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
-            <MessageCircle /> Chat
+            <MessageCircle /> {t('chat')}
           </Button>
           <Button alignLeft onClick={props.download} size="sm">
-            <Download /> Download
+            <Download /> {t('download')}
           </Button>
           <Button alignLeft onClick={props.edit} size="sm">
-            <Edit /> Edit
+            <Edit /> {t('edit')}
           </Button>
           <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)} size="sm">
-            <Copy /> Duplicate
+            <Copy /> {t('duplicate')}
           </Button>
           <Button alignLeft schema="red" onClick={props.delete} size="sm">
-            <Trash /> Delete
+            <Trash /> {t('delete')}
           </Button>
         </div>
       </DropMenu>

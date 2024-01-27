@@ -4,8 +4,11 @@ import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, userStore } from '../../../store'
 import { TokenCounter } from '/common/types'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const PromptModal: Component = () => {
+  const [t] = useTransContext()
+
   const user = userStore()
   const state = chatStore((s) => ({ prompt: s.prompt, chat: s.active?.chat }))
   const [encoder, setEncoder] = createSignal<TokenCounter>()
@@ -29,27 +32,30 @@ const PromptModal: Component = () => {
     <Modal
       show={!!state.prompt?.shown}
       close={chatStore.closePrompt}
-      title="Message Prompt"
+      title={t('message_prompt')}
       maxWidth="half"
     >
       <TextInput
         class="min-h-[300px] text-sm"
         fieldName="prompt"
-        label="Prompt"
+        label={t('prompt')}
         helperText={
           <div class="flex flex-col gap-2">
-            <div>
-              This is an approximation. It may differ from the prompt actually used at the time. For
-              authenticated users, the prompt generated on the server may contain more context as it
-              retrieves messages from the database until the 'history' portion of your prompt is
-              full. OpenAI Turbo has a different payload and is generated server-side only.
-            </div>
-            <div>
-              The entire 'budget' may not get used here as token counts may change due to
-              formatting. E.g. OpenAI Turbo payloads are split into multiple messages which
-              drastically alters token counts.
-            </div>
-            <div class="font-bold">Est. tokens: {tokens()}</div>
+            <Trans key="prompt_message">
+              <div>
+                This is an approximation. It may differ from the prompt actually used at the time.
+                For authenticated users, the prompt generated on the server may contain more context
+                as it retrieves messages from the database until the 'history' portion of your
+                prompt is full. OpenAI Turbo has a different payload and is generated server-side
+                only.
+              </div>
+              <div>
+                The entire 'budget' may not get used here as token counts may change due to
+                formatting. E.g. OpenAI Turbo payloads are split into multiple messages which
+                drastically alters token counts.
+              </div>
+            </Trans>
+            <div class="font-bold">{t('est_token_x', { token: tokens() })}</div>
           </div>
         }
         value={state.prompt?.template.parsed}

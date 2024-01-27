@@ -2,6 +2,7 @@ import extract from 'png-chunks-extract'
 import text from 'png-chunk-text'
 import { load as loadExif } from 'exifreader'
 import { getFileBuffer } from '../../store/data/chars'
+import { TFunction } from 'i18next'
 
 export type ImageCard = {
   name: string
@@ -22,6 +23,7 @@ export type ImageCard = {
   }
 }
 
+
 const dataExtractors: Record<string, (buffer: Buffer) => Promise<string>> = {
   // tEXt chunks
   apng: extractText,
@@ -33,8 +35,7 @@ const dataExtractors: Record<string, (buffer: Buffer) => Promise<string>> = {
   webp: extractExif,
 }
 
-export async function extractCardData(file: File) {
-  const ext = file.name.split('.').slice(-1)[0]
+export async function extractCardData(t: TFunction, file: File) {
   const buffer = await getFileBuffer(file)
   if (!buffer) {
     throw Error(`Failed parsing character card image: No buffer`)
@@ -73,7 +74,7 @@ async function extractExif(buffer: Buffer): Promise<string> {
 async function extractText(buffer: Buffer): Promise<string> {
   const extractions = extract(buffer as any)
   if (!extractions.length) {
-    throw new Error('No extractions found')
+    throw new Error(t('no_extractions_found'))
   }
   const textExtractions = extractions
     .filter((d) => d.name === 'tEXt')
@@ -82,7 +83,9 @@ async function extractText(buffer: Buffer): Promise<string> {
   const [extracted] = textExtractions
   if (!extracted) {
     throw new Error(
-      `No extractions of type tEXt found, found: ${extractions.map((e) => e.name).join(', ')}`
+      t('no_extractions_of_type_text_found_found_x', {
+        name: extractions.map((e) => e.name).join(', '),
+      })
     )
   }
 

@@ -292,7 +292,7 @@ export async function editChatGenPreset(chatId: string, preset: string) {
 export function createNewChat(char: AppSchema.Character, props: NewChat) {
   const chat: AppSchema.Chat = {
     _id: v4(),
-    characterId: char._id,
+    characterId: char?._id,
     ...props,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -302,7 +302,7 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
     messageCount: 1,
   }
 
-  const greeting = props.overrides ? props.greeting : char.greeting
+  const greeting = props.overrides ? props.greeting : char?.greeting
   if (!greeting) return { chat, msg: undefined }
 
   const msg: AppSchema.ChatMessage = {

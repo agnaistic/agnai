@@ -4,6 +4,7 @@ import { extractCardData } from '../Character/card-utils'
 import { processBook, processChar } from './util'
 import { AppSchema } from '/common/types'
 import { jsonToCharacter } from '../Character/port'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export const ChubItem: Component<{
   name: string
@@ -15,6 +16,8 @@ export const ChubItem: Component<{
   setBook?: (book: AppSchema.MemoryBook, fullPath: string) => void
   setChar?: (char: NewCharacter, fullPath: string) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [memorybook, setMemoryBook] = createSignal<any>({})
 
   const processItem = async () => {
@@ -37,11 +40,11 @@ export const ChubItem: Component<{
     }
 
     const file = await processChar(props.fullPath)
-    const json = await extractCardData(file)
+    const json = await extractCardData(t, file)
     if (!json) {
-      throw new Error('Invalid tavern image')
+      throw new Error(t('invalid_tavern_image'))
     }
-    props.setChar?.(Object.assign(jsonToCharacter(json), { avatar: file }), props.fullPath)
+    props.setChar?.(Object.assign(jsonToCharacter(t, json), { avatar: file }), props.fullPath)
   }
 
   return (

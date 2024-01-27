@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ts-commonjs-default-export">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/node_modules/.pnpm/pino@8.17.2/node_modules/thread-stream/test/ts-commonjs-default-export.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

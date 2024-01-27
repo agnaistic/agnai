@@ -9,6 +9,7 @@ import Divider from '../../shared/Divider'
 import Select from '../../shared/Select'
 import { assertValid } from '/common/valid'
 import { sort } from '../../shared/util'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const importValid = {
   name: 'string',
@@ -29,6 +30,8 @@ const ImportChatModal: Component<{
   close: () => void
   char?: AppSchema.Character
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [json, setJson] = createSignal<ImportChat>()
   const [charId, setCharId] = createSignal<string>()
   const state = characterStore((s) => ({ chars: s.characters.list.slice().sort(sort('name')) }))
@@ -47,17 +50,19 @@ const ImportChatModal: Component<{
       const content = await getFileAsString(files[0])
       const parsed = parseContent(content)
       if (!parsed) {
-        throw new Error(`Unrecognized format`)
+        throw new Error(t('unrecognized_format'))
       }
       assertValid(importValid, parsed.json)
       setJson(parsed.json)
 
       // TODO: Set chat log to signal
-      toastStore.success('Chat log accepted')
+      toastStore.success(t('chat_log_accepted'))
     } catch (ex) {
-      const message = ex instanceof Error ? ex.message : 'Unknown error'
+      const message = ex instanceof Error ? ex.message : t('unknown_error')
       toastStore.warn(
-        `Invalid chat log file format. Supported formats: Agnaistic, TavernAI (${message})`
+        t('invalid_chat_log_format', {
+          message: message,
+        })
       )
       setJson()
     }
@@ -73,25 +78,27 @@ const ImportChatModal: Component<{
   return (
     <Modal
       show={props.show}
-      title="Import Chat Log"
+      title={t('import_chat_log')}
       close={props.close}
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
             <X />
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={onImport}>
             <Upload />
-            Import
+            {t('import')}
           </Button>
         </>
       }
     >
       <div class="flex flex-col gap-2">
         <p>
-          <strong>Note: </strong>This currently doesn't support multi-user chats. All messages will
-          be attributed either to you or the selected character.
+          <Trans key="this_currently_does_not_support_multi_users_chat">
+            <strong>Note: </strong>This currently doesn't support multi-user chats. All messages
+            will be attributed either to you or the selected character.
+          </Trans>
         </p>
         <Divider />
         <Show when={!props.char}>
@@ -104,18 +111,18 @@ const ImportChatModal: Component<{
           />
         </Show>
         <Show when={!!props.char}>
-          <p>Your chat log will be imported for {props.char?.name}.</p>
+          <p>{t('your_chat_log_will_be_imported_for_x', { name: props.char?.name })}</p>
         </Show>
         <FileInput
-          label="JSON Lines File (.jsonl)"
+          label={t('json_lines_file')}
           fieldName="json"
           accept="application/json-lines,application/jsonl,text/jsonl"
-          helperText="Supported formats: Agnaistic, TavernAI"
+          helperText={t('supported_formats_agnaistic_tavern')}
           required
           onUpdate={onSelectLog}
         />
         <Show when={json()}>
-          <p>{json()?.messages.length} message(s) will be imported.</p>
+          <p>{t('x_messages_will_be_imported', { count: json()?.messages.length })}</p>
         </Show>
       </div>
     </Modal>

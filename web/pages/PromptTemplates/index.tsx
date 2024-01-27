@@ -12,10 +12,13 @@ import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
 import { getStrictForm } from '/web/shared/util'
 import { toastStore } from '/web/store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { PromptTemplates as default }
 
 const PromptTemplates: Component = () => {
+  const [t] = useTransContext()
+
   const state = presetStore((s) => ({ templates: s.templates }))
 
   const [show, setShow] = createSignal<boolean>(false)
@@ -41,18 +44,18 @@ const PromptTemplates: Component = () => {
 
   return (
     <>
-      <PageHeader title="Prompt Templates" />
+      <PageHeader title={t('prompt_templates')} />
 
       <div class="flex w-full flex-col gap-4">
         <div class="flex w-full justify-end">
           <Button onClick={() => setShow(true)}>
-            <Plus size={16} /> Template
+            <Plus size={16} /> {t('template')}
           </Button>
         </div>
 
         <div class="flex w-full flex-col gap-2">
           <Show when={state.templates.length === 0}>
-            <div class="flex justify-center">You have no prompt templates saved</div>
+            <div class="flex justify-center">{t('you_have_no_prompt_template_saved')}</div>
           </Show>
           <For each={state.templates}>
             {(each) => (
@@ -87,7 +90,7 @@ const PromptTemplates: Component = () => {
             )}
           </For>
           <Divider />
-          <div class="flex justify-center text-xl font-bold">Built-in Templates</div>
+          <div class="flex justify-center text-xl font-bold">{t('built_in_templates')}</div>
           <For each={builtins()}>
             {(each) => (
               <div class="flex w-full gap-2 font-bold">
@@ -116,6 +119,8 @@ const TemplateModal: Component<{
   initial?: string
   close: () => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   let form: HTMLFormElement
 
   const submit = () => {
@@ -128,14 +133,14 @@ const TemplateModal: Component<{
 
     if (props.edit) {
       presetStore.updateTemplate(props.edit._id, { name, template }, () => {
-        toastStore.success('Template updated')
+        toastStore.success(t('template_updated'))
         props.close()
       })
       return
     }
 
     presetStore.createTemplate(name, template, () => {
-      toastStore.success('Template created')
+      toastStore.success(t('template_created'))
       props.close()
     })
   }
@@ -143,10 +148,10 @@ const TemplateModal: Component<{
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
-        Cancel
+        {t('cancel')}
       </Button>
       <Button schema="primary" onClick={submit}>
-        <Save /> Save
+        <Save /> {t('save')}
       </Button>
     </>
   )
@@ -155,7 +160,7 @@ const TemplateModal: Component<{
     id: 'prompt-templates',
     element: (
       <Modal
-        title={'Prompt Templates'}
+        title={t('prompt_templates')}
         maxWidth="half"
         show={props.show}
         close={props.close}
@@ -164,8 +169,8 @@ const TemplateModal: Component<{
         <form ref={form!} class="flex flex-col gap-4 text-sm">
           <TextInput
             fieldName="name"
-            placeholder="Name"
-            label="Name"
+            placeholder={t('name')}
+            label={t('name')}
             value={props.edit?.name || ''}
             required
           />

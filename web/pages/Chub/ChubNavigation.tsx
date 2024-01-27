@@ -4,8 +4,11 @@ import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { ArrowLeft, ArrowRight } from 'lucide-solid'
 import { toastStore } from '../../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
+  const [t] = useTransContext()
+
   const state = chubStore()
 
   const update = () => {
@@ -32,7 +35,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
         <div class="flex gap-2">
           <TextInput
             fieldName="search"
-            placeholder="Search by name..."
+            placeholder={t('search_by_name')}
             value={state.search}
             onKeyUp={onSearch}
           />
@@ -45,7 +48,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                   chubStore.setPage(state.page - 1)
                   update()
                 } else {
-                  toastStore.error('Already on first page!')
+                  toastStore.error(t('already_on_first_page'))
                 }
               }}
             >
@@ -62,7 +65,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                     chubStore.setPage(n)
                     update()
                   } else {
-                    toastStore.error('Not a valid page number.')
+                    toastStore.error(t('not_a_valid_page_number'))
                   }
                 }}
               />
@@ -75,7 +78,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                   chubStore.setPage(state.page + 1)
                   update()
                 } else {
-                  toastStore.error(`Already on last page!`)
+                  toastStore.error(t('already_on_last_page'))
                 }
               }}
             >

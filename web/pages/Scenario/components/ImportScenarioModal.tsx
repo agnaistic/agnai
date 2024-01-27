@@ -5,6 +5,7 @@ import Button from '../../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../../shared/FileInput'
 import Modal from '../../../shared/Modal'
 import { scenarioStore, toastStore } from '../../../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 type ImportStatus = 'success' | 'failed' | 'pending'
 
@@ -15,6 +16,8 @@ const ImportScenarioModal: Component<{
   close: () => void
   char?: AppSchema.Character
 }> = (props) => {
+  const [t] = useTransContext()
+
   const [status, setStatus] = createSignal<ImportStatus>('pending')
   const [importing, setImporting] = createSignal(false)
   const [json, setJson] = createSignal<{ scenario: NewScenario; status: ImportStatus }[]>([])
@@ -29,20 +32,26 @@ const ImportScenarioModal: Component<{
         const content = await getFileAsString(file)
         const parsed = JSON.parse(content)
         if (!parsed) {
-          toastStore.error(`File was not a valid JSON: ${file.file.name}`)
+          toastStore.error(
+            t('file_was_not_a_valid_json_with_message_x', {
+              message: file.file.name,
+            })
+          )
           continue
         }
         if (!supportedScenarioSchemas.includes(parsed.$schema)) {
           toastStore.error(
-            `File was not a supported scenario (incorrect schema): ${file.file.name}`
+            t('file_was_not_a_supported_scenario_with_message_x', {
+              message: file.file.name,
+            })
           )
           continue
         }
         delete parsed.$schema
         setJson([...json(), { scenario: parsed, status: 'pending' }])
       } catch (ex) {
-        const message = ex instanceof Error ? ex.message : 'Unknown error'
-        toastStore.warn(`Invalid scenario: ${message}`)
+        const message = ex instanceof Error ? ex.message : t('unknown_error')
+        toastStore.warn(t('invalid_scenario_x', { message: message }))
       }
     }
   }
@@ -80,24 +89,24 @@ const ImportScenarioModal: Component<{
   return (
     <Modal
       show={props.show}
-      title="Import Scenario"
+      title={t('import_scenario')}
       close={props.close}
       footer={
         <>
           <Show when={status() === 'success'}>
             <Button schema="primary" onClick={props.close}>
               <Check />
-              Done
+              {t('done')}
             </Button>
           </Show>
           <Show when={status() !== 'success'}>
             <Button schema="secondary" onClick={props.close}>
               <X />
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={onImport} disabled={!canImport()}>
               <Upload />
-              Import
+              {t('import')}
             </Button>
           </Show>
         </>
@@ -106,10 +115,10 @@ const ImportScenarioModal: Component<{
       <div class="flex flex-col gap-2">
         <Show when={!importing() && status() !== 'success'}>
           <FileInput
-            label="Scenario JSON File"
+            label={t('scenario_json_file')}
             fieldName="json"
             accept="application/json,text/json"
-            helperText="Supported formats: Agnaistic"
+            helperText={t('supported_scenario_formats')}
             required
             onUpdate={onFileSelect}
           />

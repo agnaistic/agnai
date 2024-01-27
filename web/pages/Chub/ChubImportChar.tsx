@@ -5,6 +5,7 @@ import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const ChubImportCharModal: Component<{
   show: boolean
@@ -12,6 +13,8 @@ const ChubImportCharModal: Component<{
   id?: string
   char?: NewCharacter
 }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
 
   const [char, setChar] = createSignal<NewCharacter>(props.char!)
@@ -26,7 +29,9 @@ const ChubImportCharModal: Component<{
     try {
       characterStore.createCharacter(props.char)
     } catch (error) {
-      toastStore.error(`Error importing ${props.char.name}! ${error}`)
+      toastStore.error(
+        t('error_importing_name_x_message_x', { name: props.char.name, message: error })
+      )
     }
     props.close()
   }
@@ -37,7 +42,7 @@ const ChubImportCharModal: Component<{
       close={props.close}
       title={
         <>
-          Preview
+          {t('preview')}
           <a class="text-[var(--hl-500)]"> {char()?.name || '...'}</a>
         </>
       }
@@ -46,12 +51,12 @@ const ChubImportCharModal: Component<{
         <>
           <Button schema="secondary" onClick={props.close}>
             <X />
-            Close
+            {t('close')}
           </Button>
 
           <Button onClick={onImport} disabled={!props.char}>
             <Check />
-            Import
+            {t('import')}
           </Button>
         </>
       }
@@ -63,11 +68,9 @@ const ChubImportCharModal: Component<{
       </Show>
       <Show when={props.char}>
         <form ref={ref}>
-          <div class="mb-2 text-sm">
-            Optionally modify all the aspects of the character other than the avatar.
-          </div>
+          <div class="mb-2 text-sm">{t('optionally_modify_all_the_aspects_of_the_character')}</div>
           <div class="mb-4 text-sm">
-            The information provided here will be saved with the character on import.
+            {t('the_information_provided_here_will_be_saved_with_the_character')}
           </div>
 
           <Show when={props.char?.name}>
@@ -77,7 +80,9 @@ const ChubImportCharModal: Component<{
               label="Character Name"
               helperText={
                 <span>
-                  Override the name of the character here <i>(Optional)</i>
+                  <Trans key="override_the_name_of_the_character">
+                    Override the name of the character here <i>(Optional)</i>
+                  </Trans>
                 </span>
               }
               value={char()?.name}
@@ -86,7 +91,7 @@ const ChubImportCharModal: Component<{
             <TextInput
               isMultiline
               fieldName="greeting"
-              label="Greeting"
+              label={t('greeting')}
               value={char()?.greeting}
               class="text-xs"
               onKeyUp={(e) => setChar({ ...char(), greeting: e.currentTarget.value })}
@@ -95,7 +100,7 @@ const ChubImportCharModal: Component<{
             <TextInput
               isMultiline
               fieldName="scenario"
-              label="Scenario"
+              label={t('scenario')}
               value={char()?.scenario}
               class="text-xs"
               onKeyUp={(e) => setChar({ ...char(), scenario: e.currentTarget.value })}
@@ -104,7 +109,7 @@ const ChubImportCharModal: Component<{
             <TextInput
               isMultiline
               fieldName="sampleChat"
-              label="Sample Chat"
+              label={t('sample_chat')}
               value={char()?.sampleChat}
               class="text-xs"
               onKeyUp={(e) => setChar({ ...char(), sampleChat: e.currentTarget.value })}
@@ -113,7 +118,7 @@ const ChubImportCharModal: Component<{
             <TextInput
               isMultiline
               fieldName="persona"
-              label="Persona"
+              label={t('persona')}
               value={char()?.persona.attributes.text[0]! || ''}
               class="text-xs"
               onKeyUp={(e) => {

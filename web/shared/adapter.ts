@@ -5,6 +5,7 @@ import { defaultPresets, isDefaultPreset } from '../../common/presets'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../common/adapters'
 import { storage } from './util'
+import { TFunction } from 'i18next'
 
 const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
   novel: [
@@ -80,12 +81,13 @@ export function getClientPreset(chat?: AppSchema.Chat): PresetInfo | undefined {
 }
 
 export function getPresetOptions(
+  t: TFunction,
   userPresets: AppSchema.UserGenPreset[],
   includes: { builtin?: boolean; base?: boolean }
 ): PresetOption[] {
   const user = userStore.getState().user || { defaultPreset: '' }
   const presets = userPresets.slice().map((preset) => ({
-    label: `[${getServiceName(preset.service)}] ${preset.name} ${
+    label: `[${getServiceName(t, preset.service)}] ${preset.name} ${
       user.defaultPreset === preset._id ? '(*) ' : ''
     }`,
     value: preset._id,
@@ -100,7 +102,7 @@ export function getPresetOptions(
 
   if (includes.builtin) {
     const builtinOptions = defaults.map((preset) => ({
-      label: `[${getServiceName(preset.service)}] ${preset.name}`,
+      label: `[${getServiceName(t, preset.service)}] ${preset.name}`,
       value: preset._id,
       custom: false,
     }))
@@ -120,9 +122,9 @@ export function getInitialPresetValue(chat?: AppSchema.Chat) {
   return chat.genPreset || AutoPreset.service
 }
 
-export function getServiceName(service?: AIAdapter) {
+export function getServiceName(t: TFunction, service?: AIAdapter) {
   if (!service) return 'Unset'
-  return `${ADAPTER_LABELS[service]}`
+  return `${ADAPTER_LABELS(t)[service]}`
 }
 
 export function sortByName(left: { name: string }, right: { name: string }) {

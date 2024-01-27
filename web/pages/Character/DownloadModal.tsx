@@ -8,12 +8,14 @@ import { exportCharacter } from '/common/characters'
 import { charsApi } from '/web/store/data/chars'
 import { toastStore } from '/web/store'
 import { downloadCharCard } from './util'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
 
 type CharacterFileType = 'png' | 'json'
 
-const plainFormats = [{ value: 'text', label: 'Plain Text' }]
+const plainFormats = (t: TFunction) => [{ value: 'text', label: t('plain_text') }]
 
-const formats = [{ value: 'attributes', label: 'Key-value' }]
+const formats = (t: TFunction) => [{ value: 'attributes', label: t('key_value') }]
 
 /**
  * WIP: Enable downloading characters in different persona formats for different application targets
@@ -25,10 +27,12 @@ export const DownloadModal: Component<{
   charId: string
   char?: AppSchema.Character
 }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
   const [char, setChar] = createSignal<AppSchema.Character | undefined>(props.char)
   const opts = createMemo(
-    () => ((props.char || char())?.persona.kind === 'text' ? plainFormats : formats),
+    () => ((props.char || char())?.persona.kind === 'text' ? plainFormats(t) : formats(t)),
     { equals: false }
   )
 
@@ -40,14 +44,18 @@ export const DownloadModal: Component<{
     }
 
     if (res.error) {
-      toastStore.error(`Failed to retrieve character for download: ${res.error}`)
+      toastStore.error(
+        t('failed_to_retrieve_character_for_download_x', {
+          message: res.error,
+        })
+      )
     }
   })
 
   const fileTypeItems = createMemo(() => {
-    const opts = [{ value: 'json', label: 'JSON' }]
+    const opts = [{ value: 'json', label: t('json') }]
     if (char()?.avatar) {
-      opts.unshift({ value: 'png', label: 'Image Card' })
+      opts.unshift({ value: 'png', label: t('image_card') })
     }
     return opts
   })
@@ -63,8 +71,8 @@ export const DownloadModal: Component<{
     const base = [{ value: 'tavern', label: 'Tavern' }]
     if (fileType() === 'png') return base
     return base.concat([
-      { value: 'native', label: 'Agnaistic' },
-      { value: 'ooba', label: 'Textgen' },
+      { value: 'native', label: t('agnaistic') },
+      { value: 'ooba', label: t('text_gen') },
     ])
   })
 
@@ -72,24 +80,24 @@ export const DownloadModal: Component<{
     <Modal
       show={props.show && !!char()}
       close={props.close}
-      title="Download Character"
+      title={t('download_character')}
       footer={
         <Button schema="secondary" onClick={props.close}>
-          <X /> Close
+          <X /> {t('close')}
         </Button>
       }
     >
       <form ref={ref} class="flex flex-col gap-4">
         <div class="flex flex-row gap-3">
           <Select
-            label="Output Format"
+            label={t('output_format')}
             fieldName="app"
             value={format()}
             items={outputs()}
             onChange={(item) => setFormat(item.value)}
           />
           <Select
-            label="File type"
+            label={t('file_type')}
             fieldName="fileType"
             value={fileType()}
             items={fileTypeItems()}
@@ -98,8 +106,8 @@ export const DownloadModal: Component<{
         </div>
         <div class="flex">
           <Select
-            label="Persona Format"
-            helperText="If exporting to Agnaistic format, this does not matter"
+            label={t('persona_format')}
+            helperText={t('persona_format_message')}
             fieldName="format"
             items={opts()}
             value={schema()}
@@ -117,16 +125,16 @@ export const DownloadModal: Component<{
                 download={`${char()!.name}.json`}
               >
                 <Button>
-                  <Save /> Download (JSON)
+                  <Save /> {t('download_json')}
                 </Button>
               </a>
             </Match>
 
             <Match when={fileType() === 'png'}>
               <Button
-                onClick={() => downloadCharCard(props.char || props.charId, format(), schema())}
+                onClick={() => downloadCharCard(t, props.char || props.charId, format(), schema())}
               >
-                <Save /> Download (PNG)
+                <Save /> {t('download_png')}
               </Button>
             </Match>
           </Switch>

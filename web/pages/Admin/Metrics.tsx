@@ -7,11 +7,14 @@ import { adminStore } from '../../store'
 import { Card } from '/web/shared/Card'
 import TextInput from '/web/shared/TextInput'
 import { ConfirmModal } from '/web/shared/Modal'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const MetricsPage: Component = () => {
+  const [t] = useTransContext()
+
   let refForm: any
 
-  setComponentPageTitle('Metrics')
+  setComponentPageTitle(t('metrics'))
   const state = adminStore()
   const [refMsg, setRefMsg] = createSignal<any>()
   const [confirm, setConfirm] = createSignal(false)
@@ -29,35 +32,39 @@ const MetricsPage: Component = () => {
     <>
       <PageHeader title="Metrics" />
       <div class="mb-4 flex gap-4">
-        <Button onClick={adminStore.getMetrics}>Refresh</Button>
+        <Button onClick={adminStore.getMetrics}>{t('refresh')}</Button>
       </div>
 
       <div class="flex flex-col gap-2 text-xl">
         <FormLabel
           fieldName="active"
-          label="Online Users"
+          label={t('online_users')}
           helperText={state.metrics?.connected || '...'}
         />
 
         <FormLabel
           fieldName="active"
-          label="Max Online Users"
+          label={t('max_online_users')}
           helperText={state.metrics?.maxLiveCount || '...'}
         />
 
         <FormLabel
           fieldName="totalUsers"
-          label="Registered Users"
+          label={t('registered_users')}
           helperText={state.metrics?.totalUsers || '...'}
         />
 
-        <FormLabel fieldName="services" label="Services" helperText={state.metrics?.each.length} />
+        <FormLabel
+          fieldName="services"
+          label={t('services')}
+          helperText={state.metrics?.each.length}
+        />
 
         <Card>
           <form ref={refForm}>
-            <FormLabel label="Message All Users" />
+            <FormLabel label={t('message_all_users')} />
             <TextInput ref={setRefMsg} fieldName="message" isMultiline />
-            <Button onClick={() => setConfirm(true)}>Send</Button>
+            <Button onClick={() => setConfirm(true)}>{t('send')}</Button>
           </form>
         </Card>
       </div>
@@ -66,7 +73,7 @@ const MetricsPage: Component = () => {
         show={confirm()}
         close={() => setConfirm(false)}
         confirm={sendAll}
-        message="Are you sure you wish to send a message to all users?"
+        message={t('are_you_sure_you_want_to_send_message_to_all_users?')}
       />
     </>
   )

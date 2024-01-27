@@ -9,10 +9,13 @@ import { getStrictForm } from '/web/shared/util'
 import Button from '/web/shared/Button'
 import Select from '/web/shared/Select'
 import { TierCard } from '../Profile/TierCard'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export { TiersPage as default }
 
 const TiersPage: Component = (props) => {
+  const [t] = useTransContext()
+
   let form: any
   const params = useParams()
   const cfg = userStore()
@@ -29,7 +32,7 @@ const TiersPage: Component = (props) => {
       }
     })
 
-    return [{ label: 'No payment required', value: '' }].concat(list)
+    return [{ label: t('no_payment_required'), value: '' }].concat(list)
   })
 
   const [editing, setEditing] = createSignal(
@@ -48,7 +51,7 @@ const TiersPage: Component = (props) => {
   })
 
   const patreonTiers = createMemo(() => {
-    const items = [{ label: 'None', value: '' }]
+    const items = [{ label: t('none'), value: '' }]
 
     for (const tier of admin.patreonTiers) {
       items.push({
@@ -82,7 +85,7 @@ const TiersPage: Component = (props) => {
 
     if (!product) {
       if (data.productId) {
-        toastStore.error(`Cannot submit: Product "${data.productId}" not found`)
+        toastStore.error(t('cannot_submit_product_x_not_found', { product_id: data.productId }))
         return
       }
     }
@@ -90,12 +93,19 @@ const TiersPage: Component = (props) => {
     const priceId = product ? (product.default_price as string) : ''
 
     if (!product?.default_price && data.productId) {
-      toastStore.error(`Cannot submit: Product "${data.productId}" does not have a price`)
+      toastStore.error(
+        t('cannot_submit_product_x_does_not_have_a_price', {
+          product_id: data.productId,
+        })
+      )
       return
     }
 
     if (!price && data.productId) {
-      toastStore.error(`Cannot submit: Price "${product?.default_price}" not found`)
+      toastStore.error(
+        t('cannot_submit_product_price_x_not_found', { price: product?.default_price })
+      )
+
       return
     }
 
@@ -130,7 +140,7 @@ const TiersPage: Component = (props) => {
       <PageHeader title="Subscription Tier" />
 
       <A href="/admin/subscriptions" class="link">
-        ← Back to Subscriptions
+        {t('back_to_subscriptions')}
       </A>
 
       <Card>
@@ -139,15 +149,15 @@ const TiersPage: Component = (props) => {
 
           <TextInput
             fieldName="name"
-            label="Name"
+            label={t('name')}
             value={editing()?.name}
             onInput={(ev) => setName(ev.currentTarget.value)}
           />
 
           <TextInput
             fieldName="description"
-            label="Description"
-            helperText="This is be rendered using the markdown renderer. HTML is also supported here."
+            label={t('description')}
+            helperText={t('tier_description_message')}
             value={editing()?.description}
             isMultiline
             onInput={(ev) => setDesc(ev.currentTarget.value)}
@@ -155,8 +165,8 @@ const TiersPage: Component = (props) => {
 
           <Toggle
             fieldName="apiAccess"
-            label="API Access Capable"
-            helperText="If enabled, this tier can use API access if the server allows it"
+            label={t('api_access_capable')}
+            helperText={t('api_access_capable_message')}
             value={editing()?.apiAccess ?? false}
           />
 
@@ -169,13 +179,13 @@ const TiersPage: Component = (props) => {
 
           <Select
             fieldName="patreonTier"
-            label="Patreon Tier"
-            helperText="If Patreon is linked, the minimum tier is required"
+            label={t('patreon_tier')}
+            helperText={t('patreon_tier_message')}
             value={editing()?.patreon?.tierId}
             items={patreonTiers()}
           />
 
-          <div class="text-lg font-bold">Preview</div>
+          <div class="text-lg font-bold">{t('preview')}</div>
 
           <TierCard
             tier={{
@@ -190,32 +200,37 @@ const TiersPage: Component = (props) => {
 
           <Select
             fieldName="productId"
-            label="Stripe Product"
+            label={t('stripe_product')}
             items={products()}
             value={editing()?.productId}
             onChange={(ev) => setProductId(ev.value)}
           />
 
-          <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />
+          <TextInput
+            type="number"
+            fieldName="level"
+            label={t('level')}
+            value={editing()?.level ?? -1}
+          />
 
           <Toggle
             fieldName="enabled"
-            label="Enabled"
-            helperText="If disabled, this tier will not be available to users for selection."
+            label={t('enabled')}
+            helperText={t('tier_disabled_message')}
             value={editing()?.enabled}
           />
 
           <Show when={!!settings.slots.publisherId}>
             <Toggle
               fieldName="disableSlots"
-              label="Disable Slots"
-              helperText="This tier will prevent slots from rendering"
+              label={t('disable_slots')}
+              helperText={t('disable_slots_message')}
               value={editing()?.disableSlots}
             />
           </Show>
 
           <div class="flex w-full justify-end">
-            <Button onClick={onSubmit}>Save</Button>
+            <Button onClick={onSubmit}>{t('save')}</Button>
           </div>
         </form>
       </Card>

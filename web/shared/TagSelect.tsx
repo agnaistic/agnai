@@ -4,6 +4,7 @@ import Button from './Button'
 import { CheckSquare, ChevronDown, Square, X, XSquare } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import { tagStore } from '../store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 export type TagOption = {
   tag: string
@@ -16,6 +17,8 @@ const TagSelect: Component<{
   label?: string
   helperText?: string | JSX.Element
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = tagStore()
 
   const [opts, setOpts] = createSignal(false)
@@ -40,7 +43,7 @@ const TagSelect: Component<{
         >
           <span class="ellipsis">
             <Show when={state.filter.length}>{state.filter.join(', ')}</Show>
-            <Show when={!state.filter.length}>All tags</Show>
+            <Show when={!state.filter.length}>{t('all_tags')}</Show>
           </span>
           <span class="absolute right-0">
             <ChevronDown />
@@ -56,7 +59,7 @@ const TagSelect: Component<{
                 >
                   <div class="ellipsis flex h-3/4 items-center">
                     <X />
-                    <div class="font-bold">Reset Tag Filters</div>
+                    <div class="font-bold">{t('reset_tag_filters')}</div>
                   </div>
                 </div>
                 <For each={state.tags}>

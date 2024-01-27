@@ -4,6 +4,7 @@ import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
 import Select from '/web/shared/Select'
 import { userStore } from '/web/store'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) => {
   const user = userStore((s) => s.user?.adapterConfig)
@@ -36,6 +37,8 @@ export const ServiceOption: Component<{
   field?: (field: string) => string
   onChange?: (value: any) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const field = createMemo(
     () => props.field?.(props.opt.field) || `adapterConfig.${props.service}.${props.opt.field}`
   )
@@ -53,29 +56,31 @@ export const ServiceOption: Component<{
     if (props.opt.setting.type !== 'text') return
 
     if (props.opt.secret) {
-      if (isSet()) return `Secret is set`
+      if (isSet()) return t('secret_is_set')
     }
 
-    return props.opt.setting.placeholder
+    return props.opt.setting.placeholder != null ? t(props.opt.setting.placeholder) : ''
   })
 
   const clearSecret = () => {
     userStore.updateService(props.service as AIAdapter, { [props.opt.field]: '' })
   }
 
+  const helperText = props.opt.helperText != null ? t(props.opt.helperText) : ''
+
   return (
     <Switch>
       <Match when={props.opt.setting.type === 'text'}>
         <TextInput
           fieldName={field()}
-          label={props.opt.label}
+          label={t(props.opt.label)}
           helperText={
             <>
-              <span>{props.opt.helperText}</span>
+              <span>{helperText}</span>
               <Show when={isSet()}>
                 <div>
                   <a class="link" onClick={clearSecret}>
-                    Clear secret
+                    {t('clear_secret')}
                   </a>
                 </div>
               </Show>

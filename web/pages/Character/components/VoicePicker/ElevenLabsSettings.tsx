@@ -3,6 +3,9 @@ import { ElevenLabsModel, VoiceSettingForm } from '/common/types/texttospeech-sc
 import RangeInput from '../../../../shared/RangeInput'
 import Select, { Option } from '../../../../shared/Select'
 import { voiceStore } from '/web/store/voice'
+import { useTransContext } from '@mbarzda/solid-i18next'
+import { TFunction } from 'i18next'
+
 
 export const defaultElevenLabsSettings: VoiceSettingForm<'elevenlabs'> = {
   stability: 0.75,
@@ -13,6 +16,8 @@ export const ElevenLabsSettings: Component<{
   settings: VoiceSettingForm<'elevenlabs'>
   onChange: (value: VoiceSettingForm<'elevenlabs'>) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const update = (diff: Partial<VoiceSettingForm<'elevenlabs'>>) => {
     props.onChange({ ...props.settings, ...diff })
   }
@@ -46,16 +51,16 @@ export const ElevenLabsSettings: Component<{
     <>
       <Select
         fieldName="elevenLabsModel"
-        label="ElevenLabs Model"
-        items={modelOptions()}
+        label={t('eleven_labs_model')}
+        items={modelOptions(t)}
         value={props.settings.model}
         onChange={(item) => update({ model: item.value as ElevenLabsModel })}
       />
 
       <RangeInput
         fieldName="elevenLabsStability"
-        label="Stability"
-        helperText="Increasing variability can make speech more expressive with output varying between re-generations. It can also lead to instabilities."
+        label={t('stability')}
+        helperText={t('stability_message')}
         value={props.settings.stability ?? 0.75}
         min={0}
         max={1}
@@ -65,8 +70,8 @@ export const ElevenLabsSettings: Component<{
 
       <RangeInput
         fieldName="elevenLabsSimilarityBoost"
-        label="Clarity + Similarity Enhancement"
-        helperText="Low values are recommended if background artifacts are present in generated speech."
+        label={t('clarity_and_similarity_enhancement')}
+        helperText={t('clarity_and_similarity_enhancement_message')}
         value={props.settings.similarityBoost ?? 0.75}
         min={0}
         max={1}
@@ -76,7 +81,7 @@ export const ElevenLabsSettings: Component<{
 
       <RangeInput
         fieldName="elevenLabsRate"
-        label="Playback Rate"
+        label={t('playback_rate')}
         helperText=""
         min={0.5}
         max={2}

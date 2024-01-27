@@ -11,11 +11,14 @@ import { Toggle } from '../../../shared/Toggle'
 import { toArray } from '/common/util'
 import { rootModalStore } from '/web/store/root-modal'
 import { Pill } from '/web/shared/Card'
+import { Trans, useTransContext } from '@mbarzda/solid-i18next'
 
 const HordeAISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
   onHordeModelsChange: (models: string[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const state = userStore((s) => ({
     workers: toArray(s.user?.hordeWorkers),
     models: toArray(s.user?.hordeModel),
@@ -63,20 +66,21 @@ const HordeAISettings: Component<{
         return (
           <div class="flex flex-col">
             <div>
-              Logged in as {state.user.hordeName}.{' '}
+              {t('logged_in_as_x', { name: state.user.hordeName })}
+
               <Show when={!state.loading}>
                 <a class="link" onClick={() => userStore.hordeStats()}>
-                  Get stats
+                  {t('get_stats')}
                 </a>
               </Show>
-              <Show when={state.loading}>Loading...</Show>
+              <Show when={state.loading}>{t('loading')}</Show>
             </div>
             <Show when={state.stats}>
-              <div>Kudos: {state.stats?.kudos.toLocaleString()}</div>
+              <div>{t('kudos_x', { kudos: state.stats?.kudos.toLocaleString() })}</div>
             </Show>
           </div>
         )
-      return `Currently using anonymous access.`
+      return t('currently_using_anonymous_access')
     },
     { equals: false }
   )
@@ -86,11 +90,13 @@ const HordeAISettings: Component<{
       <span>{hordeName()}</span>
       <br />
       <span>
-        Leave blank to use guest account. Visit{' '}
-        <a class="link" href="https://aihorde.net" target="_blank">
-          stablehorde.net
-        </a>{' '}
-        to register.
+        <Trans key="horde_help_text">
+          Leave blank to use guest account. Visit
+          <a class="link" href="https://aihorde.net" target="_blank">
+            stablehorde.net
+          </a>
+          to register.
+        </Trans>
       </span>
     </>
   )
@@ -103,16 +109,16 @@ const HordeAISettings: Component<{
     <>
       <Toggle
         fieldName="hordeUseTrusted"
-        label="Use Trusted Workers Only"
+        label={t('use_trusted_workers_only')}
         value={state.user?.hordeUseTrusted ?? true}
-        helperText="This may help reduce 'bad responses' by using only 'trusted' workers. Warning: This may increase response times."
+        helperText={t('this_may_help_reduce_bad_responses')}
       />
       <TextInput
         fieldName="hordeKey"
-        label="AI Horde API Key"
+        label={t('ai_horde_api_key')}
         helperText={HordeHelpText}
         placeholder={
-          state.user?.hordeName || state.user?.hordeKey ? 'API key has been verified' : ''
+          state.user?.hordeName || state.user?.hordeKey ? t('api_key_has_been_verified') : ''
         }
         type="password"
         value={state.user?.hordeKey}
@@ -120,21 +126,21 @@ const HordeAISettings: Component<{
 
       <Show when={state.user?.hordeName}>
         <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('horde')}>
-          Delete Horde API Key
+          {t('delete_horde_api_key')}
         </Button>
       </Show>
 
       <div class="flex items-start gap-4">
         <Button onClick={() => setShowModels(true)} class="min-w-max">
-          Select Models
+          {t('select_models')}
         </Button>
         <div class="flex flex-wrap gap-2 text-sm">
           <For each={selectedModels()}>{(model) => <Pill inverse>{model}</Pill>}</For>
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <Button onClick={() => setShow(true)}>Select Workers</Button>
-        <div>Workers selected: {workers()?.length ?? state.workers.length}</div>
+        <Button onClick={() => setShow(true)}>{t('select_workers')}</Button>
+        <div>{t('workers_selected_x', { workers: workers()?.length ?? state.workers.length })}</div>
       </div>
 
       <ModelModal show={showModels()} close={() => setShowModels(false)} save={onSaveHordeModels} />
@@ -146,6 +152,8 @@ const HordeAISettings: Component<{
 export default HordeAISettings
 
 export const HordeDetails: Component<{ maxTokens: number; maxContextLength: number }> = (props) => {
+  const [t] = useTransContext()
+
   const user = userStore()
   const cfg = settingStore((c) => c.config.horde)
 
@@ -193,11 +201,14 @@ export const HordeDetails: Component<{ maxTokens: number; maxContextLength: numb
 
   return (
     <>
-      <div class="text-lg font-bold">Horde Status</div>
-      Number of Horde Workers that match your preset: {status().matches.length} /{' '}
-      {cfg.workers.length}.<br />
-      Workers excluded by your Max Tokens ({props.maxTokens}) / Max Context Length (
-      {props.maxContextLength}): {status().excluded}
+      <div class="text-lg font-bold">{t('horde_status')}</div>
+      {t('number_of_horde_workers_that_match_your_preset', {
+        count: status().matches.length,
+        total: cfg.workers.length,
+        max_tokens: props.maxTokens,
+        max_content_length: props.maxContextLength,
+        status: status().excluded,
+      })}
     </>
   )
 }
@@ -207,6 +218,8 @@ const ModelModal: Component<{
   close: () => void
   save: (items: Option[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const cfg = settingStore((s) => ({
     models: s.models.slice().map(toItem),
   }))
@@ -230,14 +243,14 @@ const ModelModal: Component<{
       <Modal
         show={props.show}
         close={props.close}
-        title="Specify AI Horde Models"
+        title={t('specify_ai_horde_models')}
         footer={
           <>
             <Button schema="secondary" onClick={props.close}>
-              <X /> Cancel
+              <X /> {t('cancel')}
             </Button>
             <Button onClick={save}>
-              <Save /> Select Model(s)
+              <Save /> {t('select_model')}
             </Button>
           </>
         }
@@ -247,14 +260,16 @@ const ModelModal: Component<{
             class="min-h-[6rem]"
             fieldName="workers"
             items={cfg.models}
-            label="Select Model(s)"
+            label={t('select_models')}
             onChange={setSelected}
             values={selected()?.map((s) => s.value) || state.models}
           />
           <div class="flex items-center justify-between gap-4">
-            <div>Models selected: {selected()?.length || state.models.length || '0'}</div>
+            <div>
+              {t('models_selected', { model: selected()?.length || state.models.length || '0' })}
+            </div>
             <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-              De-select All
+              {t('deselect_all')}
             </Button>
           </div>
         </div>
@@ -270,6 +285,8 @@ const WorkerModal: Component<{
   close: () => void
   save: (items: Option[]) => void
 }> = (props) => {
+  const [t] = useTransContext()
+
   const cfg = settingStore((s) => ({
     workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
   }))
@@ -294,14 +311,14 @@ const WorkerModal: Component<{
       <Modal
         show={props.show}
         close={props.close}
-        title="Specify AI Horde Workers"
+        title={t('specify_ai_horde_workers')}
         footer={
           <>
             <Button schema="secondary" onClick={props.close}>
-              <X /> Cancel
+              <X /> {t('cancel')}
             </Button>
             <Button onClick={save}>
-              <Save /> Select Workers
+              <Save /> {t('select_workers')}
             </Button>
           </>
         }
@@ -310,21 +327,26 @@ const WorkerModal: Component<{
           <MultiDropdown
             fieldName="workers"
             items={cfg.workers}
-            label="Select Workers"
-            helperText="To use any worker de-select all workers"
+            label={t('select_workers')}
+            helperText={t('to_use_any_worker_deselect_all_workers')}
             onChange={setSelected}
             values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
           />
           <div>
-            The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>{' '}
-            limits. If you wish to use that worker, your preset should not exceed these values.
-            <br />
-            E.g. <b>(1024/80)</b>
+            <Trans key="the_number_shown_in_brackets_are_the_worker">
+              The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>
+              limits. If you wish to use that worker, your preset should not exceed these values.
+              E.g. <b>(1024/80)</b>
+            </Trans>
           </div>
-          <div class="flex  items-center justify-between gap-4">
-            <p>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</p>
+          <div class="flex items-center justify-between gap-4">
+            <p>
+              {t('workers_selected_x', {
+                workers: selected()?.length || state.user?.hordeWorkers?.length || '0',
+              })}
+            </p>
             <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-              De-select All
+              {t('deselect_all')}
             </Button>
           </div>
         </div>

@@ -18,6 +18,7 @@ import { getImageData } from '/web/store/data/chars'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { GenField, generateChar, regenerateCharProp } from './generate-char'
+import { TFunction } from 'i18next'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -123,7 +124,7 @@ const initState: EditState = {
 
 export type CharEditor = ReturnType<typeof useCharEditor>
 
-export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
+export function useCharEditor(t: TFunction, editing?: NewCharacter & { _id?: string }) {
   const user = userStore()
   const presets = presetStore()
   const settings = settingStore()
@@ -143,7 +144,10 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const opts: Option[] = []
 
     if (preset?.service && preset.service !== 'horde') {
-      opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
+      opts.push({
+        label: t('default_adapter_x', { adapter: ADAPTER_LABELS(t)[preset.service!] }),
+        value: 'default',
+      })
     }
 
     {
@@ -151,26 +155,26 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= level)
 
       for (const sub of subs) {
-        opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })
+        opts.push({ label: t('agnaistic_x', { name: sub.name }), value: `agnaistic/${sub._id}` })
       }
     }
 
     if (user.user.oaiKeySet) {
-      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
-      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
+      opts.push({ label: t('open_ai_turbo'), value: 'openai/gpt-3.5-turbo-0301' })
+      opts.push({ label: t('open_ai_gpt_4'), value: 'openai/gpt-4' })
     }
 
     if (user.user.novelVerified) {
-      opts.push({ label: 'NovelAI - Kayra', value: 'novel/kayra-v1' })
-      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
+      opts.push({ label: t('novel_ai_kayra'), value: 'novel/kayra-v1' })
+      opts.push({ label: t('novel_ai_clio'), value: 'novel/clio-v1' })
     }
 
     if (preset?.service === 'kobold' || user.user.koboldUrl) {
-      opts.push({ label: 'Third Party', value: 'kobold' })
+      opts.push({ label: t('third_party'), value: 'kobold' })
     }
 
     if (user.user.claudeApiKeySet) {
-      opts.push({ label: 'Claude', value: 'claude' })
+      opts.push({ label: t('claude'), value: 'claude' })
     }
 
     return opts
@@ -196,9 +200,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   })
 
-  const createAvatar = async () => {
+  const createAvatar = async (t: TFunction) => {
     const char = payload()
-    const avatar = await generateAvatar(char)
+    const avatar = await generateAvatar(t, char)
 
     if (avatar) {
       const base64 = await getImageData(avatar)
@@ -207,10 +211,10 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  const generateCharacter = async (service: string, fields?: GenField[]) => {
+  const generateCharacter = async (t: TFunction, service: string, fields?: GenField[]) => {
     try {
       if (generating()) {
-        toastStore.warn(`Cannot generate: Already generating`)
+        toastStore.warn(t('cannot_generate_already_generating'))
         return
       }
 
@@ -229,7 +233,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       } else {
         const result = await generateChar(
           char.name,
-          char.description || 'a random character',
+          char.description || t('a_random_character').toLowerCase(),
           service,
           state.personaKind
         )
@@ -369,10 +373,10 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
   return payload
 }
 
-async function generateAvatar(char: NewCharacter) {
+async function generateAvatar(t: TFunction, char: NewCharacter) {
   const { user } = userStore.getState()
   if (!user) {
-    return toastStore.error(`Image generation settings missing`)
+    return toastStore.error(t('image_generation_settings_missing'))
   }
 
   return new Promise<File>((resolve, reject) => {

@@ -6,6 +6,7 @@ import { memoryStore, toastStore } from '../../store'
 import EditMemoryForm, { EntrySort } from '../Memory/EditMemory'
 import { AppSchema } from '/common/types'
 import { Option } from '/web/shared/Select'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ChubImportBookModal: Component<{
   show: boolean
@@ -14,6 +15,8 @@ const ChubImportBookModal: Component<{
   book: AppSchema.MemoryBook
   fullPath: string
 }> = (props) => {
+  const [t] = useTransContext()
+
   let ref: any
   const [book, setBook] = createSignal<AppSchema.MemoryBook>(props.book)
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
@@ -31,7 +34,7 @@ const ChubImportBookModal: Component<{
     try {
       memoryStore.create(book())
     } catch (error) {
-      toastStore.error(`Error importing ${book().name}! ${error}`)
+      toastStore.error(t('error_importing_name_x_message_x', { name: book().name, message: error }))
     }
     props.close()
   }
@@ -54,22 +57,20 @@ const ChubImportBookModal: Component<{
         <>
           <Button schema="secondary" onClick={props.close}>
             <X />
-            Close
+            {t('close')}
           </Button>
 
           <Button onClick={onImport} disabled={!book()}>
             <Check />
-            Import
+            {t('import')}
           </Button>
         </>
       }
     >
       <form ref={ref}>
-        <div class="mb-2 text-sm">
-          Optionally modify all the aspects of the memory book other than the image.
-        </div>
+        <div class="mb-2 text-sm">{t('optionally_modify_all_the_aspects_of_the_memory_book')}</div>
         <div class="mb-4 text-sm">
-          The information provided here will be saved with the memory book on import.
+          {t('the_information_provided_here_will_be_saved_with_the_memory_book')}
         </div>
         <Show when={book().name}>
           <div class="text-sm">

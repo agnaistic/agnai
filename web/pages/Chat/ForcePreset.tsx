@@ -4,15 +4,20 @@ import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { chatStore, presetStore, toastStore } from '../../store'
 import { isDefaultPreset } from '../../../common/presets'
 import { isEligible } from './util'
+import { useTransContext } from '@mbarzda/solid-i18next'
 
 const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: () => void }> = (
   props
 ) => {
+  const [t] = useTransContext()
+
   const presets = presetStore((s) => s.presets)
 
   const options = createMemo(() => {
-    const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-    return [{ label: 'System Built-in Preset (Horde)', value: AutoPreset.service }].concat(opts)
+    const opts = getPresetOptions(t, presets, { builtin: true }).filter(
+      (pre) => pre.value !== 'chat'
+    )
+    return [{ label: t('system_built_in_preset_horde'), value: AutoPreset.service }].concat(opts)
   })
 
   const [presetId, setPresetId] = createSignal(props.chat.genPreset || options()[0].value)
@@ -22,7 +27,7 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
   const savePreset = () => {
     const id = presetId()
     if (!id) {
-      toastStore.error(`Please select a preset`)
+      toastStore.error(t('please_select_a_preset'))
       return
     }
 
