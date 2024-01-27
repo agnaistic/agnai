@@ -136,7 +136,9 @@ function parseContent(content: string) {
         greeting: 'string',
         scenario: 'string',
         sampleChat: 'string',
-        messages: [{ msg: 'string', characterId: 'string?', userId: 'string?' }],
+        messages: [
+          { msg: 'string', translatedMsg: 'string', characterId: 'string?', userId: 'string?' },
+        ],
       },
       json
     )
@@ -154,11 +156,17 @@ function parseContent(content: string) {
       .filter((line) => !!line.trim())
       .map((line) => JSON.parse(line))
 
-    const messages = lines.map((line) => ({
-      msg: String(line.mes),
-      userId: line.is_user ? 'anon' : undefined,
-      characterId: line.is_user ? undefined : 'imported',
-    }))
+    const messages = lines.map((line) => {
+      const translatedMsg =
+        line.translatedMsg != null ? String(line.translatedMsg) : String(line.mes)
+
+      return {
+        msg: String(line.mes),
+        translatedMsg: translatedMsg,
+        userId: line.is_user ? 'anon' : undefined,
+        characterId: line.is_user ? undefined : 'imported',
+      }
+    })
 
     const json = {
       name: '',

@@ -176,6 +176,7 @@ async function createImageMessage(opts: {
     const msg = await store.msgs.createChatMessage({
       chatId: opts.chatId!,
       message: opts.filename,
+      translatedMessage: opts.filename,
       characterId: char._id,
       adapter: 'image',
       ooc: false,

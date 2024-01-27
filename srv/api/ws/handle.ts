@@ -125,5 +125,6 @@ export function publishAll<T extends { type: string }>(data: T) {
 export function publishGuest<T extends { type: string }>(socketId: string, data: T) {
   const socket = allSockets.get(socketId)
   if (!socket) return
+
   socket.send(JSON.stringify(data))
 }

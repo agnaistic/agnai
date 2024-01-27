@@ -14,6 +14,7 @@ import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
 import { ModelFormat } from '../presets/templates'
+import { TranslationSettings } from './translation-schema'
 
 export type AllDoc =
   | AppSchema.Announcement
@@ -232,6 +233,8 @@ export namespace AppSchema {
       autoRecord: boolean
     }
 
+    translation?: TranslationSettings
+
     texttospeech?: TTSSettings
 
     images?: ImageSettings
@@ -357,6 +360,7 @@ export namespace AppSchema {
     chatId: string
     msg: string
     retries: string[]
+    translatedMsg: string
     extras?: string[]
     characterId?: string
     userId?: string

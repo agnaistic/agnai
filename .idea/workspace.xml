@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8d82ae7f-efa0-4edc-a783-08a1d2bfac77" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/srv/api/chat/edit.ts" beforeDir="false" afterPath="$PROJECT_DIR$/srv/api/chat/edit.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2a9V89iEAZCDvs2aNTyzPW2lDec" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/google-translate&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;pnpm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/fandygotama/Projects/Python/Agnai/node_modules/prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.prettier&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/fandygotama/Projects/Python/Agnai/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/web" />
+      <recent name="$PROJECT_DIR$/srv" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8d82ae7f-efa0-4edc-a783-08a1d2bfac77" name="Changes" comment="" />
+      <created>1703730619418</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1703730619418</updated>
+      <workItem from="1703730621336" duration="22665000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/srv/domains/billing/agg.js" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/agg.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/manager.js" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/manager.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/cmd.js" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/cmd.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/types.js" />
+        <option value="$PROJECT_DIR$/srv/domains/billing/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/agg.js" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/agg.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/types.js" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/cmd.js" />
+        <option value="$PROJECT_DIR$/srv/domains/subs/cmd.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/lock.js" />
+        <option value="$PROJECT_DIR$/srv/domains/lock.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/domain.js" />
+        <option value="$PROJECT_DIR$/srv/domains/domain.js.map" />
+        <option value="$PROJECT_DIR$/srv/domains/index.js" />
+        <option value="$PROJECT_DIR$/srv/domains/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/register.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/register.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/scale.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/scale.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/stream.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/stream.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/type.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/type.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/novel-bad-words.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/novel-bad-words.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/kobold.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/kobold.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/goose.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/goose.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/generate.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/generate.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/novel.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/novel.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/agnaistic.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/agnaistic.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/openrouter.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/openrouter.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/ooba.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/ooba.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/prompt.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/prompt.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/chat-completion.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/chat-completion.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/horde.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/horde.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/openai.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/openai.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/replicate.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/replicate.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/mancer.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/mancer.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/claude.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/claude.js.map" />
+        <option value="$PROJECT_DIR$/srv/adapter/petals.js" />
+        <option value="$PROJECT_DIR$/srv/adapter/petals.js.map" />
+        <option value="$PROJECT_DIR$/srv/voice/elevenlabs.js" />
+        <option value="$PROJECT_DIR$/srv/voice/elevenlabs.js.map" />
+        <option value="$PROJECT_DIR$/srv/voice/webspeechsynthesis.js" />
+        <option value="$PROJECT_DIR$/srv/voice/webspeechsynthesis.js.map" />
+        <option value="$PROJECT_DIR$/srv/voice/types.js" />
+        <option value="$PROJECT_DIR$/srv/voice/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/voice/novel.js" />
+        <option value="$PROJECT_DIR$/srv/voice/novel.js.map" />
+        <option value="$PROJECT_DIR$/srv/voice/index.js" />
+        <option value="$PROJECT_DIR$/srv/voice/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/image/types.js" />
+        <option value="$PROJECT_DIR$/srv/image/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/image/novel.js" />
+        <option value="$PROJECT_DIR$/srv/image/novel.js.map" />
+        <option value="$PROJECT_DIR$/srv/image/horde.js" />
+        <option value="$PROJECT_DIR$/srv/image/horde.js.map" />
+        <option value="$PROJECT_DIR$/srv/image/index.js" />
+        <option value="$PROJECT_DIR$/srv/image/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/image/stable-diffusion.js" />
+        <option value="$PROJECT_DIR$/srv/image/stable-diffusion.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/scenario/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/scenario/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/classify/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/classify/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/cancel.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/cancel.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/modify.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/modify.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/stripe.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/stripe.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/resume.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/resume.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/billing/checkout.js" />
+        <option value="$PROJECT_DIR$/srv/api/billing/checkout.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/memory/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/memory/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/patreon.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/patreon.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/auth.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/auth.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/presets.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/presets.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/settings.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/settings.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/services.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/services.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/user/delete-user.js" />
+        <option value="$PROJECT_DIR$/srv/api/user/delete-user.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/json/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/json/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/lock.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/lock.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/message.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/message.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/invite.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/invite.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/texttospeech.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/texttospeech.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/inference.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/inference.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/get.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/get.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/image.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/image.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/common.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/common.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/branch.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/branch.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/edit.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/edit.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/characters.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/characters.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/create.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/create.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/remove.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/remove.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/guest-msg.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/guest-msg.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/ws/setup.js" />
+        <option value="$PROJECT_DIR$/srv/api/ws/setup.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/ws/bus.js" />
+        <option value="$PROJECT_DIR$/srv/api/ws/bus.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/ws/types.js" />
+        <option value="$PROJECT_DIR$/srv/api/ws/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/ws/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/ws/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/ws/handle.js" />
+        <option value="$PROJECT_DIR$/srv/api/ws/handle.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/wrap.js" />
+        <option value="$PROJECT_DIR$/srv/api/wrap.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/settings.js" />
+        <option value="$PROJECT_DIR$/srv/api/settings.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/announcements.js" />
+        <option value="$PROJECT_DIR$/srv/api/announcements.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/character.js" />
+        <option value="$PROJECT_DIR$/srv/api/character.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/upload.js" />
+        <option value="$PROJECT_DIR$/srv/api/upload.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/request.js" />
+        <option value="$PROJECT_DIR$/srv/api/request.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/auth.js" />
+        <option value="$PROJECT_DIR$/srv/api/auth.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/horde.js" />
+        <option value="$PROJECT_DIR$/srv/api/horde.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/index.js" />
+        <option value="$PROJECT_DIR$/srv/api/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/voice.js" />
+        <option value="$PROJECT_DIR$/srv/api/voice.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/pipeline.js" />
+        <option value="$PROJECT_DIR$/srv/api/pipeline.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/subscriptions.js" />
+        <option value="$PROJECT_DIR$/srv/api/subscriptions.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/admin.js" />
+        <option value="$PROJECT_DIR$/srv/api/admin.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/util.js" />
+        <option value="$PROJECT_DIR$/srv/db/util.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/invite.js" />
+        <option value="$PROJECT_DIR$/srv/db/invite.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/user.js" />
+        <option value="$PROJECT_DIR$/srv/db/user.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/client.js" />
+        <option value="$PROJECT_DIR$/srv/db/client.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/announcements.js" />
+        <option value="$PROJECT_DIR$/srv/db/announcements.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/scenario.js" />
+        <option value="$PROJECT_DIR$/srv/db/scenario.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/characters.js" />
+        <option value="$PROJECT_DIR$/srv/db/characters.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/index.js" />
+        <option value="$PROJECT_DIR$/srv/db/index.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/tree.js" />
+        <option value="$PROJECT_DIR$/srv/db/tree.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/presets.js" />
+        <option value="$PROJECT_DIR$/srv/db/presets.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/memory.js" />
+        <option value="$PROJECT_DIR$/srv/db/memory.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/oauth.js" />
+        <option value="$PROJECT_DIR$/srv/db/oauth.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/chats.js" />
+        <option value="$PROJECT_DIR$/srv/db/chats.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/messages.js" />
+        <option value="$PROJECT_DIR$/srv/db/messages.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/subscriptions.js" />
+        <option value="$PROJECT_DIR$/srv/db/subscriptions.js.map" />
+        <option value="$PROJECT_DIR$/srv/db/admin.js" />
+        <option value="$PROJECT_DIR$/srv/db/admin.js.map" />
+        <option value="$PROJECT_DIR$/srv/config.js" />
+        <option value="$PROJECT_DIR$/srv/config.js.map" />
+        <option value="$PROJECT_DIR$/srv/logger.js" />
+        <option value="$PROJECT_DIR$/srv/logger.js.map" />
+        <option value="$PROJECT_DIR$/srv/tokenize.js" />
+        <option value="$PROJECT_DIR$/srv/tokenize.js.map" />
+        <option value="$PROJECT_DIR$/srv/app.js" />
+        <option value="$PROJECT_DIR$/srv/app.js.map" />
+        <option value="$PROJECT_DIR$/srv/bin.js" />
+        <option value="$PROJECT_DIR$/srv/bin.js.map" />
+        <option value="$PROJECT_DIR$/srv/server.js" />
+        <option value="$PROJECT_DIR$/srv/server.js.map" />
+        <option value="$PROJECT_DIR$/srv/start.js" />
+        <option value="$PROJECT_DIR$/srv/start.js.map" />
+        <option value="$PROJECT_DIR$/web/pages/Chat/update-gaslight.js" />
+        <option value="$PROJECT_DIR$/web/pages/Chat/update-gaslight.js.map" />
+        <option value="$PROJECT_DIR$/tests/prompt.spec.js" />
+        <option value="$PROJECT_DIR$/tests/prompt.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/util.js" />
+        <option value="$PROJECT_DIR$/tests/util.js.map" />
+        <option value="$PROJECT_DIR$/tests/chat-model-sample-chat.spec.js" />
+        <option value="$PROJECT_DIR$/tests/chat-model-sample-chat.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/init.js" />
+        <option value="$PROJECT_DIR$/tests/init.js.map" />
+        <option value="$PROJECT_DIR$/tests/placeholder.spec.js" />
+        <option value="$PROJECT_DIR$/tests/placeholder.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/resolve-scenario.spec.js" />
+        <option value="$PROJECT_DIR$/tests/resolve-scenario.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/trim.spec.js" />
+        <option value="$PROJECT_DIR$/tests/trim.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/system-prompt-extraction.spec.js" />
+        <option value="$PROJECT_DIR$/tests/system-prompt-extraction.spec.js.map" />
+        <option value="$PROJECT_DIR$/tests/parser.spec.js" />
+        <option value="$PROJECT_DIR$/tests/parser.spec.js.map" />
+        <option value="$PROJECT_DIR$/common/util.js" />
+        <option value="$PROJECT_DIR$/common/util.js.map" />
+        <option value="$PROJECT_DIR$/common/dummy.js" />
+        <option value="$PROJECT_DIR$/common/dummy.js.map" />
+        <option value="$PROJECT_DIR$/common/presets.js" />
+        <option value="$PROJECT_DIR$/common/presets.js.map" />
+        <option value="$PROJECT_DIR$/common/default-preset.js" />
+        <option value="$PROJECT_DIR$/common/default-preset.js.map" />
+        <option value="$PROJECT_DIR$/common/template-parser.js" />
+        <option value="$PROJECT_DIR$/common/template-parser.js.map" />
+        <option value="$PROJECT_DIR$/common/memory.js" />
+        <option value="$PROJECT_DIR$/common/memory.js.map" />
+        <option value="$PROJECT_DIR$/common/characters.js" />
+        <option value="$PROJECT_DIR$/common/characters.js.map" />
+        <option value="$PROJECT_DIR$/common/prompt.js" />
+        <option value="$PROJECT_DIR$/common/prompt.js.map" />
+        <option value="$PROJECT_DIR$/common/horde-gen.js" />
+        <option value="$PROJECT_DIR$/common/horde-gen.js.map" />
+        <option value="$PROJECT_DIR$/common/grammar.js" />
+        <option value="$PROJECT_DIR$/common/grammar.js.map" />
+        <option value="$PROJECT_DIR$/common/typed-event-emitter.js" />
+        <option value="$PROJECT_DIR$/common/typed-event-emitter.js.map" />
+        <option value="$PROJECT_DIR$/common/image.js" />
+        <option value="$PROJECT_DIR$/common/image.js.map" />
+        <option value="$PROJECT_DIR$/common/adapters.js" />
+        <option value="$PROJECT_DIR$/common/adapters.js.map" />
+        <option value="$PROJECT_DIR$/common/image-prompt.js" />
+        <option value="$PROJECT_DIR$/common/image-prompt.js.map" />
+        <option value="$PROJECT_DIR$/common/mode-templates.js" />
+        <option value="$PROJECT_DIR$/common/mode-templates.js.map" />
+        <option value="$PROJECT_DIR$/common/prompt-order.js" />
+        <option value="$PROJECT_DIR$/common/prompt-order.js.map" />
+        <option value="$PROJECT_DIR$/common/chat.js" />
+        <option value="$PROJECT_DIR$/common/chat.js.map" />
+        <option value="$PROJECT_DIR$/common/tokenize.js" />
+        <option value="$PROJECT_DIR$/common/tokenize.js.map" />
+        <option value="$PROJECT_DIR$/common/types/ui.js" />
+        <option value="$PROJECT_DIR$/common/types/ui.js.map" />
+        <option value="$PROJECT_DIR$/common/types/image-schema.js" />
+        <option value="$PROJECT_DIR$/common/types/image-schema.js.map" />
+        <option value="$PROJECT_DIR$/common/types/memory.js" />
+        <option value="$PROJECT_DIR$/common/types/memory.js.map" />
+        <option value="$PROJECT_DIR$/common/types/replicate.js" />
+        <option value="$PROJECT_DIR$/common/types/replicate.js.map" />
+        <option value="$PROJECT_DIR$/common/types/index.js" />
+        <option value="$PROJECT_DIR$/common/types/index.js.map" />
+        <option value="$PROJECT_DIR$/common/types/sprite.js" />
+        <option value="$PROJECT_DIR$/common/types/sprite.js.map" />
+        <option value="$PROJECT_DIR$/common/types/texttospeech-schema.js" />
+        <option value="$PROJECT_DIR$/common/types/texttospeech-schema.js.map" />
+        <option value="$PROJECT_DIR$/common/types/schema.js" />
+        <option value="$PROJECT_DIR$/common/types/schema.js.map" />
+        <option value="$PROJECT_DIR$/common/valid/index.js" />
+        <option value="$PROJECT_DIR$/common/valid/index.js.map" />
+        <option value="$PROJECT_DIR$/common/valid/util.js" />
+        <option value="$PROJECT_DIR$/common/valid/util.js.map" />
+        <option value="$PROJECT_DIR$/common/valid/validate.js" />
+        <option value="$PROJECT_DIR$/common/valid/validate.js.map" />
+        <option value="$PROJECT_DIR$/common/valid/types.js" />
+        <option value="$PROJECT_DIR$/common/valid/types.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/agnaistic.js" />
+        <option value="$PROJECT_DIR$/common/presets/agnaistic.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/novel.js" />
+        <option value="$PROJECT_DIR$/common/presets/novel.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/claude.js" />
+        <option value="$PROJECT_DIR$/common/presets/claude.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/kobold.js" />
+        <option value="$PROJECT_DIR$/common/presets/kobold.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/replicate.js" />
+        <option value="$PROJECT_DIR$/common/presets/replicate.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/openai.js" />
+        <option value="$PROJECT_DIR$/common/presets/openai.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/horde.js" />
+        <option value="$PROJECT_DIR$/common/presets/horde.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/ooba.js" />
+        <option value="$PROJECT_DIR$/common/presets/ooba.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/scale.js" />
+        <option value="$PROJECT_DIR$/common/presets/scale.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/templates.js" />
+        <option value="$PROJECT_DIR$/common/presets/templates.js.map" />
+        <option value="$PROJECT_DIR$/common/presets/openrouter.js" />
+        <option value="$PROJECT_DIR$/common/presets/openrouter.js.map" />
+        <option value="$PROJECT_DIR$/common/guidance/guidance-parser.js" />
+        <option value="$PROJECT_DIR$/common/guidance/guidance-parser.js.map" />
+        <option value="$PROJECT_DIR$/common/guidance/grammar.js" />
+        <option value="$PROJECT_DIR$/common/guidance/grammar.js.map" />
+        <option value="$PROJECT_DIR$/srv/translate/google-translate.js" />
+        <option value="$PROJECT_DIR$/srv/translate/google-translate.js.map" />
+        <option value="$PROJECT_DIR$/srv/translate/types.js" />
+        <option value="$PROJECT_DIR$/srv/translate/types.js.map" />
+        <option value="$PROJECT_DIR$/srv/translate/index.js" />
+        <option value="$PROJECT_DIR$/srv/translate/index.js.map" />
+        <option value="$PROJECT_DIR$/common/types/translation-schema.js" />
+        <option value="$PROJECT_DIR$/common/types/translation-schema.js.map" />
+        <option value="$PROJECT_DIR$/srv/api/chat/translate.js" />
+        <option value="$PROJECT_DIR$/srv/api/chat/translate.js.map" />
+      </list>
+    </option>
+  </component>
+</project>

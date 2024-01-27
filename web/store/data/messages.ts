@@ -594,10 +594,13 @@ async function getGenerateProps(
  */
 async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
   const { impersonating } = getStore('character').getState()
+  const { user } = getStore('user').getState()
+
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
     text: opts.text,
     kind: opts.kind,
+    translation: user?.translation,
     impersonate,
   })
 }
@@ -749,6 +752,7 @@ function emptyMsg(
     updatedAt: new Date().toISOString(),
     msg: '',
     retries: [],
+    translatedMsg: '',
     ...props,
   }
 }

@@ -15,6 +15,7 @@ export type NewMessage = {
   _id?: string
   chatId: string
   message: string
+  translatedMessage: string
   characterId?: string
   senderId?: string
   adapter?: string
@@ -33,6 +34,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
   const {
     chatId,
     message,
+    translatedMessage,
     characterId,
     senderId,
     adapter,
@@ -51,6 +53,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     userId: senderId,
     msg: message,
     retries: retries || [],
+    translatedMsg: translatedMessage,
     adapter,
     actions,
     createdAt: new Date().toISOString(),
@@ -86,6 +89,7 @@ export async function importMessages(userId: string, messages: NewMessage[]) {
     handle: msg.handle || undefined,
     userId: msg.senderId ? msg.senderId : undefined,
     msg: msg.message,
+    translatedMsg: msg.translatedMessage,
     adapter: msg.adapter,
     createdAt: new Date(start + i).toISOString(),
     updatedAt: new Date(start + i).toISOString(),
@@ -97,8 +101,7 @@ export async function importMessages(userId: string, messages: NewMessage[]) {
 }
 
 export async function getMessage(messageId: string) {
-  const msg = await db('chat-message').findOne({ _id: messageId, kind: 'chat-message' })
-  return msg
+  return await db('chat-message').findOne({ _id: messageId, kind: 'chat-message' })
 }
 
 export async function deleteMessages(messageIds: string[]) {
@@ -110,7 +113,7 @@ export async function editMessage(
   update: Partial<
     Pick<
       AppSchema.ChatMessage,
-      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries'
+      'msg' | 'translatedMsg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries'
     >
   >
 ) {
@@ -118,8 +121,7 @@ export async function editMessage(
 
   await db('chat-message').updateOne({ _id: id }, { $set: edit })
 
-  const msg = await getMessage(id)
-  return msg
+  return await getMessage(id)
 }
 
 export async function getMessages(chatId: string, before?: string) {

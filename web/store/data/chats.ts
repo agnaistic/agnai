@@ -1,11 +1,13 @@
 import type { ImportChat, NewChat } from '../chat'
 import { v4 } from 'uuid'
-import { AppSchema } from '../../../common/types/schema'
+import { AppSchema } from '/common/types'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi, saveChats } from './storage'
 import { replace } from '/common/util'
 import { getStore } from '../create'
 import { parseTemplate } from '/common/template-parser'
+import { translateApi } from '/web/store/data/translate'
+import { TranslationSettings } from '/common/types/translation-schema'
 
 export type AllChat = AppSchema.Chat & { character?: { name: string } }
 
@@ -23,6 +25,31 @@ export const chatsApi = {
   upsertTempCharacter,
   removeCharacter,
   restartChat,
+}
+
+async function getTranslation(
+  chatId: string,
+  text: string,
+  translation?: TranslationSettings
+): Promise<string> {
+  if (
+    translation != null &&
+    ['translate_both', 'translate_outputs'].includes(translation.direction ?? '')
+  ) {
+    const translated = await translateApi.translate({
+      chatId,
+      service: translation.type,
+      text: text,
+      to: translation.targetLanguage,
+      from: undefined,
+    })
+
+    if (translated.status == 200 && translated.result?.data != null) {
+      return translated.result.data.text
+    }
+  }
+
+  return text
 }
 
 export async function getChat(id: string) {
@@ -78,18 +105,26 @@ export async function restartChat(chatId: string) {
   const greeting = char?.greeting
 
   if (char && greeting) {
-    const profile = getStore('user').getState().profile
+    const user = getStore('user').getState()
+
+    const profile = user.profile
+    const translation = user.user?.translation
+
     const { parsed } = await parseTemplate(greeting, {
       char,
       chat,
       sender: profile!,
       impersonate: impersonating,
     })
+
+    let translatedMessage = await getTranslation(chatId, parsed, translation)
+
     await localApi.saveMessages(chatId, [
       {
         _id: v4(),
         kind: 'chat-message',
         msg: parsed,
+        translatedMsg: translatedMessage,
         characterId: char._id,
         chatId,
         createdAt: new Date().toISOString(),
@@ -109,8 +144,7 @@ export async function editChat(
   update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
 ) {
   if (isLoggedIn()) {
-    const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
-    return res
+    return await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
   }
 
   const chats = await loadItem('chats')
@@ -150,14 +184,21 @@ export async function createChat(characterId: string, props: NewChat) {
 
   // If there is a greeting, parse it before persisting
   if (msg?.msg) {
-    const profile = getStore('user').getState().profile
+    const user = getStore('user').getState()
+    const profile = user.profile
+    const translation = user.user?.translation
+
     const { parsed } = await parseTemplate(msg.msg, {
       chat,
       char: char!,
       sender: profile!,
       impersonate: impersonating,
     })
+
+    let translatedMessage = await getTranslation(chat._id, parsed, translation)
+
     msg.msg = parsed
+    msg.translatedMsg = translatedMessage
   }
 
   await localApi.saveChats(chats.concat(chat))
@@ -194,6 +235,7 @@ export async function importChat(characterId: string, props: ImportChat) {
     chatId: chat._id,
     kind: 'chat-message',
     msg: msg.msg,
+    translatedMsg: msg.translatedMsg,
     characterId: msg.characterId ? char._id : undefined,
     userId: msg.userId ? localApi.ID : undefined,
     createdAt: new Date(start + i).toISOString(),
@@ -312,6 +354,7 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
     updatedAt: new Date().toISOString(),
     kind: 'chat-message',
     msg: char.greeting,
+    translatedMsg: char.greeting,
     characterId: char._id,
     retries: char.alternateGreetings || [],
   }

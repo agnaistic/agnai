@@ -54,6 +54,12 @@ export async function getUser(userId: string) {
   return user
 }
 
+export async function getTranslation(userId: string) {
+  const user = await getUser(userId)
+
+  return user?.translation
+}
+
 export async function updateUserUI(userId: string, props: Partial<AppSchema.User['ui']>) {
   const prev = await getUser(userId)
   if (!prev) throw errors.Unauthorized

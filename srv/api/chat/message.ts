@@ -4,10 +4,11 @@ import { createTextStreamV2, getResponseEntities } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
-import { AppSchema } from '../../../common/types/schema'
+import { AppSchema } from '/common/types'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
+import { translateMessage } from '/srv/translate'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -15,6 +16,7 @@ const sendValidator = {
   kind: ['send-noreply', 'ooc'],
   text: 'string',
   impersonate: 'any?',
+  translation: 'any?',
 } as const
 
 const genValidator = {
@@ -71,15 +73,18 @@ export const getMessages = handle(async ({ userId, params, query }) => {
 })
 
 export const createMessage = handle(async (req) => {
-  const { userId, body, params } = req
+  const { userId, body, params, log } = req
   const chatId = params.id
   assertValid(sendValidator, body)
 
   const impersonate: AppSchema.Character | undefined = body.impersonate
 
+  const translatedText = await translateMessage(chatId, log, 'en', body.text, body.translation)
+
   if (!userId) {
     const guest = req.socketId
-    const newMsg = newMessage(v4(), chatId, body.text, {
+
+    const newMsg = newMessage(v4(), chatId, translatedText, body.text!, {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc',
@@ -95,7 +100,8 @@ export const createMessage = handle(async (req) => {
 
     const userMsg = await store.msgs.createChatMessage({
       chatId,
-      message: body.text,
+      message: translatedText,
+      translatedMessage: body.text!,
       characterId: impersonate?._id,
       senderId: userId,
       ooc: body.kind === 'ooc',
@@ -160,9 +166,21 @@ export const generateMessageV2 = handle(async (req, res) => {
   if (body.kind === 'send' || body.kind === 'ooc') {
     await ensureBotMembership(chat, members, impersonate)
 
+    const translatedText = await translateMessage(
+      chatId,
+      log,
+      'en',
+      body.text,
+      body.user.translation
+    )
+
+    // Replace line with translated text
+    replaceLineWithTranslatedText(body.lines, body.text!, translatedText)
+
     userMsg = await store.msgs.createChatMessage({
       chatId,
-      message: body.text!,
+      message: translatedText,
+      translatedMessage: body.text!,
       characterId: impersonate?._id,
       senderId: userId,
       ooc: body.kind === 'ooc',
@@ -179,9 +197,21 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   } else if (body.kind.startsWith('send-event:')) {
+    const translatedText = await translateMessage(
+      chatId,
+      log,
+      'en',
+      body.text,
+      body.user.translation
+    )
+
+    // Replace line with translated text
+    replaceLineWithTranslatedText(body.lines, body.text!, translatedText)
+
     userMsg = await store.msgs.createChatMessage({
       chatId,
-      message: body.text!,
+      message: translatedText,
+      translatedMessage: body.text!,
       characterId: replyAs?._id,
       senderId: undefined,
       ooc: false,
@@ -318,7 +348,16 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
+  const translatedText = await translateMessage(
+    chatId,
+    log,
+    body.user.translation.targetLanguage,
+    responseText,
+    body.user.translation
+  )
+
   const actions: AppSchema.ChatAction[] = []
+
 
   await releaseLock(chatId)
 
@@ -340,6 +379,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         characterId: replyAs._id,
         senderId: body.kind === 'self' ? userId : undefined,
         message: responseText,
+        translatedMessage: translatedText,
         adapter,
         ooc: false,
         actions,
@@ -372,6 +412,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       if (body.replacing) {
         await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
+          translatedMsg: translatedText,
           actions,
           adapter,
           meta,
@@ -388,6 +429,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           messageId: body.replacing._id,
           message: responseText,
           retries: nextRetries,
+          translatedMessage: translatedText,
           actions,
           adapter,
           generate: true,
@@ -399,6 +441,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           characterId: replyAs._id,
           message: responseText,
+          translatedMessage: translatedText,
           adapter,
           actions,
           ooc: false,
@@ -422,6 +465,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     case 'continue': {
       await store.msgs.editMessage(body.continuing._id, {
         msg: responseText,
+        translatedMsg: translatedText,
         adapter,
         meta,
         state: 'continued',
@@ -432,6 +476,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         messageId: body.continuing._id,
         message: responseText,
+        translatedMessage: translatedText,
         adapter,
         generate: true,
         meta,
@@ -442,6 +487,43 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   await store.chats.update(chatId, {})
 })
+
+function replaceLineWithTranslatedText(lines: string[], text: string, translatedText: string) {
+  function splitFirstColon(input: string): string[] {
+    const index = input.indexOf(':')
+    if (index !== -1) {
+      const firstPart = input.substring(0, index).trim()
+      const secondPart = input.substring(index + 1).trim()
+      return [firstPart, secondPart]
+    } else {
+      return [input.trim()]
+    }
+  }
+
+  function findLastIndex<T>(array: T[], condition: (element: T) => boolean): number {
+    for (let i = array.length - 1; i >= 0; i--) {
+      if (condition(array[i])) {
+        return i
+      }
+    }
+    return -1
+  }
+
+  // Replace last lines with translated text
+  if (translatedText !== text) {
+    const foundIndex = findLastIndex(lines, (e) => {
+      const buffer = splitFirstColon(e)
+
+      return buffer.length > 1 && buffer[1] === text
+    })
+
+    if (foundIndex < 0) return
+
+    const line = lines[foundIndex]
+
+    lines[foundIndex] = line.replace(text, translatedText)
+  }
+}
 
 async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Response) {
   const chatId = req.params.id
@@ -465,14 +547,36 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   // For authenticated users we will verify parts of the payload
   let newMsg: AppSchema.ChatMessage | undefined
   if (body.kind === 'send' || body.kind === 'ooc') {
-    newMsg = newMessage(v4(), chatId, body.text!, {
+    const translatedText = await translateMessage(
+      chatId,
+      log,
+      'en',
+      body.text,
+      body.user.translation
+    )
+
+    // Replace line with translated text
+    replaceLineWithTranslatedText(body.lines, body.text!, translatedText)
+
+    newMsg = newMessage(v4(), chatId, translatedText, body.text!, {
       userId: 'anon',
       characterId: body.impersonate?._id,
       ooc: body.kind === 'ooc',
       event: undefined,
     })
   } else if (body.kind.startsWith('send-event:')) {
-    newMsg = newMessage(v4(), chatId, body.text!, {
+    const translatedText = await translateMessage(
+      chatId,
+      log,
+      'en',
+      body.text,
+      body.user.translation
+    )
+
+    // Replace line with translated text
+    replaceLineWithTranslatedText(body.lines, body.text!, translatedText)
+
+    newMsg = newMessage(v4(), chatId, translatedText, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
       event: body.kind.split(':')[1] as AppSchema.EventTypes,
@@ -548,14 +652,23 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
+  const translatedText = await translateMessage(
+    chatId,
+    log,
+    body.user.translation.targetLanguage,
+    responseText,
+    body.user.translation
+  )
+
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
+
 
   if (body.kind === 'retry' && body.replacing) {
     retries = [body.replacing.msg].concat(retries).concat(body.replacing.retries || [])
   }
 
-  const response = newMessage(messageId, chatId, responseText, {
+  const response = newMessage(messageId, chatId, responseText, translatedText, {
     characterId,
     userId: senderId,
     ooc: false,
@@ -592,6 +705,7 @@ function newMessage(
   messageId: string,
   chatId: string,
   text: string,
+  translatedText: string,
   props: {
     userId?: string
     characterId?: string
@@ -609,6 +723,7 @@ function newMessage(
     kind: 'chat-message',
     retries: props.retries || [],
     msg: text,
+    translatedMsg: translatedText,
     ...props,
   }
   return userMsg

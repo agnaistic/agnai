@@ -87,6 +87,7 @@
     "easy-speech": "^2.1.1",
     "evtstore": "^12.0.1",
     "express": "^4.18.2",
+    "google-translate-api-browser": "^3.0.1",
     "gpt-3-encoder": "^1.1.4",
     "jsonwebtoken": "^9.0.0",
     "localtunnel": "^2.0.2",
