@@ -36,8 +36,8 @@ dependencies:
     specifier: ^16.0.3
     version: 16.0.3
   easy-speech:
-    specifier: ^2.1.1
-    version: 2.1.1
+    specifier: ^2.3.1
+    version: 2.3.1
   evtstore:
     specifier: ^12.0.1
     version: registry.npmjs.org/evtstore@12.0.1
@@ -3255,8 +3255,8 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
-  /easy-speech@2.1.1:
-    resolution: {integrity: sha512-/Nh2SxkQc3aIdrCnagDbuaUAxuZuSVrEI00Jp1Kg8aQaD04socTjVDsyKZ/yw483q1nZC3CQ9IB7vMCnSY2LTQ==}
+  /easy-speech@2.3.1:
+    resolution: {integrity: sha512-oM7vvpbjmC9Ci/6CR/9DnGHci5hCSkXtlSy1aAFzXGdQPR4IH4jqkc/hQAM+slhCLM/wn/QrpgPOUGbxuR+Z3g==}
     engines: {node: '>= 14.x'}
     dev: false
 
