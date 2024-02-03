@@ -14,6 +14,8 @@ export const NOVEL_IMAGE_MODEL = {
   Full: 'nai-diffusion',
   Safe: 'safe-diffusion',
   Furry: 'nai-diffusion-furry',
+  Anime_v2: 'nai-diffusion-2',
+  Anime_v3: 'nai-diffusion-3',
 } as const
 
 export const NOVEL_SAMPLER_REV = {
