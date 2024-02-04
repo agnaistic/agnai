@@ -78,6 +78,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.ban_eos_token = gen.banEosToken
     body.cfg_scale = gen.cfgScale
     body.negative_prompt = gen.cfgOppose
+    if (gen.dynatemp_range) {
+      body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.temp_exponent = gen.dynatemp_exponent
+    }
   }
 
   const useChat =

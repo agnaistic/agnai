@@ -197,6 +197,8 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       top_a: gen.topA,
       typical: gen.typicalP,
       stop_sequence: getStoppingStrings(opts, stops),
+      dynatemp_range: gen.dynatemp_range,
+      dynatemp_exponent: gen.dynatemp_exponent,
       trim_stop: gen.trimStop,
       rep_pen_range: gen.repetitionPenaltyRange,
       rep_pen_slope: gen.repetitionPenaltySlope,
@@ -204,7 +206,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  const body = {
+  const body : any = {
     prompt,
     context_limit: gen.maxContextLength,
     max_new_tokens: gen.maxTokens,
@@ -232,6 +234,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     ban_eos_token: gen.banEosToken || false,
     skip_special_tokens: gen.skipSpecialTokens ?? true,
     stopping_strings: getStoppingStrings(opts, stops),
+    dynamic_temperature: gen.dynatemp_range ? true : false,
     tfs: gen.tailFreeSampling,
     mirostat_mode: gen.mirostatTau ? 2 : 0,
     mirostat_tau: gen.mirostatTau,
@@ -240,6 +243,11 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     placeholders: opts.placeholders,
     lists: opts.lists,
     previous: opts.previous,
+  }
+  if (body.dynamic_temperature) {
+    body.dynatemp_low = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+    body.dynatemp_high = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+    body.dynatemp_exponent = gen.dynatemp_exponent
   }
   return body
 }

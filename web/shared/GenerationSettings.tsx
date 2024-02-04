@@ -742,13 +742,9 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         />
         <RangeInput
           fieldName="dynatemp_range"
-          label="Dynamic Temperature"
-          helperText="The range to use for dynamic temperature.  When used,
-          the actual temperature is allowed to be automatically adjusted
-          dynamically between DynaTemp ± DynaTempRange. For example,
-          setting `temperature=0.4` and `dynatemp_range=0.1` will result
-          in a minimum temp of 0.3 and max of 0.5."
-          min={0.1}
+          label="Dynamic Temperature Range"
+          helperText="The range to use for dynamic temperature. When used, the actual temperature is allowed to be automatically adjusted dynamically between DynaTemp ± DynaTempRange. For example, setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3 and max of 0.5. (Put this value on 0 to disable its effect)"
+          min={0}
           max={20}
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
