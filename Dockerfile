@@ -1,4 +1,4 @@
-FROM node:20.10.0-bullseye-slim
+FROM node:20.10.0-bullseye
 
 WORKDIR /app
 VOLUME [ "/app/db" ]
