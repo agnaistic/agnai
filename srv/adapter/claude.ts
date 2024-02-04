@@ -275,15 +275,14 @@ async function createClaudePrompt(opts: AdapterProps) {
   )
   const gaslight = processLine('system', rawGaslight)
   const gaslightCost = await encoder()(mandatoryPrefix + gaslight)
-  let ujb = parts.ujb ? processLine('system', parts.ujb) : ''
-  const { parsed } = await injectPlaceholders(ujb, {
+  const { parsed } = await injectPlaceholders(parts.ujb ?? '', {
     opts,
     parts,
     encoder: enc,
     characters: opts.characters || {},
   })
 
-  ujb = parsed
+  const ujb = parsed ? processLine('system', parsed) : ''
 
   const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
   const prefillCost = await enc(prefill)
