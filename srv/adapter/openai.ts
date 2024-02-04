@@ -67,6 +67,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.top_k = gen.topK
     body.top_a = gen.topA
     body.min_p = gen.minP
+    body.smoothing_factor = gen.smoothingFactor
     body.tfs = gen.tailFreeSampling
     body.typical = gen.typicalP
     body.repetition_penalty = gen.repetitionPenalty

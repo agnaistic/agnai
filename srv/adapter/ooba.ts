@@ -144,6 +144,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       stop: getStoppingStrings(opts, stops),
       dynatemp_range: gen.dynatemp_range,
       dynatemp_exponent: gen.dynatemp_exponent,
+      smoothing_factor: gen.smoothingFactor,
 
       mirostat_mode: gen.mirostatToggle ? 2 : 0,
       mirostat_tau: gen.mirostatTau,
@@ -199,6 +200,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       stop_sequence: getStoppingStrings(opts, stops),
       dynatemp_range: gen.dynatemp_range,
       dynatemp_exponent: gen.dynatemp_exponent,
+      smoothing_factor: gen.smoothingFactor,
       trim_stop: gen.trimStop,
       rep_pen_range: gen.repetitionPenaltyRange,
       rep_pen_slope: gen.repetitionPenaltySlope,
@@ -235,6 +237,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     skip_special_tokens: gen.skipSpecialTokens ?? true,
     stopping_strings: getStoppingStrings(opts, stops),
     dynamic_temperature: gen.dynatemp_range ? true : false,
+    smoothing_factor: gen.smoothingFactor,
     tfs: gen.tailFreeSampling,
     mirostat_mode: gen.mirostatTau ? 2 : 0,
     mirostat_tau: gen.mirostatTau,

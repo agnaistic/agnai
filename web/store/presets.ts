@@ -319,6 +319,7 @@ type SafePreset = Pick<
   | 'useAdvancedPrompt'
   | 'dynatemp_range'
   | 'dynatemp_exponent'
+  | 'smoothingFactor'
 >
 
 export async function exportPreset(preset: AppSchema.UserGenPreset) {

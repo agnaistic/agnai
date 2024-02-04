@@ -485,6 +485,7 @@ export namespace AppSchema {
     temp: number
     dynatemp_range?: number
     dynatemp_exponent?: number
+    smoothingFactor?: number
     maxTokens: number
     maxContextLength?: number
     repetitionPenalty: number

@@ -765,6 +765,18 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           aiSetting={'dynatemp_exponent'}
         />
         <RangeInput
+          fieldName="smoothingFactor"
+          label="Smoothing Factor"
+          helperText="Activates Quadratic Sampling. Applies an S-curve to logits, penalizing low-probability tokens and smoothing out high-probability tokens. Allows model creativity at lower temperatures. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={10}
+          step={0.01}
+          value={props.inherit?.smoothingFactor || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'smoothingFactor'}
+        />
+        <RangeInput
           fieldName="cfgScale"
           label="CFG Scale"
           helperText={
