@@ -313,6 +313,8 @@ type SafePreset = Pick<
   | 'typicalP'
   | 'ultimeJailbreak'
   | 'useAdvancedPrompt'
+  | 'dynatemp_range'
+  | 'dynatemp_exponent'
 >
 
 export async function exportPreset(preset: AppSchema.UserGenPreset) {

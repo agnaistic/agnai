@@ -287,6 +287,8 @@ export const adapterSettings: {
     'agnaistic',
     'aphrodite',
   ],
+  dynatemp_range: ['kobold', 'aphrodite'],
+  dynatemp_exponent: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
@@ -383,6 +385,8 @@ export type RegisteredAdapter = {
 
 export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   temp: 'Temperature',
+  dynatemp_range: 'Dynamic Temperature Range',
+  dynatemp_exponent: 'Dynamic Temperature Exponent',
   maxTokens: 'Max Tokens (Response length)',
   repetitionPenalty: 'Repetition Penalty',
   repetitionPenaltyRange: 'Repetition Penality Range',

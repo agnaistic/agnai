@@ -738,7 +738,34 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           service={props.service}
           aiSetting={'temp'}
         />
-
+        <RangeInput
+          fieldName="dynatemp_range"
+          label="Dynamic Temperature"
+          helperText="The range to use for dynamic temperature.  When used,
+          the actual temperature is allowed to be automatically adjusted
+          dynamically between DynaTemp ± DynaTempRange. For example,
+          setting `temperature=0.4` and `dynatemp_range=0.1` will result
+          in a minimum temp of 0.3 and max of 0.5."
+          min={0.1}
+          max={20}
+          step={0.01}
+          value={props.inherit?.dynatemp_range || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'dynatemp_range'}
+        />
+        <RangeInput
+          fieldName="dynatemp_exponent"
+          label="Dynamic Temperature Exponent"
+          helperText="Exponent for dynatemp sampling. Range [0, inf)."
+          min={0}
+          max={20}
+          step={0.01}
+          value={props.inherit?.dynatemp_exponent || 1}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'dynatemp_exponent'}
+        />
         <RangeInput
           fieldName="cfgScale"
           label="CFG Scale"

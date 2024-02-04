@@ -13,6 +13,8 @@ export const presetValidator = {
   service: AI_ADAPTERS,
   name: 'string',
   temp: 'number',
+  dynatemp_range: 'number?',
+  dynatemp_exponent: 'number?',
   maxTokens: 'number',
   maxContextLength: 'number?',
   repetitionPenalty: 'number',
