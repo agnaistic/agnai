@@ -93,7 +93,8 @@ describe('Template parser tests', async () => {
       `
 Scenario: {{scenario}}
 {{char}}'s persona: {{persona}}
-{{#each bots}}{{.name}}'s persona: {{.persona}}{{/each}}
+{{#each bots}}{{.name}}'s persona: {{.persona}}
+{{/each}}
 
 {{#if example_dialogue}}Example dialogue: {{example_dialogue}}{{/if}}
 <START>
@@ -109,7 +110,8 @@ Scenario: {{scenario}}
       `
 Scenario: {{scenario}}
 {{char}}'s persona: {{persona}}
-{{#each bots}}{{.name}}'s persona: {{.persona}}{{/each}}
+{{#each bots}}{{.name}}'s persona: {{.persona}}
+{{/each}}
 
 {{#each history}}{{#if .isbot}}Assistant: {{/if}}{{#if .isuser}}Human: {{/if}}{{.name}}: {{.dialogue}}{{/each}}
 {{post}}`.trim()

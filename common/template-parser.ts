@@ -476,13 +476,6 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
         case 'bot-prop':
         case 'chat-embed-prop':
         case 'history-prop': {
-          if (
-            child.prop === 'personality' ||
-            child.prop === 'message' ||
-            child.prop === 'dialogue'
-          ) {
-            isHistory = true
-          }
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
           break
