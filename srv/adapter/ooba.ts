@@ -206,7 +206,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  const body : any = {
+  const body: any = {
     prompt,
     context_limit: gen.maxContextLength,
     max_new_tokens: gen.maxTokens,
