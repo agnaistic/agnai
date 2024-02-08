@@ -153,6 +153,7 @@ export async function parseTemplate(
         tokenLimit: opts.limit.context,
         context: output,
         lines,
+        inserts: opts.inserts,
         optional: opts.lowpriority,
       })
       unusedTokens = filled.unusedTokens
