@@ -49,13 +49,15 @@ export const ChatFooter: Component<{
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
   return (
-    <div class="mb-2">
+    <div class="mb-2 w-full overflow-x-hidden">
       <Show when={isSelfRemoved()}>
-        <div class="flex w-full justify-center">You have been removed from the conversation</div>
+        <div class="flex w-full max-w-full justify-center">
+          You have been removed from the conversation
+        </div>
       </Show>
       <Show when={props.isOwner && props.ctx.activeBots.length > 1 && !!chats.chat}>
         <div
-          class={`flex min-h-[42px] justify-center gap-2 overflow-x-auto py-1 ${
+          class={`flex max-h-[42px] min-h-[42px] flex-wrap justify-center gap-2 overflow-y-auto py-1 ${
             msgs.waiting ? 'opacity-70 saturate-0' : ''
           }`}
         >

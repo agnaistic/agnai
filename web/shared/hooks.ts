@@ -5,15 +5,15 @@ import { hexToRgb } from './util'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useSearchParams } from '@solidjs/router'
 
+function getPlatform() {
+  return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+}
+
 export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
   platform: Accessor<'sm' | 'lg' | 'xl'>
 } {
-  const getPlatform = () => {
-    return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
-  }
-
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
   const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
@@ -39,7 +39,7 @@ export function useWindowSize(): {
 
 export function usePane() {
   const windowSize = useWindowSize()
-  const isSmallScreen = createMemo(() => windowSize.width() < 800)
+  const isSmallScreen = createMemo(() => windowSize.width() < 960)
   const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
   return paneDisplay
 }

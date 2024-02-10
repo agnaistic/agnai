@@ -98,31 +98,37 @@ export const ModeDetail: Component<{
                 data-messages
                 class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"
                 classList={{
-                  'max-w-6xl': width() === 'xl',
-                  'max-w-7xl': width() === '2xl',
-                  'max-w-8xl': width() === '3xl',
-                  'max-w-none': width() === 'fill',
-                  'max-w-5xl': width() === 'fill' || width() === 'narrow' || !width(),
+                  // Chat Width
+                  'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
+                  'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
+                  // Chat Margin
+                  'xs:mr-auto mx-auto': props.showPane,
+                  'mx-auto': !props.showPane,
                 }}
-                // classList={{
-                //   // Chat Width
-                //   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
-                //   'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
-                //   // Chat Margin
-                //   'xs:mr-auto mx-auto': props.showPane,
-                //   'mx-auto': !props.showPane,
-                // }}
               >
                 {props.children}
               </section>
             </section>
           </section>
 
-          <footer style={{ 'grid-area': 'footer' }}>{props.footer}</footer>
+          <footer
+            style={{ 'grid-area': 'footer' }}
+            classList={{
+              'max-w-6xl': width() === 'xl',
+              'max-w-7xl': width() === '2xl',
+              'max-w-8xl': width() === '3xl',
+              'max-w-none': width() === 'fill',
+              'max-w-5xl': width() === 'fill' || width() === 'narrow' || !width(),
+            }}
+          >
+            {props.footer}
+          </footer>
           <section
             class="pane ml-2"
             style={{ 'grid-area': 'pane' }}
-            classList={{ hidden: !props.showPane }}
+            classList={{
+              hidden: !props.showPane,
+            }}
           >
             {props.pane}
           </section>
