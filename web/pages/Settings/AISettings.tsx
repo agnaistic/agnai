@@ -18,6 +18,7 @@ import NovelAISettings from './components/NovelAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
 import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
+import MistralSettings from './components/MistralSettings' // Added this 🇫🇷 
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import RegisteredSettings from './components/RegisteredSettings'
 import { useSearchParams } from '@solidjs/router'
@@ -187,6 +188,11 @@ const AISettings: Component<{
 
       <div class={currentTab() === ADAPTER_LABELS.claude ? tabClass : 'hidden'}>
         <ClaudeSettings />
+      </div>
+
+      {/* Added this 🇫🇷  */}
+      <div class={currentTab() === ADAPTER_LABELS.mistral ? tabClass : 'hidden'}>
+        <MistralSettings />
       </div>
 
       <For each={cfg.config.registered}>

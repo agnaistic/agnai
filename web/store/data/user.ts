@@ -98,6 +98,12 @@ export async function deleteApiKey(kind: string) {
     user.claudeApiKeySet = false
   }
 
+   // Added this 🇫🇷 
+  if (kind === 'mistral') {
+    user.mistralApiKey = ''
+    user.mistralApiKeySet = false
+  }
+
   if (kind === 'third-party') {
     user.thirdPartyPassword = ''
     user.thirdPartyPasswordSet = false

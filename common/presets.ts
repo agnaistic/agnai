@@ -70,6 +70,7 @@ export const presetValidator = {
   novelModelOverride: 'string?',
 
   claudeModel: 'string',
+  mistralModel: 'string', // Added this 🇫🇷 
   streamResponse: 'boolean?',
   ultimeJailbreak: 'string?',
   prefixNameAppend: 'boolean?',
@@ -255,6 +256,24 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     claudeModel: 'claudeModel',
     minP: '',
   },
+
+  // Added this 🇫🇷 
+  mistral: {
+    maxTokens: 'max_tokens',
+    repetitionPenalty: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    temp: 'temperature',
+    topK: '',
+    topP: 'top_p',
+    typicalP: '',
+    topA: '',
+    streamResponse: 'stream',
+    mistralModel: 'mistralModel',
+  },
+
+
   scale: {
     maxTokens: '',
     repetitionPenalty: '',
@@ -379,6 +398,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     antiBond: '',
     banEosToken: '',
     claudeModel: '',
+    mistralModel: '', // Added this 🇫🇷 
     encoderRepitionPenalty: '',
     frequencyPenalty: '',
     gaslight: '',
@@ -416,7 +436,11 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
     case 'claude':
       return deepClone(defaultPresets.claude)
 
-    case 'goose':
+    // Added this 🇫🇷 
+    case 'mistral':
+      return deepClone(defaultPresets.mistral);
+
+      case 'goose':
       return deepClone({ ...defaultPresets.basic, service: 'goose' })
 
     case 'replicate':
@@ -462,6 +486,10 @@ export function getInferencePreset(
 
     case 'claude':
       return deepClone(defaultPresets.claude)
+
+    // Added this 🇫🇷 
+    case 'mistral':
+      return deepClone(defaultPresets.mistral);
 
     case 'goose':
       return deepClone({ ...defaultPresets.basic, service: 'goose' })

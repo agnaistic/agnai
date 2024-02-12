@@ -153,6 +153,7 @@ const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean
   kobold: () => true,
   openrouter: () => true,
   claude: () => true,
+  mistral: () => true, // Added this 🇫🇷 
   mancer: () => true,
   agnaistic: () => true,
 }
@@ -211,6 +212,7 @@ function getSummaryTemplate(service: AIAdapter) {
     case 'openai':
     case 'openrouter':
     case 'claude':
+    case 'mistral': // Added this 🇫🇷 
     case 'scale':
       return neat`
               {{personality}}

@@ -5,6 +5,7 @@ import { isConnected } from '../db/client'
 import { getCachedSubscriptions } from '../db/subscriptions'
 import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
+import { handleMistral } from './mistral' // Added this 🇫🇷 
 import { handleGooseAI } from './goose'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
@@ -172,6 +173,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     opts.user.claudeApiKey = userKey
     opts.gen.claudeModel = preset.claudeModel
+
+    opts.user.mistralApiKey = userKey // Added this 🇫🇷
+    opts.gen.mistralModel = preset.mistralModel // Added this 🇫🇷 
 
     opts.user.novelApiKey = userKey
     opts.gen.novelModel = preset.novelModel
@@ -354,6 +358,7 @@ export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   openai: handleOAI,
   scale: handleScale,
   claude: handleClaude,
+  mistral: handleMistral, // Added this 🇫🇷 
   goose: handleGooseAI,
   replicate: handleReplicate,
   openrouter: handleOpenRouter,
@@ -366,6 +371,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
   switch (settings.service!) {
     case 'agnaistic':
     case 'claude':
+    case 'mistral': // Added this 🇫🇷 
     case 'goose':
     case 'replicate':
     case 'horde':
@@ -381,6 +387,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
 
   switch (settings.thirdPartyFormat!) {
     case 'claude':
+    case 'mistral': // Added this 🇫🇷 
     case 'kobold':
     case 'openai':
       return handlers[settings.thirdPartyFormat!]

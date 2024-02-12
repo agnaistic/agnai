@@ -29,6 +29,7 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
     if (svc === 'openai' && !user.oaiKeySet && !user.oaiKey) return false
     if (svc === 'novel' && !user.novelVerified && !user.novelApiKey) return false
     if (svc === 'claude' && !user.claudeApiKeySet && !user.claudeApiKey) return false
+    if (svc === 'mistral' && !user.mistralApiKeySet && !user.mistralApiKey) return false // Added this 🇫🇷 
     if (svc === 'scale' && !user.scaleApiKeySet && !user.scaleApiKey) return false
     if (
       svc === 'goose' &&

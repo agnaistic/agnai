@@ -8,6 +8,7 @@ import { defaultPresets, getFallbackPreset, presetValidator } from '../../common
 import {
   OPENAI_MODELS,
   CLAUDE_MODELS,
+  MISTRAL_MODELS, // Added this 🇫🇷 
   ADAPTER_LABELS,
   AIAdapter,
   NOVEL_MODELS,
@@ -118,6 +119,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'OpenAI', value: 'openai' },
               { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
               { label: 'Claude', value: 'claude' },
+              { label: 'Mistral', value: 'mistral' }, // Added this 🇫🇷 
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
               { label: 'Aphrodite', value: 'aphrodite' },
@@ -260,6 +262,22 @@ const GeneralSettings: Component<
     return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
   })
 
+  // Added this 🇫🇷 
+  const MISTRAL_LABELS = {
+    MistralTiny: 'Mistral Tiny',
+    MistralSmall: 'Mistral Small',
+    MistralMedium: 'Mistral Medium',
+    MistralEmbed: 'Mistral Embed',
+  } satisfies Record<keyof typeof MISTRAL_MODELS, string>
+
+  // Added this 🇫🇷 
+  const mistralModels: () => Option<string>[] = createMemo(() => {
+    const models = new Map(Object.entries(MISTRAL_MODELS) as [keyof typeof MISTRAL_MODELS, string][])
+    const labels = Object.entries(MISTRAL_LABELS) as [keyof typeof MISTRAL_MODELS, string][]
+
+    return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
+  })
+
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
       <Show when={props.service === 'horde'}>
@@ -301,6 +319,7 @@ const GeneralSettings: Component<
             'openRouterModel',
             'novelModel',
             'claudeModel',
+            'mistralModel', // Added this 🇫🇷 
             'replicateModelName',
             'thirdPartyModel'
           )
@@ -392,6 +411,20 @@ const GeneralSettings: Component<
           format={props.format}
           aiSetting={'claudeModel'}
         />
+
+        {/* Added this 🇫🇷  */}
+        <Select
+          fieldName="mistralModel"
+          label="Mistral Model"
+          items={mistralModels()}
+          helperText="Which Mistral model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
+          value={props.inherit?.mistralModel ?? defaultPresets.mistral.mistralModel}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'mistralModel'}
+        />
+
         <Show when={replicateModels().length > 1}>
           <Select
             fieldName="replicateModelName"

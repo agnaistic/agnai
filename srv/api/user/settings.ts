@@ -85,6 +85,15 @@ export const deleteClaudeKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+// Added this 🇫🇷 
+export const deleteMistralKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    mistralApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteThirdPartyPassword = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     thirdPartyPassword: '',
@@ -155,6 +164,7 @@ const validConfig = {
   scaleUrl: 'string?',
   scaleApiKey: 'string?',
   claudeApiKey: 'string?',
+  mistralApiKey: 'string?', // Added this 🇫🇷
   elevenLabsApiKey: 'string?',
   speechtotext: 'any?',
   texttospeech: 'any?',
@@ -175,6 +185,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       oaiKey: 'string?',
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
+      mistralApiKey: 'string?', // Added this 🇫🇷
       elevenLabsApiKey: 'string?',
       patreonToken: 'string?',
     },
@@ -205,6 +216,11 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
 
   if (body.claudeApiKey) {
     update.claudeApiKey = encryptText(body.claudeApiKey)
+  }
+
+  // Added this 🇫🇷
+  if (body.mistralApiKey) {
+    update.mistralApiKey = encryptText(body.mistralApiKey)
   }
 
   if (body.elevenLabsApiKey) {
@@ -309,6 +325,11 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.claudeApiKey) {
     update.claudeApiKey = encryptText(body.claudeApiKey)
+  }
+
+  // Added this 🇫🇷 
+  if (body.mistralApiKey) {
+    update.mistralApiKey = encryptText(body.mistralApiKey)
   }
 
   if (body.thirdPartyPassword) {
@@ -441,6 +462,12 @@ export async function getSafeUserConfig(userId: string) {
   if (user.claudeApiKey) {
     user.claudeApiKey = ''
     user.claudeApiKeySet = true
+  }
+
+  // Added this 🇫🇷 
+  if (user.mistralApiKey) {
+    user.mistralApiKey = ''
+    user.mistralApiKeySet = true
   }
 
   if (user.thirdPartyPassword) {

@@ -52,6 +52,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   openai: 'openai',
   'openai-chat': 'openai',
   claude: 'claude',
+  mistral: 'mistral', // Added this 🇫🇷 
   aphrodite: 'kobold',
   exllamav2: 'kobold',
   kobold: 'kobold',
@@ -65,6 +66,7 @@ export const THIRDPARTY_FORMATS = [
   'openai',
   'openai-chat',
   'claude',
+  'mistral', // Added this 🇫🇷 
   'ooba',
   'llamacpp',
   'aphrodite',
@@ -81,6 +83,7 @@ export const AI_ADAPTERS = [
   'openai',
   'scale',
   'claude',
+  'mistral', // Added this 🇫🇷  
   'goose',
   'replicate',
   'openrouter',
@@ -170,6 +173,14 @@ export const CLAUDE_MODELS = {
   ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
 } as const
 
+// Added this 🇫🇷 
+export const MISTRAL_MODELS = {
+  MistralTiny: 'mistral-tiny',
+  MistralSmall: 'mistral-small',
+  MistralMedium: 'mistral-medium',
+  MistralEmbed: 'mistral-embed',
+} as const
+
 export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
   krake: 'krake-v2',
@@ -237,6 +248,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   openai: 'OpenAI',
   scale: 'Scale',
   claude: 'Claude',
+  mistral: 'Mistral', // Added this 🇫🇷 
   goose: 'Goose AI',
   replicate: 'Replicate',
   openrouter: 'OpenRouter',
@@ -249,6 +261,7 @@ export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
   openai: true,
   openrouter: true,
   claude: true,
+  mistral: true, // Added this 🇫🇷 
   scale: true,
   novel: true,
   agnaistic: true,
@@ -283,6 +296,7 @@ export const adapterSettings: {
     'openai',
     'scale',
     'claude',
+    'mistral', // Added this 🇫🇷 
     'goose',
     'agnaistic',
     'aphrodite',
@@ -304,6 +318,7 @@ export const adapterSettings: {
     'horde',
     'kobold',
     'claude',
+    'mistral', // Added this 🇫🇷 
     'ooba',
     'openai',
     'novel',
@@ -333,6 +348,7 @@ export const adapterSettings: {
   thirdPartyFormat: ['kobold'],
   thirdPartyModel: ['openai', 'openai-chat', 'aphrodite'],
   claudeModel: ['claude'],
+  mistralModel: ['mistral'], // Added this 🇫🇷 
   novelModel: ['novel'],
   oaiModel: ['openai', 'openai-chat'],
   frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat', 'aphrodite'],
@@ -342,6 +358,7 @@ export const adapterSettings: {
     'kobold',
     'novel',
     'claude',
+    'mistral', // Added this 🇫🇷 
     'ooba',
     'agnaistic',
     'openai-chat',
@@ -403,6 +420,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   cfgOppose: 'CFG Opposing Prompt',
   cfgScale: 'CFG Scale',
   claudeModel: 'Claude Model',
+  mistralModel: 'Mistral Model', // Added this 🇫🇷 
   encoderRepitionPenalty: 'Encoder Repetition Penalty',
   frequencyPenalty: 'Frequency Penalty',
   gaslight: 'Prompt Template',

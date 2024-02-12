@@ -28,6 +28,7 @@ import {
   deleteOaiKey,
   deleteScaleKey,
   deleteClaudeKey,
+  deleteMistralKey, // Added this 🇫🇷 
   deleteThirdPartyPassword,
   getConfig,
   getInitialLoad,
@@ -69,6 +70,7 @@ router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)
 router.delete('/config/openai', loggedIn, deleteOaiKey)
 router.delete('/config/claude', loggedIn, deleteClaudeKey)
+router.delete('/config/mistral', loggedIn, deleteMistralKey) // Added this 🇫🇷 
 router.delete('/config/third-party', loggedIn, deleteThirdPartyPassword)
 router.delete('/config/elevenlabs', loggedIn, deleteElevenLabsKey)
 router.delete('/presets/:id', loggedIn, deleteUserPreset)

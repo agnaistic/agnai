@@ -827,6 +827,10 @@ export function getContextLimit(
 
     case 'claude':
       return configuredMax - genAmount
+    
+      // Added this 🇫🇷 
+    case 'mistral':
+      return configuredMax - genAmount
 
     case 'goose':
       return Math.min(configuredMax, 2048) - genAmount
@@ -840,6 +844,10 @@ export function getContextLimit(
 
     case 'mancer':
       return Math.min(configuredMax, 8000) - genAmount
+
+    // Added this 🇫🇷 
+    default:
+      return configuredMax - genAmount
   }
 }
 

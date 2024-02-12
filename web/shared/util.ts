@@ -674,6 +674,11 @@ export function isUsableService(
     case 'claude': {
       return !!user?.claudeApiKeySet || !!user?.claudeApiKey
     }
+    
+    // Added this 🇫🇷 
+    case 'mistral': {
+      return !!user?.mistralApiKeySet || !!user?.mistralApiKey
+    }
 
     case 'goose': {
       return !!user?.adapterConfig?.goose?.apiKeySet || !!user?.adapterConfig?.goose?.apiKey
