@@ -67,7 +67,7 @@ async function identity(token: string) {
   })
 
   if (identity.statusCode && identity.statusCode > 200) {
-    throw new StatusError(`Failed to get Patreon user information`, identity.statusCode)
+    throw new StatusError(`Failed to get Patreon user information (${identity.statusCode})`, 400)
   }
 
   const user: Patreon.User = identity.body.data
