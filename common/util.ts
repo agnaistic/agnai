@@ -293,10 +293,17 @@ export function deepClone<T extends object>(obj: T): T {
   return copy
 }
 
+type UserSub = {
+  type: AppSchema.SubscriptionType
+  tier: AppSchema.SubscriptionTier
+  level: number
+}
+
 export function getUserSubscriptionTier(
   user: Pick<AppSchema.User, 'patreon' | 'billing' | 'sub' | 'manualSub' | '_id' | 'username'>,
-  tiers: AppSchema.SubscriptionTier[]
-) {
+  tiers: AppSchema.SubscriptionTier[],
+  previous?: UserSub
+): UserSub | undefined {
   let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
   let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
 
@@ -316,7 +323,9 @@ export function getUserSubscriptionTier(
     patronTier = undefined
   }
 
-  if (!nativeTier && !patronTier && !manualTier) return
+  if (!nativeTier && !patronTier && !manualTier) {
+    return previous
+  }
 
   const highest = getHighestTier(
     { source: 'native', tier: nativeTier },
@@ -326,6 +335,11 @@ export function getUserSubscriptionTier(
 
   const result = { type: highest.source, tier: highest.tier, level: highest.tier.level }
   console.log(user.username, result.type, result.level)
+
+  if (previous) {
+    return result.level > previous.level ? result : previous
+  }
+
   return result
 }
 

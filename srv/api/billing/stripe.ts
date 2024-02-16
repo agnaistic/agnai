@@ -5,18 +5,15 @@ import { logger } from '/srv/logger'
 import { store } from '/srv/db'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
+import { subsCmd } from '/srv/domains/subs/cmd'
 
 export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
 
 export async function resyncSubscription(user: AppSchema.User) {
   if (!user.billing) return
 
-  const subscription = await stripe.subscriptions
-    .retrieve(user.billing.subscriptionId, { expand: ['plan'] })
-    .catch((err) => ({ err }))
-
-  if ('err' in subscription) {
-    logger.error({ err: subscription.err }, 'Subscription information could not be retrieved')
+  const subscription = await findValidSubscription(user)
+  if (!subscription) {
     return new Error(
       `Could not retrieve subscription information - Please try again or contact support`
     )
@@ -81,4 +78,82 @@ export async function resyncSubscription(user: AppSchema.User) {
   user.sub = { level: expectedTier.level, tierId: expectedTier._id }
   await store.users.updateUser(user._id, { billing: user.billing, sub: user.sub })
   return expectedTier.level
+}
+
+async function findValidSubscription(user: AppSchema.User) {
+  if (!user.billing) return
+
+  const subscription = await stripe.subscriptions
+    .retrieve(user.billing.subscriptionId, { expand: ['plan'] })
+    .catch((err) => ({ err }))
+
+  if ('err' in subscription === false && isActive(subscription.current_period_end)) {
+    return subscription
+  }
+
+  const sessionIds = (user.stripeSessions || []).slice().reverse()
+  const subs: Stripe.Subscription[] = []
+
+  for (const sessionId of sessionIds) {
+    const session = await stripe.checkout.sessions
+      .retrieve(sessionId, { expand: ['subscription', 'subscription.plan'] })
+      .catch((err) => ({ err }))
+
+    if ('err' in session) continue
+    if (session.payment_status !== 'paid') continue
+    if (!session.subscription) continue
+
+    const sub = session.subscription as Stripe.Subscription
+    if (isActive(sub.current_period_end)) {
+      subs.push(sub)
+    }
+  }
+
+  if (!subs.length) return
+
+  const allTiers = getCachedTiers()
+  const state = await domain.subscription.getAggregate(user._id)
+  const predowngradeId = state.state === 'active' && state.downgrade ? state.tierId : undefined
+
+  let match: AppSchema.SubscriptionTier | undefined
+  const bestSub = subs.reduce<Stripe.Subscription | undefined>((prev, curr) => {
+    const plan: Stripe.Plan | undefined = (curr as any).plan
+    if (!plan) return prev
+
+    const tier = allTiers.find((t) => {
+      if (predowngradeId) return t._id === predowngradeId
+      return !!plan && t.productId === plan.product
+    })
+
+    if (!tier) return prev
+    if (!prev || tier.level > match!.level) {
+      match = tier
+      return curr
+    }
+
+    return prev
+  }, undefined)
+
+  const plan: Stripe.Plan = bestSub ? (bestSub as any).plan : undefined
+  if (bestSub && plan && bestSub.id !== state.subscriptionId) {
+    const priceId = bestSub.items.data[0].price.id
+    const productId = bestSub.items.data[0].price.product as string
+    await subsCmd.subscribe(user._id, {
+      customerId: bestSub.customer as string,
+      priceId,
+      productId,
+      subscription: bestSub,
+      subscriptionId: bestSub.id,
+      tierId: match?._id!,
+    })
+  }
+
+  return bestSub
+}
+
+function isActive(until: number) {
+  const valid = new Date(until * 1000)
+  const now = Date.now() - 60000 * 120
+
+  return now < valid.valueOf()
 }
