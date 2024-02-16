@@ -49,7 +49,7 @@ export const ChatFooter: Component<{
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
   return (
-    <div class="mb-2 w-full overflow-x-hidden">
+    <div class="mb-2 w-full">
       <Show when={isSelfRemoved()}>
         <div class="flex w-full max-w-full justify-center">
           You have been removed from the conversation

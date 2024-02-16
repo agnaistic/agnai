@@ -2,16 +2,15 @@ import { v4 } from 'uuid'
 import { sagaStore } from './state'
 import { downloadJson } from '/web/shared/util'
 import { toastStore } from '/web/store'
-import { GuidedTemplate } from '/web/store/data/guided'
+import { SagaTemplate } from '/web/store/data/saga'
 
-const emptyTemplate: GuidedTemplate = {
+const emptyTemplate: SagaTemplate = {
   _id: '',
   name: '',
   byline: '',
   description: '',
 
   display: '',
-  response: '',
 
   init: '',
   loop: '',
@@ -35,7 +34,7 @@ export function exportTemplate(id: string) {
   downloadJson(template, `template_${id.slice(0, 4)}`)
 }
 
-export function validateTemplate(template: any): asserts template is GuidedTemplate {
+export function validateTemplate(template: any): asserts template is SagaTemplate {
   const missing: string[] = []
 
   for (const key of Object.keys(emptyTemplate)) {

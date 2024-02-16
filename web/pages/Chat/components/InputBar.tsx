@@ -1,6 +1,7 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
 import {
   Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
