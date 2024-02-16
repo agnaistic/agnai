@@ -24,6 +24,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
       case 'admin-manual': {
         return {
           ...prev,
+          downgrade: undefined,
           history,
         }
       }
@@ -37,6 +38,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
           tierId: ev.tierId,
           periodStart: ev.periodStart,
           history,
+          downgrade: undefined,
         }
       }
 
