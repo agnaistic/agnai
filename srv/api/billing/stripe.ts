@@ -47,21 +47,24 @@ export async function resyncSubscription(user: AppSchema.User) {
 
   // Provide a one hour buffer to allow subscriptions to auto-renew
   // Automatic invoices seem to be in a draft status for ~1 hour so provide enough time for it to clear
-  const now = Date.now() - 60000 * 120
-
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
 
-  // If the subscription has not been renewed and the tier
-  if (now < validUntil.valueOf() && user.sub?.tierId === expectedTier._id) {
+  /**
+   * If the subscription has not been renewed and the tier is downgrading then ensure
+   * the sub is still valid and return to pre-downgrade level
+   */
+  const isDowngrading = user.sub?.tierId === expectedTier._id
+  if (isActive(validUntil) && isDowngrading) {
     user.billing.lastChecked = new Date().toISOString()
     user.billing.validUntil = validUntil.toISOString()
     user.billing.lastRenewed = renewedAt.toISOString()
+    user.billing.status = 'active'
     await store.users.updateUser(user._id, { billing: user.billing })
     return expectedTier.level
   }
 
-  if (validUntil.valueOf() < now) {
+  if (!isActive(validUntil)) {
     user.billing.lastChecked = new Date().toISOString()
     user.billing.validUntil = validUntil.toISOString()
     user.billing.lastRenewed = renewedAt.toISOString()
@@ -74,7 +77,7 @@ export async function resyncSubscription(user: AppSchema.User) {
   user.billing.lastRenewed = renewedAt.toISOString()
   user.billing.validUntil = validUntil.toISOString()
   user.billing.lastChecked = new Date().toISOString()
-  user.billing.status = subscription.status === 'active' ? 'active' : 'cancelled'
+  user.billing.status = 'active'
   user.sub = { level: expectedTier.level, tierId: expectedTier._id }
   await store.users.updateUser(user._id, { billing: user.billing, sub: user.sub })
   return expectedTier.level
@@ -151,9 +154,15 @@ async function findValidSubscription(user: AppSchema.User) {
   return bestSub
 }
 
-function isActive(until: number) {
-  const valid = new Date(until * 1000)
-  const now = Date.now() - 60000 * 120
+/**
+ * Provides a grace period for expiry
+ * @param until
+ * @returns
+ */
+function isActive(until: Date | number, hours = 2) {
+  const ms = typeof until === 'number' ? until : until.valueOf()
+  const valid = new Date(ms * 1000)
+  const now = Date.now() - 60000 * 60 * hours
 
   return now < valid.valueOf()
 }
