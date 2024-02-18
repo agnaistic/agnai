@@ -10,6 +10,7 @@ import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 type PresetState = {
+  importing?: AppSchema.UserGenPreset
   presets: AppSchema.UserGenPreset[]
   templates: AppSchema.PromptTemplate[]
   subs: AppSchema.SubscriptionPreset[]
@@ -42,6 +43,9 @@ export const presetStore = createStore<PresetState>(
       if (res.result) {
         return { presets: res.result.presets }
       }
+    },
+    setImportPreset(_, preset?: AppSchema.UserGenPreset) {
+      return { importing: preset }
     },
     async *updatePreset(
       { presets },
@@ -323,7 +327,6 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
     _id,
     oaiModel,
     novelModel,
-    name,
     userId,
     claudeModel,
     images,

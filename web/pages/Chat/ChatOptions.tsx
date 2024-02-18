@@ -11,14 +11,13 @@ import {
   VenetianMask,
   AlertTriangle,
 } from 'lucide-solid'
-import { Component, Show, createMemo, JSX, createSignal } from 'solid-js'
+import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
 import { getRootRgb } from '../../shared/util'
-import { ConfirmModal } from '/web/shared/Modal'
-import { Card, TitleCard } from '/web/shared/Card'
+import { Card } from '/web/shared/Card'
 
 export type ChatModal =
   | 'export'
@@ -33,6 +32,7 @@ export type ChatModal =
 const ChatOptions: Component<{
   adapterLabel: string
   setModal: (modal: ChatModal) => void
+  setConfirm?: (state: boolean) => void
   togglePane: (pane: ChatRightPane) => void
   close: () => void
 }> = (props) => {
@@ -43,8 +43,6 @@ const ChatOptions: Component<{
   }))
   const user = userStore()
   const cfg = settingStore()
-
-  const [restart, setRestart] = createSignal(false)
 
   const toggleOocMessages = () => {
     chatStore.option('hideOoc', !chats.opts.hideOoc)
@@ -170,9 +168,9 @@ const ChatOptions: Component<{
           </Item>
         </Row>
 
-        <Show when={chats.chat}>
+        <Show when={chats.chat && props.setConfirm}>
           <Row>
-            <Item onClick={() => setRestart(true)} center hide={!isOwner()}>
+            <Item onClick={() => props.setConfirm!(true)} center hide={!isOwner()}>
               <AlertTriangle /> Restart Chat <AlertTriangle />
             </Item>
           </Row>
@@ -181,20 +179,6 @@ const ChatOptions: Component<{
           <em class="text-sm">{props.adapterLabel}</em>
         </div>
       </div>
-      <ConfirmModal
-        message={
-          <TitleCard type="rose" class="flex flex-col gap-4">
-            <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
-          </TitleCard>
-        }
-        show={restart()}
-        close={() => setRestart(false)}
-        confirm={() => {
-          chatStore.restartChat(chats.chat!._id)
-          props.close()
-        }}
-      />
     </>
   )
 }

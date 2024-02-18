@@ -2,14 +2,14 @@ import { Component } from 'solid-js'
 import Modal from '/web/shared/Modal'
 import { neat } from '/common/util'
 import { markdown } from '/web/shared/markdown'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 
 export const GuidanceHelp: Component = (props) => {
   return (
     <Modal
       maxWidth="half"
       show
-      close={() => gameStore.setState({ showModal: 'none' })}
+      close={() => sagaStore.setState({ showModal: 'none' })}
       title="Guidance"
     >
       <div class="rendered-markdown text-sm" innerHTML={markdown.makeHtml(text)}></div>

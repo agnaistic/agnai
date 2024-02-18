@@ -3,16 +3,17 @@ import { createSignal, createRenderEffect } from 'solid-js'
 import { getSettingColor, userStore } from '../store'
 import { hexToRgb } from './util'
 import { RootModal, rootModalStore } from '../store/root-modal'
+import { useSearchParams } from '@solidjs/router'
+
+function getPlatform() {
+  return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+}
 
 export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
   platform: Accessor<'sm' | 'lg' | 'xl'>
 } {
-  const getPlatform = () => {
-    return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
-  }
-
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
   const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
@@ -38,7 +39,7 @@ export function useWindowSize(): {
 
 export function usePane() {
   const windowSize = useWindowSize()
-  const isSmallScreen = createMemo(() => windowSize.width() < 800)
+  const isSmallScreen = createMemo(() => windowSize.width() < 960)
   const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
   return paneDisplay
 }
@@ -97,6 +98,21 @@ export function useEffect(callback: () => void | Function): void {
 
     return
   })
+}
+
+export const usePaneManager = () => {
+  const [search, setSearch] = useSearchParams()
+  const [showing, setShowing] = createSignal(
+    search.pane !== undefined && typeof search.pane === 'string'
+  )
+  const [pane, setPane] = createSignal(search.pane)
+
+  createEffect(() => {
+    const next = search.pane !== undefined && typeof search.pane === 'string'
+    setShowing(next)
+    setPane(search.pane)
+  })
+  return { showing, update: (pane?: string) => setSearch({ pane }), pane }
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {

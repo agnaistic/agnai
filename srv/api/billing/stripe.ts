@@ -20,11 +20,8 @@ export async function resyncSubscription(user: AppSchema.User) {
   }
 
   const plan: Stripe.Plan | undefined = (subscription as any).plan
-
   const allTiers = getCachedTiers()
-
   const state = await domain.subscription.getAggregate(user._id)
-
   const predowngradeId = state.state === 'active' && state.downgrade ? state.tierId : undefined
 
   /**
@@ -45,7 +42,7 @@ export async function resyncSubscription(user: AppSchema.User) {
     )
   }
 
-  // Provide a one hour buffer to allow subscriptions to auto-renew
+  // Provide a buffer (1 or more hours) to allow subscriptions to auto-renew
   // Automatic invoices seem to be in a draft status for ~1 hour so provide enough time for it to clear
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)

@@ -8,10 +8,9 @@ import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import EmbedContent from '../../Memory/EmbedContent'
-import { A } from '@solidjs/router'
 
 const ChatMemoryModal: Component<{
-  chat: AppSchema.Chat
+  chat: AppSchema.Chat | undefined
   close: () => void
   footer?: (children: JSX.Element) => void
 }> = (props) => {
@@ -21,8 +20,8 @@ const ChatMemoryModal: Component<{
     embeds: s.embeds,
   }))
 
-  const [id, setId] = createSignal(props.chat.memoryId || 'new')
-  const [embedId, setEmbedId] = createSignal(props.chat.userEmbedId)
+  const [id, setId] = createSignal(props.chat?.memoryId || 'new')
+  const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
@@ -41,7 +40,7 @@ const ChatMemoryModal: Component<{
   }
 
   onMount(() => {
-    changeBook(props.chat.memoryId || '')
+    changeBook(props.chat?.memoryId || '')
   })
 
   const onSubmit = (ev: Event) => {
@@ -52,11 +51,12 @@ const ChatMemoryModal: Component<{
   }
 
   const useMemoryBook = () => {
-    if (!props.chat._id) return
+    if (!props.chat?._id) return
     chatStore.editChat(props.chat._id, { memoryId: id() }, undefined)
   }
 
   const useUserEmbed = () => {
+    if (!props.chat?._id) return
     chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
   }
 
@@ -98,11 +98,6 @@ const ChatMemoryModal: Component<{
 
   return (
     <>
-      <div class="flex gap-4">
-        <A class="link" href="/guides/memory">
-          Memory Guide
-        </A>
-      </div>
       <div class="flex flex-col gap-2">
         <Select
           fieldName="memoryId"
@@ -131,7 +126,7 @@ const ChatMemoryModal: Component<{
           />
           <Button
             class="w-fit"
-            disabled={embedId() === props.chat.userEmbedId}
+            disabled={embedId() === props.chat?.userEmbedId}
             onClick={useUserEmbed}
           >
             <Save />

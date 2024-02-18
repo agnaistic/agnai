@@ -1,17 +1,16 @@
 import { v4 } from 'uuid'
-import { gameStore } from './state'
+import { sagaStore } from './state'
 import { downloadJson } from '/web/shared/util'
 import { toastStore } from '/web/store'
-import { GuidedTemplate } from '/web/store/data/guided'
+import { SagaTemplate } from '/web/store/data/saga'
 
-const emptyTemplate: GuidedTemplate = {
+const emptyTemplate: SagaTemplate = {
   _id: '',
   name: '',
   byline: '',
   description: '',
 
   display: '',
-  response: '',
 
   init: '',
   loop: '',
@@ -24,7 +23,7 @@ const emptyTemplate: GuidedTemplate = {
 }
 
 export function exportTemplate(id: string) {
-  const { templates } = gameStore.getState()
+  const { templates } = sagaStore.getState()
   const template = templates.find((t) => t._id === id)
 
   if (!template) {
@@ -35,8 +34,9 @@ export function exportTemplate(id: string) {
   downloadJson(template, `template_${id.slice(0, 4)}`)
 }
 
-export function validateTemplate(template: any): asserts template is GuidedTemplate {
+export function validateTemplate(template: any): asserts template is SagaTemplate {
   const missing: string[] = []
+
   for (const key of Object.keys(emptyTemplate)) {
     if (key in template === false) {
       missing.push(key)
@@ -49,6 +49,7 @@ export function validateTemplate(template: any): asserts template is GuidedTempl
 }
 
 export function importTemplate(template: any) {
+  template.manual ??= []
   validateTemplate(template)
 
   const next = {
@@ -56,6 +57,6 @@ export function importTemplate(template: any) {
     _id: v4(),
   }
 
-  gameStore.importTemplate(next)
+  sagaStore.importTemplate(next)
   return next
 }

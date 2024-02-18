@@ -36,14 +36,13 @@ import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
   audioStore,
   characterStore,
-  chatStore,
   inviteStore,
   settingStore,
   toastStore,
   userStore,
 } from './store'
 import Slot from './shared/Slot'
-import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
+import { useEffect, usePaneManager, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
@@ -76,8 +75,8 @@ const Navigation: Component = () => {
   let content: any
   const state = settingStore()
   const user = userStore()
-  const chat = chatStore()
   const size = useWindowSize()
+  const pane = usePaneManager()
 
   const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
@@ -99,7 +98,7 @@ const Navigation: Component = () => {
   })
 
   const hide = createMemo(() => {
-    if (!!chat.opts.pane && !state.showMenu) return 'drawer--hide'
+    if (pane.showing() && !state.showMenu) return 'drawer--hide'
     if (state.showMenu) return ''
     return 'drawer--hide'
   })
@@ -107,7 +106,7 @@ const Navigation: Component = () => {
   const fullscreen = createMemo(() => {
     if (state.fullscreen) return 'hidden'
 
-    if (chat.opts.pane && size.width() <= 1200) {
+    if (pane.showing() && size.width() <= 1200) {
       return 'hidden'
     }
 
@@ -202,7 +201,7 @@ const UserNavigation: Component = () => {
       <ChatLink />
 
       <Show when={guidance()}>
-        <Item href="/mode/preview/" ariaLabel="Sagas Preview">
+        <Item href="/saga" ariaLabel="Sagas Preview">
           <Wand2 aria-hidden="true" />
           Sagas Preview
         </Item>

@@ -115,7 +115,10 @@ export async function guidance<T = any>(
     reguidance: rerun,
   })
 
-  if (res.error) throw new Error(res.error)
+  if (res.error) {
+    throw new Error(res.error)
+  }
+
   return res.result!.values
 }
 

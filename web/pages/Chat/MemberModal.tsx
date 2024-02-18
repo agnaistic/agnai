@@ -12,7 +12,7 @@ import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { getActiveBots } from './util'
 import Divider from '/web/shared/Divider'
-import Convertible from './Convertible'
+import Convertible from '../../shared/Mode/Convertible'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
 import Accordian from '/web/shared/Accordian'
 
@@ -82,7 +82,7 @@ const MemberModal: Component<{
 
   return (
     <>
-      <Convertible kind="partial" title="Participants" close={paneClose} footer={footer()}>
+      <Convertible title="Participants" close={paneClose} footer={footer()}>
         <div class="space-y-2 text-sm">
           <Switch>
             <Match when={view() === 'list'}>

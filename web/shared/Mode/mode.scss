@@ -1,0 +1,37 @@
+.mode {
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: grid;
+
+  grid-template-areas:
+    'header pane'
+    'content pane'
+    'footer pane';
+
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 1fr auto;
+}
+
+.mode .pane {
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .mode {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+
+  .mode .pane {
+    height: 100vh;
+    height: 100dvh;
+  }
+}

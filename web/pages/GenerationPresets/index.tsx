@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createSignal, onMount, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -31,25 +31,36 @@ export const GenerationPresetsPage: Component = () => {
     nav(`/presets/${preset._id}`)
   }
 
-  const state = presetStore(({ presets, saving }) => ({
+  const state = presetStore(({ presets, saving, importing }) => ({
     saving,
     presets,
     items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
+    importing,
     editing: isDefaultPreset(query.preset)
       ? defaultPresets[query.preset]
       : presets.find((pre) => pre._id === query.preset || params.id),
   }))
 
-  createEffect(async () => {
+  onMount(async () => {
     if (params.id === 'new') {
       const copySource = query.preset
       if (copySource) {
         updateTitle(`Copy preset ${copySource}`)
+      } else if (state.importing) {
+        updateTitle(`Import preset`)
       } else {
         updateTitle(`Create preset`)
       }
+
       setEditing()
       await Promise.resolve()
+
+      if (state.importing) {
+        setEditing({ ...state.importing, kind: 'gen-setting', userId: '', _id: '', name: '' })
+        presetStore.setImportPreset()
+        return
+      }
+
       const template = isDefaultPreset(query.preset)
         ? defaultPresets[query.preset]
         : state.presets.find((p) => p._id === query.preset)

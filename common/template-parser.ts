@@ -100,10 +100,6 @@ export type TemplateOpts = {
     context: number
     encoder: TokenCounter
     output?: Record<string, { src: string; lines: string[] }>
-    history?: {
-      id: string
-      lines: string[]
-    }
   }
 
   /**
@@ -148,9 +144,7 @@ export async function parseTemplate(
   let unusedTokens = 0
   let linesAddedCount = 0
 
-  /**
-   * Typically for embeddings (chat or user)
-   */
+  /** Replace iterators */
   if (opts.limit && opts.limit.output) {
     for (const [id, { lines, src }] of Object.entries(opts.limit.output)) {
       src
@@ -159,27 +153,12 @@ export async function parseTemplate(
         tokenLimit: opts.limit.context,
         context: output,
         lines,
-        optional: opts.lowpriority,
-      })
-      unusedTokens = filled.unusedTokens
-      output = output.replace(id, filled.adding.join('\n'))
-    }
-
-    /**
-     * We ensure that history is done last
-     */
-    if (opts.limit.history) {
-      const filled = await fillPromptWithLines({
-        encoder: opts.limit.encoder,
-        tokenLimit: opts.limit.context,
-        context: output,
-        lines: opts.limit.history.lines,
         inserts: opts.inserts,
         optional: opts.lowpriority,
       })
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.slice().reverse()
-      output = output.replace(opts.limit.history.id, trimmed.join('\n'))
+      output = output.replace(id, trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
     }
 
@@ -204,7 +183,6 @@ export async function parseTemplate(
     inserts: opts.inserts ?? new Map(),
     length: await opts.limit?.encoder?.(result),
     linesAddedCount,
-    history: opts.limit?.history?.lines,
   }
 }
 
@@ -495,9 +473,9 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     i++
   }
 
-  if (isHistory && opts.limit) {
+  if (isHistory && opts.limit?.output) {
     const id = '__' + v4() + '__'
-    opts.limit.history = { id, lines: output }
+    opts.limit.output[id] = { src: holder, lines: output }
     return id
   }
 
@@ -550,8 +528,8 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
     case 'history': {
       if (opts.limit) {
         const id = `__${v4()}__`
-        opts.limit.history = {
-          id,
+        opts.limit.output![id] = {
+          src: node.value,
           lines: opts.lines || [],
         }
         return id

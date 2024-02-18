@@ -147,8 +147,13 @@ export async function guidanceAsync(opts: InferenceRequest) {
   if (sub?.preset?.guidanceCapable && (sub.tier?.guidanceAccess || opts.user.admin)) {
     const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
     if (!result.values) {
-      const values = JSON.parse(result.generated)
-      result.values = values
+      try {
+        const values = JSON.parse(result.generated)
+        result.values = values
+      } catch (ex) {
+        opts.log.error({ result }, 'Failed to JSON parse guidance result')
+        throw ex
+      }
     }
     return result
   }
