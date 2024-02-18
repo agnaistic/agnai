@@ -249,14 +249,18 @@ export const sagaStore = createStore<SagaState>(
     async *retry({ state }) {
       if (!state.responses.length) return
 
+      const original = state.responses.slice()
       const responses = state.responses.slice(0, -1)
       const last = state.responses.slice(-1)[0]
 
       sagaStore.update({ responses })
-      sagaStore.send(`${last.input}`, () => {})
+      sagaStore.send(`${last.input}`, (error) => {
+        if (!error) return
+        sagaStore.update({ responses: original })
+      })
     },
 
-    async *send({ template, state }, text: string, onSuccess: () => void) {
+    async *send({ template, state }, text: string, onDone: (error?: string) => void) {
       const missing: string[] = []
       for (const manual of template.manual || []) {
         if (manual in state.overrides) continue
@@ -332,15 +336,24 @@ export const sagaStore = createStore<SagaState>(
 
       prompt = replaceTags(prompt, state.format)
       console.log(prompt)
-      const result = await msgsApi.guidance({
-        prompt,
-        presetId: state.presetId,
-        lists: template.lists,
-        placeholders: { history },
-        previous: state.overrides,
-      })
+      const result = await msgsApi
+        .guidance({
+          prompt,
+          presetId: state.presetId,
+          lists: template.lists,
+          placeholders: { history },
+          previous: state.overrides,
+        })
+        .catch((err) => ({ err }))
+
+      if ('err' in result) {
+        const message = result.err.error || 'An unexpected error occurred'
+        toastStore.error(message)
+        yield { busy: false }
+        return
+      }
       console.log(JSON.stringify(result, null, 2))
-      onSuccess()
+      onDone()
 
       result.input = text
       const next = state.responses.concat(result)

@@ -679,7 +679,7 @@ subscribe(
     adapter: 'string',
     extras: ['string?'],
     meta: 'any?',
-    retries: ['string'],
+    retries: ['string?'],
     actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {

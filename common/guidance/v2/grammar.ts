@@ -41,13 +41,13 @@ Variable "variable"	= "[" _ val:Char+ pipes:Pipe* "]" {
     return result
 }
 
-Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / BooleanPipe / RandomPipe) _ { return pipe }
+Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / BooleanPipe / StringPipe / RandomPipe) _ { return pipe }
 
 TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
 TempPipe "temp" = "temp"i _ "=" _ value:Number { return { temp: value } }
 StopPipe "stop" = "stop"i _ "=" _ value:(Char / Symbols)+ { return { stop: value.join('') } }
 
-NumPipe "num" =  "type" _ "=" _ ("number"i / "num"i) _ range:Threshold* _ { return { type: 'number', ...range.reduce((p, c) => Object.assign(p, c), {}) } }
+NumPipe "num" =  "type" _ "=" _ ("number"i / "num"i) _ Sep? _ range:Threshold* _ { return { type: 'number', ...range.reduce((p, c) => Object.assign(p, c), {}) } }
 OptionsPipe "options" = "type" _ "=" _ ("list"i / "from"i / "options"i / "opts"i / "selection"i / "sel"i) _ list:Char+ { return { type: 'options', options: list.join('') } }
 BooleanPipe "boolean" = "type" _ "=" _ ("boolean"i / "bool"i) { return { type: 'boolean' } }
 RandomPipe "options" = "type" _ "=" _ ("random"i / "rand"i) _ list:Char+ { return { type: 'random', options: list.join('') } }

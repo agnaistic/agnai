@@ -1,7 +1,6 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
 import {
   Component,
-  createEffect,
   createMemo,
   createSignal,
   For,
@@ -207,7 +206,7 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-center justify-center">
+    <div class="relative flex items-end justify-center">
       <Show when={props.showOocToggle}>
         <div class="cursor-pointer p-2" onClick={toggleOoc}>
           <Show when={!props.ooc}>
@@ -354,7 +353,7 @@ const InputBar: Component<{
         </div>
       </DropMenu>
       <Switch>
-        <Match when={text() === '' || listening()}>
+        <Match when={user.user?.speechtotext && (text() === '' || listening())}>
           <SpeechRecognitionRecorder
             culture={props.char?.culture}
             onText={(value) => setText(value)}
