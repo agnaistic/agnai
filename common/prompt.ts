@@ -840,10 +840,6 @@ export function getContextLimit(
 
     case 'mancer':
       return Math.min(configuredMax, 8000) - genAmount
-
-    // Added this 🇫🇷 
-    default:
-      return configuredMax - genAmount
   }
 }
 
