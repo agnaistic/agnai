@@ -336,7 +336,7 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite'],
+  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'mistral'], // Added this 🇫🇷🇫🇷
   claudeModel: ['claude'],
   novelModel: ['novel'],
   oaiModel: ['openai', 'openai-chat'],
