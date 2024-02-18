@@ -32,7 +32,7 @@ export type ChatModal =
 const ChatOptions: Component<{
   adapterLabel: string
   setModal: (modal: ChatModal) => void
-  setConfirm: (state: boolean) => void
+  setConfirm?: (state: boolean) => void
   togglePane: (pane: ChatRightPane) => void
   close: () => void
 }> = (props) => {
@@ -168,9 +168,9 @@ const ChatOptions: Component<{
           </Item>
         </Row>
 
-        <Show when={chats.chat}>
+        <Show when={chats.chat && props.setConfirm}>
           <Row>
-            <Item onClick={() => props.setConfirm(true)} center hide={!isOwner()}>
+            <Item onClick={() => props.setConfirm!(true)} center hide={!isOwner()}>
               <AlertTriangle /> Restart Chat <AlertTriangle />
             </Item>
           </Row>

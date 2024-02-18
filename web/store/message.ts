@@ -1013,18 +1013,3 @@ subscribe(
     onCharacterMessageReceived(msg)
   }
 )
-
-// function addMsgToRetries(msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
-//   if (!msg) return
-
-//   const { msgs } = msgStore.getState()
-
-//   const next = msgs.map((m) => {
-//     if (m._id !== msg._id) return m
-//     const retries = m.retries || []
-//     retries.unshift(msg.msg)
-//     return { ...m, retries }
-//   })
-
-//   msgStore.setState({ msgs: next })
-// }

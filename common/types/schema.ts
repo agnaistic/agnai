@@ -356,7 +356,7 @@ export namespace AppSchema {
     kind: 'chat-message'
     chatId: string
     msg: string
-    retries: string[]
+    retries?: string[]
     extras?: string[]
     characterId?: string
     userId?: string
