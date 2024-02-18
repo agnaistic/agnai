@@ -1,6 +1,5 @@
 import { AppSchema } from './types/schema'
 import { claudePresets } from './presets/claude'
-import { mistralPresets } from './presets/mistral' // Added this 🇫🇷 
 import { hordePresets } from './presets/horde'
 import { koboldPresets } from './presets/kobold'
 import { novelPresets } from './presets/novel'
@@ -20,7 +19,6 @@ const builtinPresets = {
   ...replicatePresets,
   ...scalePresets,
   ...claudePresets,
-  ...mistralPresets, //Added this 🇫🇷   
   ...oobaPresets,
   ...openRouterPresets,
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

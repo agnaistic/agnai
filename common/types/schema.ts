@@ -217,9 +217,6 @@ export namespace AppSchema {
     claudeApiKey?: string
     claudeApiKeySet?: boolean
 
-    mistralApiKey?: string // Added this 🇫🇷
-    mistralApiKeySet?: boolean // Added this 🇫🇷
-
     elevenLabsApiKey?: string
     elevenLabsApiKeySet?: boolean
 
@@ -544,7 +541,6 @@ export namespace AppSchema {
     oaiModel?: string
     novelModel?: string
     claudeModel?: string
-    mistralModel?: string // Added this 🇫🇷 
     openRouterModel?: OpenRouterModel
 
     thirdPartyUrl?: string

@@ -103,7 +103,7 @@ export const config = {
   },
   adapters: env(
     'ADAPTERS',
-    'agnaistic,novel,horde,kobold,openai,openrouter,scale,claude,mistral,ooba,goose,replicate,mancer' // Added this 🇫🇷 
+    'agnaistic,novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate,mancer' // Added this 🇫🇷 
   )
     .split(',')
     .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],

@@ -211,11 +211,6 @@ function setRequestService(opts: InferenceRequest) {
         settings.claudeModel = model
         break
         
-      // Added this 🇫🇷 
-      case 'mistral':
-        settings.mistralModel = model
-        break
-
       case 'novel':
         settings.novelModel = model
         break

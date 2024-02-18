@@ -61,13 +61,22 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
+  // Added this 🇫🇷🇫🇷
+  const useMistral: boolean = isThirdParty === true && gen.thirdPartyFormat === 'mistral'
+  if (!useMistral) {
+    body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
+    body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
+  }
+
   const useChat =
-    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
+    useMistral || (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel] // Added this 🇫🇷🇫🇷
+
 
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : await toChatCompletionPayload(opts, body.max_tokens)
+      : await toChatCompletionPayload(opts, body.max_tokens, useMistral) // Added this 🇫🇷🇫🇷
+
 
     body.messages = messages
     yield { prompt: messages }

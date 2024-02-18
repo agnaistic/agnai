@@ -173,11 +173,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       opts.push({ label: 'Claude', value: 'claude' })
     }
 
-    // Added this 🇫🇷 
-    if (user.user.mistralApiKeySet) {
-      opts.push({ label: 'Mistral', value: 'mistral' })
-    }
-
     return opts
   })
 
