@@ -13,7 +13,7 @@ export const ModeDetail: Component<{
   pane?: JSX.Element
   header?: JSX.Element
   footer?: JSX.Element
-  split?: JSX.Element
+  split?: JSX.Element | null | false | undefined
 
   /** Percentage of content pane height */
   splitHeight?: number

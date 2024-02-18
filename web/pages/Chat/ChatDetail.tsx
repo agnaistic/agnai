@@ -338,6 +338,7 @@ const ChatDetail: Component = () => {
 
   const split = createMemo(() => {
     if (user.ui.viewMode !== 'split') return null
+    if (chats.char?.visualType !== 'sprite' && !chats.char?.avatar) return null
 
     return (
       <section
