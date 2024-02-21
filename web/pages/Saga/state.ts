@@ -139,6 +139,15 @@ export const sagaStore = createStore<SagaState>(
       const next = state.responses.map((m, i) => (index === i ? msg : m))
       return { state: { ...state, responses: next } }
     },
+    updateMsg: ({ state }, index: number, mods: Record<string, any>) => {
+      const msg = { ...state.responses[index], ...mods }
+      const next = state.responses.map((m, i) => (index === i ? msg : m))
+      return { state: { ...state, responses: next } }
+    },
+    updateIntro: ({ state }, mods: Record<string, any>) => {
+      const intro = { ...state.init, ...mods }
+      return { state: { ...state, init: intro } }
+    },
     async *newSession({ state }, templateId: string, onSuccess?: (id: string) => void) {
       const init = state.gameId === templateId ? state.init : undefined
       const id = v4()
@@ -384,6 +393,8 @@ function blankTemplate(): SagaTemplate {
     name: 'New Template',
     byline: '',
     description: '',
+    imagePrompt: '{{image_caption}}',
+    imagesEnabled: false,
     fields: [],
     history: neat`<user>{{input}}</user>
 
@@ -443,6 +454,9 @@ function exampleTemplate(): SagaTemplate {
     byline: 'Solve AI generated crimes',
     description: '',
     introduction: `Introduction:\n{{intro}}\n\nOpening:\n{{scene}}`,
+    imagePrompt:
+      'full body shot, selfie, {{image_caption}}, fantasy art, high quality, studio lighting',
+    imagesEnabled: false,
     display: '',
     lists: {},
     manual: [],
@@ -465,7 +479,10 @@ function exampleTemplate(): SagaTemplate {
 
       Write the introduction to the game: "You are [intro | temp=0.4 | stop="]"
       
-      Write the opening scene of the game to begin the game: "[scene | temp=0.4 | tokens=300 | stop="]"`,
+      Write the opening scene of the game to begin the game: "[scene | temp=0.4 | tokens=300 | stop="]"
+      
+      Write a brief image caption describing the scene and appearances of the characters: "[image_caption | tokens=200 | stop="]"
+      `,
 
     history: neat`
       <user>
@@ -497,6 +514,9 @@ function exampleTemplate(): SagaTemplate {
 
     <bot>
     [response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
+
+    <user>
+    Write a brief image caption describing the scene and appearances of the characters: "[image_caption | tokens=200 | stop="]"
 
     <user>
     Where is the main character currently standing?</user>

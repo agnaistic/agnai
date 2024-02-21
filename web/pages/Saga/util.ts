@@ -10,6 +10,9 @@ const emptyTemplate: SagaTemplate = {
   byline: '',
   description: '',
 
+  imagesEnabled: false,
+
+  imagePrompt: '',
   display: '',
 
   init: '',
@@ -59,4 +62,15 @@ export function importTemplate(template: any) {
 
   sagaStore.importTemplate(next)
   return next
+}
+
+export function getTemplateFields(template: string) {
+  const names = template
+    .match(/{{([a-z0-9_-]+)}}/gi)
+    ?.map((text) => text.replace('{{', '').replace('}}', '').trim())
+
+  if (!names) return []
+
+  const unique = Array.from(new Set(names))
+  return unique
 }

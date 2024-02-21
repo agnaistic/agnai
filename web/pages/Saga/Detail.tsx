@@ -8,7 +8,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  on,
   onMount,
 } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
@@ -17,24 +16,19 @@ import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
 import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
-import { SagaResponse, SagaSession, SagaTemplate } from '/web/store/data/saga'
+import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import {
-  Cog,
-  HelpCircle,
-  MoreHorizontal,
-  Pencil,
-  RefreshCw,
-  Scissors,
-  Sliders,
-  Trash,
-} from 'lucide-solid'
-import { toDuration, toMap } from '/web/shared/util'
+import { Cog, HelpCircle, MoreHorizontal, Pencil, RefreshCw, Sliders, Trash } from 'lucide-solid'
+import { createDebounce, toDuration, toMap } from '/web/shared/util'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'
 import { DropMenu } from '/web/shared/DropMenu'
+import { createStore } from 'solid-js/store'
+import { Pill } from '/web/shared/Card'
+import { imageApi } from '/web/store/data/image'
+import { getTemplateFields } from './util'
 
 export function toSessionUrl(id: string) {
   return `/saga/${id}${location.search}`
@@ -47,12 +41,8 @@ export const SagaDetail: Component = (props) => {
 
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
-  // const [image, setImage] = createSignal<string>()
-
-  const trimResult = (i: number) => () => {
-    const msg = state.state.responses[i]
-    sagaStore.updateResponse(i, trim(msg.response))
-  }
+  const [stage, setStage] = createSignal<'ready' | 'rendering' | 'done'>('ready')
+  const [image, setImage] = createSignal<string>()
 
   onMount(() => {
     sagaStore.init(params.id)
@@ -62,54 +52,98 @@ export const SagaDetail: Component = (props) => {
   })
 
   // PoC auto-image generation
-  // createEffect((prev) => {
-  // const last = state.state.responses.slice(-1)[0]
-  // if (!last) return ''
+  createEffect((prev: string | void) => {
+    if (!state.template.imagesEnabled) return
+    if (!state.template.imagePrompt) return
+    const busy = state.busy
 
-  // const caption = last.caption ? `${last.caption}` : ''
+    const last = state.state.responses.slice(-1)[0] || state.state.init
+    if (!last) return prev
 
-  // if (caption && prev !== caption) {
-  //   imageApi.generateImageAsync(caption).then((image) => setImage(image.data))
-  // }
+    const now = stage()
 
-  // return last.summary
-  // })
+    switch (now) {
+      case 'rendering':
+        return prev
 
-  // const headerImage = createMemo(() => {
-  //   const src = image()
-  //   if (!src) return null
+      case 'ready':
+        break
 
-  //   return <img src={src} class="h-full" />
-  // })
+      case 'done':
+        if (busy) {
+          setStage('ready')
+        }
+        return prev
+    }
+
+    return generateImage(prev || '')
+  })
+
+  const [generateImage] = createDebounce((previous?: string) => {
+    if (stage() === 'rendering') return previous
+
+    const last = state.state.responses.slice(-1)[0] || state.state.init
+    if (!last) return previous
+
+    setStage('rendering')
+
+    const caption = formatResponse(state.template.imagePrompt, state.state, last)
+
+    if (previous && previous === caption) return
+
+    imageApi.generateImageAsync(caption).then((image) => {
+      setStage('done')
+      setImage(image.data)
+    })
+
+    return caption
+  }, 100)
+
+  const headerImage = createMemo(() => {
+    const src = image()
+    if (!src) return null
+
+    return <img src={src} class="h-full" />
+  })
 
   return (
     <>
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        footer={<Footer load={() => setLoad(true)} />}
+        footer={<Footer load={() => setLoad(true)} regenImage={generateImage} />}
         showPane={pane()}
         pane={<SidePane show={setPane} />}
-        // split={headerImage()}
+        split={headerImage()}
         splitHeight={30}
       >
         <div class="flex flex-col gap-2">
           <Show when={!!state.state.init}>
-            <Msg
-              text={formatResponse(state.template.introduction, state.state, state.state.init!)}
+            <Response
+              template={state.template}
+              type="intro"
+              msg={state.state.init!}
+              session={state.state}
             />
           </Show>
 
           <For each={state.state.responses}>
             {(res, i) => (
               <>
-                <Msg msg={res} text={res.input} user index={i()} />
-                <Msg
+                <Response
+                  template={state.template}
+                  type="input"
                   msg={res}
+                  session={state.state}
                   index={i()}
+                />
+                <Response
+                  template={state.template}
+                  type="response"
+                  msg={res}
+                  session={state.state}
                   siblings={state.state.responses.length}
-                  trim={trimResult(i())}
-                  text={formatResponse(state.template.display || '{{response}}', state.state, res)}
+                  index={i()}
                 />
               </>
             )}
@@ -190,7 +224,7 @@ const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (pro
   )
 }
 
-const Footer: Component<{ load: () => void }> = (props) => {
+const Footer: Component<{ load: () => void; regenImage: () => void }> = (props) => {
   const state = sagaStore()
   const params = useParams()
   const nav = useNavigate()
@@ -225,6 +259,12 @@ const Footer: Component<{ load: () => void }> = (props) => {
         <Show when={state.state.init}>
           <Button size="pill" onClick={() => sagaStore.saveSession(onSave)} disabled={state.busy}>
             Save
+          </Button>
+        </Show>
+
+        <Show when={state.template.imagesEnabled && state.template.imagePrompt}>
+          <Button size="pill" onClick={props.regenImage} disabled={state.busy}>
+            Regen Image
           </Button>
         </Show>
         <MainMenu />
@@ -267,140 +307,139 @@ const MainMenu = () => {
   )
 }
 
-const Msg: Component<{
-  text: string | JSX.Element
-  trim?: () => void
-  index?: number
-  user?: boolean
-  msg?: SagaResponse
+const Response: Component<{
+  template: SagaTemplate
+  session: SagaSession
+  type: 'input' | 'response' | 'intro'
   siblings?: number
+  msg: Record<string, any>
+  index?: number
 }> = (props) => {
-  let ref: HTMLDivElement
+  const [edit, setEdit] = createSignal(false)
+  const [mods, setMods] = createStore<Record<string, string>>({})
 
-  const canEdit = createMemo(() => props.index !== undefined && !!props.msg)
+  const updateMod = (field: string, ev: any) => {
+    const value = ev.target.innerText
+    setMods({ ...mods, [field]: value })
+  }
+
   const canRetry = createMemo(
     () => props.siblings !== undefined && props.index === props.siblings - 1
   )
 
-  const html = createMemo(() =>
-    typeof props.text === 'string' ? markdown.makeHtml(props.text) : props.text
-  )
+  const template = createMemo(() => {
+    switch (props.type) {
+      case 'input':
+        return '{{input}}'
 
-  createEffect(
-    on(
-      () => props.text,
-      () => {
-        if (props.text !== 'string') return
-        if (ref.innerText === props.text) return
-        ref.innerText = props.text
-      }
-    )
-  )
+      case 'response':
+        return props.template.display
 
-  const edit = () => {
-    if (!props.msg) return
+      case 'intro':
+        return props.template.introduction
+    }
+  })
+
+  const fields = createMemo(() => getTemplateFields(template()))
+
+  const startEdit = () => {
+    switch (props.type) {
+      case 'input':
+        setMods({ input: props.msg.input })
+        break
+
+      case 'intro':
+      case 'response':
+        setMods({ ...props.msg })
+        break
+    }
+
     setEdit(true)
-    ref.innerText = props.user ? props.msg.input : props.msg.response
-    ref.focus()
   }
 
-  const deleteMsg = () => {
-    sagaStore.deleteResponse(props.index!)
-  }
-
-  const cancel = () => {
-    setEdit(false)
-    if (props.text !== 'string') return
-    ref.innerText = props.text
-  }
+  const text = createMemo(() => formatResponse(template(), props.session, props.msg))
 
   const save = () => {
-    const candidate = ref.innerText
-    if (props.user) {
-      sagaStore.updateInput(props.index!, candidate)
-    } else {
-      sagaStore.updateResponse(props.index!, candidate)
-    }
     setEdit(false)
-  }
 
-  const onKeyUp = (ev: KeyboardEvent) => {
-    if (ev.altKey && ev.key === 's') {
-      ev.preventDefault()
-      save()
+    switch (props.type) {
+      case 'input':
+      case 'response':
+        sagaStore.updateMsg(props.index!, mods)
+        break
+
+      case 'intro':
+        sagaStore.updateIntro(mods)
+        break
     }
   }
 
-  const [editing, setEdit] = createSignal(false)
   return (
-    <div
-      class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
-      classList={{
-        'bg-700': !props.user,
-        'bg-800': !!props.user,
-      }}
-    >
-      <Show when={typeof props.text === 'string'}>
-        <div innerHTML={html() as string} classList={{ hidden: editing() }} />
-      </Show>
-      <Show when={typeof props.text !== 'string'}>
-        <div>{props.text}</div>
-      </Show>
+    <>
       <div
-        ref={(ele) => {
-          ref = ele
-          if (props.text !== 'string') return
-          ele.innerText = props.text
+        class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
+        classList={{
+          'bg-800': props.type === 'intro' || props.type === 'response',
+          'bg-700': props.type === 'input',
         }}
-        contentEditable={editing()}
-        classList={{ hidden: !editing() }}
-        onKeyUp={onKeyUp}
-      />
-      <div class="flex w-full justify-end gap-1">
-        <Button
-          size="pill"
-          schema="clear"
-          onClick={props.trim}
-          classList={{ hidden: editing() || !props.trim }}
-        >
-          <Scissors size={20} />
-        </Button>
-
-        <Show when={canEdit()}>
-          <Button size="pill" schema="clear" onClick={edit} classList={{ hidden: editing() }}>
-            <Pencil size={20} />
-          </Button>
-          <Show when={!props.user}>
-            <Button
-              size="pill"
-              schema="clear"
-              onClick={deleteMsg}
-              classList={{ hidden: editing() }}
-            >
-              <Trash size={20} />
-            </Button>
-          </Show>
-
-          <Show when={canRetry()}>
-            <Button
-              size="pill"
-              schema="clear"
-              onClick={sagaStore.retry}
-              classList={{ hidden: editing() }}
-            >
-              <RefreshCw size={20} />
-            </Button>
-          </Show>
-
-          <Button size="pill" schema="success" classList={{ hidden: !editing() }} onClick={save}>
-            Save
-          </Button>
-          <Button size="pill" schema="error" classList={{ hidden: !editing() }} onClick={cancel}>
-            Cancel
-          </Button>
+      >
+        <Show when={!edit()}>
+          <div innerHTML={markdown.makeHtml(text())} />
         </Show>
+        <Show when={edit()}>
+          <div class="flex flex-col gap-1">
+            <For each={fields()}>
+              {(field) => (
+                <div class="bg-700 p-1 text-sm">
+                  <Pill small type="hl">
+                    {field}
+                  </Pill>
+                  <div
+                    ref={(r) => (r.innerText = mods[field])}
+                    contentEditable
+                    onKeyUp={(ev) => updateMod(field, ev)}
+                  ></div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <div class="flex justify-end gap-1">
+          <Show when={!edit()}>
+            <Button size="pill" schema="clear" onClick={startEdit}>
+              <Pencil size={20} />
+            </Button>
+
+            <Show when={props.type === 'response'}>
+              <Button
+                size="pill"
+                schema="clear"
+                onClick={() => sagaStore.deleteResponse(props.index!)}
+              >
+                <Trash size={20} />
+              </Button>
+              <Button
+                size="pill"
+                schema="clear"
+                onClick={sagaStore.retry}
+                classList={{ hidden: !canRetry() }}
+              >
+                <RefreshCw size={20} />
+              </Button>
+            </Show>
+          </Show>
+
+          <Show when={edit()}>
+            <Button size="pill" schema="success" onClick={save}>
+              Save
+            </Button>
+            <Button size="pill" schema="error" onClick={() => setEdit(false)}>
+              Cancel
+            </Button>
+          </Show>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -411,20 +450,4 @@ const Label: Component<{ label: string; children: JSX.Element }> = (props) => {
       <div class="bg-900 rounded-r-md px-2 py-1">{props.children}</div>
     </div>
   )
-}
-
-function trim(text: string) {
-  const ends = ['.', '?', '"', '!']
-
-  const index = ends
-    .map((end) => {
-      const last = text.lastIndexOf(end)
-      if (last === text.length - 1) return text.slice(0, -1).lastIndexOf(end)
-      return last
-    })
-    .reduce((prev, curr) => (curr > prev ? curr : prev), -1)
-
-  if (index === -1) return text
-
-  return text.slice(0, index + 1)
 }
