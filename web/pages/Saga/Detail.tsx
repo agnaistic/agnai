@@ -42,62 +42,44 @@ export const SagaDetail: Component = (props) => {
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
   const [stage, setStage] = createSignal<'ready' | 'rendering' | 'done'>('ready')
+  const [lastCaption, setCaption] = createSignal('')
   const [image, setImage] = createSignal<string>()
 
   onMount(() => {
-    sagaStore.init(params.id)
+    sagaStore.init(params.id, generateImage)
     if (params.id === 'new' && !search.pane) {
       setSearch({ pane: 'prompt' })
     }
   })
 
-  // PoC auto-image generation
-  createEffect((prev: string | void) => {
-    if (!state.template.imagesEnabled) return
-    if (!state.template.imagePrompt) return
-    const busy = state.busy
-
-    const last = state.state.responses.slice(-1)[0] || state.state.init
-    if (!last) return prev
-
+  createEffect(() => {
     const now = stage()
-
-    switch (now) {
-      case 'rendering':
-        return prev
-
-      case 'ready':
-        break
-
-      case 'done':
-        if (busy) {
-          setStage('ready')
-        }
-        return prev
+    const busy = state.busy
+    if (now === 'done' && !busy) {
+      setStage('ready')
     }
-
-    return generateImage(prev || '')
   })
 
-  const [generateImage] = createDebounce((previous?: string) => {
-    if (stage() === 'rendering') return previous
+  const [generateImage] = createDebounce((auto?: boolean) => {
+    if (!state.template.imagesEnabled || !state.template.imagePrompt) return
+    if (stage() === 'rendering') return
 
     const last = state.state.responses.slice(-1)[0] || state.state.init
-    if (!last) return previous
-
-    setStage('rendering')
+    if (!last) return
 
     const caption = formatResponse(state.template.imagePrompt, state.state, last)
 
-    if (previous && previous === caption) return
+    if (auto && lastCaption() === caption) return
 
-    imageApi.generateImageAsync(caption).then((image) => {
+    setCaption(caption)
+    setStage('rendering')
+    imageApi.generateImageAsync(caption, { noAffix: true }).then((image) => {
       setStage('done')
       setImage(image.data)
     })
-
-    return caption
   }, 100)
+
+  onMount(() => {})
 
   const headerImage = createMemo(() => {
     const src = image()
@@ -106,12 +88,20 @@ export const SagaDetail: Component = (props) => {
     return <img src={src} class="h-full" />
   })
 
+  const sendMessage = (text: string, done?: () => void) => {
+    sagaStore.send(text, (err) => {
+      if (err) return
+      done?.()
+      generateImage(true)
+    })
+  }
+
   return (
     <>
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        footer={<Footer load={() => setLoad(true)} regenImage={generateImage} />}
+        footer={<Footer load={() => setLoad(true)} regenImage={generateImage} send={sendMessage} />}
         showPane={pane()}
         pane={<SidePane show={setPane} />}
         split={headerImage()}
@@ -224,7 +214,11 @@ const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (pro
   )
 }
 
-const Footer: Component<{ load: () => void; regenImage: () => void }> = (props) => {
+const Footer: Component<{
+  load: () => void
+  regenImage: () => void
+  send: (text: string, onSuccess?: () => void) => void
+}> = (props) => {
   const state = sagaStore()
   const params = useParams()
   const nav = useNavigate()
@@ -263,8 +257,8 @@ const Footer: Component<{ load: () => void; regenImage: () => void }> = (props) 
         </Show>
 
         <Show when={state.template.imagesEnabled && state.template.imagePrompt}>
-          <Button size="pill" onClick={props.regenImage} disabled={state.busy}>
-            Regen Image
+          <Button size="pill" onClick={() => props.regenImage()} disabled={state.busy}>
+            Re-image
           </Button>
         </Show>
         <MainMenu />
@@ -281,7 +275,7 @@ const Footer: Component<{ load: () => void; regenImage: () => void }> = (props) 
           )}
         </For>
       </div>
-      <SagaInput onEnter={sagaStore.send} loading={state.busy} />
+      <SagaInput onEnter={props.send} loading={state.busy} />
     </div>
   )
 }

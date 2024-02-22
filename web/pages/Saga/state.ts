@@ -42,7 +42,7 @@ export const sagaStore = createStore<SagaState>(
   init
 )((get, set) => {
   return {
-    async *init({ inited }, id?: string) {
+    async *init({ inited }, id?: string, onLoad?: () => void) {
       if (!inited) {
         const templates = await sagaApi.getTemplates()
         const sessions = await sagaApi.getSessions()
@@ -64,6 +64,8 @@ export const sagaStore = createStore<SagaState>(
           templates: templates.result.templates,
           inited: true,
         }
+
+        onLoad?.()
       }
 
       if (id) {
