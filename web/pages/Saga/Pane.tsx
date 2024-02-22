@@ -28,6 +28,7 @@ import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { FormLabel } from '/web/shared/FormLabel'
 import { neat } from '/common/util'
 import { usePaneManager } from '/web/shared/hooks'
+import { Toggle } from '/web/shared/Toggle'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -321,6 +322,29 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
             placeholder="E.g. {{response}}"
             value={state.template.display}
             onInputText={(ev) => sagaStore.updateTemplate({ display: ev })}
+            isMultiline
+          />
+        </Card>
+
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="imagePrompt"
+            label={
+              <div class="flex w-full justify-between">
+                <div>Prompt Template for Image Generation</div>
+                <div>
+                  <Toggle
+                    fieldName="imagesEnabled"
+                    value={state.template.imagesEnabled}
+                    onChange={(ev) => sagaStore.updateTemplate({ imagesEnabled: ev })}
+                  />
+                </div>
+              </div>
+            }
+            helperMarkdown="Leave empty to disable image generation"
+            placeholder="E.g. full body shot, {{image_caption}}, fantasy, anime art, studio lighting"
+            value={state.template.imagePrompt}
+            onInputText={(ev) => sagaStore.updateTemplate({ imagePrompt: ev })}
             isMultiline
           />
         </Card>

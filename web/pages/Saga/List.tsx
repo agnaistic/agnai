@@ -10,6 +10,7 @@ import { markdown } from '/web/shared/markdown'
 import { neat } from '/common/util'
 import Button from '/web/shared/Button'
 import { PlusIcon } from 'lucide-solid'
+import { SagaSession } from '/web/store/data/saga'
 
 export const SagaList: Component = (props) => {
   const state = sagaStore()
@@ -93,28 +94,21 @@ export const SagaList: Component = (props) => {
         </div>
         <For each={templates()}>
           {(template) => {
-            const sess = template.sessions[0]
-            const url = toSessionUrl(sess?._id || 'new')
+            if (!template.sessions.length) return null
+
             return (
-              <a
-                onClick={() => {
-                  if (!sess?._id) sagaStore.loadTemplate(template._id)
-                  else sagaStore.loadSession(sess._id)
-                  nav(url)
-                }}
-              >
-                <SolidCard bg="bg-700" class="flex cursor-pointer justify-between">
-                  <div class="font-bold">
-                    <Pill small type="hl">
-                      {template.sessions.length}
-                    </Pill>{' '}
-                    {template.name}
-                  </div>
-                  <div>
+              <SolidCard bg="bg-700" class="flex flex-col justify-between">
+                <div class="font-bold">
+                  <Pill small type="hl">
+                    {template.sessions.length}
+                  </Pill>{' '}
+                  {template.name}
+                </div>
+                <Sessions sessions={template.sessions} />
+                {/* <div>
                     <sub>{sess ? `${toDuration(new Date(sess.updated))} ago` : 'no sessions'}</sub>
-                  </div>
-                </SolidCard>
-              </a>
+                  </div> */}
+              </SolidCard>
             )
           }}
         </For>
@@ -122,5 +116,33 @@ export const SagaList: Component = (props) => {
         <Divider />
       </div>
     </>
+  )
+}
+
+const Sessions: Component<{ sessions: SagaSession[] }> = (props) => {
+  const nav = useNavigate()
+
+  return (
+    <div class="flex flex-wrap gap-1">
+      <For each={props.sessions}>
+        {(session) => (
+          <a
+            class="cursor-pointer"
+            onClick={() => {
+              sagaStore.loadSession(session._id)
+              nav(toSessionUrl(session._id))
+            }}
+          >
+            <Pill type="hl">
+              <Pill small type="bg">
+                {session.responses.length}
+              </Pill>
+              &nbsp;
+              {toDuration(new Date(session.updated))} ago
+            </Pill>
+          </a>
+        )}
+      </For>
+    </div>
   )
 }

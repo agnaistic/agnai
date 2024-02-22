@@ -25,12 +25,15 @@ export type SagaTemplate = {
   name: string
   byline: string
   description: string
-  // response: string
+
   display: string
   introduction: string
   init: string
   loop: string
   history: string
+  imagePrompt: string
+  imagesEnabled: boolean
+
   fields: Array<SagaField>
 
   /**

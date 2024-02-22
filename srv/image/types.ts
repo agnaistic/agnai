@@ -9,6 +9,7 @@ export type ImageGenerateRequest = {
   ephemeral?: boolean
   append?: boolean
   source: string
+  noAffix?: boolean
 }
 
 export type ImageAdapter = (

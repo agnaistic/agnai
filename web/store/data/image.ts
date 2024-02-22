@@ -21,6 +21,9 @@ type GenerateOpts = {
   prompt?: string
   append?: boolean
   source: string
+
+  /** If true, the Image Settings prefix and suffix won't be applied */
+  noAffix?: boolean
   onDone: (image: string) => void
 }
 
@@ -92,7 +95,10 @@ export async function generateImageWithPrompt(
 
 type ImageResult = { image: string; file: File; data?: string }
 
-export async function generateImageAsync(prompt: string): Promise<ImageResult> {
+export async function generateImageAsync(
+  prompt: string,
+  opts: { noAffix?: boolean } = {}
+): Promise<ImageResult> {
   const user = getStore('user').getState().user
   const source = `image-${v4()}`
 
@@ -122,6 +128,7 @@ export async function generateImageAsync(prompt: string): Promise<ImageResult> {
     user,
     ephemeral: true,
     source,
+    noAffix: opts.noAffix,
   })
 
   return new Promise<ImageResult>((resolve) => {
