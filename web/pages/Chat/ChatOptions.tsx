@@ -32,9 +32,7 @@ export type ChatModal =
 const ChatOptions: Component<{
   adapterLabel: string
   setModal: (modal: ChatModal) => void
-  setConfirm?: (state: boolean) => void
   togglePane: (pane: ChatRightPane) => void
-  close: () => void
 }> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
@@ -45,15 +43,15 @@ const ChatOptions: Component<{
   const cfg = settingStore()
 
   const toggleOocMessages = () => {
-    chatStore.option('hideOoc', !chats.opts.hideOoc)
+    chatStore.option({ hideOoc: !chats.opts.hideOoc })
   }
 
   const toggleEditing = () => {
-    chatStore.option('editing', !chats.opts.editing)
+    chatStore.option({ editing: !chats.opts.editing })
   }
 
   const toggleScreenshot = (value: boolean) => {
-    chatStore.option('screenshot', value)
+    chatStore.option({ screenshot: value })
   }
 
   const isOwner = createMemo(
@@ -168,9 +166,16 @@ const ChatOptions: Component<{
           </Item>
         </Row>
 
-        <Show when={chats.chat && props.setConfirm}>
+        <Show when={chats.chat}>
           <Row>
-            <Item onClick={() => props.setConfirm!(true)} center hide={!isOwner()}>
+            <Item
+              onClick={() => {
+                console.log('opening confirm')
+                chatStore.option({ confirm: true, options: false })
+              }}
+              center
+              hide={!isOwner()}
+            >
               <AlertTriangle /> Restart Chat <AlertTriangle />
             </Item>
           </Row>

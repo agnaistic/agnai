@@ -23,6 +23,8 @@ import { embedApi } from '/web/store/embeddings'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { ChatHeader } from './ChatHeader'
 import { ChatFooter } from './ChatFooter'
+import { ConfirmModal } from '/web/shared/Modal'
+import { TitleCard } from '/web/shared/Card'
 
 export { ChatDetail as default }
 
@@ -96,7 +98,6 @@ const ChatDetail: Component = () => {
 
   const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
-  const [showOpts, setShowOpts] = createSignal(false)
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
   const [linesAddedCount, setLinesAddedCount] = createSignal<number | undefined>(undefined)
@@ -199,8 +200,7 @@ const ChatDetail: Component = () => {
   })
 
   const clearModal = () => {
-    setShowOpts(false)
-    chatStore.option('modal', 'none')
+    chatStore.option({ options: false, modal: 'none' })
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -371,14 +371,7 @@ const ChatDetail: Component = () => {
   return (
     <>
       <ModeDetail
-        header={
-          <ChatHeader
-            ctx={ctx}
-            isOwner={isOwner()}
-            showOpts={showOpts()}
-            setShowOpts={setShowOpts}
-          />
-        }
+        header={<ChatHeader ctx={ctx} isOwner={isOwner()} />}
         footer={
           <ChatFooter
             ctx={ctx}
@@ -391,7 +384,7 @@ const ChatDetail: Component = () => {
         }
         loading={!chats.loaded && !chats.chat}
         showPane={showPane()}
-        pane={<ChatPanes setShowOpts={setShowOpts} />}
+        pane={<ChatPanes />}
         split={split()}
       >
         <section
@@ -488,6 +481,21 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
+
+      <ConfirmModal
+        message={
+          <TitleCard type="rose" class="flex flex-col gap-4">
+            <div class="flex justify-center font-bold">Are you sure?</div>
+            <div>This will delete ALL messages in this conversation.</div>
+          </TitleCard>
+        }
+        show={chats.opts.confirm}
+        confirm={() => {
+          chatStore.restartChat(chats.chat!._id)
+          chatStore.option({ confirm: false })
+        }}
+        close={() => chatStore.option({ confirm: false })}
+      />
     </>
   )
 }

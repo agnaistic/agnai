@@ -1,5 +1,5 @@
 import './chat-detail.css'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, Show } from 'solid-js'
 import { A } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Settings } from 'lucide-solid'
 import { ADAPTER_LABELS } from '../../../common/adapters'
@@ -7,18 +7,15 @@ import { ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { DropMenu } from '../../shared/DropMenu'
 import ChatOptions, { ChatModal } from './ChatOptions'
-import { usePaneManager } from '/web/shared/hooks'
+import { useDeviceType, usePaneManager } from '/web/shared/hooks'
 import { getHeaderBg } from './helpers'
 import { ContextState } from '/web/store/context'
-import { ConfirmModal } from '/web/shared/Modal'
-import { TitleCard } from '/web/shared/Card'
 
 export const ChatHeader: Component<{
   ctx: ContextState
   isOwner: boolean
-  showOpts: boolean
-  setShowOpts: (show: boolean) => void
 }> = (props) => {
+  const mobile = useDeviceType()
   const pane = usePaneManager()
   const cfg = settingStore()
   const user = userStore()
@@ -34,16 +31,13 @@ export const ChatHeader: Component<{
     props.isOwner ? `/character/${chats.char?._id}/chats` : `/chats`
   )
 
-  const [confirm, setConfirm] = createSignal(false)
-
   const togglePane = (paneType: ChatRightPane) => {
-    props.setShowOpts(false)
+    chatStore.option({ options: false })
     pane.update(paneType)
   }
 
   const setModal = (modal: ChatModal) => {
-    props.setShowOpts(false)
-    chatStore.option('modal', modal)
+    chatStore.option({ options: false, modal })
   }
 
   const adapterLabel = createMemo(() => {
@@ -88,20 +82,18 @@ export const ChatHeader: Component<{
             {props.isOwner ? adapterLabel() : ''}
           </div>
 
-          <div class="" onClick={() => props.setShowOpts(true)}>
+          <div onClick={() => chatStore.option({ options: true })}>
             <Settings class="icon-button" />
             <DropMenu
-              show={props.showOpts}
-              close={() => props.setShowOpts(false)}
+              show={chats.opts.options && !mobile()}
+              close={() => chatStore.option({ options: false })}
               horz="left"
               vert="down"
             >
               <ChatOptions
                 adapterLabel={adapterLabel()}
                 setModal={setModal}
-                setConfirm={setConfirm}
                 togglePane={togglePane}
-                close={() => props.setShowOpts(false)}
               />
             </DropMenu>
           </div>
@@ -119,20 +111,6 @@ export const ChatHeader: Component<{
           </Show>
         </div>
       </header>
-      <ConfirmModal
-        message={
-          <TitleCard type="rose" class="flex flex-col gap-4">
-            <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
-          </TitleCard>
-        }
-        show={confirm()}
-        close={() => setConfirm(false)}
-        confirm={() => {
-          chatStore.restartChat(chats.chat!._id)
-          props.setShowOpts(false)
-        }}
-      />
     </>
   )
 }
