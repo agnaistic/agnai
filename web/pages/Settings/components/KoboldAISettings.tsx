@@ -31,6 +31,8 @@ const KoboldAISettings: Component = () => {
           { label: 'Llama.cpp', value: 'llamacpp' },
           { label: 'ExLlamaV2', value: 'exllamav2' },
           { label: 'KoboldCpp', value: 'koboldcpp' },
+          { label: 'TabbyAPI', value: 'tabby' },
+          { label: 'Mistral API', value: 'mistral' },
         ]}
         value={state.user?.thirdPartyFormat ?? 'kobold'}
       />

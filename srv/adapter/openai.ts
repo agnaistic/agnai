@@ -46,7 +46,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+  const oaiModel =
+    gen.thirdPartyModel || gen.mistralModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
@@ -55,10 +56,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
-    presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
-    frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
     top_p: gen.topP ?? 1,
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
+  }
+
+  const useMistral: boolean = isThirdParty === true && gen.thirdPartyFormat === 'mistral'
+  if (!useMistral) {
+    body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
+    body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   }
 
   const useTabby = isThirdParty && gen.thirdPartyFormat === 'tabby'
@@ -87,12 +92,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const useChat =
-    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
+    useMistral ||
+    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') ||
+    !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : await toChatCompletionPayload(opts, body.max_tokens)
+      : await toChatCompletionPayload(opts, body.max_tokens, useMistral)
 
     body.messages = messages
     yield { prompt: messages }

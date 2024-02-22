@@ -174,7 +174,8 @@ export const streamCompletion: CompletionGenerator = async function* (
  */
 export async function toChatCompletionPayload(
   opts: AdapterProps,
-  maxTokens: number
+  maxTokens: number,
+  mistralApi: boolean
 ): Promise<CompletionItem[]> {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
@@ -225,7 +226,7 @@ export async function toChatCompletionPayload(
       })
     ).parsed
     tokens += await encode(post.content)
-    history.push(post)
+    if (!mistralApi) history.push(post)
   }
 
   const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
@@ -234,7 +235,7 @@ export async function toChatCompletionPayload(
   let addedAllInserts = false
   const addRemainingInserts = () => {
     const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
-    if (remainingInserts) {
+    if (remainingInserts && !mistralApi) {
       history.push({
         role: 'system',
         content: remainingInserts,

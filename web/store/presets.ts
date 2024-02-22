@@ -330,6 +330,7 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
     novelModel,
     userId,
     claudeModel,
+    mistralModel,
     images,
     thirdPartyModel,
     thirdPartyKey,

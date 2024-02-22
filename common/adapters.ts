@@ -59,6 +59,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   llamacpp: 'ooba',
   ooba: 'ooba',
   tabby: 'openai',
+  mistral: 'openai',
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -72,6 +73,7 @@ export const THIRDPARTY_FORMATS = [
   'exllamav2',
   'koboldcpp',
   'tabby',
+  'mistral',
 ] as const
 
 export const AI_ADAPTERS = [
@@ -94,6 +96,8 @@ export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 export const MULTI_TENANT_ADAPTERS = ['novel', 'chai', 'kobold'] as const
 
 export type NovelModel = keyof typeof NOVEL_MODELS
+
+export type MistralModel = keyof typeof MISTRAL_MODELS
 
 export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
 
@@ -131,6 +135,12 @@ export const OPENAI_MODELS = {
   GPT45_1106: 'gpt-4-1106-preview',
   GPT45_0125: 'gpt-4-0125-preview',
   GPT45_Preview: 'gpt-4-turbo-preview', // latest GPT 4 Turbo
+} as const
+
+export const MISTRAL_MODELS = {
+  MistralTiny: 'mistral-tiny',
+  MistralSmall: 'mistral-small',
+  MistralMedium: 'mistral-medium',
 } as const
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
@@ -289,6 +299,7 @@ export const adapterSettings: {
     'agnaistic',
     'aphrodite',
     'tabby',
+    'mistral',
   ],
   dynatemp_range: ['kobold', 'aphrodite', 'ooba', 'tabby'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby'],
@@ -316,6 +327,7 @@ export const adapterSettings: {
     'openai-chat',
     'aphrodite',
     'tabby',
+    'mistral',
   ],
   repetitionPenalty: [
     'horde',
@@ -355,9 +367,10 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby'],
+  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby', 'mistral'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
+  mistralModel: ['mistral'],
   oaiModel: ['openai', 'openai-chat'],
   frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat', 'aphrodite', 'tabby'],
   presencePenalty: ['openai', 'kobold', 'novel', 'openai-chat', 'aphrodite', 'tabby'],
@@ -371,6 +384,7 @@ export const adapterSettings: {
     'openai-chat',
     'aphrodite',
     'tabby',
+    'mistral',
   ],
   openRouterModel: ['openrouter'],
   stopSequences: [

@@ -542,6 +542,7 @@ export namespace AppSchema {
     oaiModel?: string
     novelModel?: string
     claudeModel?: string
+    mistralModel?: string
     openRouterModel?: OpenRouterModel
 
     thirdPartyUrl?: string

@@ -17,6 +17,7 @@ import {
   AdapterSetting,
   ThirdPartyFormat,
   THIRDPARTY_FORMATS,
+  MISTRAL_MODELS,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -125,6 +126,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
               { label: 'TabbyAPI', value: 'tabby' },
+              { label: 'Mistral API', value: 'mistral' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             service={service()}
@@ -303,6 +305,7 @@ const GeneralSettings: Component<
             'openRouterModel',
             'novelModel',
             'claudeModel',
+            'mistralModel',
             'replicateModelName',
             'thirdPartyModel'
           )
@@ -320,10 +323,22 @@ const GeneralSettings: Component<
           aiSetting={'oaiModel'}
         />
 
+        <Select
+          fieldName="mistralModel"
+          label="Mistral Model"
+          items={modelsToItems(MISTRAL_MODELS)}
+          helperText="Which Mistral model to use"
+          value={props.inherit?.mistralModel ?? ''}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'mistralModel'}
+        />
+
         <TextInput
           fieldName="thirdPartyModel"
-          label="OpenAI Model Override"
-          helperText="OpenAI Model Override (typically for 3rd party APIs)"
+          label="Model Override"
+          helperText="Model Override (typically for 3rd party APIs)"
           value={props.inherit?.thirdPartyModel ?? ''}
           disabled={props.disabled}
           service={props.service}
