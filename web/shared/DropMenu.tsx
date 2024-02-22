@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
 import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { useEffect } from './hooks'
+import { v4 } from 'uuid'
 
 export const Dropup: Component<{ children: any }> = (props) => {
   const [show, setShow] = createSignal(false)
@@ -55,6 +56,7 @@ export const DropMenu: Component<{
   let ref: HTMLDivElement
   const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
   const [opened, setOpened] = createSignal(false)
+  const [id] = createSignal(v4())
 
   const onRef = (el: HTMLDivElement) => {
     const rect = el.getBoundingClientRect()
@@ -99,6 +101,7 @@ export const DropMenu: Component<{
         event.stopPropagation()
         setOpened(false)
         props.close()
+        console.log('bounding rect closed')
       }
     }
 
@@ -122,7 +125,7 @@ export const DropMenu: Component<{
 
   return (
     <>
-      <div ref={ref!} class="relative z-50 text-sm">
+      <div ref={ref!} class="relative z-50 text-sm" data-id={id()}>
         <Show when={props.show}>
           <div
             ref={onRef}

@@ -51,9 +51,7 @@ export const useValidChatPane = () => {
   return isValidPane
 }
 
-const ChatPanes: Component<{
-  setShowOpts: (state: boolean) => void
-}> = (props) => {
+const ChatPanes: Component<{}> = (props) => {
   const params = useParams()
   const pane = usePaneManager()
 

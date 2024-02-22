@@ -49,6 +49,8 @@ export type ChatState = {
     screenshot: boolean
     hideOoc: boolean
     pane?: ChatRightPane
+    confirm: boolean
+    options: boolean
   }
   promptHistory: Record<string, any>
 }
@@ -102,6 +104,8 @@ const initState: ChatState = {
   /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
   opts: {
+    options: false,
+    confirm: false,
     editing: false,
     screenshot: false,
     hideOoc: false,
@@ -124,6 +128,8 @@ export const chatStore = createStore<ChatState>('chat', {
   memberIds: {},
   opts: {
     ...getOptsCache(),
+    options: false,
+    confirm: false,
     modal: undefined,
     screenshot: false,
     pane: undefined,
@@ -186,13 +192,8 @@ export const chatStore = createStore<ChatState>('chat', {
      * If a user accepts an invite to a chat, their profile has not been fetched and cached
      * To fix this, we'll lazy load them when they send a message and their profile isn't already present
      */
-    option<Prop extends keyof ChatState['opts']>(
-      prev: ChatState,
-      key: Prop,
-      value: ChatState['opts'][Prop]
-    ) {
-      const next = { ...prev.opts, [key]: value }
-      next[key] = value
+    option(prev: ChatState, opts: Partial<ChatState['opts']>) {
+      const next = { ...prev.opts, ...opts }
       saveOptsCache(next)
       return { opts: next }
     },

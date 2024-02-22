@@ -1,5 +1,5 @@
 import { Menu, MoreHorizontal } from 'lucide-solid'
-import { Component, Show, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createMemo } from 'solid-js'
 import { A, useLocation } from '@solidjs/router'
 import { ChatRightPane, chatStore, settingStore } from '../store'
 import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
@@ -19,19 +19,16 @@ const NavBar: Component = () => {
     opts: s.opts,
   }))
 
-  const [showOpts, setShowOpts] = createSignal(false)
-
   const isChat = createMemo(() => {
     return location.pathname.startsWith('/chat/')
   })
 
   const setModal = (modal: ChatModal) => {
-    setShowOpts(false)
-    chatStore.option('modal', modal)
+    chatStore.option({ options: false, modal })
   }
 
   const togglePane = (paneType: ChatRightPane) => {
-    setShowOpts(false)
+    chatStore.option({ options: false })
     pane.update(paneType)
   }
 
@@ -78,14 +75,18 @@ const NavBar: Component = () => {
             </Show>
           </div>
           <Show when={isChat()} fallback={<div class="w-8 sm:hidden"></div>}>
-            <div class="" onClick={() => setShowOpts(true)}>
+            <div onClick={() => chatStore.option({ options: true })}>
               <MoreHorizontal class="icon-button" />
-              <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
+              <DropMenu
+                show={chats.opts.options}
+                close={() => chatStore.option({ options: false })}
+                horz="left"
+                vert="down"
+              >
                 <ChatOptions
                   setModal={setModal}
                   togglePane={togglePane}
                   adapterLabel={adapterLabel()}
-                  close={() => setShowOpts(false)}
                 />
               </DropMenu>
             </div>
