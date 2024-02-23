@@ -7,7 +7,7 @@ import { ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { DropMenu } from '../../shared/DropMenu'
 import ChatOptions, { ChatModal } from './ChatOptions'
-import { useDeviceType, usePaneManager } from '/web/shared/hooks'
+import { usePaneManager } from '/web/shared/hooks'
 import { getHeaderBg } from './helpers'
 import { ContextState } from '/web/store/context'
 
@@ -15,7 +15,6 @@ export const ChatHeader: Component<{
   ctx: ContextState
   isOwner: boolean
 }> = (props) => {
-  const mobile = useDeviceType()
   const pane = usePaneManager()
   const cfg = settingStore()
   const user = userStore()
@@ -82,10 +81,10 @@ export const ChatHeader: Component<{
             {props.isOwner ? adapterLabel() : ''}
           </div>
 
-          <div onClick={() => chatStore.option({ options: true })}>
+          <div onClick={() => chatStore.option({ options: 'main' })}>
             <Settings class="icon-button" />
             <DropMenu
-              show={chats.opts.options && !mobile()}
+              show={chats.opts.options === 'main'}
               close={() => chatStore.option({ options: false })}
               horz="left"
               vert="down"
