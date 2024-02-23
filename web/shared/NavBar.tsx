@@ -75,10 +75,10 @@ const NavBar: Component = () => {
             </Show>
           </div>
           <Show when={isChat()} fallback={<div class="w-8 sm:hidden"></div>}>
-            <div onClick={() => chatStore.option({ options: true })}>
+            <div onClick={() => chatStore.option({ options: 'mobile' })}>
               <MoreHorizontal class="icon-button" />
               <DropMenu
-                show={chats.opts.options}
+                show={chats.opts.options === 'mobile'}
                 close={() => chatStore.option({ options: false })}
                 horz="left"
                 vert="down"

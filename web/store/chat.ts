@@ -50,7 +50,7 @@ export type ChatState = {
     hideOoc: boolean
     pane?: ChatRightPane
     confirm: boolean
-    options: boolean
+    options: 'mobile' | 'main' | false
   }
   promptHistory: Record<string, any>
 }
