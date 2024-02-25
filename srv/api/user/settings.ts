@@ -119,6 +119,14 @@ export const deleteOaiKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteMistralKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    mistralKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteElevenLabsKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     elevenLabsApiKey: '',
@@ -152,6 +160,7 @@ const validConfig = {
   hordeModels: ['string?'],
   hordeWorkers: ['string'],
   oaiKey: 'string?',
+  mistralKey: 'string?',
   scaleUrl: 'string?',
   scaleApiKey: 'string?',
   claudeApiKey: 'string?',
@@ -302,6 +311,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.oaiKey = encryptText(body.oaiKey!)
   }
 
+  if (body.mistralKey) {
+    update.mistralKey = encryptText(body.mistralKey!)
+  }
+
   if (body.scaleUrl !== undefined) update.scaleUrl = body.scaleUrl
   if (body.scaleApiKey) {
     update.scaleApiKey = encryptText(body.scaleApiKey)
@@ -431,6 +444,11 @@ export async function getSafeUserConfig(userId: string) {
   if (user.oaiKey) {
     user.oaiKeySet = true
     user.oaiKey = ''
+  }
+
+  if (user.mistralKey) {
+    user.mistralKeySet = true
+    user.mistralKey = ''
   }
 
   if (user.scaleApiKey) {

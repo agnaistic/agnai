@@ -288,7 +288,7 @@ const GeneralSettings: Component<
         <TextInput
           fieldName="thirdPartyKey"
           label="Third Party Password"
-          helperText="Never enter your official OpenAI key here."
+          helperText="Never enter your official OpenAI, Claude, Mistral keys here."
           value={''}
           disabled={props.disabled}
           service={props.service}

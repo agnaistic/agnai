@@ -262,6 +262,7 @@ const settingsForm = {
   hordeKey: 'string?',
   hordeModel: 'string?',
   oaiKey: 'string?',
+  mistralKey: 'string?',
   scaleApiKey: 'string?',
   scaleUrl: 'string?',
   claudeApiKey: 'string?',

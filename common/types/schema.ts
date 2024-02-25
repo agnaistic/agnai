@@ -201,6 +201,9 @@ export namespace AppSchema {
     thirdPartyPasswordSet?: boolean
     oobaUrl: string
 
+    mistralKey?: string
+    mistralKeySet?: boolean
+
     oaiKey: string
     oaiKeySet?: boolean
 

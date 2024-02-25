@@ -170,23 +170,31 @@ async function dispatch(opts: AdapterProps, body: any) {
 async function getHeaders(opts: AdapterProps) {
   const headers: any = {}
 
-  const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
-  if (!password) return headers
-
-  const apiKey = opts.guest ? password : decryptText(password)
-
   switch (opts.gen.thirdPartyFormat) {
     case 'aphrodite': {
+      const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
+      const apiKey = opts.guest ? password : decryptText(password)
       headers['x-api-key'] = apiKey
       headers['Authorization'] = `Bearer ${apiKey}`
       break
     }
 
-    case 'tabby':
-    case 'mistral':
+    case 'tabby': {
+      const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
+      const apiKey = opts.guest ? password : decryptText(password)
+      headers['Authorization'] = `Bearer ${apiKey}`
+      break
+    }
+
+    case 'mistral': {
+      const key = opts.user.mistralKey
+      if (!key) throw new Error(`Mistral API key not set. Check your AI->3rd-party settings`)
+
+      const apiKey = opts.guest ? key : decryptText(key)
       headers['Authorization'] = `Bearer ${apiKey}`
       headers['Content-Type'] = 'application/json'
       break
+    }
   }
 
   return headers

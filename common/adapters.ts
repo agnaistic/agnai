@@ -368,7 +368,8 @@ export const adapterSettings: {
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
   thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby'],
-  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'mistral', 'openai', 'openai-chat'],
+  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'openai', 'openai-chat'],
+
   claudeModel: ['claude'],
   novelModel: ['novel'],
   mistralModel: ['mistral'],
