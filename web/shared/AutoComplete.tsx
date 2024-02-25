@@ -1,14 +1,14 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
 import { Component, For } from 'solid-js'
 
-type Option = {
+export type AutoCompleteOption = {
   label: string
   value: string
 }
 
 export const AutoComplete: Component<{
-  options: Option[]
-  onSelect: (option: Option) => void
+  options: AutoCompleteOption[]
+  onSelect: (option: AutoCompleteOption) => void
   close: () => void
   dir: 'up' | 'down'
   /**
