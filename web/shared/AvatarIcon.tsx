@@ -1,14 +1,5 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  JSX,
-  Match,
-  Show,
-  Switch,
-} from 'solid-js'
+import { Component, createEffect, createSignal, JSX, Match, Show, Switch } from 'solid-js'
 import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
