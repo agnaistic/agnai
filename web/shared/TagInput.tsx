@@ -68,7 +68,10 @@ const TagInput: Component<TagInputProps> = (props) => {
     const value = inputValue()
     if (e.key === 'Backspace' && value === '' && lastTag) {
       removeTag(lastTag)
-    } else if ((e.key === ',' || e.key == 'Enter') && value !== '' && suggestions().length === 0) {
+    } else if (e.key == 'Enter' && value !== '' && suggestions().length === 0) {
+      e.preventDefault()
+      addTag(value)
+    } else if (e.key === ',' && value !== '') {
       e.preventDefault()
       addTag(value)
     }
