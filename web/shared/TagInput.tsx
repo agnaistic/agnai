@@ -55,6 +55,7 @@ const TagInput: Component<TagInputProps> = (props) => {
   function removeTag(tagToRemove: string) {
     const updatedTags = tags().filter((tag) => tag !== tagToRemove)
     setTags(updatedTags)
+    setInputValue('')
     props.onSelect(updatedTags)
   }
 
@@ -65,7 +66,7 @@ const TagInput: Component<TagInputProps> = (props) => {
 
   function handleInputKeyDown(e: KeyboardEvent) {
     const lastTag = tags()[tags().length - 1]
-    const value = inputValue()
+    const value = inputValue().trim()
     if (e.key === 'Backspace' && value === '' && lastTag) {
       removeTag(lastTag)
     } else if (e.key == 'Enter' && value !== '' && suggestions().length === 0) {
@@ -74,6 +75,17 @@ const TagInput: Component<TagInputProps> = (props) => {
     } else if (e.key === ',' && value !== '') {
       e.preventDefault()
       addTag(value)
+    }
+  }
+
+  function handleBlur(e: Event) {
+    resetSuggestions()
+    // do not leave trailing text in the input
+    const value = inputValue().trim()
+    if (value !== '' && value !== ',') {
+      addTag(value)
+    } else {
+      setInputValue('')
     }
   }
 
@@ -97,7 +109,7 @@ const TagInput: Component<TagInputProps> = (props) => {
           value={inputValue()}
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}
-          onBlur={resetSuggestions}
+          onBlur={handleBlur}
           placeholder={tags().length || inputValue() ? '' : props.placeholder ?? 'Add tags...'}
           disabled={props.disabled}
           autocomplete="off"
