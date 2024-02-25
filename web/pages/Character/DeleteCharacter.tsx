@@ -54,7 +54,7 @@ const DeleteCharacterModal: Component<{
         </div>
         <div>Are you sure you wish to delete this character?</div>
         <div class="flex justify-center gap-4">
-          <CharacterAvatar char={props.char!} />
+          <CharacterAvatar char={props.char!} format={{ size: 'md', corners: 'circle' }} />
           {props.char!.name}
         </div>
       </div>
