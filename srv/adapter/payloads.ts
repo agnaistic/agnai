@@ -1,5 +1,6 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
+import { clamp } from '/common/util'
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen } = opts
@@ -16,6 +17,19 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 
 function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt } = opts
+
+  if (gen.thirdPartyFormat === 'mistral') {
+    const body = {
+      messages: [{ role: 'user', content: prompt }],
+      model: gen.mistralModel!,
+      temperature: clamp(gen.temp!, 0.01, 1),
+      top_p: clamp(gen.topP!, 0, 1),
+      max_tokens: gen.maxTokens!,
+      stream: gen.streamResponse,
+    }
+
+    return body
+  }
 
   if (gen.thirdPartyFormat === 'tabby') {
     const body: any = {

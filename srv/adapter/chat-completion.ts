@@ -90,6 +90,11 @@ export const streamCompletion: CompletionGenerator = async function* (
     const events = requestStream(resp)
     let prev = ''
     for await (const event of events) {
+      if (event.error) {
+        yield { error: event.error }
+        return
+      }
+
       if (!event.data) {
         continue
       }
@@ -174,8 +179,7 @@ export const streamCompletion: CompletionGenerator = async function* (
  */
 export async function toChatCompletionPayload(
   opts: AdapterProps,
-  maxTokens: number,
-  mistralApi: boolean
+  maxTokens: number
 ): Promise<CompletionItem[]> {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
@@ -226,7 +230,7 @@ export async function toChatCompletionPayload(
       })
     ).parsed
     tokens += await encode(post.content)
-    if (!mistralApi) history.push(post)
+    history.push(post)
   }
 
   const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
@@ -235,7 +239,7 @@ export async function toChatCompletionPayload(
   let addedAllInserts = false
   const addRemainingInserts = () => {
     const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
-    if (remainingInserts && !mistralApi) {
+    if (remainingInserts) {
       history.push({
         role: 'system',
         content: remainingInserts,
@@ -437,4 +441,33 @@ function tryParse<T = any>(value: string, prev?: string): T | undefined {
   } catch (ex) {
     return
   }
+}
+
+export const requestFullCompletion: CompletionGenerator = async function* (
+  _userId,
+  url,
+  headers,
+  body,
+  _service,
+  _log
+) {
+  const resp = await needle('post', url, JSON.stringify(body), {
+    json: true,
+    headers,
+  }).catch((err) => ({ error: err }))
+
+  if ('error' in resp) {
+    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
+    return
+  }
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
+    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
+    return
+  }
+
+  return resp.body
 }

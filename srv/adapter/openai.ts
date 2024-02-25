@@ -1,4 +1,3 @@
-import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
@@ -6,7 +5,7 @@ import { OPENAI_CHAT_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
 import { AppLog } from '../logger'
-import { streamCompletion, toChatCompletionPayload } from './chat-completion'
+import { requestFullCompletion, streamCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
 
 const baseUrl = `https://api.openai.com`
@@ -26,17 +25,6 @@ type Completion<T = Inference> = {
   error?: { message: string }
 }
 
-type CompletionGenerator = (
-  userId: string,
-  url: string,
-  headers: Record<string, string | string[] | number>,
-  body: any,
-  log: AppLog
-) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string },
-  Completion | undefined
->
-
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getBaseUrl(user, !!gen.thirdPartyUrlNoSuffix, isThirdParty)
@@ -46,8 +34,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const oaiModel =
-    gen.thirdPartyModel || gen.mistralModel || gen.oaiModel || defaultPresets.openai.oaiModel
+  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
@@ -60,21 +47,16 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
-  const useMistral: boolean = isThirdParty === true && gen.thirdPartyFormat === 'mistral'
-  if (!useMistral) {
-    body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
-    body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
-  }
+  body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
+  body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
   const useChat =
-    useMistral ||
-    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') ||
-    !!OPENAI_CHAT_MODELS[oaiModel]
+    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : await toChatCompletionPayload(opts, body.max_tokens, useMistral)
+      : await toChatCompletionPayload(opts, body.max_tokens)
 
     body.messages = messages
     yield { prompt: messages }
@@ -87,7 +69,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
   const apiKey = useThirdPartyPassword
-    ? user.thirdPartyPassword
+    ? gen.thirdPartyKey || user.thirdPartyPassword
     : !isThirdParty
     ? user.oaiKey
     : null
@@ -111,7 +93,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const iter = body.stream
     ? streamCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
-    : requestFullCompletion(opts.user._id, url, headers, body, opts.log)
+    : requestFullCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
   let accumulated = ''
   let response: Completion<Inference> | undefined
 
@@ -176,34 +158,6 @@ export type OAIUsage = {
   daily_costs: Array<{ timestamp: number; line_item: Array<{ name: string; cost: number }> }>
   object: string
   total_usage: number
-}
-
-const requestFullCompletion: CompletionGenerator = async function* (
-  _userId,
-  url,
-  headers,
-  body,
-  _log
-) {
-  const resp = await needle('post', url, JSON.stringify(body), {
-    json: true,
-    headers,
-  }).catch((err) => ({ error: err }))
-
-  if ('error' in resp) {
-    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return
-  }
-
-  if (resp.statusCode && resp.statusCode >= 400) {
-    const msg =
-      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
-
-    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
-    return
-  }
-
-  return resp.body
 }
 
 function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {

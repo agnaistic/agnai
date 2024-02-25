@@ -62,6 +62,7 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
   }
 
   const { order, disabledSamplers, ...rest } = body
+
   const update: Partial<AppSchema.UserGenPreset> = { ...rest }
   if (order) {
     update.order = order?.split(',').map((i) => +i)

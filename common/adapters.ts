@@ -59,7 +59,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   llamacpp: 'ooba',
   ooba: 'ooba',
   tabby: 'kobold',
-  mistral: 'openai',
+  mistral: 'kobold',
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -367,7 +367,8 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby', 'mistral'],
+  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby'],
+  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'mistral', 'openai', 'openai-chat'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
   mistralModel: ['mistral'],

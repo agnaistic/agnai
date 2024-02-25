@@ -281,8 +281,21 @@ const GeneralSettings: Component<
           value={props.inherit?.thirdPartyUrl || ''}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'thirdPartyUrl'}
         />
+
+        <TextInput
+          fieldName="thirdPartyKey"
+          label="Third Party Password"
+          helperText="Never enter your official OpenAI key here."
+          value={''}
+          disabled={props.disabled}
+          service={props.service}
+          type="password"
+          aiSetting={'thirdPartyKey'}
+        />
+
         <div class="flex flex-wrap items-start gap-2">
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"

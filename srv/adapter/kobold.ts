@@ -9,6 +9,7 @@ import { getStoppingStrings } from './prompt'
 import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
+import * as oai from './chat-completion'
 
 /**
  * Sampler order
@@ -35,6 +36,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'mistral' ||
     opts.gen.thirdPartyFormat === 'tabby' ||
     opts.gen.thirdPartyFormat === 'aphrodite' ||
     opts.gen.thirdPartyFormat === 'llamacpp' ||
@@ -43,9 +45,9 @@ export const handleKobold: ModelAdapter = async function* (opts) {
       ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
-  // Kobold has a stop requence parameter which automatically
+  // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
-  if (opts.gen.thirdPartyFormat !== 'llamacpp') {
+  if (opts.gen.thirdPartyFormat === 'kobold' || opts.gen.thirdPartyFormat === 'koboldcpp') {
     const stop_sequence = getStoppingStrings(opts).concat('END_OF_DIALOG')
     body.stop_sequence = stop_sequence
 
@@ -116,29 +118,10 @@ export const handleKobold: ModelAdapter = async function* (opts) {
 async function dispatch(opts: AdapterProps, body: any) {
   const baseURL = `${normalizeUrl(opts.user.koboldUrl)}`
 
-  const headers: any = {}
-
+  const headers: any = await getHeaders(opts)
   if (opts.gen.thirdPartyFormat === 'aphrodite') {
-    if (opts.user.thirdPartyPassword) {
-      const apiKey = decryptText(opts.user.thirdPartyPassword)
-      headers['x-api-key'] = apiKey
-      headers['Authorization'] = `Bearer ${apiKey}`
-    }
     await validateModel(opts, baseURL, body, headers)
   }
-
-  if (opts.gen.thirdPartyFormat === 'tabby' && opts.user.thirdPartyPassword) {
-    const apiKey = decryptText(opts.user.thirdPartyPassword)
-    headers['Authorization'] = `Bearer ${apiKey}`
-  }
-
-  const isStreamSupported =
-    opts.gen.thirdPartyFormat === 'tabby' ||
-    opts.gen.thirdPartyFormat === 'llamacpp' ||
-    opts.gen.thirdPartyFormat === 'aphrodite' ||
-    opts.gen.thirdPartyFormat === 'exllamav2'
-      ? true
-      : await checkStreamSupported(`${baseURL}/api/extra/version`)
 
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
@@ -149,14 +132,23 @@ async function dispatch(opts: AdapterProps, body: any) {
       const url = `${baseURL}/v1/completions`
       return opts.gen.streamResponse
         ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
 
     case 'exllamav2': {
       const stream = await websocketStream({ url: baseURL, body })
       return stream
     }
 
+    case 'mistral': {
+      const url = 'https://api.mistral.ai/v1/chat/completions'
+      const stream = opts.gen.streamResponse
+        ? oai.streamCompletion(opts.user._id, url, headers, body, 'mistral', opts.log)
+        : fullCompletion(url, body, headers, 'mistral', opts.log)
+      return stream
+    }
+
     default:
+      const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       return opts.gen.streamResponse && isStreamSupported
         ? streamCompletion(
             `${baseURL}/api/extra/generate/stream`,
@@ -165,8 +157,39 @@ async function dispatch(opts: AdapterProps, body: any) {
             headers,
             opts.log
           )
-        : fullCompletion(`${baseURL}/api/v1/generate`, body, headers, opts.log)
+        : fullCompletion(
+            `${baseURL}/api/v1/generate`,
+            body,
+            headers,
+            opts.gen.thirdPartyFormat || opts.gen.service!,
+            opts.log
+          )
   }
+}
+
+async function getHeaders(opts: AdapterProps) {
+  const headers: any = {}
+
+  const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
+  if (!password) return headers
+
+  const apiKey = opts.guest ? password : decryptText(password)
+
+  switch (opts.gen.thirdPartyFormat) {
+    case 'aphrodite': {
+      headers['x-api-key'] = apiKey
+      headers['Authorization'] = `Bearer ${apiKey}`
+      break
+    }
+
+    case 'tabby':
+    case 'mistral':
+      headers['Authorization'] = `Bearer ${apiKey}`
+      headers['Content-Type'] = 'application/json'
+      break
+  }
+
+  return headers
 }
 
 async function checkStreamSupported(versioncheckURL: any) {
@@ -191,31 +214,39 @@ async function checkStreamSupported(versioncheckURL: any) {
   return isSupportedVersion
 }
 
-const fullCompletion = async function* (genURL: string, body: any, headers: any, log: AppLog) {
+const fullCompletion = async function* (
+  genURL: string,
+  body: any,
+  headers: any,
+  service: string,
+  log: AppLog
+) {
   const resp = await needle('post', genURL, body, {
     headers: { 'Bypass-Tunnel-Reminder': 'true', ...headers },
     json: true,
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
-    log.error({ error: resp.error }, `Kobold request failed`)
+    yield { error: `${service} request failed: ${resp.error?.message || resp.error}` }
+    log.error({ error: resp.error }, `${service} request failed`)
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `Kobold request failed: ${resp.statusMessage}` }
-    log.error({ error: resp.body }, `Kobold request failed`)
+    yield { error: `${service} request failed: ${resp.statusMessage}` }
+    log.error({ error: resp.body }, `${service} request failed`)
     return
   }
 
   if ('choices' in resp.body) {
-    const text = resp.body.choices[0].text
+    const first = resp.body.choices[0]
+    const text = first.message ? first.message.content : first.text
 
     const gens: string[] = []
     for (const choice of resp.body.choices) {
       if (!choice.index || choice.index === 0) continue
-      gens.push(choice.text)
+      const text = choice.message ? choice.message.content : choice.text
+      gens.push(text)
     }
 
     return gens.length ? { tokens: text, gens } : { tokens: text }
@@ -226,8 +257,8 @@ const fullCompletion = async function* (genURL: string, body: any, headers: any,
   if (text) {
     return { tokens: text }
   } else {
-    log.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
-    yield { error: `Kobold failed to generate a response: ${resp.body}` }
+    log.error({ err: resp.body }, `Failed to generate text using ${service} adapter`)
+    yield { error: `${service} failed to generate a response: ${resp.body}` }
     return
   }
 }

@@ -63,6 +63,7 @@ export const presetValidator = {
   stopSequences: ['string?'],
   trimStop: 'boolean?',
   thirdPartyUrl: 'string?',
+  thirdPartyKey: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',
   thirdPartyModel: 'string?',
