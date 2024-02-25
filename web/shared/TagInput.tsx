@@ -123,6 +123,7 @@ const TagInput: Component<TagInputProps> = (props) => {
             close={resetSuggestions}
             dir="down"
             offset={0}
+            limit={5}
           />
         </Show>
       </div>
