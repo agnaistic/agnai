@@ -4,10 +4,11 @@ import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { AdapterProps, ModelAdapter } from './type'
 import { requestStream, websocketStream } from './stream'
-import { getThirdPartyPayload, llamaStream } from './ooba'
+import { llamaStream } from './ooba'
 import { getStoppingStrings } from './prompt'
 import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
+import { getThirdPartyPayload } from './payloads'
 
 /**
  * Sampler order
@@ -31,17 +32,16 @@ const base = {
 }
 
 export const handleKobold: ModelAdapter = async function* (opts) {
-  const { members, characters, user, prompt, mappedSettings } = opts
+  const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'tabby' ||
     opts.gen.thirdPartyFormat === 'aphrodite' ||
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
     opts.gen.thirdPartyFormat === 'koboldcpp'
       ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
-
-  const baseURL = `${normalizeUrl(user.koboldUrl)}`
 
   // Kobold has a stop requence parameter which automatically
   // halts generation when a certain token is generated
@@ -67,50 +67,9 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   yield { prompt: body.prompt }
 
   logger.debug(`Prompt:\n${body.prompt}`)
-  logger.debug({ ...body, prompt: null }, 'Kobold payload')
+  logger.debug({ ...body, prompt: null }, '3rd-party payload')
 
-  const headers: any = {}
-
-  if (opts.gen.thirdPartyFormat === 'aphrodite' && user.thirdPartyPassword) {
-    const apiKey = decryptText(user.thirdPartyPassword)
-    headers['x-api-key'] = apiKey
-    headers['Authorization'] = `Bearer ${apiKey}`
-  }
-
-  await validateModel(opts, baseURL, body, headers)
-
-  // Only KoboldCPP at version 1.30 and higher has streaming support
-  const isStreamSupported =
-    opts.gen.thirdPartyFormat === 'llamacpp' ||
-    opts.gen.thirdPartyFormat === 'aphrodite' ||
-    opts.gen.thirdPartyFormat === 'exllamav2'
-      ? true
-      : await checkStreamSupported(`${baseURL}/api/extra/version`)
-
-  const stream =
-    opts.gen.thirdPartyFormat === 'llamacpp'
-      ? llamaStream(baseURL, body)
-      : opts.gen.thirdPartyFormat === 'aphrodite'
-      ? body.stream
-        ? streamCompletion(
-            `${baseURL}/v1/completions`,
-            body,
-            headers,
-            opts.gen.thirdPartyFormat,
-            opts.log
-          )
-        : fullCompletion(`${baseURL}/v1/completions`, body, headers, opts.log)
-      : opts.gen.thirdPartyFormat === 'exllamav2'
-      ? await websocketStream({ url: baseURL, body })
-      : opts.gen.streamResponse && isStreamSupported
-      ? streamCompletion(
-          `${baseURL}/api/extra/generate/stream`,
-          body,
-          'koboldcpp',
-          headers,
-          opts.log
-        )
-      : fullCompletion(`${baseURL}/api/v1/generate`, body, headers, opts.log)
+  const stream = await dispatch(opts, body)
 
   let accum = ''
 
@@ -152,6 +111,62 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   ])
 
   yield trimmed || parsed
+}
+
+async function dispatch(opts: AdapterProps, body: any) {
+  const baseURL = `${normalizeUrl(opts.user.koboldUrl)}`
+
+  const headers: any = {}
+
+  if (opts.gen.thirdPartyFormat === 'aphrodite') {
+    if (opts.user.thirdPartyPassword) {
+      const apiKey = decryptText(opts.user.thirdPartyPassword)
+      headers['x-api-key'] = apiKey
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+    await validateModel(opts, baseURL, body, headers)
+  }
+
+  if (opts.gen.thirdPartyFormat === 'tabby' && opts.user.thirdPartyPassword) {
+    const apiKey = decryptText(opts.user.thirdPartyPassword)
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  const isStreamSupported =
+    opts.gen.thirdPartyFormat === 'tabby' ||
+    opts.gen.thirdPartyFormat === 'llamacpp' ||
+    opts.gen.thirdPartyFormat === 'aphrodite' ||
+    opts.gen.thirdPartyFormat === 'exllamav2'
+      ? true
+      : await checkStreamSupported(`${baseURL}/api/extra/version`)
+
+  switch (opts.gen.thirdPartyFormat) {
+    case 'llamacpp':
+      return llamaStream(baseURL, body)
+
+    case 'aphrodite':
+    case 'tabby':
+      const url = `${baseURL}/v1/completions`
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.log)
+
+    case 'exllamav2': {
+      const stream = await websocketStream({ url: baseURL, body })
+      return stream
+    }
+
+    default:
+      return opts.gen.streamResponse && isStreamSupported
+        ? streamCompletion(
+            `${baseURL}/api/extra/generate/stream`,
+            body,
+            'koboldcpp',
+            headers,
+            opts.log
+          )
+        : fullCompletion(`${baseURL}/api/v1/generate`, body, headers, opts.log)
+  }
 }
 
 async function checkStreamSupported(versioncheckURL: any) {
@@ -250,38 +265,43 @@ const streamCompletion = async function* (
         final: boolean
         ptr: number
         error?: string
+        choices?: Array<{ index: number; finish_reason: string; logprobs: any; text: string }>
       }
+
       if (data.error) {
-        yield { error: `Kobold streaming request failed: ${data.error}` }
-        log.error({ error: data.error }, 'Kobold streaming request failed')
+        yield { error: `${format} streaming request failed: ${data.error}` }
+        log.error({ error: data.error }, `${format} streaming request failed`)
         return
       }
+
+      const res = data.choices ? data.choices[0] : data
+      const token = 'text' in res ? res.text : res.token
 
       if (!first) {
         first = Date.now()
       }
 
       /** Handle batch generations */
-      if (data.index !== undefined) {
-        const index = data.index
+      if (res.index !== undefined) {
+        const index = res.index
         if (!responses[index]) {
           responses[index] = ''
         }
 
-        responses[index] += data.token
+        responses[index] += token
 
         if (index === 0) {
-          tokens.push(data.token)
-          yield { token: data.token }
+          tokens.push(token)
+          yield { token: token }
         }
         continue
       }
 
-      tokens.push(data.token)
-      yield { token: data.token }
+      tokens.push(token)
+      yield { token: token }
     }
   } catch (err: any) {
-    yield { error: `Kobold streaming request failed: ${err.message || err}` }
+    yield { error: `${format} streaming request failed: ${err.message || err}` }
     return
   }
 

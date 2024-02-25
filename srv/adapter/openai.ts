@@ -66,31 +66,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   }
 
-  const useTabby = isThirdParty && gen.thirdPartyFormat === 'tabby'
-
-  if (useTabby) {
-    body.top_k = gen.topK
-    body.top_a = gen.topA
-    body.min_p = gen.minP
-    body.smoothing_factor = gen.smoothingFactor
-    body.tfs = gen.tailFreeSampling
-    body.typical = gen.typicalP
-    body.repetition_penalty = gen.repetitionPenalty
-    body.repetition_penalty_range = gen.repetitionPenaltyRange
-    body.mirostat_mode = gen.mirostatToggle ? 2 : 0
-    body.mirostat_tau = gen.mirostatTau
-    body.mirostat_eta = gen.mirostatLR
-    body.add_bos_token = gen.addBosToken
-    body.ban_eos_token = gen.banEosToken
-    body.cfg_scale = gen.cfgScale
-    body.negative_prompt = gen.cfgOppose
-    if (gen.dynatemp_range) {
-      body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
-      body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
-      body.temp_exponent = gen.dynatemp_exponent
-    }
-  }
-
   const useChat =
     useMistral ||
     (isThirdParty && gen.thirdPartyFormat === 'openai-chat') ||

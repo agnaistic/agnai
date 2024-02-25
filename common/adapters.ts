@@ -58,7 +58,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   koboldcpp: 'kobold',
   llamacpp: 'ooba',
   ooba: 'ooba',
-  tabby: 'openai',
+  tabby: 'kobold',
   mistral: 'openai',
 }
 
