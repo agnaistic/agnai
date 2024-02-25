@@ -15,6 +15,7 @@ export const presetValidator = {
   temp: 'number',
   dynatemp_range: 'number?',
   dynatemp_exponent: 'number?',
+  smoothingFactor: 'number?',
   maxTokens: 'number',
   maxContextLength: 'number?',
   repetitionPenalty: 'number',
@@ -62,6 +63,7 @@ export const presetValidator = {
   stopSequences: ['string?'],
   trimStop: 'boolean?',
   thirdPartyUrl: 'string?',
+  thirdPartyKey: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',
   thirdPartyModel: 'string?',
@@ -70,6 +72,7 @@ export const presetValidator = {
   novelModelOverride: 'string?',
 
   claudeModel: 'string',
+  mistralModel: 'string',
   streamResponse: 'boolean?',
   ultimeJailbreak: 'string?',
   prefixNameAppend: 'boolean?',

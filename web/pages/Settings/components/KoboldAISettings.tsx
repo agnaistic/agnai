@@ -1,4 +1,4 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
@@ -31,6 +31,8 @@ const KoboldAISettings: Component = () => {
           { label: 'Llama.cpp', value: 'llamacpp' },
           { label: 'ExLlamaV2', value: 'exllamav2' },
           { label: 'KoboldCpp', value: 'koboldcpp' },
+          { label: 'TabbyAPI', value: 'tabby' },
+          { label: 'Mistral API', value: 'mistral' },
         ]}
         value={state.user?.thirdPartyFormat ?? 'kobold'}
       />
@@ -42,6 +44,25 @@ const KoboldAISettings: Component = () => {
         type="password"
         value={''}
       />
+
+      <TextInput
+        fieldName="mistralKey"
+        helperText={
+          <div>
+            <div>For use with the official Mistral AI service</div>
+            <Show when={state.user?.mistralKeySet}>
+              <a class="link" onClick={() => userStore.deleteKey('mistral')}>
+                Delete Key
+              </a>
+            </Show>
+          </div>
+        }
+        label="Mistral API Key"
+        placeholder={state.user?.mistralKeySet ? 'Password is set' : 'API Key not set'}
+        type="password"
+        value={''}
+      />
+
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('third-party')}>
         Delete third-party password
       </Button>

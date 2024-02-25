@@ -55,7 +55,7 @@ const Character: Component<{
         role="link"
         aria-label={`Open chats with ${props.char.name}`}
       >
-        <CharacterAvatar char={props.char} zoom={1.75} />
+        <CharacterAvatar char={props.char} zoom={1.75} format={{ size: 'md', corners: 'circle' }} />
         <div class="flex max-w-full flex-col overflow-hidden">
           <span class="ellipsis font-bold">{props.char.name}</span>
           <span class="ellipsis">{props.char.description}</span>

@@ -364,8 +364,8 @@ const InputBar: Component<{
         </Match>
 
         <Match when>
-          <Button schema="clear">
-            <Send class="icon-button" size={18} onClick={send} />
+          <Button schema="clear" onClick={send}>
+            <Send class="icon-button" size={18} />
           </Button>
         </Match>
       </Switch>

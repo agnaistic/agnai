@@ -1,14 +1,5 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  JSX,
-  Match,
-  Show,
-  Switch,
-} from 'solid-js'
+import { Component, createEffect, createSignal, JSX, Match, Show, Switch } from 'solid-js'
 import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
@@ -24,7 +15,7 @@ type Props = {
   avatarUrl?: string | File
   class?: string
   bot?: boolean
-  format?: Format
+  format: Format
   anonymize?: boolean
   Icon?: (props: LucideProps) => JSX.Element
   openable?: boolean
@@ -36,13 +27,11 @@ type Format = {
   corners: UI.AvatarCornerRadius
 }
 
-const defaultFormat: Format = { size: 'md', corners: 'circle' }
-
 export const CharacterAvatar: Component<{
   noBorder?: boolean
   char: AppSchema.Character
   openable?: boolean
-  format?: Format
+  format: Format
   bot?: boolean
   anonymize?: boolean
   surround?: boolean
@@ -51,13 +40,6 @@ export const CharacterAvatar: Component<{
   Icon?: (props: LucideProps) => JSX.Element
 }> = (props) => {
   let ref: any
-  const format = createMemo(() => props.format || defaultFormat)
-
-  const fmtSize = createMemo(() => {
-    return `avatar-${format().size} ${format().corners === 'circle' ? 'avatar-circle' : ''}`
-  })
-
-  const fmtCorners = createMemo(() => corners[format().corners])
 
   return (
     <>
@@ -73,10 +55,13 @@ export const CharacterAvatar: Component<{
         <Match when={props.char.visualType === 'sprite' && props.char.sprite && props.surround}>
           <div
             ref={ref}
-            class={`flex justify-center overflow-hidden border-2  bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            class={`flex shrink-0 justify-center overflow-hidden border-2 bg-[var(--bg-800)] ${
               props.class || ''
             }`}
             classList={{
+              [corners[props.format.corners]]: true,
+              [`avatar-${props.format.size}`]: true,
+              'avatar-circle': props.format.corners === 'circle',
               'border-2': !props.noBorder,
               'border-[var(--bg-800)]': !props.noBorder,
               'border-0': props.noBorder,
@@ -90,9 +75,11 @@ export const CharacterAvatar: Component<{
 
         <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
           <div
-            class={`flex justify-center avatar-${
-              props.format?.size || 'md'
-            } avatar-circle ${fmtCorners()}`}
+            classList={{
+              [corners[props.format.corners]]: true,
+              [`avatar-${props.format.size}`]: true,
+            }}
+            class={`avatar-circle flex justify-center`}
             ref={ref}
           >
             <AvatarContainer zoom={props.zoom} body={props.char.sprite} container={ref} />
@@ -119,16 +106,6 @@ const AvatarIcon: Component<Props> = (props) => {
   const [avatar, setAvatar] = createSignal(
     typeof props.avatarUrl === 'string' ? props.avatarUrl : null
   )
-  const cls = createMemo(() => props.class || '')
-
-  const format = createMemo(() => props.format || defaultFormat)
-
-  const fmtFit = createMemo(() => fit[format().corners])
-  const fmtSize = createMemo(() => {
-    return `avatar-${format().size} ${format().corners === 'circle' ? 'avatar-circle' : ''}`
-  })
-
-  const fmtCorners = createMemo(() => corners[format().corners])
 
   createEffect(async () => {
     if (!props.avatarUrl) {
@@ -143,12 +120,6 @@ const AvatarIcon: Component<Props> = (props) => {
     }
   })
 
-  // We don't simply remove or change the image, because
-  // this would cause a DOM shift (bad UX). If the user's avatar is tall,
-  // replacing it with the default round avatar would cause long messages to
-  // shrink.
-  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
-
   const onImageClick = () => {
     if (!props.openable) return
     const img = avatar()
@@ -161,13 +132,15 @@ const AvatarIcon: Component<Props> = (props) => {
       <Switch>
         <Match when={avatar()}>
           <div
-            class={`avatar-icon overflow-hidden ${fmtSize()} ${fmtCorners()} shrink-0 ${
-              props.class || ''
-            }`}
+            class={`avatar-icon shrink-0 overflow-hidden ${props.class || ''}`}
             classList={{
+              [corners[props.format.corners]]: true,
+              [`avatar-${props.format.size}`]: true,
+              'avatar-circle': props.format.corners === 'circle',
               'border-2': !props.noBorder,
               'border-[var(--bg-800)]': !props.noBorder,
               'border-0': props.noBorder,
+              visible: props.anonymize,
             }}
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
@@ -177,12 +150,14 @@ const AvatarIcon: Component<Props> = (props) => {
             <img
               data-bot-image={props.bot}
               data-user-image={!props.bot}
-              class={`
-            ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
-            ${fmtFit()} ${fmtCorners()}
-            ${visibilityClass()}
-            `}
-              classList={{ 'm-auto': !props.noBorder }}
+              classList={{
+                'm-auto': !props.noBorder,
+                'avatar-circle': props.format.corners === 'circle',
+                [`avatar-${props.format.size}`]: props.format.corners === 'circle',
+                'max-h-full max-w-full': props.format.corners !== 'circle',
+                [fit[props.format.corners]]: true,
+                [corners[props.format.corners]]: true,
+              }}
               src={getAssetUrl(avatar()!)}
               data-bot-avatar={props.bot}
             />
@@ -194,8 +169,10 @@ const AvatarIcon: Component<Props> = (props) => {
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
             class={`avatar-${
-              format().size
-            } avatar-circle flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-700)] ${cls()}`}
+              props.format.size
+            } avatar-circle flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-700)] ${
+              props.class || ''
+            }`}
             classList={{
               'border-2': !props.noBorder,
               'border-[var(--bg-800)]': !props.noBorder,

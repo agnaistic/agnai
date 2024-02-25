@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
-import { now } from './util'
+import { encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
 
 export async function createTemplate(
@@ -48,10 +48,6 @@ export async function getUserTemplates(userId: string) {
   return templates
 }
 
-export async function updateGenSetting(chatId: string, props: AppSchema.Chat['genSettings']) {
-  await db('chat').updateOne({ _id: chatId }, { $set: { genSettings: props, genPreset: '' } })
-}
-
 export async function updateGenPreset(chatId: string, preset: string) {
   await db('chat').updateOne(
     { _id: chatId },
@@ -67,7 +63,14 @@ export async function createUserPreset(userId: string, settings: AppSchema.GenSe
     ...settings,
   }
 
+  if (preset.thirdPartyKey) {
+    preset.thirdPartyKey = encryptText(preset.thirdPartyKey)
+  }
+
   await db('gen-setting').insertOne(preset)
+
+  preset.thirdPartyKey = ''
+
   return preset
 }
 
@@ -77,7 +80,10 @@ export async function deleteUserPreset(presetId: string) {
 }
 
 export async function getUserPresets(userId: string) {
-  const presets = await db('gen-setting').find({ userId }).toArray()
+  const presets = (await db('gen-setting').find({ userId }).toArray()).map((pre) => {
+    pre.thirdPartyKey = ''
+    return pre
+  })
   return presets
 }
 
@@ -94,11 +100,25 @@ export async function updateUserPreset(
     }
   }
 
+  if (update.thirdPartyKey) {
+    update.thirdPartyKey = encryptText(update.thirdPartyKey)
+  } else {
+    delete update.thirdPartyKey
+  }
+
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
   const updated = await db('gen-setting').findOne({ _id: presetId })
+  update.thirdPartyKey = ''
   return updated
 }
 
+/**
+ * This function is for internal API use only
+ * The preset from here should never be returned to the user
+ *
+ * @param presetId
+ * @returns
+ */
 export async function getUserPreset(presetId: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
   return preset

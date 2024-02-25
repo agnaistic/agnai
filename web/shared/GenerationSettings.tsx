@@ -17,6 +17,7 @@ import {
   AdapterSetting,
   ThirdPartyFormat,
   THIRDPARTY_FORMATS,
+  MISTRAL_MODELS,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -124,6 +125,8 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'Aphrodite', value: 'aphrodite' },
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
+              { label: 'TabbyAPI', value: 'tabby' },
+              { label: 'Mistral API', value: 'mistral' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             service={service()}
@@ -278,8 +281,21 @@ const GeneralSettings: Component<
           value={props.inherit?.thirdPartyUrl || ''}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'thirdPartyUrl'}
         />
+
+        <TextInput
+          fieldName="thirdPartyKey"
+          label="Third Party Password"
+          helperText="Never enter your official OpenAI, Claude, Mistral keys here."
+          value={''}
+          disabled={props.disabled}
+          service={props.service}
+          type="password"
+          aiSetting={'thirdPartyKey'}
+        />
+
         <div class="flex flex-wrap items-start gap-2">
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"
@@ -302,6 +318,7 @@ const GeneralSettings: Component<
             'openRouterModel',
             'novelModel',
             'claudeModel',
+            'mistralModel',
             'replicateModelName',
             'thirdPartyModel'
           )
@@ -319,10 +336,22 @@ const GeneralSettings: Component<
           aiSetting={'oaiModel'}
         />
 
+        <Select
+          fieldName="mistralModel"
+          label="Mistral Model"
+          items={modelsToItems(MISTRAL_MODELS)}
+          helperText="Which Mistral model to use"
+          value={props.inherit?.mistralModel ?? ''}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'mistralModel'}
+        />
+
         <TextInput
           fieldName="thirdPartyModel"
-          label="OpenAI Model Override"
-          helperText="OpenAI Model Override (typically for 3rd party APIs)"
+          label="Model Override"
+          helperText="Model Override (typically for 3rd party APIs)"
           value={props.inherit?.thirdPartyModel ?? ''}
           disabled={props.disabled}
           service={props.service}
@@ -741,13 +770,9 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         />
         <RangeInput
           fieldName="dynatemp_range"
-          label="Dynamic Temperature"
-          helperText="The range to use for dynamic temperature.  When used,
-          the actual temperature is allowed to be automatically adjusted
-          dynamically between DynaTemp ± DynaTempRange. For example,
-          setting `temperature=0.4` and `dynatemp_range=0.1` will result
-          in a minimum temp of 0.3 and max of 0.5."
-          min={0.1}
+          label="Dynamic Temperature Range"
+          helperText="The range to use for dynamic temperature. When used, the actual temperature is allowed to be automatically adjusted dynamically between DynaTemp ± DynaTempRange. For example, setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3 and max of 0.5. (Put this value on 0 to disable its effect)"
+          min={0}
           max={20}
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
@@ -766,6 +791,18 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           disabled={props.disabled}
           service={props.service}
           aiSetting={'dynatemp_exponent'}
+        />
+        <RangeInput
+          fieldName="smoothingFactor"
+          label="Smoothing Factor"
+          helperText="Activates Quadratic Sampling. Applies an S-curve to logits, penalizing low-probability tokens and smoothing out high-probability tokens. Allows model creativity at lower temperatures. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={10}
+          step={0.01}
+          value={props.inherit?.smoothingFactor || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'smoothingFactor'}
         />
         <RangeInput
           fieldName="cfgScale"

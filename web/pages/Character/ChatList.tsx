@@ -287,6 +287,7 @@ const Chats: Component<{
                                     char={props.allChars[ch._id]}
                                     surround
                                     zoom={1.75}
+                                    format={{ size: 'md', corners: 'circle' }}
                                   />
                                 </div>
                               )

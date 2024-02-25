@@ -1,5 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
@@ -49,6 +49,13 @@ export const ModeGenSettings: Component<{
   const [selected, setSelected] = createSignal(
     props.presetId || user.user?.defaultPreset || AutoPreset.service
   )
+
+  createEffect(() => {
+    if (!props.presetId) return
+    if (selected() !== props.presetId) {
+      setSelected(props.presetId)
+    }
+  })
 
   const onSave = () => {
     const presetId = selected()

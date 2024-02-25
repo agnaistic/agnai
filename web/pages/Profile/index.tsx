@@ -119,7 +119,10 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <div class="flex flex-row gap-2">
-              <AvatarIcon avatarUrl={state.profile?.avatar} />
+              <AvatarIcon
+                avatarUrl={state.profile?.avatar}
+                format={{ size: 'md', corners: 'circle' }}
+              />
               <div class="flex items-center">{state.profile?.handle}</div>
             </div>
           </div>

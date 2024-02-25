@@ -420,22 +420,26 @@ const GuestNavigation: Component = () => {
   )
 }
 
+function onItemClick(onClick?: () => void) {
+  return () => {
+    onClick?.()
+    const { showMenu } = settingStore.getState()
+    if (showMenu) settingStore.closeMenu()
+  }
+}
+
 const Item: Component<{
   href?: string
   ariaLabel?: string
   children: string | JSX.Element
   onClick?: () => void
 }> = (props) => {
-  const menu = settingStore()
   return (
     <>
       <Show when={!props.href}>
         <div
           class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
-          onClick={() => {
-            if (props.onClick) props.onClick()
-            else if (menu.showMenu) settingStore.closeMenu()
-          }}
+          onClick={onItemClick(props.onClick)}
           tabindex={0}
           role="button"
           aria-label={props.ariaLabel}
@@ -447,10 +451,7 @@ const Item: Component<{
         <A
           href={props.href!}
           class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
-          onClick={() => {
-            if (props.onClick) props.onClick()
-            if (menu.showMenu) settingStore.closeMenu()
-          }}
+          onClick={onItemClick(props.onClick)}
           role="button"
           aria-label={props.ariaLabel}
         >
@@ -470,7 +471,6 @@ const SubItem: Component<{
   children: string | JSX.Element
   onClick?: () => void
 }> = (props) => {
-  const menu = settingStore()
   const loc = useLocation()
   return (
     <Show when={loc.pathname.startsWith(props.parent)}>
@@ -479,7 +479,7 @@ const SubItem: Component<{
         href={props.href!}
         class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 pl-4 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
         onClick={() => {
-          if (menu.showMenu) settingStore.closeMenu()
+          if (settingStore.getState().showMenu) settingStore.closeMenu()
         }}
         role="button"
         aria-label={props.ariaLabel}

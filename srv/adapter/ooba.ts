@@ -1,9 +1,9 @@
 import needle from 'needle'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { AdapterProps, ModelAdapter } from './type'
+import { ModelAdapter } from './type'
 import { websocketStream } from './stream'
-import { getStoppingStrings } from './prompt'
 import { eventGenerator } from '/common/util'
+import { getThirdPartyPayload } from './payloads'
 
 export const handleOoba: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen } = opts
@@ -98,150 +98,6 @@ export async function* getTextgenCompletion(
   } catch (ex: any) {
     yield { error: `${service} request failed: ${ex.message || ex}` }
   }
-}
-
-export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen, prompt } = opts
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
-    const body = {
-      prompt,
-      temperature: gen.temp,
-      min_p: gen.minP,
-      top_k: gen.topK,
-      top_p: gen.topP,
-      n_predict: gen.maxTokens,
-      stop: getStoppingStrings(opts, stops),
-      stream: true,
-      frequency_penality: gen.frequencyPenalty,
-      presence_penalty: gen.presencePenalty,
-      mirostat: gen.mirostatTau ? 2 : 0,
-      mirostat_tau: gen.mirostatTau,
-      mirostat_eta: gen.mirostatLR,
-      seed: -1,
-      typical_p: gen.typicalP,
-      ignore_eos: gen.banEosToken,
-      repeat_penalty: gen.repetitionPenalty,
-      repeat_last_n: gen.repetitionPenaltyRange,
-      tfs_z: gen.tailFreeSampling,
-    }
-    return body
-  }
-
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'aphrodite') {
-    const body = {
-      model: gen.thirdPartyModel || '',
-      stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
-      temperature: gen.temp ?? 0.5,
-      max_tokens: gen.maxTokens ?? 200,
-      best_of: gen.swipesPerGeneration,
-      n: gen.swipesPerGeneration,
-      prompt,
-
-      top_p: gen.topP ?? 1,
-      min_p: gen.minP,
-      top_k: gen.topK,
-      top_a: gen.topA,
-      stop: getStoppingStrings(opts, stops),
-      dynatemp_range: gen.dynatemp_range,
-      dynatemp_exponent: gen.dynatemp_exponent,
-
-      mirostat_mode: gen.mirostatToggle ? 2 : 0,
-      mirostat_tau: gen.mirostatTau,
-      mirostat_eta: gen.mirostatLR,
-
-      tfs: gen.tailFreeSampling,
-      typical_p: gen.typicalP,
-
-      repetition_penalty: gen.repetitionPenalty,
-      presence_penality: gen.presencePenalty ?? 0,
-      frequency_penalty: gen.frequencyPenalty ?? 0,
-      ignore_eos: gen.banEosToken,
-      skip_special_tokens: gen.skipSpecialTokens,
-      eta_cutoff: gen.etaCutoff,
-      epsilon_cutoff: gen.epsilonCutoff,
-    }
-
-    return body
-  }
-
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'exllamav2') {
-    const body = {
-      request_id: opts.requestId,
-      action: 'infer',
-      text: prompt,
-      stream: true,
-      temperature: gen.temp,
-      top_k: gen.topK,
-      top_p: gen.topP,
-      max_new_tokens: gen.maxTokens,
-      stop_conditions: getStoppingStrings(opts, stops),
-      typical: gen.typicalP,
-      rep_pen: gen.repetitionPenalty,
-      min_p: gen.minP,
-    }
-    return body
-  }
-
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'koboldcpp') {
-    const body = {
-      n: 1,
-      max_context_length: gen.maxContextLength,
-      prompt,
-      max_length: gen.maxTokens,
-      rep_pen: gen.repetitionPenalty,
-      temperature: gen.temp,
-      tfs: gen.tailFreeSampling,
-      min_p: gen.minP,
-      top_p: gen.topP,
-      top_k: gen.topK,
-      top_a: gen.topA,
-      typical: gen.typicalP,
-      stop_sequence: getStoppingStrings(opts, stops),
-      trim_stop: gen.trimStop,
-      rep_pen_range: gen.repetitionPenaltyRange,
-      rep_pen_slope: gen.repetitionPenaltySlope,
-    }
-    return body
-  }
-
-  const body = {
-    prompt,
-    context_limit: gen.maxContextLength,
-    max_new_tokens: gen.maxTokens,
-    do_sample: gen.doSample ?? true,
-    temperature: gen.temp,
-    top_p: gen.topP,
-    typical_p: gen.typicalP || 1,
-    repetition_penalty: gen.repetitionPenalty,
-    encoder_repetition_penalty: gen.encoderRepitionPenalty,
-    repetition_penalty_range: gen.repetitionPenaltyRange,
-    frequency_penalty: gen.frequencyPenalty,
-    presence_penalty: gen.presencePenalty,
-    top_k: gen.topK,
-    min_p: gen.minP,
-    top_a: gen.topA,
-    min_length: 0,
-    no_repeat_ngram_size: 0,
-    num_beams: gen.numBeams || 1,
-    penalty_alpha: gen.penaltyAlpha,
-    length_penalty: 1,
-    early_stopping: gen.earlyStopping || false,
-    seed: -1,
-    add_bos_token: gen.addBosToken || false,
-    truncation_length: gen.maxContextLength || 2048,
-    ban_eos_token: gen.banEosToken || false,
-    skip_special_tokens: gen.skipSpecialTokens ?? true,
-    stopping_strings: getStoppingStrings(opts, stops),
-    tfs: gen.tailFreeSampling,
-    mirostat_mode: gen.mirostatTau ? 2 : 0,
-    mirostat_tau: gen.mirostatTau,
-    mirostat_eta: gen.mirostatLR,
-    guidance: opts.guidance,
-    placeholders: opts.placeholders,
-    lists: opts.lists,
-    previous: opts.previous,
-  }
-  return body
 }
 
 export function llamaStream(host: string, payload: any) {

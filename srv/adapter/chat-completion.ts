@@ -90,6 +90,11 @@ export const streamCompletion: CompletionGenerator = async function* (
     const events = requestStream(resp)
     let prev = ''
     for await (const event of events) {
+      if (event.error) {
+        yield { error: event.error }
+        return
+      }
+
       if (!event.data) {
         continue
       }
@@ -436,4 +441,33 @@ function tryParse<T = any>(value: string, prev?: string): T | undefined {
   } catch (ex) {
     return
   }
+}
+
+export const requestFullCompletion: CompletionGenerator = async function* (
+  _userId,
+  url,
+  headers,
+  body,
+  _service,
+  _log
+) {
+  const resp = await needle('post', url, JSON.stringify(body), {
+    json: true,
+    headers,
+  }).catch((err) => ({ error: err }))
+
+  if ('error' in resp) {
+    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
+    return
+  }
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
+    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
+    return
+  }
+
+  return resp.body
 }

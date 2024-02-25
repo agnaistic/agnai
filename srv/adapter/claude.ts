@@ -72,9 +72,10 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'anthropic-version': apiVersion,
   }
 
-  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const useThirdPartyPassword =
+    base.changed && isThirdParty && (gen.thirdPartyKey || user.thirdPartyPassword)
   const apiKey = useThirdPartyPassword
-    ? user.thirdPartyPassword
+    ? gen.thirdPartyKey || user.thirdPartyPassword
     : !isThirdParty
     ? user.claudeApiKey
     : null

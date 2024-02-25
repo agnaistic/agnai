@@ -201,6 +201,9 @@ export namespace AppSchema {
     thirdPartyPasswordSet?: boolean
     oobaUrl: string
 
+    mistralKey?: string
+    mistralKeySet?: boolean
+
     oaiKey: string
     oaiKeySet?: boolean
 
@@ -485,6 +488,7 @@ export namespace AppSchema {
     temp: number
     dynatemp_range?: number
     dynatemp_exponent?: number
+    smoothingFactor?: number
     maxTokens: number
     maxContextLength?: number
     repetitionPenalty: number
@@ -541,6 +545,7 @@ export namespace AppSchema {
     oaiModel?: string
     novelModel?: string
     claudeModel?: string
+    mistralModel?: string
     openRouterModel?: OpenRouterModel
 
     thirdPartyUrl?: string
