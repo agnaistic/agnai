@@ -214,11 +214,7 @@ export function selectOnCharacterMessageReceivedEvent(
 
 function executeEvent(chat: AppSchema.Chat, event: AppSchema.ScenarioEvent) {
   updateChatScenarioStates(chat, event.assigns)
-  if (event.type === 'ooc') {
-    msgStore.queue(chat._id, `**Scenario Message**\n` + event.text, 'ooc')
-  } else {
-    msgStore.queue(chat._id, event.text, `send-event:${event.type}`)
-  }
+  msgStore.queue(chat._id, event.text, `send-event:${event.type}`)
 }
 
 function updateChatScenarioStates(chat: AppSchema.Chat, assigns: string[]) {
