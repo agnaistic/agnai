@@ -12,7 +12,7 @@ import { publishMany } from '../ws/handle'
 type GenRequest = UnwrapBody<typeof genValidator>
 
 const sendValidator = {
-  kind: ['send-noreply', 'ooc'],
+  kind: ['send-noreply', 'ooc', 'send-event:ooc'],
   text: 'string',
   impersonate: 'any?',
 } as const
@@ -24,6 +24,7 @@ const genValidator = {
     'send-event:world',
     'send-event:character',
     'send-event:hidden',
+    'send-event:ooc',
     'ooc',
     'retry',
     'continue',
@@ -82,8 +83,10 @@ export const createMessage = handle(async (req) => {
     const newMsg = newMessage(v4(), chatId, body.text, {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
-      ooc: body.kind === 'ooc',
-      event: undefined,
+      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
+      event: body.kind.startsWith('send-event')
+        ? (body.kind.split(':')[1] as AppSchema.EventTypes)
+        : undefined,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -98,8 +101,10 @@ export const createMessage = handle(async (req) => {
       message: body.text,
       characterId: impersonate?._id,
       senderId: userId,
-      ooc: body.kind === 'ooc',
-      event: undefined,
+      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
+      event: body.kind.startsWith('send-event')
+        ? (body.kind.split(':')[1] as AppSchema.EventTypes)
+        : undefined,
     })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })

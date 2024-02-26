@@ -178,6 +178,7 @@ export type GenerateOpts =
   | { kind: 'send-event:world'; text: string }
   | { kind: 'send-event:character'; text: string }
   | { kind: 'send-event:hidden'; text: string }
+  | { kind: 'send-event:ooc'; text: string }
   | { kind: 'send-noreply'; text: string }
   | { kind: 'ooc'; text: string }
   /**
@@ -207,7 +208,7 @@ export async function generateResponse(opts: GenerateOpts) {
     return localApi.error('No active chat. Try refreshing.')
   }
 
-  if (opts.kind === 'ooc' || opts.kind === 'send-noreply') {
+  if (opts.kind === 'ooc' || opts.kind === 'send-noreply' || opts.kind === 'send-event:ooc') {
     return createMessage(active.chat._id, opts)
   }
 
@@ -595,7 +596,10 @@ async function getGenerateProps(
 /**
  * Create a user message that does not generate a bot response
  */
-async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
+async function createMessage(
+  chatId: string,
+  opts: { kind: 'ooc' | 'send-noreply' | 'send-event:ooc'; text: string }
+) {
   const { impersonating } = getStore('character').getState()
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {

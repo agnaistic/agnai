@@ -33,6 +33,7 @@ type SendModes =
   | 'send-event:world'
   | 'send-event:character'
   | 'send-event:hidden'
+  | 'send-event:ooc'
   | 'retry'
   | 'self'
   | 'send-noreply'
@@ -403,6 +404,7 @@ export const msgStore = createStore<MsgState>(
 
         case 'ooc':
         case 'send-noreply':
+        case 'send-event:ooc':
           res = await msgsApi.generateResponse({ kind: mode, text: message })
           yield { partial: undefined, waiting: undefined }
           break
