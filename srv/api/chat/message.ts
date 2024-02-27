@@ -579,6 +579,9 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     case 'retry':
     case 'self':
     case 'send':
+    case 'send-event:world':
+    case 'send-event:character':
+    case 'send-event:hidden':
       sendGuest(guest, {
         type: 'guest-message-created',
         requestId,
