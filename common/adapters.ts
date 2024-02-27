@@ -138,9 +138,11 @@ export const OPENAI_MODELS = {
 } as const
 
 export const MISTRAL_MODELS = {
-  MistralTiny: 'mistral-tiny',
-  MistralSmall: 'mistral-small',
-  MistralMedium: 'mistral-medium',
+  OpenMistral7b: 'open-mistral-7b',
+  OpenMixtral8x7b: 'open-mixtral-8x7b',
+  MistralSmall: 'mistral-small-latest',
+  MistralMedium: 'mistral-medium-latest',
+  MistralLarge: 'mistral-large-latest',
 } as const
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
