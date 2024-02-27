@@ -12,7 +12,14 @@ import { publishMany } from '../ws/handle'
 type GenRequest = UnwrapBody<typeof genValidator>
 
 const sendValidator = {
-  kind: ['send-noreply', 'ooc', 'send-event:ooc'],
+  kind: [
+    'send-noreply',
+    'ooc',
+    'send-event:world',
+    'send-event:character',
+    'send-event:hidden',
+    'send-event:ooc',
+  ],
   text: 'string',
   impersonate: 'any?',
 } as const
