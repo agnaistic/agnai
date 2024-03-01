@@ -110,6 +110,7 @@ const createTier = handle(async ({ body }) => {
       description: 'string',
       apiAccess: 'boolean',
       guidanceAccess: 'boolean',
+      imagesAccess: 'boolean',
       patreon: 'any?',
     },
     body
@@ -132,6 +133,7 @@ const updateTier = handle(async ({ body, params }) => {
       apiAccess: 'boolean',
       patreon: 'any?',
       guidanceAccess: 'boolean',
+      imagesAccess: 'boolean',
     },
     body,
     true

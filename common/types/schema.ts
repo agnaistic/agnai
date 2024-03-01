@@ -75,6 +75,10 @@ export namespace AppSchema {
     /** Concatenated to adapters listed in ADAPTERS envvar */
     /** Not yet implemented */
     enabledAdapters: string[]
+
+    imagesEnabled: boolean
+    imagesHost: string
+    imagesModels: string
   }
 
   export interface Announcement {
@@ -105,6 +109,7 @@ export namespace AppSchema {
     }
     apiAccess: boolean
     guidanceAccess: boolean
+    imagesAccess: boolean
 
     name: string
     description: string

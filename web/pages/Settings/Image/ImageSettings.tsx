@@ -123,6 +123,10 @@ export const ImageSettings: Component = () => {
       <div class={currentType() === 'sd' ? subclass : 'hidden'}>
         <SDSettings />
       </div>
+
+      <div class={currentType() === 'agnai' ? subclass : 'hidden'}>
+        <AgnaiSettings />
+      </div>
     </div>
   )
 }
@@ -239,6 +243,30 @@ const SDSettings: Component = () => {
         items={samplers}
         label="Sampler"
         value={state.user?.images?.sd.sampler || SD_SAMPLER['DPM++ 2M']}
+      />
+    </>
+  )
+}
+
+const AgnaiSettings: Component = () => {
+  const state = userStore()
+  const settings = settingStore()
+
+  const models = createMemo(() => {
+    const names = settings.config.serverConfig?.imagesModels?.split(',').map((t) => t.trim()) || []
+
+    return names.map((label) => ({ label, value: label }))
+  })
+
+  return (
+    <>
+      <div class="text-xl">Agnaistic</div>
+      <Select
+        fieldName="agnaiModel"
+        items={models()}
+        helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
+        value={state.user?.images?.agnai.model}
+        disabled={models().length <= 1}
       />
     </>
   )

@@ -38,6 +38,9 @@ const ServerConfiguration: Component = () => {
       termsOfService: 'string',
       privacyStatement: 'string',
       policiesEnabled: 'boolean',
+      imagesHost: 'string',
+      imagesEnabled: 'boolean',
+      imagesModels: 'string',
     })
 
     adminStore.updateServerConfig({ ...body, slots: slots(), enabledAdapters: [] })
@@ -58,6 +61,28 @@ const ServerConfiguration: Component = () => {
             { label: 'Adminstrators', value: 'admins' },
           ]}
           value={state.serverConfig?.apiAccess || 'off'}
+        />
+
+        <TextInput
+          fieldName="imagesHost"
+          label={
+            <>
+              <div class="flex gap-2">
+                <div>Agnaistic Images Host</div>
+                <Toggle fieldName="imagesEnabled" value={state.serverConfig?.imagesEnabled} />
+              </div>
+            </>
+          }
+          value={state.serverConfig?.imagesHost}
+          classList={{ hidden: !state.adapters.includes('agnaistic') }}
+        />
+
+        <TextInput
+          fieldName="imagesModels"
+          label="Agnaistic Models"
+          helperText="Comma-delimited list of models"
+          value={state.serverConfig?.imagesModels}
+          classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 
         <Toggle

@@ -12,12 +12,14 @@ export type ImageGenerateRequest = {
   noAffix?: boolean
 }
 
+export type ImageRequestOpts = {
+  user: AppSchema.User
+  prompt: string
+  negative: string
+}
+
 export type ImageAdapter = (
-  opts: {
-    user: AppSchema.User
-    prompt: string
-    negative: string
-  },
+  opts: ImageRequestOpts,
   log: AppLog,
   guestId?: string
 ) => Promise<ImageAdapterResponse>

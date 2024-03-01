@@ -18,6 +18,7 @@ const Select: Component<{
   value?: string
   class?: string
   disabled?: boolean
+  classList?: Record<string, boolean>
   onChange?: (item: Option) => void
 
   service?: AIAdapter
@@ -39,7 +40,7 @@ const Select: Component<{
   })
 
   return (
-    <div class={`${hide()} max-w-full`}>
+    <div class={`${hide()} max-w-full`} classList={props.classList}>
       <FormLabel
         label={props.label}
         helperText={props.helperText}

@@ -1,4 +1,4 @@
-type ImageType = NovelSettings | HordeSettings | SDSettings
+type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings
 
 export type ImageSettings = {
   type: ImageType['type']
@@ -19,6 +19,7 @@ export type ImageSettings = {
   novel: Omit<NovelSettings, 'type'>
   horde: Omit<HordeSettings, 'type'>
   sd: Omit<SDSettings, 'type'>
+  agnai: Omit<AgnaiSettings, 'type'>
 }
 
 export type NovelSettings = {
@@ -37,4 +38,9 @@ export type SDSettings = {
   type: 'sd'
   sampler: string
   url: string
+}
+
+export type AgnaiSettings = {
+  type: 'agnai'
+  model: string
 }

@@ -1,8 +1,13 @@
 import needle from 'needle'
-import { ImageAdapter } from './types'
+import { ImageAdapter, ImageRequestOpts } from './types'
 import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
 import { SDSettings } from '../../common/types/image-schema'
 import { logger } from '../logger'
+import { AppSchema } from '/common/types/schema'
+import { store } from '../db'
+import { getUserSubscriptionTier } from '/common/util'
+import { getCachedTiers } from '../db/subscriptions'
+import { config } from '../config'
 
 const defaultSettings: SDSettings = {
   type: 'sd',
@@ -10,7 +15,7 @@ const defaultSettings: SDSettings = {
   url: 'http://localhost:7860',
 }
 
-type SDRequest = {
+export type SDRequest = {
   seed: number
   sampler_name: string
   n_iter: number
@@ -31,33 +36,15 @@ type SDRequest = {
   hr_second_pass_steps?: number
 }
 
-export const handleSDImage: ImageAdapter = async ({ user, prompt, negative }, log, guestId) => {
-  const base = user.images
+export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
+  const { user } = opts
   const settings = user.images?.sd || defaultSettings
-
-  const payload: SDRequest = {
-    prompt,
-    // enable_hr: true,
-    // hr_scale: 1.5,
-    // hr_second_pass_steps: 15,
-    // hr_upscaler: "",
-    height: base?.height ?? 384,
-    width: base?.width ?? 384,
-    n_iter: 1,
-    batch_size: 1,
-    negative_prompt: negative,
-    sampler_name: (SD_SAMPLER_REV as any)[settings.sampler ?? defaultSettings.sampler],
-    cfg_scale: base?.cfg ?? 9,
-    seed: Math.trunc(Math.random() * 1_000_000_000),
-    steps: base?.steps ?? 28,
-    restore_faces: false,
-    save_images: false,
-    send_images: true,
-  }
+  const config = await getConfig(user)
+  const payload = getPayload(opts, settings.url)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
-  const result = await needle('post', `${settings.url}/sdapi/v1/txt2img`, payload, {
+  const result = await needle('post', `${config.host}${config.params || ''}`, payload, {
     json: true,
   })
 
@@ -71,10 +58,61 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt, negative }, lo
 
   const image = result.body.images[0]
   if (!image) {
-    throw new Error(`Failed to generate image: Novel response did not contain an image`)
+    throw new Error(`Failed to generate image: Response did not contain an image`)
   }
 
   const buffer = Buffer.from(image, 'base64')
 
   return { ext: 'png', content: buffer }
+}
+
+async function getConfig(
+  user: AppSchema.User
+): Promise<{ kind: 'user' | 'agnai'; host: string; params?: string }> {
+  const userHost = (user.images?.sd.url || defaultSettings.url) + '/sdapi/v1/txt2img'
+  if (user.images?.type !== 'agnai') {
+    return { kind: 'user', host: userHost }
+  }
+
+  const srv = await store.admin.getServerConfiguration()
+  if (!srv.imagesEnabled || !srv.imagesHost) {
+    return { kind: 'user', host: userHost }
+  }
+
+  const sub = await getUserSubscriptionTier(user, getCachedTiers())
+  if (!sub?.tier?.imagesAccess) return { kind: 'user', host: userHost }
+
+  const params = [
+    `key=${config.auth.inferenceKey}`,
+    `id=${user._id}`,
+    `level=${sub.level}`,
+    `model=${user.images.agnai.model || 'image'}`,
+  ].join('&')
+
+  return { kind: 'agnai', host: srv.imagesHost, params: `?${params}` }
+}
+
+function getPayload(opts: ImageRequestOpts, host: string) {
+  const sampler = opts.user.images?.sd.sampler || defaultSettings.sampler
+  const payload: SDRequest = {
+    prompt: opts.prompt,
+    // enable_hr: true,
+    // hr_scale: 1.5,
+    // hr_second_pass_steps: 15,
+    // hr_upscaler: "",
+    height: opts.user.images?.height ?? 384,
+    width: opts.user?.images?.width ?? 384,
+    n_iter: 1,
+    batch_size: 1,
+    negative_prompt: opts.negative,
+    sampler_name: (SD_SAMPLER_REV as any)[sampler],
+    cfg_scale: opts.user.images?.cfg ?? 9,
+    seed: Math.trunc(Math.random() * 1_000_000_000),
+    steps: opts.user.images?.steps ?? 28,
+    restore_faces: false,
+    save_images: false,
+    send_images: true,
+  }
+
+  return payload
 }

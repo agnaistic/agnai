@@ -164,6 +164,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           sampler: sdSampler,
           url: sdUrl,
         },
+        agnai: { model: '' },
       },
     })
   }

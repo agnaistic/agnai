@@ -71,6 +71,7 @@ export async function generateImage(
         break
 
       case 'sd':
+      case 'agnai':
         image = await handleSDImage({ user, prompt, negative }, log, guestId)
         break
 

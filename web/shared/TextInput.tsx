@@ -27,6 +27,7 @@ const TextInput: Component<{
   tokenCount?: boolean | ((count: number) => void)
   step?: number
   readonly?: boolean
+  classList?: Record<string, boolean>
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -182,6 +183,7 @@ const TextInput: Component<{
             class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
             classList={{
               'w-full': !props.class?.includes('w-'),
+              ...props.classList,
             }}
             onkeyup={(ev) => {
               updateCount()
@@ -212,7 +214,7 @@ const TextInput: Component<{
             'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
             (props.class || '')
           }
-          classList={{ 'py-2': !props.class?.includes('py-') }}
+          classList={{ 'py-2': !props.class?.includes('py-'), ...props.classList }}
           disabled={props.disabled}
           spellcheck={props.spellcheck}
           lang={props.lang}
