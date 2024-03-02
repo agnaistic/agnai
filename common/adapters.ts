@@ -314,6 +314,7 @@ export const adapterSettings: {
   swipesPerGeneration: ['aphrodite'],
   epsilonCutoff: ['aphrodite'],
   etaCutoff: ['aphrodite'],
+  prependAuthorNameToMessages: ['openai'],
 
   prefill: ['claude'],
 

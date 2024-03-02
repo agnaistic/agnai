@@ -27,6 +27,7 @@ Facts: {{memory}}
 
 Relevant Information: {{user_embed}}
 `,
+  prependAuthorNameToMessages: true,
   },
   openaiAlt: {
     name: 'Turbo (#2)',
@@ -52,6 +53,7 @@ Facts: {{memory}}
 
 Relevant Information: {{user_embed}}
 `,
+  prependAuthorNameToMessages: true,
   },
   openaiTurbo: {
     name: 'DaVinci',
@@ -74,5 +76,6 @@ Description of {{char}}: {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 
 Facts: {{memory}}`,
+  prependAuthorNameToMessages: true,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
