@@ -9,7 +9,7 @@ import type {
   ThirdPartyFormat,
 } from '../adapters'
 import type { GenerationPreset } from '../presets'
-import type { ImageSettings } from './image-schema'
+import type { BaseImageSettings, ImageSettings } from './image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
@@ -347,6 +347,9 @@ export namespace AppSchema {
     scenarioStates?: string[]
 
     treeLeafId?: string
+
+    imageSource?: 'last-character' | 'main-character' | 'chat' | 'settings'
+    imageSettings?: BaseImageSettings
   }
 
   export interface ChatMember {
@@ -425,6 +428,8 @@ export namespace AppSchema {
     voice?: VoiceSettings
     voiceDisabled?: boolean
 
+    image?: ImageSettings
+
     // v2 stuff
     alternateGreetings?: string[]
     characterBook?: MemoryBook
@@ -435,6 +440,7 @@ export namespace AppSchema {
     creator?: string
     characterVersion?: string
     folder?: string
+    imageSettings?: BaseImageSettings
   }
 
   export interface ChatInvite {

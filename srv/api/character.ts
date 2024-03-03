@@ -34,6 +34,8 @@ const characterValidator = {
   voiceDisabled: 'string?',
   tags: 'string?',
 
+  imageSettings: 'string?',
+
   // v2 fields start here
   alternateGreetings: 'string?',
   characterBook: 'any?',
@@ -88,6 +90,8 @@ const createCharacter = handle(async (req) => {
     throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
   }
 
+  const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
     persona,
@@ -111,6 +115,7 @@ const createCharacter = handle(async (req) => {
     creator: body.creator,
     characterVersion: body.characterVersion,
     insert: insert,
+    imageSettings,
   })
 
   const filename = await entityUpload(
@@ -149,6 +154,8 @@ const editCharacter = handle(async (req) => {
     ? (JSON.parse(body.insert) as { prompt: string; depth: number })
     : undefined
 
+  const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+
   const update: CharacterUpdate = {
     name: body.name,
     description: body.description,
@@ -166,6 +173,7 @@ const editCharacter = handle(async (req) => {
     creator: body.creator,
     characterVersion: body.characterVersion,
     voiceDisabled: body.voiceDisabled === 'true',
+    imageSettings,
     insert,
   }
 
@@ -251,6 +259,8 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       ephemeral: 'boolean?',
       source: 'string?',
       noAffix: 'boolean?',
+      characterId: 'string?',
+      chatId: 'string?',
     },
     body
   )
@@ -264,6 +274,8 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       ephemeral: body.ephemeral,
       source: body.source || 'unknown',
       noAffix: body.noAffix,
+      chatId: body.chatId,
+      characterId: body.characterId,
     },
     log,
     guestId

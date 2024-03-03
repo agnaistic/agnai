@@ -38,7 +38,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   const openRouter = await getOpenRouterModels()
 
   const configuration = await store.admin.getServerConfiguration().catch(() => undefined)
-  if (configuration) {
+  if (!user?.admin && configuration) {
     configuration.imagesHost = ''
   }
 

@@ -38,6 +38,8 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
   const entities = await getPromptEntities()
   const prompt = opts.prompt ? opts.prompt : await createSummarizedImagePrompt(entities)
 
+  const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
+
   const max = getMaxImageContext(entities.user)
   const trimmed = await encode(prompt)
     .then((tokens) => tokens.slice(0, max))
@@ -50,6 +52,8 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     ephemeral: opts.ephemeral,
     append: opts.append,
     source: opts.source,
+    chatId,
+    characterId,
   })
   return res
 }

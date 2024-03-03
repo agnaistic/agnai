@@ -10,6 +10,7 @@ export type ImageGenerateRequest = {
   append?: boolean
   source: string
   noAffix?: boolean
+  characterId?: string
 }
 
 export type ImageRequestOpts = {

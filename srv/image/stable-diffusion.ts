@@ -44,9 +44,12 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
-  const result = await needle('post', `${config.host}${config.params || ''}`, payload, {
-    json: true,
-  })
+  const result = await needle(
+    'post',
+    `${config.host}/sdapi/v1/txt2img${config.params || ''}`,
+    payload,
+    { json: true }
+  )
 
   if (result.statusCode && result.statusCode >= 400) {
     throw new Error(
@@ -69,7 +72,7 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
 async function getConfig(
   user: AppSchema.User
 ): Promise<{ kind: 'user' | 'agnai'; host: string; params?: string }> {
-  const userHost = (user.images?.sd.url || defaultSettings.url) + '/sdapi/v1/txt2img'
+  const userHost = user.images?.sd.url || defaultSettings.url
   if (user.images?.type !== 'agnai') {
     return { kind: 'user', host: userHost }
   }
@@ -79,14 +82,23 @@ async function getConfig(
     return { kind: 'user', host: userHost }
   }
 
-  const sub = await getUserSubscriptionTier(user, getCachedTiers())
-  if (!sub?.tier?.imagesAccess) return { kind: 'user', host: userHost }
+  const sub = getUserSubscriptionTier(user, getCachedTiers())
+  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost }
+
+  const models = getAgnaiModels(srv.imagesModels)
+  const model =
+    models.length === 1
+      ? models[0]
+      : user.images.agnai?.model ?? models.length > 0
+      ? models[0]
+      : 'images'
 
   const params = [
+    `type=image`,
     `key=${config.auth.inferenceKey}`,
     `id=${user._id}`,
-    `level=${sub.level}`,
-    `model=${user.images.agnai.model || 'image'}`,
+    `level=${sub?.level ?? 99999}`,
+    `model=${model}`,
   ].join('&')
 
   return { kind: 'agnai', host: srv.imagesHost, params: `?${params}` }
@@ -115,4 +127,8 @@ function getPayload(opts: ImageRequestOpts, host: string) {
   }
 
   return payload
+}
+
+function getAgnaiModels(csv: string) {
+  return csv.split(',').map((v) => v.trim())
 }
