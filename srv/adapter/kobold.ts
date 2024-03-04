@@ -10,6 +10,7 @@ import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
 import * as oai from './chat-completion'
+import { toSamplerOrder } from '/common/sampler-order'
 
 /**
  * Sampler order
@@ -21,6 +22,18 @@ import * as oai from './chat-completion'
  * 5. Temperature
  * 6. Repetition Penalty
  */
+
+const samplerMap: Record<string, number> = {
+  temp: 0,
+  topK: 1,
+  topP: 2,
+  tailFreeSampling: 3,
+  topA: 4,
+  typicalP: 5,
+  cfgScale: 6,
+  topG: 7,
+  mirostatTau: 8,
+}
 
 const MIN_STREAMING_KCPPVERSION = '1.30'
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
@@ -53,8 +66,11 @@ export const handleKobold: ModelAdapter = async function* (opts) {
 
     // Kobold sampler order parameter must contain all 6 samplers to be valid
     // If the sampler order is provided, but incomplete, add the remaining samplers.
-    if (typeof body.sampler_order === 'string') {
-      body.sampler_order = (body.sampler_order as string).split(',').map((val) => +val)
+    const samplers = toSamplerOrder('kobold', opts.gen.order, opts.gen.disabledSamplers)
+    if (samplers) {
+      body.sampler_order = samplers.order
+    } else {
+      delete body.sampler_order
     }
 
     if (body.sampler_order && body.sampler_order.length !== 6) {

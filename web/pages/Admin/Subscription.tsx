@@ -28,6 +28,7 @@ const tokenizers = [
   { label: 'Novel Kayra', value: 'novel-modern' },
   { label: 'Novel (Old)', value: 'novel' },
   { label: 'Mistral', value: 'mistral' },
+  { label: 'Yi', value: 'yi' },
 ]
 
 export const Subscription: Component = () => {
