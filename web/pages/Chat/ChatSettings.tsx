@@ -137,6 +137,7 @@ const ChatSettings: Component<{
     const payload = {
       ...body,
       overrides,
+      imageSource,
       imageSettings: {
         type: imageType,
         steps: imageSteps,
