@@ -38,6 +38,9 @@ export async function getAppConfig(user?: AppSchema.User) {
   const openRouter = await getOpenRouterModels()
 
   const configuration = await store.admin.getServerConfiguration().catch(() => undefined)
+  if (!user?.admin && configuration) {
+    configuration.imagesHost = ''
+  }
 
   if (!appConfig) {
     await Promise.all([store.subs.prepSubscriptionCache(), store.subs.prepTierCache()])
@@ -125,10 +128,9 @@ export async function getAppConfig(user?: AppSchema.User) {
 async function update() {
   try {
     if (!config.db.host) return
-    const cfg = await store.admin.getConfig()
+    const cfg = await store.admin.getServerConfiguration()
 
-    appConfig.maintenance = cfg.maintenance || appConfig.maintenance
-    appConfig.patreon = cfg.patreon ?? appConfig.patreon
+    appConfig.maintenance = cfg.maintenanceMessage || appConfig.maintenance
   } catch (ex) {}
 }
 

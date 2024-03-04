@@ -47,6 +47,7 @@ import { PhraseBias, StoppingStrings } from './PhraseBias'
 import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
 import { BUILTIN_FORMATS, templates } from '/common/presets/templates'
 import { usePaneManager } from './hooks'
+import { samplerServiceMap } from '/common/sampler-order'
 
 export { GenerationSettings as default }
 
@@ -1253,12 +1254,12 @@ const SamplerOrder: Component<{
     if (!props.service) return list
 
     const order = samplerOrders[props.service]
-    if (!order) return []
+    const orderMap = samplerServiceMap[props.service]
+    if (!order || !orderMap) return []
 
-    let id = 0
     for (const item of order) {
       list.push({
-        id: id++,
+        id: orderMap[item],
         value: item,
         label: settingLabels[item]!,
       })

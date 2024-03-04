@@ -8,6 +8,7 @@ import { NOVEL_MODELS } from '/common/adapters'
 import { requestStream } from './stream'
 import { AppLog } from '../logger'
 import { getEncoder } from '../tokenize'
+import { toSamplerOrder } from '/common/sampler-order'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
@@ -22,7 +23,7 @@ const streamUrl = (model: string) => `${getBaseUrl(model)}/ai/generate-stream`
  * 4. Top A Sampling
  * 5. Typical Sampling
  * 6. CFG Scale
- * 7. Top G
+ * 7. Top G (omitted)
  * 8. Mirostat
  */
 
@@ -64,12 +65,10 @@ export const handleNovel: ModelAdapter = async function* ({
     return
   }
 
-  if (typeof opts.gen.order === 'string') {
-    opts.gen.order = (opts.gen.order as string).split(',').map((val) => +val)
-  }
-
-  if (typeof opts.gen.disabledSamplers === 'string') {
-    opts.gen.disabledSamplers = (opts.gen.disabledSamplers as string).split(',').map((val) => +val)
+  const samplers = toSamplerOrder('novel', opts.gen.order, opts.gen.disabledSamplers)
+  if (samplers) {
+    opts.gen.order = samplers.order
+    opts.gen.disabledSamplers = samplers.disabled
   }
 
   const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.clio_v1
@@ -121,20 +120,6 @@ export const handleNovel: ModelAdapter = async function* ({
     for (const stop of all) {
       stops.push(stop)
     }
-  }
-
-  if (Array.isArray(opts.gen.order)) {
-    opts.gen.order = opts.gen.order.map((o) => +o)
-  }
-
-  if (opts.gen.order && !opts.gen.disabledSamplers) {
-    body.parameters.order = opts.gen.order
-  }
-
-  if (opts.gen.order && opts.gen.disabledSamplers) {
-    body.parameters.order = opts.gen.order
-      .map((o) => +o)
-      .filter((sampler) => sampler === 0 || !opts.gen.disabledSamplers?.includes(sampler))
   }
 
   yield { prompt: body.input }

@@ -36,6 +36,7 @@ let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
 let mistral: Encoder
+let yi: Encoder
 
 export type EncoderType =
   | 'novel'
@@ -45,6 +46,7 @@ export type EncoderType =
   | 'davinci'
   | 'turbo'
   | 'mistral'
+  | 'yi'
 
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
@@ -72,6 +74,9 @@ export function getEncoderByName(type: EncoderType) {
   switch (type) {
     case 'mistral':
       return mistral
+
+    case 'yi':
+      return yi
 
     case 'claude':
       return claude
@@ -162,6 +167,8 @@ export async function prepareTokenizers() {
     novel = createEncoder('novelai.model')
     novelModern = createEncoder('novelai_v2.model')
     llama = createEncoder('llama.model')
+    yi = createEncoder('yi.model')
+
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
     {
       davinci = {

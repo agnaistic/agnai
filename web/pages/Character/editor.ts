@@ -18,6 +18,7 @@ import { getImageData } from '/web/store/data/chars'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { GenField, generateChar, regenerateCharProp } from './generate-char'
+import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -51,9 +52,11 @@ type EditState = {
   culture: string
   alternateGreetings: string[]
   persona: AppSchema.Persona
+
+  imageSettings?: BaseImageSettings
 }
 
-export const newCharGuard = {
+const newCharGuard = {
   kind: PERSONA_FORMATS,
   name: 'string',
   description: 'string?',
@@ -69,6 +72,7 @@ export const newCharGuard = {
   creator: 'string',
   characterVersion: 'string',
   voiceDisabled: 'boolean?',
+  ...baseImageValid,
 } as const
 
 const fieldMap: Map<CharKey, GuardKey | 'tags'> = new Map([
@@ -119,6 +123,19 @@ const initState: EditState = {
   sprite: undefined,
   book: undefined,
   persona: { kind: 'text', attributes: { text: [''] } },
+  imageSettings: {
+    type: 'sd',
+    width: 512,
+    height: 512,
+    steps: 10,
+    cfg: 9,
+    negative: '',
+    prefix: '',
+    suffix: '',
+    summariseChat: true,
+    summaryPrompt: '',
+    template: '',
+  },
 }
 
 export type CharEditor = ReturnType<typeof useCharEditor>
@@ -363,6 +380,18 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     persona: {
       kind: state.personaKind,
       attributes: persona.attributes,
+    },
+    imageSettings: {
+      type: body.imageType,
+      steps: body.imageSteps,
+      width: body.imageWidth,
+      height: body.imageHeight,
+      prefix: body.imagePrefix,
+      suffix: body.imageSuffix,
+      negative: body.imageNegative,
+      cfg: body.imageCfg,
+      summariseChat: body.summariseChat,
+      summaryPrompt: body.summaryPrompt,
     },
   }
 

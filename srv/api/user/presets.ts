@@ -4,6 +4,7 @@ import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
 import { AppSchema } from '/common/types'
+import { toSamplerOrder } from '/common/sampler-order'
 
 const createPreset = {
   ...presetValidator,
@@ -65,11 +66,11 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
 
   const update: Partial<AppSchema.UserGenPreset> = { ...rest }
   if (order) {
-    update.order = order?.split(',').map((i) => +i)
-  }
-
-  if (disabledSamplers) {
-    update.disabledSamplers = body.disabledSamplers?.split(',').map((i) => +i)
+    const samplers = toSamplerOrder(body.service, order, disabledSamplers)
+    if (samplers) {
+      update.order = samplers.order
+      update.disabledSamplers = samplers.disabled
+    }
   }
 
   const preset = await store.presets.updateUserPreset(userId!, params.id, update)

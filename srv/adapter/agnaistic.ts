@@ -232,6 +232,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   log.debug(`Prompt:\n${prompt}`)
 
   const params = [
+    `type=text`,
     `key=${key}`,
     `id=${opts.user._id}`,
     `model=${preset.subModel}`,

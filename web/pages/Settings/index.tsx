@@ -164,6 +164,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           sampler: sdSampler,
           url: sdUrl,
         },
+        agnai: { model: '' },
       },
     })
   }
@@ -271,7 +272,7 @@ const settingsForm = {
   useLocalPipeline: 'boolean?',
   summariseChat: 'boolean?',
   summaryPrompt: 'string?',
-  imageType: ['horde', 'sd', 'novel'],
+  imageType: ['horde', 'sd', 'novel', 'agnai'],
   imageSteps: 'number',
   imageCfg: 'number',
   imageWidth: 'number',

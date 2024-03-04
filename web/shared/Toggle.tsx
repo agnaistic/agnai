@@ -18,6 +18,7 @@ export const Toggle: Component<{
   service?: AIAdapter
   format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
+  classList?: Record<string, boolean>
 }> = (props) => {
   let ref: HTMLInputElement
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -35,7 +36,10 @@ export const Toggle: Component<{
   const justify = createMemo(() => (props.reverse ? 'sm:justify-start' : 'sm:justify-between'))
 
   return (
-    <div class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center ${justify()}`}>
+    <div
+      class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center ${justify()}`}
+      classList={props.classList}
+    >
       <Show when={props.label && !props.reverse}>
         <FormLabel
           label={props.label}

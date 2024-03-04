@@ -1,6 +1,6 @@
-type ImageType = NovelSettings | HordeSettings | SDSettings
+type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings
 
-export type ImageSettings = {
+export type BaseImageSettings = {
   type: ImageType['type']
 
   summaryPrompt?: string
@@ -15,10 +15,13 @@ export type ImageSettings = {
   height: number
   steps: number
   cfg: number
+}
 
+export type ImageSettings = BaseImageSettings & {
   novel: Omit<NovelSettings, 'type'>
   horde: Omit<HordeSettings, 'type'>
   sd: Omit<SDSettings, 'type'>
+  agnai: Omit<AgnaiSettings, 'type'>
 }
 
 export type NovelSettings = {
@@ -38,3 +41,21 @@ export type SDSettings = {
   sampler: string
   url: string
 }
+
+export type AgnaiSettings = {
+  type: 'agnai'
+  model: string
+}
+
+export const baseImageValid = {
+  imageType: ['horde', 'sd', 'agnai', 'novel'],
+  imageSteps: 'number',
+  imageWidth: 'number',
+  imageHeight: 'number',
+  imageCfg: 'number',
+  imagePrefix: 'string',
+  imageSuffix: 'string',
+  imageNegative: 'string',
+  summaryPrompt: 'string',
+  summariseChat: 'boolean',
+} as const

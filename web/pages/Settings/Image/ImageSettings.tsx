@@ -12,15 +12,25 @@ import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
+import { BaseImageSettings } from '/common/types/image-schema'
 
-const imageTypes = [
-  { label: 'Horde', value: 'horde' },
-  { label: 'NovelAI', value: 'novel' },
-  { label: 'Stable Diffusion', value: 'sd' },
-]
-
-export const ImageSettings: Component = () => {
+export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boolean }> = (props) => {
   const state = userStore()
+  const settings = settingStore()
+
+  const imageTypes = createMemo(() => {
+    const list = [
+      { label: 'Horde', value: 'horde' },
+      { label: 'NovelAI', value: 'novel' },
+      { label: 'Stable Diffusion', value: 'sd' },
+    ]
+
+    if (settings.config.serverConfig?.imagesEnabled) {
+      list.push({ label: 'Agnaistic', value: 'agnai' })
+    }
+
+    return list
+  })
 
   const [currentType, setType] = createSignal(state.user?.images?.type || 'horde')
   const subclass = 'flex flex-col gap-4'
@@ -29,8 +39,8 @@ export const ImageSettings: Component = () => {
     <div class="flex flex-col gap-4">
       <Select
         fieldName="imageType"
-        items={imageTypes}
-        value={state.user?.images?.type || 'horde'}
+        items={imageTypes()}
+        value={(props.inherit ? props.cfg?.type : state.user?.images?.type) ?? 'horde'}
         onChange={(value) => setType(value.value as any)}
       />
 
@@ -39,7 +49,7 @@ export const ImageSettings: Component = () => {
         min={20}
         max={128}
         step={1}
-        value={state.user?.images?.steps ?? 28}
+        value={(props.inherit ? props.cfg?.steps : state.user?.images?.steps) ?? 28}
         label="Sampling Steps"
         helperText="(Novel Anlas Threshold: 28)"
       />
@@ -49,7 +59,7 @@ export const ImageSettings: Component = () => {
         min={256}
         max={1024}
         step={64}
-        value={state.user?.images?.width ?? 384}
+        value={(props.inherit ? props.cfg?.width : state.user?.images?.width) ?? 384}
         label="Image Width"
         helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
       />
@@ -59,21 +69,21 @@ export const ImageSettings: Component = () => {
         min={256}
         max={1024}
         step={64}
-        value={state.user?.images?.height ?? 384}
+        value={(props.inherit ? props.cfg?.height : state.user?.images?.height) ?? 384}
         label="Image Height"
         helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
       />
 
       <TextInput
         fieldName="imageCfg"
-        value={state.user?.images?.cfg ?? 9}
+        value={(props.inherit ? props.cfg?.cfg : state.user?.images?.cfg) ?? 9}
         label="CFG Scale"
         helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
       />
 
       <TextInput
         fieldName="imagePrefix"
-        value={state.user?.images?.prefix}
+        value={props.inherit ? props.cfg?.prefix : state.user?.images?.prefix}
         label="Prompt Prefix"
         helperText="(Optional) Text to prepend to your image prompt"
         placeholder={`E.g.: best quality, masterpiece`}
@@ -81,7 +91,7 @@ export const ImageSettings: Component = () => {
 
       <TextInput
         fieldName="imageSuffix"
-        value={state.user?.images?.suffix}
+        value={props.inherit ? props.cfg?.suffix : state.user?.images?.suffix}
         label="Prompt Suffix"
         helperText="(Optional) Text to append to your image prompt"
         placeholder={`E.g.: full body, visible legs, dramatic lighting`}
@@ -89,7 +99,7 @@ export const ImageSettings: Component = () => {
 
       <TextInput
         fieldName="imageNegative"
-        value={state.user?.images?.negative}
+        value={props.inherit ? props.cfg?.negative : state.user?.images?.negative}
         label="Negative Prompt"
         helperText="(Optional) Negative Prompt"
         placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
@@ -97,32 +107,38 @@ export const ImageSettings: Component = () => {
 
       <TextInput
         fieldName="summaryPrompt"
-        value={state.user?.images?.summaryPrompt}
+        value={props.inherit ? props.cfg?.summaryPrompt : state.user?.images?.summaryPrompt}
         label="Summary Prompt"
-        helperText='If you use OpenAI or NovelAI, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
+        helperText='When summarising the chat to an image caption, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
         placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
       />
 
       <Toggle
         fieldName="summariseChat"
         label="Summarise Chat"
-        helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (NovelAI, OpenAI, Claude, etc)"
-        value={state.user?.images?.summariseChat}
+        helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (Agnai, NovelAI, OpenAI, Claude, etc)"
+        value={props.inherit ? props.cfg?.summariseChat : state.user?.images?.summariseChat}
       />
 
-      <Divider />
+      <Show when={!props.inherit}>
+        <Divider />
 
-      <div class={currentType() === 'novel' ? subclass : 'hidden'}>
-        <NovelSettings />
-      </div>
+        <div class={currentType() === 'novel' ? subclass : 'hidden'}>
+          <NovelSettings />
+        </div>
 
-      <div class={currentType() === 'horde' ? subclass : 'hidden'}>
-        <HordeSettings />
-      </div>
+        <div class={currentType() === 'horde' ? subclass : 'hidden'}>
+          <HordeSettings />
+        </div>
 
-      <div class={currentType() === 'sd' ? subclass : 'hidden'}>
-        <SDSettings />
-      </div>
+        <div class={currentType() === 'sd' ? subclass : 'hidden'}>
+          <SDSettings />
+        </div>
+
+        <div class={currentType() === 'agnai' ? subclass : 'hidden'}>
+          <AgnaiSettings />
+        </div>
+      </Show>
     </div>
   )
 }
@@ -239,6 +255,34 @@ const SDSettings: Component = () => {
         items={samplers}
         label="Sampler"
         value={state.user?.images?.sd.sampler || SD_SAMPLER['DPM++ 2M']}
+      />
+    </>
+  )
+}
+
+const AgnaiSettings: Component = () => {
+  const state = userStore()
+  const settings = settingStore()
+
+  const models = createMemo(() => {
+    const names = settings.config.serverConfig?.imagesModels?.split(',').map((t) => t.trim()) || []
+
+    return names.map((label) => ({ label, value: label }))
+  })
+
+  return (
+    <>
+      <div class="text-xl">Agnaistic</div>
+      <Show when={models().length <= 1}>
+        <i>No additional options available</i>
+      </Show>
+      <Select
+        fieldName="agnaiModel"
+        label="Agnaistic Image Model"
+        items={models()}
+        value={state.user?.images?.agnai?.model}
+        disabled={models().length <= 1}
+        classList={{ hidden: models().length <= 1 }}
       />
     </>
   )

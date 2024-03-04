@@ -66,6 +66,7 @@ export async function create(
     | 'overrides'
     | 'genPreset'
     | 'mode'
+    | 'imageSource'
   >,
   profile: AppSchema.Profile,
   impersonating?: AppSchema.Character
@@ -94,6 +95,7 @@ export async function create(
     genPreset: props.genPreset,
     messageCount: props.greeting ? 1 : 0,
     tempCharacters: {},
+    imageSource: props.imageSource,
   }
 
   await db('chat').insertOne(doc)

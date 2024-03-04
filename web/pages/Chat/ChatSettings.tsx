@@ -14,6 +14,9 @@ import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
+import { ImageSettings } from '../Settings/Image/ImageSettings'
+import { baseImageValid } from '/common/types/image-schema'
+import Divider from '/web/shared/Divider'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -97,7 +100,21 @@ const ChatSettings: Component<{
   })
 
   const onSave = () => {
-    const { scenarioId, ...body } = getStrictForm(ref, {
+    const {
+      scenarioId,
+      imageCfg,
+      imageHeight,
+      imageNegative,
+      imagePrefix,
+      imageSource,
+      imageSteps,
+      imageSuffix,
+      imageType,
+      imageWidth,
+      summariseChat,
+      summaryPrompt,
+      ...body
+    } = getStrictForm(ref, {
       name: 'string',
       greeting: 'string?',
       sampleChat: 'string?',
@@ -107,6 +124,8 @@ const ChatSettings: Component<{
       schema: ['wpp', 'boostyle', 'sbf', 'text', 'attributes', null],
       scenarioId: 'string?',
       mode: ['standard', 'adventure', 'companion', null],
+      imageSource: ['last-character', 'main-character', 'chat', 'settings'],
+      ...baseImageValid,
     })
 
     const attributes = getAttributeMap(ref)
@@ -118,6 +137,18 @@ const ChatSettings: Component<{
     const payload = {
       ...body,
       overrides,
+      imageSettings: {
+        type: imageType,
+        steps: imageSteps,
+        width: imageWidth,
+        height: imageHeight,
+        prefix: imagePrefix,
+        suffix: imageSuffix,
+        negative: imageNegative,
+        cfg: imageCfg,
+        summariseChat,
+        summaryPrompt,
+      },
       scenarioIds: scenarioId ? [scenarioId] : [],
       scenarioStates: states(),
     }
@@ -197,6 +228,22 @@ const ChatSettings: Component<{
           />
         </Card>
       </Show>
+
+      <Card>
+        <Select
+          fieldName="imageSource"
+          label="Image Source"
+          helperText={<>Which settings to use when generating images for this chat</>}
+          onChange={(ev) => setMode(ev.value as any)}
+          items={[
+            { label: 'Main Character', value: 'main-character' },
+            { label: 'Last Character to Speak', value: 'last-character' },
+            { label: 'Chat Settings', value: 'chat' },
+            { label: 'App Settings', value: 'settings' },
+          ]}
+          value={state.chat?.imageSource || 'settings'}
+        />
+      </Card>
 
       <Show when={activePreset()?.service !== 'horde'}>
         <Card>
@@ -319,6 +366,13 @@ const ChatSettings: Component<{
           </div>
         </Card>
       </Show>
+
+      <Divider />
+      <FormLabel
+        label="Image Generation Settings"
+        helperMarkdown="These settings will be used to for image generation if the `Image Source` is set `Chat`"
+      />
+      <ImageSettings inherit cfg={state.chat?.imageSettings} />
     </form>
   )
 }
