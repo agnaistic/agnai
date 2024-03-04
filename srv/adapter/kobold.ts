@@ -23,18 +23,6 @@ import { toSamplerOrder } from '/common/sampler-order'
  * 6. Repetition Penalty
  */
 
-const samplerMap: Record<string, number> = {
-  temp: 0,
-  topK: 1,
-  topP: 2,
-  tailFreeSampling: 3,
-  topA: 4,
-  typicalP: 5,
-  cfgScale: 6,
-  topG: 7,
-  mirostatTau: 8,
-}
-
 const MIN_STREAMING_KCPPVERSION = '1.30'
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
