@@ -24,6 +24,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       systemPrompt: 'string?',
       postHistoryInstructions: 'string?',
       imageSource: 'string?',
+      imageSettings: 'any?',
     },
     body,
     true
@@ -51,6 +52,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     scenarioIds: body.scenarioIds ?? prev.scenarioIds,
     scenarioStates: body.scenarioStates ?? prev.scenarioStates,
     imageSource: (body.imageSource as any) ?? prev.imageSource,
+    imageSettings: body.imageSettings,
   }
 
   if (body.useOverrides === false) {
