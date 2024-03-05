@@ -64,6 +64,10 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
     throw new Error(`Failed to generate image: Response did not contain an image`)
   }
 
+  if (typeof image === 'string' && image.startsWith('http')) {
+    return { ext: 'png', content: image }
+  }
+
   const buffer = Buffer.from(image, 'base64')
 
   return { ext: 'png', content: buffer }
