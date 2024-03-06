@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-solid'
-import { Component, Show, JSX, createMemo, Switch, Match } from 'solid-js'
+import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
 import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'
@@ -211,5 +211,40 @@ export const ConfirmModal: Component<{
         />
       </Show>
     </Modal>
+  )
+}
+
+export const HelpModal: Component<{
+  title?: string
+  cta: JSX.Element
+  children?: any
+  markdown?: any
+}> = (props) => {
+  const [show, setShow] = createSignal(false)
+  const close = () => setShow(false)
+
+  return (
+    <>
+      <div onClick={() => setShow(true)}>{props.cta}</div>
+      <Modal
+        title={props.title || ''}
+        maxWidth="half"
+        show={show()}
+        close={close}
+        footer={
+          <>
+            <Button onClick={close}>Close</Button>
+          </>
+        }
+      >
+        <Show when={!!props.children}>{props.children}</Show>
+        <Show when={!!props.markdown}>
+          <div
+            class="rendered-markdown text-sm"
+            innerHTML={markdown.makeMarkdown(props.markdown!)}
+          />
+        </Show>
+      </Modal>
+    </>
   )
 }

@@ -169,6 +169,7 @@ export const Pill: Component<{
   onClick?: () => void
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
+  corners?: { l?: boolean; r?: boolean }
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
 
@@ -193,7 +194,7 @@ export const Pill: Component<{
 
   return (
     <span
-      class={`rounded-md border-[1px] px-2 py-1 text-sm`}
+      class={`border-[1px] px-2 py-1 text-sm`}
       style={bg()}
       onClick={props.onClick}
       classList={{
@@ -201,7 +202,9 @@ export const Pill: Component<{
         'border-0': props.small,
         'cursor-pointer': !!props.onClick,
         'py-1': !props.small,
-        'py-[2x]': props.small,
+        'py-[2px]': props.small,
+        'rounded-l-md': props.corners?.l !== false,
+        'rounded-r-md': props.corners?.r !== false,
       }}
       role={props.ariaRole}
       aria-label={props.ariaLabel}
