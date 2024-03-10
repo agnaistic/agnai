@@ -270,10 +270,10 @@ const AgnaiSettings: Component = () => {
     }
   })
 
-  const [curr, setCurr] = createSignal(state.user?.images?.agnai.model)
+  const [curr, setCurr] = createSignal(state.user?.images?.agnai?.model)
 
   const model = createMemo(() => {
-    const original = state.user?.images?.agnai.model
+    const original = state.user?.images?.agnai?.model
     const id = settings.models.length === 1 ? settings.models[0].name : curr() || original
     const match = settings.models.find((m) => m.name === id)
     return match
