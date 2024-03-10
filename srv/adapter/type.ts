@@ -10,6 +10,7 @@ export type GenerateRequestV2 = {
     | 'send-event:world'
     | 'send-event:character'
     | 'send-event:hidden'
+    | 'send-event:ooc'
     | 'ooc'
     | 'retry'
     | 'continue'

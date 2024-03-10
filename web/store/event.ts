@@ -12,7 +12,7 @@ export type ChatEvent = {
   charId: string
   chatId: string
   prompt: string
-  event: AppSchema.EventTypes
+  event: AppSchema.ScenarioEventType
 }
 
 type ChatEventState = {
@@ -85,7 +85,7 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           if (event) executeEvent(chat, event)
         }
       },
-      async triggerEvent(_, chat: AppSchema.Chat, char: AppSchema.Character) {
+      async triggerEvent(_, chat: AppSchema.Chat, char?: AppSchema.Character) {
         const scenarios = scenarioStore
           .getState()
           .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
@@ -108,9 +108,11 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
         }
 
         const profile = userStore.getState().profile
-        const prompt = selected.event.text
-          .replace(BOT_REPLACE, char.name)
-          .replace(SELF_REPLACE, profile?.handle || 'You')
+
+        let prompt = selected.event.text.replace(SELF_REPLACE, profile?.handle || 'You')
+        if (char) {
+          prompt = prompt.replace(BOT_REPLACE, char.name)
+        }
 
         const eventState = {
           charId: chat.characterId,
@@ -214,11 +216,7 @@ export function selectOnCharacterMessageReceivedEvent(
 
 function executeEvent(chat: AppSchema.Chat, event: AppSchema.ScenarioEvent) {
   updateChatScenarioStates(chat, event.assigns)
-  if (event.type === 'ooc') {
-    msgStore.queue(chat._id, `**Scenario Message**\n` + event.text, 'ooc')
-  } else {
-    msgStore.queue(chat._id, event.text, `send-event:${event.type}`)
-  }
+  msgStore.queue(chat._id, event.text, `send-event:${event.type}`)
 }
 
 function updateChatScenarioStates(chat: AppSchema.Chat, assigns: string[]) {

@@ -38,9 +38,8 @@ export type SDRequest = {
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const { user } = opts
-  const settings = user.images?.sd || defaultSettings
   const config = await getConfig(user)
-  const payload = getPayload(opts, settings.url)
+  const payload = getPayload(opts, config.model)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
@@ -49,7 +48,15 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
     `${config.host}/sdapi/v1/txt2img${config.params || ''}`,
     payload,
     { json: true }
-  )
+  ).catch((err) => ({ err }))
+
+  if ('err' in result) {
+    if ('syscall' in result.err && 'code' in result.err) {
+      throw new Error(`Image request failed: Service unreachable - ${result.err.code}`)
+    }
+
+    throw new Error(`Image request request failed: ${result.err.message || result.err}`)
+  }
 
   if (result.statusCode && result.statusCode >= 400) {
     throw new Error(
@@ -73,9 +80,12 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   return { ext: 'png', content: buffer }
 }
 
-async function getConfig(
-  user: AppSchema.User
-): Promise<{ kind: 'user' | 'agnai'; host: string; params?: string }> {
+async function getConfig(user: AppSchema.User): Promise<{
+  kind: 'user' | 'agnai'
+  host: string
+  params?: string
+  model?: AppSchema.ImageModel
+}> {
   const userHost = user.images?.sd.url || defaultSettings.url
   if (user.images?.type !== 'agnai') {
     return { kind: 'user', host: userHost }
@@ -93,22 +103,24 @@ async function getConfig(
   const model =
     models.length === 1
       ? models[0]
-      : user.images.agnai?.model ?? models.length > 0
-      ? models[0]
-      : 'images'
+      : models.find((m) => m.name === user.images?.agnai?.model) ?? models[0]
+
+  if (!model) {
+    return { kind: 'user', host: userHost }
+  }
 
   const params = [
     `type=image`,
     `key=${config.auth.inferenceKey}`,
     `id=${user._id}`,
-    `level=${sub?.level ?? 99999}`,
-    `model=${model}`,
+    `level=${user.admin ? 99999 : sub?.level ?? -1}`,
+    `model=${model.name}`,
   ].join('&')
 
-  return { kind: 'agnai', host: srv.imagesHost, params: `?${params}` }
+  return { kind: 'agnai', host: srv.imagesHost, params: `?${params}`, model }
 }
 
-function getPayload(opts: ImageRequestOpts, host: string) {
+function getPayload(opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
   const sampler = opts.user.images?.sd.sampler || defaultSettings.sampler
   const payload: SDRequest = {
     prompt: opts.prompt,
@@ -116,23 +128,34 @@ function getPayload(opts: ImageRequestOpts, host: string) {
     // hr_scale: 1.5,
     // hr_second_pass_steps: 15,
     // hr_upscaler: "",
-    height: opts.user.images?.height ?? 384,
-    width: opts.user?.images?.width ?? 384,
+    height: opts.user.images?.height ?? model?.init.height ?? 384,
+    width: opts.user?.images?.width ?? model?.init.width ?? 384,
     n_iter: 1,
     batch_size: 1,
     negative_prompt: opts.negative,
     sampler_name: (SD_SAMPLER_REV as any)[sampler],
-    cfg_scale: opts.user.images?.cfg ?? 9,
+    cfg_scale: opts.user.images?.cfg ?? model?.init.cfg ?? 9,
     seed: Math.trunc(Math.random() * 1_000_000_000),
-    steps: opts.user.images?.steps ?? 28,
+    steps: opts.user.images?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
     save_images: false,
     send_images: true,
   }
 
+  if (model) {
+    payload.steps = Math.min(model.limit.steps, payload.steps)
+    payload.cfg_scale = Math.min(model.limit.cfg, payload.cfg_scale)
+    payload.width = Math.min(model.limit.width, payload.width)
+    payload.height = Math.min(model.limit.height, payload.height)
+  }
+
+  // width and height must be divisible by 64
+  payload.width = Math.floor(payload.width / 64) * 64
+  payload.height = Math.floor(payload.height / 64) * 64
+
   return payload
 }
 
 function getAgnaiModels(csv: AppSchema.Configuration['imagesModels']) {
-  return csv.map((v) => v.name.trim())
+  return csv
 }

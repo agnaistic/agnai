@@ -23,7 +23,7 @@ export type NewMessage = {
   imagePrompt?: string
   actions?: AppSchema.ChatMessage['actions']
   meta?: any
-  event: AppSchema.EventTypes | undefined
+  event: AppSchema.ScenarioEventType | undefined
   retries?: string[]
 }
 

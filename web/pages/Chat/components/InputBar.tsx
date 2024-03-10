@@ -178,7 +178,10 @@ const InputBar: Component<{
   }
 
   const triggerEvent = () => {
-    eventStore.triggerEvent(props.chat, props.botMap[chats.replyAs!])
+    const char =
+      chats.replyAs && chats.replyAs in props.botMap ? props.botMap[chats.replyAs] : undefined
+
+    eventStore.triggerEvent(props.chat, char)
     setMenu(false)
   }
 
@@ -327,13 +330,7 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
-            <Show
-              when={
-                !!ctx.chat?.scenarioIds?.length &&
-                isOwner() &&
-                (chats.replyAs || ctx.activeBots.length === 1)
-              }
-            >
+            <Show when={!!ctx.chat?.scenarioIds?.length && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
                 <Zap /> Trigger Event
               </Button>

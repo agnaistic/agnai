@@ -8,11 +8,19 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
+import { getScenarioEventType } from '/common/scenario'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
 const sendValidator = {
-  kind: ['send-noreply', 'ooc'],
+  kind: [
+    'send-noreply',
+    'ooc',
+    'send-event:world',
+    'send-event:character',
+    'send-event:hidden',
+    'send-event:ooc',
+  ],
   text: 'string',
   impersonate: 'any?',
 } as const
@@ -24,6 +32,7 @@ const genValidator = {
     'send-event:world',
     'send-event:character',
     'send-event:hidden',
+    'send-event:ooc',
     'ooc',
     'retry',
     'continue',
@@ -82,8 +91,8 @@ export const createMessage = handle(async (req) => {
     const newMsg = newMessage(v4(), chatId, body.text, {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
-      ooc: body.kind === 'ooc',
-      event: undefined,
+      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
+      event: getScenarioEventType(body.kind),
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -98,8 +107,8 @@ export const createMessage = handle(async (req) => {
       message: body.text,
       characterId: impersonate?._id,
       senderId: userId,
-      ooc: body.kind === 'ooc',
-      event: undefined,
+      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
+      event: getScenarioEventType(body.kind),
     })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
@@ -185,7 +194,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       characterId: replyAs?._id,
       senderId: undefined,
       ooc: false,
-      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+      event: getScenarioEventType(body.kind),
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -475,7 +484,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     newMsg = newMessage(v4(), chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
-      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+      event: getScenarioEventType(body.kind),
     })
   }
 
@@ -574,6 +583,9 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     case 'retry':
     case 'self':
     case 'send':
+    case 'send-event:world':
+    case 'send-event:character':
+    case 'send-event:hidden':
       sendGuest(guest, {
         type: 'guest-message-created',
         requestId,
@@ -597,7 +609,7 @@ function newMessage(
     characterId?: string
     ooc: boolean
     meta?: any
-    event: undefined | AppSchema.EventTypes
+    event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
   }
 ) {

@@ -170,14 +170,25 @@ export async function getMessages(chatId: string, before: string) {
   return res
 }
 
+type EventKind =
+  | 'send-event:world'
+  | 'send-event:character'
+  | 'send-event:hidden'
+  | 'send-event:ooc'
+
+function isEventOpts(opts: GenerateOpts): opts is { kind: EventKind; text: string } {
+  return (
+    opts.kind.startsWith('send-event:') &&
+    ['world', 'character', 'hidden', 'ooc'].includes(opts.kind.split(':')[1])
+  )
+}
+
 export type GenerateOpts =
   /**
    * A user sending a new message
    */
   | { kind: 'send'; text: string }
-  | { kind: 'send-event:world'; text: string }
-  | { kind: 'send-event:character'; text: string }
-  | { kind: 'send-event:hidden'; text: string }
+  | { kind: EventKind; text: string }
   | { kind: 'send-noreply'; text: string }
   | { kind: 'ooc'; text: string }
   /**
@@ -207,7 +218,13 @@ export async function generateResponse(opts: GenerateOpts) {
     return localApi.error('No active chat. Try refreshing.')
   }
 
-  if (opts.kind === 'ooc' || opts.kind === 'send-noreply') {
+  if (
+    opts.kind === 'ooc' ||
+    opts.kind === 'send-noreply' ||
+    opts.kind === 'send-event:ooc' ||
+    // allow events to be sent without a reply in multi-bot chats
+    (isEventOpts(opts) && !active.replyAs)
+  ) {
     return createMessage(active.chat._id, opts)
   }
 
@@ -331,7 +348,7 @@ async function getActivePromptOptions(
 }
 
 async function createActiveChatPrompt(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
+  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' | 'send-event:ooc' }>
 ) {
   const { active } = chatStore.getState()
   const { ui } = userStore.getState()
@@ -595,7 +612,10 @@ async function getGenerateProps(
 /**
  * Create a user message that does not generate a bot response
  */
-async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
+async function createMessage(
+  chatId: string,
+  opts: { kind: 'ooc' | 'send-noreply' | EventKind; text: string }
+) {
   const { impersonating } = getStore('character').getState()
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
