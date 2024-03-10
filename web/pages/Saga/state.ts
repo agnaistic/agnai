@@ -165,6 +165,14 @@ export const sagaStore = createStore<SagaState>(
       yield { state: session }
       onSuccess?.(id)
     },
+    async *deleteTemplate({ templates }, id: string, onSuccess?: () => void) {
+      const res = await sagaApi.removeTemplate(id)
+      if (res.result) {
+        yield { templates: templates.filter((t) => t._id !== id) }
+        onSuccess?.()
+        toastStore.success('Saga template deleted')
+      }
+    },
     async *deleteSession({ state, sessions }, id: string, onSuccess?: () => void) {
       const res = await sagaApi.removeSession(id)
 

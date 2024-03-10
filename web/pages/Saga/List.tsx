@@ -8,7 +8,7 @@ import Divider from '/web/shared/Divider'
 import { markdown } from '/web/shared/markdown'
 import { neat } from '/common/util'
 import Button from '/web/shared/Button'
-import { PlusIcon } from 'lucide-solid'
+import { PlusIcon, TrashIcon } from 'lucide-solid'
 import { SagaSession } from '/web/store/data/saga'
 import { GuidanceHelp } from './Help'
 import { toSessionUrl } from './util'
@@ -120,20 +120,28 @@ export const SessionList: Component<{
 
         return (
           <SolidCard bg="bg-700" class="flex flex-col justify-between">
-            <div class="font-bold">
-              <Pill small type="hl">
-                {template.sessions.length}
-              </Pill>{' '}
-              {template.name}
+            <div class="flex justify-between">
+              <div class="font-bold">
+                <Pill small type="hl">
+                  {template.sessions.length}
+                </Pill>{' '}
+                {template.name}
+              </div>
+              <div>
+                <Button
+                  schema="red"
+                  size="sm"
+                  onClick={() => sagaStore.deleteTemplate(template._id)}
+                >
+                  <TrashIcon size={12} />
+                </Button>
+              </div>
             </div>
             <Sessions
               sessions={template.sessions}
               current={state.state}
               onSession={props.onSession}
             />
-            {/* <div>
-          <sub>{sess ? `${toDuration(new Date(sess.updated))} ago` : 'no sessions'}</sub>
-        </div> */}
           </SolidCard>
         )
       }}
@@ -154,32 +162,32 @@ const Sessions: Component<{
         {(session) => (
           <a class="cursor-pointer">
             <Pill
-              type="hl"
-              corners={{ r: false }}
+              type="bg"
               onClick={() => {
                 props.onSession?.()
                 sagaStore.loadSession(session._id)
                 nav(toSessionUrl(session._id))
               }}
             >
-              <Pill small type="bg">
+              <Pill small type="bg" inverse>
                 {session.responses.length}
               </Pill>
               &nbsp;
               {toDuration(new Date(session.updated))} ago
-            </Pill>
-            <Pill
-              type="rose"
-              corners={{ l: false }}
-              onClick={() => {
-                sagaStore.deleteSession(session._id)
+              <Button
+                class="ml-1 inline-block"
+                size="sm"
+                schema="red"
+                onClick={() => {
+                  sagaStore.deleteSession(session._id)
 
-                if (props.onSession && props.current._id === session._id) {
-                  nav(toSessionUrl('new'))
-                }
-              }}
-            >
-              X
+                  if (props.onSession && props.current._id === session._id) {
+                    nav(toSessionUrl('new'))
+                  }
+                }}
+              >
+                <TrashIcon size={12} />
+              </Button>
             </Pill>
           </a>
         )}
