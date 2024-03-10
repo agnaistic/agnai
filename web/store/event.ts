@@ -12,7 +12,7 @@ export type ChatEvent = {
   charId: string
   chatId: string
   prompt: string
-  event: AppSchema.EventTypes
+  event: AppSchema.ScenarioEventType
 }
 
 type ChatEventState = {

@@ -25,7 +25,7 @@ import PromptEditor from '/web/shared/PromptEditor'
 import { FormLabel } from '/web/shared/FormLabel'
 import { Card, Pill, TitleCard } from '/web/shared/Card'
 
-const eventTypeOptions: Option<AppSchema.EventTypes>[] = [
+const eventTypeOptions: Option<AppSchema.ScenarioEventType>[] = [
   { value: 'hidden', label: 'Hidden (not shown to the user)' },
   { value: 'world', label: 'World (shown, external to the character)' },
   { value: 'character', label: 'Character (shown, thought or action by the character)' },

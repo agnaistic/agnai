@@ -80,12 +80,14 @@ export namespace AppSchema {
 
     imagesEnabled: boolean
     imagesHost: string
-    imagesModels: Array<{
-      name: string
-      desc: string
-      init: { steps: number; cfg: number; height: number; width: number }
-      limit: { steps: number; cfg: number; height: number; width: number }
-    }>
+    imagesModels: ImageModel[]
+  }
+
+  export type ImageModel = {
+    name: string
+    desc: string
+    init: { steps: number; cfg: number; height: number; width: number }
+    limit: { steps: number; cfg: number; height: number; width: number }
   }
 
   export interface Announcement {
@@ -389,12 +391,12 @@ export namespace AppSchema {
     ooc?: boolean
     system?: boolean
     meta?: any
-    event?: EventTypes | undefined
+    event?: ScenarioEventType | undefined
     state?: string
     values?: Record<string, string | number | boolean>
   }
 
-  export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'
+  export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
 
   /** Description of the character or user */
   export type Persona =
@@ -664,7 +666,7 @@ export namespace AppSchema {
     name: string
     requires: string[]
     assigns: string[]
-    type: EventTypes
+    type: ScenarioEventType
     text: string
     trigger: T
   }

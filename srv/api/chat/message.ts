@@ -8,6 +8,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
+import { getScenarioEventType } from '/common/scenario'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -91,9 +92,7 @@ export const createMessage = handle(async (req) => {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
-      event: body.kind.startsWith('send-event')
-        ? (body.kind.split(':')[1] as AppSchema.EventTypes)
-        : undefined,
+      event: getScenarioEventType(body.kind),
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -109,9 +108,7 @@ export const createMessage = handle(async (req) => {
       characterId: impersonate?._id,
       senderId: userId,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
-      event: body.kind.startsWith('send-event')
-        ? (body.kind.split(':')[1] as AppSchema.EventTypes)
-        : undefined,
+      event: getScenarioEventType(body.kind),
     })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
@@ -197,7 +194,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       characterId: replyAs?._id,
       senderId: undefined,
       ooc: false,
-      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+      event: getScenarioEventType(body.kind),
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -487,7 +484,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     newMsg = newMessage(v4(), chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
-      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+      event: getScenarioEventType(body.kind),
     })
   }
 
@@ -612,7 +609,7 @@ function newMessage(
     characterId?: string
     ooc: boolean
     meta?: any
-    event: undefined | AppSchema.EventTypes
+    event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
   }
 ) {
