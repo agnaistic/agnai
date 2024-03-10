@@ -90,12 +90,15 @@ describe('Chat Completion Example Dialogue::', () => {
 })
 
 async function testInput(input: string, budget?: number) {
-  const result = await splitSampleChat({
-    sampleChat: input,
-    char: TEST_CHARACTER_NAME,
-    sender: TEST_USER_NAME,
-    budget,
-  })
+  const result = await splitSampleChat(
+    {
+      sampleChat: input,
+      char: TEST_CHARACTER_NAME,
+      sender: TEST_USER_NAME,
+      budget,
+    },
+    'system'
+  )
 
   return JSON.stringify(result.additions, null, 2)
 }
