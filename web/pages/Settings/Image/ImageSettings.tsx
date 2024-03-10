@@ -13,6 +13,7 @@ import { settingStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { BaseImageSettings } from '/common/types/image-schema'
+import { SolidCard } from '/web/shared/Card'
 
 export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boolean }> = (props) => {
   const state = userStore()
@@ -60,6 +61,13 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
         value={(props.inherit ? props.cfg?.type : state.user?.images?.type) ?? 'horde'}
         onChange={(value) => setType(value.value as any)}
       />
+
+      <Show when={type() === 'agnai'}>
+        <SolidCard bg="rose-600">
+          Refer to the recommended settings at the bottom of the page when using Agnaistic image
+          models
+        </SolidCard>
+      </Show>
 
       <RangeInput
         fieldName="imageSteps"
