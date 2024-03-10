@@ -56,6 +56,8 @@ export namespace AppSchema {
 
     maintenance: boolean
 
+    supportEmail: string
+
     /** Markdown */
     maintenanceMessage: string
 
@@ -78,7 +80,12 @@ export namespace AppSchema {
 
     imagesEnabled: boolean
     imagesHost: string
-    imagesModels: string
+    imagesModels: Array<{
+      name: string
+      desc: string
+      init: { steps: number; cfg: number; height: number; width: number }
+      limit: { steps: number; cfg: number; height: number; width: number }
+    }>
   }
 
   export interface Announcement {

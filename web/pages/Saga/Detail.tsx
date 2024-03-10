@@ -14,13 +14,13 @@ import { ModeDetail } from '/web/shared/Mode/Detail'
 import { SagaInput } from './Input'
 import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
-import { formatResponse, sagaStore } from './state'
+import { formatResponse, getPlaceholderNames, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import { Cog, HelpCircle, MoreHorizontal, Pencil, RefreshCw, Sliders, Trash } from 'lucide-solid'
-import { createDebounce, toDuration, toMap } from '/web/shared/util'
+import { createDebounce } from '/web/shared/util'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'
@@ -28,11 +28,9 @@ import { DropMenu } from '/web/shared/DropMenu'
 import { createStore } from 'solid-js/store'
 import { Pill } from '/web/shared/Card'
 import { imageApi } from '/web/store/data/image'
-import { getTemplateFields } from './util'
-
-export function toSessionUrl(id: string) {
-  return `/saga/${id}${location.search}`
-}
+import { getTemplateFields, toSessionUrl } from './util'
+import { SessionList } from './List'
+import { toastStore } from '/web/store'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
@@ -67,6 +65,13 @@ export const SagaDetail: Component = (props) => {
     const last = state.state.responses.slice(-1)[0] || state.state.init
     if (!last) return
 
+    const placeholders = getPlaceholderNames(state.template.imagePrompt)
+    for (const { key } of placeholders) {
+      if (!last[key] && !state.state.init?.[key]) {
+        return
+      }
+    }
+
     const caption = formatResponse(state.template.imagePrompt, state.state, last)
 
     if (auto && lastCaption() === caption) return
@@ -78,8 +83,6 @@ export const SagaDetail: Component = (props) => {
       setImage(image.data)
     })
   }, 100)
-
-  onMount(() => {})
 
   const headerImage = createMemo(() => {
     if (!state.template.imagesEnabled) return null
@@ -147,11 +150,8 @@ export const SagaDetail: Component = (props) => {
       <Show when={load()}>
         <LoadModal close={() => setLoad(false)} />
       </Show>
+      <GuidanceHelp />
       <Switch>
-        <Match when={state.showModal === 'help'}>
-          <GuidanceHelp />
-        </Match>
-
         <Match when={state.showModal === 'import'}>
           <ImportTemplate />
         </Match>
@@ -161,35 +161,10 @@ export const SagaDetail: Component = (props) => {
 }
 
 const LoadModal: Component<{ close: () => void }> = (props) => {
-  const nav = useNavigate()
-  const sessions = sagaStore((g) => {
-    const templates = toMap(g.templates)
-    const sessions = g.sessions
-      .filter((sess) => sess.gameId in templates === true && !!sess.updated)
-      .map((sess) => ({
-        _id: sess._id,
-        name: templates[sess.gameId].name,
-        age: new Date(sess.updated ?? new Date()),
-      }))
-      .sort((l, r) => r.age.valueOf() - l.age.valueOf())
-    return sessions
-  })
-  const load = (id: string) => {
-    sagaStore.loadSession(id)
-    nav(toSessionUrl(id))
-    props.close()
-  }
-
   return (
     <Modal maxWidth="half" show close={props.close}>
       <div class="flex flex-col gap-1">
-        <For each={sessions}>
-          {(sess) => (
-            <Button onClick={() => load(sess._id)}>
-              <span class="font-bold">{sess.name}</span> <sub>{toDuration(sess.age)} ago</sub>
-            </Button>
-          )}
-        </For>
+        <SessionList onSession={props.close} />
       </div>
     </Modal>
   )
@@ -225,6 +200,7 @@ const Footer: Component<{
   const nav = useNavigate()
 
   const onSave = (session: SagaSession) => {
+    toastStore.success('Session saved')
     if (session._id !== params.id) {
       nav(toSessionUrl(session._id))
     }

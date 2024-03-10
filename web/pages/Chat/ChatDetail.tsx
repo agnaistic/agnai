@@ -386,6 +386,7 @@ const ChatDetail: Component = () => {
         showPane={showPane()}
         pane={<ChatPanes />}
         split={split()}
+        splitHeight={user.ui.viewHeight}
       >
         <section
           data-messages

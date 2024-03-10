@@ -64,6 +64,10 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
     throw new Error(`Failed to generate image: Response did not contain an image`)
   }
 
+  if (typeof image === 'string' && image.startsWith('http')) {
+    return { ext: 'png', content: image }
+  }
+
   const buffer = Buffer.from(image, 'base64')
 
   return { ext: 'png', content: buffer }
@@ -129,6 +133,6 @@ function getPayload(opts: ImageRequestOpts, host: string) {
   return payload
 }
 
-function getAgnaiModels(csv: string) {
-  return csv.split(',').map((v) => v.trim())
+function getAgnaiModels(csv: AppSchema.Configuration['imagesModels']) {
+  return csv.map((v) => v.name.trim())
 }

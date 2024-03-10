@@ -106,6 +106,7 @@ export const sagaStore = createStore<SagaState>(
       if (res.result) {
         const template = res.result
         const next = templates.filter((t) => t._id !== template._id).concat(template)
+        toastStore.success('Saga template saved')
         return { template: res.result, templates: next }
       }
     },
@@ -164,12 +165,43 @@ export const sagaStore = createStore<SagaState>(
       yield { state: session }
       onSuccess?.(id)
     },
+    async *deleteTemplate({ templates }, id: string, onSuccess?: () => void) {
+      const res = await sagaApi.removeTemplate(id)
+      if (res.result) {
+        yield { templates: templates.filter((t) => t._id !== id) }
+        onSuccess?.()
+        toastStore.success('Saga template deleted')
+      }
+    },
+    async *deleteSession({ state, sessions }, id: string, onSuccess?: () => void) {
+      const res = await sagaApi.removeSession(id)
+
+      if (res.result) {
+        if (id === state._id) {
+          yield {
+            state: {
+              ...state,
+              _id: v4(),
+              responses: [],
+              gameId: state.gameId,
+              format: state.format,
+              init: undefined,
+              overrides: {},
+              updated: new Date().toISOString(),
+            },
+          }
+        }
+        yield { sessions: sessions.filter((s) => s._id !== id) }
+        toastStore.success('Saga session deleted')
+        onSuccess?.()
+      }
+    },
     async *saveSession({ state }, onSave?: (session: SagaSession) => void) {
       const next = { ...state, updated: now() }
       const res = await sagaApi.saveSession(next)
       if (res.result) {
-        yield { sessions: res.result.sessions, state: res.result.session }
         onSave?.(res.result.session)
+        yield { sessions: res.result.sessions, state: res.result.session }
       }
     },
     loadSession: async ({ sessions, templates, inited, template: current }, id: string) => {
@@ -535,11 +567,11 @@ export function formatResponse(
 ) {
   let output = template || '{{response}}'
 
-  const matches = output.match(/{{[a-z0-9_-]+}}/gi)
+  const matches = getPlaceholderNames(output)
 
-  if (!matches) return output
-  for (const match of matches) {
-    const key = match.replace('{{', '').replace('}}', '').trim()
+  if (!matches.length) return output
+
+  for (const { key, match } of matches) {
     if (!key) continue
     const value = session.overrides[key] || values[key] || session.init?.[key] || ''
     output = output.replace(match, `${value}`)
@@ -567,4 +599,12 @@ function sortByAge(left: SagaSession, right: SagaSession) {
 
 function toTrimmed(value: string) {
   return value.trim()
+}
+
+export function getPlaceholderNames(prompt: string) {
+  const matches = prompt
+    .match(/{{[a-z0-9_-]+}}/gi)
+    ?.map((name) => ({ match: name, key: name.replace('{{', '').replace('}}', '').trim() }))
+    .filter((name) => !!name)
+  return matches || []
 }

@@ -156,8 +156,14 @@ async function findValidSubscription(user: AppSchema.User) {
  * @param until
  * @returns
  */
-function isActive(until: Date | number, hours = 2) {
-  const ms = typeof until === 'number' ? until : until.valueOf()
+export function isActive(until: Date | number | string, hours = 2) {
+  const ms =
+    typeof until === 'string'
+      ? new Date(until).valueOf()
+      : typeof until === 'number'
+      ? until
+      : until.valueOf()
+
   const valid = new Date(ms * 1000)
   const now = Date.now() - 60000 * 60 * hours
 

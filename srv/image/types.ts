@@ -25,4 +25,4 @@ export type ImageAdapter = (
   guestId?: string
 ) => Promise<ImageAdapterResponse>
 
-export type ImageAdapterResponse = { ext: string; content: Buffer }
+export type ImageAdapterResponse = { ext: string; content: Buffer | string }

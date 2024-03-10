@@ -30,7 +30,8 @@ export async function getServerConfiguration() {
     tosUpdated: new Date().toISOString(),
     imagesEnabled: false,
     imagesHost: '',
-    imagesModels: '',
+    imagesModels: [],
+    supportEmail: '',
   }
 
   await db('configuration').insertOne(next)

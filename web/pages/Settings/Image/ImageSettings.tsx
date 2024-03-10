@@ -262,28 +262,85 @@ const SDSettings: Component = () => {
 
 const AgnaiSettings: Component = () => {
   const state = userStore()
-  const settings = settingStore()
+  const settings = settingStore((s) => {
+    const models = s.config.serverConfig?.imagesModels || []
+    return {
+      models,
+      names: models.map((m) => ({ label: m.desc.trim(), value: m.name })),
+    }
+  })
 
-  const models = createMemo(() => {
-    const names = settings.config.serverConfig?.imagesModels?.split(',').map((t) => t.trim()) || []
+  const [curr, setCurr] = createSignal(state.user?.images?.agnai.model)
 
-    return names.map((label) => ({ label, value: label }))
+  const model = createMemo(() => {
+    const original = state.user?.images?.agnai.model
+    const id = settings.models.length === 1 ? settings.models[0].name : curr() || original
+    const match = settings.models.find((m) => m.name === id)
+    return match
   })
 
   return (
     <>
       <div class="text-xl">Agnaistic</div>
-      <Show when={models().length <= 1}>
+      <Show when={settings.models.length === 0}>
         <i>No additional options available</i>
       </Show>
       <Select
         fieldName="agnaiModel"
         label="Agnaistic Image Model"
-        items={models()}
+        items={settings.names}
         value={state.user?.images?.agnai?.model}
-        disabled={models().length <= 1}
-        classList={{ hidden: models().length <= 1 }}
+        disabled={settings.models.length <= 1}
+        classList={{ hidden: settings.models.length === 0 }}
+        onChange={(ev) => setCurr(ev.value)}
       />
+
+      <Show when={!!model()}>
+        <div>
+          <table class="table-auto border-separate border-spacing-2 ">
+            <thead>
+              <tr>
+                <Th />
+                <Th>Steps</Th>
+                <Th>CFG</Th>
+                <Th>Width</Th>
+                <Th>Height</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <Td>Recommended</Td>
+                <Td>{model()?.init.steps}</Td>
+                <Td>{model()?.init.cfg}</Td>
+                <Td>{model()?.init.width}</Td>
+                <Td>{model()?.init.height}</Td>
+              </tr>
+
+              <tr>
+                <Td>Maximums</Td>
+                <Td>{model()?.limit.steps}</Td>
+                <Td>{model()?.limit.cfg}</Td>
+                <Td>{model()?.limit.width}</Td>
+                <Td>{model()?.limit.height}</Td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Show>
     </>
   )
 }
+
+const Th: Component<{ children?: any }> = (props) => (
+  <th
+    class="rounded-md border-[var(--bg-600)] p-2 font-bold"
+    classList={{ border: !!props.children, 'bg-[var(--bg-700)]': !!props.children }}
+  >
+    {props.children}
+  </th>
+)
+const Td: Component<{ children?: any }> = (props) => (
+  <td class="rounded-md border-[var(--bg-600)] p-2 " classList={{ border: !!props.children }}>
+    {props.children}
+  </td>
+)

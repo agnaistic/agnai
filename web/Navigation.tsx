@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   HelpCircle,
   LogIn,
+  MailQuestion,
   MessageCircle,
   Moon,
   Plus,
@@ -46,6 +47,7 @@ import { useEffect, usePaneManager, useResizeObserver, useWindowSize } from './s
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
+import Tooltip from './shared/Tooltip'
 
 const MobileNavHeader = () => {
   const user = userStore()
@@ -246,6 +248,18 @@ const UserNavigation: Component = () => {
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
+        <Show when={!!menu.config.serverConfig?.supportEmail}>
+          <ExternalLink
+            href={`mailto:${menu.config.serverConfig?.supportEmail}`}
+            newtab
+            ariaLabel="Email Support"
+          >
+            <Tooltip position="top" tip={`${menu.config.serverConfig?.supportEmail}`}>
+              <MailQuestion aria-hidden />
+            </Tooltip>
+          </ExternalLink>
+        </Show>
+
         <Item href="/faq" ariaLabel="Open FAQ page">
           <HelpCircle aria-hidden="true" />
         </Item>

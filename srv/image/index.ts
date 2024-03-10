@@ -115,13 +115,20 @@ export async function generateImage(
   if (image) {
     // Guest images do not get saved under any circumstances
 
+    if (typeof image.content === 'string' && image.content.startsWith('http')) {
+      output = image.content
+    }
+
     if (guestId) {
-      if (!output.startsWith('data')) {
+      if (!output) {
         output = `data:image/image;base64,${image.content.toString('base64')}`
       }
     } else if (!opts.ephemeral && config.storage.saveImages) {
       const name = `${v4()}.${image.ext}`
-      output = await saveFile(name, image.content)
+
+      if (!output) {
+        output = await saveFile(name, image.content)
+      }
 
       if (!guestId && chatId) {
         const msg = await createImageMessage({
@@ -138,7 +145,7 @@ export async function generateImage(
         if (msg) return
       }
     } else {
-      output = await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300)
+      output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))
     }
   }
 

@@ -25,6 +25,10 @@ const emptyTemplate: SagaTemplate = {
   manual: [],
 }
 
+export function toSessionUrl(id: string) {
+  return `/saga/${id}${location.search}`
+}
+
 export function exportTemplate(id: string) {
   const { templates } = sagaStore.getState()
   const template = templates.find((t) => t._id === id)
