@@ -84,8 +84,6 @@ export const SagaDetail: Component = (props) => {
     })
   }, 100)
 
-  onMount(() => {})
-
   const headerImage = createMemo(() => {
     if (!state.template.imagesEnabled) return null
     const src = image()

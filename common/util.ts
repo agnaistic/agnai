@@ -282,6 +282,17 @@ export function deepClone<T extends object>(obj: T): T {
   let copy: any = {}
 
   for (const [key, value] of Object.entries(obj)) {
+    if (Array.isArray(value)) {
+      const subCopy = []
+
+      for (const subval of value) {
+        subCopy.push(deepClone(subval))
+      }
+
+      copy[key] = subCopy
+      continue
+    }
+
     if (copyables[typeof value] || !value) {
       copy[key] = value
       continue

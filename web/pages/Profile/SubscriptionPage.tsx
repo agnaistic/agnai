@@ -1,5 +1,5 @@
 import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { userStore } from '/web/store'
+import { settingStore, userStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { Pill, SolidCard } from '/web/shared/Card'
 import Button from '/web/shared/Button'
@@ -9,6 +9,7 @@ import { PatreonControls } from '../Settings/PatreonOauth'
 import { getUserSubscriptionTier } from '/common/util'
 
 export const SubscriptionPage: Component = (props) => {
+  const settings = settingStore((s) => s.config)
   const user = userStore()
   const cfg = userStore((s) => {
     const tier = s.user ? getUserSubscriptionTier(s.user, s.tiers) : null
@@ -101,6 +102,15 @@ export const SubscriptionPage: Component = (props) => {
             </p>
             <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
           </SolidCard>
+
+          <Show when={settings.serverConfig?.supportEmail}>
+            <SolidCard>
+              If you require billing or subscription support contact{' '}
+              <a class="link" href={`mailto:${settings.serverConfig?.supportEmail}`}>
+                {settings.serverConfig?.supportEmail}
+              </a>
+            </SolidCard>
+          </Show>
 
           <PatreonControls />
 

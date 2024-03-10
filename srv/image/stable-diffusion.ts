@@ -133,6 +133,6 @@ function getPayload(opts: ImageRequestOpts, host: string) {
   return payload
 }
 
-function getAgnaiModels(csv: string) {
-  return csv.split(',').map((v) => v.trim())
+function getAgnaiModels(csv: AppSchema.Configuration['imagesModels']) {
+  return csv.map((v) => v.name.trim())
 }

@@ -13,7 +13,7 @@ const Tooltip: Component<{
     <div ref={ref!} class="tooltip select-none">
       {props.children}
       <div
-        class="tooltip-text bg-700 z-10 hidden w-[128px] rounded-md px-2 py-1 text-sm sm:flex"
+        class="tooltip-text bg-700 z-10 hidden w-[128px] rounded-md border-[1px] border-[var(--bg-900)] px-2 py-1 text-sm sm:flex"
         style={getPosition(props.position)}
       >
         {props.tip}

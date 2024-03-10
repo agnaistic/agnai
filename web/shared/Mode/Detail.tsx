@@ -28,7 +28,7 @@ export const ModeDetail: Component<{
 
   const viewHeight = createMemo(() => {
     const percent = props.splitHeight ?? 40
-    return `calc(${percent}vh - 24px)`
+    return `calc(${percent}vh)`
   })
 
   const width = createMemo(() => user.ui.chatWidth || 'fill')
@@ -72,16 +72,6 @@ export const ModeDetail: Component<{
                 </Match>
               </Switch>
             </div>
-
-            <Show when={!!props.split}>
-              <section
-                data-avatar-container
-                class="flex items-end justify-center"
-                style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
-              >
-                {props.split}
-              </section>
-            </Show>
           </header>
 
           <section
@@ -93,10 +83,19 @@ export const ModeDetail: Component<{
                 props.showPane && mode() === 'pane',
             }}
           >
-            <section class="flex h-full w-full justify-end gap-2">
+            <section class="flex h-full w-full flex-col justify-end gap-2">
+              <Show when={!!props.split}>
+                <section
+                  data-avatar-container
+                  class="sticky top-0 flex items-end justify-center"
+                  style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
+                >
+                  {props.split}
+                </section>
+              </Show>
               <section
                 data-messages
-                class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"
+                class="mx-auto flex w-full flex-col-reverse overflow-y-auto"
                 classList={{
                   // Chat Width
                   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',

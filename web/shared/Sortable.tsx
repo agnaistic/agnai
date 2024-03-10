@@ -1,13 +1,15 @@
-import { Component, Index, JSX, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, Index, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
 import Sort from 'sortablejs'
 import { FormLabel } from './FormLabel'
 import { Menu } from 'lucide-solid'
+import TextInput from './TextInput'
 
 export { Sortable as default }
 
 export type SortItem = { id: number; value: string | number; label: string; enabled?: boolean }
 
 const Sortable: Component<{
+  field?: string
   items: SortItem[]
   label?: JSX.Element | string
   helperText?: JSX.Element
@@ -16,6 +18,7 @@ const Sortable: Component<{
   setSorter?: (sort: Sort) => void
 }> = (props) => {
   let ref: HTMLUListElement
+  let field: HTMLInputElement
 
   const [_sort, setSort] = createSignal<Sort>()
   const [items, setItems] = createSignal(props.items)
@@ -44,6 +47,10 @@ const Sortable: Component<{
 
     setItems(next)
     props.onChange(next)
+    if (field) {
+      const value = next.map((n) => `${n.value}=${n.enabled ? 'on' : 'off'}`).join(',')
+      field.value = value
+    }
   }
 
   const onClick = (id: number) => {
@@ -82,6 +89,9 @@ const Sortable: Component<{
     <>
       <div>
         <FormLabel label={props.label} helperText={props.helperText} />
+        <Show when={!!props.field}>
+          <TextInput fieldName={props.field!} parentClass="hidden" ref={(ele) => (field = ele)} />
+        </Show>
         <ul ref={ref!}>
           <Index each={items()}>
             {(item) => {

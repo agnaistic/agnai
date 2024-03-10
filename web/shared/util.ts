@@ -12,6 +12,7 @@ import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 import { UserState, settingStore, userStore } from '../store'
 import { AppSchema } from '/common/types'
+import { deepClone } from '/common/util'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -728,4 +729,81 @@ export function toLocalTime(date: string) {
   const m = d.getMinutes().toString().padStart(2, '0')
 
   return `${Y}-${M}-${D}T${h}:${m}`
+}
+
+export type FieldUpdater = (index: number, path: string) => (ev: any) => void
+
+/**
+ * init: Initial list of items
+ * empty: Object template to use when adding a new item to the list
+ * @param opts
+ * @returns
+ */
+export function useRowHelper<T extends object>(opts: {
+  signal: [() => T[], (v: T[]) => void]
+  empty: T
+}) {
+  const items = opts.signal[0]
+  const setItems = opts.signal[1]
+
+  const add = () => {
+    const next = items().concat(deepClone(opts.empty))
+    setItems(next)
+  }
+
+  const remove = (index: number) => {
+    const prev = items()
+    const next = prev.slice(0, index).concat(prev.slice(index + 1))
+    setItems(next)
+  }
+
+  const updateItem = (index: number, field: string, value: any) => {
+    const prev = items()
+    const item = setProperty(prev[index], field, value)
+
+    const next = prev
+      .slice(0, index)
+      .concat(item)
+      .concat(prev.slice(index + 1))
+    setItems(next)
+  }
+
+  const updater = (index: number, field: string) => {
+    return (ev: any) => {
+      // Toggle, Radio, ColorPicker, ...
+      if (typeof ev === 'string' || typeof ev === 'number' || typeof ev === 'boolean') {
+        return updateItem(index, field, ev)
+      }
+
+      // Textarea and Input fields
+      if ('currentTarget' in ev) {
+        return updateItem(index, field, ev.currentTarget.value)
+      }
+
+      // Selects
+      if ('label' in ev && 'value' in ev) {
+        return updateItem(index, field, ev.value)
+      }
+
+      // MultiDropdown
+      if (Array.isArray(ev)) {
+        return updateItem(
+          index,
+          field,
+          ev.map((ev) => ev.value)
+        )
+      }
+    }
+  }
+
+  return { add, remove, updateItem, items, updater }
+}
+
+function setProperty(obj: any, path: string, value: any): any {
+  const [head, ...rest] = path.split('.')
+
+  return {
+    ...obj,
+    [head]: rest.length ? setProperty(obj[head], rest.join('.'), value) : value,
+  }
 }
