@@ -19,7 +19,7 @@ import { escapeRegex } from '/common/util'
 import { AppLog } from '../logger'
 
 type Role = 'user' | 'assistant' | 'system'
-type CompletionItem = { role: Role; content: string; name?: string }
+export type CompletionItem = { role: Role; content: string; name?: string }
 
 type SplitSampleChatProps = {
   sampleChat: string
@@ -181,8 +181,9 @@ export async function toChatCompletionPayload(
   opts: AdapterProps,
   maxTokens: number
 ): Promise<CompletionItem[]> {
+  const SYSTEM_ROLE = opts.gen.service === 'claude' ? 'user' : 'system'
   if (opts.kind === 'plain') {
-    return [{ role: 'system', content: opts.prompt }]
+    return [{ role: SYSTEM_ROLE, content: opts.prompt }]
   }
 
   const { lines, parts, gen, replyAs } = opts
@@ -202,7 +203,7 @@ export async function toChatCompletionPayload(
     }
   )
 
-  messages.push({ role: 'system', content: gaslight })
+  messages.push({ role: SYSTEM_ROLE, content: gaslight })
 
   const all = []
 
@@ -217,7 +218,7 @@ export async function toChatCompletionPayload(
   }
 
   // Append 'postamble' and system prompt (ujb)
-  const post = await getPostInstruction(opts, messages)
+  const post = await getPostInstruction(opts, messages, SYSTEM_ROLE)
   if (post) {
     const encode = encoder()
     post.content = (
@@ -241,7 +242,7 @@ export async function toChatCompletionPayload(
     const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
     if (remainingInserts) {
       history.push({
-        role: 'system',
+        role: SYSTEM_ROLE,
         content: remainingInserts,
       })
     }
@@ -261,18 +262,21 @@ export async function toChatCompletionPayload(
     const isBot = !isUser && !isSystem
 
     const insert = inserts.get(distanceFromBottom)
-    if (insert) history.push({ role: 'system', content: insert })
+    if (insert) history.push({ role: SYSTEM_ROLE, content: insert })
 
     if (i === examplePos) {
       addRemainingInserts()
       addedAllInserts = true
 
-      const { additions, consumed } = await splitSampleChat({
-        budget: maxBudget - tokens,
-        sampleChat: obj.content,
-        char: replyAs.name,
-        sender: handle,
-      })
+      const { additions, consumed } = await splitSampleChat(
+        {
+          budget: maxBudget - tokens,
+          sampleChat: obj.content,
+          char: replyAs.name,
+          sender: handle,
+        },
+        SYSTEM_ROLE
+      )
 
       if (tokens + consumed > maxBudget) {
         --i
@@ -284,10 +288,10 @@ export async function toChatCompletionPayload(
       continue
     } else if (isBot) {
     } else if (line === '<START>') {
-      obj.role = sampleChatMarkerCompletionItem.role
+      obj.role = SYSTEM_ROLE
       obj.content = sampleChatMarkerCompletionItem.content
     } else if (isSystem) {
-      obj.role = 'system'
+      obj.role = SYSTEM_ROLE
       obj.content = obj.content.replace('System:', '').trim()
     } else {
       obj.role = 'user'
@@ -308,7 +312,7 @@ export async function toChatCompletionPayload(
   return messages.concat(history.reverse())
 }
 
-export async function splitSampleChat(opts: SplitSampleChatProps) {
+export async function splitSampleChat(opts: SplitSampleChatProps, SYSTEM_ROLE: Role) {
   const { sampleChat, char, sender, budget } = opts
   const regex = new RegExp(
     `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|System:|<start>)`,
@@ -328,7 +332,7 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       additions.push(sampleChatMarkerCompletionItem)
       tokens += await encoder()(sampleChatMarkerCompletionItem.content)
       if (afterStart) {
-        additions.push({ role: 'system' as const, content: afterStart })
+        additions.push({ role: SYSTEM_ROLE, content: afterStart })
         tokens += await encoder()(afterStart)
       }
       continue
@@ -339,7 +343,7 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       ? 'assistant'
       : sample.startsWith(sender + ':')
       ? 'user'
-      : 'system'
+      : SYSTEM_ROLE
 
     const msg: CompletionItem = {
       role: role,
@@ -358,7 +362,8 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
 
 async function getPostInstruction(
   opts: AdapterProps,
-  messages: CompletionItem[]
+  messages: CompletionItem[],
+  SYSTEM_ROLE: Role
 ): Promise<CompletionItem | undefined> {
   let prefix = opts.parts.ujb ?? ''
 
@@ -380,7 +385,7 @@ async function getPostInstruction(
     }
 
     case 'continue':
-      return { role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }
+      return { role: SYSTEM_ROLE, content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }
 
     case 'summary': {
       let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
@@ -401,7 +406,7 @@ async function getPostInstruction(
 
     case 'self':
       return {
-        role: 'system',
+        role: SYSTEM_ROLE,
         content: `${prefix}\n\n${opts.impersonate?.name || opts.sender?.handle || 'You'}:`,
       }
 
@@ -410,7 +415,7 @@ async function getPostInstruction(
     case 'request': {
       const appendName = opts.gen.prefixNameAppend ?? true
       return {
-        role: 'system',
+        role: SYSTEM_ROLE,
         content: appendName ? `${prefix}\n\n${opts.replyAs.name}:` : prefix,
       }
     }

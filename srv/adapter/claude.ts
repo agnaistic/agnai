@@ -17,12 +17,17 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 import { getTokenCounter } from '../tokenize'
 import { publishOne } from '../api/ws/handle'
+import { CLAUDE_CHAT_MODELS } from '/common/adapters'
+import { CompletionItem, toChatCompletionPayload } from './chat-completion'
 
-const baseUrl = `https://api.anthropic.com/v1/complete`
+const CHAT_URL = `https://api.anthropic.com/v1/messages`
+const TEXT_URL = `https://api.anthropic.com/v1/complete`
 const apiVersion = '2023-06-01' // https://docs.anthropic.com/claude/reference/versioning
 
 type ClaudeCompletion = {
   completion: string
+  delta?: { text: string }
+  text?: string
   stop_reason: string | null
   model: string
   /** If `stop_reason` is "stop_sequence", this is the particular stop sequence that was matched. */
@@ -43,24 +48,51 @@ const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { members, user, log, guest, gen, isThirdParty } = opts
-  const base = getBaseUrl(user, isThirdParty)
+  const claudeModel = gen.claudeModel ?? defaultPresets.claude.claudeModel
+  const base = getBaseUrl(user, claudeModel, isThirdParty)
   if (!user.claudeApiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
-  const claudeModel = gen.claudeModel ?? defaultPresets.claude.claudeModel
 
+  const useChat = !!CLAUDE_CHAT_MODELS[claudeModel]
   const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
 
-  const payload = {
+  const payload: any = {
     model: claudeModel,
     temperature: Math.min(1, Math.max(0, gen.temp ?? defaultPresets.claude.temp)),
-    max_tokens_to_sample: gen.maxTokens ?? defaultPresets.claude.maxTokens,
-    prompt: await createClaudePrompt(opts),
     stop_sequences: Array.from(stops),
     top_p: Math.min(1, Math.max(0, gen.topP ?? defaultPresets.claude.topP)),
     top_k: Math.min(1, Math.max(0, gen.topK ?? defaultPresets.claude.topK)),
     stream: gen.streamResponse ?? defaultPresets.claude.streamResponse,
+  }
+
+  if (useChat) {
+    payload.max_tokens = gen.maxTokens
+    const messages = await toChatCompletionPayload(opts, gen.maxTokens!)
+
+    let last: CompletionItem
+
+    // We need to ensure each role alternates so we will naively merge consecutive messages :/
+    payload.messages = messages.reduce((msgs, msg) => {
+      if (!last) {
+        last = msg
+        msgs.push(msg)
+        return msgs
+      }
+
+      if (last.role !== msg.role) {
+        last = msg
+        msgs.push(msg)
+        return msgs
+      }
+
+      last.content += '\n\n' + msg.content
+      return msgs
+    }, [] as CompletionItem[])
+  } else {
+    payload.max_tokens_to_sample = gen.maxTokens
+    payload.prompt = await createClaudePrompt(opts)
   }
 
   if (opts.kind === 'plain') {
@@ -132,12 +164,16 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
+function getBaseUrl(user: AppSchema.User, model: string, isThirdParty?: boolean) {
   if (isThirdParty && user.thirdPartyFormat === 'claude' && user.koboldUrl) {
     return { url: user.koboldUrl, changed: true }
   }
 
-  return { url: baseUrl, changed: false }
+  if (CLAUDE_CHAT_MODELS[model]) {
+    return { url: CHAT_URL, changed: false }
+  }
+
+  return { url: TEXT_URL, changed: false }
 }
 
 const requestFullCompletion: CompletionGenerator = async function* (
@@ -204,8 +240,9 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 
       switch (event.type) {
         case 'completion':
+        case 'content_block_delta':
           const delta: Partial<ClaudeCompletion> = JSON.parse(event.data)
-          const token = delta.completion || ''
+          const token = delta.completion || delta.delta?.text || delta.text || ''
           meta = { ...meta, ...delta }
           tokens.push(token)
           yield { token }

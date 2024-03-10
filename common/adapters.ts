@@ -182,9 +182,14 @@ export const CLAUDE_MODELS = {
   ClaudeInstantV1_0: 'claude-instant-v1.0',
   ClaudeInstantV1_1: 'claude-instant-v1.1',
   ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
-  // ClaudeV3_Opus: 'claude-3-opus-20240229',
-  // ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
+  ClaudeV3_Opus: 'claude-3-opus-20240229',
+  ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
 } as const
+
+export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
+  [CLAUDE_MODELS.ClaudeV3_Opus]: true,
+  [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
+}
 
 export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
