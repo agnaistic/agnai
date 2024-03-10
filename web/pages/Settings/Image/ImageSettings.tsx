@@ -13,10 +13,29 @@ import { settingStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { BaseImageSettings } from '/common/types/image-schema'
+import { SolidCard } from '/web/shared/Card'
 
 export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boolean }> = (props) => {
   const state = userStore()
   const settings = settingStore()
+  const [type, setType] = createSignal(state.user?.images?.type || 'horde')
+
+  const canUseImages = createMemo(() => {
+    const access = state.sub?.tier.imagesAccess || state.user?.admin
+    return (
+      settings.config.serverConfig?.imagesEnabled &&
+      access &&
+      settings.config.serverConfig?.imagesModels?.length > 0
+    )
+  })
+
+  const agnaiModel = createMemo(() => {
+    if (!canUseImages()) return
+    if (type() !== 'agnai') return
+
+    const id = state.user?.images?.agnai?.model
+    return settings.config.serverConfig?.imagesModels?.find((m) => m.name === id)
+  })
 
   const imageTypes = createMemo(() => {
     const list = [
@@ -25,14 +44,13 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
       { label: 'Stable Diffusion', value: 'sd' },
     ]
 
-    if (settings.config.serverConfig?.imagesEnabled) {
+    if (canUseImages()) {
       list.push({ label: 'Agnaistic', value: 'agnai' })
     }
 
     return list
   })
 
-  const [currentType, setType] = createSignal(state.user?.images?.type || 'horde')
   const subclass = 'flex flex-col gap-4'
 
   return (
@@ -44,12 +62,23 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
         onChange={(value) => setType(value.value as any)}
       />
 
+      <Show when={type() === 'agnai'}>
+        <SolidCard bg="rose-600">
+          Refer to the recommended settings at the bottom of the page when using Agnaistic image
+          models
+        </SolidCard>
+      </Show>
+
       <RangeInput
         fieldName="imageSteps"
         min={20}
         max={128}
         step={1}
-        value={(props.inherit ? props.cfg?.steps : state.user?.images?.steps) ?? 28}
+        value={
+          (props.inherit ? props.cfg?.steps : state.user?.images?.steps) ??
+          agnaiModel()?.init.steps ??
+          28
+        }
         label="Sampling Steps"
         helperText="(Novel Anlas Threshold: 28)"
       />
@@ -59,7 +88,11 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
         min={256}
         max={1024}
         step={64}
-        value={(props.inherit ? props.cfg?.width : state.user?.images?.width) ?? 384}
+        value={
+          (props.inherit ? props.cfg?.width : state.user?.images?.width) ??
+          agnaiModel()?.init.width ??
+          384
+        }
         label="Image Width"
         helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
       />
@@ -69,14 +102,20 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
         min={256}
         max={1024}
         step={64}
-        value={(props.inherit ? props.cfg?.height : state.user?.images?.height) ?? 384}
+        value={
+          (props.inherit ? props.cfg?.height : state.user?.images?.height) ??
+          agnaiModel()?.init.height ??
+          384
+        }
         label="Image Height"
         helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
       />
 
       <TextInput
         fieldName="imageCfg"
-        value={(props.inherit ? props.cfg?.cfg : state.user?.images?.cfg) ?? 9}
+        value={
+          (props.inherit ? props.cfg?.cfg : state.user?.images?.cfg) ?? agnaiModel()?.init.cfg ?? 9
+        }
         label="CFG Scale"
         helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
       />
@@ -123,19 +162,19 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
       <Show when={!props.inherit}>
         <Divider />
 
-        <div class={currentType() === 'novel' ? subclass : 'hidden'}>
+        <div class={type() === 'novel' ? subclass : 'hidden'}>
           <NovelSettings />
         </div>
 
-        <div class={currentType() === 'horde' ? subclass : 'hidden'}>
+        <div class={type() === 'horde' ? subclass : 'hidden'}>
           <HordeSettings />
         </div>
 
-        <div class={currentType() === 'sd' ? subclass : 'hidden'}>
+        <div class={type() === 'sd' ? subclass : 'hidden'}>
           <SDSettings />
         </div>
 
-        <div class={currentType() === 'agnai' ? subclass : 'hidden'}>
+        <div class={type() === 'agnai' ? subclass : 'hidden'}>
           <AgnaiSettings />
         </div>
       </Show>
