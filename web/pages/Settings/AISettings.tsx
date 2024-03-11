@@ -100,7 +100,7 @@ const AISettings: Component<{
     if (!cfg.server.apiAccess || cfg.server?.apiAccess === 'off') return false
     if (!state.user?.admin) {
       if (cfg.server.apiAccess === 'users') return true
-      return cfg.server.apiAccess === 'subscribers' && state.sub.tier.apiAccess
+      return cfg.server.apiAccess === 'subscribers' && state.sub?.tier.apiAccess
     }
 
     return true
