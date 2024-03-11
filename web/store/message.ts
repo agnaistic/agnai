@@ -553,7 +553,7 @@ function processQueue() {
  * @param image base64 encoded image or image url
  */
 async function handleImage(chatId: string, image: string, messageId?: string) {
-  const { msgs, activeCharId, images, imagesSaved } = msgStore.getState()
+  const { msgs, activeCharId, images, imagesSaved, activeChatId } = msgStore.getState()
 
   const chatImages = images[chatId] || []
 
@@ -590,12 +590,14 @@ async function handleImage(chatId: string, image: string, messageId?: string) {
 
   chatImages.push(newMsg)
 
-  const nextMsgs = msgs.concat(newMsg)
-  msgStore.setState({
-    msgs: nextMsgs,
-    waiting: undefined,
-    images: { ...images, [chatId]: chatImages },
-  })
+  if (chatId === activeChatId) {
+    const nextMsgs = msgs.concat(newMsg)
+    msgStore.setState({
+      msgs: nextMsgs,
+      waiting: undefined,
+      images: { ...images, [chatId]: chatImages },
+    })
+  }
 }
 
 async function playVoiceFromUrl(

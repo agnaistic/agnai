@@ -228,8 +228,8 @@ const CreateChatForm: Component<{
               helperText={
                 <div class="flex flex-col gap-2">
                   <TitleCard>
-                    <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale). This
-                    may not work as intended with other models.
+                    <b>ADVENTURE:</b> Adventure mode is currently disabled and will return when
+                    Sagas are out of Preview.
                   </TitleCard>
                   <TitleCard>
                     <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,

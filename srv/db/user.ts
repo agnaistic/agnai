@@ -270,6 +270,7 @@ export async function validateApiAccess(apiKey: string) {
   }
 
   if (config.apiAccess === 'subscribers') {
+    if (user.admin) return { user }
     const tier = store.users.getUserSubTier(user)
     if (!tier || tier.level <= 0) return
     const sub = await db('subscription-tier').findOne({ _id: user.sub?.tierId })

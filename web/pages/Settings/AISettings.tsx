@@ -26,6 +26,8 @@ import { SolidCard, TitleCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
+import { neat } from '/common/util'
+import { HelpModal } from '/web/shared/Modal'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -33,7 +35,10 @@ const AISettings: Component<{
 }> = (props) => {
   const [query] = useSearchParams()
   const state = userStore()
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({
+    config: s.config,
+    server: s.config.serverConfig,
+  }))
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
 
   let keyRef: any
@@ -90,6 +95,17 @@ const AISettings: Component<{
   })
   const [presetId, setPresetId] = createSignal(state.user?.defaultPreset || '')
 
+  const canUseApi = createMemo(() => {
+    if (!cfg.server) return false
+    if (!cfg.server.apiAccess || cfg.server?.apiAccess === 'off') return false
+    if (!state.user?.admin) {
+      if (cfg.server.apiAccess === 'users') return true
+      return cfg.server.apiAccess === 'subscribers' && state.sub?.tier.apiAccess
+    }
+
+    return true
+  })
+
   const tabClass = `flex flex-col gap-4`
 
   return (
@@ -99,7 +115,7 @@ const AISettings: Component<{
       </Show>
 
       <Show when={ready()}>
-        <Show when={!cfg.config.apiAccess}>
+        <Show when={!canUseApi()}>
           <PresetSelect
             fieldName="defaultPreset"
             label="Default Preset"
@@ -110,43 +126,55 @@ const AISettings: Component<{
           />
         </Show>
 
-        <Show when={cfg.config.apiAccess}>
-          <PresetSelect
-            fieldName="defaultPreset"
-            label="Default/API Access Preset"
-            helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
-            options={presetOptions()}
-            selected={presetId()}
-            setPresetId={setPresetId}
-          />
+        <Show when={canUseApi()}>
+          <SolidCard class="flex flex-col gap-2">
+            <HelpModal
+              title="Agnaistic API Access"
+              cta={
+                <div>
+                  <a class="link">How use to API Access</a>
+                </div>
+              }
+              markdown={ApiAccessHelp}
+            />
 
-          <TextInput
-            fieldName="apiKeyPlaceholder"
-            helperText={
-              <div class="text-900 flex gap-1">
-                <Show when={apiKey().includes('***')}>
-                  <Button size="pill" onClick={revealKey}>
-                    Reveal Key
-                  </Button>
-                </Show>
-                <Show when={apiKey() === 'Not set'}>
-                  <Button size="pill" onClick={generateKey}>
-                    Generate Key
-                  </Button>
-                </Show>
-                <Show when={apiKey() !== 'Not set'}>
-                  <Button size="pill" onClick={generateKey}>
-                    Regenerate Key
-                  </Button>
-                </Show>
-              </div>
-            }
-            ref={keyRef}
-            label="API Key"
-            readonly
-            placeholder="API Key Hidden"
-            value={apiKey()}
-          />
+            <PresetSelect
+              fieldName="defaultPreset"
+              label="Default/API Access Preset"
+              helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
+              options={presetOptions()}
+              selected={presetId()}
+              setPresetId={setPresetId}
+            />
+
+            <TextInput
+              fieldName="apiKeyPlaceholder"
+              helperText={
+                <div class="text-900 flex gap-1">
+                  <Show when={apiKey().includes('***')}>
+                    <Button size="pill" onClick={revealKey}>
+                      Reveal Key
+                    </Button>
+                  </Show>
+                  <Show when={apiKey() === 'Not set'}>
+                    <Button size="pill" onClick={generateKey}>
+                      Generate Key
+                    </Button>
+                  </Show>
+                  <Show when={apiKey() !== 'Not set'}>
+                    <Button size="pill" onClick={generateKey}>
+                      Regenerate Key
+                    </Button>
+                  </Show>
+                </div>
+              }
+              ref={keyRef}
+              label="API Key"
+              readonly
+              placeholder="API Key Hidden"
+              value={apiKey()}
+            />
+          </SolidCard>
         </Show>
 
         <div class="my-2">
@@ -218,3 +246,13 @@ const AISettings: Component<{
 }
 
 export default AISettings
+
+const ApiAccessHelp = neat`
+  The subscriber API endpoint uses the *OpenAI Text Completion* format.
+
+  1. Select your \`API Access Preset\`: This preset will be used for your API calls.
+  2. Generate your API Key.
+  3. Use the API URL \`https://agnai.chat\` and your generated API key.
+
+  *SillyTavern*: Use _Ooba_ or _Aphrodite_
+`
