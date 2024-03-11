@@ -238,12 +238,6 @@ const ChatDetail: Component = () => {
     }
   })
 
-  // force replyAs to be set when there is only one bot
-  createEffect(() => {
-    if (ctx.activeBots.length !== 1 || chats.replyAs) return
-    chatStore.setAutoReplyAs(ctx.activeBots[0]._id)
-  })
-
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (isDevCommand(message)) {
       switch (message) {
