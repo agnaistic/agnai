@@ -239,10 +239,7 @@ export const HelpModal: Component<{
       >
         <Show when={!!props.children}>{props.children}</Show>
         <Show when={!!props.markdown}>
-          <div
-            class="rendered-markdown text-sm"
-            innerHTML={markdown.makeMarkdown(props.markdown!)}
-          />
+          <div class="rendered-markdown text-sm" innerHTML={markdown.makeHtml(props.markdown!)} />
         </Show>
       </Modal>
     </>
