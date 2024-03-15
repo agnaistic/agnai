@@ -181,7 +181,8 @@ export async function toChatCompletionPayload(
   opts: AdapterProps,
   maxTokens: number
 ): Promise<CompletionItem[]> {
-  const SYSTEM_ROLE = opts.gen.service === 'claude' ? 'user' : 'system'
+  const isClaude = opts.gen.service === 'claude' || opts.gen.thirdPartyFormat === 'claude'
+  const SYSTEM_ROLE = isClaude ? 'user' : 'system'
   if (opts.kind === 'plain') {
     return [{ role: SYSTEM_ROLE, content: opts.prompt }]
   }
