@@ -69,3 +69,16 @@
 .helper-text {
   @apply mt-[-0.125rem] pb-1 text-sm text-[var(--text-600)];
 }
+
+.spinner {
+  animation: spin 1.3s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

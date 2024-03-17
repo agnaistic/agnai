@@ -239,8 +239,8 @@ devDependencies:
     specifier: ^1.10.0
     version: 1.10.0
   lucide-solid:
-    specifier: 0.252.0
-    version: 0.252.0(solid-js@1.7.6)
+    specifier: 0.356.0
+    version: 0.356.0(solid-js@1.7.6)
   mocha:
     specifier: ^10.2.0
     version: 10.2.0
@@ -4320,8 +4320,8 @@ packages:
     dependencies:
       yallist: 4.0.0
 
-  /lucide-solid@0.252.0(solid-js@1.7.6):
-    resolution: {integrity: sha512-yj17zg4KQWIMP/dD6GjV2qrRDLywXApITHjpfJeNZkvhFW82Q55nfBNE8OVudSSXl2GuzS/Ibs69wzTZlRNLUg==}
+  /lucide-solid@0.356.0(solid-js@1.7.6):
+    resolution: {integrity: sha512-s1sMreftM+Ha7PnSe/jJXu+FjIYQaklDkUfYFiUztlQZVY81XJl9ZQHS6kUge1sa8QYz/7Xd0hKn3M1njGfN/g==, tarball: https://registry.npmjs.org/lucide-solid/-/lucide-solid-0.356.0.tgz}
     peerDependencies:
       solid-js: ^1.4.7
     dependencies:

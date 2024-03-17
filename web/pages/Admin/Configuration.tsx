@@ -48,6 +48,8 @@ const ServerConfiguration: Component = () => {
       imagesHost: 'string',
       imagesEnabled: 'boolean',
       supportEmail: 'string',
+      ttsEnabled: 'boolean',
+      ttsHost: 'string',
     })
 
     adminStore.updateServerConfig({
@@ -86,6 +88,20 @@ const ServerConfiguration: Component = () => {
             </>
           }
           value={state.serverConfig?.imagesHost}
+          classList={{ hidden: !state.adapters.includes('agnaistic') }}
+        />
+
+        <TextInput
+          fieldName="ttsHost"
+          label={
+            <>
+              <div class="flex gap-2">
+                <div>Agnaistic TTS Host</div>
+                <Toggle fieldName="ttsEnabled" value={state.serverConfig?.ttsEnabled} />
+              </div>
+            </>
+          }
+          value={state.serverConfig?.ttsHost}
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 

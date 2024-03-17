@@ -82,6 +82,8 @@ const updateConfiguration = handle(async ({ body }) => {
       enabledAdapters: ['string'],
       imagesEnabled: 'boolean',
       imagesHost: 'string',
+      ttsEnabled: 'boolean',
+      ttsHost: 'string',
       imagesModels: ['any'],
       supportEmail: 'string',
     },

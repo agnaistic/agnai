@@ -279,6 +279,8 @@ const copyables: Record<string, boolean> = {
 }
 
 export function deepClone<T extends object>(obj: T): T {
+  if (copyables[typeof obj] || !obj) return obj
+
   let copy: any = {}
 
   for (const [key, value] of Object.entries(obj)) {
