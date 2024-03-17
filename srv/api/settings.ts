@@ -40,6 +40,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   const configuration = await store.admin.getServerConfiguration().catch(() => undefined)
   if (!user?.admin && configuration) {
     configuration.imagesHost = ''
+    configuration.ttsHost = ''
   }
 
   if (!appConfig) {

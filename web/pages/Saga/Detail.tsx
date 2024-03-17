@@ -19,7 +19,16 @@ import { markdown } from '/web/shared/markdown'
 import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import { Cog, HelpCircle, MoreHorizontal, Pencil, RefreshCw, Sliders, Trash } from 'lucide-solid'
+import {
+  Cog,
+  HelpCircle,
+  LoaderCircle,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Sliders,
+  Trash,
+} from 'lucide-solid'
 import { createDebounce } from '/web/shared/util'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
@@ -30,10 +39,12 @@ import { Pill } from '/web/shared/Card'
 import { imageApi } from '/web/store/data/image'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
-import { toastStore } from '/web/store'
+import { toastStore, userStore } from '/web/store'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
+  const user = userStore()
+
   const params = useParams()
   const [search, setSearch] = useSearchParams()
 
@@ -87,9 +98,38 @@ export const SagaDetail: Component = (props) => {
   const headerImage = createMemo(() => {
     if (!state.template.imagesEnabled) return null
     const src = image()
-    if (!src) return null
+    if (!src) {
+      if (stage() !== 'rendering') return null
 
-    return <img src={src} class="h-full" />
+      return (
+        <div class="relative flex h-full w-full justify-center">
+          {/* <img src={src} class="h-full" /> */}
+          <div class="bg-700 t h-full w-3/4 bg-gradient-to-r from-[var(--bg-800)] via-slate-700 to-[var(--bg-800)]">
+            &nbsp;
+          </div>
+
+          <div
+            class="spinner absolute bottom-1/2 left-1/2"
+            classList={{ hidden: stage() !== 'rendering' }}
+          >
+            <LoaderCircle />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div class="relative h-full">
+        <img src={src} class="h-full" />
+
+        <div
+          class="spinner absolute bottom-1/2 left-1/2"
+          classList={{ hidden: stage() !== 'rendering' }}
+        >
+          <LoaderCircle />
+        </div>
+      </div>
+    )
   })
 
   const sendMessage = (text: string, done?: () => void) => {
@@ -105,11 +145,18 @@ export const SagaDetail: Component = (props) => {
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        footer={<Footer load={() => setLoad(true)} regenImage={generateImage} send={sendMessage} />}
+        footer={
+          <Footer
+            load={() => setLoad(true)}
+            regenImage={generateImage}
+            send={sendMessage}
+            rendering={stage() === 'rendering'}
+          />
+        }
         showPane={pane()}
         pane={<SidePane show={setPane} />}
         split={headerImage()}
-        splitHeight={30}
+        splitHeight={user.ui.viewHeight ?? 30}
       >
         <div class="flex flex-col gap-2">
           <Show when={!!state.state.init}>
@@ -194,6 +241,7 @@ const Footer: Component<{
   load: () => void
   regenImage: () => void
   send: (text: string, onSuccess?: () => void) => void
+  rendering: boolean
 }> = (props) => {
   const state = sagaStore()
   const params = useParams()
@@ -234,7 +282,11 @@ const Footer: Component<{
         </Show>
 
         <Show when={state.template.imagesEnabled && state.template.imagePrompt}>
-          <Button size="pill" onClick={() => props.regenImage()} disabled={state.busy}>
+          <Button
+            size="pill"
+            onClick={() => props.regenImage()}
+            disabled={state.busy || props.rendering}
+          >
             Re-image
           </Button>
         </Show>

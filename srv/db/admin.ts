@@ -32,6 +32,8 @@ export async function getServerConfiguration() {
     imagesHost: '',
     imagesModels: [],
     supportEmail: '',
+    ttsEnabled: false,
+    ttsHost: '',
   }
 
   await db('configuration').insertOne(next)

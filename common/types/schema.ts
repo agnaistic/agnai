@@ -81,6 +81,9 @@ export namespace AppSchema {
     imagesEnabled: boolean
     imagesHost: string
     imagesModels: ImageModel[]
+
+    ttsEnabled: boolean
+    ttsHost: string
   }
 
   export type ImageModel = {

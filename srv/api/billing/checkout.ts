@@ -131,6 +131,7 @@ export const finishCheckout = handle(async ({ body, userId }) => {
   assertValid({ sessionId: 'string', state: 'string' }, body)
 
   const session = await stripe.checkout.sessions.retrieve(body.sessionId)
+  const user = await store.users.getUser(userId)
 
   if (!session) {
     throw new StatusError(`Invalid checkout`, 400)
@@ -147,6 +148,17 @@ export const finishCheckout = handle(async ({ body, userId }) => {
     }
 
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+
+    await stripe.subscriptions
+      .update(session.subscription as string, {
+        metadata: {
+          userId,
+          tierId: agg.tierId,
+          username: user?.username || '',
+        },
+      })
+      .catch(() => {})
+
     const now = new Date()
     const lastRenewed = now.toISOString()
     now.setMonth(now.getMonth() + 1)
