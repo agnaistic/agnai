@@ -6,6 +6,7 @@ import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
 import { v4 } from 'uuid'
 import { replaceTags } from '/common/presets/templates'
+import { subscribe } from '/web/store/socket'
 
 type SagaState = {
   template: SagaTemplate
@@ -379,8 +380,15 @@ export const sagaStore = createStore<SagaState>(
 
       prompt = replaceTags(prompt, state.format)
       console.log(prompt)
+      const requestId = v4()
+      yield {
+        state: Object.assign({}, state, {
+          responses: state.responses.concat({ requestId, input: text, response: '' }),
+        }),
+      }
       const result = await msgsApi
         .guidance({
+          requestId,
           prompt,
           presetId: state.presetId,
           lists: template.lists,
@@ -392,14 +400,17 @@ export const sagaStore = createStore<SagaState>(
       if ('err' in result) {
         const message = result.err.error || 'An unexpected error occurred'
         toastStore.error(message)
-        yield { busy: false }
+        const next = get().state.responses.filter((res) => res.requestId !== requestId)
+        yield { busy: false, state: Object.assign({}, state, { responses: next }) }
         return
       }
       console.log(JSON.stringify(result, null, 2))
       onDone()
 
+      result.requestId = requestId
       result.input = text
-      const next = state.responses.concat(result)
+      const next = state.responses.filter((res) => res.requestId !== requestId).concat(result)
+
       yield {
         busy: false,
         state: Object.assign({}, state, { responses: next }),
@@ -408,6 +419,23 @@ export const sagaStore = createStore<SagaState>(
     },
   }
 })
+
+subscribe(
+  'guidance-partial',
+  { partial: 'any', adapter: 'string?', requestId: 'string' },
+  (body) => {
+    const { state } = sagaStore.getState()
+    const prev = state.responses.find((res) => res.requestId === body.requestId)
+    if (!prev) return
+
+    const next = state.responses.map((res) => {
+      if (body.requestId !== res.requestId) return res
+      return { ...body.partial, input: prev.input, requestId: body.requestId }
+    })
+
+    sagaStore.setState({ state: Object.assign({}, state, { responses: next }) })
+  }
+)
 
 function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): SagaSession {
   return {

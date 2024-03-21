@@ -274,7 +274,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     // Only the streaming generator yields individual tokens.
     if (generated.value.token) {
-      accumulated += generated.value.token
+      if (opts.guidance) accumulated = generated.value.token
+      else accumulated += generated.value.token
       yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
 

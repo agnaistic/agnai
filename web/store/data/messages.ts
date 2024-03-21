@@ -84,6 +84,7 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
 
 export async function guidance<T = any>(
   opts: InferenceOpts & {
+    requestId?: string
     presetId?: string
     previous?: any
     lists?: Record<string, string[]>
@@ -92,7 +93,7 @@ export async function guidance<T = any>(
   }
 ): Promise<T> {
   const { prompt, service, maxTokens, settings, previous, lists, rerun, placeholders } = opts
-  const requestId = v4()
+  const requestId = opts.requestId || v4()
   const { user } = userStore.getState()
 
   if (!user) {

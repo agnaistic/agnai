@@ -22,6 +22,7 @@ import { deepClone, parseStops } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
 import { getCachedSubscriptionPresets } from '../db/subscriptions'
+import { sendOne } from '../api/ws'
 
 let version = ''
 
@@ -46,6 +47,7 @@ configure(async (opts) => {
 export type ResponseEntities = Awaited<ReturnType<typeof getResponseEntities>>
 
 export type InferenceRequest = {
+  requestId?: string
   prompt: string
   guest?: string
   user: AppSchema.User
@@ -86,6 +88,12 @@ export async function inferenceAsync(opts: InferenceRequest) {
       }
 
       if ('partial' in gen) {
+        sendOne(opts.user._id, {
+          type: 'guidance-partial',
+          partial: JSON.parse(gen.partial),
+          adapter: opts.service,
+          requestId: opts.requestId,
+        })
         continue
       }
 

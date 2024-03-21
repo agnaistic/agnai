@@ -63,6 +63,7 @@ export type SagaSession = {
 }
 
 export type SagaResponse = {
+  requestId?: string
   input: string
   response: string
 } & Record<string, FieldType>
