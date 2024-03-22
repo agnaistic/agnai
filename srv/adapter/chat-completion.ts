@@ -217,7 +217,7 @@ export async function toChatCompletionPayload(
   }
 
   // Append 'postamble' and system prompt (ujb)
-  const posts = await getPostInstruction(opts, messages) ?? []
+  const posts = (await getPostInstruction(opts, messages)) ?? []
   posts.reverse()
   for (const post of posts) {
     const encode = encoder()
@@ -268,14 +268,12 @@ export async function toChatCompletionPayload(
       addRemainingInserts()
       addedAllInserts = true
 
-      const { additions, consumed } = await splitSampleChat(
-        {
-          budget: maxBudget - tokens,
-          sampleChat: obj.content,
-          char: replyAs.name,
-          sender: handle,
-        },
-      )
+      const { additions, consumed } = await splitSampleChat({
+        budget: maxBudget - tokens,
+        sampleChat: obj.content,
+        char: replyAs.name,
+        sender: handle,
+      })
 
       if (tokens + consumed > maxBudget) {
         --i
@@ -361,7 +359,7 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
 
 async function getPostInstruction(
   opts: AdapterProps,
-  messages: CompletionItem[],
+  messages: CompletionItem[]
 ): Promise<CompletionItem[] | undefined> {
   let prefix = opts.parts.ujb ?? ''
 
@@ -383,9 +381,7 @@ async function getPostInstruction(
     }
 
     case 'continue':
-      return [
-        { role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` },
-      ]
+      return [{ role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }]
 
     case 'summary': {
       let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
@@ -401,9 +397,7 @@ async function getPostInstruction(
       if (looks) {
         messages[0].content += '\n' + looks
       }
-      return [
-        { role: 'user', content },
-      ]
+      return [{ role: 'user', content }]
     }
 
     case 'self':
@@ -426,9 +420,9 @@ async function getPostInstruction(
         {
           role: 'assistant',
           content: `${opts.gen.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
-        } 
+        },
       ]
-      return messages.filter((m) => m.content); // Non-empty messages
+      return messages.filter((m) => m.content) // Non-empty messages
     }
   }
 }
