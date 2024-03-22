@@ -85,6 +85,7 @@ export async function generateImage(
       prompt,
       negative,
       service: imageSettings?.type,
+      requestId: opts.requestId,
     })
   }
 
@@ -150,8 +151,19 @@ export async function generateImage(
   }
 
   const message = image
-    ? { type: 'image-generated', chatId, image: output, source: opts.source }
-    : { type: 'image-failed', chatId, error: error || 'Invalid image settings (No handler found)' }
+    ? {
+        type: 'image-generated',
+        chatId,
+        image: output,
+        source: opts.source,
+        requestId: opts.requestId,
+      }
+    : {
+        type: 'image-failed',
+        chatId,
+        error: error || 'Invalid image settings (No handler found)',
+        requestId: opts.requestId,
+      }
 
   if (broadcastIds.length) {
     sendMany(broadcastIds, message)

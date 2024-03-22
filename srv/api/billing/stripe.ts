@@ -80,7 +80,7 @@ export async function resyncSubscription(user: AppSchema.User) {
   return expectedTier.level
 }
 
-async function findValidSubscription(user: AppSchema.User) {
+export async function findValidSubscription(user: AppSchema.User) {
   if (!user.billing) return
 
   const subscription = await stripe.subscriptions

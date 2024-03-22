@@ -261,6 +261,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: 'boolean?',
       characterId: 'string?',
       chatId: 'string?',
+      requestId: 'string?',
     },
     body
   )
@@ -276,6 +277,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: body.noAffix,
       chatId: body.chatId,
       characterId: body.characterId,
+      requestId: body.requestId,
     },
     log,
     guestId
