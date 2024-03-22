@@ -72,6 +72,21 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     payload.max_tokens = gen.maxTokens
     const messages = await toChatCompletionPayload(opts, gen.maxTokens!)
 
+    // Claude doesn't have a system role, so we extract the first message to put it in the system
+    // field (https://docs.anthropic.com/claude/docs/system-prompts)
+    if (messages[0].role === 'system') {
+      payload.system = messages[0].content
+
+      // Claude requires starting with a user message, and messages cannot be empty.
+      messages[0].content = '...'
+    }
+    // Any system messages will go through the user instead.
+    for (const message of messages) {
+      if (message.role === 'system') {
+        message.role = 'user'
+      }
+    }
+
     let last: CompletionItem
 
     // We need to ensure each role alternates so we will naively merge consecutive messages :/
