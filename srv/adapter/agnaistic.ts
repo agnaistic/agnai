@@ -85,7 +85,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     yield { warning: opts.subscription.warning }
   }
 
-  const level = opts.subscription.level ?? -1
+  const level = opts.user.admin ? 99999 : opts.subscription.level ?? -1
   const preset = opts.subscription.preset
 
   let newLevel = await store.users.validateSubscription(opts.user)
