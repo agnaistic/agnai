@@ -31,7 +31,10 @@ export const ModeDetail: Component<{
     return `calc(${percent}vh)`
   })
 
-  const width = createMemo(() => user.ui.chatWidth || 'fill')
+  const width = createMemo(() => {
+    if (props.showPane) return 'full'
+    return user.ui.chatWidth || 'fill'
+  })
 
   const slots = useResizeObserver()
 
@@ -113,6 +116,7 @@ export const ModeDetail: Component<{
           <footer
             style={{ 'grid-area': 'footer' }}
             classList={{
+              'w-full': width() === 'full',
               'max-w-6xl': width() === 'xl',
               'max-w-7xl': width() === '2xl',
               'max-w-8xl': width() === '3xl',

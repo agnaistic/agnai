@@ -282,9 +282,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       sprite: char?.sprite || undefined,
       visualType: char?.visualType || 'avatar',
       culture: char?.culture || defaultCulture,
-      insert: char?.insert?.prompt
-        ? { prompt: char.insert.prompt, depth: char.insert.depth }
-        : undefined,
+      insert: char?.insert ? { prompt: char.insert.prompt, depth: char.insert.depth } : undefined,
     })
   }
 

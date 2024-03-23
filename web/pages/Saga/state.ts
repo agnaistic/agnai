@@ -6,6 +6,9 @@ import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
 import { v4 } from 'uuid'
 import { replaceTags } from '/common/presets/templates'
+import { subscribe } from '/web/store/socket'
+import { imageApi } from '/web/store/data/image'
+import { createDebounce } from '/web/shared/util'
 
 type SagaState = {
   template: SagaTemplate
@@ -15,6 +18,12 @@ type SagaState = {
   inited: boolean
   busy: boolean
   showModal: 'help' | 'import' | 'none'
+  image: {
+    loading: boolean
+    data?: string
+    state: 'ready' | 'generating' | 'done'
+    last: string
+  }
 }
 
 const init: SagaState = {
@@ -35,6 +44,12 @@ const init: SagaState = {
     responses: [],
     updated: now(),
   },
+  image: {
+    loading: false,
+    state: 'ready',
+    data: undefined,
+    last: '',
+  },
 }
 
 export const sagaStore = createStore<SagaState>(
@@ -42,6 +57,9 @@ export const sagaStore = createStore<SagaState>(
   init
 )((get, set) => {
   return {
+    generateImage({}, auto?: boolean) {
+      debounceImage(auto)
+    },
     async *init({ inited }, id?: string, onLoad?: () => void) {
       if (!inited) {
         const templates = await sagaApi.getTemplates()
@@ -65,7 +83,7 @@ export const sagaStore = createStore<SagaState>(
           inited: true,
         }
 
-        onLoad?.()
+        debounceImage(true)
       }
 
       if (id) {
@@ -255,7 +273,7 @@ export const sagaStore = createStore<SagaState>(
       const next = { ...state, ...update, updated: now() }
       return { state: next }
     },
-    async *start({ template, state }) {
+    async *start({ template, state }, onDone?: () => void) {
       yield { busy: true, state: { ...state, init: undefined, responses: [], updated: now() } }
       const previous: any = {}
 
@@ -265,7 +283,16 @@ export const sagaStore = createStore<SagaState>(
       }
 
       const init = insertPlaceholders(template.init, template, state.overrides)
+      const requestId = v4()
+      yield {
+        state: {
+          ...state,
+          init: { requestId },
+          responses: [],
+        },
+      }
       const result = await msgsApi.guidance({
+        requestId,
         prompt: replaceTags(init, state.format),
         previous,
         lists: template.lists,
@@ -282,6 +309,8 @@ export const sagaStore = createStore<SagaState>(
       }
 
       sagaStore.saveSession()
+      onDone?.()
+      debounceImage(true)
     },
     deleteResponse({ state }, index: number) {
       if (!state.responses.length) return
@@ -379,8 +408,15 @@ export const sagaStore = createStore<SagaState>(
 
       prompt = replaceTags(prompt, state.format)
       console.log(prompt)
+      const requestId = v4()
+      yield {
+        state: Object.assign({}, state, {
+          responses: state.responses.concat({ requestId, input: text, response: '' }),
+        }),
+      }
       const result = await msgsApi
         .guidance({
+          requestId,
           prompt,
           presetId: state.presetId,
           lists: template.lists,
@@ -392,22 +428,80 @@ export const sagaStore = createStore<SagaState>(
       if ('err' in result) {
         const message = result.err.error || 'An unexpected error occurred'
         toastStore.error(message)
-        yield { busy: false }
+        const next = get().state.responses.filter((res) => res.requestId !== requestId)
+        yield { busy: false, state: Object.assign({}, state, { responses: next }) }
         return
       }
       console.log(JSON.stringify(result, null, 2))
       onDone()
+      debounceImage(true)
 
+      result.requestId = requestId
       result.input = text
-      const next = state.responses.concat(result)
+      const next = state.responses.filter((res) => res.requestId !== requestId).concat(result)
+
       yield {
         busy: false,
         state: Object.assign({}, state, { responses: next }),
       }
       sagaStore.saveSession()
+      debounceImage(true)
     },
   }
 })
+
+const [debounceImage] = createDebounce(async (auto?: boolean) => {
+  const { state, template, image: prev } = sagaStore.getState()
+  if (!template.imagesEnabled || !template.imagePrompt) return
+  if (prev.state === 'generating') return
+
+  const last = state.responses.slice(-1)[0] || state.init
+  if (!last) return
+
+  const placeholders = getPlaceholderNames(template.imagePrompt)
+  for (const { key } of placeholders) {
+    if (!last[key] && !state.init?.[key]) {
+      return
+    }
+  }
+
+  const caption = formatResponse(template.imagePrompt, state, last)
+
+  if (auto && prev.last === caption) return
+  sagaStore.setState({ image: { ...prev, loading: true, state: 'generating', last: caption } })
+
+  try {
+    const res = await imageApi.generateImageAsync(caption, { noAffix: true })
+    sagaStore.setState({ image: { ...prev, loading: false, state: 'done', data: res.data } })
+  } catch (ex: any) {
+    sagaStore.setState({ image: { ...prev, loading: false, state: 'done' } })
+    toastStore.error(`Failed to generate image. ${ex.message || ''}`)
+  }
+}, 100)
+
+subscribe(
+  'guidance-partial',
+  { partial: 'any', adapter: 'string?', requestId: 'string' },
+  (body) => {
+    const { state } = sagaStore.getState()
+
+    if (state.init?.requestId === body.requestId) {
+      const next = { ...state, init: { requestId: body.requestId, ...body.partial } }
+      sagaStore.setState({ state: next })
+      return
+    }
+
+    const prev = state.responses.find((res) => res.requestId === body.requestId)
+    if (!prev) return
+
+    const next = state.responses.map((res) => {
+      if (body.requestId !== res.requestId) return res
+      return { ...body.partial, input: prev.input, requestId: body.requestId }
+    })
+
+    sagaStore.setState({ state: Object.assign({}, state, { responses: next }) })
+  }
+)
 
 function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): SagaSession {
   return {

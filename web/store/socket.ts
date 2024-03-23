@@ -48,7 +48,7 @@ export function subscribe<T extends string, U extends Validator>(
   listeners.set(type, handlers)
 }
 
-const squelched = new Set(['profile-handle-changed', 'message-partial'])
+const squelched = new Set(['profile-handle-changed', 'message-partial', 'guidance-partial'])
 
 function onMessage(msg: MessageEvent<any>) {
   if (typeof msg.data !== 'string') return
