@@ -798,8 +798,32 @@ const GenSettings: Component<
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
           disabled={props.disabled}
-          service={props.service}
+          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
+        />
+        <RangeInput
+          fieldName="dynatemp_min"
+          label="Dynamic Temperature Min"
+          helperText="Used in the range for automatic adjustment of output randomness. For example, temperature=0.4 and dynatemp_min=0.1 allows randomness to vary between 0.3 and 0.4. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={20}
+          step={0.01}
+          value={props.inherit?.dynatemp_min || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'dynatemp_min'}
+        />
+        <RangeInput
+          fieldName="dynatemp_max"
+          label="Dynamic Temperature Max"
+          helperText="Used in the range for automatic adjustment of output randomness. For example, temperature=0.4 and dynatemp_max=0.1 allows randomness to vary between 0.4 and 0.5. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={20}
+          step={0.01}
+          value={props.inherit?.dynatemp_max || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'dynatemp_max'}
         />
         <RangeInput
           fieldName="dynatemp_exponent"
@@ -824,6 +848,18 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingFactor'}
+        />
+        <RangeInput
+          fieldName="smoothingCurve"
+          label="Smoothing Curve"
+          helperText="The smoothing curve to use for Cubic Sampling. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={5}
+          step={0.01}
+          value={props.inherit?.smoothingCurve || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'smoothingCurve'}
         />
         <RangeInput
           fieldName="cfgScale"
