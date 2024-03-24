@@ -11,7 +11,7 @@ import { getVoiceService } from '../voice'
 import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
-import { isObject } from '/common/util'
+import { isObject, tryParse } from '/common/util'
 
 const router = Router()
 
@@ -307,12 +307,4 @@ function toArray(value?: string) {
   if (typeof parsed === 'string') return []
 
   if (!parsed) return []
-}
-
-function tryParse(value?: any) {
-  if (!value) return
-  try {
-    const obj = JSON.parse(value)
-    return obj
-  } catch (ex) {}
 }

@@ -375,3 +375,11 @@ function getHighestTier(
   const sorted = tiers.filter((t) => !!t.tier).sort((l, r) => r.tier!.level - l.tier!.level)
   return sorted[0] as any
 }
+
+export function tryParse(value?: any) {
+  if (!value) return
+  try {
+    const obj = JSON.parse(value)
+    return obj
+  } catch (ex) {}
+}
