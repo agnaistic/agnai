@@ -29,6 +29,7 @@ import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
 import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
+import { formatHolders } from '/common/prompt-order'
 
 type Placeholder = {
   required: boolean
@@ -408,7 +409,7 @@ export const BasicPromptTemplate: Component<{
   hide?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
-  const items = ['Alpaca', 'Vicuna', 'Metharme', 'ChatML', 'Pyg/Simple'].map((label) => ({
+  const items = Object.keys(formatHolders).map((label) => ({
     label: `Format: ${label}`,
     value: label,
   }))

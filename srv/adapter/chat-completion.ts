@@ -422,7 +422,13 @@ async function getPostInstruction(
           content: `${opts.gen.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
         },
       ]
-      return messages.filter((m) => m.content) // Non-empty messages
+
+      // Non-empty-ish messages
+      return messages.filter((m) => {
+        if (!m.content) return false
+        if (m.content === ':') return false
+        return true
+      })
     }
   }
 }

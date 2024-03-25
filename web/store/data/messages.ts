@@ -435,17 +435,17 @@ async function getRetrievalBreakpoint(
 ) {
   if (!text) return { users: undefined, chats: undefined }
 
-  const embedLimit = (settings.memoryChatEmbedLimit ?? 0) + (settings.memoryUserEmbedLimit ?? 0)
-
   const encoder = await getEncoder()
   let removed = 0
   let count = 0
-  for (const line of lines) {
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[lines.length - 1 - i]
     const size = await encoder(line)
     removed += size
     count++
 
-    if (removed > embedLimit) break
+    if (removed > settings.maxContextLength!) break
   }
 
   const users = text && chat.userEmbedId ? await embedApi.query(chat.userEmbedId, text) : undefined

@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
-import { createTextStreamV2, getResponseEntities } from '../../adapter/generate'
+import { createChatStream, getResponseEntities } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
@@ -230,7 +230,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
-  const { stream, adapter, ...metadata } = await createTextStreamV2(
+  const { stream, adapter, ...metadata } = await createChatStream(
     { ...body, chat, replyAs, impersonate, requestId, entities },
     log
   )
@@ -498,7 +498,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
-  const { stream, adapter, ...entities } = await createTextStreamV2(
+  const { stream, adapter, ...entities } = await createChatStream(
     { ...body, chat, replyAs, requestId },
     log,
     guest

@@ -18,7 +18,7 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { deepClone, parseStops } from '/common/util'
+import { deepClone, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
 import { getCachedSubscriptionPresets } from '../db/subscriptions'
@@ -87,10 +87,12 @@ export async function inferenceAsync(opts: InferenceRequest) {
         continue
       }
 
-      if ('partial' in gen) {
+      if ('partial' in gen && gen.partial) {
+        const partial = tryParse(gen.partial)
+        if (!partial || typeof partial !== 'object') continue
         sendOne(opts.user._id, {
           type: 'guidance-partial',
-          partial: JSON.parse(gen.partial),
+          partial,
           adapter: opts.service,
           requestId: opts.requestId,
         })
@@ -264,7 +266,7 @@ function setRequestService(opts: InferenceRequest) {
   return settings
 }
 
-export async function createTextStreamV2(
+export async function createChatStream(
   opts: GenerateRequestV2 & { entities?: ResponseEntities },
   log: AppLog,
   guestSocketId?: string
