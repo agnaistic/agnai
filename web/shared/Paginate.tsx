@@ -154,6 +154,10 @@ export function usePagination<T = any>(opts: {
     const nextItems = items.slice(start, start + pageSize())
     setItems(nextItems)
     setCount(items.length)
+
+    if (itemsChanged) {
+      setPage(1)
+    }
   })
 
   createEffect(() => {

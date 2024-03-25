@@ -103,9 +103,9 @@ export const BooksTab: Component = (props) => {
             <div class="mt-2 flex w-full items-center gap-4">
               <A
                 href={`/memory/${book._id}`}
-                class="flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]"
+                class="ellipsis flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]"
               >
-                <span class="font-bold">{book.name}</span>
+                <span class="ellipsis font-bold">{book.name}</span>
                 <span class="ml-2">{book.description}</span>
               </A>
 
