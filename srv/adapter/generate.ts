@@ -266,7 +266,7 @@ function setRequestService(opts: InferenceRequest) {
   return settings
 }
 
-export async function createTextStreamV2(
+export async function createChatStream(
   opts: GenerateRequestV2 & { entities?: ResponseEntities },
   log: AppLog,
   guestSocketId?: string

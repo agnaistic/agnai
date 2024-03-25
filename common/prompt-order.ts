@@ -50,6 +50,17 @@ const formatHolders: Record<string, Record<string, string>> = {
     post: `ASSISTANT: {{post}}`,
     system_prompt: `{{#if system_prompt}}SYSTEM: {{system_prompt}}{{/if}}`,
   },
+  Mistral: {
+    preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
+  Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
+    history: neat`Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+    
+    {{#each msg}}{{#if .isbot}}\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}[INST] {{.name}}: {{.msg}} [/INST]{{/if}}
+    {{/each}}`,
+    post: `{{post}}`,
+    system_prompt: `{{#if system_prompt}}[INST] {{system_prompt}} [/INST]{{/if}}`,
+    ujb: `{{#if ujb}}[INST] {{ujb}} [/INST]{{/if}}`,
+  },
   Metharme: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
   Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,

@@ -237,12 +237,7 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
 
-  const validate =
-    opts.settings?.useAdvancedPrompt === undefined
-      ? true
-      : typeof opts.settings?.useAdvancedPrompt === 'boolean'
-      ? opts.settings.useAdvancedPrompt
-      : opts.settings?.useAdvancedPrompt === 'validate'
+  const validate = opts.settings?.useAdvancedPrompt !== 'no-validation'
 
   if (!validate) {
     return template
@@ -262,12 +257,13 @@ type InjectOpts = {
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
+  const validate = opts.settings?.useAdvancedPrompt !== 'no-validation'
 
   // Automatically inject example conversation if not included in the prompt
   /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
   const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
   const sampleChat = parts.sampleChat?.join('\n')
-  if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
+  if (!template.match(HOLDERS.sampleChat) && sampleChat && hist && validate) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
     const svc = opts.settings?.service
