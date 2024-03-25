@@ -1,5 +1,14 @@
 import './chat-detail.css'
-import { Component, createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Index,
+  onCleanup,
+  onMount,
+  Show,
+} from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
@@ -134,7 +143,7 @@ const ChatDetail: Component = () => {
     })
   })
 
-  createEffect(() => {
+  onMount(() => {
     chatStore.computePrompt(msgs.msgs[msgs.msgs.length - 1], false)
     setLinesAddedCount(chats.linesAddedCount)
   })
