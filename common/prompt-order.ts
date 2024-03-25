@@ -29,7 +29,7 @@ function getOrderHolder(format: string, holder: string) {
   return formatHolders[format]?.[holder] || fallbackHolders[holder] || ''
 }
 
-const formatHolders: Record<string, Record<string, string>> = {
+export const formatHolders: Record<string, Record<string, string>> = {
   Alpaca: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
   Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
