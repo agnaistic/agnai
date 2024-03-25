@@ -280,10 +280,12 @@ export const msgStore = createStore<MsgState>(
       const textBeforeGenMore = retryLatestGenMoreOutput
         ? msgState.textBeforeGenMore ?? replace.msg
         : replace.msg
-      const res = await msgsApi.generateResponse({
-        kind: 'continue',
-        retry: retryLatestGenMoreOutput,
-      })
+      const res = await msgsApi
+        .generateResponse({
+          kind: 'continue',
+          retry: retryLatestGenMoreOutput,
+        })
+        .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
         toastStore.error(`(Continue) Generation request failed: ${res.error}`)
@@ -304,7 +306,9 @@ export const msgStore = createStore<MsgState>(
       }
       yield { partial: undefined, waiting: { chatId, mode: 'request', characterId } }
 
-      const res = await msgsApi.generateResponse({ kind: 'request', characterId })
+      const res = await msgsApi
+        .generateResponse({ kind: 'request', characterId })
+        .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
         toastStore.error(`(Bot) Generation request failed: ${res.error}`)
@@ -340,7 +344,9 @@ export const msgStore = createStore<MsgState>(
         retrying: replace,
       }
 
-      const res = await msgsApi.generateResponse({ kind: 'retry', messageId })
+      const res = await msgsApi
+        .generateResponse({ kind: 'retry', messageId })
+        .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
@@ -392,7 +398,9 @@ export const msgStore = createStore<MsgState>(
       switch (mode) {
         case 'self':
         case 'retry':
-          res = await msgsApi.generateResponse({ kind: mode })
+          res = await msgsApi
+            .generateResponse({ kind: mode })
+            .catch((err) => ({ error: err.message, result: undefined }))
           break
 
         case 'send':
@@ -402,7 +410,9 @@ export const msgStore = createStore<MsgState>(
         case 'send-event:hidden':
         case 'send-noreply':
         case 'send-event:ooc':
-          res = await msgsApi.generateResponse({ kind: mode, text: message })
+          res = await msgsApi
+            .generateResponse({ kind: mode, text: message })
+            .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result.generating) {
             yield { partial: undefined, waiting: undefined }
           }
