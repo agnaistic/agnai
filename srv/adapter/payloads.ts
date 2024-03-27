@@ -105,9 +105,11 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       top_k: gen.topK,
       top_a: gen.topA,
       stop: getStoppingStrings(opts, stops),
-      dynatemp_range: gen.dynatemp_range,
+      dynatemp_min: gen.dynatemp_min,
+      dynatemp_max: gen.dynatemp_max,
       dynatemp_exponent: gen.dynatemp_exponent,
       smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
 
       mirostat_mode: gen.mirostatToggle ? 2 : 0,
       mirostat_tau: gen.mirostatTau,
