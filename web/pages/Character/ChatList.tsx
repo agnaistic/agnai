@@ -25,7 +25,7 @@ import {
 import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 
-const sortOptions = [
+const baseSortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
   { value: 'bot-activity', label: 'Bot Activity', kind: 'chat' },
   { value: 'chat-created', label: 'Chat Created', kind: 'chat' },
@@ -36,6 +36,7 @@ const sortOptions = [
 const CharacterChats: Component = () => {
   const params = useParams()
   const cache = getListCache()
+
   const chars = characterStore((s) => ({
     list: s.characters.list,
     map: s.characters.list.reduce<Record<string, AppSchema.Character>>(
@@ -44,6 +45,7 @@ const CharacterChats: Component = () => {
     ),
     loaded: s.characters.loaded,
   }))
+
   const state = chatStore((s) => ({
     chats: s.allChats.map((chat) => ({
       _id: chat._id,
@@ -56,6 +58,17 @@ const CharacterChats: Component = () => {
     })),
     chars: s.allChars.map,
   }))
+
+  const sortOptions = createMemo(() => {
+    const opts = baseSortOptions.slice()
+    const hasCounts = state.chats.some((c) => !!c.messageCount)
+
+    if (hasCounts) {
+      opts.push({ value: 'chat-count', label: 'Chat Counts', kind: 'chat' })
+    }
+
+    return opts
+  })
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
@@ -181,7 +194,7 @@ const CharacterChats: Component = () => {
             <Select
               class="bg-[var(--bg-600)]"
               fieldName="sortBy"
-              items={sortOptions.filter((opt) => (charId() ? opt.kind === 'chat' : true))}
+              items={sortOptions().filter((opt) => (charId() ? opt.kind === 'chat' : true))}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortType)}
             />

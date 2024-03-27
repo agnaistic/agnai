@@ -3,8 +3,8 @@ import { CardProps, ViewProps } from './types'
 import Divider from '/web/shared/Divider'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarContainer from '/web/shared/Avatar/Container'
-import { getAssetUrl } from '/web/shared/util'
-import { Copy, Download, Edit, Menu, MessageCircle, Star, Trash, VenetianMask } from 'lucide-solid'
+import { getAssetUrl, toDuration } from '/web/shared/util'
+import { ArrowRight, Copy, Download, Menu, Pencil, Star, Trash, VenetianMask } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
 
@@ -47,6 +47,8 @@ const Character: Component<CardProps> = (props) => {
 
   let ref: any
 
+  const size = 20
+
   return (
     <div
       ref={ref}
@@ -64,7 +66,11 @@ const Character: Component<CardProps> = (props) => {
           </Match>
           <Match when={props.char.avatar}>
             <A
-              href={`/character/${props.char._id}/chats`}
+              href={
+                props.char.chat
+                  ? `/chat/${props.char.chat._id}`
+                  : `/character/${props.char._id}/chats`
+              }
               class="block h-32 w-full justify-center overflow-hidden rounded-lg rounded-b-none"
             >
               <img
@@ -86,21 +92,69 @@ const Character: Component<CardProps> = (props) => {
       </div>
       <div class="w-full text-sm">
         <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 text-center font-bold">
-          {props.char.name}
+          <A class="link" href={`/character/${props.char._id}/chats`}>
+            {props.char.name}
+          </A>
         </div>
         <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
-          {props.char.description}
+          {props.char.chat?.name || props.char.description}
+        </div>
+        <div class="flex justify-between p-1">
+          <button
+            onClick={() => props.toggleFavorite(!props.char.favorite)}
+            aria-label="Toggle Favorite"
+          >
+            <Show when={props.char.favorite}>
+              <Star size={size} class="text-900 fill-[var(--text-900)]" />
+            </Show>
+
+            <Show when={!props.char.favorite}>
+              <Star size={size} />
+            </Show>
+          </button>
+
+          <div class="text-500 text-xs italic">
+            {props.char.chat ? toDuration(new Date(props.char.chat.updatedAt)) + ' ago' : ''}
+          </div>
+
+          <Switch>
+            <Match when={props.char.chat}>
+              <button
+                onClick={() => nav(`/chat/${props.char.chat?._id}`)}
+                aria-label="Open Recent Chat"
+              >
+                <ArrowRight size={size} />
+              </button>
+            </Match>
+
+            <Match when={!props.char.chat}>
+              <button
+                onClick={() => nav(`/chats/create${props.char._id}`)}
+                aria-label="Open Character Chats"
+              >
+                <ArrowRight size={size} />
+              </button>
+            </Match>
+          </Switch>
+        </div>
+        <div class="float-left ml-[3px] mt-[-224px]">
+          <div
+            class="cursor-pointer rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
+            onClick={props.download}
+          >
+            <Download size={size} />
+          </div>
         </div>
         {/* hacky positioning shenanigans are necessary as opposed to using an
             absolute positioning because if any of the DropMenu parent is
             positioned, then DropMenu breaks because it relies on the nearest
             positioned parent to be the sitewide container */}
         <div
-          class="float-right mr-[3px] mt-[-195px] flex justify-end"
+          class="float-right mr-[3px] mt-[-224px] flex justify-end"
           onClick={() => setOpts(true)}
         >
           <div class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]">
-            <Menu size={24} class="icon-button" color="var(--bg-100)" />
+            <Menu size={size} class="icon-button" color="var(--bg-100)" />
           </div>
           <DropMenu
             show={opts()}
@@ -108,34 +162,10 @@ const Character: Component<CardProps> = (props) => {
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button
-                onClick={() => props.toggleFavorite(!props.char.favorite)}
-                size="sm"
-                alignLeft
-              >
-                <Show when={props.char.favorite}>
-                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
-                </Show>
-                <Show when={!props.char.favorite}>
-                  <Star /> Favorite
-                </Show>
+              <Button onClick={props.edit} aria-label="Edit" alignLeft size="sm">
+                <Pencil size={size} /> Edit
               </Button>
-              <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
-                <MessageCircle /> Chat
-              </Button>
-              <Button
-                alignLeft
-                size="sm"
-                onClick={() => {
-                  setOpts(false)
-                  props.download()
-                }}
-              >
-                <Download /> Download
-              </Button>
-              <Button alignLeft onClick={props.edit} size="sm">
-                <Edit /> Edit
-              </Button>
+
               <Button
                 alignLeft
                 onClick={() => nav(`/character/create/${props.char._id}`)}
@@ -143,6 +173,7 @@ const Character: Component<CardProps> = (props) => {
               >
                 <Copy /> Duplicate
               </Button>
+
               <Button
                 alignLeft
                 size="sm"

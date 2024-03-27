@@ -472,6 +472,18 @@ async function getGenerationSettings(
     return { ...chat.genSettings, src }
   }
 
+  if (user.defaultPreset) {
+    if (isDefaultPreset(user.defaultPreset)) {
+      return { ...defaultPresets[user.defaultPreset], src: 'user-settings-genpreset-default' }
+    }
+
+    const preset = await store.presets.getUserPreset(user.defaultPreset)
+    if (preset) {
+      preset.src = 'user-settings-genpreset-custom'
+      return preset
+    }
+  }
+
   const servicePreset = user.defaultPresets?.[adapter]
   if (servicePreset) {
     if (isDefaultPreset(servicePreset)) {

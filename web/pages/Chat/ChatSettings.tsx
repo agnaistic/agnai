@@ -6,7 +6,14 @@ import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, presetStore, scenarioStore, settingStore, userStore } from '../../store'
+import {
+  chatStore,
+  msgStore,
+  presetStore,
+  scenarioStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -17,6 +24,7 @@ import { usePane } from '/web/shared/hooks'
 import { ImageSettings } from '../Settings/Image/ImageSettings'
 import { baseImageValid } from '/common/types/image-schema'
 import Divider from '/web/shared/Divider'
+import { Wand } from 'lucide-solid'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -59,6 +67,7 @@ const ChatSettings: Component<{
   })
 
   let ref: any
+  let nameRef: any
 
   const [mode, setMode] = createSignal(state.chat?.mode || 'standard')
   const [scenarioId, setScenarioId] = createSignal(state.chat?.scenarioIds?.[0] || '')
@@ -274,7 +283,30 @@ const ChatSettings: Component<{
         </Card>
       </Show>
       <Card>
-        <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
+        <TextInput
+          fieldName="name"
+          class="text-sm"
+          value={state.chat?.name}
+          ref={(ref) => (nameRef = ref)}
+          label={
+            <>
+              Chat name{' '}
+              <div
+                onClick={() =>
+                  msgStore.chatQuery(
+                    state.chat?._id!,
+                    'Generate a brief title for this conversation',
+                    (msg) => {
+                      nameRef.value = msg
+                    }
+                  )
+                }
+              >
+                <Wand />
+              </div>
+            </>
+          }
+        />
       </Card>
       <Card>
         <Toggle

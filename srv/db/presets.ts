@@ -106,6 +106,7 @@ export async function updateUserPreset(
     delete update.thirdPartyKey
   }
 
+  update.updatedAt = new Date().toISOString()
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
   const updated = await db('gen-setting').findOne({ _id: presetId })
   update.thirdPartyKey = ''

@@ -503,7 +503,13 @@ function createPostPrompt(
   >
 ) {
   const post = []
-  post.push(`${opts.replyAs.name}:`)
+
+  if (opts.kind === 'chat-query') {
+    post.push(`Query Response:`)
+  } else {
+    post.push(`${opts.replyAs.name}:`)
+  }
+
   return post
 }
 
@@ -534,20 +540,20 @@ export async function getLinesForPrompt(
     profiles.set(member.userId, member)
   }
 
-  const formatMsg = (msg: AppSchema.ChatMessage) => {
+  const formatMsg = (msg: AppSchema.ChatMessage, i: number, all: AppSchema.ChatMessage[]) => {
     const profile = msg.userId ? profiles.get(msg.userId) : opts.sender
     const sender = opts.impersonate
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
-    const author = getMessageAuthor(
-      opts.chat,
+    const author = getMessageAuthor({
+      chat: opts.chat,
       msg,
-      opts.characters,
-      profiles,
-      opts.sender,
-      opts.impersonate
-    )
+      chars: opts.characters,
+      members: profiles,
+      sender: opts.sender,
+      impersonate: opts.impersonate,
+    })
     const char = getBotName(
       opts.chat,
       msg,
@@ -672,7 +678,7 @@ export function getChatPreset(
   /**
    * Order of precedence:
    * 1. chat.genPreset
-   * 2. chat.genSettings
+   * 2. chat.genSettings (Deprecated)
    * 3. user.defaultPreset
    * 4. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
    * 5. built-in fallback preset (horde)

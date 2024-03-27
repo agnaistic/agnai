@@ -18,6 +18,7 @@ export type GenerateRequestV2 = {
     | 'summary'
     | 'request'
     | 'plain'
+    | 'chat-query'
   chat: AppSchema.Chat
   user: AppSchema.User
   char: AppSchema.Character

@@ -35,6 +35,7 @@ import PageHeader from '/web/shared/PageHeader'
 import { isLoggedIn } from '/web/store/api'
 import { AppSchema } from '/common/types'
 import { isEligible } from './util'
+import { ADAPTER_LABELS } from '/common/adapters'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -95,14 +96,26 @@ const CreateChatForm: Component<{
   }
 
   const [presetId, setPresetId] = createSignal(
-    user.defaultPreset || (isEligible() ? 'agnai' : 'horde')
+    user.defaultPreset ? '' : isEligible() ? 'agnai' : 'horde'
   )
   const presets = presetStore((s) => s.presets)
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-    return [
+    const combined = [
       { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
     ].concat(opts)
+
+    const defaultPreset = presets.find((p) => p._id === user.defaultPreset)
+    if (defaultPreset) {
+      const label = ADAPTER_LABELS[defaultPreset.service!]
+      combined.unshift({
+        label: `[${label}] Your Default Preset`,
+        value: '',
+        custom: true,
+      })
+    }
+
+    return combined
   })
 
   const selectedPreset = createMemo(() => {

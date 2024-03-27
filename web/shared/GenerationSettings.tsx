@@ -1211,6 +1211,8 @@ const SamplerOrder: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
+  const [loaded, setLoaded] = createSignal(false)
+
   const presetOrder = createMemo(() => {
     if (!props.inherit?.order) return ''
     // Guests persist the string instead of the array for some reason
@@ -1223,15 +1225,21 @@ const SamplerOrder: Component<{
   const [disabled, setDisabled] = createSignal(ensureArray(props.inherit?.disabledSamplers))
   const [sorter, setSorter] = createSignal<Sorter>()
 
+  /**
+   * The SamplerOrder component is re-mounted on save for some reason
+   * We need to manually handle this to correctly preserve the order and disabled states
+   */
   createEffect(() => {
-    // Try to detect if the inherited settings change
-    const inherited = presetOrder()
-    if (inherited !== order()) {
-      setOrder(inherited)
-      setValue(inherited)
-      setDisabled(props.inherit?.disabledSamplers || [])
-      resort()
-    }
+    if (loaded()) return
+
+    const order = props.inherit?.order || ''
+    const next = Array.isArray(order) ? order.join(',') : order
+
+    setLoaded(true)
+    setOrder(next)
+    setValue(next)
+    setDisabled(props.inherit?.disabledSamplers || [])
+    resort()
   })
 
   const updateValue = (next: SortItem[]) => {

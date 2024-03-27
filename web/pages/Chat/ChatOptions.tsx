@@ -120,7 +120,7 @@ const ChatOptions: Component<{
         </Option>
 
         <Option onClick={() => props.togglePane('character')} hide={!isOwner()}>
-          <User /> Character
+          <User /> Main Character
         </Option>
 
         <Option onClick={() => props.togglePane('participants')} hide={!isOwner()}>

@@ -211,6 +211,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
+  | { kind: 'chat-query'; text: string }
 
 export async function generateResponse(opts: GenerateOpts) {
   const { active } = chatStore.getState()
@@ -260,6 +261,7 @@ export async function generateResponse(opts: GenerateOpts) {
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
     text:
+      opts.kind === 'chat-query' ||
       opts.kind === 'send' ||
       opts.kind === 'send-event:world' ||
       opts.kind === 'send-event:character' ||
@@ -424,6 +426,11 @@ async function createActiveChatPrompt(
       userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
     }
   }
+
+  if (opts.kind === 'chat-query') {
+    prompt.lines.push(`Chat Query: ${opts.text}`)
+  }
+
   return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
@@ -559,7 +566,7 @@ async function getGenerateProps(
       props.replyAs = getBot(lastCharMsg?.characterId)
       props.continue = lastCharMsg.msg
       if (opts.retry) {
-        const msgState = msgStore()
+        const msgState = msgStore.getState()
         props.continuing = { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg }
         props.continue = msgState.textBeforeGenMore ?? lastMsg.msg
         props.messages = [
