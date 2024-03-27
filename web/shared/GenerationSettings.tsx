@@ -258,6 +258,7 @@ const GeneralSettings: Component<
     ClaudeInstantV1_0: 'Claude Instant v1.0',
     ClaudeV3_Opus: 'Claude v3 Opus',
     ClaudeV3_Sonnet: 'Claude v3 Sonnet',
+    ClaudeV3_Haiku: 'Claude v3 Haiku',
   } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {

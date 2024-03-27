@@ -184,11 +184,13 @@ export const CLAUDE_MODELS = {
   ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
+  ClaudeV3_Haiku: 'claude-3-haiku-20240307',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV3_Opus]: true,
   [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
+  [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
 }
 
 export const NOVEL_MODELS = {
