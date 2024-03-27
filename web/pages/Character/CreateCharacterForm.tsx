@@ -430,7 +430,7 @@ export const CreateCharacterForm: Component<{
                 <TagInput
                   availableTags={tagState.tags.map((t) => t.tag)}
                   value={editor.state.tags}
-                  fieldName="tags"
+                  fieldName="_tags"
                   label="Tags"
                   helperText="Used to help you organize and filter your characters."
                   onSelect={(tags) => editor.update({ tags })}
