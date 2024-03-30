@@ -573,6 +573,8 @@ export const chatStore = createStore<ChatState>('chat', {
   }
 })
 
+function updateAutoReplyAs() {}
+
 function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.Profile) {
   prev[curr.userId] = curr
   return prev

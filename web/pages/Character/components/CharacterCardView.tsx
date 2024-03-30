@@ -4,7 +4,17 @@ import Divider from '/web/shared/Divider'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { getAssetUrl, toDuration } from '/web/shared/util'
-import { ArrowRight, Copy, Download, Menu, Pencil, Star, Trash, VenetianMask } from 'lucide-solid'
+import {
+  ArrowRight,
+  Copy,
+  Download,
+  Menu,
+  MessageCirclePlus,
+  Pencil,
+  Star,
+  Trash,
+  VenetianMask,
+} from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
 
@@ -129,7 +139,7 @@ const Character: Component<CardProps> = (props) => {
 
             <Match when={!props.char.chat}>
               <button
-                onClick={() => nav(`/chats/create${props.char._id}`)}
+                onClick={() => nav(`/chats/create/${props.char._id}`)}
                 aria-label="Open Character Chats"
               >
                 <ArrowRight size={size} />
@@ -162,6 +172,10 @@ const Character: Component<CardProps> = (props) => {
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
+              <Button alignLeft onClick={() => nav(`/chats/create/${props.char._id}`)} size="sm">
+                <MessageCirclePlus size={size} /> New Chat
+              </Button>
+
               <Button onClick={props.edit} aria-label="Edit" alignLeft size="sm">
                 <Pencil size={size} /> Edit
               </Button>
