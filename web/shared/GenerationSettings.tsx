@@ -184,7 +184,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
-          sub={sub}
+          sub={sub()}
         />
       </div>
     </>
