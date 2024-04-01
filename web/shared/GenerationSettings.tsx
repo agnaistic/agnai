@@ -875,7 +875,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="minP"
           label="Min P"
-          helperText="Used to discard unlikely text in the sampling process. Lower values will make text more predictable. (Put this value on 0 to disable its effect)"
+          helperText="Used to discard tokens with the probability under a threshold (min_p) in the sampling process. Higher values will make text more predictable. (Put this value on 0 to disable its effect)"
           min={0}
           max={1}
           step={0.01}
@@ -915,7 +915,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="topA"
           label="Top A"
-          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. (Put this value on 0 to disable its effect)"
+          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. Exclude all tokens with p < (top_a * highest_p^2) (Put this value on 0 to disable its effect)"
           min={0}
           max={1}
           step={0.01}
