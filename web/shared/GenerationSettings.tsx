@@ -60,6 +60,7 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
+  const subs = settingStore((s) => s.config.subs)
   const userState = userStore()
   const [search, setSearch] = useSearchParams()
   const pane = usePaneManager()
@@ -75,6 +76,16 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
   const [format, setFormat] = createSignal(
     props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
   )
+
+  const sub = createMemo(() => {
+    if (props.inherit?.service !== 'agnaistic') return
+    const match = subs.find(
+      (sub) => sub._id === props.inherit?.registered?.agnaistic?.subscriptionId
+    )
+
+    return match
+  })
+
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
@@ -173,6 +184,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
+          sub={sub}
         />
       </div>
     </>
@@ -754,9 +766,14 @@ const PromptSettings: Component<
   )
 }
 
-const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }> = (
-  props
-) => {
+const GenSettings: Component<
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
+> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Advanced' }}>
       <Card class="flex flex-col gap-4">

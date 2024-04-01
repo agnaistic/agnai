@@ -24,6 +24,7 @@ import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
 import { embedApi } from '../embeddings'
 import { replaceTags } from '/common/presets/templates'
+import { settingStore } from '../settings'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -759,7 +760,28 @@ function getAuthGenSettings(
   user: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
   const presets = getStore('presets').getState().presets
-  return getChatPreset(chat, user, presets)
+  const preset = getChatPreset(chat, user, presets)
+
+  applySubscriptionAdjustment(preset)
+
+  return preset
+}
+
+function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
+  if (preset.service !== 'agnaistic') return preset
+
+  const subs = settingStore.getState().config.subs
+  const match = subs.find((sub) => sub._id === preset.registered?.agnaistic?.subscriptionId)
+  if (!match) return preset
+
+  console.log(`max ctx: ${preset.maxContextLength} v. ${match.preset.maxContextLength}`)
+  console.log(`tokens: ${preset.maxTokens} v. ${match.preset.maxTokens}`)
+
+  return {
+    ...preset,
+    maxContextLength: Math.min(preset.maxContextLength!, match.preset.maxContextLength!),
+    maxTokens: Math.min(preset.maxTokens!, match.preset.maxTokens!),
+  }
 }
 
 async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {

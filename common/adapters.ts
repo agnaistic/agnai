@@ -314,7 +314,7 @@ export const adapterSettings: {
   ],
   dynatemp_range: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
-  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
+  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
