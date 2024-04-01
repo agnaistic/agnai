@@ -30,7 +30,7 @@ import { presetStore } from '/web/store'
 import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { formatHolders } from '/common/prompt-order'
-import {Toggle} from "/web/shared/Toggle";
+import { Toggle } from '/web/shared/Toggle'
 
 type Placeholder = {
   required: boolean
@@ -452,21 +452,26 @@ export const BasicPromptTemplate: Component<{
           helperMarkdown="Ordering of elements within your prompt. Click on an element to exclude it.
           Enable **Advanced Prompting** for full control and customization."
         />
-        <div className="flex flex-wrap gap-4">
+        <div class="flex flex-wrap gap-4">
           <Select
-              fieldName="promptOrderFormat"
-              items={items}
-              value={props.inherit?.promptOrderFormat || 'Alpaca'}
+            fieldName="promptOrderFormat"
+            items={items}
+            value={props.inherit?.promptOrderFormat || 'Alpaca'}
           />
           <Toggle
-              fieldName="lockPromptOrder"
-              label="Lock Prompt Order"
-              helperMarkdown="Prevent reordering of prompt elements. Useful for mobile devices."
-              value={lockPromptOrder()}
-              onChange={setLockPromptOrder}
+            fieldName="lockPromptOrder"
+            label="Lock Prompt Order"
+            helperMarkdown="Prevent reordering of prompt elements. Useful for mobile devices."
+            value={lockPromptOrder()}
+            onChange={setLockPromptOrder}
           />
         </div>
-        <Sortable items={mod()} onChange={updateRef} onItemClick={onClick} disabled={lockPromptOrder()} />
+        <Sortable
+          items={mod()}
+          onChange={updateRef}
+          onItemClick={onClick}
+          disabled={lockPromptOrder()}
+        />
         <TextInput
           fieldName="promptOrder"
           parentClass="hidden"
