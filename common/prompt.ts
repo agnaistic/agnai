@@ -257,7 +257,11 @@ type InjectOpts = {
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
-  const validate = opts.settings?.useAdvancedPrompt !== 'no-validation'
+
+  // Basic templates can exclude example dialogue
+  const validate =
+    opts.settings?.useAdvancedPrompt !== 'no-validation' &&
+    opts.settings?.useAdvancedPrompt !== 'basic'
 
   // Automatically inject example conversation if not included in the prompt
   /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */

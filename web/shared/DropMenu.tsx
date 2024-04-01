@@ -101,7 +101,6 @@ export const DropMenu: Component<{
         event.stopPropagation()
         setOpened(false)
         props.close()
-        console.log('bounding rect closed')
       }
     }
 

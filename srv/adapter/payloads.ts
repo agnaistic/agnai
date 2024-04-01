@@ -211,5 +211,12 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     previous: opts.previous,
   }
 
+  if (gen.dynatemp_range) {
+    body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+    body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+    body.dynatemp_range = gen.dynatemp_range
+    body.temp_exponent = gen.dynatemp_exponent
+  }
+
   return body
 }

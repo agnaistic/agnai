@@ -527,6 +527,7 @@ async function getGenerateProps(
 
   switch (opts.kind) {
     case 'retry': {
+      props.impersonate = entities.impersonating
       if (opts.messageId) {
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
