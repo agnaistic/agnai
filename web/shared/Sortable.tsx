@@ -16,6 +16,7 @@ const Sortable: Component<{
   onChange: (items: SortItem[]) => void
   onItemClick?: (id: number) => void
   setSorter?: (sort: Sort) => void
+  disabled?: boolean
 }> = (props) => {
   let ref: HTMLUListElement
   let field: HTMLInputElement
@@ -87,7 +88,7 @@ const Sortable: Component<{
 
   return (
     <>
-      <div>
+      <div class={`${props.disabled ? 'pointer-events-none opacity-50' : ''}`}>
         <FormLabel label={props.label} helperText={props.helperText} />
         <Show when={!!props.field}>
           <TextInput fieldName={props.field!} parentClass="hidden" ref={(ele) => (field = ele)} />
