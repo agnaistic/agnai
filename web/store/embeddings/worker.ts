@@ -217,6 +217,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   if (msg.type === 'embedDocument') {
     let embedded = 0
+    documents[msg.documentId] = []
     for (const item of msg.documents) {
       const embed = await Embedder(item.msg, { pooling: 'mean', normalize: true })
       embedded++
