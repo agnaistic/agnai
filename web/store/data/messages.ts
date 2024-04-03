@@ -626,10 +626,21 @@ async function createMessage(
   chatId: string,
   opts: { kind: 'ooc' | 'send-noreply' | EventKind; text: string }
 ) {
+  const props = await getPromptEntities()
   const { impersonating } = getStore('character').getState()
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
+
+  const text = await parseTemplate(opts.text, {
+    char: props.char,
+    chat: props.chat,
+    sender: props.profile,
+    impersonate: impersonating,
+    replyAs: props.char,
+    lastMessage: props.lastMessage?.date,
+  })
+
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
-    text: opts.text,
+    text: text.parsed,
     kind: opts.kind,
     impersonate,
   })

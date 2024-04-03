@@ -128,3 +128,8 @@ export async function getUserPreset(presetId: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
   return preset
 }
+
+export function safePreset(preset: AppSchema.UserGenPreset) {
+  preset.thirdPartyKey = ''
+  return preset
+}
