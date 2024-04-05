@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { assertValid } from '/common/valid'
-import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
+import { Download, Plus, Trash, Upload, X, Edit, FileX, FileCheck } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -11,9 +11,13 @@ import { memoryStore, toastStore } from '../../store'
 import { SolidCard } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
 import { embedApi } from '/web/store/embeddings'
+import TextInput from '/web/shared/TextInput'
+import { RequestDocEmbed } from '/web/store/embeddings/types'
+import { getStrictForm } from '/web/shared/util'
 
 export const EmbedsTab: Component = (props) => {
   const state = memoryStore()
+  const [editing, setEditing] = createSignal<string>()
   const [deleting, setDeleting] = createSignal<string>()
 
   return (
@@ -25,13 +29,19 @@ export const EmbedsTab: Component = (props) => {
         <For each={state.embeds}>
           {(each) => (
             <div class="mt-2 flex w-full items-center gap-4">
-              <SolidCard
-                size="md"
-                class="flex w-full items-center justify-between overflow-hidden"
-                bg="bg-800"
-              >
+              <SolidCard size="md" class="flex w-full items-center gap-1" bg="bg-800">
+                <div
+                  class="flex cursor-pointer"
+                  title={each.state === 'loaded' ? 'Loaded' : 'Not loaded'}
+                >
+                  {each.state === 'loaded' ? <FileCheck /> : <FileX class="text-gray-500" />}
+                </div>
                 <div class="ellipsis font-bold">{each.id}</div>
               </SolidCard>
+
+              <div class="icon-button" onClick={() => setEditing(each.id)}>
+                <Edit />
+              </div>
 
               <div class="icon-button" onClick={() => setDeleting(each.id)}>
                 <Trash />
@@ -40,6 +50,7 @@ export const EmbedsTab: Component = (props) => {
           )}
         </For>
       </div>
+      <EditEmbedModal show={!!editing()} embedId={editing()} close={() => setEditing()} />
       <ConfirmModal
         confirm={() => embedApi.removeDocument(deleting()!)}
         show={!!deleting()}
@@ -47,6 +58,78 @@ export const EmbedsTab: Component = (props) => {
         message={`Are you sure you wish to delete this embedding?\n\n${deleting()}`}
       />
     </>
+  )
+}
+
+const EditEmbedModal: Component<{ show: boolean; embedId?: string; close: () => void }> = (
+  props
+) => {
+  let form: HTMLFormElement | undefined
+
+  const [content, setContent] = createSignal<string>()
+  const [loading, setLoading] = createSignal(false)
+
+  createEffect(async () => {
+    if (!props.show || !props.embedId) return
+
+    setLoading(true)
+    let doc: RequestDocEmbed | undefined
+    try {
+      doc = await embedApi.cache.getDoc(props.embedId)
+    } finally {
+      setLoading(false)
+    }
+
+    if (doc) {
+      // get the content of the document by combining all the lines
+      const lines = doc.documents.map((d) => d.msg).join('\n')
+      setContent(lines)
+    } else {
+      toastStore.error(`Failed to load embedding ${props.embedId}`)
+      props.close()
+    }
+  })
+
+  const updateEmbed = async () => {
+    if (!form || !props.embedId) return
+
+    setLoading(true)
+    try {
+      const { embedText } = getStrictForm(form, { embedText: 'string' })
+
+      await embedApi.embedPlainText(props.embedId, embedText)
+      toastStore.success('Successfully updated embedding')
+      props.close()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const Footer = (
+    <>
+      <Button onClick={props.close}>
+        <X /> Cancel
+      </Button>
+      <Button onClick={updateEmbed}>
+        <Edit /> Update
+      </Button>
+    </>
+  )
+
+  return (
+    <Modal show={props.show} close={props.close} title="Edit Embedding" footer={Footer}>
+      <form ref={form}>
+        <TextInput
+          fieldName="embedText"
+          label="Content"
+          helperText="The content to be embedded. Use line breaks to seperate lines."
+          isMultiline
+          value={content()}
+          required
+          disabled={loading()}
+        />
+      </form>
+    </Modal>
   )
 }
 
