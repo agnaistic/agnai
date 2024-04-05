@@ -21,22 +21,22 @@ export const EmbedsTab: Component = (props) => {
       <PageHeader title="Memory - Embeddings" />
       <EmbedContent />
 
-      <div class="my-2 flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <For each={state.embeds}>
           {(each) => (
-            <SolidCard
-              border
-              size="sm"
-              class="flex items-center justify-between overflow-hidden"
-              bg="bg-700"
-            >
-              <div class="ellipsis">{each.id}</div>
-              <div>
-                <Button schema="red" onClick={() => setDeleting(each.id)}>
-                  <Trash size={14} />
-                </Button>
+            <div class="mt-2 flex w-full items-center gap-4">
+              <SolidCard
+                size="md"
+                class="flex w-full items-center justify-between overflow-hidden"
+                bg="bg-800"
+              >
+                <div class="ellipsis font-bold">{each.id}</div>
+              </SolidCard>
+
+              <div class="icon-button" onClick={() => setDeleting(each.id)}>
+                <Trash />
               </div>
-            </SolidCard>
+            </div>
           )}
         </For>
       </div>
