@@ -1,4 +1,4 @@
-import { Save } from 'lucide-solid'
+import { Edit, Save } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, JSX, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
@@ -8,6 +8,8 @@ import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import EmbedContent from '../../Memory/EmbedContent'
+import { EditEmbedModal } from '/web/shared/EditEmbedModal'
+import { Portal } from 'solid-js/web'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat | undefined
@@ -22,6 +24,7 @@ const ChatMemoryModal: Component<{
 
   const [id, setId] = createSignal('')
   const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
+  const [editingEmbed, setEditingEmbed] = createSignal<boolean>(false)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
@@ -136,14 +139,35 @@ const ChatMemoryModal: Component<{
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}
           />
-          <Button
-            class="w-fit"
-            disabled={embedId() === props.chat?.userEmbedId}
-            onClick={useUserEmbed}
-          >
-            <Save />
-            Use Embedding
-          </Button>
+          <div class="flex items-center gap-1">
+            <Button
+              class="w-fit"
+              disabled={embedId() === props.chat?.userEmbedId}
+              onClick={useUserEmbed}
+            >
+              <Save />
+              Use Embedding
+            </Button>
+
+            <Show when={embedId() === props.chat?.userEmbedId}>
+              <Button
+                class="w-fit"
+                schema="secondary"
+                disabled={editingEmbed() || !props.chat?.userEmbedId}
+                onClick={() => setEditingEmbed(true)}
+              >
+                <Edit />
+                Edit
+              </Button>
+            </Show>
+          </div>
+          <Portal>
+            <EditEmbedModal
+              show={editingEmbed()}
+              embedId={embedId()}
+              close={() => setEditingEmbed(false)}
+            />
+          </Portal>
           <Divider />
         </Show>
         <EmbedContent />
