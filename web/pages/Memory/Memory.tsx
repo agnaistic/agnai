@@ -90,16 +90,25 @@ const EditEmbedModal: Component<{ show: boolean; embedId?: string; close: () => 
     }
   })
 
+  const cancel = () => {
+    setContent('')
+    props.close()
+  }
+
   const updateEmbed = async () => {
     if (!form || !props.embedId) return
 
     setLoading(true)
     try {
       const { embedText } = getStrictForm(form, { embedText: 'string' })
+      if (!embedText) {
+        toastStore.warn(`Embedding content cannot be empty`)
+        return
+      }
 
       await embedApi.embedPlainText(props.embedId, embedText)
       toastStore.success('Successfully updated embedding')
-      props.close()
+      cancel()
     } finally {
       setLoading(false)
     }
@@ -107,7 +116,7 @@ const EditEmbedModal: Component<{ show: boolean; embedId?: string; close: () => 
 
   const Footer = (
     <>
-      <Button onClick={props.close}>
+      <Button onClick={cancel}>
         <X /> Cancel
       </Button>
       <Button onClick={updateEmbed}>
