@@ -60,6 +60,7 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
+  const subs = settingStore((s) => s.config.subs)
   const userState = userStore()
   const [search, setSearch] = useSearchParams()
   const pane = usePaneManager()
@@ -75,6 +76,16 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
   const [format, setFormat] = createSignal(
     props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
   )
+
+  const sub = createMemo(() => {
+    if (props.inherit?.service !== 'agnaistic') return
+    const match = subs.find(
+      (sub) => sub._id === props.inherit?.registered?.agnaistic?.subscriptionId
+    )
+
+    return match
+  })
+
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
@@ -173,6 +184,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
+          sub={sub()}
         />
       </div>
     </>
@@ -754,9 +766,14 @@ const PromptSettings: Component<
   )
 }
 
-const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }> = (
-  props
-) => {
+const GenSettings: Component<
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
+> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Advanced' }}>
       <Card class="flex flex-col gap-4">
@@ -1211,6 +1228,8 @@ const SamplerOrder: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
+  const [loaded, setLoaded] = createSignal(false)
+
   const presetOrder = createMemo(() => {
     if (!props.inherit?.order) return ''
     // Guests persist the string instead of the array for some reason
@@ -1223,15 +1242,21 @@ const SamplerOrder: Component<{
   const [disabled, setDisabled] = createSignal(ensureArray(props.inherit?.disabledSamplers))
   const [sorter, setSorter] = createSignal<Sorter>()
 
+  /**
+   * The SamplerOrder component is re-mounted on save for some reason
+   * We need to manually handle this to correctly preserve the order and disabled states
+   */
   createEffect(() => {
-    // Try to detect if the inherited settings change
-    const inherited = presetOrder()
-    if (inherited !== order()) {
-      setOrder(inherited)
-      setValue(inherited)
-      setDisabled(props.inherit?.disabledSamplers || [])
-      resort()
-    }
+    if (loaded()) return
+
+    const order = props.inherit?.order || ''
+    const next = Array.isArray(order) ? order.join(',') : order
+
+    setLoaded(true)
+    setOrder(next)
+    setValue(next)
+    setDisabled(props.inherit?.disabledSamplers || [])
+    resort()
   })
 
   const updateValue = (next: SortItem[]) => {

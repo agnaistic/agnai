@@ -377,6 +377,31 @@ export const msgStore = createStore<MsgState>(
       processQueue()
     },
 
+    async *chatQuery(
+      { waiting },
+      chatId: string,
+      message: string,
+      onSuccess: (response: string) => void
+    ) {
+      if (waiting) return
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        return
+      }
+
+      const res = await msgsApi
+        .generateResponse({ kind: 'chat-query', text: message })
+        .catch((err) => ({ error: err.message, result: undefined }))
+
+      if (res.result) {
+        queryCallbacks.set(res.result.requestId, onSuccess)
+      }
+
+      if (res.error) {
+        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
+      }
+    },
+
     async *send(
       { activeCharId, waiting },
       chatId: string,
@@ -674,11 +699,13 @@ async function playVoiceFromBrowser(
   audio.play(voice.rate)
 }
 
-subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
+subscribe('message-partial', { partial: 'string', chatId: 'string', kind: 'string?' }, (body) => {
   const { activeChatId } = msgStore.getState()
   if (body.chatId !== activeChatId) return
 
-  msgStore.setState({ partial: body.partial })
+  if (body.kind !== 'chat-query') {
+    msgStore.setState({ partial: body.partial })
+  }
 })
 
 subscribe(
@@ -847,6 +874,16 @@ function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User |
     speaking: char.voice ? ({ messageId: msg._id, status: 'generating' } as const) : undefined,
   }
 }
+
+const queryCallbacks = new Map<string, (response: string) => void>()
+
+subscribe('chat-query', { requestId: 'string', response: 'string' }, (body) => {
+  const callback = queryCallbacks.get(body.requestId)
+  if (!callback) return
+
+  callback(body.response)
+  queryCallbacks.delete(body.requestId)
+})
 
 subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
   msgStore.setState({ waiting: undefined })

@@ -117,7 +117,7 @@ const fallbackHolders: Record<string, string> = {
   memory: `{{#if memory}}{{char}}'s memories:\n{{memory}}{{/if}}`,
   ujb: `{{#if ujb}}{{ujb}}{{/if}}`,
   example_dialogue: `{{#if example_dialogue}}How {{char}} speaks:\n{{example_dialogue}}{{/if}}`,
-  impersonating: `{{#if impersonating}}{{user}}'s personality:\n
+  impersonating: `{{#if impersonating}}{{user}}'s personality:
   {{impersonating}}{{/if}}`,
   history: `{{history}}`,
   post: `{{post}}`,

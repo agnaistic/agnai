@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, Index } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Index, on } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
@@ -30,31 +30,35 @@ const EditMemoryForm: Component<{
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
-  onChange?: (book: AppSchema.MemoryBook) => void
+  onChange?: (book: Partial<AppSchema.MemoryBook>) => void
 }> = (props) => {
-  const [editing, setEditing] = createSignal(props.book)
+  const [entries, setEntries] = createSignal(props.book.entries)
   const [search, setSearch] = createSignal('')
 
-  const change = (book: AppSchema.MemoryBook) => {
-    setEditing(book)
+  const change = (book: Partial<AppSchema.MemoryBook>) => {
     props.onChange?.(book)
   }
 
   const addEntry = () => {
-    const book = editing()
-    const next = book.entries.slice()
+    const next = entries().slice()
     next.push({ entry: '', keywords: [], name: '', priority: 0, weight: 0, enabled: true })
-    change({ ...book, entries: next })
+    change({ ...props.book, entries: next })
   }
 
   const onRemoveEntry = (pos: number) => {
-    const book = editing()
-    const next = book.entries.filter((_, i) => i !== pos)
-
-    change({ ...book, entries: next })
+    const next = entries().filter((_, i) => i !== pos)
+    change({ ...props.book, entries: next })
   }
 
-  const entries = () => sortEntries(editing().entries, props.entrySort)
+  createEffect(
+    on(
+      () => props.entrySort,
+      (entrySort) => {
+        const next = sortEntries(entries(), entrySort)
+        setEntries(next)
+      }
+    )
+  )
 
   return (
     <>
@@ -67,21 +71,21 @@ const EditMemoryForm: Component<{
         <TextInput
           fieldName="name"
           label="Book Name"
-          value={editing().name}
+          value={props.book.name}
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
-            change({ ...editing(), name: e.currentTarget.value })
+            change({ name: e.currentTarget.value })
           }}
         />
 
         <TextInput
           fieldName="description"
           label="Description"
-          value={editing().description}
+          value={props.book.description}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
-            change({ ...editing(), description: e.currentTarget.value })
+            change({ description: e.currentTarget.value })
           }}
         />
         <Divider />
@@ -118,12 +122,10 @@ const EditMemoryForm: Component<{
               onRemove={() => onRemoveEntry(i)}
               search={search()}
               onChange={(e) => {
-                const prev = editing()
-                const entries = prev.entries.map((entry, idx) =>
+                const next = entries().map((entry, idx) =>
                   idx === i ? Object.assign({}, entry, e) : entry
                 )
-                const next = { ...prev, entries }
-                change(next)
+                change({ entries: next })
               }}
             />
           )}

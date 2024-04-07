@@ -28,6 +28,13 @@ export const subsCmd = createCommands<SubsEvt, SubsAgg, SubsCmd>(domain.subscrip
       tierId: cmd.tierId,
     }
   },
+  async startSession(cmd, agg) {
+    return {
+      type: 'session-started',
+      tierId: cmd.tierId,
+      sessionId: cmd.sessionId,
+    }
+  },
   async subscribe(cmd, agg) {
     const user = await store.users.getUser(cmd.aggregateId)
     if (!user) {

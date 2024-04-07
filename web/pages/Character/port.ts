@@ -72,6 +72,7 @@ export function jsonToCharacter(json: any): NewCharacter {
     return {
       name: json.name,
       greeting: json.first_mes,
+      appearance: json.extensions?.agnai?.appearance,
       persona: {
         kind: 'text',
         attributes: {

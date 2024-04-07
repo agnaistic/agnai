@@ -80,11 +80,11 @@ export async function deleteUserPreset(presetId: string) {
 }
 
 export async function getUserPresets(userId: string) {
-  const presets = (await db('gen-setting').find({ userId }).toArray()).map((pre) => {
+  const presets = await db('gen-setting').find({ userId }).toArray()
+  return presets.map((pre) => {
     pre.thirdPartyKey = ''
     return pre
   })
-  return presets
 }
 
 export async function updateUserPreset(
@@ -106,9 +106,14 @@ export async function updateUserPreset(
     delete update.thirdPartyKey
   }
 
+  update.updatedAt = new Date().toISOString()
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
   const updated = await db('gen-setting').findOne({ _id: presetId })
-  update.thirdPartyKey = ''
+
+  if (updated) {
+    updated.thirdPartyKey = ''
+  }
+
   return updated
 }
 
@@ -121,5 +126,10 @@ export async function updateUserPreset(
  */
 export async function getUserPreset(presetId: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
+  return preset
+}
+
+export function safePreset(preset: AppSchema.UserGenPreset) {
+  preset.thirdPartyKey = ''
   return preset
 }

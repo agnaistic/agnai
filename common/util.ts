@@ -1,4 +1,5 @@
 import { AppSchema } from './types/schema'
+import { GenerateRequestV2 } from '/srv/adapter/type'
 
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
@@ -155,14 +156,17 @@ export function escapeRegex(string: string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
 }
 
-export function getMessageAuthor(
-  chat: AppSchema.Chat,
-  msg: AppSchema.ChatMessage,
-  chars: Record<string, AppSchema.Character>,
-  members: Map<string, AppSchema.Profile>,
-  sender: AppSchema.Profile,
+export function getMessageAuthor(opts: {
+  kind?: GenerateRequestV2['kind']
+  chat: AppSchema.Chat
+  msg: AppSchema.ChatMessage
+  chars: Record<string, AppSchema.Character>
+  members: Map<string, AppSchema.Profile>
+  sender: AppSchema.Profile
   impersonate?: AppSchema.Character
-) {
+}) {
+  const { chat, msg, chars, members, sender, impersonate } = opts
+
   if (msg.characterId) {
     const char =
       msg.characterId === impersonate?._id

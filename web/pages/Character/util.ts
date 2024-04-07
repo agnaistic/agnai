@@ -27,6 +27,7 @@ export type SortType =
   | 'character-name'
   | 'character-created'
   | 'bot-activity'
+  | 'chat-count'
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -45,6 +46,8 @@ export function getChatSortableValue(chat: ChatLine, field: SortType) {
       return chat.updatedAt
     case 'chat-created':
       return chat.createdAt
+    case 'chat-count':
+      return chat.messageCount ?? 0
     default:
       return 0
   }
@@ -90,7 +93,7 @@ export function groupAndSort(
   type: SortType,
   direction: SortDirection
 ): Array<ChatGroup> {
-  if (type === 'chat-updated' || type === 'chat-created') {
+  if (type === 'chat-updated' || type === 'chat-created' || type === 'chat-count') {
     const sorted = allChats.slice().sort(getChatSortFunction(type, direction))
     return [{ char: null, chats: sorted }]
   }

@@ -91,7 +91,7 @@ const AISettings: Component<{
     const opts = getPresetOptions(presets, { builtin: true }).filter(
       (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
     )
-    return [{ label: 'None', value: '', custom: false }].concat(opts)
+    return opts
   })
   const [presetId, setPresetId] = createSignal(state.user?.defaultPreset || '')
 

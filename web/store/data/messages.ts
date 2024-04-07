@@ -24,6 +24,7 @@ import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
 import { embedApi } from '../embeddings'
 import { replaceTags } from '/common/presets/templates'
+import { settingStore } from '../settings'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -211,6 +212,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
+  | { kind: 'chat-query'; text: string }
 
 export async function generateResponse(opts: GenerateOpts) {
   const { active } = chatStore.getState()
@@ -260,6 +262,7 @@ export async function generateResponse(opts: GenerateOpts) {
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
     text:
+      opts.kind === 'chat-query' ||
       opts.kind === 'send' ||
       opts.kind === 'send-event:world' ||
       opts.kind === 'send-event:character' ||
@@ -424,6 +427,11 @@ async function createActiveChatPrompt(
       userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
     }
   }
+
+  if (opts.kind === 'chat-query') {
+    prompt.lines.push(`Chat Query: ${opts.text}`)
+  }
+
   return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
@@ -520,6 +528,7 @@ async function getGenerateProps(
 
   switch (opts.kind) {
     case 'retry': {
+      props.impersonate = entities.impersonating
       if (opts.messageId) {
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
@@ -559,7 +568,7 @@ async function getGenerateProps(
       props.replyAs = getBot(lastCharMsg?.characterId)
       props.continue = lastCharMsg.msg
       if (opts.retry) {
-        const msgState = msgStore()
+        const msgState = msgStore.getState()
         props.continuing = { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg }
         props.continue = msgState.textBeforeGenMore ?? lastMsg.msg
         props.messages = [
@@ -617,10 +626,21 @@ async function createMessage(
   chatId: string,
   opts: { kind: 'ooc' | 'send-noreply' | EventKind; text: string }
 ) {
+  const props = await getPromptEntities()
   const { impersonating } = getStore('character').getState()
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
+
+  const text = await parseTemplate(opts.text, {
+    char: props.char,
+    chat: props.chat,
+    sender: props.profile,
+    impersonate: impersonating,
+    replyAs: props.char,
+    lastMessage: props.lastMessage?.date,
+  })
+
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
-    text: opts.text,
+    text: text.parsed,
     kind: opts.kind,
     impersonate,
   })
@@ -751,7 +771,25 @@ function getAuthGenSettings(
   user: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
   const presets = getStore('presets').getState().presets
-  return getChatPreset(chat, user, presets)
+  const preset = getChatPreset(chat, user, presets)
+
+  applySubscriptionAdjustment(preset)
+
+  return preset
+}
+
+function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
+  if (preset.service !== 'agnaistic') return preset
+
+  const subs = settingStore.getState().config.subs
+  const match = subs.find((sub) => sub._id === preset.registered?.agnaistic?.subscriptionId)
+  if (!match) return preset
+
+  return {
+    ...preset,
+    maxContextLength: Math.min(preset.maxContextLength!, match.preset.maxContextLength!),
+    maxTokens: Math.min(preset.maxTokens!, match.preset.maxTokens!),
+  }
 }
 
 async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {

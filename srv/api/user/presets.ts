@@ -1,7 +1,7 @@
 import { assertValid } from '/common/valid'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
-import { errors, handle } from '../wrap'
+import { StatusError, errors, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
 import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
@@ -17,6 +17,17 @@ export const getUserPresets = handle(async ({ userId }) => {
     store.presets.getUserTemplates(userId),
   ])
   return { presets, templates }
+})
+
+export const getUserPreset = handle(async ({ userId, params }) => {
+  const preset = await store.presets.getUserPreset(params.id)
+
+  if (!preset || preset.userId !== userId) {
+    throw new StatusError('Preset not found', 404)
+  }
+
+  store.presets.safePreset(preset)
+  return preset
 })
 
 export const getBasePresets = handle(async () => {

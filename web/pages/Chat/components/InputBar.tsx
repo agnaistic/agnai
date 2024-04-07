@@ -14,7 +14,14 @@ import { AppSchema } from '../../../../common/types/schema'
 import Button, { LabelButton } from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
 import TextInput from '../../../shared/TextInput'
-import { chatStore, toastStore, userStore, settingStore, characterStore } from '../../../store'
+import {
+  chatStore,
+  toastStore,
+  userStore,
+  settingStore,
+  characterStore,
+  ChatMessageExt,
+} from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
@@ -50,7 +57,12 @@ const InputBar: Component<{
 
   const user = userStore()
   const state = msgStore((s) => ({
-    lastMsg: s.msgs.slice(-1)[0],
+    lastMsg: s.msgs.reduceRight<ChatMessageExt>((prev, curr, i) => {
+      if (prev) return prev
+      if (curr.characterId && !curr.userId) return curr
+      if (i === 0) return curr
+      return undefined as any
+    }, undefined as any),
     msgs: s.msgs,
     canCaption: s.canImageCaption,
   }))

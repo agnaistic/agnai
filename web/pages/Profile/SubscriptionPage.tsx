@@ -1,7 +1,7 @@
 import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
 import { settingStore, userStore } from '/web/store'
 import { AppSchema } from '/common/types'
-import { Pill, SolidCard } from '/web/shared/Card'
+import { Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import Button from '/web/shared/Button'
 import { TierCard } from './TierCard'
 import { ConfirmModal } from '/web/shared/Modal'
@@ -176,6 +176,17 @@ export const SubscriptionPage: Component = (props) => {
           <Show when={candidates().length > 0}>
             <div class="font-bold">Subscription Options</div>
           </Show>
+
+          <Show when={settings.patreon}>
+            <TitleCard center title={<span class="text-[var(--hl-500)]">Patreon</span>}>
+              Become a{' '}
+              <a class="link font-bold" href="https://patreon.com/Agnaistic" target="_blank">
+                Patron
+              </a>{' '}
+              and link your account or use the options below
+            </TitleCard>
+          </Show>
+
           <div class="flex w-full flex-wrap justify-center gap-4">
             <For each={candidates()}>
               {(each) => (

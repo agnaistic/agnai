@@ -909,7 +909,12 @@ const MemoryBookPicker: Component<{
 
   return (
     <div>
-      <h4 class="text-lg">Character Book</h4>
+      <h4 class="flex gap-1 text-lg">
+        <div>Character Book</div>
+        <Button size="sm" onClick={initBlankCharacterBook}>
+          Create New Book
+        </Button>
+      </h4>
       <Show when={!props.bundledBook}>
         <span class="text-sm"> This character doesn't have a Character Book. </span>
         <div class="flex flex-col gap-3 sm:flex-row">
@@ -919,7 +924,6 @@ const MemoryBookPicker: Component<{
             items={internalMemoryBookOptions()}
             onChange={pickInternalMemoryBook}
           />
-          <Button onClick={initBlankCharacterBook}>Create New Book</Button>
         </div>
       </Show>
       <Show when={props.bundledBook}>
@@ -952,7 +956,7 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         <TextInput
           isMultiline
           fieldName="postHistoryInstructions"
-          label="Post-conversation History Instructions (optional)"
+          label="(Jailbreak) Post-conversation History Instructions (optional)"
           helperText={
             <span>
               {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}

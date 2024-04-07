@@ -14,7 +14,7 @@ import Button from '../../shared/Button'
 import Loading from '../../shared/Loading'
 import TagSelect from '../../shared/TagSelect'
 import { DownloadModal } from './DownloadModal'
-import { SortDirection, SortField, ViewType } from './components/types'
+import { ListCharacter, SortDirection, ViewType, SortField } from './components/types'
 import { CharacterListView } from './components/CharacterListView'
 import { CharacterCardView } from './components/CharacterCardView'
 import { CharacterFolderView } from './components/CharacterFolderView'
@@ -34,6 +34,7 @@ type ListCache = {
 
 const sortOptions: Option<SortField>[] = [
   { value: 'modified', label: 'Last Modified' },
+  { value: 'conversed', label: 'Last Conversed' },
   { value: 'created', label: 'Created' },
   { value: 'name', label: 'Name' },
 ]
@@ -47,13 +48,19 @@ const CharacterList: Component = () => {
   const [sortField, setSortField] = createSignal(cached.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
 
+  const chats = chatStore((s) => s.allChats)
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const cfg = settingStore()
   const user = userStore()
+
   const state = chatStore((s) => {
+    const allChars: ListCharacter[] = s.allChars.list
+      .filter((ch) => ch.userId === user.user?._id)
+      .map<ListCharacter>((ch) => ({ ...ch, chat: findLatestChat(ch._id, chats) }))
+
     return {
-      allChars: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
-      list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
+      allChars,
+      list: allChars.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
 
       loading: s.allLoading,
       loaded: s.loaded,
@@ -358,21 +365,27 @@ const EditCharacter: Component<{ char?: AppSchema.Character; close: () => void }
   )
 }
 
-function getSortableValue(char: AppSchema.Character, field: SortField) {
+function getSortableValue(char: ListCharacter, field: SortField) {
   switch (field) {
     case 'name':
       return char.name.toLowerCase()
+
     case 'created':
       return char.createdAt
+
     case 'modified':
       return char.updatedAt
+
+    case 'conversed':
+      return char.chat?.updatedAt || new Date(0).toISOString()
+
     default:
       return 0
   }
 }
 
 function getSortFunction(field: SortField, direction: SortDirection) {
-  return (left: AppSchema.Character, right: AppSchema.Character) => {
+  return (left: ListCharacter, right: ListCharacter) => {
     const mod = direction === 'asc' ? 1 : -1
     const l = getSortableValue(left, field)
     const r = getSortableValue(right, field)
@@ -406,3 +419,21 @@ const NoCharacters: Component = () => (
 )
 
 export default CharacterList
+
+function findLatestChat(charId: string, chats: AppSchema.Chat[]) {
+  let match: AppSchema.Chat | undefined
+
+  for (const chat of chats) {
+    if (chat.characterId !== charId) continue
+    if (!match) {
+      match = chat
+      continue
+    }
+
+    if (chat.updatedAt > match.updatedAt) {
+      match = chat
+    }
+  }
+
+  return match
+}

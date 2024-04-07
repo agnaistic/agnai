@@ -34,6 +34,11 @@ export const startCheckout = handle(async ({ body, userId }) => {
     metadata: { tierId: body.tierId, userId },
   })
 
+  await subsCmd.startSession(userId, {
+    tierId: tier._id,
+    sessionId: session.id,
+  })
+
   await billingCmd.request(session.id, {
     priceId: tier.priceId,
     productId: tier.productId,

@@ -591,12 +591,12 @@ export namespace AppSchema {
 
     src?: string
 
-    images?: {
-      adapter: string
-    }
+    imageSettings?: BaseImageSettings
 
     temporary?: Record<string, any>
     registered?: { [key in AIAdapter]?: Record<string, any> }
+
+    updatedAt?: string
   }
 
   export interface PromptTemplate {

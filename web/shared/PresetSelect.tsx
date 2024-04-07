@@ -145,11 +145,11 @@ const OptionList: Component<{
       <For each={props.options}>
         {(option) => (
           <div
-            class={
-              (props.selected && props.selected === option.value
-                ? 'bg-[var(--hl-800)]'
-                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`
-            }
+            classList={{
+              'bg-[var(--hl-800)]': props.selected === option.value,
+              'bg-700': props.selected !== option.value,
+            }}
+            class={`w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`}
             onClick={() => props.onSelect(option.value)}
           >
             <div class="font-bold">{option.label}</div>

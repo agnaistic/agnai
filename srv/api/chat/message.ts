@@ -26,6 +26,7 @@ const sendValidator = {
 } as const
 
 const genValidator = {
+  requestId: 'string?',
   parent: 'string?',
   kind: [
     'send',
@@ -39,6 +40,7 @@ const genValidator = {
     'self',
     'summary',
     'request',
+    'chat-query',
   ],
   char: 'any',
   sender: 'any',
@@ -119,9 +121,9 @@ export const createMessage = handle(async (req) => {
 
 export const generateMessageV2 = handle(async (req, res) => {
   const { userId, body, params, log } = req
-  const requestId = v4()
   const chatId = params.id
   assertValid(genValidator, body)
+  const requestId = body.requestId || v4()
 
   if (!userId) {
     return handleGuestGenerate(body, req, res)
@@ -220,13 +222,16 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
   }
 
-  sendMany(members, {
-    type: 'message-creating',
-    chatId,
-    mode: body.kind,
-    senderId: userId,
-    characterId: replyAs._id,
-  })
+  if (body.kind !== 'chat-query') {
+    sendMany(members, {
+      type: 'message-creating',
+      chatId,
+      mode: body.kind,
+      senderId: userId,
+      characterId: replyAs._id,
+    })
+  }
+
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
@@ -269,6 +274,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
         sendMany(members, {
           type: 'message-partial',
+          kind: body.kind,
           partial: `${prefix}${gen.partial}`,
           adapter,
           chatId,
@@ -334,6 +340,16 @@ export const generateMessageV2 = handle(async (req, res) => {
   switch (body.kind) {
     case 'summary': {
       sendOne(userId, { type: 'chat-summary', chatId, summary: generated })
+      break
+    }
+
+    case 'chat-query': {
+      sendOne(userId, {
+        type: 'chat-query',
+        requestId: body.requestId,
+        chatId,
+        response: generated,
+      })
       break
     }
 
