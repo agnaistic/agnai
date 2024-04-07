@@ -175,6 +175,15 @@ export function trimSentence(text: string) {
   return index === -1 ? text.trimEnd() : text.slice(0, index + 1).trimEnd()
 }
 
+export function concatenateSentence(text: string, next: string) {
+  if (!text || !next) return text + next
+  if (text.endsWith('\n') || next.startsWith('\n')) {
+    return `${text.trimEnd()}\n${next.trimStart()}`
+  }
+
+  return `${text.trimEnd()} ${next.trimStart()}`
+}
+
 export function slugify(str: string) {
   return str
     .toLowerCase()
