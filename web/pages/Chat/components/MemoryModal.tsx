@@ -1,5 +1,5 @@
 import { Save } from 'lucide-solid'
-import { Component, createMemo, createSignal, JSX, onMount, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, JSX, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
@@ -20,7 +20,7 @@ const ChatMemoryModal: Component<{
     embeds: s.embeds,
   }))
 
-  const [id, setId] = createSignal(props.chat?.memoryId || 'new')
+  const [id, setId] = createSignal('')
   const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
@@ -31,23 +31,49 @@ const ChatMemoryModal: Component<{
   }
 
   const changeBook = async (id: string) => {
-    setId(id)
+    setId(id === 'new' ? '' : id)
     setBook(undefined)
     await Promise.resolve()
 
-    const match = state.books.list.find((book) => book._id === id)
+    const match: AppSchema.MemoryBook | undefined =
+      id === 'new'
+        ? {
+            _id: '',
+            userId: '',
+            entries: [],
+            kind: 'memory',
+            name: '',
+            description: '',
+          }
+        : state.books.list.find((book) => book._id === id)
+
     setBook(match)
   }
 
-  onMount(() => {
-    changeBook(props.chat?.memoryId || '')
+  createEffect(() => {
+    if (!props.chat) return
+    if (!props.chat.memoryId) return
+
+    if (props.chat.memoryId && !id()) {
+      changeBook(props.chat.memoryId)
+    }
   })
 
   const onSubmit = (ev: Event) => {
     ev.preventDefault()
     const update = book()
-    if (!id() || !update) return
-    memoryStore.update(id(), update)
+
+    if (!update) return
+
+    if (id() === '') {
+      memoryStore.create(update, (next) => {
+        setId(next._id)
+        setBook(next)
+        useMemoryBook()
+      })
+    } else {
+      memoryStore.update(id(), update)
+    }
   }
 
   const useMemoryBook = () => {
@@ -60,26 +86,12 @@ const ChatMemoryModal: Component<{
     chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
   }
 
-  const createMemoryBook = () => {
-    memoryStore.create(
-      {
-        name: 'New Book',
-        entries: [],
-        description: '',
-        extensions: {},
-      },
-      (book) => {
-        changeBook(book._id)
-      }
-    )
-  }
-
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
         Close
       </Button>
-      <Button disabled={id() === ''} type="submit" onClick={onSubmit}>
+      <Button disabled={book() === undefined} type="submit" onClick={onSubmit}>
         <Save />
         Save Memory Book
       </Button>
@@ -111,7 +123,7 @@ const ChatMemoryModal: Component<{
           }}
         />
         <div>
-          <Button onClick={createMemoryBook}>Create New Memory Book</Button>
+          <Button onClick={() => changeBook('new')}>Create New Memory Book</Button>
         </div>
 
         <Divider />
@@ -143,7 +155,10 @@ const ChatMemoryModal: Component<{
               book={book()!}
               entrySort={entrySort()}
               updateEntrySort={updateEntrySort}
-              onChange={setBook}
+              onChange={(next) => {
+                const prev = book()!
+                setBook({ ...prev, ...next })
+              }}
             />
           </div>
         </Show>

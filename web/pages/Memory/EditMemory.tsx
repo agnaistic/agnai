@@ -132,6 +132,7 @@ const EditMemoryForm: Component<{
                 const next = entries().map((entry, idx) =>
                   idx === i ? Object.assign({}, entry, e) : entry
                 )
+                setEntries(next)
                 change({ entries: next })
               }}
             />
