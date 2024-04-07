@@ -40,8 +40,15 @@ const EditMemoryForm: Component<{
   }
 
   const addEntry = () => {
-    const next = entries().slice()
-    next.push({ entry: '', keywords: [], name: '', priority: 0, weight: 0, enabled: true })
+    const next = entries().concat({
+      entry: '',
+      keywords: [],
+      name: '',
+      priority: 0,
+      weight: 0,
+      enabled: true,
+    })
+    setEntries(next)
     change({ ...props.book, entries: next })
   }
 
