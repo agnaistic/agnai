@@ -50,11 +50,11 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
     props.show(false)
   }
   createEffect(() => {
-    updatePane(pane.pane())
+    updatePane(pane.pane()!)
   })
 
   onMount(() => {
-    updatePane(pane.pane())
+    updatePane(pane.pane()!)
   })
 
   return (
