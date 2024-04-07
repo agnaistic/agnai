@@ -131,15 +131,36 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
     .trim()
 }
 
-const end = `."'*!?)}]\``.split('')
-export function trimSentence(text: string) {
-  const last = end.reduce((last, char) => {
-    const index = text.lastIndexOf(char)
-    return index > last ? index : last
-  }, -1)
+const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\``.split(''))
+const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
-  if (last === -1) return text
-  return text.slice(0, last + 1)
+export function trimSentence(text: string) {
+  let index = -1
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (END_SYMBOLS.has(text[i])) {
+      // Save if the punctuation mark is preceded by white space
+      if (i && /[\p{White_Space}\n]/u.test(text[i - 1])) {
+        index = i - 1
+        continue
+      }
+
+      // Skip if the punctuation mark is in the middle of a word
+      if (
+        MID_SYMBOLS.has(text[i]) &&
+        i > 0 &&
+        i < text.length - 1 &&
+        /\p{L}/u.test(text[i - 1]) &&
+        /\p{L}/u.test(text[i + 1])
+      ) {
+        continue
+      }
+
+      index = i
+      break
+    }
+  }
+
+  return index === -1 ? text.trimEnd() : text.slice(0, index + 1).trimEnd()
 }
 
 export function slugify(str: string) {
