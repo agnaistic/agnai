@@ -32,7 +32,6 @@ How MainChar speaks: SAMPLECHAT MainChar
 
 <START>
 MainChar: FIRST
-MainChar: ORIGINAL
 MainChar:"
 `;
 
@@ -99,7 +98,6 @@ Scenario: MAIN MainChar
 This is how OtherBot should talk: SAMPLECHAT OtherBot
 MainChar: FIRST
 ChatOwner: SECOND
-MainChar: ORIGINAL
 OtherBot:"
 `;
 
@@ -165,7 +163,6 @@ SAMPLECHAT OtherBot
 System: New conversation started. Previous conversations are examples only.
 MainChar: FIRST
 ChatOwner: SECOND
-MainChar: ORIGINAL
 OtherBot:"
 `;
 
