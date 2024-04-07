@@ -4,7 +4,7 @@ import './app.css'
 import './dots.css'
 import '@melloware/coloris/dist/coloris.css'
 import { Component, createMemo, JSX, Show, lazy, onMount } from 'solid-js'
-import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
+import { Route, Router, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
@@ -49,104 +49,81 @@ const App: Component = () => {
   const cfg = settingStore()
 
   return (
-    <Router>
-      <Routes>
-        <Route path="" component={Layout}>
-          <CharacterRoutes />
-          <ScenarioRoutes />
-          <Route
-            path="/discord"
-            component={() => <Redirect external="https://agnai.chat/discord" />}
-          />
-          <ChubRoutes />
-          <Route path="/chats/create/:id?" component={CreateChatForm} />
-          <Route path="/chats" component={CharacterChats} />
-          <Route path="/chat" component={ChatDetail} />
-          <Show when={cfg.config.guidanceAccess || state.user?.admin}>
-            <Route path="/saga" component={SagaList} />
-            <Route path="/saga/:id" component={SagaDetail} />
-          </Show>
-          <Route path="/chat/:id" component={ChatDetail} />
-          <Route path={['/info', '/']} component={HomePage} />
-          <Route path="/changelog" component={ChangeLog} />
-          <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
-          <Route
-            path="/presets"
-            component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
-          />
-          <Show when={cfg.flags.sounds}>
-            <Route path="/sounds" component={SoundsPage} />
-          </Show>
-          <Route path="/oauth/patreon" component={PatreonOauth} />
-          <Route path="/profile" component={ProfilePage} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />
-          <Route
-            path="/memory/:id"
-            component={lazy(() => import('./pages/Memory/EditMemoryPage'))}
-          />
-          <Route
-            path="/terms-of-service"
-            component={lazy(() => import('./pages/TermsOfService'))}
-          />
-          <Route path="/checkout">
-            <Route path="/success" component={CheckoutSuccess} />
-            <Route path="/cancel" component={CheckoutCancel} />
-          </Route>
-          <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
-          <Route path="/guides">
-            <Route path="/pipeline" component={PipelineGuide} />
-            <Route path="/memory" component={MemoryGuide} />
-            <Route path="/novel" component={NovelGuide} />
-          </Route>
-          <Show when={state.loggedIn}>
-            <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
-            <Show when={state.user?.admin}>
-              <Route
-                path="/admin/metrics"
-                component={lazy(() => import('./pages/Admin/Metrics'))}
-              />
+    <Router root={Layout}>
+      <CharacterRoutes />
+      <ScenarioRoutes />
+      <Route path="/discord" component={() => <Redirect external="https://agnai.chat/discord" />} />
+      <ChubRoutes />
+      <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
+      <Route path="/chats" component={CharacterChats} />
+      <Route path="/chat" component={ChatDetail} />
+      <Show when={cfg.config.guidanceAccess || state.user?.admin}>
+        <Route path="/saga" component={SagaList} />
+        <Route path="/saga/:id" component={SagaDetail} />
+      </Show>
+      <Route path="/chat/:id" component={ChatDetail} />
+      <Route path={['/info', '/']} component={HomePage} />
+      <Route path="/changelog" component={ChangeLog} />
+      <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
+      <Route
+        path="/presets"
+        component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
+      />
+      <Show when={cfg.flags.sounds}>
+        <Route path="/sounds" component={SoundsPage} />
+      </Show>
+      <Route path="/oauth/patreon" component={PatreonOauth} />
+      <Route path="/profile" component={() => <ProfilePage />} />
+      <Route path="/settings" component={() => <Settings />} />
+      <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />
+      <Route path="/memory/:id" component={lazy(() => import('./pages/Memory/EditMemoryPage'))} />
+      <Route path="/terms-of-service" component={lazy(() => import('./pages/TermsOfService'))} />
+      <Route path="/checkout">
+        <Route path="/success" component={CheckoutSuccess} />
+        <Route path="/cancel" component={CheckoutCancel} />
+      </Route>
+      <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
+      <Route path="/guides">
+        <Route path="/pipeline" component={PipelineGuide} />
+        <Route path="/memory" component={MemoryGuide} />
+        <Route path="/novel" component={NovelGuide} />
+      </Route>
+      <Show when={state.loggedIn}>
+        <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
+        <Show when={state.user?.admin}>
+          <Route path="/admin/metrics" component={lazy(() => import('./pages/Admin/Metrics'))} />
 
-              <Route
-                path="/admin/configuration"
-                component={lazy(() => import('./pages/Admin/Configuration'))}
-              />
+          <Route
+            path="/admin/configuration"
+            component={lazy(() => import('./pages/Admin/Configuration'))}
+          />
 
-              <Route
-                path="/admin/users"
-                component={lazy(() => import('./pages/Admin/UsersPage'))}
-              />
-              <Route
-                path="/admin/subscriptions"
-                component={lazy(() => import('./pages/Admin/SubscriptionList'))}
-              />
-              <Route
-                path="/admin/subscriptions/:id"
-                component={lazy(() => import('./pages/Admin/Subscription'))}
-              />
-              <Route
-                path={['/admin/announcements', '/admin/announcements/:id']}
-                component={lazy(() => import('./pages/Admin/Announcements'))}
-              />
-              <Route
-                path="/admin/tiers/:id"
-                component={lazy(() => import('./pages/Admin/Tiers'))}
-              />
-            </Show>
-          </Show>
-          <Show when={cfg.config.canAuth}>
-            <Route path={['/login', '/login/remember']} component={LoginPage} />
-          </Show>
-          <Route path="/faq" component={FAQ} />
-          <Route path="/builder" component={lazy(() => import('./shared/Avatar/Builder'))} />
-          <Route path="*" component={HomePage} />
-        </Route>
-      </Routes>
+          <Route path="/admin/users" component={lazy(() => import('./pages/Admin/UsersPage'))} />
+          <Route
+            path="/admin/subscriptions"
+            component={lazy(() => import('./pages/Admin/SubscriptionList'))}
+          />
+          <Route
+            path="/admin/subscriptions/:id"
+            component={lazy(() => import('./pages/Admin/Subscription'))}
+          />
+          <Route
+            path={['/admin/announcements', '/admin/announcements/:id']}
+            component={lazy(() => import('./pages/Admin/Announcements'))}
+          />
+          <Route path="/admin/tiers/:id" component={lazy(() => import('./pages/Admin/Tiers'))} />
+        </Show>
+      </Show>
+      <Show when={cfg.config.canAuth}>
+        <Route path={['/login', '/login/remember']} component={LoginPage} />
+      </Show>
+      <Route path="/faq" component={FAQ} />
+      <Route path="*" component={HomePage} />
     </Router>
   )
 }
 
-const Layout: Component = () => {
+const Layout: Component<{ children?: any }> = (props) => {
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
@@ -198,7 +175,7 @@ const Layout: Component = () => {
               }}
             >
               <Show when={cfg.init}>
-                <Outlet />
+                {props.children}
                 <Maintenance />
               </Show>
               <Show when={!cfg.init && cfg.initLoading}>

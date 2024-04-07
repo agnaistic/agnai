@@ -25,7 +25,16 @@ const AppIcon: Component<IconProps & { svg: string }> = (props) => {
     }
   })
 
-  return <div ref={ref} innerHTML={props.svg} class={props.class || ''} {...rest} />
+  return (
+    <div
+      ref={(ele) => {
+        ref = ele
+      }}
+      innerHTML={props.svg}
+      class={props.class || ''}
+      {...rest}
+    />
+  )
 }
 
 export default AppIcon

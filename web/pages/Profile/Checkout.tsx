@@ -9,7 +9,7 @@ export const CheckoutSuccess: Component = (props) => {
   const [query] = useSearchParams()
 
   onMount(() => {
-    userStore.finishCheckout(query.session_id, 'success', () => {
+    userStore.finishCheckout(query.session_id!, 'success', () => {
       window.close()
     })
   })
@@ -36,7 +36,7 @@ export const CheckoutCancel: Component = (props) => {
   const [query] = useSearchParams()
 
   onMount(() => {
-    userStore.finishCheckout(query.session_id, 'cancel')
+    userStore.finishCheckout(query.session_id!, 'cancel')
   })
 
   return (

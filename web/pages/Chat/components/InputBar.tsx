@@ -46,7 +46,7 @@ const InputBar: Component<{
   swiped: boolean
   showOocToggle: boolean
   ooc: boolean
-  setOoc: Setter<boolean>
+  setOoc: Setter<boolean | undefined>
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
   request: (charId: string) => void
