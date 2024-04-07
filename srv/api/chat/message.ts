@@ -271,7 +271,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
 
       if ('partial' in gen) {
-        const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+        const prefix = body.kind === 'continue' ? `${body.continuing.msg}` : ''
         sendMany(members, {
           type: 'message-partial',
           kind: body.kind,
@@ -331,7 +331,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     return
   }
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const responseText = body.kind === 'continue' ? `${body.continuing.msg}${generated}` : generated
   const actions: AppSchema.ChatAction[] = []
 
   switch (body.kind) {
@@ -568,7 +568,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   if (error) return
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const responseText = body.kind === 'continue' ? `${body.continuing.msg}${generated}` : generated
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined

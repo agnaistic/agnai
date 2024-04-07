@@ -139,6 +139,18 @@ export async function parseTemplate(
   }
 
   const ast = parser.parse(template, {}) as PNode[]
+
+  // hack: when we continue, remove the post along with the last newline from tree
+  if (opts.continue && ast.length > 1) {
+    const last = ast[ast.length - 1]
+    if (typeof last !== 'string' && last.kind === 'placeholder' && last.value === 'post') {
+      ast.pop()
+    }
+    if (ast[ast.length - 1] === '\n') {
+      ast.pop()
+    }
+  }
+
   readInserts(opts, ast)
   let output = render(template, opts, ast)
   let unusedTokens = 0

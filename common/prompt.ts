@@ -422,10 +422,6 @@ export async function buildPromptParts(
 
   const post = createPostPrompt(opts)
 
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
   const linesForMemory = [...lines].reverse()
   const books: AppSchema.MemoryBook[] = []
   if (replyAs.characterBook) books.push(replyAs.characterBook)
@@ -514,7 +510,7 @@ function createPostPrompt(
 
   if (opts.kind === 'chat-query') {
     post.push(`Query Response:`)
-  } else {
+  } else if (opts.kind !== 'continue') {
     post.push(`${opts.replyAs.name}:`)
   }
 
