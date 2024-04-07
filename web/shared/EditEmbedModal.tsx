@@ -73,7 +73,13 @@ export const EditEmbedModal: Component<{ show: boolean; embedId?: string; close:
   )
 
   return (
-    <Modal show={props.show} close={props.close} title="Edit Embedding" footer={Footer}>
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Edit Embedding"
+      footer={Footer}
+      maxWidth="half"
+    >
       <form ref={form}>
         <TextInput
           fieldName="embedText"
