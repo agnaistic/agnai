@@ -170,7 +170,6 @@ const ChatOptions: Component<{
           <Row>
             <Item
               onClick={() => {
-                console.log('opening confirm')
                 chatStore.option({ confirm: true, options: false })
               }}
               center

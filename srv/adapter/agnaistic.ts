@@ -139,7 +139,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       maxTokens,
       gaslight,
       allowGuestUsage,
-      images,
+      imageSettings,
       temporary,
       useAdvancedPrompt,
       _id,

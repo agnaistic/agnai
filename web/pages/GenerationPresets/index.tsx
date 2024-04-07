@@ -25,7 +25,6 @@ export const GenerationPresetsPage: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
   const [deleting, setDeleting] = createSignal(false)
-  const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
 
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
@@ -122,11 +121,6 @@ export const GenerationPresetsPage: Component = () => {
       return
     }
 
-    if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
-      setMissingPlaceholder(true)
-      return
-    }
-
     const prev = editing()
 
     if (prev?._id) {
@@ -134,9 +128,9 @@ export const GenerationPresetsPage: Component = () => {
     } else {
       presetStore.createPreset(body as any, (newPreset) => {
         nav(`/presets/${newPreset._id}`)
+        setEditing(newPreset)
       })
     }
-    setMissingPlaceholder(false)
   }
 
   if (params.id && params.id !== 'new' && !state.editing) {
@@ -213,23 +207,6 @@ export const GenerationPresetsPage: Component = () => {
         close={() => setDeleting(false)}
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
-      />
-      <ConfirmModal
-        show={!!missingPlaceholder()}
-        close={() => setMissingPlaceholder(false)}
-        confirm={() => onSave(ref, true)}
-        message={
-          <div class="flex flex-col items-center gap-2 text-sm">
-            <div>
-              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
-              almost never what you want. It is recommended for your gaslight to contain the
-              placeholders:
-              <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
-            </div>
-
-            <p>Are you sure you wish to proceed?</p>
-          </div>
-        }
       />
     </>
   )

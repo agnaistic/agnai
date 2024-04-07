@@ -11,14 +11,19 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
     tierId: '',
     periodStart: '',
     history: [],
+    sessions: [],
   }),
   fold: (ev, prev, meta) => {
     const tierId = 'tierId' in ev ? ev.tierId : undefined
+    const subscriptionId = 'subscriptionId' in ev ? ev.subscriptionId : undefined
+
     const history = prev.history.concat({
       type: ev.type,
       time: meta.timestamp.toISOString(),
       tierId,
+      subscriptionId,
     })
+
     switch (ev.type) {
       // We don't alter the aggregate here, admin-manual events are purely for record keeping
       case 'admin-manual': {
@@ -28,6 +33,14 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
           history,
         }
       }
+
+      case 'session-started': {
+        return {
+          ...prev,
+          sessions: prev.sessions.concat(ev.sessionId),
+        }
+      }
+
       case 'admin-subscribe':
       case 'subscribed': {
         return {

@@ -58,7 +58,10 @@ const InputBar: Component<{
   const user = userStore()
   const state = msgStore((s) => ({
     lastMsg: s.msgs.reduceRight<ChatMessageExt>((prev, curr, i) => {
-      return prev ? prev : curr.characterId ? curr : i === 0 ? curr : (undefined as any)
+      if (prev) return prev
+      if (curr.characterId && !curr.userId) return curr
+      if (i === 0) return curr
+      return undefined as any
     }, undefined as any),
     msgs: s.msgs,
     canCaption: s.canImageCaption,

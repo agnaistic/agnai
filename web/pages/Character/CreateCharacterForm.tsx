@@ -956,7 +956,7 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         <TextInput
           isMultiline
           fieldName="postHistoryInstructions"
-          label="Post-conversation History Instructions (optional)"
+          label="(Jailbreak) Post-conversation History Instructions (optional)"
           helperText={
             <span>
               {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}

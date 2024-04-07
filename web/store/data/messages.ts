@@ -785,9 +785,6 @@ function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
   const match = subs.find((sub) => sub._id === preset.registered?.agnaistic?.subscriptionId)
   if (!match) return preset
 
-  console.log(`max ctx: ${preset.maxContextLength} v. ${match.preset.maxContextLength}`)
-  console.log(`tokens: ${preset.maxTokens} v. ${match.preset.maxTokens}`)
-
   return {
     ...preset,
     maxContextLength: Math.min(preset.maxContextLength!, match.preset.maxContextLength!),
