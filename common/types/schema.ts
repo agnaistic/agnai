@@ -510,8 +510,6 @@ export namespace AppSchema {
 
     temp: number
     dynatemp_range?: number
-    dynatemp_min?: number
-    dynatemp_max?: number
     dynatemp_exponent?: number
     smoothingFactor?: number
     smoothingCurve?: number
