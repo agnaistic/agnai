@@ -1,5 +1,4 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { obtainLock, releaseLock } from '../api/chat/lock'
 import { config } from '../config'
 import { store } from '../db'
 import { isConnected } from '../db/client'
@@ -122,8 +121,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   /**
    * Lock per user per model
    */
-  const lockId = `${opts.user._id}-${preset.subModel}`
-  await obtainLock(lockId, 15)
+  // if (!opts.guidance) {
+  //   const lockId = `${opts.user._id}-${preset.subModel}`
+  //   await obtainLock(lockId, 15)
+  // }
 
   const useRecommended = !!opts.gen.registered?.agnaistic?.useRecommended
   if (useRecommended) {
@@ -288,7 +289,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
   }
 
-  await releaseLock(lockId)
+  // await releaseLock(lockId)
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, ['END_OF_DIALOG'])
