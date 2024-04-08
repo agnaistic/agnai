@@ -798,7 +798,7 @@ const GenSettings: Component<
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
           disabled={props.disabled}
-          service={props.service}
+          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
         />
         <RangeInput
@@ -824,6 +824,18 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingFactor'}
+        />
+        <RangeInput
+          fieldName="smoothingCurve"
+          label="Smoothing Curve"
+          helperText="The smoothing curve to use for Cubic Sampling. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={5}
+          step={0.01}
+          value={props.inherit?.smoothingCurve || 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'smoothingCurve'}
         />
         <RangeInput
           fieldName="cfgScale"
