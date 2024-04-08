@@ -312,7 +312,7 @@ export const adapterSettings: {
     'tabby',
     'mistral',
   ],
-  dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic'],
+  dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby'],
   smoothingCurve: ['kobold', 'aphrodite'],
