@@ -510,7 +510,7 @@ function createPostPrompt(
 
   if (opts.kind === 'chat-query') {
     post.push(`Query Response:`)
-  } else if (opts.kind !== 'continue') {
+  } else {
     post.push(`${opts.replyAs.name}:`)
   }
 

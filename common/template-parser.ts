@@ -138,16 +138,22 @@ export async function parseTemplate(
     parts.ujb = render(parts.ujb, opts)
   }
 
-  const ast = parser.parse(template, {}) as PNode[]
+  let ast = parser.parse(template, {}) as PNode[]
 
-  // hack: when we continue, remove the post along with the last newline from tree
-  if (opts.continue && ast.length > 1) {
-    const last = ast[ast.length - 1]
-    if (typeof last !== 'string' && last.kind === 'placeholder' && last.value === 'post') {
-      ast.pop()
-    }
-    if (ast[ast.length - 1] === '\n') {
-      ast.pop()
+  /**
+   * Continuing the previous message:
+   * In this case our goal is to end the prompt as close to the
+   * last message as possible.
+   */
+  if (opts.continue) {
+    const historyIndex = ast.findIndex(
+      (node) =>
+        typeof node !== 'string' &&
+        ((node.kind === 'placeholder' && node.value === 'history') ||
+          (node.kind === 'each' && node.value === 'history'))
+    )
+    if (historyIndex !== -1) {
+      ast = ast.slice(0, historyIndex + 1)
     }
   }
 
@@ -447,7 +453,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
   let i = 0
   for (const entity of entities) {
     let curr = ''
-    for (const child of children) {
+    children_loop: for (const child of children) {
       if (typeof child === 'string') {
         curr += child
         continue
@@ -473,6 +479,8 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
         case 'history-prop': {
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
+          // when continuing, cut the first node (last response) to its message
+          if (opts.continue && i === 0 && isHistory && child.prop === 'message') break children_loop
           break
         }
 
@@ -482,6 +490,8 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
           if (!prop) break
           const result = renderEntityCondition(child.children, opts, entity, i)
           curr += result
+          // when continuing, cut the first node (last response) to its message
+          if (opts.continue && i === 0 && isHistory) break children_loop
           break
         }
       }
