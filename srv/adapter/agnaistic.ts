@@ -1,5 +1,4 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { obtainLock, releaseLock } from '../api/chat/lock'
 import { config } from '../config'
 import { store } from '../db'
 import { isConnected } from '../db/client'
