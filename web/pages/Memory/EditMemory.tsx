@@ -54,6 +54,7 @@ const EditMemoryForm: Component<{
 
   const onRemoveEntry = (pos: number) => {
     const next = entries().filter((_, i) => i !== pos)
+    setEntries(next)
     change({ ...props.book, entries: next })
   }
 
