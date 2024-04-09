@@ -63,4 +63,10 @@ describe('trimSentence', () => {
     const result = trimSentence(text)
     expect(result).to.eq(`Hello World?"`)
   })
+
+  it('should trim repeated orphaned punctuation', () => {
+    const text = "*Hello world.*\n ***Hello      "
+    const result = trimSentence(text)
+    expect(result).to.eq(`*Hello world.*`)
+  })
 })
