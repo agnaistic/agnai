@@ -194,8 +194,8 @@ function readInserts(opts: TemplateOpts, ast: PNode[]): void {
   ) as InsertNode[]
 
   opts.inserts = new Map()
-  if (opts.char.insert) {
-    opts.inserts.set(opts.char.insert.depth, opts.char.insert.prompt)
+  if (opts.replyAs?.insert) {
+    opts.inserts.set(opts.replyAs.insert.depth, opts.replyAs.insert.prompt)
   }
 
   for (const insert of inserts) {
