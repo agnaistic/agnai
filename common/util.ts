@@ -135,12 +135,19 @@ const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\``.split(''))
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
-  let index = -1
+  let index = -1,
+    checkpoint = -1
   for (let i = text.length - 1; i >= 0; i--) {
     if (END_SYMBOLS.has(text[i])) {
-      // Save if the punctuation mark is preceded by white space
+      // Skip ahead if the punctuation mark is preceded by white space
       if (i && /[\p{White_Space}\n]/u.test(text[i - 1])) {
         index = i - 1
+        continue
+      }
+
+      // Save if there are several punctuation marks in a row
+      if (i && END_SYMBOLS.has(text[i - 1])) {
+        if (checkpoint < i) checkpoint = i
         continue
       }
 
@@ -155,8 +162,10 @@ export function trimSentence(text: string) {
         continue
       }
 
-      index = i
+      index = checkpoint > i ? checkpoint : i
       break
+    } else {
+      checkpoint = -1
     }
   }
 
