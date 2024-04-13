@@ -5,7 +5,7 @@ import { decryptText } from '../db/util'
 import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
 import { NovelSettings } from '../../common/types/image-schema'
 
-const baseUrl = `https://api.novelai.net/ai`
+const baseUrl = `https://image.novelai.net/ai`
 
 // const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
 
