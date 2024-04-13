@@ -88,7 +88,7 @@ export const AutoComplete: Component<{
           <li
             class="ellipsis cursor-pointer px-2 pb-2 pt-1 text-sm hover:bg-[var(--bg-700)]"
             classList={{ 'bg-600': i() === selected(), 'bg-800': i() !== selected() }}
-            onClick={() => props.onSelect(opt)}
+            onMouseDown={() => props.onSelect(opt)}
           >
             {opt.label}
           </li>
