@@ -131,7 +131,7 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
     .trim()
 }
 
-const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\``.split(''))
+const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>`.split(''))
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
@@ -140,7 +140,7 @@ export function trimSentence(text: string) {
   for (let i = text.length - 1; i >= 0; i--) {
     if (END_SYMBOLS.has(text[i])) {
       // Skip ahead if the punctuation mark is preceded by white space
-      if (i && /[\p{White_Space}\n]/u.test(text[i - 1])) {
+      if (i && /[\p{White_Space}\n<]/u.test(text[i - 1])) {
         index = i - 1
         continue
       }
