@@ -47,6 +47,10 @@ export async function resyncSubscription(user: AppSchema.User) {
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
 
+  if (user.billing.subscriptionId !== subscription.id) {
+    user.billing.subscriptionId = subscription.id
+  }
+
   /**
    * If the subscription has not been renewed and the tier is downgrading then ensure
    * the sub is still valid and return to pre-downgrade level

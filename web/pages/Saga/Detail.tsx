@@ -229,7 +229,7 @@ const Footer: Component<{
             size="pill"
             onClick={() => sagaStore.newSession(state.template._id, (id) => nav(toSessionUrl(id)))}
           >
-            Reset
+            New
           </Button>
         </Show>
 
@@ -327,7 +327,7 @@ const Response: Component<{
     }
   })
 
-  const fields = createMemo(() => getTemplateFields(template()))
+  const fields = createMemo(() => getTemplateFields(props.type, props.template, props.msg))
 
   const startEdit = () => {
     switch (props.type) {

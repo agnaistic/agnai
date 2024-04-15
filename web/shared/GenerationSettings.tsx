@@ -798,9 +798,10 @@ const GenSettings: Component<
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
           disabled={props.disabled}
-          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
+          service={props.service} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
         />
+
         <RangeInput
           fieldName="dynatemp_exponent"
           label="Dynamic Temperature Exponent"

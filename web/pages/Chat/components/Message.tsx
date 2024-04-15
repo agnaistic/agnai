@@ -341,13 +341,18 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </div>
                 </Match>
-                <Match when={!edit() && content().type !== 'waiting'}>
+                <Match when={!edit() && content().type === 'message'}>
                   <p
                     class={`rendered-markdown pr-1 ${content().class}`}
                     data-bot-message={!props.msg.userId}
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
+                  <Show when={props.msg.adapter === 'partial' && props.last}>
+                    <span class="flex h-8 w-12 items-center justify-center">
+                      <span class="dot-flashing bg-[var(--hl-700)]"></span>
+                    </span>
+                  </Show>
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>
@@ -364,7 +369,14 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
                 </Match>
-                <Match when={!edit() && content().type === 'waiting'}>
+                <Match when={!edit() && content().type !== 'message'}>
+                  <p
+                    classList={{ hidden: content().type === 'waiting' }}
+                    class={`rendered-markdown pr-1 ${content().class}`}
+                    data-bot-message={!props.msg.userId}
+                    data-user-message={!!props.msg.userId}
+                    innerHTML={content().message}
+                  />
                   <div class="flex h-8 w-12 items-center justify-center">
                     <div class="dot-flashing bg-[var(--hl-700)]"></div>
                   </div>
