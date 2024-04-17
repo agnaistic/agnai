@@ -828,11 +828,11 @@ const GenSettings: Component<
         <RangeInput
           fieldName="smoothingCurve"
           label="Smoothing Curve"
-          helperText="The smoothing curve to use for Cubic Sampling. (Put this value on 0 to disable its effect)"
-          min={0}
+          helperText="The smoothing curve to use for Cubic Sampling. (Put this value on 1 to disable its effect)"
+          min={1}
           max={5}
           step={0.01}
-          value={props.inherit?.smoothingCurve || 0}
+          value={props.inherit?.smoothingCurve || 1}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingCurve'}
@@ -1111,7 +1111,7 @@ const GenSettings: Component<
         <RangeInput
           fieldName="frequencyPenalty"
           label="Frequency Penalty"
-          helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim."
+          helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. (Set to 0.0 to disable)"
           min={-2.0}
           max={2.0}
           step={0.01}
@@ -1124,7 +1124,7 @@ const GenSettings: Component<
         <RangeInput
           fieldName="presencePenalty"
           label="Presence Penalty"
-          helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."
+          helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics. (Set to 0.0 to disable)"
           min={-2.0}
           max={2.0}
           step={0.01}
