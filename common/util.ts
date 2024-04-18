@@ -131,7 +131,7 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
     .trim()
 }
 
-const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>`.split(''))
+const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>~`.split(''))
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
