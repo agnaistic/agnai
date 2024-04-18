@@ -407,7 +407,12 @@ function getEntities(holder: IterableHolder, opts: TemplateOpts) {
         if (!b) return false
         if (b._id === (opts.replyAs || opts.char)._id) return false
         if (b.deletedAt) return false
+
+        // Exclude temp characters that have been disabled/removed
         if (b._id.startsWith('temp-') && b.favorite === false) return false
+
+        // Exclude non-temp characters that have been removed from the chat
+        if (!b._id.startsWith('temp-') && !opts.chat.characters?.[b._id]) return false
         return true
       })
     case 'chat_embed':
