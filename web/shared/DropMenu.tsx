@@ -56,7 +56,7 @@ export const DropMenu: Component<{
   let ref: HTMLDivElement
   const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
   const [opened, setOpened] = createSignal(false)
-  const [id] = createSignal(v4())
+  const [id, _setId] = createSignal('dropdown-' + v4())
 
   const onRef = (el: HTMLDivElement) => {
     const rect = el.getBoundingClientRect()
@@ -95,6 +95,29 @@ export const DropMenu: Component<{
     const handler = (event: MouseEvent | TouchEvent) => {
       if (!opened()) return
       if (!ref) return
+
+      let dropdown: HTMLElement | null = event.target as HTMLElement
+
+      do {
+        if (!dropdown) break
+        const id = dropdown.dataset?.id
+        if (!id) {
+          dropdown = dropdown.parentElement
+          continue
+        }
+
+        if (!id.startsWith('dropdown-')) {
+          dropdown = dropdown.parentElement
+          continue
+        }
+
+        break
+      } while (true)
+
+      // If we are inside a dropdown then we simply won't close
+      if (dropdown) {
+        return
+      }
 
       if (event.target instanceof Element && !ref.contains(event.target) && event.target !== ref) {
         event.preventDefault()
