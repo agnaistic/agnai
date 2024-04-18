@@ -47,6 +47,10 @@ export async function resyncSubscription(user: AppSchema.User) {
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
 
+  if (user.billing.subscriptionId !== subscription.id) {
+    user.billing.subscriptionId = subscription.id
+  }
+
   /**
    * If the subscription has not been renewed and the tier is downgrading then ensure
    * the sub is still valid and return to pre-downgrade level
@@ -104,6 +108,10 @@ export async function findValidSubscription(user: AppSchema.User) {
     if (!session.subscription) continue
 
     const sub = session.subscription as Stripe.Subscription
+    if (sub.status !== 'active') {
+      continue
+    }
+
     if (isActive(sub.current_period_end)) {
       subs.push(sub)
     }
@@ -118,7 +126,13 @@ export async function findValidSubscription(user: AppSchema.User) {
   let match: AppSchema.SubscriptionTier | undefined
   const bestSub = subs.reduce<Stripe.Subscription | undefined>((prev, curr) => {
     const plan: Stripe.Plan | undefined = (curr as any).plan
-    if (!plan) return prev
+    if (!plan) {
+      return prev
+    }
+
+    if (curr.status !== 'active') {
+      return prev
+    }
 
     const tier = allTiers.find((t) => {
       if (predowngradeId) return t._id === predowngradeId

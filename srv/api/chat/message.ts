@@ -326,8 +326,20 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
   }
 
+  await releaseLock(chatId)
   if (error) {
-    await releaseLock(chatId)
+    return
+  }
+
+  if (!generated.trim()) {
+    sendMany(members, {
+      type: 'message-error',
+      requestId,
+      error: `Server generated an empty response. Please try again.`,
+      adapter,
+      chatId,
+    })
+
     return
   }
 

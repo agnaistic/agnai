@@ -107,7 +107,7 @@ const Character: Component<CardProps> = (props) => {
           </A>
         </div>
         <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
-          {props.char.chat?.name || props.char.description}
+          {props.char.description}
         </div>
         <div class="flex justify-between p-1">
           <button

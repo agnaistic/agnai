@@ -21,7 +21,7 @@ Expression = body:(Variable / Text)* {
 }
 
 
-Variable "variable"	= "[" _ val:Char+ pipes:Pipe* "]" {
+Variable "variable"	= "[" _ val:Char+ pipes:Pipe+ "]" {
     const result = { kind: 'variable', name: val.join('') }
     for (const pipe of pipes) {
        if ('stop' in pipe) {

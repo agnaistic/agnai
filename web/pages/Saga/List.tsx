@@ -70,7 +70,7 @@ export const SagaList: Component = (props) => {
         <div>
           <Button
             onClick={() => {
-              sagaStore.createTemplate()
+              sagaStore.createTemplate('open_world')
               nav(toSessionUrl('new'))
             }}
           >

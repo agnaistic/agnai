@@ -9,6 +9,7 @@ import { replaceTags } from '/common/presets/templates'
 import { subscribe } from '/web/store/socket'
 import { imageApi } from '/web/store/data/image'
 import { createDebounce } from '/web/shared/util'
+import { TemplateExampleID, exampleTemplates } from './examples'
 
 type SagaState = {
   template: SagaTemplate
@@ -248,8 +249,15 @@ export const sagaStore = createStore<SagaState>(
 
       return { state: session, template }
     },
-    createTemplate: () => {
-      const game = blankTemplate()
+    createTemplate: ({ state }, base: TemplateExampleID) => {
+      const example = exampleTemplates[base]
+      const game = blankTemplate({
+        loop: example.loop,
+        init: example.init,
+        history: example.history,
+        imagePrompt: example.image,
+        name: example.name,
+      })
       return { template: game }
     },
     updateTemplate({ template: game }, update: Partial<SagaTemplate>) {
@@ -515,7 +523,7 @@ function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): Sag
   }
 }
 
-function blankTemplate(): SagaTemplate {
+function blankTemplate(partial: Partial<SagaTemplate> = {}): SagaTemplate {
   return {
     _id: v4(),
     name: 'New Template',
@@ -532,6 +540,7 @@ function blankTemplate(): SagaTemplate {
     lists: {},
     manual: [],
     ...newTemplate(),
+    ...partial,
   }
 }
 
