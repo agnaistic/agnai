@@ -12,10 +12,13 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
   const noSub = createMemo(() => {
     if (!props.preset) return false
     if (props.preset.service !== 'agnaistic') return false
+    if (!user.sub) return false
+
     const userLevel = user.admin ? Infinity : user.sub?.level ?? -1
     const sub = cfg.subs.find(
       (sub) => sub._id === props.preset?.registered?.agnaistic?.subscriptionId
     )
+
     if (!sub) return false
     const ineligible = userLevel < sub.level
     return ineligible
