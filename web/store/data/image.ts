@@ -260,7 +260,7 @@ function getSummaryTemplate(service: AIAdapter) {
 
       The scenario of the conversation: {{scenario}}
 
-      Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+      Then the roleplay chat begins.
   
       {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
       {{/each}}

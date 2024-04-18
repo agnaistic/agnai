@@ -6,6 +6,7 @@ import { store } from '/srv/db'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
 import { subsCmd } from '/srv/domains/subs/cmd'
+import { StatusError } from '../wrap'
 
 export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
 
@@ -14,6 +15,11 @@ export async function resyncSubscription(user: AppSchema.User) {
 
   const subscription = await findValidSubscription(user)
   if (!subscription) {
+    // Remove subscription if the call succeeds, but returns no active subscription
+    if (user.sub) {
+      await store.users.updateUser(user._id, { sub: null as any })
+    }
+
     return new Error(
       `Could not retrieve subscription information - Please try again or contact support`
     )
@@ -90,6 +96,14 @@ export async function findValidSubscription(user: AppSchema.User) {
   const subscription = await stripe.subscriptions
     .retrieve(user.billing.subscriptionId, { expand: ['plan'] })
     .catch((err) => ({ err }))
+
+  if ('err' in subscription) {
+    logger.error({ err: subscription.err }, 'Stripe subscription retrieval failed')
+    throw new StatusError(
+      `Could not retrieve subsciption information - Please try again or contact support`,
+      500
+    )
+  }
 
   if ('err' in subscription === false && isActive(subscription.current_period_end)) {
     return subscription

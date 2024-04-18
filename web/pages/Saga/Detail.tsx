@@ -1,6 +1,7 @@
 import {
   Component,
   For,
+  Index,
   JSX,
   Match,
   Show,
@@ -133,27 +134,27 @@ export const SagaDetail: Component = (props) => {
             />
           </Show>
 
-          <For each={state.state.responses}>
+          <Index each={state.state.responses}>
             {(res, i) => (
               <>
                 <Response
                   template={state.template}
                   type="input"
-                  msg={res}
+                  msg={res()}
                   session={state.state}
-                  index={i()}
+                  index={i}
                 />
                 <Response
                   template={state.template}
                   type="response"
-                  msg={res}
+                  msg={res()}
                   session={state.state}
                   siblings={state.state.responses.length}
-                  index={i()}
+                  index={i}
                 />
               </>
             )}
-          </For>
+          </Index>
           <Show when={state.busy}>
             <Loading type="flashing" />
           </Show>

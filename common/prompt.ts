@@ -389,6 +389,10 @@ export async function buildPromptParts(
     const temp = opts.chat.tempCharacters?.[bot._id]
     if (temp?.deletedAt || temp?.favorite === false) continue
 
+    if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
+      continue
+    }
+
     personalities.add(bot._id)
     parts.allPersonas.push(
       `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`

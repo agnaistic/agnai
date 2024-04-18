@@ -566,11 +566,9 @@ const PromptSettings: Component<
 > = (props) => {
   const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
-    !props.inherit?._id
-      ? 'basic'
-      : typeof props.inherit.useAdvancedPrompt === 'string'
+    typeof props.inherit?.useAdvancedPrompt === 'string'
       ? props.inherit.useAdvancedPrompt
-      : props.inherit?.useAdvancedPrompt === true || props.inherit.useAdvancedPrompt === undefined
+      : props.inherit?.useAdvancedPrompt === true || props.inherit?.useAdvancedPrompt === undefined
       ? 'validate'
       : 'basic'
   )
