@@ -14,6 +14,7 @@ const ONE_HOUR_MS = 60000 * 60
 
 export async function resyncSubscription(user: AppSchema.User) {
   if (!user.billing) return
+  if (user.billing.status === 'cancelled') return
 
   const subscription = await findValidSubscription(user)
   if (!subscription) {
@@ -26,9 +27,10 @@ export async function resyncSubscription(user: AppSchema.User) {
       user.billing.cancelling = false
       user.billing.status = 'cancelled'
 
-      if (isActive(user.billing.validUntil)) {
-        user.billing.validUntil = new Date(Date.now() - ONE_HOUR_MS * 2).toISOString()
-      }
+      // if (isActive(user.billing.validUntil)) {
+      //   user.billing.validUntil = new Date(Date.now() - ONE_HOUR_MS * 2).toISOString()
+      // }
+
       await store.users.updateUser(user._id, { billing: user.billing })
     }
 
