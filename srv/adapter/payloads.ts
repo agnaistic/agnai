@@ -102,7 +102,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
       top_p: gen.topP ?? 1,
       min_p: gen.minP,
-      top_k: gen.topK,
+      top_k: gen.topK! < 1 ? -1 : gen.topK,
       top_a: gen.topA,
       stop: getStoppingStrings(opts, stops),
       smoothing_factor: gen.smoothingFactor,
