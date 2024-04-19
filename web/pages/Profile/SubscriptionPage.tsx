@@ -43,7 +43,8 @@ export const SubscriptionPage: Component = (props) => {
     return cfg.tiers
       .filter((t) => {
         const isPatronOf = cfg.type === 'patreon' && cfg.tier?._id === t._id
-        if (isPatronOf) return false
+        isPatronOf
+        // if (isPatronOf) return false
 
         const usable = t.level === cfg.level ? hasExpired() : true
         return usable && t.enabled && !t.deletedAt && !!t.productId
