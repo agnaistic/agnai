@@ -218,7 +218,7 @@ const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
   service: '' as any,
   name: '',
-  maxTokens: 150,
+  maxTokens: 300,
 }
 
 const EditPreset: Component<{
