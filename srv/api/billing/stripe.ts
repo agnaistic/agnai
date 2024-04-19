@@ -16,7 +16,11 @@ export async function resyncSubscription(user: AppSchema.User) {
   if (!user.billing) return
 
   const subscription = await findValidSubscription(user)
+
   if (!subscription) {
+    // Don't throw when already cancelled
+    if (user.billing.status === 'cancelled') return
+
     // Remove subscription if the call succeeds, but returns no active subscription
     if (user.sub) {
       await store.users.updateUser(user._id, { sub: null as any })
