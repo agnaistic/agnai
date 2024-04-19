@@ -31,6 +31,8 @@ export const SubscriptionPage: Component = (props) => {
     if (cfg.type === 'patreon' || cfg.type === 'manual') return false
     // if (!user.user?.billing?.cancelling) return false
     if (!user.user?.billing) return true
+    if (user.user.billing.status === 'cancelled') return true
+
     const threshold = new Date(user.user.billing.validUntil)
     return threshold.valueOf() < Date.now()
   })
@@ -75,6 +77,8 @@ export const SubscriptionPage: Component = (props) => {
 
   const canResume = createMemo(() => {
     if (!user.user?.billing?.cancelling) return false
+    if (user.user.billing.status === 'cancelled') return false
+
     const threshold = new Date(user.user.billing.validUntil)
     return threshold.valueOf() > Date.now()
   })

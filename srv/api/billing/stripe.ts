@@ -10,6 +10,8 @@ import { StatusError } from '../wrap'
 
 export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
 
+const ONE_HOUR_MS = 60000 * 60
+
 export async function resyncSubscription(user: AppSchema.User) {
   if (!user.billing) return
 
@@ -18,6 +20,16 @@ export async function resyncSubscription(user: AppSchema.User) {
     // Remove subscription if the call succeeds, but returns no active subscription
     if (user.sub) {
       await store.users.updateUser(user._id, { sub: null as any })
+    }
+
+    if (user.billing) {
+      user.billing.cancelling = false
+      user.billing.status = 'cancelled'
+
+      if (isActive(user.billing.validUntil)) {
+        user.billing.validUntil = new Date(Date.now() - ONE_HOUR_MS * 2).toISOString()
+      }
+      await store.users.updateUser(user._id, { billing: user.billing })
     }
 
     return new Error(
@@ -193,7 +205,7 @@ export function isActive(until: Date | number | string, hours = 2) {
       : until.valueOf()
 
   const valid = new Date(ms * 1000)
-  const now = Date.now() - 60000 * 60 * hours
+  const now = Date.now() - ONE_HOUR_MS * hours
 
   return now < valid.valueOf()
 }
