@@ -14,6 +14,7 @@ const ONE_HOUR_MS = 60000 * 60
 
 export async function resyncSubscription(user: AppSchema.User) {
   if (!user.billing) return
+  if (user.billing.status === 'cancelled') return
 
   const subscription = await findValidSubscription(user)
   if (!subscription) {

@@ -28,7 +28,9 @@ export const SubscriptionPage: Component = (props) => {
   const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
 
   const hasExpired = createMemo(() => {
-    if (cfg.type === 'patreon' || cfg.type === 'manual') return false
+    // We should leave this out. It's possible a user can subscribe multiple ways
+    // if (cfg.type === 'patreon' || cfg.type === 'manual') return true
+
     // if (!user.user?.billing?.cancelling) return false
     if (!user.user?.billing) return true
     if (user.user.billing.status === 'cancelled') return true
