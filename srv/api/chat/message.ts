@@ -327,27 +327,12 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   await releaseLock(chatId)
-  if (error) {
-    return
-  }
-
-  if (!generated.trim()) {
-    sendMany(members, {
-      type: 'message-error',
-      requestId,
-      error: `Server generated an empty response. Please try again.`,
-      adapter,
-      chatId,
-    })
-
+  if (error || !generated.trim()) {
     return
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
-
   const actions: AppSchema.ChatAction[] = []
-
-  await releaseLock(chatId)
 
   switch (body.kind) {
     case 'summary': {
