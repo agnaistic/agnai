@@ -69,4 +69,41 @@ describe('trimSentence', () => {
     const result = trimSentence(text)
     expect(result).to.eq(`*Hello world.*`)
   })
+
+  it('should stop at HTML tags', () => {
+    const text = `Hello world. <div>Hello</div> World`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world. <div>Hello</div>`)
+  })
+
+  it('should stop at self-closing HTML tags', () => {
+    const text = `Hello world.\n<img src="" />`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world.\n<img src="" />`)
+  })
+
+  /* In this case we let the browser fix the markup for us */
+  it('should stop and opening HTML tags', () => {
+    const text = `Hello world. <div>Hello`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world. <div>`)
+  })
+
+  it('should trim math operands', () => {
+    const text = `Hello world. 2 / 2 > 2`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world.`)
+  })
+
+  it('should stop at HTML comments', () => {
+    const text = `Hello world.\n<!-- My HTML Comment -->`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world.\n<!-- My HTML Comment -->`)
+  })
+
+  it('should trim incomplete HTML comments', () => {
+    const text = `Hello world.\n<!-- My HTML Comment`
+    const result = trimSentence(text)
+    expect(result).to.eq(`Hello world.`)
+  })
 })
