@@ -47,11 +47,9 @@ jobs:
           node .github/inject.js
 
       - name: Publish - Live
-        uses: BetaHuhn/do-spaces-action@v2
+        uses: shallwefootball/s3-upload-action@master
         with:
-          access_key: ${{ secrets.S3_ASSET_ACCESS_KEY }}
-          secret_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
-          space_name: ${{ secrets.S3_PRD_ASSET_BUCKET }}
-          space_region: ${{ secrets.S3_ASSET_REGION }}
-          permission: public-read
-          source: dist
+          aws_key_id: ${{ secrets.S3_ASSET_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
+          aws_bucket: ${{ secrets.S3_PRD_ASSET_BUCKET }}
+          source_dir: 'dist'
