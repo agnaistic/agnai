@@ -9,7 +9,7 @@ import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
-import { wait } from '/common/util'
+import { tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 
 export type SettingState = {
@@ -123,6 +123,7 @@ export const settingStore = createStore<SettingState>(
 
       if (res.result) {
         setAssetPrefix(res.result.config.assetPrefix)
+        loadSlotConfig(res.result.config?.serverConfig?.slots)
 
         const isMaint = res.result.config?.maintenance
         if (!isMaint) {
@@ -336,14 +337,13 @@ function canUseStorage(noThrow?: boolean) {
   return true
 }
 
-loadSlotConfig()
-
-async function loadSlotConfig() {
+async function loadSlotConfig(serverSlots?: string) {
   const slots: any = { publisherId: '' }
+  const server = serverSlots ? tryParse(serverSlots) || {} : {}
 
   try {
     const content = await fetch('/slots.txt', { cache: 'no-cache' }).then((res) => res.text())
-    const config = JSON.parse(content)
+    const config = tryParse(content) || {}
 
     for (const [prop, value] of Object.entries(config)) {
       const key = prop as keyof typeof slots
@@ -359,7 +359,7 @@ async function loadSlotConfig() {
     console.log(ex.message)
   } finally {
     await wait(0.01)
-    settingStore.setState({ slots, slotsLoaded: true })
+    settingStore.setState({ slots: Object.assign(slots, server), slotsLoaded: true })
   }
 }
 
