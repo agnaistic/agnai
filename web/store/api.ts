@@ -7,12 +7,16 @@ export function setSocketId(id: string) {
   socketId = id
 }
 
+const HOST = location.hostname.toLowerCase()
+const PORT = location.port
+
 export const baseUrl =
-  location.port === '1234' ||
-  location.port === '3001' ||
-  location.hostname === 'localhost' ||
-  location.hostname === '127.0.0.1'
-    ? `${location.protocol}//${location.hostname}:3001`
+  PORT === '1234' || PORT === '3001' || HOST === 'localhost' || HOST === '127.0.0.1'
+    ? `${location.protocol}//${HOST}:3001`
+    : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
+    ? 'api.agnai.chat'
+    : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
+    ? 'dev-api.agnai.chat'
     : location.origin
 
 export const api = {
