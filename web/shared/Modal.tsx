@@ -4,6 +4,7 @@ import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
+import { Portal } from 'solid-js/web'
 
 interface Props {
   title?: string | JSX.Element
@@ -243,5 +244,13 @@ export const HelpModal: Component<{
         </Show>
       </Modal>
     </>
+  )
+}
+
+export const RootModal: Component<Props> = (props) => {
+  return (
+    <Portal>
+      <Modal {...props} />
+    </Portal>
   )
 }

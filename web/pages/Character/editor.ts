@@ -19,6 +19,8 @@ import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { GenField, generateChar, regenerateCharProp } from './generate-char'
 import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
+import { useImageCache } from '/web/shared/hooks'
+import { imageApi } from '/web/store/data/image'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -144,6 +146,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const user = userStore()
   const presets = presetStore()
   const settings = settingStore()
+  const cache = useImageCache('avatars', { clean: true })
+
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
@@ -194,7 +198,13 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   })
 
   createEffect(async () => {
-    const file = state.avatar || original()?.originalAvatar
+    const orig = original()?.originalAvatar
+
+    if (orig && !cache.state.images.includes('original')) {
+      await cache.addImage(orig, 'original')
+    }
+
+    const file = state.avatar || orig
     if (!file) {
       setImageData(undefined)
       return
@@ -202,6 +212,17 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
     const data = await getImageData(file)
     setImageData(data)
+  })
+
+  createEffect(async () => {
+    const nextImage = cache.state.image
+    console.log('imgupdated', !!nextImage)
+
+    if (nextImage) {
+      const file = await imageApi.dataURLtoFile(nextImage)
+      setImageData(nextImage)
+      setState('avatar', file)
+    }
   })
 
   createEffect(() => {
@@ -214,13 +235,18 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   })
 
   const createAvatar = async () => {
-    const char = payload()
-    const avatar = await generateAvatar(char)
+    const avatar = await generateAvatar(payload())
 
     if (avatar) {
       const base64 = await getImageData(avatar)
       setState('avatar', avatar)
       setImageData(base64)
+
+      if (base64) {
+        cache.addImage(base64)
+      }
+
+      return base64
     }
   }
 
@@ -338,6 +364,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     generateCharacter,
     generateAvatar,
     prepare: setForm,
+    imageCache: cache,
   }
 }
 

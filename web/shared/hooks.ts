@@ -4,6 +4,8 @@ import { getSettingColor, userStore } from '../store'
 import { hexToRgb } from './util'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useSearchParams } from '@solidjs/router'
+import { createImageCache } from '../store/images'
+import { createStore } from 'solid-js/store'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
@@ -35,6 +37,120 @@ export function useWindowSize(): {
   })
 
   return { width, height, platform }
+}
+
+export type ImageCache = ReturnType<typeof useImageCache>
+
+type ImageCacheOpts = {
+  clean?: boolean
+  include?: string[]
+}
+
+export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
+  const reel = createImageCache(collection)
+
+  const cleanIds = (imageId: string) => imageId.replace(`${collection}-`, '')
+
+  const [state, setState] = createStore({
+    id: collection,
+    image: '',
+    pos: 0,
+    imageId: '',
+    images: [] as string[],
+  })
+
+  if (opts.clean) {
+    reel.removeAll()
+  }
+
+  const start = opts.clean ? reel.removeAll() : Promise.resolve()
+
+  // Initialise the reel
+  start.then(reel.getImageIds).then(async (images) => {
+    if (!images.length) {
+      setState({ images: images.map(cleanIds) })
+      return
+    }
+
+    const current = images.length - 1
+    const image = await reel.getImage(images[current])
+
+    setState({ pos: current, image, images: images.map(cleanIds), imageId: images[current] })
+  })
+
+  const next = async () => {
+    let pos = -1
+    if (state.images[state.pos + 1]) {
+      pos = state.pos + 1
+    } else if (state.images[0]) {
+      pos = 0
+    }
+
+    if (pos === -1) return
+
+    const image = await reel.getImage(state.images[pos])
+    setState({ pos: pos, image, imageId: state.images[pos] })
+  }
+
+  const prev = async () => {
+    let pos = -1
+    if (state.images[state.pos - 1]) {
+      pos = state.pos - 1
+    } else if (state.images[state.images.length - 1]) {
+      pos = state.images.length - 1
+    }
+
+    if (pos === -1) return
+
+    const image = await reel.getImage(state.images[pos])
+    setState({ pos: pos, image, imageId: state.images[pos] })
+  }
+
+  const addImage = async (base64: string, id?: string) => {
+    const images = await reel.addImage(base64, id)
+
+    setState({
+      images: images.map(cleanIds),
+      pos: images.length - 1,
+      imageId: images[images.length - 1],
+      image: base64,
+    })
+  }
+
+  const removeImage = async (imageId: string) => {
+    const images = await reel.removeImage(imageId)
+
+    // Automatically load the deleted image's ancestor if it is available
+    if (imageId === state.imageId) {
+      let pos = -1
+      if (images[state.pos]) {
+        pos = state.pos
+      } else if (state.pos > 0 && images[state.pos - 1]) {
+        pos = state.pos - 1
+      } else if (images[0]) {
+        pos = 0
+      }
+
+      if (pos >= 0) {
+        const image = await reel.getImage(images[pos])
+        setState({ images: images.map(cleanIds), image, pos, imageId: images[pos] })
+      } else {
+        setState({ images: images.map(cleanIds), pos: 0, image: '', imageId: '' })
+      }
+
+      return
+    }
+
+    setState({ images: images.map(cleanIds) })
+  }
+
+  return {
+    state,
+    next,
+    prev,
+    addImage,
+    removeImage,
+  }
 }
 
 export function usePane() {
