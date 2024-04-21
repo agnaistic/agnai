@@ -133,9 +133,15 @@ function test(noThrow?: boolean) {
   return true
 }
 
+const DEFAULT_PREFIXES: Record<string, string> = {
+  'agnai.chat': 'https://agnai-assets.sgp1.digitaloceanspaces.com',
+  'dev.agnai.chat': 'https://agnai-assets.sgp1.digitaloceanspaces.com',
+}
+
 const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
 
-let assetPrefix: string = localStorage.getItem(PREFIX_CACHE_KEY) || ''
+let assetPrefix: string =
+  localStorage.getItem(PREFIX_CACHE_KEY) || DEFAULT_PREFIXES[location.hostname.toLowerCase()] || ''
 
 export function getAssetPrefix() {
   return assetPrefix
@@ -163,6 +169,8 @@ export function getAssetUrl(filename: string) {
 }
 
 export function setAssetPrefix(prefix: string) {
+  if (!prefix && assetPrefix) return
+
   storage.setItem(PREFIX_CACHE_KEY, prefix)
   assetPrefix = prefix
 }

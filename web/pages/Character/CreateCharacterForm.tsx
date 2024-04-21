@@ -8,7 +8,20 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { MinusCircle, Plus, Save, X, Import, Download, HelpCircle } from 'lucide-solid'
+import {
+  MinusCircle,
+  Plus,
+  Save,
+  X,
+  Import,
+  Download,
+  HelpCircle,
+  ArrowLeft,
+  Trash,
+  ArrowRight,
+  WandSparkles,
+  RotateCcw,
+} from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -446,15 +459,18 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                     <Match when={!state.avatar.loading}>
-                      <div
-                        class="flex items-baseline justify-center"
-                        style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                        onClick={() => setImageUrl(editor.avatar() || image())}
-                      >
-                        <AvatarIcon
-                          format={{ corners: 'sm', size: '3xl' }}
-                          avatarUrl={editor.avatar() || image()}
-                        />
+                      <div class="flex flex-col items-center gap-1">
+                        <div
+                          class="flex items-baseline"
+                          style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
+                          onClick={() => setImageUrl(editor.avatar() || image())}
+                        >
+                          <AvatarIcon
+                            format={{ corners: 'sm', size: '3xl' }}
+                            avatarUrl={editor.avatar() || image()}
+                          />
+                        </div>
+                        <ReelControl editor={editor} />
                       </div>
                     </Match>
                     <Match when={state.avatar.loading}>
@@ -463,9 +479,6 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                   </Switch>
-                  <Button size="pill" class="w-fit" onClick={() => editor.createAvatar()}>
-                    Generate Image
-                  </Button>
                 </div>
                 <div class="flex w-full flex-col gap-2">
                   <ToggleButtons
@@ -1040,5 +1053,54 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         />
       </Card>
     </>
+  )
+}
+
+const ReelControl: Component<{ editor: CharEditor }> = (props) => {
+  const createAvatar = async () => {
+    const base64 = await props.editor.createAvatar()
+    if (!base64) return
+
+    await props.editor.imageCache.addImage(base64)
+  }
+
+  const size = 14
+
+  return (
+    <div class="flex flex-col items-center gap-1">
+      <div class="flex w-fit gap-2">
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.images.length <= 1}
+          onClick={props.editor.imageCache.prev}
+        >
+          <ArrowLeft size={size} />
+        </Button>
+
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.imageId === ''}
+          onClick={() => props.editor.imageCache.removeImage(props.editor.imageCache.state.imageId)}
+        >
+          <Trash size={size} />
+        </Button>
+
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.images.length <= 1}
+          onClick={props.editor.imageCache.next}
+        >
+          <ArrowRight size={size} />
+        </Button>
+      </div>
+      <div class="flex w-fit gap-2">
+        <Button size="sm">
+          <RotateCcw size={size} />
+        </Button>
+        <Button size="sm" onClick={createAvatar}>
+          <WandSparkles size={size} />
+        </Button>
+      </div>
+    </div>
   )
 }

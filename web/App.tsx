@@ -52,7 +52,7 @@ const App: Component = () => {
     <Router root={Layout}>
       <CharacterRoutes />
       <ScenarioRoutes />
-      <Route path="/discord" component={() => <Redirect external="https://agnai.chat/discord" />} />
+      <Route path="/discord" component={() => <Redirect external="https://discord.agnai.chat" />} />
       <ChubRoutes />
       <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
       <Route path="/chats" component={CharacterChats} />
