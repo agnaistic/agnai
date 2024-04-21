@@ -1,4 +1,4 @@
-// import cors from 'cors'
+import cors from 'cors'
 import express from 'express'
 import multer from 'multer'
 import { logMiddleware } from './logger'
@@ -23,7 +23,12 @@ const server = createServer(app)
 app.use(express.urlencoded({ limit: `${config.limits.upload}mb`, extended: false }))
 app.use(express.json({ limit: `${config.limits.payload}mb` }))
 app.use(logMiddleware())
-// app.use(cors())
+app.use(
+  cors({
+    origin: '*',
+    optionsSuccessStatus: 200,
+  })
+)
 app.use(upload.any())
 
 const baseFolder = resolve(__dirname, '..')
