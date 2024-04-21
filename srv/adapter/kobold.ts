@@ -120,7 +120,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
 }
 
 async function dispatch(opts: AdapterProps, body: any) {
-  const baseURL = `${normalizeUrl(opts.user.koboldUrl)}`
+  const baseURL = normalizeUrl(opts.user.koboldUrl)
 
   const headers: any = await getHeaders(opts)
   if (opts.gen.thirdPartyFormat === 'aphrodite') {
@@ -373,8 +373,18 @@ const streamCompletion = async function* (
 
 async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {
   if (opts.gen.thirdPartyFormat !== 'aphrodite') return
-  if (payload.model) return
 
-  const res = await fetch(`${baseURL}/v1/models`, { headers }).then((r) => r.json())
-  payload.model = res.data[0].root
+  const res = await needle('get', `${baseURL}/v1/models`, { headers, json: true })
+
+  const code = res.statusCode ?? 400
+  if (code >= 400) {
+    return
+  }
+
+  if (!Array.isArray(res.body.data)) return
+  const names = res.body.data.map((data: any) => data.id) as string[]
+
+  if (!payload.model || !names.includes(payload.model)) {
+    payload.model = names[0]
+  }
 }

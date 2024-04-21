@@ -49,9 +49,9 @@ jobs:
       - name: Publish - Live
         uses: BetaHuhn/do-spaces-action@v2
         with:
-          access_key: ${{ secrets.S3_ACCESS_KEY}}
-          secret_key: ${{ secrets.S3_SECRET_KEY }}
-          space_name: ${{ secrets.S3_BUCKET }}
-          space_region: ${{ secrets.S3_REGION }}
+          access_key: ${{ secrets.S3_ASSET_ACCESS_KEY }}
+          secret_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
+          space_name: ${{ secrets.S3_PRD_ASSET_BUCKET }}
+          space_region: ${{ secrets.S3_ASSET_REGION }}
           permission: public-read
           source: dist
