@@ -58,6 +58,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
           aws_bucket: ${{ secrets.S3_DEV_ASSET_BUCKET }}
           source_dir: 'dist'
+          destination_dir: ''
 
       # - name: Build image
       #   run: |
