@@ -39,7 +39,7 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Build frontend
-      env:
+        env:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
           pnpm run build:prod
