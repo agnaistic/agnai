@@ -350,9 +350,11 @@ async function loadSlotConfig(serverSlots?: string) {
       slots[key] = value
     }
 
-    if (config.inject) {
+    const inject = server.inject || config.inject
+
+    if (inject) {
       await wait(0.2)
-      const node = document.createRange().createContextualFragment(config.inject)
+      const node = document.createRange().createContextualFragment(inject)
       document.head.append(node)
     }
   } catch (ex: any) {
