@@ -560,6 +560,7 @@ export namespace AppSchema {
     promptOrder?: Array<{ placeholder: string; enabled: boolean }>
     ultimeJailbreak?: string
     prefixNameAppend?: boolean
+    prependAuthorNameToMessages?: boolean
     prefill?: string
     ignoreCharacterUjb?: boolean
     antiBond?: boolean

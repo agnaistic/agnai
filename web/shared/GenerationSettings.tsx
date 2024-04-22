@@ -630,6 +630,21 @@ const PromptSettings: Component<
             hide={useAdvanced() === 'basic'}
             showTemplates
           />
+          <Toggle
+            fieldName="prependAuthorNameToMessages"
+            label="Prepend messages with author name"
+            helperText={
+              <>
+                For OpenAI Chat Completion. Prepends messages with the name of their author.
+                Recommended for multi-character and multi-user chats.
+              </>
+            }
+            value={props.inherit?.prependAuthorNameToMessages ?? true}
+            disabled={props.disabled}
+            service={props.service}
+            format={props.format}
+            aiSetting={'prependAuthorNameToMessages'}
+          />
 
           <FormLabel
             label="System Prompt"
