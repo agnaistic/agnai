@@ -93,7 +93,7 @@ export const SagaDetail: Component = (props) => {
 
     return (
       <div class="relative h-full">
-        <img src={getAssetUrl(src)} class="h-full" />
+        <img src={src} class="h-full" />
 
         <div
           class="spinner absolute bottom-1/2 left-1/2"
