@@ -39,7 +39,6 @@ import { Pill } from '/web/shared/Card'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
-import { getAssetUrl } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
