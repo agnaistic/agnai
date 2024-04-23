@@ -39,7 +39,6 @@ import { Pill } from '/web/shared/Card'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
-import { getAssetUrl } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
@@ -93,7 +92,7 @@ export const SagaDetail: Component = (props) => {
 
     return (
       <div class="relative h-full">
-        <img src={getAssetUrl(src)} class="h-full" />
+        <img src={src} class="h-full" />
 
         <div
           class="spinner absolute bottom-1/2 left-1/2"

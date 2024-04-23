@@ -15,7 +15,7 @@ export const koboldPresets = {
     topP: 1,
     minP: 0.1,
     typicalP: 1,
-    topA: 1,
+    topA: 0,
     tailFreeSampling: 1,
     encoderRepitionPenalty: 1.0,
     penaltyAlpha: 0,
