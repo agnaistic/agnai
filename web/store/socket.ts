@@ -69,7 +69,11 @@ function onMessage(msg: MessageEvent<any>) {
         console.log(JSON.stringify(payload))
       } else {
         console.log(
-          JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 60) + '...' })
+          `[${new Date().toLocaleTimeString()}]`,
+          JSON.stringify({
+            ...payload,
+            image: (payload.image || '').slice(0, 60) + '...',
+          })
         )
       }
     } else {

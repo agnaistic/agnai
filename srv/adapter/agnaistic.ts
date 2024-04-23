@@ -1,4 +1,5 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { sendOne } from '../api/ws'
 import { config } from '../config'
 import { store } from '../db'
 import { isConnected } from '../db/client'
@@ -267,7 +268,11 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
 
     if (generated.value.meta) {
-      yield { meta: generated.value.meta }
+      const meta = generated.value.meta
+      yield { meta }
+      if (meta.host && !opts.guest) {
+        sendOne(opts.user._id, { type: 'message-meta', host: meta.host })
+      }
     }
 
     if (generated.value.error) {
