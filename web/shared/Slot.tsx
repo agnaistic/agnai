@@ -10,7 +10,7 @@ import {
 } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
-import { wait } from '/common/util'
+import { getUserSubscriptionTier, wait } from '/common/util'
 import { createDebounce } from './util'
 
 window.googletag = window.googletag || { cmd: [] }
@@ -69,6 +69,7 @@ const Slot: Component<{
   const user = userStore((s) => ({
     user: s.user,
     sub: s.sub,
+    tiers: s.tiers,
   }))
 
   const [stick, setStick] = createSignal(props.sticky)
@@ -80,6 +81,11 @@ const Slot: Component<{
   const [visible, setVisible] = createSignal(false)
   const [slotId, setSlotId] = createSignal<string>()
   const [actualId, setActualId] = createSignal('...')
+
+  const tier = createMemo(() => {
+    if (!user.user) return
+    return getUserSubscriptionTier(user.user, user.tiers)
+  })
 
   const id = createMemo(() => {
     if (cfg.provider === 'ez') return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
@@ -311,7 +317,15 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!cfg.ready || !user.user || !specs() || user.sub?.tier?.disableSlots}>
+        <Match
+          when={
+            !cfg.ready ||
+            !user.user ||
+            !specs() ||
+            tier()?.tier.disableSlots ||
+            user.sub?.tier?.disableSlots
+          }
+        >
           {null}
         </Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
