@@ -1,5 +1,6 @@
 import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
+import { PING_INTERVAL_MS } from '/common/util'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
@@ -10,13 +11,15 @@ const BASE_RETRY = 100
 const MAX_RETRY = 1000
 let RETRY_TIME = 0
 
-let socket: WebSocket
+type ClientSocket = WebSocket & { pingTimeout: any }
+
+let socket: ClientSocket
 
 createSocket()
 
 function createSocket() {
   const socketUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://')
-  const ws = new WebSocket(socketUrl)
+  const ws = new WebSocket(socketUrl) as ClientSocket
 
   socket = ws
   ws.onopen = onConnected

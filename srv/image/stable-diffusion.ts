@@ -39,7 +39,7 @@ export type SDRequest = {
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const { user } = opts
   const config = await getConfig(user)
-  const payload = getPayload(opts, config.model)
+  const payload = getPayload(config.kind, opts, config.model)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
@@ -120,8 +120,10 @@ async function getConfig(user: AppSchema.User): Promise<{
   return { kind: 'agnai', host: srv.imagesHost, params: `?${params}`, model }
 }
 
-function getPayload(opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
-  const sampler = opts.user.images?.sd.sampler || defaultSettings.sampler
+function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
+  const sampler =
+    (kind === 'agnai' ? opts.user.images?.agnai?.sampler : opts.user.images?.sd?.sampler) ||
+    defaultSettings.sampler
   const payload: SDRequest = {
     prompt: opts.prompt,
     // enable_hr: true,
