@@ -1,9 +1,20 @@
 import { assertValid } from '/common/valid'
 import { AppSocket } from './types'
 import { verifyJwt } from '/srv/db/user'
+import { PING_INTERVAL_MS } from '/common/util'
 
 const allSockets = new Map<string, AppSocket>()
 const userSockets = new Map<string, AppSocket[]>()
+
+setInterval(() => {
+  for (const cli of allSockets.values()) {
+    const socket = cli as AppSocket
+    if (socket.isAlive === false) return socket.terminate()
+
+    socket.isAlive = false
+    socket.ping()
+  }
+}, PING_INTERVAL_MS)
 
 type Handler = (client: AppSocket, data: any) => void
 
