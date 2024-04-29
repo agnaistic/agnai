@@ -1,6 +1,8 @@
 import { AppSchema } from './types/schema'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 
+export const PING_INTERVAL_MS = 30000
+
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
@@ -91,8 +93,9 @@ export function elapsedSince(date: string | Date, offsetMs: number = 0) {
   return toDuration(Math.floor(elapsed))
 }
 
-const ONE_HOUR = 3600
-const ONE_DAY = 86400
+const ONE_HOUR_MS = 60000 * 60
+const ONE_HOUR_SECS = 3600
+const ONE_DAY_SECS = 86400
 
 type Days = number
 type Hours = number
@@ -102,8 +105,8 @@ type Seconds = number
 type Duration = [Days, Hours, Minutes, Seconds]
 
 function toRawDuration(valueSecs: number) {
-  const days = Math.floor(valueSecs / ONE_DAY)
-  const hours = Math.floor(valueSecs / ONE_HOUR) % 24
+  const days = Math.floor(valueSecs / ONE_DAY_SECS)
+  const hours = Math.floor(valueSecs / ONE_HOUR_SECS) % 24
   const mins = Math.floor(valueSecs / 60) % 60
   const secs = Math.ceil(valueSecs % 60)
 
@@ -388,11 +391,13 @@ export function getUserSubscriptionTier(
   return result
 }
 
-function isExpired(expiresAt?: string) {
+function isExpired(expiresAt?: string, graceHrs = 3) {
   if (!expiresAt) return true
 
+  const threshold = Date.now() - graceHrs * ONE_HOUR_MS
+
   const expires = new Date(expiresAt).valueOf()
-  if (Date.now() > expires) return true
+  if (threshold > expires) return true
   return false
 }
 

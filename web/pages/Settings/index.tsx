@@ -105,6 +105,8 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       imagePrefix,
       imageSuffix,
       sdSampler,
+      agnaiModel,
+      agnaiSampler,
       sdUrl,
       hordeImageModel,
       hordeSampler,
@@ -154,7 +156,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
         summaryPrompt,
         horde: {
           sampler: hordeSampler,
-          model: hordeImageModel,
+          model: hordeImageModel || '',
         },
         novel: {
           model: novelImageModel,
@@ -164,7 +166,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           sampler: sdSampler,
           url: sdUrl,
         },
-        agnai: { model: '' },
+        agnai: { model: agnaiModel, sampler: agnaiSampler },
       },
     })
   }
@@ -285,10 +287,13 @@ const settingsForm = {
   novelSampler: 'string',
 
   hordeSampler: 'string',
-  hordeImageModel: 'string',
+  hordeImageModel: 'string?',
 
   sdUrl: 'string',
   sdSampler: 'string',
+
+  agnaiModel: 'string',
+  agnaiSampler: 'string',
 
   speechToTextEnabled: 'boolean',
   speechToTextAutoSubmit: 'boolean',

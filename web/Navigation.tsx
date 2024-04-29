@@ -35,6 +35,7 @@ import {
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
+  UserState,
   audioStore,
   characterStore,
   inviteStore,
@@ -48,6 +49,7 @@ import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
 import Tooltip from './shared/Tooltip'
+import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
 
 const MobileNavHeader = () => {
   const user = userStore()
@@ -172,8 +174,6 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
-  const toasts = toastStore()
-  const invites = inviteStore()
 
   const guidance = createMemo(() => {
     const usable = menu.config.subs.some((sub) => sub.guidance)
@@ -181,10 +181,6 @@ const UserNavigation: Component = () => {
 
     const access = !!menu.config.guidanceAccess || !!user.user?.admin
     return access
-  })
-
-  const count = createMemo(() => {
-    return toasts.unseen + invites.invites.length
   })
 
   return (
@@ -247,70 +243,13 @@ const UserNavigation: Component = () => {
         </SubMenu>
       </Show>
 
-      <div class="flex flex-wrap justify-center gap-[2px] text-sm">
-        <Show when={!!menu.config.serverConfig?.supportEmail}>
-          <ExternalLink
-            href={`mailto:${menu.config.serverConfig?.supportEmail}`}
-            newtab
-            ariaLabel="Email Support"
-          >
-            <Tooltip position="top" tip={`${menu.config.serverConfig?.supportEmail}`}>
-              <MailQuestion aria-hidden />
-            </Tooltip>
-          </ExternalLink>
-        </Show>
-
-        <Item href="/faq" ariaLabel="Open FAQ page">
-          <HelpCircle aria-hidden="true" />
-        </Item>
-
-        <Show when={menu.config.patreon}>
-          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
-            <HeartHandshake aria-hidden="true" />
-          </ExternalLink>
-        </Show>
-        <Item href="/settings" ariaLabel="Open settings page">
-          <Settings aria-hidden="true" />
-        </Item>
-
-        <Item
-          ariaLabel="Toggle between light and dark mode"
-          onClick={() => {
-            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
-          }}
-        >
-          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
-            <Moon aria-hidden="true" />
-          </Show>
-        </Item>
-
-        <Item
-          onClick={() => {
-            if (menu.showMenu) settingStore.closeMenu()
-            toastStore.modal(true)
-          }}
-          ariaLabel="Show notification list"
-        >
-          <Switch>
-            <Match when={count() > 0}>
-              <div
-                class="relative flex"
-                role="status"
-                aria-label={`Status: You have ${count()} new notifications`}
-              >
-                <Bell fill="var(--bg-100)" aria-hidden="true" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
-                  <Badge>{count() > 9 ? '9+' : count()}</Badge>
-                </span>
-              </div>
-            </Match>
-
-            <Match when={!count()}>
-              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
-            </Match>
-          </Switch>
-        </Item>
-      </div>
+      <NavIcons
+        supportEmail={menu.config.serverConfig?.supportEmail}
+        patreon={menu.config.patreon}
+        user={user}
+        showMenu={menu.showMenu}
+        mode={user.ui.mode}
+      />
 
       <Slots />
     </>
@@ -318,7 +257,6 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const toasts = toastStore()
   const user = userStore()
   const menu = settingStore((s) => ({
     showMenu: s.showMenu,
@@ -375,16 +313,47 @@ const GuestNavigation: Component = () => {
         </Show>
       </Show>
 
+      <NavIcons
+        supportEmail={menu.config.serverConfig?.supportEmail}
+        patreon={menu.config.patreon}
+        user={user}
+        showMenu={menu.showMenu}
+        mode={user.ui.mode}
+      />
+
+      <Slots />
+    </>
+  )
+}
+
+const NavIcons: Component<{
+  patreon?: boolean
+  supportEmail?: string
+  user: UserState
+  showMenu: boolean
+  mode: 'light' | 'dark'
+}> = (props) => {
+  const invites = inviteStore()
+  const toasts = toastStore()
+
+  const count = createMemo(() => {
+    return toasts.unseen + invites.invites.length
+  })
+
+  return (
+    <>
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
+        <Show when={!!props.supportEmail}>
+          <ExternalLink href={`mailto:${props.supportEmail}`} newtab ariaLabel="Email Support">
+            <Tooltip position="top" tip={`${props.supportEmail}`}>
+              <MailQuestion aria-hidden />
+            </Tooltip>
+          </ExternalLink>
+        </Show>
+
         <Item href="/faq" ariaLabel="Open FAQ page">
           <HelpCircle aria-hidden="true" />
         </Item>
-
-        <Show when={menu.config.patreon}>
-          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
-            <HeartHandshake aria-hidden="true" />
-          </ExternalLink>
-        </Show>
 
         <Item href="/settings" ariaLabel="Open settings page">
           <Settings aria-hidden="true" />
@@ -393,43 +362,57 @@ const GuestNavigation: Component = () => {
         <Item
           ariaLabel="Toggle between light and dark mode"
           onClick={() => {
-            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
+            userStore.saveUI({ mode: props.user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
         >
-          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
+          <Show when={props.user.ui.mode === 'dark'} fallback={<Sun />}>
             <Moon aria-hidden="true" />
           </Show>
         </Item>
 
         <Item
           onClick={() => {
-            if (menu.showMenu) settingStore.closeMenu()
+            if (props.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
           ariaLabel="Show notification list"
         >
           <Switch>
-            <Match when={toasts.unseen > 0}>
+            <Match when={count() > 0}>
               <div
                 class="relative flex"
                 role="status"
-                aria-label={`Status: You have ${toasts.unseen} new notifications`}
+                aria-label={`Status: You have ${count()} new notifications`}
               >
                 <Bell fill="var(--bg-100)" aria-hidden="true" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
-                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                  <Badge>{count() > 9 ? '9+' : count()}</Badge>
                 </span>
               </div>
             </Match>
 
-            <Match when={!toasts.unseen}>
+            <Match when={!count()}>
               <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
             </Match>
           </Switch>
         </Item>
       </div>
+      <div class="flex flex-wrap justify-center gap-[2px] text-sm">
+        <Show when={props.patreon}>
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
+            <HeartHandshake aria-hidden="true" />
+          </ExternalLink>
+        </Show>
 
-      <Slots />
+        <ExternalLink href="https://discord.agnai.chat" newtab ariaLabel="Discord">
+          <Show when={props.mode === 'dark'}>
+            <DiscordLightIcon />
+          </Show>
+          <Show when={props.mode === 'light'}>
+            <DiscordDarkIcon />
+          </Show>
+        </ExternalLink>
+      </div>
     </>
   )
 }

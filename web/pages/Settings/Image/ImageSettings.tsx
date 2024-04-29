@@ -318,6 +318,11 @@ const AgnaiSettings: Component = () => {
     return match
   })
 
+  const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
+    label: value,
+    value: key,
+  }))
+
   return (
     <>
       <div class="text-xl">Agnaistic</div>
@@ -328,10 +333,17 @@ const AgnaiSettings: Component = () => {
         fieldName="agnaiModel"
         label="Agnaistic Image Model"
         items={settings.names}
-        value={state.user?.images?.agnai?.model}
+        value={curr()}
         disabled={settings.models.length <= 1}
         classList={{ hidden: settings.models.length === 0 }}
         onChange={(ev) => setCurr(ev.value)}
+      />
+
+      <Select
+        fieldName="agnaiSampler"
+        items={samplers}
+        label="Sampler"
+        value={state.user?.images?.sd.sampler || SD_SAMPLER['DPM++ SDE']}
       />
 
       <Show when={!!model()}>
