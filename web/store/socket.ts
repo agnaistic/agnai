@@ -1,5 +1,6 @@
 import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
+import { PING_INTERVAL_MS } from '/common/util'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
