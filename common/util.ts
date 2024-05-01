@@ -135,14 +135,7 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
 }
 
 const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>~`.split(''))
-const END_SEQUENCES = [
-  '\n```',
-  '\n---',
-  '\n***',
-  '\n___',
-  '\n===',
-  '\n"""',
-]
+const END_SEQUENCES = ['\n```', '\n---', '\n***', '\n___', '\n===', '\n"""']
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
@@ -153,11 +146,8 @@ export function trimSentence(text: string) {
     for (const seq of END_SEQUENCES) {
       if (text.slice(i, i + seq.length) === seq) {
         // only trim if it's not an opening sequence
-        if (
-          i + seq.length < text.length &&
-          /\p{L}/u.test(text[i + seq.length])
-        ) {
-          break;
+        if (i + seq.length < text.length && /\p{L}/u.test(text[i + seq.length])) {
+          break
         }
         index = i + seq.length - 1
         break sentence_loop
