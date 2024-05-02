@@ -153,7 +153,7 @@ export async function parseTemplate(
           (node.kind === 'each' && node.value === 'history'))
     )
     if (historyIndex !== -1) {
-      const node = ast[historyIndex] as PlaceHolder | IteratorNode;
+      const node = ast[historyIndex] as PlaceHolder | IteratorNode
       // replace iterator with normalized history
       if (node.kind === 'each' && node.value === 'history') {
         ast[historyIndex] = { kind: 'placeholder', value: 'history' } as PlaceHolder

@@ -176,12 +176,12 @@ export function trimSentence(text: string) {
 }
 
 export function concatenateSentence(text: string, next: string) {
-  if (!text || !next) return text + next
-  if (text.endsWith('\n') || next.startsWith('\n')) {
+  if (!text || !next) return `${text}${next}`
+  if (next.startsWith('\n')) {
     return `${text.trimEnd()}\n${next.trimStart()}`
   }
 
-  return `${text.trimEnd()} ${next.trimStart()}`
+  return `${text.trimEnd()}${next}`
 }
 
 export function slugify(str: string) {
