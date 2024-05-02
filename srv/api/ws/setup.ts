@@ -18,6 +18,7 @@ export function setupSockets(srv: Server) {
     client.userId = ''
     client.token = ''
     client.isAlive = true
+    client.misses = 0
 
     client.send(JSON.stringify({ type: 'connected', uid: client.uid }))
     client.on('pong', heartbeart)
@@ -27,4 +28,5 @@ export function setupSockets(srv: Server) {
 
 function heartbeart(client: AppSocket) {
   client.isAlive = true
+  client.misses = 0
 }
