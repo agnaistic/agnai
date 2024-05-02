@@ -1,4 +1,4 @@
-import { MinusCircle, Plus } from 'lucide-solid'
+import { Plus, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
@@ -153,19 +153,20 @@ const Attribute: Component<{
   disabled?: boolean
 }> = (props) => {
   return (
-    <div class="flex w-full flex-col gap-2 sm:flex-row">
-      <div class="flex w-full items-start gap-1 sm:w-3/12">
+    <div class="flex w-full flex-col gap-2">
+      <div class="flex w-full items-center justify-between gap-2">
         <TextInput
+          parentClass="w-full"
           fieldName={`attr-key.${props.index}`}
           placeholder="Name. E.g. appearance"
           value={props.attr.key}
           disabled={props.disabled}
         />
-        <div class="sm:hidden" onClick={() => props.remove(props.index)}>
-          <MinusCircle size={16} class="focusable-icon-button" />
-        </div>
+        <Button schema="red" onClick={() => props.remove(props.index)}>
+          <X size={16} class="" />
+        </Button>
       </div>
-      <div class="sm:w-9/12">
+      <div class="">
         <TextInput
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
@@ -174,9 +175,6 @@ const Attribute: Component<{
           isMultiline
           disabled={props.disabled}
         />
-      </div>
-      <div class="1/12 hidden items-start sm:flex" onClick={() => props.remove(props.index)}>
-        <MinusCircle size={16} class="focusable-icon-button" />
       </div>
     </div>
   )

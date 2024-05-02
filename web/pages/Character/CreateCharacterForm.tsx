@@ -586,7 +586,7 @@ export const CreateCharacterForm: Component<{
                       <div class="flex items-center gap-1">
                         Persona Schema{' '}
                         <Regenerate
-                          fields={['personality', 'behaviour']}
+                          fields={['personality']}
                           service={genService()}
                           editor={editor}
                           allowed={editor.canGuidance}

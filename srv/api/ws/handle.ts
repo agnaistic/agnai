@@ -9,7 +9,13 @@ const userSockets = new Map<string, AppSocket[]>()
 setInterval(() => {
   for (const cli of allSockets.values()) {
     const socket = cli as AppSocket
-    if (socket.isAlive === false) return socket.terminate()
+    if (socket.isAlive === false) {
+      socket.misses++
+
+      if (socket.misses >= 5) {
+        return socket.terminate()
+      }
+    }
 
     socket.isAlive = false
     socket.ping()
