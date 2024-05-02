@@ -153,6 +153,11 @@ export async function parseTemplate(
           (node.kind === 'each' && node.value === 'history'))
     )
     if (historyIndex !== -1) {
+      const node = ast[historyIndex] as PlaceHolder | IteratorNode;
+      // replace iterator with normalized history
+      if (node.kind === 'each' && node.value === 'history') {
+        ast[historyIndex] = { kind: 'placeholder', value: 'history' } as PlaceHolder
+      }
       ast = ast.slice(0, historyIndex + 1)
     }
   }
@@ -453,7 +458,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
   let i = 0
   for (const entity of entities) {
     let curr = ''
-    children_loop: for (const child of children) {
+    for (const child of children) {
       if (typeof child === 'string') {
         curr += child
         continue
@@ -479,8 +484,6 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
         case 'history-prop': {
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
-          // when continuing, cut the first node (last response) to its message
-          if (opts.continue && i === 0 && isHistory && child.prop === 'message') break children_loop
           break
         }
 
@@ -490,8 +493,6 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
           if (!prop) break
           const result = renderEntityCondition(child.children, opts, entity, i)
           curr += result
-          // when continuing, cut the first node (last response) to its message
-          if (opts.continue && i === 0 && isHistory) break children_loop
           break
         }
       }
