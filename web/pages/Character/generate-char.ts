@@ -22,7 +22,7 @@ export async function generateChar(
   service: string,
   kind: PersonaFormat
 ) {
-  const { template } = getTemplate('attributes', {}, 'Alpaca', [])
+  const { template, aliases } = getTemplate('attributes', {}, 'Alpaca', [])
   const prompt = template.replace(`{{description}}`, description)
 
   const previous = name ? { firstname: name } : undefined
@@ -35,7 +35,7 @@ export async function generateChar(
     originalAvatar: undefined,
     description,
     name: previous?.firstname || vars.firstname,
-    persona: toAttributes(kind, vars, {}),
+    persona: toAttributes(kind, vars, aliases),
     appearance: vars.appearance,
     greeting: vars.greeting,
     sampleChat: samples,
