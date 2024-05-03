@@ -12,8 +12,8 @@ import ScenarioRoutes from './pages/Scenario'
 import { settingStore } from './store/settings'
 import { userStore } from './store/user'
 import LoginPage from './pages/Login'
-import Home from './pages/Home'
 import HomePage from './pages/HomePage'
+import Home from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
@@ -23,14 +23,14 @@ import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
-import ChangeLog from './pages/HomePage/ChangeLog'
+import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getMaxChatWidth } from './shared/util'
-import FAQ from './pages/HomePage/FAQ'
+import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
 import { ContextProvider } from './store/context'
@@ -55,7 +55,7 @@ const App: Component = () => {
     <Router>
       <Routes>
         <Route path="" component={AiFansLayout}>
-          <Route path="/" component={Home} />
+          <Route path="/" component={HomePage} />
           <Route path="/model/:id" component={ModelPage} />
           <Show when={cfg.config.canAuth}>
             <Route path={['/login', '/login/remember']} component={LoginPage} />
@@ -77,7 +77,7 @@ const App: Component = () => {
             <Route path="/saga/:id" component={SagaDetail} />
           </Show>
           <Route path="/chat/:id" component={ChatDetail} />
-          <Route path={['/info']} component={HomePage} />
+          <Route path={['/info']} component={Home} />
           <Route path="/changelog" component={ChangeLog} />
           <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
           <Route
