@@ -9,6 +9,7 @@ import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
+import FormContainer from '/web/shared/aifans/FormContainer'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
@@ -50,7 +51,7 @@ const LoginPage: Component = () => {
           <RegisterForm isLoading={store.loading} />
         </Show>
         <Show when={!register()}>
-          <LoginForm isLoading={store.loading} />
+          <LoginForm isLoading={store.loading} onClickRegister={() => setRegister(true)} />
         </Show>
         <Show when={loginError()}>
           <Divider />
@@ -73,27 +74,13 @@ const LoginPage: Component = () => {
           .
         </div>
       </Show>
-
-      <div class="mt-8 w-full gap-4">
-        <p class="flex justify-center text-xl text-[var(--hl-400)]">Why register?</p>
-        <div class="flex flex-col items-center">
-          <p>
-            You don't need to register to use Agnaistic. You can use it anonymously and no data will
-            be stored on any servers.
-          </p>
-          <p>
-            If you choose to register your data will be stored and accessible on any devices you
-            login with.
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
 
 export default LoginPage
 
-type FormProps = { isLoading: boolean }
+type FormProps = { isLoading: boolean; onClickRegister?: () => void }
 
 const RegisterForm: Component<FormProps> = (props) => {
   const navigate = useNavigate()
@@ -171,29 +158,52 @@ const LoginForm: Component<FormProps> = (props) => {
         return
       }
 
-      navigate('/dashboard')
+      userStore.loginModal(false)
+
+      // navigate('/dashboard')
+      window.location.reload()
     })
   }
 
   return (
-    <form onSubmit={login} class="flex flex-col gap-6">
-      <div class="flex flex-col gap-2">
-        <TextInput
-          fieldName="username"
-          placeholder="Username"
-          required
-          value={loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''}
-        />
-        <TextInput fieldName="password" placeholder="Password" type="password" required />
+    <FormContainer>
+      <div>
+        <h1 class="my-2 text-xl">User Log In</h1>
+        <h2 class="text-xl text-cosplay-blue-200">Log In</h2>
       </div>
+      <form onSubmit={login} class="my-2 flex flex-col gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="username">Username</label>
+          <TextInput
+            fieldName="username"
+            placeholder="Enter Username"
+            required
+            value={
+              loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''
+            }
+          />
+          <label for="password">Password</label>
+          <TextInput fieldName="password" placeholder="Enter Password" type="password" required />
+        </div>
 
-      <Show when={error()}>
-        <TitleCard type="rose">{error()}</TitleCard>
-      </Show>
+        <Show when={error()}>
+          <TitleCard type="rose">{error()}</TitleCard>
+        </Show>
 
-      <Button type="submit" disabled={props.isLoading || !!error()}>
-        {props.isLoading ? 'Logging in...' : 'Login'}
-      </Button>
-    </form>
+        <Button
+          class="rounded bg-gradient-to-r from-cosplay-blue-200 to-cosplay-purple px-4 py-2 font-semibold text-white"
+          type="submit"
+          disabled={props.isLoading || !!error()}
+        >
+          {props.isLoading ? 'Logging in...' : 'Login'}
+        </Button>
+      </form>
+      <div>
+        Don't have an account?{' '}
+        <Button size="pill" onClick={props.onClickRegister}>
+          Sign Up
+        </Button>
+      </div>
+    </FormContainer>
   )
 }

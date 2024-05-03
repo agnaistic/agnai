@@ -131,7 +131,7 @@ export const characterStore = createStore<CharacterState>(
     set({
       characters: {
         map: toMap(chars),
-        list: chars.filter((ch) => ch.userId === userId),
+        list: chars, //.filter((ch) => ch.userId === userId),
         loaded: Date.now(),
       },
       impersonating,

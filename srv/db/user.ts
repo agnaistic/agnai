@@ -120,6 +120,8 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
 
   await db('user').insertOne(user)
 
+  // No default characters -- AIFans
+  /*
   for (const char of Object.values(defaultChars)) {
     const nextChar: AppSchema.Character = {
       _id: v4(),
@@ -133,6 +135,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     }
     await db('character').insertOne(nextChar)
   }
+  */
 
   const profile: AppSchema.Profile = {
     _id: v4(),

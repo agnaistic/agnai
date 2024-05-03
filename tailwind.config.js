@@ -2,7 +2,15 @@
 module.exports = {
   content: ['./web/**/*.{html,tsx}'],
   theme: {
+    fontFamily: {
+      display: 'ClashDisplay-Regular, sans-serif',
+      displayMedium: 'ClashDisplay-Medium, sans-serif',
+      displayBold: 'ClashDisplay-Semibold, sans-serif',
+    },
     extend: {
+      backgroundImage: {
+        'model-backdrop': "url('/web/asset/aifans/model-backdrop.png')",
+      },
       screens: {
         xs: '768px',
         sm: '1024px',
@@ -22,6 +30,20 @@ module.exports = {
           800: '#60286e',
           900: '#401c4c',
         },
+        cosplay: {
+          blue: {
+            100: '#10E0F9',
+            200: '#4A72FF',
+          },
+          pink: {
+            100: '#FF23FF',
+            200: '#FF00B8',
+          },
+          purple: '#B14DFF',
+        },
+      },
+      fontSize: {
+        xxs: '0.625rem',
       },
     },
   },

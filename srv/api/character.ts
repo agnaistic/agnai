@@ -1,9 +1,12 @@
 import { Router } from 'express'
+import fs from 'fs'
+import mime from 'mime'
+
 import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
-import { entityUpload, handleForm } from './upload'
+import { entityUpload, entityUploadBase64, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterUpdate } from '../db/characters'
@@ -129,12 +132,22 @@ const createCharacter = handle(async (req) => {
     char.avatar = filename
   }
 
+  if (body.avatar) {
+    const avatarFilename = await entityUploadBase64('char', char._id, body.avatar)
+
+    if (avatarFilename) {
+      await store.characters.updateCharacter(char._id, req.userId, { avatar: avatarFilename })
+      char.avatar = filename
+    }
+  }
+
   return char
 })
 
 const getCharacters = handle(async ({ userId }) => {
-  const chars = await store.characters.getCharacters(userId!)
-  return { characters: chars }
+  // const chars = await store.characters.getCharacters(userId!)
+  const chars = await store.characters.getAllCharacters()
+  return { characters: chars, total: chars.length }
 })
 
 const editCharacter = handle(async (req) => {
@@ -284,9 +297,9 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
 })
 
 router.post('/image', createImage)
+router.get('/', getCharacters)
 router.use(loggedIn)
 router.post('/', createCharacter)
-router.get('/', getCharacters)
 router.post('/:id', editCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)

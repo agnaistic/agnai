@@ -247,7 +247,8 @@ export async function getAllChats() {
     chats.push(chat)
   }
 
-  return localApi.result({ chats, characters })
+  // return localApi.result({ chats, characters })
+  return localApi.result({ chats })
 }
 
 export async function getBotChats(characterId: string) {

@@ -89,8 +89,29 @@ export async function getCharacter(
   userId: string,
   id: string
 ): Promise<AppSchema.Character | undefined> {
-  const char = await db('character').findOne({ _id: id, userId })
+  const char = await db('character').findOne({ _id: id })
   return char || undefined
+}
+
+export async function getAllCharacters() {
+  const list = await db('character')
+    .find()
+    .project({
+      _id: 1,
+      userId: 1,
+      name: 1,
+      avatar: 1,
+      description: 1,
+      favorite: 1,
+      tags: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      voice: 1,
+      voiceDisabled: 1,
+    })
+    .toArray()
+
+  return list
 }
 
 export async function getCharacters(userId: string) {

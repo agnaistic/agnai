@@ -34,10 +34,10 @@ async function getCharacterDetail(charId: string) {
 }
 
 export async function getCharacters() {
-  if (isLoggedIn()) {
-    const res = await api.get('/character')
-    return res
-  }
+  // if (isLoggedIn()) {
+  const res = await api.get('/character')
+  return res
+  // }
 
   const characters = await localApi.loadItem('characters')
   const result = characters.map((ch) => ({

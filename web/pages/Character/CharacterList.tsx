@@ -52,8 +52,10 @@ const CharacterList: Component = () => {
   const user = userStore()
   const state = chatStore((s) => {
     return {
-      allChars: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
-      list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
+      // allChars: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
+      // list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
+      allChars: s.allChars.list,
+      list: s.allChars.list.filter((ch) => !ch.favorite),
 
       loading: s.allLoading,
       loaded: s.loaded,
@@ -76,7 +78,7 @@ const CharacterList: Component = () => {
     const dir = sortDirection()
     const sorted = state.list
       .slice()
-      .filter((ch) => ch.userId === user.user?._id)
+      // .filter((ch) => ch.userId === user.user?._id)
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))

@@ -6,6 +6,7 @@ import { api } from '../api'
 import { toastStore } from '../toasts'
 import { storage, toMap } from '/web/shared/util'
 import { resolveTreePath } from '/common/chat'
+import { charsApi } from './chars'
 
 type StorageKey = keyof typeof KEYS
 
@@ -71,14 +72,7 @@ type LocalStorage = {
 const localStore = new Map<keyof LocalStorage, any>()
 
 const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
-  characters: Object.values(defaultChars).map((char) => ({
-    _id: v4(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    kind: 'character',
-    userId: 'anon',
-    ...char,
-  })),
+  characters: [], // no default chars -- AIFans
   chats: [],
   presets: [],
   config: {
@@ -182,7 +176,7 @@ async function getGuestInitEntities() {
   const presets = await localApi.loadItem('presets', true)
   const books = await localApi.loadItem('memory', true)
   const scenario = await localApi.loadItem('scenario', true)
-  const characters = await localApi.loadItem('characters', true)
+  let characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
 
   let fixed = false
@@ -205,6 +199,12 @@ async function getGuestInitEntities() {
 
   const trees = await localApi.loadItem('trees', true)
   const templates = await localApi.loadItem('templates', true)
+
+  const res = await charsApi.getCharacters()
+
+  if (res?.result?.characters) {
+    characters = res.result.characters
+  }
 
   user._id = 'anon'
 

@@ -1,0 +1,25 @@
+@import '/web/asset/mixins.scss';
+
+.home-cards {
+  display: grid;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  @apply gap-4;
+
+  * > ul {
+    @apply ml-6;
+    list-style-type: disc;
+  }
+
+  * > ol {
+    list-style-type: decimal;
+  }
+
+  // @include mobile {
+  //   grid-template-columns: repeat(1, 1fr);
+  // }
+
+  // @include tablet {
+  //   grid-template-columns: repeat(2, 1fr);
+  // }
+}

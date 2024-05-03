@@ -45,6 +45,7 @@ export type UserState = {
   }
   oaiUsageLoading: boolean
   hordeStatsLoading: boolean
+  showLogin: boolean
   showProfile: boolean
   tiers: AppSchema.SubscriptionTier[]
   billingLoading: boolean
@@ -110,6 +111,9 @@ export const userStore = createStore<UserState>(
   return {
     modal({ showProfile }, show?: boolean) {
       return { showProfile: show ?? !showProfile }
+    },
+    loginModal({ showLogin }, show?: boolean) {
+      return { showLogin: show ?? !showLogin }
     },
     async revealApiKey(_, cb: (key: string) => void) {
       const res = await api.post('/user/config/reveal-key')
@@ -669,6 +673,7 @@ function init(): UserState {
       hordeStatsLoading: false,
       metadata: {},
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
+      showLogin: false,
       showProfile: false,
       tiers: [],
       billingLoading: false,
@@ -685,6 +690,7 @@ function init(): UserState {
     hordeStatsLoading: false,
     metadata: {},
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
+    showLogin: false,
     showProfile: false,
     tiers: [],
     billingLoading: false,

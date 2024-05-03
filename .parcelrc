@@ -3,5 +3,9 @@
   "resolvers": [
     "@parcel/resolver-glob",
     "..."
+  ],
+  "reporters": [
+    "...",
+    "parcel-reporter-static-files-copy"
   ]
 }

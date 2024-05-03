@@ -12,7 +12,8 @@ import ScenarioRoutes from './pages/Scenario'
 import { settingStore } from './store/settings'
 import { userStore } from './store/user'
 import LoginPage from './pages/Login'
-import HomePage from './pages/Home'
+import Home from './pages/Home'
+import HomePage from './pages/HomePage'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
@@ -22,14 +23,14 @@ import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
-import ChangeLog from './pages/Home/ChangeLog'
+import ChangeLog from './pages/HomePage/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getMaxChatWidth } from './shared/util'
-import FAQ from './pages/Home/FAQ'
+import FAQ from './pages/HomePage/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
 import { ContextProvider } from './store/context'
@@ -43,6 +44,8 @@ import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
 import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
+import LoginModal from './pages/AiFans/LoginModal'
+import ModelPage from './pages/AiFans/ModelPage'
 
 const App: Component = () => {
   const state = userStore()
@@ -51,6 +54,13 @@ const App: Component = () => {
   return (
     <Router>
       <Routes>
+        <Route path="" component={AiFansLayout}>
+          <Route path="/" component={Home} />
+          <Route path="/model/:id" component={ModelPage} />
+          <Show when={cfg.config.canAuth}>
+            <Route path={['/login', '/login/remember']} component={LoginPage} />
+          </Show>
+        </Route>
         <Route path="" component={Layout}>
           <CharacterRoutes />
           <ScenarioRoutes />
@@ -67,7 +77,7 @@ const App: Component = () => {
             <Route path="/saga/:id" component={SagaDetail} />
           </Show>
           <Route path="/chat/:id" component={ChatDetail} />
-          <Route path={['/info', '/']} component={HomePage} />
+          <Route path={['/info']} component={HomePage} />
           <Route path="/changelog" component={ChangeLog} />
           <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
           <Route
@@ -134,15 +144,99 @@ const App: Component = () => {
               />
             </Show>
           </Show>
-          <Show when={cfg.config.canAuth}>
-            <Route path={['/login', '/login/remember']} component={LoginPage} />
-          </Show>
+
           <Route path="/faq" component={FAQ} />
           <Route path="/builder" component={lazy(() => import('./shared/Avatar/Builder'))} />
           <Route path="*" component={HomePage} />
         </Route>
       </Routes>
     </Router>
+  )
+}
+
+const AiFansLayout: Component = (props: any) => {
+  const state = userStore()
+  const cfg = settingStore()
+  const location = useLocation()
+  const pane = usePaneManager()
+
+  const maxW = createMemo((): string => {
+    if (pane.showing()) return 'max-w-full'
+
+    return getMaxChatWidth(state.ui.chatWidth)
+  })
+  const rootModals = rootModalStore()
+
+  const reload = () => {
+    settingStore.init()
+  }
+
+  onMount(() => {
+    settingStore.init()
+  })
+
+  const isChat = createMemo(() => {
+    return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
+  })
+
+  const bg = createMemo(() => {
+    const styles: JSX.CSSProperties = {
+      'background-image':
+        state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
+      'background-repeat': 'no-repeat',
+      'background-size': 'cover',
+      'background-position': 'center',
+      'background-color': isChat() ? undefined : '',
+    }
+    return styles
+  })
+
+  return (
+    <ContextProvider>
+      <style>{css}</style>
+      <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between bg-[#0C0F12]">
+        <div class="flex w-full grow flex-row overflow-y-hidden">
+          <main class="w-full overflow-y-auto" data-background style={bg()}>
+            <div>
+              <Show when={cfg.init}>
+                <Outlet />
+                <Maintenance />
+              </Show>
+              <Show when={!cfg.init && cfg.initLoading}>
+                <div class="flex h-[80vh] items-center justify-center">
+                  <Loading />
+                </div>
+              </Show>
+
+              <Show when={!cfg.init && !cfg.initLoading}>
+                <div class="flex flex-col items-center gap-2">
+                  <div>CosplayFans failed to load</div>
+                  <div>
+                    <Button onClick={reload}>Try Again</Button>
+                  </div>
+                </div>
+              </Show>
+            </div>
+          </main>
+        </div>
+      </div>
+      <Toasts />
+      <ImpersonateModal
+        show={cfg.showImpersonate}
+        close={() => settingStore.toggleImpersonate(false)}
+      />
+      <InfoModal />
+      <LoginModal />
+      <ProfileModal />
+      <For each={rootModals.modals}>{(modal) => modal.element}</For>
+      <ImageModal />
+
+      <div
+        class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
+        classList={{ hidden: !cfg.overlay }}
+        onClick={() => settingStore.toggleOverlay(false)}
+      ></div>
+    </ContextProvider>
   )
 }
 
