@@ -73,6 +73,7 @@ type MessageProps = {
 const anonNames = new Map<string, number>()
 
 let anonId = 0
+
 function getAnonName(entityId: string) {
   if (!anonNames.has(entityId)) {
     anonNames.set(entityId, ++anonId)
@@ -398,7 +399,7 @@ const Message: Component<MessageProps> = (props) => {
               </Switch>
             </div>
           </div>
-          {props.last && props.children}
+          <Show when={!edit()}>{props.last && props.children}</Show>
         </div>
       </div>
     </div>
