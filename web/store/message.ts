@@ -234,6 +234,34 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
+    async *discardSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
+      const msg = msgs.find((m) => m._id === msgId)
+
+      if (!msg) return toastStore.error(`Cannot find message`)
+      if (!msg.retries?.length) {
+        return toastStore.error(`Message does not contain any swipes`)
+      }
+
+      const retries = msg.retries.slice()
+
+      if (!retries[position - 1]) {
+        return toastStore.error(`Cannot discard swipe: Swipe not found`)
+      }
+
+      // Remove the message at the specified position from the retries array
+      retries.splice(position - 1, 1)
+
+      const res = await msgsApi.swapMessage(msg, msg.msg, retries)
+      if (res.error) {
+        toastStore.error(`Failed to discard message: ${res.error}`)
+      }
+      if (res.result) {
+        const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, retries } : m))
+        yield { msgs: nextMsgs }
+        onSuccess?.()
+      }
+    },
+
     async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)
