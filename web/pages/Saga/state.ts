@@ -622,11 +622,9 @@ function exampleTemplate(): SagaTemplate {
       `,
 
     history: neat`
-      <user>
-      [input]</user>
+      <user>{{input}}</user>
 
-      <bot>
-      [response]</bot>
+      <bot>{{response}}</bot>
     `,
     loop: neat`
     "detective who-dunnit" RPG

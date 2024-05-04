@@ -17,7 +17,7 @@ const Tabs: Component<{
   return (
     <div
       class={
-        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm' +
+        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm ' +
           props.class || ''
       }
     >
@@ -25,10 +25,12 @@ const Tabs: Component<{
         {(tab, i) => (
           <div
             onClick={() => props.select(i())}
-            class={`flex min-w-max cursor-pointer items-center justify-center border-b-2 py-2 ${border(
-              props.selected() === i()
-            )} rounded-t-md px-4`}
+            class={`flex min-w-max cursor-pointer items-center justify-center rounded-t-md border-b-2 px-4 py-2`}
             classList={{
+              'bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]':
+                props.selected() === i(),
+              'bg-900 hover:bg-[var(--bg-800)] border-[var(--bg-700)] hover:border-[var(--bg-500)]':
+                props.selected() !== i(),
               'border-l-[1px]': props.selected() !== i(),
               'border-t-[1px]': props.selected() !== i(),
               'border-r-[1px]': props.selected() !== i(),
@@ -43,11 +45,6 @@ const Tabs: Component<{
 }
 
 export default Tabs
-
-const border = (selected: boolean) =>
-  selected
-    ? `bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]`
-    : `bg-900 hover:bg-[var(--bg-800)] border-[var(--bg-700)] hover:border-[var(--bg-500)]`
 
 export function useTabs(tabs: string[], initial: number = 0): TabHook {
   const [tab, setTabs] = createSignal(initial)
