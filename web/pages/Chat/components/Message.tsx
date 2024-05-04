@@ -427,7 +427,7 @@ const MessageOptions: Component<{
   onRemove: () => void
 }> = (props) => {
   return (
-    <div class="flex items-center gap-3 text-sm">
+    <div class="mr-3 flex items-center gap-4 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div
           onClick={() => !props.partial && chatStore.computePrompt(props.msg, true)}
@@ -683,86 +683,3 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
     class: 'not-streaming',
   }
 }
-
-// function toMessageContext=
-
-// function splitMessage(incoming: AppSchema.ChatMessage): SplitMessage[] {
-// const charName =
-//   (incoming.characterId ? ctx.allBots[incoming.characterId]?.name : ctx.char?.name) || ''
-
-// const CHARS = [`{{char}}:`]
-// if (charName) CHARS.push(`${charName}:`)
-
-// const USERS = [`${ctx.handle}:`, `{{user}}:`]
-
-// const msg = { ...incoming }
-// if (msg.msg.startsWith(`${charName}:`)) {
-//   msg.msg = msg.msg.replace(`${charName}:`, '').trim()
-// } else if (msg.msg.startsWith(`${charName} :`)) {
-//   msg.msg = msg.msg.replace(`${charName} :`, '').trim()
-// }
-
-// const next: AppSchema.ChatMessage[] = []
-
-// const splits = msg.msg.split('\n')
-
-// for (const split of splits) {
-//   const trim = split.trim()
-
-//   let newMsg: AppSchema.ChatMessage | undefined
-
-//   // for (const CHAR of ctx.activeBots) {
-//   //   if (trim.startsWith(CHAR.name + ':')) {
-//   //     newMsg = {
-//   //       ...msg,
-//   //       msg: trim.slice(CHAR.name.length + 1).trim(),
-//   //       characterId: CHAR._id,
-//   //       state: CHAR._id,
-//   //     }
-//   //   }
-//   // }
-
-//   for (const USER of USERS) {
-//     if (newMsg) break
-//     if (trim.startsWith(USER)) {
-//       newMsg = {
-//         ...msg,
-//         msg: trim.replace(USER, ''),
-//         userId: ctx.profile?.userId || '',
-//         characterId: ctx.impersonate?._id,
-//         state: 'user',
-//       }
-//       break
-//     }
-//   }
-
-//   if (!newMsg) {
-//     newMsg = {
-//       ...msg,
-//       msg: trim,
-//       characterId: incoming.characterId,
-//       userId: incoming.userId,
-//       state: incoming.characterId,
-//     }
-//   }
-
-//   if (next.length) {
-//     const lastMsg = next.slice(-1)[0]
-//     if (lastMsg.state === newMsg.state) {
-//       lastMsg.msg += ` ${trim}`
-//       continue
-//     }
-//   }
-
-//   if (newMsg?.msg.length) {
-//     const suffix = next.length === 0 ? '' : `-${next.length}`
-//     newMsg._id = `${newMsg._id}${suffix}`
-//     next.push(newMsg)
-//   }
-//   continue
-// }
-
-// if (!next.length || next.length === 1) return [msg]
-// const newSplits = next.map((next) => ({ ...next, split: true }))
-// return newSplits
-// }

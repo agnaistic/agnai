@@ -216,7 +216,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
   createEffect(async () => {
     const nextImage = cache.state.image
-    console.log('imgupdated', !!nextImage)
 
     if (nextImage) {
       const file = await imageApi.dataURLtoFile(nextImage)
