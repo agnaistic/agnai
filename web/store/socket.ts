@@ -50,7 +50,7 @@ export function subscribe<T extends string, U extends Validator>(
   listeners.set(type, handlers)
 }
 
-const squelched = new Set(['profile-handle-changed', 'message-partial', 'guidance-partial'])
+const squelched = new Set(['profile-handle-changed', 'message-partial', 'guidance-partial', 'ping'])
 
 function onMessage(msg: MessageEvent<any>) {
   if (typeof msg.data !== 'string') return
@@ -102,6 +102,7 @@ function onMessage(msg: MessageEvent<any>) {
 
 function onConnected() {
   RETRY_TIME = 0
+  publish({ type: 'version', version: 1 })
   const token = getAuth()
   if (!token) return
   publish({ type: 'login', token })
@@ -125,4 +126,8 @@ function parse(blob: string) {
 
 subscribe('connected', { uid: 'string' }, (body) => {
   setSocketId(body.uid)
+})
+
+subscribe('ping', {}, () => {
+  publish({ type: 'pong' })
 })

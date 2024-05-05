@@ -18,6 +18,58 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt } = opts
 
+  // Agnaistic
+  if (gen.service !== 'kobold') {
+    const body: any = {
+      prompt,
+      context_limit: gen.maxContextLength,
+      max_new_tokens: gen.maxTokens,
+      do_sample: gen.doSample ?? true,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      typical_p: gen.typicalP || 1,
+      repetition_penalty: gen.repetitionPenalty,
+      encoder_repetition_penalty: gen.encoderRepitionPenalty,
+      repetition_penalty_range: gen.repetitionPenaltyRange,
+      frequency_penalty: gen.frequencyPenalty,
+      presence_penalty: gen.presencePenalty,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      top_a: gen.topA,
+      min_length: 0,
+      no_repeat_ngram_size: 0,
+      num_beams: gen.numBeams || 1,
+      penalty_alpha: gen.penaltyAlpha,
+      length_penalty: 1,
+      early_stopping: gen.earlyStopping || false,
+      seed: -1,
+      add_bos_token: gen.addBosToken || false,
+      truncation_length: gen.maxContextLength || 2048,
+      ban_eos_token: gen.banEosToken || false,
+      skip_special_tokens: gen.skipSpecialTokens ?? true,
+      stopping_strings: getStoppingStrings(opts, stops),
+      dynamic_temperature: gen.dynatemp_range ? true : false,
+      smoothing_factor: gen.smoothingFactor,
+      tfs: gen.tailFreeSampling,
+      mirostat_mode: gen.mirostatTau ? 2 : 0,
+      mirostat_tau: gen.mirostatTau,
+      mirostat_eta: gen.mirostatLR,
+      guidance: opts.guidance,
+      placeholders: opts.placeholders,
+      lists: opts.lists,
+      previous: opts.previous,
+    }
+
+    if (gen.dynatemp_range) {
+      body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_range = gen.dynatemp_range
+      body.temp_exponent = gen.dynatemp_exponent
+    }
+
+    return body
+  }
+
   if (gen.thirdPartyFormat === 'mistral') {
     const body = {
       messages: [{ role: 'user', content: prompt }],
@@ -65,7 +117,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
+  if (gen.thirdPartyFormat === 'llamacpp') {
     const body = {
       prompt,
       temperature: gen.temp,
@@ -90,7 +142,45 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'aphrodite') {
+  if (gen.thirdPartyFormat === 'ooba') {
+    const body: any = {
+      prompt,
+      temperature: gen.temp,
+      min_p: gen.minP,
+      top_k: gen.topK,
+      top_p: gen.topP,
+      top_a: gen.topA,
+      stop: getStoppingStrings(opts, stops),
+      stream: true,
+      frequency_penality: gen.frequencyPenalty,
+      presence_penalty: gen.presencePenalty,
+      repetition_penalty: gen.repetitionPenalty,
+      repetition_penalty_range: gen.repetitionPenaltyRange,
+      do_sample: gen.doSample,
+      penalty_alpha: gen.penaltyAlpha,
+      mirostat_mode: gen.mirostatTau ? 2 : 0,
+      mirostat_tau: gen.mirostatTau,
+      mirostat_eta: gen.mirostatLR,
+      typical_p: gen.typicalP,
+      tfs_z: gen.tailFreeSampling,
+      max_tokens: opts.gen.maxTokens,
+      skip_special_tokens: gen.skipSpecialTokens,
+      smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
+      tfs: gen.tailFreeSampling,
+    }
+
+    if (gen.dynatemp_range) {
+      body.dynamic_temperature = true
+      body.dynatemp_low = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.dynatemp_high = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_exponent = gen.dynatemp_exponent
+    }
+
+    return body
+  }
+
+  if (gen.thirdPartyFormat === 'aphrodite') {
     const body: any = {
       model: gen.thirdPartyModel || '',
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
@@ -133,7 +223,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'exllamav2') {
+  if (gen.thirdPartyFormat === 'exllamav2') {
     const body = {
       request_id: opts.requestId,
       action: 'infer',
@@ -151,7 +241,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'koboldcpp') {
+  if (gen.thirdPartyFormat === 'koboldcpp') {
     const body = {
       n: 1,
       max_context_length: gen.maxContextLength,
@@ -175,53 +265,4 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     }
     return body
   }
-
-  const body: any = {
-    prompt,
-    context_limit: gen.maxContextLength,
-    max_new_tokens: gen.maxTokens,
-    do_sample: gen.doSample ?? true,
-    temperature: gen.temp,
-    top_p: gen.topP,
-    typical_p: gen.typicalP || 1,
-    repetition_penalty: gen.repetitionPenalty,
-    encoder_repetition_penalty: gen.encoderRepitionPenalty,
-    repetition_penalty_range: gen.repetitionPenaltyRange,
-    frequency_penalty: gen.frequencyPenalty,
-    presence_penalty: gen.presencePenalty,
-    top_k: gen.topK,
-    min_p: gen.minP,
-    top_a: gen.topA,
-    min_length: 0,
-    no_repeat_ngram_size: 0,
-    num_beams: gen.numBeams || 1,
-    penalty_alpha: gen.penaltyAlpha,
-    length_penalty: 1,
-    early_stopping: gen.earlyStopping || false,
-    seed: -1,
-    add_bos_token: gen.addBosToken || false,
-    truncation_length: gen.maxContextLength || 2048,
-    ban_eos_token: gen.banEosToken || false,
-    skip_special_tokens: gen.skipSpecialTokens ?? true,
-    stopping_strings: getStoppingStrings(opts, stops),
-    dynamic_temperature: gen.dynatemp_range ? true : false,
-    smoothing_factor: gen.smoothingFactor,
-    tfs: gen.tailFreeSampling,
-    mirostat_mode: gen.mirostatTau ? 2 : 0,
-    mirostat_tau: gen.mirostatTau,
-    mirostat_eta: gen.mirostatLR,
-    guidance: opts.guidance,
-    placeholders: opts.placeholders,
-    lists: opts.lists,
-    previous: opts.previous,
-  }
-
-  if (gen.dynatemp_range) {
-    body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
-    body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
-    body.dynatemp_range = gen.dynatemp_range
-    body.temp_exponent = gen.dynatemp_exponent
-  }
-
-  return body
 }

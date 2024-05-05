@@ -9,6 +9,8 @@ const userSockets = new Map<string, AppSocket[]>()
 setInterval(() => {
   for (const cli of allSockets.values()) {
     const socket = cli as AppSocket
+    if (cli.appVersion >= 1 === false) continue
+
     if (socket.isAlive === false) {
       socket.misses++
 
@@ -18,7 +20,7 @@ setInterval(() => {
     }
 
     socket.isAlive = false
-    socket.ping()
+    socket.dispatch({ type: 'ping' })
   }
 }, PING_INTERVAL_MS)
 
@@ -27,6 +29,17 @@ type Handler = (client: AppSocket, data: any) => void
 const handlers: Record<string, Handler> = {
   login,
   logout,
+  version: (client, data) => {
+    if (isNaN(data.version)) return
+    client.appVersion = data.version
+  },
+  pong: (client) => {
+    client.misses = 0
+    client.isAlive = true
+  },
+  ping: (client) => {
+    client.dispatch({ type: 'pong' })
+  },
 }
 
 export function getAllCount() {
