@@ -11,7 +11,6 @@ import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
-import { getTextgenCompletion, handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
 import { getThirdPartyPayload } from './payloads'
@@ -24,6 +23,7 @@ import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { parseStops } from '/common/util'
+import { getTextgenCompletion } from './dispatch'
 
 export async function getSubscriptionPreset(
   user: AppSchema.User,
@@ -198,7 +198,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     if (preset.service === 'kobold' && preset.thirdPartyFormat === 'llamacpp') {
       opts.gen.service = 'kobold'
-      handler = handleOoba
+      handler = handleKobold
     }
 
     if (preset.service === 'goose') {
