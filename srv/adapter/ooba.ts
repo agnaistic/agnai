@@ -21,8 +21,8 @@ export const handleOoba: ModelAdapter = async function* (opts) {
     opts.gen.service === 'kobold' && opts.gen.thirdPartyFormat === 'llamacpp'
       ? llamaStream(baseUrl, body)
       : gen.streamResponse
-      ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
-      : getTextgenCompletion('Textgen', `${baseUrl}/api/v1/generate`, body, {})
+      ? await websocketStream({ url: baseUrl + '/v1/completions', body })
+      : getTextgenCompletion('Textgen', `${baseUrl}/v1/completions`, body, {})
 
   let accumulated = ''
   let result = ''

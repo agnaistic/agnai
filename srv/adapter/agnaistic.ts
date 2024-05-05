@@ -363,7 +363,7 @@ export async function updateRegisteredSubs() {
 export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   novel: handleNovel,
   kobold: handleKobold,
-  ooba: handleOoba,
+  ooba: handleKobold,
   horde: handleHorde,
   openai: handleOAI,
   scale: handleScale,
