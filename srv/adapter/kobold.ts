@@ -4,7 +4,7 @@ import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { AdapterProps, ModelAdapter } from './type'
 import { requestStream, websocketStream } from './stream'
-import { llamaStream } from './ooba'
+import { llamaStream } from './dispatch'
 import { getStoppingStrings } from './prompt'
 import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
@@ -37,6 +37,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'ooba' ||
     opts.gen.thirdPartyFormat === 'mistral' ||
     opts.gen.thirdPartyFormat === 'tabby' ||
     opts.gen.thirdPartyFormat === 'aphrodite' ||
@@ -131,6 +132,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'llamacpp':
       return llamaStream(baseURL, body)
 
+    case 'ooba':
     case 'aphrodite':
     case 'tabby':
       const url = `${baseURL}/v1/completions`
@@ -292,8 +294,6 @@ const streamCompletion = async function* (
   })
 
   const tokens = []
-  const start = Date.now()
-  let first = 0
 
   const responses: Record<number, string> = {}
 
@@ -320,10 +320,6 @@ const streamCompletion = async function* (
       const res = data.choices ? data.choices[0] : data
       const token = 'text' in res ? res.text : res.token
 
-      if (!first) {
-        first = Date.now()
-      }
-
       /** Handle batch generations */
       if (res.index !== undefined) {
         const index = res.index
@@ -337,6 +333,7 @@ const streamCompletion = async function* (
           tokens.push(token)
           yield { token: token }
         }
+
         continue
       }
 
@@ -347,20 +344,6 @@ const streamCompletion = async function* (
     yield { error: `${format} streaming request failed: ${err.message || err}` }
     return
   }
-
-  const ttfb = (Date.now() - first) / 1000
-  const total = (Date.now() - start) / 1000
-  const tps = tokens.length / ttfb
-  const total_tps = tokens.length / total
-  log.info(
-    {
-      ttfb: ttfb.toFixed(1),
-      total: total.toFixed(1),
-      tps: tps.toFixed(1),
-      total_tps: total_tps.toFixed(1),
-    },
-    'Performance'
-  )
 
   const gens: string[] = []
   for (const [id, text] of Object.entries(responses)) {

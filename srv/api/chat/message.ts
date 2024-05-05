@@ -327,7 +327,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   await releaseLock(chatId)
-  if (error || !generated.trim()) {
+  if (error) {
     return
   }
 
