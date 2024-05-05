@@ -49,6 +49,7 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
           name: char.name,
           first_mes: char.greeting,
           scenario: char.scenario,
+
           description: formatCharacter(char.name, char.persona),
           personality: '',
           mes_example: char.sampleChat,
@@ -70,6 +71,7 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
             agnai: {
               voice: char.voice,
               persona: char.persona,
+              appearance: char.appearance,
             },
           },
         },

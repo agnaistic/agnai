@@ -1,6 +1,7 @@
 import {
   Component,
   For,
+  Index,
   JSX,
   Match,
   Show,
@@ -14,37 +15,44 @@ import { ModeDetail } from '/web/shared/Mode/Detail'
 import { SagaInput } from './Input'
 import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
-import { formatResponse, getPlaceholderNames, sagaStore } from './state'
+import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import { Cog, HelpCircle, MoreHorizontal, Pencil, RefreshCw, Sliders, Trash } from 'lucide-solid'
-import { createDebounce } from '/web/shared/util'
+import {
+  Cog,
+  HelpCircle,
+  LoaderCircle,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Sliders,
+  Trash,
+} from 'lucide-solid'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'
 import { DropMenu } from '/web/shared/DropMenu'
 import { createStore } from 'solid-js/store'
 import { Pill } from '/web/shared/Card'
-import { imageApi } from '/web/store/data/image'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
-import { toastStore } from '/web/store'
+import { toastStore, userStore } from '/web/store'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
+  const user = userStore()
+
   const params = useParams()
   const [search, setSearch] = useSearchParams()
 
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
   const [stage, setStage] = createSignal<'ready' | 'rendering' | 'done'>('ready')
-  const [lastCaption, setCaption] = createSignal('')
-  const [image, setImage] = createSignal<string>()
 
   onMount(() => {
-    sagaStore.init(params.id, generateImage)
+    sagaStore.init(params.id)
     if (params.id === 'new' && !search.pane) {
       setSearch({ pane: 'prompt' })
     }
@@ -58,45 +66,48 @@ export const SagaDetail: Component = (props) => {
     }
   })
 
-  const [generateImage] = createDebounce((auto?: boolean) => {
-    if (!state.template.imagesEnabled || !state.template.imagePrompt) return
-    if (stage() === 'rendering') return
-
-    const last = state.state.responses.slice(-1)[0] || state.state.init
-    if (!last) return
-
-    const placeholders = getPlaceholderNames(state.template.imagePrompt)
-    for (const { key } of placeholders) {
-      if (!last[key] && !state.state.init?.[key]) {
-        return
-      }
-    }
-
-    const caption = formatResponse(state.template.imagePrompt, state.state, last)
-
-    if (auto && lastCaption() === caption) return
-
-    setCaption(caption)
-    setStage('rendering')
-    imageApi.generateImageAsync(caption, { noAffix: true }).then((image) => {
-      setStage('done')
-      setImage(image.data)
-    })
-  }, 100)
-
   const headerImage = createMemo(() => {
     if (!state.template.imagesEnabled) return null
-    const src = image()
-    if (!src) return null
+    const src = state.image.data
+    const stage = state.image.state
+    if (!src) {
+      if (stage !== 'generating') return null
 
-    return <img src={src} class="h-full" />
+      return (
+        <div class="relative flex h-full w-full justify-center">
+          {/* <img src={src} class="h-full" /> */}
+          <div class="bg-700 t h-full w-3/4 bg-gradient-to-r from-[var(--bg-800)] via-slate-700 to-[var(--bg-800)]">
+            &nbsp;
+          </div>
+
+          <div
+            class="spinner absolute bottom-1/2 left-1/2"
+            classList={{ hidden: stage !== 'generating' }}
+          >
+            <LoaderCircle />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div class="relative h-full">
+        <img src={src} class="h-full" />
+
+        <div
+          class="spinner absolute bottom-1/2 left-1/2"
+          classList={{ hidden: stage !== 'generating' }}
+        >
+          <LoaderCircle />
+        </div>
+      </div>
+    )
   })
 
   const sendMessage = (text: string, done?: () => void) => {
     sagaStore.send(text, (err) => {
       if (err) return
       done?.()
-      generateImage(true)
     })
   }
 
@@ -105,11 +116,13 @@ export const SagaDetail: Component = (props) => {
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        footer={<Footer load={() => setLoad(true)} regenImage={generateImage} send={sendMessage} />}
+        footer={
+          <Footer load={() => setLoad(true)} send={sendMessage} rendering={state.image.loading} />
+        }
         showPane={pane()}
         pane={<SidePane show={setPane} />}
         split={headerImage()}
-        splitHeight={30}
+        splitHeight={user.ui.viewHeight ?? 30}
       >
         <div class="flex flex-col gap-2">
           <Show when={!!state.state.init}>
@@ -121,27 +134,27 @@ export const SagaDetail: Component = (props) => {
             />
           </Show>
 
-          <For each={state.state.responses}>
+          <Index each={state.state.responses}>
             {(res, i) => (
               <>
                 <Response
                   template={state.template}
                   type="input"
-                  msg={res}
+                  msg={res()}
                   session={state.state}
-                  index={i()}
+                  index={i}
                 />
                 <Response
                   template={state.template}
                   type="response"
-                  msg={res}
+                  msg={res()}
                   session={state.state}
                   siblings={state.state.responses.length}
-                  index={i()}
+                  index={i}
                 />
               </>
             )}
-          </For>
+          </Index>
           <Show when={state.busy}>
             <Loading type="flashing" />
           </Show>
@@ -192,8 +205,8 @@ const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (pro
 
 const Footer: Component<{
   load: () => void
-  regenImage: () => void
   send: (text: string, onSuccess?: () => void) => void
+  rendering: boolean
 }> = (props) => {
   const state = sagaStore()
   const params = useParams()
@@ -209,7 +222,7 @@ const Footer: Component<{
   return (
     <div class="flex flex-col gap-2">
       <div class="flex gap-2">
-        <Button size="pill" disabled={state.busy} onClick={sagaStore.start}>
+        <Button size="pill" disabled={state.busy} onClick={() => sagaStore.start()}>
           {state.state.init ? 'Restart' : 'Start'}
         </Button>
         <Show when={state.state.init}>
@@ -217,7 +230,7 @@ const Footer: Component<{
             size="pill"
             onClick={() => sagaStore.newSession(state.template._id, (id) => nav(toSessionUrl(id)))}
           >
-            Reset
+            New
           </Button>
         </Show>
 
@@ -234,7 +247,11 @@ const Footer: Component<{
         </Show>
 
         <Show when={state.template.imagesEnabled && state.template.imagePrompt}>
-          <Button size="pill" onClick={() => props.regenImage()} disabled={state.busy}>
+          <Button
+            size="pill"
+            onClick={() => sagaStore.generateImage(false)}
+            disabled={state.busy || props.rendering}
+          >
             Re-image
           </Button>
         </Show>
@@ -311,7 +328,7 @@ const Response: Component<{
     }
   })
 
-  const fields = createMemo(() => getTemplateFields(template()))
+  const fields = createMemo(() => getTemplateFields(props.type, props.template, props.msg))
 
   const startEdit = () => {
     switch (props.type) {
@@ -392,7 +409,7 @@ const Response: Component<{
               <Button
                 size="pill"
                 schema="clear"
-                onClick={sagaStore.retry}
+                onClick={() => sagaStore.retry()}
                 classList={{ hidden: !canRetry() }}
               >
                 <RefreshCw size={20} />

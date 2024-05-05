@@ -14,7 +14,7 @@ import { getVoiceService } from '../voice'
 import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
-import { isObject } from '/common/util'
+import { isObject, tryParse } from '/common/util'
 
 const router = Router()
 
@@ -274,6 +274,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: 'boolean?',
       characterId: 'string?',
       chatId: 'string?',
+      requestId: 'string?',
     },
     body
   )
@@ -289,6 +290,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: body.noAffix,
       chatId: body.chatId,
       characterId: body.characterId,
+      requestId: body.requestId,
     },
     log,
     guestId
@@ -318,12 +320,4 @@ function toArray(value?: string) {
   if (typeof parsed === 'string') return []
 
   if (!parsed) return []
-}
-
-function tryParse(value?: any) {
-  if (!value) return
-  try {
-    const obj = JSON.parse(value)
-    return obj
-  } catch (ex) {}
 }

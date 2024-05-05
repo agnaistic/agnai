@@ -283,6 +283,6 @@ export async function restartChat(
     characterId: char._id,
     createdAt: now(),
     updatedAt: now(),
-    retries: [],
+    retries: char.alternateGreetings || [],
   })
 }

@@ -18,6 +18,7 @@ import { novelTtsHandler } from './novel'
 import { webSpeechSynthesisHandler } from './webspeechsynthesis'
 import { TTSService, VoiceSettings } from '../../common/types/texttospeech-schema'
 import { AppSchema } from '../../common/types/schema'
+import { agnaiTtsHandler } from './agnai'
 
 export async function getVoicesList(
   { user, ttsService }: VoicesListRequest,
@@ -137,7 +138,11 @@ export async function generateVoice(
   }
 
   try {
-    output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+    if (audio.ext === 'url') {
+      output = audio.content.toString()
+    } else {
+      output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+    }
   } catch (ex: any) {
     send(broadcastIds, guestId, {
       type: 'voice-failed',
@@ -169,6 +174,9 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | 
 
     case 'novel':
       return novelTtsHandler
+
+    case 'agnai':
+      return agnaiTtsHandler
 
     default:
       return

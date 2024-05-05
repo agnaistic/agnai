@@ -1,9 +1,18 @@
 import './chat-detail.css'
-import { Component, createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Index,
+  onCleanup,
+  onMount,
+  Show,
+} from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
-import { setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
@@ -134,7 +143,7 @@ const ChatDetail: Component = () => {
     })
   })
 
-  createEffect(() => {
+  onMount(() => {
     chatStore.computePrompt(msgs.msgs[msgs.msgs.length - 1], false)
     setLinesAddedCount(chats.linesAddedCount)
   })
@@ -357,7 +366,7 @@ const ChatDetail: Component = () => {
         <Show when={chats.char?.visualType !== 'sprite' && chats.char?.avatar}>
           <div class="flex h-full w-full justify-center">
             <img
-              src={chats.char?.avatar!}
+              src={getAssetUrl(chats.char?.avatar!)}
               class="flex h-full justify-center rounded-lg object-cover"
             />
           </div>

@@ -11,6 +11,7 @@ export type ImageGenerateRequest = {
   source: string
   noAffix?: boolean
   characterId?: string
+  requestId?: string
 }
 
 export type ImageRequestOpts = {

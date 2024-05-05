@@ -32,6 +32,8 @@ export async function getServerConfiguration() {
     imagesHost: '',
     imagesModels: [],
     supportEmail: '',
+    ttsEnabled: false,
+    ttsHost: '',
   }
 
   await db('configuration').insertOne(next)
@@ -64,6 +66,7 @@ export async function getUsers(opts: UsersOpts = {}) {
 
     if (opts.customerId) {
       filters.push({ 'billing.customerId': opts.customerId })
+      filters.push({ patreonUserId: opts.customerId })
     }
 
     filter.$or = filters

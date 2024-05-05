@@ -1,14 +1,14 @@
-import { createSignal, onCleanup, onMount } from 'solid-js'
+import { createMemo, createSignal, onCleanup, onMount } from 'solid-js'
 import { Component, For } from 'solid-js'
 
-type Option = {
+export type AutoCompleteOption = {
   label: string
   value: string
 }
 
 export const AutoComplete: Component<{
-  options: Option[]
-  onSelect: (option: Option) => void
+  options: AutoCompleteOption[]
+  onSelect: (option: AutoCompleteOption) => void
   close: () => void
   dir: 'up' | 'down'
   /**
@@ -16,6 +16,7 @@ export const AutoComplete: Component<{
    * up: offset is bottom: {offset}px
    */
   offset?: number
+  limit?: number
 }> = (props) => {
   const [selected, setSelected] = createSignal(0)
 
@@ -67,6 +68,13 @@ export const AutoComplete: Component<{
     document.removeEventListener('keydown', listener)
   })
 
+  const options = createMemo(() => {
+    if (props.limit && props.limit > 0 && Number.isFinite(props.limit)) {
+      return props.options.slice(0, props.limit)
+    }
+    return props.options
+  })
+
   return (
     <ul
       class="bg-900 absolute left-0 flex max-h-40 w-56 flex-col gap-[2px] overflow-y-auto rounded-md border-[1px] border-[var(--bg-700)]"
@@ -75,12 +83,12 @@ export const AutoComplete: Component<{
         [props.dir === 'up' ? 'bottom' : 'top']: `${props.offset ?? 44}px`,
       }}
     >
-      <For each={props.options}>
+      <For each={options()}>
         {(opt, i) => (
           <li
             class="ellipsis cursor-pointer px-2 pb-2 pt-1 text-sm hover:bg-[var(--bg-700)]"
             classList={{ 'bg-600': i() === selected(), 'bg-800': i() !== selected() }}
-            onClick={() => props.onSelect(opt)}
+            onMouseDown={() => props.onSelect(opt)}
           >
             {opt.label}
           </li>

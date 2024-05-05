@@ -3,6 +3,7 @@ import { AIAdapter } from '/common/adapters'
 import { settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 import { AppSchema } from '/common/types'
+import { getUserSubscriptionTier } from '/common/util'
 
 export const AgnaisticSettings: Component<{
   service: AIAdapter
@@ -13,7 +14,8 @@ export const AgnaisticSettings: Component<{
   const config = settingStore((s) => s.config)
 
   const opts = createMemo(() => {
-    const tierLevel = state.sub?.level ?? -1
+    const tier = state.user ? getUserSubscriptionTier(state.user!, state.tiers) : undefined
+    const tierLevel = tier?.level ?? -1
     const level = state.user?.admin ? Infinity : tierLevel
 
     return config.subs

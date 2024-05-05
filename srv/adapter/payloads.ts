@@ -91,7 +91,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   }
 
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'aphrodite') {
-    const body = {
+    const body: any = {
       model: gen.thirdPartyModel || '',
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
       temperature: gen.temp ?? 0.5,
@@ -102,12 +102,11 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
       top_p: gen.topP ?? 1,
       min_p: gen.minP,
-      top_k: gen.topK,
+      top_k: gen.topK! < 1 ? -1 : gen.topK,
       top_a: gen.topA,
       stop: getStoppingStrings(opts, stops),
-      dynatemp_range: gen.dynatemp_range,
-      dynatemp_exponent: gen.dynatemp_exponent,
       smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
 
       mirostat_mode: gen.mirostatToggle ? 2 : 0,
       mirostat_tau: gen.mirostatTau,
@@ -123,6 +122,12 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       skip_special_tokens: gen.skipSpecialTokens,
       eta_cutoff: gen.etaCutoff,
       epsilon_cutoff: gen.epsilonCutoff,
+    }
+
+    if (gen.dynatemp_range) {
+      body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_exponent = gen.dynatemp_exponent
     }
 
     return body
@@ -209,6 +214,13 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     placeholders: opts.placeholders,
     lists: opts.lists,
     previous: opts.previous,
+  }
+
+  if (gen.dynatemp_range) {
+    body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+    body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+    body.dynatemp_range = gen.dynatemp_range
+    body.temp_exponent = gen.dynatemp_exponent
   }
 
   return body

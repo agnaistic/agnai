@@ -29,11 +29,11 @@ function getOrderHolder(format: string, holder: string) {
   return formatHolders[format]?.[holder] || fallbackHolders[holder] || ''
 }
 
-const formatHolders: Record<string, Record<string, string>> = {
+export const formatHolders: Record<string, Record<string, string>> = {
   Alpaca: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
   Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
-    history: neat`Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
     {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
     {{/each}}`,
@@ -43,17 +43,28 @@ const formatHolders: Record<string, Record<string, string>> = {
   Vicuna: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
   Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
-    history: neat`Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
     {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
     {{/each}}`,
     post: `ASSISTANT: {{post}}`,
     system_prompt: `{{#if system_prompt}}SYSTEM: {{system_prompt}}{{/if}}`,
   },
+  Mistral: {
+    preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
+  Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
+    
+    {{#each msg}}{{#if .isbot}}\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}[INST] {{.name}}: {{.msg}} [/INST]{{/if}}
+    {{/each}}`,
+    post: `{{post}}`,
+    system_prompt: `{{#if system_prompt}}[INST] {{system_prompt}} [/INST]{{/if}}`,
+    ujb: `{{#if ujb}}[INST] {{ujb}} [/INST]{{/if}}`,
+  },
   Metharme: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
   Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}`,
-    history: neat`Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
     {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
     {{/each}}`,
@@ -80,7 +91,7 @@ const formatHolders: Record<string, Record<string, string>> = {
   How {{char}} speaks:
   {{example_dialogue}}<|im_end|>{{/if}}`,
     history: neat`<|im_start|>system
-    Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.<|im_end|>
+    Then the roleplay chat between {{user}} and {{char}} begins.<|im_end|>
     
     {{#each msg}}{{#if .isbot}}<|im_start|>assistant{{/if}}{{#if .isuser}}<|im_start|>user{{/if}}
   {{.name}}: {{.msg}}<|im_end|>
@@ -106,7 +117,7 @@ const fallbackHolders: Record<string, string> = {
   memory: `{{#if memory}}{{char}}'s memories:\n{{memory}}{{/if}}`,
   ujb: `{{#if ujb}}{{ujb}}{{/if}}`,
   example_dialogue: `{{#if example_dialogue}}How {{char}} speaks:\n{{example_dialogue}}{{/if}}`,
-  impersonating: `{{#if impersonating}}{{user}}'s personality:\n
+  impersonating: `{{#if impersonating}}{{user}}'s personality:
   {{impersonating}}{{/if}}`,
   history: `{{history}}`,
   post: `{{post}}`,

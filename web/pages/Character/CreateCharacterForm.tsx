@@ -8,7 +8,20 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { MinusCircle, Plus, Save, X, Import, Download, HelpCircle } from 'lucide-solid'
+import {
+  MinusCircle,
+  Plus,
+  Save,
+  X,
+  Import,
+  Download,
+  HelpCircle,
+  ArrowLeft,
+  Trash,
+  ArrowRight,
+  WandSparkles,
+  RotateCcw,
+} from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -430,7 +443,7 @@ export const CreateCharacterForm: Component<{
                 <TagInput
                   availableTags={tagState.tags.map((t) => t.tag)}
                   value={editor.state.tags}
-                  fieldName="tags"
+                  fieldName="_tags"
                   label="Tags"
                   helperText="Used to help you organize and filter your characters."
                   onSelect={(tags) => editor.update({ tags })}
@@ -446,15 +459,18 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                     <Match when={!state.avatar.loading}>
-                      <div
-                        class="flex items-baseline justify-center"
-                        style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                        onClick={() => setImageUrl(editor.avatar() || image())}
-                      >
-                        <AvatarIcon
-                          format={{ corners: 'sm', size: '3xl' }}
-                          avatarUrl={editor.avatar() || image()}
-                        />
+                      <div class="flex flex-col items-center gap-1">
+                        <div
+                          class="flex items-baseline"
+                          style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
+                          onClick={() => setImageUrl(editor.avatar() || image())}
+                        >
+                          <AvatarIcon
+                            format={{ corners: 'sm', size: '3xl' }}
+                            avatarUrl={editor.avatar() || image()}
+                          />
+                        </div>
+                        <ReelControl editor={editor} />
                       </div>
                     </Match>
                     <Match when={state.avatar.loading}>
@@ -463,9 +479,6 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                   </Switch>
-                  <Button size="pill" class="w-fit" onClick={() => editor.createAvatar()}>
-                    Generate Image
-                  </Button>
                 </div>
                 <div class="flex w-full flex-col gap-2">
                   <ToggleButtons
@@ -573,7 +586,7 @@ export const CreateCharacterForm: Component<{
                       <div class="flex items-center gap-1">
                         Persona Schema{' '}
                         <Regenerate
-                          fields={['personality', 'behaviour']}
+                          fields={['personality']}
                           service={genService()}
                           editor={editor}
                           allowed={editor.canGuidance}
@@ -909,7 +922,12 @@ const MemoryBookPicker: Component<{
 
   return (
     <div>
-      <h4 class="text-lg">Character Book</h4>
+      <h4 class="flex gap-1 text-lg">
+        <div>Character Book</div>
+        <Button size="sm" onClick={initBlankCharacterBook}>
+          Create New Book
+        </Button>
+      </h4>
       <Show when={!props.bundledBook}>
         <span class="text-sm"> This character doesn't have a Character Book. </span>
         <div class="flex flex-col gap-3 sm:flex-row">
@@ -919,7 +937,6 @@ const MemoryBookPicker: Component<{
             items={internalMemoryBookOptions()}
             onChange={pickInternalMemoryBook}
           />
-          <Button onClick={initBlankCharacterBook}>Create New Book</Button>
         </div>
       </Show>
       <Show when={props.bundledBook}>
@@ -952,7 +969,7 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         <TextInput
           isMultiline
           fieldName="postHistoryInstructions"
-          label="Post-conversation History Instructions (optional)"
+          label="(Jailbreak) Post-conversation History Instructions (optional)"
           helperText={
             <span>
               {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}
@@ -1036,5 +1053,54 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         />
       </Card>
     </>
+  )
+}
+
+const ReelControl: Component<{ editor: CharEditor }> = (props) => {
+  const createAvatar = async () => {
+    const base64 = await props.editor.createAvatar()
+    if (!base64) return
+
+    await props.editor.imageCache.addImage(base64)
+  }
+
+  const size = 14
+
+  return (
+    <div class="flex flex-col items-center gap-1">
+      <div class="flex w-fit gap-2">
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.images.length <= 1}
+          onClick={props.editor.imageCache.prev}
+        >
+          <ArrowLeft size={size} />
+        </Button>
+
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.imageId === ''}
+          onClick={() => props.editor.imageCache.removeImage(props.editor.imageCache.state.imageId)}
+        >
+          <Trash size={size} />
+        </Button>
+
+        <Button
+          size="sm"
+          disabled={props.editor.imageCache.state.images.length <= 1}
+          onClick={props.editor.imageCache.next}
+        >
+          <ArrowRight size={size} />
+        </Button>
+      </div>
+      <div class="flex w-fit gap-2">
+        <Button size="sm">
+          <RotateCcw size={size} />
+        </Button>
+        <Button size="sm" onClick={createAvatar}>
+          <WandSparkles size={size} />
+        </Button>
+      </div>
+    </div>
   )
 }

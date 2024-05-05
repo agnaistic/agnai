@@ -60,7 +60,7 @@ export const config = {
   jwtSecret: env('JWT_SECRET'),
   jwtPrivateKey: env('JWT_PRIVATE_KEY', ''),
   jwtPublicKey: env('JWT_PUBLIC_KEY', ''),
-  jwtExpiry: env('JWT_EXPIRY', '30d'),
+  jwtExpiry: env('JWT_EXPIRY', '120d'),
   host: env('APP_HOST', '0.0.0.0'),
   port: +env('PORT', '3001'),
   assetUrl: env('ASSET_URL', ''),
@@ -89,8 +89,7 @@ export const config = {
   limits: {
     upload: +env('IMAGE_SIZE_LIMIT', '10'),
     payload: +env('JSON_SIZE_LIMIT', '10'),
-    subRate: +env('SUB_RATE_LIMIT', '15'),
-    msgPageSize: +env('MESSAGE_PAGE_SIZE', '500'),
+    msgPageSize: +env('MESSAGE_PAGE_SIZE', '0'),
   },
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),

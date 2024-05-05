@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { assertValid } from '/common/valid'
-import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
+import { Download, Plus, Trash, Upload, X, Edit, FileX, FileCheck } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -11,9 +11,11 @@ import { memoryStore, toastStore } from '../../store'
 import { SolidCard } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
 import { embedApi } from '/web/store/embeddings'
+import { EditEmbedModal } from '/web/shared/EditEmbedModal'
 
 export const EmbedsTab: Component = (props) => {
   const state = memoryStore()
+  const [editing, setEditing] = createSignal<string>()
   const [deleting, setDeleting] = createSignal<string>()
 
   return (
@@ -21,25 +23,32 @@ export const EmbedsTab: Component = (props) => {
       <PageHeader title="Memory - Embeddings" />
       <EmbedContent />
 
-      <div class="my-2 flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <For each={state.embeds}>
           {(each) => (
-            <SolidCard
-              border
-              size="sm"
-              class="flex items-center justify-between overflow-hidden"
-              bg="bg-700"
-            >
-              <div class="ellipsis">{each.id}</div>
-              <div>
-                <Button schema="red" onClick={() => setDeleting(each.id)}>
-                  <Trash size={14} />
-                </Button>
+            <div class="mt-2 flex w-full items-center gap-4">
+              <SolidCard size="md" class="flex w-full items-center gap-1" bg="bg-800">
+                <div
+                  class="flex cursor-pointer"
+                  title={each.state === 'loaded' ? 'Loaded' : 'Not loaded'}
+                >
+                  {each.state === 'loaded' ? <FileCheck /> : <FileX class="text-gray-500" />}
+                </div>
+                <div class="ellipsis font-bold">{each.id}</div>
+              </SolidCard>
+
+              <div class="icon-button" onClick={() => setEditing(each.id)}>
+                <Edit />
               </div>
-            </SolidCard>
+
+              <div class="icon-button" onClick={() => setDeleting(each.id)}>
+                <Trash />
+              </div>
+            </div>
           )}
         </For>
       </div>
+      <EditEmbedModal show={!!editing()} embedId={editing()} close={() => setEditing()} />
       <ConfirmModal
         confirm={() => embedApi.removeDocument(deleting()!)}
         show={!!deleting()}
@@ -103,9 +112,9 @@ export const BooksTab: Component = (props) => {
             <div class="mt-2 flex w-full items-center gap-4">
               <A
                 href={`/memory/${book._id}`}
-                class="flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]"
+                class="ellipsis flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]"
               >
-                <span class="font-bold">{book.name}</span>
+                <span class="ellipsis font-bold">{book.name}</span>
                 <span class="ml-2">{book.description}</span>
               </A>
 

@@ -182,9 +182,11 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
   post('status', { id, kind: type, status: 'loading' })
   console.log(`[${type}] ${id} started`)
   if (msg.type === 'embedChat') {
+    const seen = new Set<string>()
     const cache = embeddings[msg.chatId]
 
     const filtered = msg.messages.filter((msg) => {
+      seen.add(msg._id)
       const prev = embeddings[msg.chatId][msg._id]
       if (!prev) return true
       if (prev.msg !== msg.msg) return true
@@ -201,11 +203,21 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
         meta: { created: msg.createdAt },
       }
     }
-    console.log(`[chat] ${msg.chatId} embedded`)
+
+    let deleted = 0
+    for (const cachedId of Object.keys(cache)) {
+      if (seen.has(cachedId)) continue
+      delete cache[cachedId]
+      deleted++
+    }
+
+    const pre = deleted > 0 ? '+' : ''
+    console.log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
   }
 
   if (msg.type === 'embedDocument') {
     let embedded = 0
+    documents[msg.documentId] = []
     for (const item of msg.documents) {
       const embed = await Embedder(item.msg, { pooling: 'mean', normalize: true })
       embedded++

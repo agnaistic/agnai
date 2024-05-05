@@ -1,4 +1,5 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { sendOne } from '../api/ws'
 import { config } from '../config'
 import { store } from '../db'
 import { isConnected } from '../db/client'
@@ -85,7 +86,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     yield { warning: opts.subscription.warning }
   }
 
-  const level = opts.subscription.level ?? -1
+  const level = opts.user.admin ? 99999 : opts.subscription.level ?? -1
   const preset = opts.subscription.preset
 
   let newLevel = await store.users.validateSubscription(opts.user)
@@ -118,6 +119,14 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  /**
+   * Lock per user per model
+   */
+  // if (!opts.guidance) {
+  //   const lockId = `${opts.user._id}-${preset.subModel}`
+  //   await obtainLock(lockId, 15)
+  // }
+
   const useRecommended = !!opts.gen.registered?.agnaistic?.useRecommended
   if (useRecommended) {
     const {
@@ -132,7 +141,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       maxTokens,
       gaslight,
       allowGuestUsage,
-      images,
+      imageSettings,
       temporary,
       useAdvancedPrompt,
       _id,
@@ -219,10 +228,6 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  // if (opts.kind === 'continue') {
-  //   opts.prompt = opts.prompt.trim() + ' '
-  // }
-
   const body = getThirdPartyPayload(opts, allStops)
 
   yield { prompt }
@@ -263,7 +268,11 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
 
     if (generated.value.meta) {
-      yield { meta: generated.value.meta }
+      const meta = generated.value.meta
+      yield { meta }
+      if (meta.host && !opts.guest) {
+        sendOne(opts.user._id, { type: 'message-meta', host: meta.host })
+      }
     }
 
     if (generated.value.error) {
@@ -274,7 +283,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     // Only the streaming generator yields individual tokens.
     if (generated.value.token) {
-      accumulated += generated.value.token
+      if (opts.guidance) accumulated = generated.value.token
+      else accumulated += generated.value.token
       yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
 
@@ -283,6 +293,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       break
     }
   }
+
+  // await releaseLock(lockId)
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, ['END_OF_DIALOG'])

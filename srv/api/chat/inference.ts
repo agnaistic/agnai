@@ -136,6 +136,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
   assertValid(
     {
       ...validInference,
+      requestId: 'string?',
       service: 'string?',
       placeholders: 'any?',
       lists: 'any?',
@@ -182,6 +183,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     previous: body.previous,
     lists: body.lists,
     reguidance: body.reguidance,
+    requestId: body.requestId,
   }
 
   const result = await guidanceAsync(props)

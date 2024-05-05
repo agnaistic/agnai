@@ -10,13 +10,15 @@ const BASE_RETRY = 100
 const MAX_RETRY = 1000
 let RETRY_TIME = 0
 
-let socket: WebSocket
+type ClientSocket = WebSocket & { pingTimeout: any }
+
+let socket: ClientSocket
 
 createSocket()
 
 function createSocket() {
   const socketUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://')
-  const ws = new WebSocket(socketUrl)
+  const ws = new WebSocket(socketUrl) as ClientSocket
 
   socket = ws
   ws.onopen = onConnected
@@ -48,7 +50,7 @@ export function subscribe<T extends string, U extends Validator>(
   listeners.set(type, handlers)
 }
 
-const squelched = new Set(['profile-handle-changed', 'message-partial'])
+const squelched = new Set(['profile-handle-changed', 'message-partial', 'guidance-partial'])
 
 function onMessage(msg: MessageEvent<any>) {
   if (typeof msg.data !== 'string') return
@@ -69,7 +71,11 @@ function onMessage(msg: MessageEvent<any>) {
         console.log(JSON.stringify(payload))
       } else {
         console.log(
-          JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 60) + '...' })
+          `[${new Date().toLocaleTimeString()}]`,
+          JSON.stringify({
+            ...payload,
+            image: (payload.image || '').slice(0, 60) + '...',
+          })
         )
       }
     } else {

@@ -12,6 +12,7 @@ export type SubsEvt =
   | { type: 'cancelled' }
   | { type: 'upgraded'; tierId: string; priceId: string }
   | { type: 'downgraded'; tierId: string; priceId: string; activeAt: string }
+  | { type: 'session-started'; sessionId: string; tierId: string }
   /** Only available during a cancellation period */
   | { type: 'resumed' }
   /** Manually assign a subscription ID to a user in the case of a failed update */
@@ -39,6 +40,7 @@ export type SubsCmd =
   | { type: 'resume' }
   | { type: 'upgrade'; tierId: string; priceId: string }
   | { type: 'downgrade'; tierId: string; priceId: string; activeAt: string }
+  | { type: 'startSession'; sessionId: string; tierId: string }
   | {
       type: 'adminSubscribe'
       tierId: string
@@ -57,6 +59,7 @@ export type SubsAgg = {
   subscriptionId: string
   priceId: string
   periodStart: string
+  sessions: string[]
 
   downgrade?: {
     requestedAt: Date
@@ -64,5 +67,5 @@ export type SubsAgg = {
     tierId: string
   }
 
-  history: Array<{ type: string; time: string; tierId?: string }>
+  history: Array<{ type: string; time: string; tierId?: string; subscriptionId?: string }>
 }

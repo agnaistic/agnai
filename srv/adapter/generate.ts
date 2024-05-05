@@ -18,10 +18,11 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { deepClone, parseStops } from '/common/util'
+import { deepClone, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
 import { getCachedSubscriptionPresets } from '../db/subscriptions'
+import { sendOne } from '../api/ws'
 
 let version = ''
 
@@ -46,6 +47,7 @@ configure(async (opts) => {
 export type ResponseEntities = Awaited<ReturnType<typeof getResponseEntities>>
 
 export type InferenceRequest = {
+  requestId?: string
   prompt: string
   guest?: string
   user: AppSchema.User
@@ -85,7 +87,15 @@ export async function inferenceAsync(opts: InferenceRequest) {
         continue
       }
 
-      if ('partial' in gen) {
+      if ('partial' in gen && gen.partial) {
+        const partial = tryParse(gen.partial)
+        if (!partial || typeof partial !== 'object') continue
+        sendOne(opts.user._id, {
+          type: 'guidance-partial',
+          partial,
+          adapter: opts.service,
+          requestId: opts.requestId,
+        })
         continue
       }
 
@@ -256,7 +266,7 @@ function setRequestService(opts: InferenceRequest) {
   return settings
 }
 
-export async function createTextStreamV2(
+export async function createChatStream(
   opts: GenerateRequestV2 & { entities?: ResponseEntities },
   log: AppLog,
   guestSocketId?: string
@@ -460,6 +470,18 @@ async function getGenerationSettings(
   if (chat.genSettings) {
     const src = guest ? 'guest-chat-gensettings' : 'user-chat-gensettings'
     return { ...chat.genSettings, src }
+  }
+
+  if (user.defaultPreset) {
+    if (isDefaultPreset(user.defaultPreset)) {
+      return { ...defaultPresets[user.defaultPreset], src: 'user-settings-genpreset-default' }
+    }
+
+    const preset = await store.presets.getUserPreset(user.defaultPreset)
+    if (preset) {
+      preset.src = 'user-settings-genpreset-custom'
+      return preset
+    }
   }
 
   const servicePreset = user.defaultPresets?.[adapter]

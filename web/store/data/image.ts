@@ -97,7 +97,7 @@ export async function generateImageWithPrompt(
   return res
 }
 
-type ImageResult = { image: string; file: File; data?: string }
+type ImageResult = { image: string; file: File; data?: string; error?: string }
 
 export async function generateImageAsync(
   prompt: string,
@@ -127,34 +127,50 @@ export async function generateImageAsync(
     }
   }
 
+  const requestId = v4()
   await api.post<{ success: boolean }>(`/character/image`, {
     prompt,
     user,
     ephemeral: true,
     source,
     noAffix: opts.noAffix,
+    requestId,
   })
 
-  return new Promise<ImageResult>((resolve) => {
-    callbacks.set(source, resolve)
+  return new Promise<ImageResult>((resolve, reject) => {
+    callbacks.set(requestId, (image) => {
+      if (image.error) return reject(new Error(image.error))
+      resolve(image)
+    })
   })
 }
 
 const callbacks = new Map<string, (result: ImageResult) => void>()
 
-subscribe('image-generated', { image: 'string', source: 'string' }, async (body) => {
-  if (body.source === 'avatar') return
+subscribe(
+  'image-generated',
+  { image: 'string', requestId: 'string', source: 'string?' },
+  async (body) => {
+    if (body.source === 'avatar') return
 
-  const callback = callbacks.get(body.source)
+    const callback = callbacks.get(body.requestId)
+    if (!callback) return
+
+    callbacks.delete(body.requestId)
+    const url = getAssetUrl(body.image)
+    const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
+    const file = new File([image], `${body.source}.png`, { type: 'image/png' })
+    const data = await getImageData(file)
+
+    callback({ image: url, file, data })
+  }
+)
+
+subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
+  const callback = callbacks.get(body.requestId)
   if (!callback) return
 
-  callbacks.delete(body.source)
-  const url = getAssetUrl(body.image)
-  const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
-  const file = new File([image], `${body.source}.png`, { type: 'image/png' })
-  const data = await getImageData(file)
-
-  callback({ image: url, file, data })
+  callback({ file: {} as any, image: '', error: body.error })
 })
 
 const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
@@ -244,7 +260,7 @@ function getSummaryTemplate(service: AIAdapter) {
 
       The scenario of the conversation: {{scenario}}
 
-      Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+      Then the roleplay chat begins.
   
       {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
       {{/each}}

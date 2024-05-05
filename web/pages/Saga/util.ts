@@ -68,13 +68,41 @@ export function importTemplate(template: any) {
   return next
 }
 
-export function getTemplateFields(template: string) {
-  const names = template
+export function getTemplateFields(
+  type: 'intro' | 'input' | 'response',
+  template: SagaTemplate,
+  msg: Record<string, any>
+) {
+  const intro = extractFields(template.introduction || '{{scene}}')
+  const input = extractFields('{{input}}')
+  const response = extractFields(template.history).filter((field) => field !== 'input')
+
+  const remainder = Object.entries(msg)
+    .filter(([key, value]) => {
+      if (value === undefined) return false
+      if (key === 'input' || key === 'requestId') return false
+      if (intro.includes(key) || response.includes(key)) return false
+      return true
+    })
+    .map(([key]) => key)
+
+  switch (type) {
+    case 'intro':
+      return intro.concat(remainder)
+
+    case 'input':
+      return input
+
+    case 'response':
+      return response.concat(remainder)
+  }
+}
+
+function extractFields(prompt: string) {
+  const names = prompt
     .match(/{{([a-z0-9_-]+)}}/gi)
     ?.map((text) => text.replace('{{', '').replace('}}', '').trim())
 
   if (!names) return []
-
-  const unique = Array.from(new Set(names))
-  return unique
+  return names
 }

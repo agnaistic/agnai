@@ -45,6 +45,7 @@ export type SDSettings = {
 export type AgnaiSettings = {
   type: 'agnai'
   model: string
+  sampler: string
 }
 
 export const baseImageValid = {

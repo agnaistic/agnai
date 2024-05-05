@@ -5,10 +5,11 @@ import { now } from './util'
 import { getChatBranchIds } from '/common/chat'
 import { store } from '.'
 import { config } from '../config'
+import { WithId } from 'mongodb'
 
 let PAGE_SIZE = config.limits.msgPageSize
 if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
-  PAGE_SIZE = 100
+  PAGE_SIZE = 0
 }
 
 export type NewMessage = {
@@ -130,26 +131,41 @@ export async function getMessages(chatId: string, before?: string) {
     before = now()
   }
 
-  const docs = await db('chat-message')
-    .find({
-      kind: 'chat-message',
-      chatId,
-      $and: [{ createdAt: { $lt: before } }, { createdAt: { $ne: before } }],
-    })
-    .sort({ createdAt: -1 })
-    .limit(pageSize + 1)
-    .toArray()
+  const result: Array<WithId<AppSchema.ChatMessage>> = []
 
-  if (!docs.length) return []
-
-  docs.reverse()
-
-  if (docs.length < pageSize + 1) {
-    docs[0].first = true
-    return docs
+  if (pageSize) {
+    const docs = await db('chat-message')
+      .find({
+        kind: 'chat-message',
+        chatId,
+        $and: [{ createdAt: { $lt: before } }, { createdAt: { $ne: before } }],
+      })
+      .sort({ createdAt: -1 })
+      .limit(pageSize + 1)
+      .toArray()
+    result.push(...docs)
+  } else {
+    const docs = await db('chat-message')
+      .find({
+        kind: 'chat-message',
+        chatId,
+        $and: [{ createdAt: { $lt: before } }, { createdAt: { $ne: before } }],
+      })
+      .sort({ createdAt: -1 })
+      .toArray()
+    result.push(...docs)
   }
 
-  return docs.slice(1)
+  if (!result.length) return []
+
+  result.reverse()
+
+  if (result.length < pageSize + 1) {
+    result[0].first = true
+    return result
+  }
+
+  return pageSize ? result.slice(1) : result
 }
 
 export async function getChatMessages(chat: AppSchema.Chat) {

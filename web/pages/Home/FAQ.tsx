@@ -49,10 +49,10 @@ Yes, you can change some elements of Agnaistic in your **Settings -> UI Settings
 All frontends behave a little differently. You can tweak how your character behaves by modifying your **Prompt Template** in your **Preset**.
 
 ### I forgot my password!
-Recovering your account is not guaranteed. You can try to contact Sceik on [Discord](https://agnai.chat/discord) to try to recover your account.
+Recovering your account is not guaranteed. You can try to contact Sceik on [Discord](https://discord.agnai.chat) to try to recover your account.
 
 ### My question isn't answered here, where should I ask?
-The best place to get a quick answer is on [Discord](https://agnai.chat/discord).
+The best place to get a quick answer is on [Discord](https://discord.agnai.chat).
 
 ### Glossory / Terminology:
 - **Input Options**: Accessed from the Right hand side (three-dot menu) of your chat text input.

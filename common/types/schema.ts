@@ -81,6 +81,9 @@ export namespace AppSchema {
     imagesEnabled: boolean
     imagesHost: string
     imagesModels: ImageModel[]
+
+    ttsEnabled: boolean
+    ttsHost: string
   }
 
   export type ImageModel = {
@@ -509,6 +512,7 @@ export namespace AppSchema {
     dynatemp_range?: number
     dynatemp_exponent?: number
     smoothingFactor?: number
+    smoothingCurve?: number
     maxTokens: number
     maxContextLength?: number
     repetitionPenalty: number
@@ -588,12 +592,12 @@ export namespace AppSchema {
 
     src?: string
 
-    images?: {
-      adapter: string
-    }
+    imageSettings?: BaseImageSettings
 
     temporary?: Record<string, any>
     registered?: { [key in AIAdapter]?: Record<string, any> }
+
+    updatedAt?: string
   }
 
   export interface PromptTemplate {

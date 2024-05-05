@@ -13,8 +13,10 @@ import { AppSchema, Encoder, TokenCounter, Tokenizer } from '/common/types'
 const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
 const gpt2Json = readFileSync(resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json'))
+const cohereJson = readFileSync(resolve(__dirname, 'sp-models', 'cohere.json'))
 
 let claudeEncoder: Tokenizer
+let cohereEncoder: Tokenizer
 let krake: Encoder
 let euterpe: Encoder
 
@@ -37,6 +39,7 @@ let davinci: Encoder
 let turbo: Encoder
 let mistral: Encoder
 let yi: Encoder
+let cohere: Encoder
 
 export type EncoderType =
   | 'novel'
@@ -47,6 +50,7 @@ export type EncoderType =
   | 'turbo'
   | 'mistral'
   | 'yi'
+  | 'cohere'
 
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
@@ -95,6 +99,9 @@ export function getEncoderByName(type: EncoderType) {
 
     case 'turbo':
       return turbo
+
+    case 'cohere':
+      return cohere
   }
 }
 
@@ -206,6 +213,20 @@ export async function prepareTokenizers() {
         },
         count: (value) => {
           const tokens = claudeEncoder.encode(value)
+          return tokens.length
+        },
+      }
+    }
+    {
+      cohereEncoder = await mlc.Tokenizer.fromJSON(cohereJson)
+      cohere = {
+        decode: (tokens) => cohereEncoder.decode(Int32Array.from(tokens)),
+        encode: (value) => {
+          const tokens = Array.from(cohereEncoder.encode(value))
+          return tokens
+        },
+        count: (value) => {
+          const tokens = cohereEncoder.encode(value)
           return tokens.length
         },
       }

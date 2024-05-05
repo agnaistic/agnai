@@ -60,6 +60,7 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
+  const subs = settingStore((s) => s.config.subs)
   const userState = userStore()
   const [search, setSearch] = useSearchParams()
   const pane = usePaneManager()
@@ -75,6 +76,16 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
   const [format, setFormat] = createSignal(
     props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
   )
+
+  const sub = createMemo(() => {
+    if (props.inherit?.service !== 'agnaistic') return
+    const match = subs.find(
+      (sub) => sub._id === props.inherit?.registered?.agnaistic?.subscriptionId
+    )
+
+    return match
+  })
+
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
@@ -173,6 +184,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
+          sub={sub()}
         />
       </div>
     </>
@@ -258,6 +270,7 @@ const GeneralSettings: Component<
     ClaudeInstantV1_0: 'Claude Instant v1.0',
     ClaudeV3_Opus: 'Claude v3 Opus',
     ClaudeV3_Sonnet: 'Claude v3 Sonnet',
+    ClaudeV3_Haiku: 'Claude v3 Haiku',
   } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
@@ -553,11 +566,9 @@ const PromptSettings: Component<
 > = (props) => {
   const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
-    !props.inherit?._id
-      ? 'basic'
-      : typeof props.inherit.useAdvancedPrompt === 'string'
+    typeof props.inherit?.useAdvancedPrompt === 'string'
       ? props.inherit.useAdvancedPrompt
-      : props.inherit?.useAdvancedPrompt === true || props.inherit.useAdvancedPrompt === undefined
+      : props.inherit?.useAdvancedPrompt === true || props.inherit?.useAdvancedPrompt === undefined
       ? 'validate'
       : 'basic'
   )
@@ -753,9 +764,14 @@ const PromptSettings: Component<
   )
 }
 
-const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }> = (
-  props
-) => {
+const GenSettings: Component<
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
+> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Advanced' }}>
       <Card class="flex flex-col gap-4">
@@ -780,9 +796,10 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
           disabled={props.disabled}
-          service={props.service}
+          service={props.service} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
         />
+
         <RangeInput
           fieldName="dynatemp_exponent"
           label="Dynamic Temperature Exponent"
@@ -806,6 +823,18 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingFactor'}
+        />
+        <RangeInput
+          fieldName="smoothingCurve"
+          label="Smoothing Curve"
+          helperText="The smoothing curve to use for Cubic Sampling. (Put this value on 1 to disable its effect)"
+          min={1}
+          max={5}
+          step={0.01}
+          value={props.inherit?.smoothingCurve || 1}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'smoothingCurve'}
         />
         <RangeInput
           fieldName="cfgScale"
@@ -874,7 +903,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="minP"
           label="Min P"
-          helperText="Used to discard unlikely text in the sampling process. Lower values will make text more predictable. (Put this value on 0 to disable its effect)"
+          helperText="Used to discard tokens with the probability under a threshold (min_p) in the sampling process. Higher values will make text more predictable. (Put this value on 0 to disable its effect)"
           min={0}
           max={1}
           step={0.01}
@@ -914,7 +943,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="topA"
           label="Top A"
-          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. (Put this value on 0 to disable its effect)"
+          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. Exclude all tokens with p < (top_a * highest_p^2) (Put this value on 0 to disable its effect)"
           min={0}
           max={1}
           step={0.01}
@@ -1081,7 +1110,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="frequencyPenalty"
           label="Frequency Penalty"
-          helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim."
+          helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. (Set to 0.0 to disable)"
           min={-2.0}
           max={2.0}
           step={0.01}
@@ -1094,7 +1123,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="presencePenalty"
           label="Presence Penalty"
-          helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."
+          helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics. (Set to 0.0 to disable)"
           min={-2.0}
           max={2.0}
           step={0.01}
@@ -1210,6 +1239,8 @@ const SamplerOrder: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
+  const [loaded, setLoaded] = createSignal(false)
+
   const presetOrder = createMemo(() => {
     if (!props.inherit?.order) return ''
     // Guests persist the string instead of the array for some reason
@@ -1222,15 +1253,21 @@ const SamplerOrder: Component<{
   const [disabled, setDisabled] = createSignal(ensureArray(props.inherit?.disabledSamplers))
   const [sorter, setSorter] = createSignal<Sorter>()
 
+  /**
+   * The SamplerOrder component is re-mounted on save for some reason
+   * We need to manually handle this to correctly preserve the order and disabled states
+   */
   createEffect(() => {
-    // Try to detect if the inherited settings change
-    const inherited = presetOrder()
-    if (inherited !== order()) {
-      setOrder(inherited)
-      setValue(inherited)
-      setDisabled(props.inherit?.disabledSamplers || [])
-      resort()
-    }
+    if (loaded()) return
+
+    const order = props.inherit?.order || ''
+    const next = Array.isArray(order) ? order.join(',') : order
+
+    setLoaded(true)
+    setOrder(next)
+    setValue(next)
+    setDisabled(props.inherit?.disabledSamplers || [])
+    resort()
   })
 
   const updateValue = (next: SortItem[]) => {

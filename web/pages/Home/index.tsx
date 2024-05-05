@@ -102,7 +102,7 @@ const HomePage: Component = () => {
 
           <TitleCard type="bg" title="Links" center ariaRole="region" ariaLabel="Links">
             <div class="flex flex-wrap justify-center gap-2">
-              <a href="/discord" target="_blank">
+              <a href="https://discord.agnai.chat" target="_blank">
                 <Pill inverse>Agnaistic Discord</Pill>
               </a>
 

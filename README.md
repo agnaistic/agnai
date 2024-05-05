@@ -2,7 +2,7 @@
 
 > AI Roleplay Chat with Personalised Characters with your favorite AI services.
 
-[Live Version](https://agnai.chat) | [Discord](https://agnai.chat/discord)
+[Live Version](https://agnai.chat) | [Discord](https://discord.agnai.chat)
 
 You can visit the live version at [Agnai.chat](https://agnai.chat)
 

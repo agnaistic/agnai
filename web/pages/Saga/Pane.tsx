@@ -50,11 +50,11 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
     props.show(false)
   }
   createEffect(() => {
-    updatePane(pane.pane())
+    updatePane(pane.pane()!)
   })
 
   onMount(() => {
-    updatePane(pane.pane())
+    updatePane(pane.pane()!)
   })
 
   return (
@@ -233,7 +233,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
 
   const Footer = (
     <div class="flex flex-wrap gap-1">
-      <Button onClick={sagaStore.createTemplate}>New</Button>
+      <Button onClick={() => sagaStore.createTemplate('open_world')}>New</Button>
       <Button onClick={sagaStore.saveTemplate}>Save</Button>
       <Show when={state.template._id !== ''}>
         <Button onClick={sagaStore.saveTemplateCopy}>Copy</Button>
@@ -254,7 +254,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
           <Card bg={bg} bgOpacity={opacity}>
             <div class="font-bold">
               Load Template{' '}
-              <a class="link ml-2 text-sm" onClick={sagaStore.createTemplate}>
+              <a class="link ml-2 text-sm" onClick={() => sagaStore.createTemplate('open_world')}>
                 New Template
               </a>
             </div>

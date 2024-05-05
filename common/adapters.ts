@@ -184,11 +184,13 @@ export const CLAUDE_MODELS = {
   ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
+  ClaudeV3_Haiku: 'claude-3-haiku-20240307',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV3_Opus]: true,
   [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
+  [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
 }
 
 export const NOVEL_MODELS = {
@@ -310,9 +312,10 @@ export const adapterSettings: {
     'tabby',
     'mistral',
   ],
-  dynatemp_range: ['kobold', 'aphrodite', 'ooba', 'tabby'],
-  dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby'],
+  dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite'],
+  dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby'],
+  smoothingCurve: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
@@ -439,6 +442,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   dynatemp_range: 'Dynamic Temperature Range',
   dynatemp_exponent: 'Dynamic Temperature Exponent',
   smoothingFactor: 'Smoothing Factor (Quadratic Sampling)',
+  smoothingCurve: 'Smoothing Curve (Cubic Sampling)',
   maxTokens: 'Max Tokens (Response length)',
   repetitionPenalty: 'Repetition Penalty',
   repetitionPenaltyRange: 'Repetition Penality Range',

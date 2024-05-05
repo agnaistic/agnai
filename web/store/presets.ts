@@ -320,6 +320,7 @@ type SafePreset = Pick<
   | 'dynatemp_range'
   | 'dynatemp_exponent'
   | 'smoothingFactor'
+  | 'smoothingCurve'
 >
 
 export async function exportPreset(preset: AppSchema.UserGenPreset) {
@@ -331,7 +332,6 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
     userId,
     claudeModel,
     mistralModel,
-    images,
     thirdPartyModel,
     thirdPartyKey,
     thirdPartyFormat,

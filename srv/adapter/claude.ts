@@ -25,7 +25,8 @@ const TEXT_URL = `https://api.anthropic.com/v1/complete`
 const apiVersion = '2023-06-01' // https://docs.anthropic.com/claude/reference/versioning
 
 type ClaudeCompletion = {
-  completion: string
+  completion?: string
+  content?: { type: string; text?: string }[]
   delta?: { text: string }
   text?: string
   stop_reason: string | null
@@ -70,6 +71,21 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   if (useChat) {
     payload.max_tokens = gen.maxTokens
     const messages = await toChatCompletionPayload(opts, gen.maxTokens!)
+
+    // Claude doesn't have a system role, so we extract the first message to put it in the system
+    // field (https://docs.anthropic.com/claude/docs/system-prompts)
+    if (messages[0].role === 'system') {
+      payload.system = messages[0].content
+
+      // Claude requires starting with a user message, and messages cannot be empty.
+      messages[0].content = '...'
+    }
+    // Any system messages will go through the user instead.
+    for (const message of messages) {
+      if (message.role === 'system') {
+        message.role = 'user'
+      }
+    }
 
     let last: CompletionItem
 
@@ -150,7 +166,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 
   try {
-    const completion = resp?.completion || ''
+    const completion = resp?.completion || resp?.content?.[0]?.text || ''
     if (!completion) {
       log.error({ body: resp }, 'Claude request failed: Empty response')
       yield { error: `Claude request failed: Received empty response. Try again.` }

@@ -88,7 +88,7 @@ export const templates = {
 {{/if}}
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -122,7 +122,7 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 {{/if}}
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -153,7 +153,7 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{
 {{/if}}
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -212,7 +212,7 @@ Summary: {{scenario}}
 
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -239,7 +239,7 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{
 Below is an instruction that describes a task. Write a response that appropriately completes the request.<|im_end|>
 
 <|im_start|>system
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -250,7 +250,7 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{
 {{/if}}
 {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
 {{/if}}
-Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.<|im_end|>
+Then the roleplay chat begins.<|im_end|>
 
 {{#each msg}}{{#if .isbot}}<|im_start|>assistant{{/if}}{{#if .isuser}}<|im_start|>user{{/if}}
 {{.name}}: {{.msg}}<|im_end|>
