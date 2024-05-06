@@ -1,6 +1,4 @@
 import { Router } from 'express'
-import fs from 'fs'
-import mime from 'mime'
 
 import { assertValid } from '/common/valid'
 import { store } from '../db'
