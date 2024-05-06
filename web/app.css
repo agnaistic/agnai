@@ -82,3 +82,8 @@
     transform: rotate(360deg);
   }
 }
+
+.input-bar {
+  max-height: 50vh;
+  max-height: 50svh;
+}
