@@ -280,6 +280,22 @@ const InputBar: Component<{
             ev.preventDefault()
           }
         }}
+        onKeyUp={(ev) => {
+          if (ev.key === 'ArrowUp') {
+            const editBtn = document.querySelector(
+              '[data-last="true"] .edit-btn'
+            ) as HTMLDivElement | null
+            if (!editBtn) return
+
+            editBtn.click()
+            const msgBox = document.querySelector(
+              '[data-last="true"] .msg-edit-text-box'
+            ) as HTMLDivElement | null
+            if (!msgBox) return
+
+            msgBox.focus()
+          }
+        }}
         onInput={updateText}
       />
       <Button schema="clear" onClick={onButtonClick} class="h-full px-2 py-2">
