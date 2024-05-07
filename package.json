@@ -29,6 +29,7 @@
     "/common": "./common",
     "common": "./common"
   },
+  "browserslist": "> 0.5%, last 2 versions, not dead, Safari 14",
   "scripts": {
     "clean": "npx rimraf@5 --glob \"dist/*.js\" \"dist/*.css\" \"dist/*.map\"",
     "prepublishOnly": "npm run clean && npm run build",
