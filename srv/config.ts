@@ -113,6 +113,7 @@ export const config = {
     bucket: env('BUCKET_NAME', ''),
     endpoint: env('BUCKET_ENDPOINT', ''),
     saveImages: !!env('SAVE_IMAGES', ''),
+    region: env('AWS_REGION', 'us-east-1'),
   },
   jsonStorage: !!env('JSON_STORAGE', ''),
   jsonFolder: env('JSON_FOLDER', resolve(__dirname, '..', 'db')),

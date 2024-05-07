@@ -8,7 +8,7 @@ import { assertValid, Validator, UnwrapBody } from '/common/valid'
 import { config } from '../config'
 
 const s3 = new S3({
-  region: 'us-east-1',
+  region: config.storage.region,
   forcePathStyle: false,
   endpoint: `https://${config.storage.endpoint}`,
   credentials: {
