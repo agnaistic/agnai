@@ -46,7 +46,6 @@ import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
 import LoginModal from './pages/AiFans/LoginModal'
 import ModelPage from './pages/AiFans/ModelPage'
-import { createPromptParts } from '/common/prompt'
 
 const App: Component = () => {
   const state = userStore()

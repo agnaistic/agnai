@@ -11,7 +11,7 @@ export default function CosplayCard(props: any) {
       <div class="description absolute bottom-0 flex w-full items-center justify-between bg-black/[.5] px-4 py-2 backdrop-blur-sm group-hover:bg-gradient-to-r group-hover:from-[#B14DFF] group-hover:to-[#4A72FF]">
         <div class="flex items-center gap-4">
           <div class="h-12 w-12 overflow-hidden rounded-full border border-[#10E0F9]">
-            <img src={props.img} alt={props.name} />
+            <img src={getAssetUrl(props.img)} alt={props.name} />
           </div>
           <div class="">
             <span class="font-['ClashDisplay-Medium'] text-xl text-white">{props.name}</span>
