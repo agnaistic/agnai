@@ -1,7 +1,13 @@
+import { getAssetUrl } from '../util'
+
 export default function CosplayCard(props: any) {
   const card = (
     <div class="group relative cursor-pointer overflow-hidden rounded-3xl shadow-lg">
-      <img class="h-[516px] max-h-[516px] w-full" src={props.img} alt="cosplay image" />
+      <img
+        class="h-[516px] max-h-[516px] w-full"
+        src={getAssetUrl(props.img)}
+        alt="cosplay image"
+      />
       <div class="description absolute bottom-0 flex w-full items-center justify-between bg-black/[.5] px-4 py-2 backdrop-blur-sm group-hover:bg-gradient-to-r group-hover:from-[#B14DFF] group-hover:to-[#4A72FF]">
         <div class="flex items-center gap-4">
           <div class="h-12 w-12 overflow-hidden rounded-full border border-[#10E0F9]">
