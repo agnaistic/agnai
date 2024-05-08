@@ -61,14 +61,6 @@ export const ChatFooter: Component<{
             msgs.waiting ? 'opacity-70 saturate-0' : ''
           }`}
         >
-          <Button
-            size="md"
-            schema="bordered"
-            onClick={() => settingStore.toggleImpersonate(true)}
-            classList={{ 'impersonate-btn': true }}
-          >
-            <VenetianMask size={16} />
-          </Button>
           <For each={props.pills}>
             {(bot) => (
               <CharacterPill

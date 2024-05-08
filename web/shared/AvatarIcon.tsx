@@ -20,6 +20,7 @@ type Props = {
   Icon?: (props: LucideProps) => JSX.Element
   openable?: boolean
   noBorder?: boolean
+  active?: boolean
 }
 
 type Format = {
@@ -138,7 +139,7 @@ const AvatarIcon: Component<Props> = (props) => {
               [`avatar-${props.format.size}`]: true,
               'avatar-circle': props.format.corners === 'circle',
               'border-2': !props.noBorder,
-              'border-[var(--bg-800)]': !props.noBorder,
+              [`border-[${props.active ? 'var(--hl-500)' : 'var(--bg-800)'}]`]: !props.noBorder,
               'border-0': props.noBorder,
               visible: props.anonymize,
             }}
@@ -175,7 +176,7 @@ const AvatarIcon: Component<Props> = (props) => {
             }`}
             classList={{
               'border-2': !props.noBorder,
-              'border-[var(--bg-800)]': !props.noBorder,
+              [`border-[${props.active ? 'var(--hl-500)' : 'var(--bg-800)'}]`]: !props.noBorder,
               'border-0': props.noBorder,
             }}
             aria-hidden="true"
