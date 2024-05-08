@@ -35,5 +35,43 @@ export const agnaiPresets = {
     antiBond: false,
     useAdvancedPrompt: 'basic',
     promptOrderFormat: 'Alpaca',
+    promptOrder: [
+      {
+        placeholder: 'system_prompt',
+        enabled: true,
+      },
+      {
+        placeholder: 'scenario',
+        enabled: true,
+      },
+      {
+        placeholder: 'personality',
+        enabled: true,
+      },
+      {
+        placeholder: 'impersonating',
+        enabled: true,
+      },
+      {
+        placeholder: 'chat_embed',
+        enabled: true,
+      },
+      {
+        placeholder: 'memory',
+        enabled: true,
+      },
+      {
+        placeholder: 'example_dialogue',
+        enabled: true,
+      },
+      {
+        placeholder: 'history',
+        enabled: true,
+      },
+      {
+        placeholder: 'ujb',
+        enabled: true,
+      },
+    ],
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
