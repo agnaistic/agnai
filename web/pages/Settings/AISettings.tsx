@@ -252,7 +252,7 @@ const ApiAccessHelp = neat`
 
   1. Select your \`API Access Preset\`: This preset will be used for your API calls.
   2. Generate your API Key.
-  3. Use the API URL \`https://agnai.chat\` and your generated API key.
+  3. Use the API URL \`https://api.agnai.chat\` and your generated API key.
 
-  *SillyTavern*: Use _Ooba_ or _Aphrodite_
+  *SillyTavern*: Use _Ooba_ as the backend
 `
