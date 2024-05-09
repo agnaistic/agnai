@@ -7,7 +7,7 @@ type PostReq = {
   body: any
 }
 
-const baseUrl = `https://stablehorde.net/api/v2`
+const baseUrl = `https://aihorde.net/api/v2`
 
 export const PY_URL = 'http://localhost:5001'
 
