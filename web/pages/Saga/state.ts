@@ -1,6 +1,6 @@
 import { neat, now } from '/common/util'
 import { createStore } from '/web/store/create'
-import { SagaSession, SagaTemplate, sagaApi } from '/web/store/data/saga'
+import { sagaApi } from '/web/store/data/saga'
 import { parseTemplateV2 } from '/common/guidance/v2'
 import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
@@ -10,12 +10,13 @@ import { subscribe } from '/web/store/socket'
 import { imageApi } from '/web/store/data/image'
 import { createDebounce } from '/web/shared/util'
 import { TemplateExampleID, exampleTemplates } from './examples'
+import { Saga } from '/common/types'
 
 type SagaState = {
-  template: SagaTemplate
-  state: SagaSession
-  templates: SagaTemplate[]
-  sessions: SagaSession[]
+  template: Saga.Template
+  state: Saga.Session
+  templates: Saga.Template[]
+  sessions: Saga.Session[]
   inited: boolean
   busy: boolean
   showModal: 'help' | 'import' | 'none'
@@ -40,7 +41,8 @@ const init: SagaState = {
   state: {
     format: 'Alpaca',
     _id: '',
-    gameId: '',
+    userId: '',
+    templateId: '',
     overrides: {},
     responses: [],
     updated: now(),
@@ -104,15 +106,16 @@ export const sagaStore = createStore<SagaState>(
 
       yield { template }
 
-      if (state.gameId === template._id) return
+      if (state.templateId === template._id) return
 
       // If we change template and we have a session loaded, we need to clear the session
       yield {
         state: {
           _id: 'new',
+          userId: '',
           format: state.format || 'Alpaca',
           overrides: {},
-          gameId: template._id,
+          templateId: template._id,
           responses: [],
           updated: now(),
           init: undefined,
@@ -129,7 +132,7 @@ export const sagaStore = createStore<SagaState>(
         return { template: res.result, templates: next }
       }
     },
-    importTemplate: async ({ templates }, importing: SagaTemplate) => {
+    importTemplate: async ({ templates }, importing: Saga.Template) => {
       importing.name = `${importing.name} (imported)`
       const res = await sagaApi.saveTemplate(importing)
       if (res.result) {
@@ -171,11 +174,11 @@ export const sagaStore = createStore<SagaState>(
       return { state: { ...state, init: intro } }
     },
     async *newSession({ state }, templateId: string, onSuccess?: (id: string) => void) {
-      const init = state.gameId === templateId ? state.init : undefined
+      const init = state.templateId === templateId ? state.init : undefined
       const id = v4()
       const session = blankSession(templateId, {
         init,
-        gameId: state.gameId,
+        templateId: state.templateId,
         format: state.format,
         responses: [],
         overrides: state.overrides,
@@ -202,7 +205,7 @@ export const sagaStore = createStore<SagaState>(
               ...state,
               _id: v4(),
               responses: [],
-              gameId: state.gameId,
+              templateId: state.templateId,
               format: state.format,
               init: undefined,
               overrides: {},
@@ -215,7 +218,7 @@ export const sagaStore = createStore<SagaState>(
         onSuccess?.()
       }
     },
-    async *saveSession({ state }, onSave?: (session: SagaSession) => void) {
+    async *saveSession({ state }, onSave?: (session: Saga.Session) => void) {
       const next = { ...state, updated: now() }
       const res = await sagaApi.saveSession(next)
       if (res.result) {
@@ -241,7 +244,7 @@ export const sagaStore = createStore<SagaState>(
         session.format = 'Alpaca'
       }
 
-      const template = templates.find((t) => t._id === session.gameId)
+      const template = templates.find((t) => t._id === session.templateId)
       if (!template) {
         toastStore.error(`Session template not found`)
         return
@@ -260,7 +263,7 @@ export const sagaStore = createStore<SagaState>(
       })
       return { template: game }
     },
-    updateTemplate({ template: game }, update: Partial<SagaTemplate>) {
+    updateTemplate({ template: game }, update: Partial<Saga.Template>) {
       const next = { ...game, ...update }
 
       const fields = new Set(next.fields.filter((f) => !!f.list).map((f) => f.list))
@@ -277,7 +280,7 @@ export const sagaStore = createStore<SagaState>(
       return { template: next }
     },
 
-    update({ state }, update: Partial<SagaSession>) {
+    update({ state }, update: Partial<Saga.Session>) {
       const next = { ...state, ...update, updated: now() }
       return { state: next }
     },
@@ -511,11 +514,12 @@ subscribe(
   }
 )
 
-function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): SagaSession {
+function blankSession(templateId: string, overrides: Partial<Saga.Session> = {}): Saga.Session {
   return {
     _id: v4(),
     format: 'Alpaca',
-    gameId,
+    userId: '',
+    templateId,
     overrides: {},
     responses: [],
     updated: now(),
@@ -523,11 +527,12 @@ function blankSession(gameId: string, overrides: Partial<SagaSession> = {}): Sag
   }
 }
 
-function blankTemplate(partial: Partial<SagaTemplate> = {}): SagaTemplate {
+function blankTemplate(partial: Partial<Saga.Template> = {}): Saga.Template {
   return {
     _id: v4(),
     name: 'New Template',
     byline: '',
+    userId: '',
     description: '',
     imagePrompt: '{{image_caption}}',
     imagesEnabled: false,
@@ -582,10 +587,11 @@ function newTemplate() {
   }
 }
 
-function exampleTemplate(): SagaTemplate {
+function exampleTemplate(): Saga.Template {
   return {
     _id: '',
     fields: [],
+    userId: '',
 
     name: 'Detective RPG (Example)',
     byline: 'Solve AI generated crimes',
@@ -642,28 +648,23 @@ function exampleTemplate(): SagaTemplate {
 
     {{history}}
 
-    <user>
-    {{main_char}}: {{input}}</user>
+    <user>{{main_char}}: {{input}}</user>
 
     Write the next scene with the character's in the scene actions and dialogue.
 
-    <bot>
-    [response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
+    <bot>[response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
 
-    <user>
-    Write a brief image caption describing the scene and appearances of the characters: "[image_caption | tokens=200 | stop="]"
+    <user>Write a brief image caption describing the scene and appearances of the characters: "[image_caption | tokens=200 | stop="]"
 
-    <user>
-    Where is the main character currently standing?</user>
+    <user>Where is the main character currently standing?</user>
 
-    <bot>
-    Location: "[location | temp=0.4 | tokens=50 | stop="]"</bot>`,
+    <bot>Location: "[location | temp=0.4 | tokens=50 | stop="]"</bot>`,
   }
 }
 
 export function formatResponse(
   template: string,
-  session: SagaSession,
+  session: Saga.Session,
   values: Record<string, any>
 ) {
   let output = template || '{{response}}'
@@ -681,7 +682,7 @@ export function formatResponse(
   return output
 }
 
-function insertPlaceholders(prompt: string, template: SagaTemplate, values: Record<string, any>) {
+function insertPlaceholders(prompt: string, template: Saga.Template, values: Record<string, any>) {
   let output = prompt
   for (const manual of template.manual || []) {
     const value = values[manual] || ''
@@ -692,7 +693,7 @@ function insertPlaceholders(prompt: string, template: SagaTemplate, values: Reco
   return output
 }
 
-function sortByAge(left: SagaSession, right: SagaSession) {
+function sortByAge(left: Saga.Session, right: Saga.Session) {
   const l = new Date(left.updated ?? 0).valueOf()
   const r = new Date(right.updated ?? 0).valueOf()
   return r - l

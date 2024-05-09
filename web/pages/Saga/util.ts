@@ -2,10 +2,11 @@ import { v4 } from 'uuid'
 import { sagaStore } from './state'
 import { downloadJson } from '/web/shared/util'
 import { toastStore } from '/web/store'
-import { SagaTemplate } from '/web/store/data/saga'
+import { Saga } from '/common/types'
 
-const emptyTemplate: SagaTemplate = {
+const emptyTemplate: Saga.Template = {
   _id: '',
+  userId: '',
   name: '',
   byline: '',
   description: '',
@@ -41,7 +42,7 @@ export function exportTemplate(id: string) {
   downloadJson(template, `template_${id.slice(0, 4)}`)
 }
 
-export function validateTemplate(template: any): asserts template is SagaTemplate {
+export function validateTemplate(template: any): asserts template is Saga.Template {
   const missing: string[] = []
 
   for (const key of Object.keys(emptyTemplate)) {
@@ -70,7 +71,7 @@ export function importTemplate(template: any) {
 
 export function getTemplateFields(
   type: 'intro' | 'input' | 'response',
-  template: SagaTemplate,
+  template: Saga.Template,
   msg: Record<string, any>
 ) {
   const intro = extractFields(template.introduction || '{{scene}}')

@@ -18,7 +18,6 @@ import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { sagaStore } from './state'
 import { GuidanceNode, parseTemplateV2 } from '/common/guidance/v2'
-import { SagaField, SagaSession } from '/web/store/data/saga'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 import { Card, SolidCard } from '/web/shared/Card'
@@ -31,6 +30,7 @@ import { usePaneManager } from '/web/shared/hooks'
 import { Toggle } from '/web/shared/Toggle'
 import Tabs from '/web/shared/Tabs'
 import { useSearchParams } from '@solidjs/router'
+import { Saga } from '/common/types'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -157,7 +157,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
       const seen: Record<string, boolean> = {}
       const holders: string[] = []
       const errors: string[] = []
-      const newFields: SagaField[] = []
+      const newFields: Saga.Field[] = []
 
       const nodes: GuidanceNode[] = []
 
@@ -237,7 +237,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
   const updateHistory: FormHandler = (ev) =>
     sagaStore.updateTemplate({ history: ev.currentTarget.value })
 
-  const onFieldChange = (name: string) => (next: Partial<SagaField>) => {
+  const onFieldChange = (name: string) => (next: Partial<Saga.Field>) => {
     const fields = state.template.fields.map((prev) =>
       prev.name === name ? { ...prev, ...next } : prev
     )
@@ -471,7 +471,7 @@ const ManualField: Component<{
   field: string
   override?: string
   setOverride: (text: string) => void
-  session: SagaSession
+  session: Saga.Session
 }> = (props) => {
   return (
     <div
@@ -495,11 +495,11 @@ const ManualField: Component<{
 }
 
 const Field: Component<{
-  field: SagaField
-  onChange: (next: Partial<SagaField>) => void
+  field: Saga.Field
+  onChange: (next: Partial<Saga.Field>) => void
   override?: string
   setOverride: (text: string) => void
-  session: SagaSession
+  session: Saga.Session
 }> = (props) => {
   const value = createMemo(() => {
     const name = props.field.name
