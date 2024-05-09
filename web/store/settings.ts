@@ -49,7 +49,7 @@ export type SettingState = {
   overlay: boolean
 }
 
-const HORDE_URL = `https://stablehorde.net/api/v2`
+const HORDE_URL = `https://aihorde.net/api/v2`
 
 const FLAG_KEY = 'agnai-flags'
 
