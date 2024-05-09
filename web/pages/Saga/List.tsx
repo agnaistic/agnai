@@ -9,9 +9,9 @@ import { markdown } from '/web/shared/markdown'
 import { neat } from '/common/util'
 import Button from '/web/shared/Button'
 import { PlusIcon, TrashIcon } from 'lucide-solid'
-import { SagaSession } from '/web/store/data/saga'
 import { GuidanceHelp } from './Help'
 import { toSessionUrl } from './util'
+import { Saga } from '/common/types'
 
 export const SagaList: Component = (props) => {
   const nav = useNavigate()
@@ -24,13 +24,13 @@ export const SagaList: Component = (props) => {
     const list = state.sessions
       .filter((s) => {
         if (!s.updated) return false
-        if (s.gameId in temps === false) return false
+        if (s.templateId in temps === false) return false
         return true
       })
       .map((s) => {
         return {
           session: s,
-          template: temps[s.gameId],
+          template: temps[s.templateId],
           url: toSessionUrl(s._id),
           updated: new Date(s.updated),
         }
@@ -96,7 +96,7 @@ export const SessionList: Component<{
     const list = state.templates
       .map((template) => {
         const sessions = state.sessions
-          .filter((s) => s.gameId === template._id && !!s.updated)
+          .filter((s) => s.templateId === template._id && !!s.updated)
           .sort((l, r) => (l.updated === r.updated ? 0 : l.updated > r.updated ? -1 : 1))
 
         return {
@@ -150,8 +150,8 @@ export const SessionList: Component<{
 }
 
 const Sessions: Component<{
-  sessions: SagaSession[]
-  current: SagaSession
+  sessions: Saga.Session[]
+  current: Saga.Session
   onSession?: () => void
 }> = (props) => {
   const nav = useNavigate()

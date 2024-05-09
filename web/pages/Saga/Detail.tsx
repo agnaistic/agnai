@@ -17,7 +17,6 @@ import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
 import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
-import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import {
@@ -39,6 +38,7 @@ import { Pill } from '/web/shared/Card'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
+import { Saga } from '/common/types'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
@@ -183,7 +183,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
   )
 }
 
-const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (props) => {
+const Header: Component<{ template: Saga.Template; session: Saga.Session }> = (props) => {
   const [_, setParams] = useSearchParams()
   return (
     <div class="flex w-full justify-between rounded-md p-1">
@@ -212,7 +212,7 @@ const Footer: Component<{
   const params = useParams()
   const nav = useNavigate()
 
-  const onSave = (session: SagaSession) => {
+  const onSave = (session: Saga.Session) => {
     toastStore.success('Session saved')
     if (session._id !== params.id) {
       nav(toSessionUrl(session._id))
@@ -296,8 +296,8 @@ const MainMenu = () => {
 }
 
 const Response: Component<{
-  template: SagaTemplate
-  session: SagaSession
+  template: Saga.Template
+  session: Saga.Session
   type: 'input' | 'response' | 'intro'
   siblings?: number
   msg: Record<string, any>

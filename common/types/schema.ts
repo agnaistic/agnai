@@ -14,6 +14,7 @@ import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
 import { ModelFormat } from '../presets/templates'
+import * as Saga from './saga'
 
 export type AllDoc =
   | AppSchema.Announcement
@@ -34,6 +35,8 @@ export type AllDoc =
   | AppSchema.ApiKey
   | AppSchema.PromptTemplate
   | AppSchema.Configuration
+  | AppSchema.SagaTemplate
+  | AppSchema.SagaSession
 
 export type OAuthScope = keyof typeof oauthScopes
 
@@ -314,6 +317,21 @@ export namespace AppSchema {
     userId: string
     createdAt: string
     enabled: boolean
+  }
+
+  export interface SagaField {
+    name: string
+    label: string
+    visible: boolean
+    type: 'string' | 'number' | 'boolean'
+  }
+
+  export interface SagaTemplate extends Saga.Template {
+    kind: 'saga-template'
+  }
+
+  export interface SagaSession extends Saga.Session {
+    kind: 'saga-session'
   }
 
   export interface ChatTree {

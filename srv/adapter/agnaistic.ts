@@ -158,9 +158,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
 
-  const stops = Array.isArray(preset.stopSequences)
-    ? new Set(preset.stopSequences)
-    : new Set<string>()
+  const stops =
+    useRecommended && Array.isArray(preset.stopSequences)
+      ? new Set(preset.stopSequences)
+      : new Set<string>()
 
   if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
     for (const stop of opts.gen.stopSequences) {
