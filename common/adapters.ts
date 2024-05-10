@@ -134,7 +134,8 @@ export const OPENAI_MODELS = {
   GPT4_32k_0613: 'gpt-4-32k-0613',
   GPT45_1106: 'gpt-4-1106-preview',
   GPT45_0125: 'gpt-4-0125-preview',
-  GPT45_Preview: 'gpt-4-turbo-preview', // latest GPT 4 Turbo
+  GPT45_Preview: 'gpt-4-turbo-preview',
+  GPT45_0409: 'gpt4-turbo-0409', // latest GPT 4 Turbo
 } as const
 
 export const MISTRAL_MODELS = {
@@ -160,6 +161,7 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT45_1106]: true,
   [OPENAI_MODELS.GPT45_0125]: true,
   [OPENAI_MODELS.GPT45_Preview]: true,
+  [OPENAI_MODELS.GPT45_0409]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
