@@ -8,6 +8,7 @@ let connected = false
 
 type LiveCount = {
   count: number
+  versioned: number
   hostname: string
   date: Date
   max: number

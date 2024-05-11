@@ -27,6 +27,7 @@ type AdminState = {
   metrics?: {
     totalUsers: number
     connected: number
+    versioned: number
     maxLiveCount: number
     each: Array<{ count: number; date: string; hostname: string; max: number }>
   }

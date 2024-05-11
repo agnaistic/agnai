@@ -41,6 +41,12 @@ const MetricsPage: Component = () => {
 
         <FormLabel
           fieldName="active"
+          label="Versioned Users"
+          helperText={state.metrics?.versioned || '...'}
+        />
+
+        <FormLabel
+          fieldName="active"
           label="Max Online Users"
           helperText={state.metrics?.maxLiveCount || '...'}
         />
