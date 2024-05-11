@@ -135,7 +135,9 @@ export const OPENAI_MODELS = {
   GPT45_1106: 'gpt-4-1106-preview',
   GPT45_0125: 'gpt-4-0125-preview',
   GPT45_Preview: 'gpt-4-turbo-preview',
-  GPT45_0409: 'gpt4-turbo-0409', // latest GPT 4 Turbo
+  GPT4_Turbo_Preview: 'gpt-4-turbo-preview',
+  GPT4_Turbo: 'gpt-4-turbo',
+  GPT4_Turbo_0409: 'gpt-4-turbo-2024-04-09',
 } as const
 
 export const MISTRAL_MODELS = {
@@ -145,6 +147,23 @@ export const MISTRAL_MODELS = {
   MistralMedium: 'mistral-medium-latest',
   MistralLarge: 'mistral-large-latest',
 } as const
+
+export const OPENAI_CONTEXTS: Record<string, number> = {
+  [OPENAI_MODELS.Turbo]: 16300,
+  [OPENAI_MODELS.Turbo0613]: 16300,
+  [OPENAI_MODELS.Turbo1106]: 16300,
+  [OPENAI_MODELS.Turbo_16k]: 16300,
+  [OPENAI_MODELS.GPT4]: 8100,
+  [OPENAI_MODELS.GPT4_0314]: 8100,
+  [OPENAI_MODELS.GPT4_0613]: 8100,
+  [OPENAI_MODELS.GPT4_32k]: 32000,
+  [OPENAI_MODELS.GPT4_32k_0314]: 32000,
+  [OPENAI_MODELS.GPT4_32k_0613]: 32000,
+  [OPENAI_MODELS.GPT45_1106]: 128000,
+  [OPENAI_MODELS.GPT45_0125]: 128000,
+  [OPENAI_MODELS.GPT45_Preview]: 128000,
+  [OPENAI_MODELS.GPT4_Turbo_0409]: 128000,
+}
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
@@ -161,7 +180,7 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT45_1106]: true,
   [OPENAI_MODELS.GPT45_0125]: true,
   [OPENAI_MODELS.GPT45_Preview]: true,
-  [OPENAI_MODELS.GPT45_0409]: true,
+  [OPENAI_MODELS.GPT4_Turbo_0409]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point

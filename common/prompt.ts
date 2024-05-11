@@ -1,6 +1,12 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS, THIRDPARTY_HANDLERS } from './adapters'
+import {
+  AIAdapter,
+  NOVEL_MODELS,
+  OPENAI_CONTEXTS,
+  OPENAI_MODELS,
+  THIRDPARTY_HANDLERS,
+} from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -816,17 +822,8 @@ export function getContextLimit(
     }
 
     case 'openai': {
-      const models = new Set<string>([
-        OPENAI_MODELS.Turbo,
-        OPENAI_MODELS.Turbo0301,
-        OPENAI_MODELS.Turbo0613,
-        OPENAI_MODELS.DaVinci,
-      ])
-
-      if (!model || models.has(model)) return Math.min(configuredMax, 4090) - genAmount
-      if (model === OPENAI_MODELS.Turbo_16k) return Math.min(configuredMax, 16360) - genAmount
-
-      return configuredMax - genAmount
+      const limit = OPENAI_CONTEXTS[model] || 8100
+      return Math.min(configuredMax, limit) - genAmount
     }
 
     case 'replicate':
