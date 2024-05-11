@@ -1,12 +1,6 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import {
-  AIAdapter,
-  NOVEL_MODELS,
-  OPENAI_CONTEXTS,
-  OPENAI_MODELS,
-  THIRDPARTY_HANDLERS,
-} from './adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_CONTEXTS, THIRDPARTY_HANDLERS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
