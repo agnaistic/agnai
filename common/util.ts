@@ -135,7 +135,7 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
 }
 
 const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>~`.split(''))
-const END_SEQUENCES = ['\n```', '\n---', '\n***', '\n___', '\n===', '\n"""']
+const END_SEQUENCES = ['\n```', '\n---', '\n***', '\n___', '\n===', '\n"""', '\n*/']
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
