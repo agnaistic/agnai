@@ -1,6 +1,6 @@
 import * as lf from 'localforage'
 import { v4 } from 'uuid'
-import { getImageData } from './data/chars'
+import { imageApi } from './data/image'
 
 const store = lf.createInstance({ name: `agnai-images` })
 
@@ -38,7 +38,7 @@ async function addImage(collection: string, image: string, id?: string): Promise
   const imageId = `${collection}-${id ?? v4().slice(0, 5)}`
 
   if (!image.startsWith('data:')) {
-    image = (await getImageData(image)) || image
+    image = (await imageApi.getImageData(image)) || image
   }
 
   await store.setItem(imageId, image)

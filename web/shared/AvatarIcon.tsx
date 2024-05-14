@@ -4,10 +4,10 @@ import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
-import { getImageData } from '../store/data/chars'
 import { AppSchema, UI } from '/common/types'
 import AvatarContainer from './Avatar/Container'
 import { FullSprite } from '/common/types/sprite'
+import { imageApi } from '../store/data/image'
 
 type Props = {
   visual?: string
@@ -113,7 +113,7 @@ const AvatarIcon: Component<Props> = (props) => {
       return
     }
     if (props.avatarUrl instanceof File) {
-      const data = await getImageData(props.avatarUrl)
+      const data = await imageApi.getImageData(props.avatarUrl)
       setAvatar(data!)
     } else {
       setAvatar(props.avatarUrl)
