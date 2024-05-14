@@ -2,7 +2,7 @@ import { Component, createEffect, createSignal, onMount } from 'solid-js'
 import { characterStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { useParams } from '@solidjs/router'
-import { setComponentPageTitle } from '/web/shared/util'
+import { getAssetUrl, setComponentPageTitle } from '/web/shared/util'
 import { isLoggedIn } from '/web/store/api'
 
 import favoriteIcon from '/web/asset/aifans/model-favorite-star.png'
@@ -21,6 +21,7 @@ const ModelPage: Component = () => {
   const params = useParams()
 
   const [character, setCharacter] = createSignal<AppSchema.Character | undefined>(undefined)
+  const [avatarUrl, setAvatarUrl] = createSignal<string | undefined>(undefined)
 
   const chars = characterStore((s) => ({
     list: s.characters.list,
@@ -35,7 +36,6 @@ const ModelPage: Component = () => {
     if (!chars.loaded) {
       characterStore.getCharacters()
     }
-    window.scrollTo(0, 0)
 
     // chatStore.getAllChats()
   })
@@ -48,6 +48,11 @@ const ModelPage: Component = () => {
 
     const char = chars.list.find((c) => c._id === params.id)
     setCharacter(char)
+
+    const avatar = character()?.avatar
+    if (avatar) {
+      setAvatarUrl(getAssetUrl(avatar))
+    }
   })
 
   const defaultDescription = `Hi I’m Candice Nice, a vibrant influencer who loves to please my followers with a
@@ -60,14 +65,14 @@ const ModelPage: Component = () => {
       <div class="h-full w-full bg-model-backdrop">
         <div class="relative w-full">
           <div class="absolute left-3 right-3 top-3 md:relative md:left-auto md:right-auto md:top-auto md:bg-white/5 ">
-            <div class="xl:container md:mx-auto md:px-5 lg:px-[20px] xl:px-[40px] 2xl:px-[60px]  ">
+            <div class="xl:container md:mx-auto md:px-5 lg:px-[20px] xl:px-[40px] 2xl:max-w-[1775px] 2xl:px-[60px]  ">
               <Header />
             </div>
           </div>
-          <div class="w-full xl:container md:mx-auto md:px-5 md:py-[27px] lg:px-[20px] xl:px-[40px] 2xl:px-[60px]">
+          <div class="w-full xl:container md:mx-auto md:px-5 md:py-[27px] lg:px-[20px] xl:px-[40px] 2xl:max-w-[1775px] 2xl:px-[60px]">
             <div class="md:flex">
-              <div class=" h-[445px] w-full overflow-hidden md:shrink-0 md:grow-0 md:basis-[387px] md:rounded-[12px]">
-                <img class="w-full" src={character()?.avatar} />
+              <div class="relative h-[445px] w-full overflow-hidden md:shrink-0 md:grow-0 md:basis-[387px] md:rounded-[12px]">
+                <img class="absolute h-full w-full object-cover" src={avatarUrl()} />
               </div>
               <div class="md:ml-6">
                 <div class="mx-[22px] my-[14px] flex">
@@ -88,7 +93,7 @@ const ModelPage: Component = () => {
                 </div>
                 <div class="mx-[22px] mb-[30px] mt-[18px]">
                   <div class="md:flex md:flex-col-reverse">
-                    <p class="break-all font-display text-[18px]">
+                    <p class="break-all font-display text-[18px] 2xl:max-w-2xl">
                       {character()?.description || defaultDescription}
                     </p>
                     <div class="mt-[30px] md:mb-4 md:mt-0 lg:flex">

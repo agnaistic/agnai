@@ -1,7 +1,7 @@
 import { A } from '@solidjs/router'
 import { userStore } from '/web/store'
 import { isLoggedIn } from '/web/store/api'
-import Logo from '/web/asset/aifans/logo.svg'
+import Logo from '/web/asset/aifans/svg/logo.svg'
 
 const Header = () => {
   return (

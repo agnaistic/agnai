@@ -83,7 +83,7 @@ export const userStore = createStore<UserState>(
       userStore.syncPatreonAccount(true)
     }
 
-    if (init.user.billing) {
+    if (init.user?.billing) {
       userStore.validateSubscription(true)
     }
 
@@ -91,12 +91,12 @@ export const userStore = createStore<UserState>(
       userStore.getTiers()
     }
 
-    window.usePipeline = init.user.useLocalPipeline
+    window.usePipeline = init.user?.useLocalPipeline
 
     /**
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
      */
-    if (!init.user.ui) {
+    if (!init.user?.ui) {
       userStore.saveUI(defaultUIsettings)
     } else {
       userStore.receiveUI(init.user.ui)

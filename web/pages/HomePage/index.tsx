@@ -6,6 +6,11 @@ import Banner from '/web/shared/aifans/Banner'
 import CosplayCard from '/web/shared/aifans/CosplayCard'
 import CreatorCard from '/web/shared/aifans/CreatorCard'
 
+import Card from '/web/shared/aifans/Cards/Card'
+// import Footer from '../Footer'
+import BottomBar from './BottomBar'
+import Hero from './Hero'
+
 import model4 from '/web/shared/assets/img/model4.png'
 import creator2 from '/web/shared/assets/img/creator2.png'
 import trending3 from '/web/shared/assets/img/trending3.png'
@@ -50,6 +55,28 @@ export default function Home() {
   createEffect(() => {
     // console.log('JB', chars.list)
   })
+
+  return (
+    <div class="h-full w-full bg-black">
+      <div class="h-full w-full bg-model-backdrop">
+        <div class="relative w-full">
+          <div class="absolute left-3 right-3 top-3">
+            <div class="px-8">
+              <Header />
+            </div>
+          </div>
+          <div>
+            <Hero />
+            <Card popular={chars.list} />
+            <Footer />
+            <div class="fixed bottom-0 z-50 w-full md:hidden">
+              <BottomBar />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <>

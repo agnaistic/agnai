@@ -190,15 +190,15 @@ const Layout: Component<{ children?: any }> = (props) => {
   return (
     <ContextProvider>
       <style>{css}</style>
-      <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
+      <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] flex flex-col justify-between">
         <Show when={!isAiFansPage()}>
           <NavBar />
         </Show>
-        <div class="flex w-full grow flex-row overflow-y-hidden">
+        <div class="flex w-full grow flex-row">
           <Show when={!isAiFansPage()}>
             <Navigation />
           </Show>
-          <main class="w-full overflow-y-auto" data-background style={bg()}>
+          <main class="w-full" data-background style={bg()}>
             <div class={containerDivStyles()} classList={containerDivClasslist()}>
               <Show when={cfg.init}>
                 {props.children}

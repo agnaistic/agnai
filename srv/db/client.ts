@@ -16,7 +16,7 @@ export async function connect(verbose = false) {
   }
 
   retrying = false
-  const cli = new MongoClient(uri, { ignoreUndefined: true })
+  const cli = new MongoClient(uri, { ignoreUndefined: true, maxPoolSize: 50 })
   try {
     const timer = setTimeout(() => cli.close(), 10000)
     await cli.connect()

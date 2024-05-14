@@ -29,7 +29,7 @@ const FeaturedCreator: Component = () => {
       <button class="mb-4 rounded-full bg-blue-600 px-6 py-2 font-bold hover:bg-blue-500">
         Register For Free
       </button>
-      <a href="#" class="text-red-600 hover:underline">
+      <a href="#" class="text-display text-red-600 hover:underline">
         See Profile{' >'}
       </a>
     </div>

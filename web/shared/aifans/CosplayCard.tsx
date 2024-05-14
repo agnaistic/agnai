@@ -1,6 +1,8 @@
+import { A, useNavigate } from '@solidjs/router'
 import { getAssetUrl } from '../util'
 
 export default function CosplayCard(props: any) {
+  const navigate = useNavigate()
   const card = (
     <div class="group relative cursor-pointer overflow-hidden rounded-3xl shadow-lg">
       <img
@@ -30,7 +32,7 @@ export default function CosplayCard(props: any) {
   )
 
   if (props.id) {
-    return <a href={`/model/${props.id}`}>{card}</a>
+    return <button onClick={() => navigate(`/model/${props.id}`, { scroll: true })}>{card}</button>
   }
 
   return card

@@ -105,7 +105,6 @@
     "pino": "^8.10.0",
     "pino-pretty": "^9.2.0",
     "redis": "^4.6.5",
-    "solid-router": "^0.3.3",
     "solid-slider": "^1.3.17",
     "stripe": "^13.7.0",
     "throng": "^5.0.0",
@@ -115,6 +114,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
+    "@faker-js/faker": "^8.4.1",
     "@melloware/coloris": "^0.20.0",
     "@parcel/config-default": "^2.12.0",
     "@parcel/core": "^2.12.0",
@@ -190,5 +190,15 @@
   },
   "alias": {
     "easy-speech": "easy-speech/dist/EasySpeech.cjs.js"
-  }
+  },
+  "staticFiles": [
+    {
+      "staticPath": "static/images",
+      "staticOutPath": "images"
+    },
+    {
+      "staticPath": "static/characters",
+      "staticOutPath": "assets"
+    }
+  ]
 }

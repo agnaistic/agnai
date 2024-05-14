@@ -10,6 +10,12 @@ module.exports = {
     extend: {
       backgroundImage: {
         'model-backdrop': "url('/web/asset/aifans/model-backdrop.png')",
+        'home-hero-mobile': "url('/static/images/Header1.png')",
+        'home-hero-desktop': "url('/static/images/hero-bg1.png')",
+        'home-hero-shadow': "url('/static/images/shadow.png')",
+      },
+      boxShadow: {
+        hero: '0px 0px 10px 0px rgba(0, 0, 0, 0.60)',
       },
       screens: {
         xs: '768px',
