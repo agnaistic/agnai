@@ -16,8 +16,8 @@ import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
-import { getRootRgb } from '../../shared/util'
 import { Card } from '/web/shared/Card'
+import { getRootRgb } from '/web/shared/colors'
 
 export type ChatModal =
   | 'export'

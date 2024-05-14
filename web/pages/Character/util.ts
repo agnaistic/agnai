@@ -1,11 +1,12 @@
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { toastStore } from '/web/store'
-import { ALLOWED_TYPES, charsApi, getImageData } from '/web/store/data/chars'
+import { charsApi } from '/web/store/data/chars'
 import { exportCharacter } from '/common/characters'
 import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
+import { imageApi } from '/web/store/data/image'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -223,11 +224,13 @@ function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
   if (url.startsWith('data:')) {
     const [header] = url.split(',')
     const ext = header.slice(11, -7)
-    return ALLOWED_TYPES.has(ext) ? { type: 'base64', ext } : { type: 'base64', ext: 'unknown' }
+    return imageApi.ALLOWED_TYPES.has(ext)
+      ? { type: 'base64', ext }
+      : { type: 'base64', ext: 'unknown' }
   }
 
   const ext = url.split('.').slice(-1)[0]
-  if (ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
+  if (imageApi.ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
   return { type: 'url', ext: 'unknown' }
 }
 
@@ -238,7 +241,7 @@ async function getImageBase64(image: string) {
     image = getAssetUrl(image)
   }
 
-  const base64 = await getImageData(image)
+  const base64 = await imageApi.getImageData(image)
   return base64!
 }
 

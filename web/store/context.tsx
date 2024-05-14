@@ -4,12 +4,13 @@ import { characterStore } from './character'
 import { settingStore } from './settings'
 import { chatStore } from './chat'
 import { AppSchema } from '/common/types'
-import { getSettingColor, userStore } from './user'
-import { hexToRgb, toMap } from '../shared/util'
+import { userStore } from './user'
+import { toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
 import { PresetInfo, getClientPreset } from '../shared/adapter'
+import { getRgbaFromVar } from '../shared/colors'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -153,15 +154,4 @@ export function useAppContext() {
   const [state, setState] = useContext(AppContext)
 
   return [state, { setState }] as const
-}
-
-function getRgbaFromVar(cssVar: string, opacity: number): JSX.CSSProperties {
-  const hex = getSettingColor(cssVar)
-  const rgb = hexToRgb(hex)
-  if (!rgb) return {}
-
-  return {
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`,
-    'backdrop-filter': 'blur(5px)',
-  }
 }

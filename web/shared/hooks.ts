@@ -1,11 +1,11 @@
 import { Accessor, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
-import { hexToRgb } from './util'
+import { userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
+import { getSettingColor, hexToRgb } from './colors'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'

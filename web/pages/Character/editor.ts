@@ -14,13 +14,13 @@ import {
   toastStore,
   userStore,
 } from '/web/store'
-import { getImageData } from '/web/store/data/chars'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { GenField, generateChar, regenerateCharProp } from './generate-char'
 import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
+import { v4 } from 'uuid'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -210,7 +210,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       return
     }
 
-    const data = await getImageData(file)
+    const data = await imageApi.getImageData(file)
     setImageData(data)
   })
 
@@ -219,6 +219,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
     if (nextImage) {
       const file = await imageApi.dataURLtoFile(nextImage)
+
       setImageData(nextImage)
       setState('avatar', file)
     }
@@ -237,12 +238,13 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const avatar = await generateAvatar(payload())
 
     if (avatar) {
-      const base64 = await getImageData(avatar)
+      const base64 = await imageApi.getImageData(avatar)
       setState('avatar', avatar)
       setImageData(base64)
 
       if (base64) {
-        cache.addImage(base64)
+        const id = `${v4()}.png`
+        cache.addImage(base64, id)
       }
 
       return base64

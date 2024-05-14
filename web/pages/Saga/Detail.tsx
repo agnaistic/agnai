@@ -1,3 +1,4 @@
+import * as Purify from 'dompurify'
 import {
   Component,
   For,
@@ -39,10 +40,19 @@ import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
 import { Saga } from '/common/types'
+import { getRgbaFromVar } from '/web/shared/colors'
 
 export const SagaDetail: Component = (props) => {
   const state = sagaStore()
   const user = userStore()
+
+  const ui = createMemo(() => {
+    return {
+      response: getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
+      intro: getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
+      input: getRgbaFromVar(user.current.msgBackground || 'bg-800', user.ui.msgOpacity),
+    }
+  })
 
   const params = useParams()
   const [search, setSearch] = useSearchParams()
@@ -131,6 +141,7 @@ export const SagaDetail: Component = (props) => {
               type="intro"
               msg={state.state.init!}
               session={state.state}
+              ui={ui()}
             />
           </Show>
 
@@ -143,6 +154,7 @@ export const SagaDetail: Component = (props) => {
                   msg={res()}
                   session={state.state}
                   index={i}
+                  ui={ui()}
                 />
                 <Response
                   template={state.template}
@@ -151,13 +163,16 @@ export const SagaDetail: Component = (props) => {
                   session={state.state}
                   siblings={state.state.responses.length}
                   index={i}
-                />
+                  ui={ui()}
+                >
+                  {' '}
+                  <Show when={state.busy && i === state.state.responses.length - 1}>
+                    <Loading type="flashing" />
+                  </Show>
+                </Response>
               </>
             )}
           </Index>
-          <Show when={state.busy}>
-            <Loading type="flashing" />
-          </Show>
         </div>
       </ModeDetail>
       <Show when={load()}>
@@ -298,10 +313,12 @@ const MainMenu = () => {
 const Response: Component<{
   template: Saga.Template
   session: Saga.Session
+  ui: Record<string, JSX.CSSProperties>
   type: 'input' | 'response' | 'intro'
   siblings?: number
   msg: Record<string, any>
   index?: number
+  children?: any
 }> = (props) => {
   const [edit, setEdit] = createSignal(false)
   const [mods, setMods] = createStore<Record<string, string>>({})
@@ -362,23 +379,22 @@ const Response: Component<{
     }
   }
 
+  const content = createMemo(() => renderMessage(text()))
+
   return (
     <>
       <div
         class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
-        classList={{
-          'bg-800': props.type === 'intro' || props.type === 'response',
-          'bg-700': props.type === 'input',
-        }}
+        style={props.ui[props.type]}
       >
         <Show when={!edit()}>
-          <div innerHTML={markdown.makeHtml(text())} />
+          <div innerHTML={content()} />
         </Show>
         <Show when={edit()}>
           <div class="flex flex-col gap-1">
             <For each={fields()}>
               {(field) => (
-                <div class="bg-700 p-1 text-sm">
+                <div class="bg-700 rounded-md p-1 text-sm">
                   <Pill small type="hl">
                     {field}
                   </Pill>
@@ -392,39 +408,44 @@ const Response: Component<{
             </For>
           </div>
         </Show>
-        <div class="flex justify-end gap-1">
-          <Show when={!edit()}>
-            <Button size="pill" schema="clear" onClick={startEdit}>
-              <Pencil size={20} />
-            </Button>
-
-            <Show when={props.type === 'response'}>
-              <Button
-                size="pill"
-                schema="clear"
-                onClick={() => sagaStore.deleteResponse(props.index!)}
-              >
-                <Trash size={20} />
+        <div class="flex justify-between gap-1">
+          <div>
+            <Show when={canRetry() && !!props.children}>{props.children}</Show>
+          </div>
+          <div class="flex items-end justify-end gap-1">
+            <Show when={!edit()}>
+              <Button size="pill" schema="clear" onClick={startEdit}>
+                <Pencil size={20} />
               </Button>
-              <Button
-                size="pill"
-                schema="clear"
-                onClick={() => sagaStore.retry()}
-                classList={{ hidden: !canRetry() }}
-              >
-                <RefreshCw size={20} />
+
+              <Show when={props.type === 'response'}>
+                <Button
+                  size="pill"
+                  schema="clear"
+                  onClick={() => sagaStore.deleteResponse(props.index!)}
+                >
+                  <Trash size={20} />
+                </Button>
+                <Button
+                  size="pill"
+                  schema="clear"
+                  onClick={() => sagaStore.retry()}
+                  classList={{ hidden: !canRetry() }}
+                >
+                  <RefreshCw size={20} />
+                </Button>
+              </Show>
+            </Show>
+
+            <Show when={edit()}>
+              <Button size="pill" schema="success" onClick={save}>
+                Save
+              </Button>
+              <Button size="pill" schema="error" onClick={() => setEdit(false)}>
+                Cancel
               </Button>
             </Show>
-          </Show>
-
-          <Show when={edit()}>
-            <Button size="pill" schema="success" onClick={save}>
-              Save
-            </Button>
-            <Button size="pill" schema="error" onClick={() => setEdit(false)}>
-              Cancel
-            </Button>
-          </Show>
+          </div>
         </div>
       </div>
     </>
@@ -438,4 +459,35 @@ const Label: Component<{ label: string; children: JSX.Element }> = (props) => {
       <div class="bg-900 rounded-r-md px-2 py-1">{props.children}</div>
     </div>
   )
+}
+
+function renderMessage(msg: string) {
+  return Purify.sanitize(
+    wrapWithQuoteElement(markdown.makeHtml(msg).replace(/&amp;nbsp;/g, '&nbsp;'))
+  )
+}
+
+function wrapWithQuoteElement(str: string) {
+  return str.replace(
+    // we first match code blocks AND html tags
+    // to ensure we do NOTHING to what's inside them
+    // then we match "regular quotes" and“'pretty quotes” as capture group
+    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    wrapCaptureGroups
+  )
+}
+
+/** For use as a String#replace(str, cb) callback */
+function wrapCaptureGroups(
+  match: string,
+  regularQuoted?: string /** regex capture group 1 */,
+  curlyQuoted?: string /** regex capture group 2 */
+) {
+  if (regularQuoted) {
+    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
+  } else if (curlyQuoted) {
+    return '<q>“' + curlyQuoted.replace(/\u201C|\u201D/g, '') + '”</q>'
+  } else {
+    return match
+  }
 }

@@ -234,7 +234,8 @@ export const characterStore = createStore<CharacterState>(
       char: UpdateCharacter,
       onSuccess?: () => void
     ) {
-      const res = await charsApi.editCharacter(characterId, char)
+      const previous = map[characterId]
+      const res = await charsApi.editCharacter(characterId, char, previous)
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
