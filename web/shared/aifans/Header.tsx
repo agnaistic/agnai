@@ -16,7 +16,14 @@ const Header = () => {
         <button class="bg-opacity-7 text-shadow font-clash hidden h-7 w-28 flex-shrink-0 rounded-md border border-white bg-[#0000001e] text-xs font-medium text-white shadow backdrop-blur lg:block">
           LIVE CHAT
         </button>
-        <button class="bg-opacity-7 bg-blur text-shadow font-clash h-[28px] w-[86px] flex-shrink-0 rounded-md border bg-red-500 text-xs font-medium text-white shadow lg:h-7 lg:w-28">
+        <button
+          onClick={() => {
+            if (!isLoggedIn()) {
+              userStore.loginModal(true)
+            }
+          }}
+          class="bg-opacity-7 bg-blur text-shadow font-clash h-[28px] w-[86px] flex-shrink-0 rounded-md border bg-red-500 text-xs font-medium text-white shadow lg:h-7 lg:w-28"
+        >
           BUY TOKENS
         </button>
         {!isLoggedIn() && (

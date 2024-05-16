@@ -1,24 +1,14 @@
-import { Component } from 'solid-js'
+import { Component, createEffect } from 'solid-js'
 import Modal from '/web/shared/Modal'
 import { userStore } from '/web/store'
 import { rootModalStore } from '/web/store/root-modal'
 import LoginPage from '../Login'
+import LoginFormModal from '../Login/LoginFormModal'
 
 const LoginModal: Component = (props) => {
-  const user = userStore()
-
   rootModalStore.addModal({
     id: 'login-modal',
-    element: (
-      <Modal
-        show={user.showLogin}
-        close={() => userStore.loginModal(false)}
-        maxWidth="half"
-        fixedHeight
-      >
-        <LoginPage />
-      </Modal>
-    ),
+    element: <LoginPage />,
   })
 
   return null

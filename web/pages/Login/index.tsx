@@ -2,7 +2,6 @@ import { Component, createEffect, createMemo, createSignal, Show } from 'solid-j
 import { A, useLocation, useNavigate, useSearchParams } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
-import PageHeader from '../../shared/PageHeader'
 import { ACCOUNT_KEY, settingStore, toastStore, userStore } from '../../store'
 import { getStrictForm, setComponentPageTitle, storage } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
@@ -10,6 +9,7 @@ import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
 import FormContainer from '/web/shared/aifans/FormContainer'
+import LoginFormModal from './LoginFormModal'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
@@ -31,22 +31,7 @@ const LoginPage: Component = () => {
   return (
     <div class="flex w-full flex-col items-center">
       <div class="my-4 border-b border-white/5" />
-      <PageHeader
-        title={<div class="flex w-full justify-center">Welcome</div>}
-        subtitle={
-          <div class="flex flex-wrap items-center justify-center">
-            <Button size="pill" onClick={() => setRegister(false)}>
-              Login
-            </Button>
-            &nbsp; to your account or&nbsp;
-            <Button size="pill" onClick={() => setRegister(true)}>
-              Register
-            </Button>
-            &nbsp;or continue as a guest.
-          </div>
-        }
-      />
-      <div class="w-full max-w-sm">
+      <div class="w-full max-w-lg">
         <Show when={register()}>
           <RegisterForm isLoading={store.loading} />
         </Show>
@@ -165,18 +150,22 @@ const LoginForm: Component<FormProps> = (props) => {
     })
   }
 
+  return <LoginFormModal onClickLogin={login} />
+
   return (
     <FormContainer>
       <div>
-        <h1 class="my-2 text-xl">User Log In</h1>
-        <h2 class="text-xl text-cosplay-blue-200">Log In</h2>
+        <h1 class="my-2 font-display text-xl">User Log In</h1>
+        <h2 class="font-display text-xl text-cosplay-blue-200">Log In</h2>
       </div>
       <form onSubmit={login} class="my-2 flex flex-col gap-6">
-        <div class="flex flex-col gap-2">
-          <label for="username">Username</label>
+        <div class="flex flex-col gap-2 font-display">
+          <label class="font-displayMedium" for="username">
+            Username or Email
+          </label>
           <TextInput
             fieldName="username"
-            placeholder="Enter Username"
+            placeholder="Enter Username or Email"
             required
             value={
               loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''
