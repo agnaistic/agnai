@@ -386,6 +386,9 @@ subscribe('image-generated', { image: 'string', source: 'string' }, async (body)
 })
 
 subscribe('image-failed', { error: 'string' }, (body) => {
+  const { generate } = characterStore.getState()
+  if (!generate.loading) return
+
   characterStore.setState({ generate: { image: null, loading: false, blob: null } })
   toastStore.error(`Failed to generate avatar: ${body.error}`)
 })

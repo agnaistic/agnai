@@ -97,13 +97,15 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
     const {
       imageCfg,
-      imageHeight,
       imageSteps,
       imageType,
+      imageClipSkip,
       imageWidth,
+      imageHeight,
       imageNegative,
       imagePrefix,
       imageSuffix,
+
       sdSampler,
       agnaiModel = '',
       agnaiSampler = '',
@@ -146,6 +148,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       images: {
         type: imageType,
         cfg: imageCfg,
+        clipSkip: imageClipSkip,
         height: imageHeight,
         width: imageWidth,
         steps: imageSteps,
@@ -274,8 +277,10 @@ const settingsForm = {
   useLocalPipeline: 'boolean?',
   summariseChat: 'boolean?',
   summaryPrompt: 'string?',
+
   imageType: ['horde', 'sd', 'novel', 'agnai'],
   imageSteps: 'number',
+  imageClipSkip: 'number',
   imageCfg: 'number',
   imageWidth: 'number',
   imageHeight: 'number',

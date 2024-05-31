@@ -338,7 +338,10 @@ export const sagaStore = createStore<SagaState>(
 
       sagaStore.update({ responses })
       sagaStore.send(`${last.input}`, (error) => {
-        if (!error) return
+        if (!error) {
+          sagaStore.update({ responses: original })
+          return
+        }
         sagaStore.update({ responses: original })
       })
     },
@@ -420,6 +423,8 @@ export const sagaStore = createStore<SagaState>(
       prompt = replaceTags(prompt, state.format)
       console.log(prompt)
       const requestId = v4()
+      const original = state.responses.slice()
+
       yield {
         state: Object.assign({}, state, {
           responses: state.responses.concat({ requestId, input: text, response: '' }),
@@ -439,8 +444,7 @@ export const sagaStore = createStore<SagaState>(
       if ('err' in result) {
         const message = result.err.error || 'An unexpected error occurred'
         toastStore.error(message)
-        const next = get().state.responses.filter((res) => res.requestId !== requestId)
-        yield { busy: false, state: Object.assign({}, state, { responses: next }) }
+        yield { busy: false, state: Object.assign({}, state, { responses: original }) }
         return
       }
       console.log(JSON.stringify(result, null, 2))

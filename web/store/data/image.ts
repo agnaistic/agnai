@@ -138,6 +138,14 @@ export async function generateImageAsync(
   }
 
   const requestId = v4()
+
+  const promise = new Promise<ImageResult>((resolve, reject) => {
+    callbacks.set(requestId, (image) => {
+      if (image.error) return reject(new Error(image.error))
+      resolve(image)
+    })
+  })
+
   await api.post<{ success: boolean }>(`/character/image`, {
     prompt,
     user,
@@ -147,12 +155,7 @@ export async function generateImageAsync(
     requestId,
   })
 
-  return new Promise<ImageResult>((resolve, reject) => {
-    callbacks.set(requestId, (image) => {
-      if (image.error) return reject(new Error(image.error))
-      resolve(image)
-    })
-  })
+  return promise
 }
 
 const callbacks = new Map<string, (result: ImageResult) => void>()

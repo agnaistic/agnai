@@ -130,6 +130,7 @@ const initState: EditState = {
     width: 512,
     height: 512,
     steps: 10,
+    clipSkip: 0,
     cfg: 9,
     negative: '',
     prefix: '',

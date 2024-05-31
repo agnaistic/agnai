@@ -26,7 +26,7 @@ export function createApp() {
   app.use(logMiddleware())
   app.use(
     cors({
-      origin: '*',
+      origin: true,
       optionsSuccessStatus: 200,
     })
   )

@@ -142,6 +142,7 @@ export const SagaDetail: Component = (props) => {
               msg={state.state.init!}
               session={state.state}
               ui={ui()}
+              busy={state.busy}
             />
           </Show>
 
@@ -155,6 +156,7 @@ export const SagaDetail: Component = (props) => {
                   session={state.state}
                   index={i}
                   ui={ui()}
+                  busy={state.busy}
                 />
                 <Response
                   template={state.template}
@@ -164,6 +166,7 @@ export const SagaDetail: Component = (props) => {
                   siblings={state.state.responses.length}
                   index={i}
                   ui={ui()}
+                  busy={state.busy}
                 >
                   {' '}
                   <Show when={state.busy && i === state.state.responses.length - 1}>
@@ -319,6 +322,7 @@ const Response: Component<{
   msg: Record<string, any>
   index?: number
   children?: any
+  busy: boolean
 }> = (props) => {
   const [edit, setEdit] = createSignal(false)
   const [mods, setMods] = createStore<Record<string, string>>({})
@@ -414,7 +418,7 @@ const Response: Component<{
           </div>
           <div class="flex items-end justify-end gap-1">
             <Show when={!edit()}>
-              <Button size="pill" schema="clear" onClick={startEdit}>
+              <Button size="pill" schema="clear" onClick={startEdit} disabled={props.busy}>
                 <Pencil size={20} />
               </Button>
 
@@ -431,6 +435,7 @@ const Response: Component<{
                   schema="clear"
                   onClick={() => sagaStore.retry()}
                   classList={{ hidden: !canRetry() }}
+                  disabled={props.busy}
                 >
                   <RefreshCw size={20} />
                 </Button>

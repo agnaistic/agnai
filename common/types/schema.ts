@@ -92,8 +92,8 @@ export namespace AppSchema {
   export type ImageModel = {
     name: string
     desc: string
-    init: { steps: number; cfg: number; height: number; width: number }
-    limit: { steps: number; cfg: number; height: number; width: number }
+    init: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
+    limit: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
   }
 
   export interface Announcement {
