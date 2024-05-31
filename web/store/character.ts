@@ -234,7 +234,8 @@ export const characterStore = createStore<CharacterState>(
       char: UpdateCharacter,
       onSuccess?: () => void
     ) {
-      const res = await charsApi.editCharacter(characterId, char)
+      const previous = map[characterId]
+      const res = await charsApi.editCharacter(characterId, char, previous)
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
@@ -385,6 +386,9 @@ subscribe('image-generated', { image: 'string', source: 'string' }, async (body)
 })
 
 subscribe('image-failed', { error: 'string' }, (body) => {
+  const { generate } = characterStore.getState()
+  if (!generate.loading) return
+
   characterStore.setState({ generate: { image: null, loading: false, blob: null } })
   toastStore.error(`Failed to generate avatar: ${body.error}`)
 })

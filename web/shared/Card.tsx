@@ -1,7 +1,8 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
-import { getSettingColor, getAsCssVar, userStore } from '../store'
+import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
+import { getAsCssVar, getSettingColor } from './colors'
 
 type Size = 'sm' | 'md' | 'lg'
 

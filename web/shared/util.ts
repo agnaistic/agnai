@@ -406,48 +406,6 @@ export function createDebounce<T extends (...args: any[]) => void>(
   ]
 }
 
-/**
- * @param name E.g. bg-100, hl-800, rose-300
- */
-export function getRootVariable(name: string) {
-  const root = document.documentElement
-  const value = getComputedStyle(root).getPropertyValue(name.startsWith('--') ? name : `--${name}`)
-  return value
-}
-
-export function setRootVariable(name: string, value: string) {
-  const root = document.documentElement
-  root.style.setProperty(name.startsWith('--') ? name : `--${name}`, value)
-}
-
-export function parseHex(hex: string) {
-  if (!hex.startsWith('#')) hex = '#' + hex
-  const rgb = hex.slice(1, 7)
-  const a = parseInt(hex.slice(7, 9), 16)
-  const { r, g, b } = hexToRgb(rgb)!
-  return { hex: rgb, r, g, b, alpha: isNaN(a) ? undefined : a / 255, rgba: hex }
-}
-
-export function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-        rgb: `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`,
-      }
-    : null
-}
-
-/**
- * @param name E.g. bg-100, hl-800, rose-300
- */
-export function getRootRgb(name: string) {
-  const value = getRootVariable(name)
-  return hexToRgb(value)!
-}
-
 export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
   const map = list.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
   return map

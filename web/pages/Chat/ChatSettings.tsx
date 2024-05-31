@@ -120,8 +120,10 @@ const ChatSettings: Component<{
       imageSuffix,
       imageType,
       imageWidth,
+      imageClipSkip,
       summariseChat,
       summaryPrompt,
+
       ...body
     } = getStrictForm(ref, {
       name: 'string',
@@ -148,6 +150,7 @@ const ChatSettings: Component<{
       overrides,
       imageSource,
       imageSettings: {
+        clipSkip: imageClipSkip,
         type: imageType,
         steps: imageSteps,
         width: imageWidth,

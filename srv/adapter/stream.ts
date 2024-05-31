@@ -33,10 +33,11 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
   const emitter = eventGenerator<ServerSentEvent>()
 
   stream.on('header', (statusCode, headers) => {
+    const contentType = headers['content-type'] || ''
     if (statusCode > 201) {
       emitter.push({ error: `SSE request failed with status code ${statusCode}` })
       emitter.done()
-    } else if (!headers['content-type']?.startsWith('text/event-stream')) {
+    } else if (!contentType.startsWith('text/event-stream')) {
       emitter.push({
         error: `SSE request received unexpected content-type ${headers['content-type']}`,
       })
@@ -156,6 +157,7 @@ export async function websocketStream(opts: { url: string; body: any }, timeoutM
   socket.on('error', (err) => {
     if ('syscall' in err && 'code' in err) {
       emitter.push({ error: `Service unreachable - ${err.code}` })
+      emitter.done()
       return
     }
 

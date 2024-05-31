@@ -1,9 +1,10 @@
 import { Component, createSignal, createEffect, Suspense, Show, createResource } from 'solid-js'
-import { asyncFrame, parseHex } from '../util'
+import { asyncFrame } from '../util'
 import { WIDTH, HEIGHT, getColorProp } from './hooks'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
 import { attributes, manifest } from '/web/asset/sprite'
-import { getImageData } from '/web/store/data/chars'
+import { imageApi } from '/web/store/data/image'
+import { parseHex } from '../colors'
 
 export { AvatarCanvas as default }
 
@@ -182,7 +183,7 @@ async function getImageBase64(src: string) {
 
   if ('err' in blob) throw new Error(`Failed to get Sprite image: ${blob.err.message || blob.err}`)
 
-  const base64 = await getImageData(blob)
+  const base64 = await imageApi.getImageData(blob)
   oneImageCache.set(src, base64!)
   return base64!
 }

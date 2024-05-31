@@ -84,6 +84,20 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
       />
 
       <RangeInput
+        fieldName="imageClipSkip"
+        min={0}
+        max={4}
+        step={1}
+        value={
+          (props.inherit ? props.cfg?.clipSkip : state.user?.images?.clipSkip) ??
+          agnaiModel()?.init.clipSkip ??
+          0
+        }
+        label="Clip Skip"
+        helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+      />
+
+      <RangeInput
         fieldName="imageWidth"
         min={256}
         max={1024}

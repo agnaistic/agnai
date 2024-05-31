@@ -1,8 +1,8 @@
 import { Component, JSX, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
+import { userStore } from '../store'
 import { v4 } from 'uuid'
 import Coloris from '@melloware/coloris'
-import { parseHex } from './util'
+import { getSettingColor, parseHex } from './colors'
 
 Coloris.init()
 

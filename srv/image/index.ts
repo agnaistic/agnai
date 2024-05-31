@@ -73,7 +73,13 @@ export async function generateImage(
       parts.push(imageSettings.suffix)
     }
 
-    prompt = parts.join(', ').replace(/,+/g, ',').replace(/ +/g, ' ')
+    prompt = parts
+      .join(', ')
+      .split(',')
+      .filter((p) => !!p.trim())
+      .join(', ')
+      .replace(/,+/g, ',')
+      .replace(/ +/g, ' ')
   }
 
   log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')

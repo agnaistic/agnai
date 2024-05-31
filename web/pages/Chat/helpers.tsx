@@ -4,7 +4,8 @@ import Button from '/web/shared/Button'
 import { chatStore, msgStore } from '/web/store'
 import IsVisible from '/web/shared/IsVisible'
 import { AppSchema, UI } from '/common/types'
-import { createDebounce, getRootRgb } from '/web/shared/util'
+import { createDebounce } from '/web/shared/util'
+import { getRootRgb } from '/web/shared/colors'
 
 const [onEnter] = createDebounce((loading: boolean) => {
   if (loading) return

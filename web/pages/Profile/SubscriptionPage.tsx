@@ -204,6 +204,11 @@ export const SubscriptionPage: Component = (props) => {
                     </Show>
                     <div class="mt-4 flex justify-center">
                       <Switch>
+                        <Match when={!hasExpired() && cfg.tier?._id === each._id}>
+                          <Button schema="success" disabled>
+                            Subscribed!
+                          </Button>
+                        </Match>
                         <Match when={cfg.tier && cfg.level < each.level}>
                           <Button
                             schema="success"

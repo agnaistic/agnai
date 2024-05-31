@@ -11,6 +11,7 @@ export type BaseImageSettings = {
   negative?: string
 
   template?: string
+  clipSkip?: number
   width: number
   height: number
   steps: number
@@ -56,6 +57,7 @@ export const baseImageValid = {
   imageCfg: 'number',
   imagePrefix: 'string',
   imageSuffix: 'string',
+  imageClipSkip: 'number?',
   imageNegative: 'string',
   summaryPrompt: 'string',
   summariseChat: 'boolean',

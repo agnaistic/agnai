@@ -4,7 +4,6 @@ import { EVENTS, events } from '../emitter'
 import { createDebounce, getAssetUrl } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
-import { getImageData } from './data/chars'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { GenerateOpts, msgsApi } from './data/messages'
@@ -602,7 +601,7 @@ async function handleImage(chatId: string, image: string, messageId?: string) {
   if (!imagesSaved && isImageUrl) {
     const base64 = await fetch(getAssetUrl(image))
       .then((res) => res.blob())
-      .then(getImageData)
+      .then(imageApi.getImageData)
 
     image = base64!
   }

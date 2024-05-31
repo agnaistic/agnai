@@ -121,7 +121,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
 }
 
 async function dispatch(opts: AdapterProps, body: any) {
-  const baseURL = normalizeUrl(opts.user.koboldUrl)
+  const baseURL = normalizeUrl(opts.gen.thirdPartyUrl || opts.user.koboldUrl)
 
   const headers: any = await getHeaders(opts)
   if (opts.gen.thirdPartyFormat === 'aphrodite') {
@@ -174,11 +174,15 @@ async function dispatch(opts: AdapterProps, body: any) {
 }
 
 async function getHeaders(opts: AdapterProps) {
+  const password = opts.gen.thirdPartyUrl ? opts.gen.thirdPartyKey : opts.user.thirdPartyPassword
   const headers: any = {}
+
+  if (!password) {
+    return headers
+  }
 
   switch (opts.gen.thirdPartyFormat) {
     case 'aphrodite': {
-      const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
       const apiKey = opts.guest ? password : decryptText(password)
       headers['x-api-key'] = apiKey
       headers['Authorization'] = `Bearer ${apiKey}`
@@ -186,7 +190,6 @@ async function getHeaders(opts: AdapterProps) {
     }
 
     case 'tabby': {
-      const password = opts.gen.thirdPartyKey || opts.user.thirdPartyPassword
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`
       break
