@@ -103,6 +103,15 @@ async function callApi<T = any>(
   }).catch((err) => ({ error: err }))
 
   if ('error' in res) {
+    if (isSessionExpired() && fullUrl.includes(baseUrl)) {
+      events.emit(EVENTS.sessionExpired)
+      return {
+        result: undefined,
+        status: 401,
+        error: 'Your session has expired. Please login again.',
+      }
+    }
+
     return { result: undefined, status: 503, error: res.error.message || res.error }
   }
 
@@ -176,7 +185,19 @@ async function* callApiStream<T = any>(path: string, opts: RequestInit) {
 }
 
 export function setAuth(jwt: string) {
-  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 30 })
+  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 120 })
+}
+
+function isSessionExpired() {
+  const jwt = getAuth()
+
+  // No jwt = no session
+  if (!jwt) return false
+
+  const token = getTokenBody(jwt)
+  const expiry = new Date(token.exp * 1000)
+
+  return Date.now() > expiry.valueOf()
 }
 
 export function getAuth() {
@@ -202,7 +223,7 @@ export function getUserId() {
 function getTokenBody(jwt: string) {
   const [_head, body, _sign] = jwt.split('.')
   const data = JSON.parse(window.atob(body))
-  return data as any
+  return data as { admin: boolean; exp: number; iat: number; userId: string; username: string }
 }
 
 export function setAltAuth(jwt: string) {
