@@ -11,6 +11,7 @@ import {
   Repeat1,
   Terminal,
   Trash,
+  Delete,
   X,
   Zap,
 } from 'lucide-solid'
@@ -56,6 +57,7 @@ type MessageProps = {
   swipe?: string | false
   confirmSwipe?: () => void
   cancelSwipe?: () => void
+  discardSwipe?: () => void
   onRemove: () => void
   editing: boolean
   tts?: boolean
@@ -73,6 +75,7 @@ type MessageProps = {
 const anonNames = new Map<string, number>()
 
 let anonId = 0
+
 function getAnonName(entityId: string) {
   if (!anonNames.has(entityId)) {
     anonNames.set(entityId, ++anonId)
@@ -297,12 +300,27 @@ const Message: Component<MessageProps> = (props) => {
 
                 <Match when={props.last && props.swipe}>
                   <div class="mr-4 flex items-center gap-4 text-sm">
-                    <X size={22} class="cursor-pointer text-red-500" onClick={props.cancelSwipe} />
-                    <Check
-                      size={22}
-                      class="cursor-pointer text-green-500"
+                    <div
+                      class="icon-button text-red-500"
+                      onClick={props.discardSwipe}
+                      title="Discard"
+                    >
+                      <Delete size={22} />
+                    </div>
+                    <div
+                      class="icon-button text-red-500"
+                      onClick={props.cancelSwipe}
+                      title="Cancel"
+                    >
+                      <X size={22} />
+                    </div>
+                    <div
+                      class="icon-button text-green-500"
                       onClick={props.confirmSwipe}
-                    />
+                      title="Select"
+                    >
+                      <Check size={22} />
+                    </div>
                   </div>
                 </Match>
               </Switch>
@@ -398,7 +416,7 @@ const Message: Component<MessageProps> = (props) => {
               </Switch>
             </div>
           </div>
-          {props.last && props.children}
+          <Show when={!edit()}>{props.last && props.children}</Show>
         </div>
       </div>
     </div>

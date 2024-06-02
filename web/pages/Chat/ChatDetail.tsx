@@ -277,6 +277,12 @@ const ChatDetail: Component = () => {
     })
   }
 
+  const discardSwipe = (msgId: string, index: number) => {
+    msgStore.discardSwipe(msgId, index, () => {
+      setSwipe(Math.max(index - 1, 0))
+    })
+  }
+
   const indexOfLastRPMessage = createMemo(() => {
     const msgs = chatMsgs()
 
@@ -436,6 +442,7 @@ const ChatDetail: Component = () => {
                     }
                     confirmSwipe={() => confirmSwipe(msg()._id)}
                     cancelSwipe={cancelSwipe}
+                    discardSwipe={() => discardSwipe(msg()._id, swipe())}
                     tts={tts()}
                     retrying={msgs.retrying}
                     partial={msgs.partial}

@@ -124,8 +124,8 @@ export async function guidance<T = any>(
   return res.result!.values
 }
 
-export async function swapMessage(msg: AppSchema.ChatMessage, _msg: string, _retries: string[]) {
-  return swapMessageProps(msg, { msg: _msg, retries: _retries })
+export async function swapMessage(msg: AppSchema.ChatMessage, text: string, retries: string[]) {
+  return swapMessageProps(msg, { msg: text, retries })
 }
 
 export async function swapMessageProps(
