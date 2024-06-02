@@ -278,10 +278,16 @@ const ChatDetail: Component = () => {
   }
 
   const indexOfLastRPMessage = createMemo(() => {
-    return msgs.msgs.reduceRight(
-      (prev, curr, i) => (prev > -1 ? prev : !curr.ooc && curr.adapter !== 'image' ? i : -1),
-      -1
-    )
+    const msgs = chatMsgs()
+
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const curr = msgs[i]
+      if (!curr.ooc && curr.adapter !== 'image') {
+        return i
+      }
+    }
+
+    return -1
   })
 
   const generateFirst = () => {
