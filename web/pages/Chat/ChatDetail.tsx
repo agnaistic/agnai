@@ -279,7 +279,7 @@ const ChatDetail: Component = () => {
 
   const discardSwipe = (msgId: string, index: number) => {
     msgStore.discardSwipe(msgId, index, () => {
-      setSwipe(index - 1)
+      setSwipe(Math.max(index - 1, 0))
     })
   }
 

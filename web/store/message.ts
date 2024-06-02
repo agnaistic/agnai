@@ -244,21 +244,27 @@ export const msgStore = createStore<MsgState>(
 
       const retries = msg.retries.slice()
 
-      if (!retries[position - 1]) {
+      if (position !== 0 && !retries[position - 1]) {
         return toastStore.error(`Cannot discard swipe: Swipe not found`)
       }
 
+      const text = position === 0 ? retries[0] : msg.msg
       // Remove the message at the specified position from the retries array
-      retries.splice(position - 1, 1)
+      if (position !== 0) {
+        retries.splice(position - 1, 1)
+      } else {
+        retries.splice(0, 1)
+      }
 
-      const res = await msgsApi.swapMessage(msg, msg.msg, retries)
+      const res = await msgsApi.swapMessage(msg, text, retries)
       if (res.error) {
         toastStore.error(`Failed to discard message: ${res.error}`)
       }
       if (res.result) {
-        const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, retries } : m))
+        const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, msg: text, retries } : m))
         yield { msgs: nextMsgs }
         onSuccess?.()
+        toastStore.success(`Swipe deleted`, 2)
       }
     },
 

@@ -33,6 +33,11 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
+          <Show when={!!state.msg?.retries?.length}>
+            <Button onClick={() => msgStore.discardSwipe(props.messageId, 0, props.close)}>
+              Delete Swipe
+            </Button>
+          </Show>
           <Show when={count() > 1 && state.msg?.adapter !== 'image'}>
             <Button onClick={() => confirm(true)}>Delete One</Button>
           </Show>

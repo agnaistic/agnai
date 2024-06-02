@@ -392,17 +392,18 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     case 'retry': {
       if (body.replacing) {
+        const nextRetries = [body.replacing.msg]
+          .concat(retries)
+          .concat(body.replacing.retries || [])
+
         await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
           actions,
           adapter,
           meta,
           state: 'retried',
-          retries: body.replacing.retries,
+          retries: nextRetries,
         })
-        const nextRetries = [body.replacing.msg]
-          .concat(retries)
-          .concat(body.replacing.retries || [])
         sendMany(members, {
           type: 'message-retry',
           requestId,
