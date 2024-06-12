@@ -796,6 +796,8 @@ export function getContextLimit(
 
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
+  if (gen?.service === 'kobold' || gen?.service === 'ooba') return configuredMax - genAmount
+
   switch (adapter) {
     case 'agnaistic':
       return configuredMax - genAmount
