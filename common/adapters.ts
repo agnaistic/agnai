@@ -138,6 +138,7 @@ export const OPENAI_MODELS = {
   GPT4_Turbo_Preview: 'gpt-4-turbo-preview',
   GPT4_Turbo: 'gpt-4-turbo',
   GPT4_Turbo_0409: 'gpt-4-turbo-2024-04-09',
+  GPT4_Omni: 'gpt-4o',
 } as const
 
 export const MISTRAL_MODELS = {
@@ -163,6 +164,7 @@ export const OPENAI_CONTEXTS: Record<string, number> = {
   [OPENAI_MODELS.GPT45_0125]: 128000,
   [OPENAI_MODELS.GPT45_Preview]: 128000,
   [OPENAI_MODELS.GPT4_Turbo_0409]: 128000,
+  [OPENAI_MODELS.GPT4_Omni]: 120000,
 }
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
@@ -181,6 +183,7 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT45_0125]: true,
   [OPENAI_MODELS.GPT45_Preview]: true,
   [OPENAI_MODELS.GPT4_Turbo_0409]: true,
+  [OPENAI_MODELS.GPT4_Omni]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
