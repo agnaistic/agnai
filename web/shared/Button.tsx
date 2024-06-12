@@ -15,6 +15,7 @@ const kinds = {
   warning: 'btn-orange',
   hollow: 'btn-hollow',
   bordered: 'btn-bordered',
+  icon: 'btn-icon',
   none: '',
 } satisfies { [key: string]: string }
 

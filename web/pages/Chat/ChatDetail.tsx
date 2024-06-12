@@ -12,7 +12,7 @@ import {
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
-import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
@@ -387,7 +387,7 @@ const ChatDetail: Component = () => {
     )
   })
 
-  onCleanup(clearScrollMonitor)
+  onCleanup(sticky.clear)
 
   return (
     <>
@@ -412,7 +412,7 @@ const ChatDetail: Component = () => {
         <section
           data-messages
           class={`mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto`}
-          ref={monitorScroll}
+          ref={sticky.monitor}
         >
           <div id="chat-messages" class="flex w-full flex-col gap-2">
             <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
@@ -521,30 +521,4 @@ const ChatDetail: Component = () => {
       />
     </>
   )
-}
-
-let scrollMonitor: any
-
-function monitorScroll(ref: HTMLElement) {
-  let bottom = true
-
-  ref.onscroll = (ev) => {
-    const pos = ref.scrollTop
-
-    if (pos >= 0) {
-      bottom = true
-    } else {
-      bottom = false
-    }
-  }
-
-  scrollMonitor = setInterval(() => {
-    if (bottom && ref.scrollTop !== 0) {
-      ref.scrollTop = 0
-    }
-  }, 1000 / 30)
-}
-
-function clearScrollMonitor() {
-  clearInterval(scrollMonitor)
 }

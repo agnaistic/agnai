@@ -793,6 +793,7 @@ export function getContextLimit(
 ): number {
   const configuredMax =
     gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
+  console.log(`ctx limit`, gen?.service, configuredMax)
 
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 

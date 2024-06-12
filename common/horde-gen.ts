@@ -5,7 +5,7 @@ import { toArray } from './util'
 import type { AppLog } from '/srv/logger'
 
 const HORDE_GUEST_KEY = '0000000000'
-const baseUrl = 'https://horde.koboldai.net/api/v2'
+const baseUrl = 'https://aihorde.net/api/v2'
 
 export const defaults = {
   image: {

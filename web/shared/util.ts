@@ -773,3 +773,27 @@ function setProperty(obj: any, path: string, value: any): any {
     [head]: rest.length ? setProperty(obj[head], rest.join('.'), value) : value,
   }
 }
+
+export const sticky = {
+  interval: null as any as NodeJS.Timer,
+  monitor: (ref: HTMLElement) => {
+    let bottom = true
+
+    ref.onscroll = (ev) => {
+      const pos = ref.scrollTop
+
+      if (pos >= 0) {
+        bottom = true
+      } else {
+        bottom = false
+      }
+    }
+
+    sticky.interval = setInterval(() => {
+      if (bottom && ref.scrollTop !== 0) {
+        ref.scrollTop = 0
+      }
+    }, 1000 / 30)
+  },
+  clear: () => clearInterval(sticky.interval),
+}
