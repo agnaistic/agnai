@@ -1096,3 +1096,29 @@ subscribe(
     onCharacterMessageReceived(msg)
   }
 )
+
+// type MsgTree = Record<string, { depth: number; msg: AppSchema.ChatMessage }>
+// type MsgDepths = Array<string[]>
+// type ResolvedTree = { tree: MsgTree; depths: MsgDepths }
+
+// function toChatTree(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]): ResolvedTree {
+//   const tree: MsgTree = {}
+//   const depths: MsgDepths = []
+
+//   let depth = 0
+//   let parent: string | undefined
+//   for (const msg of messages) {
+//     tree[msg._id] = {
+//       depth,
+//       msg,
+//     }
+//     depths.push([msg._id])
+//     parent = msg._id
+//   }
+
+//   return { tree, depths }
+// }
+
+// function resolveChatTree(tree: MsgTree, leaf: string): AppSchema.ChatMessage[] {
+//   return []
+// }

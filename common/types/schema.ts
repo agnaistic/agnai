@@ -415,6 +415,7 @@ export namespace AppSchema {
     event?: ScenarioEventType | undefined
     state?: string
     values?: Record<string, string | number | boolean>
+    parent?: string
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
