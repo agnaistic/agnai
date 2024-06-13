@@ -169,13 +169,13 @@ function toPersonaPrompt(aliases: Record<string, string>) {
 
 function toPropPrompt(variable: string, trait: string) {
   return neat`
-<user>Write of description of [firstname]'s "${trait}" personality trait:</user>
+<user>Briefly write a description of [firstname]'s "${trait}" personality trait:</user>
 
 <bot>[firstname]'s "${trait}" personality trait: [${variable} | tokens=150 | stop=###]</bot>`
 }
 
 const textPersona = neat`
-<user>Describe [firstname]'s personality and typical behavior:</user>
+<user>Briefly describe [firstname]'s personality and typical behavior:</user>
 
 <bot>[firstname's] personality and typical behavior: [personality | tokens=250 | stop=###]</bot>
 `

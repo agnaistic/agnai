@@ -23,6 +23,7 @@ import { useRootModal } from '/web/shared/hooks'
 const tokenizers = [
   { label: 'None', value: '' },
   { label: 'Llama', value: 'llama' },
+  { label: 'Llama 3', value: 'llama3' },
   { label: 'Turbo', value: 'turbo' },
   { label: 'DaVinci', value: 'davinci' },
   { label: 'Novel Kayra', value: 'novel-modern' },

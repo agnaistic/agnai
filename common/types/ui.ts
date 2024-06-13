@@ -64,6 +64,7 @@ export type UISettings = {
   viewHeight?: number
 
   chatWidth?: ChatWidth
+  chatAlternating?: number
   trimSentences?: boolean
   logPromptsToBrowserConsole: boolean
   contextWindowLine: boolean

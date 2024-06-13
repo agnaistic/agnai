@@ -31,11 +31,11 @@ function getPosition(pos?: Position) {
       return { top: '-5px', left: '110%' }
 
     case 'top':
-      return { width: '128px', bottom: '100%', left: '50%' }
+      return { width: 'fit-content', bottom: '100%', left: '50%' }
 
     case 'bottom':
     default:
-      return { width: '128px', top: '120%', right: '50%' }
+      return { width: 'fit-content', top: '120%', right: '50%' }
   }
 }
 

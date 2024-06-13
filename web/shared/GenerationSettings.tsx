@@ -914,6 +914,16 @@ const GenSettings: Component<
           aiSetting={'minP'}
         />
 
+        <Toggle
+          fieldName="tempLast"
+          label="Temperature Last"
+          helperText="When using Min P, enabling this will make temperature the last sampler to be applied"
+          value={props.inherit?.tempLast ?? false}
+          service={props.service}
+          format={props.format}
+          aiSetting="tempLast"
+        />
+
         <RangeInput
           fieldName="topP"
           label="Top P"
@@ -1137,6 +1147,16 @@ const GenSettings: Component<
           <Divider />
           <div class="text-2xl">TextGen / Ooba</div>
         </Show>
+        <Toggle
+          fieldName="tokenHealing"
+          label="Token Healing"
+          helperText="Backs up the generation process by one token then constrains the output's first token to equal the last token of your prompt."
+          value={props.inherit?.tokenHealing ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'tokenHealing'}
+          format={props.format}
+        />
         <Toggle
           fieldName="addBosToken"
           label="Add BOS Token"

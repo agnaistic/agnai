@@ -582,12 +582,9 @@ function newTemplate() {
 
     <user>{{main_char}}: {{input}}</user>
 
-    <bot>
-    [response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
+    <bot>[response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
     
-    <user>
-
-  `,
+    <user>`,
   }
 }
 

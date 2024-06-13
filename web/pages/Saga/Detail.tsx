@@ -10,6 +10,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
   onMount,
 } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
@@ -41,16 +42,35 @@ import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
 import { Saga } from '/common/types'
 import { getRgbaFromVar } from '/web/shared/colors'
+import { trimSentence } from '/common/util'
+import { sticky } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
-  const state = sagaStore()
   const user = userStore()
+  const state = sagaStore((s) => {
+    const responses = s.state.responses.map((res) => trimResponse(res, user.ui.trimSentences))
+    const init = s.state.init ? trimResponse(s.state.init, user.ui.trimSentences) : undefined
+
+    return {
+      ...s,
+      responses,
+      init,
+    }
+  })
 
   const ui = createMemo(() => {
+    const alt = `${user.ui.chatAlternating ?? 0}%`
     return {
-      response: getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
-      intro: getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
-      input: getRgbaFromVar(user.current.msgBackground || 'bg-800', user.ui.msgOpacity),
+      response: {
+        ...getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
+        width: `calc(100% - ${alt})`,
+        'margin-left': alt,
+      },
+      input: {
+        ...getRgbaFromVar(user.current.msgBackground || 'bg-800', user.ui.msgOpacity),
+        width: `calc(100% - ${alt}%)`,
+        'margin-right': alt,
+      },
     }
   })
 
@@ -121,6 +141,8 @@ export const SagaDetail: Component = (props) => {
     })
   }
 
+  onCleanup(sticky.clear)
+
   return (
     <>
       <ModeDetail
@@ -134,19 +156,19 @@ export const SagaDetail: Component = (props) => {
         split={headerImage()}
         splitHeight={user.ui.viewHeight ?? 30}
       >
-        <div class="flex flex-col gap-2">
-          <Show when={!!state.state.init}>
+        <section class="flex flex-col gap-2" ref={sticky.monitor}>
+          <Show when={!!state.init}>
             <Response
               template={state.template}
               type="intro"
-              msg={state.state.init!}
+              msg={state.init!}
               session={state.state}
               ui={ui()}
               busy={state.busy}
             />
           </Show>
 
-          <Index each={state.state.responses}>
+          <Index each={state.responses}>
             {(res, i) => (
               <>
                 <Response
@@ -168,7 +190,6 @@ export const SagaDetail: Component = (props) => {
                   ui={ui()}
                   busy={state.busy}
                 >
-                  {' '}
                   <Show when={state.busy && i === state.state.responses.length - 1}>
                     <Loading type="flashing" />
                   </Show>
@@ -176,7 +197,7 @@ export const SagaDetail: Component = (props) => {
               </>
             )}
           </Index>
-        </div>
+        </section>
       </ModeDetail>
       <Show when={load()}>
         <LoadModal close={() => setLoad(false)} />
@@ -388,9 +409,49 @@ const Response: Component<{
   return (
     <>
       <div
-        class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
-        style={props.ui[props.type]}
+        class="rendered-markdown flex flex-col gap-1 rounded-md px-2 py-[6px]"
+        style={{ ...(props.ui[props.type] || props.ui.response) }}
       >
+        <div class="flex justify-between gap-1 py-1">
+          <div>
+            <Show when={canRetry() && !!props.children}>{props.children}</Show>
+          </div>
+          <div class="flex items-end justify-end gap-1">
+            <Show when={!edit()}>
+              <Button size="pill" schema="icon" onClick={startEdit} disabled={props.busy}>
+                <Pencil size={16} />
+              </Button>
+
+              <Show when={props.type === 'response'}>
+                <Button
+                  size="pill"
+                  schema="icon"
+                  onClick={() => sagaStore.deleteResponse(props.index!)}
+                >
+                  <Trash size={16} />
+                </Button>
+                <Button
+                  size="pill"
+                  schema="icon"
+                  onClick={() => sagaStore.retry()}
+                  classList={{ hidden: !canRetry() }}
+                  disabled={props.busy}
+                >
+                  <RefreshCw class="icon-button" size={16} />
+                </Button>
+              </Show>
+            </Show>
+
+            <Show when={edit()}>
+              <Button size="pill" schema="success" onClick={save}>
+                Save
+              </Button>
+              <Button size="pill" schema="error" onClick={() => setEdit(false)}>
+                Cancel
+              </Button>
+            </Show>
+          </div>
+        </div>
         <Show when={!edit()}>
           <div innerHTML={content()} />
         </Show>
@@ -412,46 +473,6 @@ const Response: Component<{
             </For>
           </div>
         </Show>
-        <div class="flex justify-between gap-1">
-          <div>
-            <Show when={canRetry() && !!props.children}>{props.children}</Show>
-          </div>
-          <div class="flex items-end justify-end gap-1">
-            <Show when={!edit()}>
-              <Button size="pill" schema="clear" onClick={startEdit} disabled={props.busy}>
-                <Pencil size={20} />
-              </Button>
-
-              <Show when={props.type === 'response'}>
-                <Button
-                  size="pill"
-                  schema="clear"
-                  onClick={() => sagaStore.deleteResponse(props.index!)}
-                >
-                  <Trash size={20} />
-                </Button>
-                <Button
-                  size="pill"
-                  schema="clear"
-                  onClick={() => sagaStore.retry()}
-                  classList={{ hidden: !canRetry() }}
-                  disabled={props.busy}
-                >
-                  <RefreshCw size={20} />
-                </Button>
-              </Show>
-            </Show>
-
-            <Show when={edit()}>
-              <Button size="pill" schema="success" onClick={save}>
-                Save
-              </Button>
-              <Button size="pill" schema="error" onClick={() => setEdit(false)}>
-                Cancel
-              </Button>
-            </Show>
-          </div>
-        </div>
       </div>
     </>
   )
@@ -495,4 +516,16 @@ function wrapCaptureGroups(
   } else {
     return match
   }
+}
+
+function trimResponse(res: Record<string, any>, trim?: boolean) {
+  if (!trim) return res
+
+  const next = Object.assign({}, res)
+
+  for (const [key, value] of Object.entries(res)) {
+    next[key] = typeof value === 'string' ? trimSentence(value) : value
+  }
+
+  return next
 }

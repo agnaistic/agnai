@@ -174,6 +174,25 @@ const UISettings: Component = () => {
         </Button>
       </div>
 
+      <div class="flex w-full items-center justify-between gap-2">
+        <RangeInput
+          parentClass="w-full"
+          fieldName="chatAlternating"
+          min={0}
+          max={25}
+          step={1}
+          label="Message Alternating (%)"
+          helperText={`Message bubble width reduction for alternating based on author`}
+          value={state.ui.chatAlternating || 0}
+          onChange={(value) => userStore.tryUI({ chatAlternating: value })}
+        />
+        <Button
+          onClick={() => userStore.saveUI({ chatAlternating: state.ui.chatAlternating || 0 })}
+        >
+          <Save />
+        </Button>
+      </div>
+
       <div class="flex flex-row justify-start gap-4">
         <Select
           fieldName="avatarSize"

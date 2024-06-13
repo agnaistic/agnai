@@ -291,27 +291,23 @@ function getSummaryTemplate(service: AIAdapter) {
   }
 }
 
-export async function dataURLtoFile(base64: string) {
+export async function dataURLtoFile(base64: string, name?: string) {
   return fetch(base64)
     .then((res) => res.blob())
     .then(async (buf) => {
-      const file = new File([buf], 'avatar.png', { type: 'image/png' })
-      const hash = md5(await buf.text())
-      Object.assign(file, { hash })
+      const file = new File([buf], name || 'avatar.png', { type: 'image/png' })
       return file
     })
 }
 
-export async function getImageData(file?: File | Blob | string) {
+export async function getImageData(file: File | Blob | string | undefined, name?: string) {
   if (!file) return
 
   if (typeof file === 'string') {
     const image = await fetch(getAssetUrl(file)).then((res) => res.blob())
     const ext = file.split('.').slice(-1)[0]
     const mimetype = ALLOWED_TYPES.get(ext) || 'image/png'
-    file = new File([image], 'downloaded.png', { type: mimetype })
-    const hash = md5(await image.text())
-    Object.assign(file, { hash })
+    file = new File([image], name || 'downloaded.png', { type: mimetype })
   }
 
   const reader = new FileReader()

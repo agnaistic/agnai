@@ -415,6 +415,7 @@ export namespace AppSchema {
     event?: ScenarioEventType | undefined
     state?: string
     values?: Record<string, string | number | boolean>
+    parent?: string
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
@@ -527,6 +528,7 @@ export namespace AppSchema {
     service?: AIAdapter
 
     temp: number
+    tempLast?: boolean
     dynatemp_range?: number
     dynatemp_exponent?: number
     smoothingFactor?: number
@@ -548,8 +550,11 @@ export namespace AppSchema {
     doSample?: boolean
     penaltyAlpha?: number
     numBeams?: number
+
     addBosToken?: boolean
     banEosToken?: boolean
+    tokenHealing?: boolean
+
     earlyStopping?: boolean
     stopSequences?: string[]
     trimStop?: boolean

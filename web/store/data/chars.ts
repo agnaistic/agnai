@@ -4,7 +4,7 @@ import { api, isLoggedIn } from '../api'
 import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
 import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
-import { dataURLtoFile, getImageData } from './image'
+import { getImageData } from './image'
 
 export const charsApi = {
   getCharacterDetail,
@@ -140,13 +140,7 @@ export async function editCharacter(
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
 
     if (file) {
-      const prev = previous?.avatar ? await dataURLtoFile(previous.avatar) : null
-      const prevHash = (prev as any)?.hash
-      const nextHash = (file as any)?.hash
-
-      if (prevHash !== nextHash) {
-        appendFormOptional(form, 'avatar', file)
-      }
+      appendFormOptional(form, 'avatar', file)
     }
 
     appendFormOptional(form, 'visualType', char.visualType)

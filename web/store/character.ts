@@ -346,7 +346,7 @@ export const characterStore = createStore<CharacterState>(
       try {
         let prompt =
           typeof persona === 'string'
-            ? `full body, ${persona}`
+            ? `${persona}`
             : await createAppearancePrompt(user, { persona })
 
         prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')

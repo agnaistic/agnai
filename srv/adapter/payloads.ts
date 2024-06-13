@@ -53,6 +53,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stopping_strings: getStoppingStrings(opts, stops),
       dynamic_temperature: gen.dynatemp_range ? true : false,
       smoothing_factor: gen.smoothingFactor,
+      token_healing: gen.tokenHealing,
+      temp_last: gen.tempLast,
       tfs: gen.tailFreeSampling,
       mirostat_mode: gen.mirostatTau ? 2 : 0,
       mirostat_tau: gen.mirostatTau,
@@ -109,6 +111,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
       stream: gen.streamResponse,
+      token_healing: gen.tokenHealing,
+      temperature_last: gen.minP ? !!gen.tempLast : false,
     }
 
     if (gen.dynatemp_range) {
@@ -239,7 +243,10 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stop_conditions: getStoppingStrings(opts, stops),
       typical: gen.typicalP,
       rep_pen: gen.repetitionPenalty,
+      freq_pen: gen.frequencyPenalty,
+      pres_pen: gen.presencePenalty,
       min_p: gen.minP,
+      token_healing: !!gen.tokenHealing,
     }
     return body
   }
