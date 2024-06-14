@@ -240,7 +240,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const onSubmit = async (ev: Event) => {
-    const payload = editor.payload()
+    const payload = editor.payload(true)
 
     if (props.temp && props.chat) {
       if (editor.state.avatar) {

@@ -255,8 +255,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   }
 
   const createAvatar = async () => {
+    const current = payload()
     const attributes = getAttributeMap(form())
-    const desc = state.appearance || (attributes?.appeareance || attributes?.looks)?.join(', ')
+    const desc = current.appearance || (attributes?.appeareance || attributes?.looks)?.join(', ')
     const avatar = await generateAvatar(desc || '')
     if (!avatar) return
 
@@ -351,15 +352,17 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     })
   }
 
-  const payload = () => {
+  const payload = (submitting?: boolean) => {
     const imgId = imageId()
     const data = getPayload(form(), state, original())
 
-    if (imgId !== cache.state.imageId) {
-      data.avatar = cache.state.image
-      setImageId(cache.state.imageId)
-    } else {
-      delete data.avatar
+    if (submitting) {
+      if (imgId !== cache.state.imageId) {
+        data.avatar = state.avatar
+        setImageId(cache.state.imageId)
+      } else {
+        delete data.avatar
+      }
     }
 
     return data
