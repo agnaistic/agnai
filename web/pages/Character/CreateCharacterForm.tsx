@@ -689,7 +689,7 @@ export const CreateCharacterForm: Component<{
         close={() => setImport(false)}
         onSave={(char, imgs) => {
           editor.load(char[0])
-          editor.update('avatar', imgs[0])
+          editor.receiveAvatar(imgs[0]!)
           setImage(imgs[0] as any)
           setImport(false)
         }}

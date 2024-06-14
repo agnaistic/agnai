@@ -241,6 +241,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   })
 
   const receiveAvatar = async (image: File, original?: boolean) => {
+    if (!image) return
     const base64 = await imageApi.getImageData(image)
     setState('avatar', image)
     setImageData(base64)
