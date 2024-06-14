@@ -291,7 +291,7 @@ function getSummaryTemplate(service: AIAdapter) {
   }
 }
 
-export async function dataURLtoFile(base64: string, name?: string) {
+export async function dataURLtoFile(base64: string, name?: string): Promise<File> {
   return fetch(base64)
     .then((res) => res.blob())
     .then(async (buf) => {
