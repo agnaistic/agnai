@@ -241,14 +241,17 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   })
 
   const receiveAvatar = async (image: File, original?: boolean) => {
+    if (!image) return
     const base64 = await imageApi.getImageData(image)
     setState('avatar', image)
     setImageData(base64)
 
     if (base64) {
       const id = original ? 'original' : v4()
-      cache.addImage(base64, id)
-      setImageId(`avatars-${id}`)
+      await cache.addImage(base64, id)
+      if (original) {
+        setImageId(`avatars-${id}`)
+      }
     }
 
     return base64
@@ -314,8 +317,11 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setFormField(form(), 'kind', personaKind)
 
       if (char?.originalAvatar) {
-        const file = await imageApi.dataURLtoFile(char.originalAvatar)
-        receiveAvatar(file, true)
+        const base64 = await imageApi.getImageData(char.originalAvatar)
+        if (base64) {
+          const file = await imageApi.dataURLtoFile(base64)
+          receiveAvatar(file, true)
+        }
       }
 
       // We set fields that aren't properly managed by form elements
