@@ -181,6 +181,7 @@ export const CreateCharacterForm: Component<{
         avatar: file,
         personaKind: 'text',
       })
+      editor.receiveAvatar(file)
 
       setImage(imageData)
       toastStore.success(`Successfully downloaded from Character Hub`)
