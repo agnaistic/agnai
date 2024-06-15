@@ -317,11 +317,13 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setFormField(form(), 'kind', personaKind)
 
       if (char?.originalAvatar) {
-        const base64 = await imageApi.getImageData(char.originalAvatar)
-        if (base64) {
-          const file = await imageApi.dataURLtoFile(base64)
-          receiveAvatar(file, true)
-        }
+        try {
+          const base64 = await imageApi.getImageData(char.originalAvatar)
+          if (base64) {
+            const file = await imageApi.dataURLtoFile(base64)
+            receiveAvatar(file, true)
+          }
+        } catch (ex) {}
       }
 
       // We set fields that aren't properly managed by form elements
