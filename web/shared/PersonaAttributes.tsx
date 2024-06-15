@@ -112,7 +112,7 @@ const PersonaAttributes: Component<{
           <TextInput
             fieldName="attr-value.0"
             class="text-input-min-h-override"
-            value={props.value?.text?.[0]}
+            value={props.value?.text?.join('\n\n')}
             isMultiline
             placeholder="{{char}} is a tall man who likes {{user}}."
             tokenCount={() => updateCount()}
