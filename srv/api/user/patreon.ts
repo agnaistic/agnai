@@ -137,7 +137,7 @@ async function revalidatePatron(userId: string) {
       type: 'notification',
       level: 'warn',
       message:
-        'Your patreon account was assigned to another account. It has been unlinked from that account.',
+        'Your patreon account was already assigned to an account. It has been unlinked from that account.',
       ttl: 20,
     })
 
