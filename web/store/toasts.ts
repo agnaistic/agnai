@@ -85,18 +85,18 @@ export const toastStore = createStore<ToastState>('toasts', {
   }
 })
 
-subscribe('notification', { level: 'string?', message: 'string' }, (body) => {
+subscribe('notification', { level: 'string?', message: 'string', ttl: 'number?' }, (body) => {
   switch (body.level) {
     case 'error':
-      return toastStore.error(body.message)
+      return toastStore.error(body.message, body.ttl)
 
     case 'warn':
     case 'warning':
-      return toastStore.warn(body.message)
+      return toastStore.warn(body.message, body.ttl)
 
     case 'normal':
     default:
-      return toastStore.normal(body.message)
+      return toastStore.normal(body.message, body.ttl)
   }
 })
 

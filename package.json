@@ -171,7 +171,7 @@
     "punycode": "^1.4.1",
     "querystring-es3": "^0.2.1",
     "showdown": "^2.1.0",
-    "solid-js": "1.8.16",
+    "solid-js": "1.8.17",
     "sortablejs": "^1.15.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
@@ -181,7 +181,7 @@
     "url": "^0.11.1",
     "util": "^0.12.3",
     "values.js": "^2.1.1",
-    "zustand": "^4.3.3"
+    "zustand": "^4.5.2"
   },
   "alias": {
     "easy-speech": "easy-speech/dist/EasySpeech.cjs.js"
