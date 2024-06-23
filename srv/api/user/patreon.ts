@@ -4,6 +4,8 @@ import { StatusError } from '../wrap'
 import { AppSchema, Patreon } from '/common/types'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { store } from '/srv/db'
+import { publishOne } from '../ws/handle'
+import { command } from '/srv/domains'
 
 export const patreon = {
   authorize,
@@ -131,7 +133,15 @@ async function revalidatePatron(userId: string) {
 
   const existing = await store.users.findByPatreonUserId(patron.user.id)
   if (existing && existing._id !== userId) {
-    throw new StatusError(`This Patreon account is already attributed to another user`, 400)
+    publishOne(userId, {
+      type: 'notification',
+      level: 'warn',
+      message:
+        'Your patreon account was already assigned to an account. It has been unlinked from that account.',
+      ttl: 20,
+    })
+
+    await store.users.unlinkPatreonAccount(existing._id, `attributing to user ${userId}`)
   }
 
   const next = await store.users.updateUser(userId, {
@@ -144,7 +154,7 @@ async function revalidatePatron(userId: string) {
     },
     patreonUserId: patron.user.id,
   })
-
+  await command.patron.link(patron.user.id, { userId })
   return next
 }
 
