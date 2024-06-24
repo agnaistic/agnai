@@ -15,6 +15,31 @@
   min-height: 120px !important;
 }
 
+.bg-chat-bot {
+  background: var(--rgba-chat-bot);
+  backdrop-filter: blur(5px);
+}
+
+.bg-chat-user {
+  background: var(--rgba-chat-user);
+  backdrop-filter: blur(5px);
+}
+
+.bg-chat-ooc {
+  background: var(--rgba-chat-ooc);
+  backdrop-filter: blur(5px);
+}
+
+.unblur {
+  backdrop-filter: none !important;
+}
+
+.tooltip-cursor {
+  position: absolute;
+  left: var(--tooltip-x);
+  top: var(--tooltip-y);
+}
+
 .drawer {
   height: calc(100vh);
   height: calc(100dvh);

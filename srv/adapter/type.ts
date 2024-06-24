@@ -35,8 +35,12 @@ export type GenerateRequestV2 = {
   characters: Record<string, AppSchema.Character>
   impersonate?: AppSchema.Character
 
+  /** Chat Tree  */
+  parent?: string
+
   /** Date ISO string */
   lastMessage?: string
+
   chatEmbeds?: Array<Memory.UserEmbed<{ name: string }>>
   userEmbeds?: Memory.UserEmbed[]
 }

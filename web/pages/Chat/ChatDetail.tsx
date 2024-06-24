@@ -34,6 +34,7 @@ import { ChatHeader } from './ChatHeader'
 import { ChatFooter } from './ChatFooter'
 import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
+import { ChatGraphModal } from './components/GraphModal'
 
 export { ChatDetail as default }
 
@@ -482,6 +483,15 @@ const ChatDetail: Component = () => {
 
       <Show when={chats.opts.modal === 'export'}>
         <ChatExport show={true} close={clearModal} />
+      </Show>
+
+      <Show when={chats.opts.modal === 'graph'}>
+        <ChatGraphModal
+          tree={ctx.chatTree}
+          show
+          close={clearModal}
+          leafId={chatMsgs().slice(-1)[0]?._id || ''}
+        />
       </Show>
 
       <Show when={chats.opts.modal === 'delete'}>

@@ -4,8 +4,7 @@ import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
-import { storage, toMap } from '/web/shared/util'
-import { resolveTreePath } from '/common/chat'
+import { storage } from '/web/shared/util'
 
 type StorageKey = keyof typeof KEYS
 
@@ -50,7 +49,6 @@ export const KEYS = {
   lastChatId: 'guestLastChatId',
   memory: 'memory',
   scenario: 'scenario',
-  trees: 'chat-trees',
   templates: 'templates',
 }
 
@@ -64,7 +62,6 @@ type LocalStorage = {
   lastChatId: string
   memory: AppSchema.MemoryBook[]
   scenario: AppSchema.ScenarioBook[]
-  trees: AppSchema.ChatTree[]
   templates: AppSchema.PromptTemplate[]
 }
 
@@ -104,7 +101,6 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   messages: [],
   memory: [],
   scenario: [],
-  trees: [],
   templates: [],
 }
 
@@ -146,7 +142,6 @@ export async function handleGuestInit() {
       localStore.set('scenario', res.result.scenario)
       localStore.set('characters', res.result.characters)
       localStore.set('chats', res.result.chats)
-      localStore.set('trees', res.result.trees)
       localStore.set('templates', res.result.templates)
       return res
     }
@@ -203,12 +198,11 @@ async function getGuestInitEntities() {
     await saveChats(chats)
   }
 
-  const trees = await localApi.loadItem('trees', true)
   const templates = await localApi.loadItem('templates', true)
 
   user._id = 'anon'
 
-  return { user, presets, profile, books, scenario, characters, chats, trees, templates }
+  return { user, presets, profile, books, scenario, characters, chats, templates }
 }
 
 async function migrateLegacyItems() {
@@ -269,16 +263,6 @@ export async function getMessages(
   if (!messages) return []
 
   return JSON.parse(messages) as AppSchema.ChatMessage[]
-}
-
-export async function getChatMessages(tree: AppSchema.ChatTree, leafId: string) {
-  const all = await getMessages(tree.chatId)
-  const messages = resolveTreePath(tree, toMap(all), leafId)
-  return messages
-}
-
-export async function saveTrees(state: AppSchema.ChatTree[]) {
-  await saveItem('trees', state)
 }
 
 export async function saveChars(state: AppSchema.Character[]) {
@@ -380,11 +364,9 @@ export const localApi = {
   saveBooks,
   saveTemplates,
   saveScenarios,
-  saveTrees,
   deleteChatMessages,
   loadItem,
   getMessages,
-  getChatMessages,
   KEYS,
   ID,
   error,

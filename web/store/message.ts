@@ -17,7 +17,7 @@ import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
-import { sortAsc } from '/common/chat'
+import { ChatTree, resolveChatPath, sortAsc, toChatTree, updateChatTree } from '/common/chat'
 import { embedApi } from './embeddings'
 
 const SOFT_PAGE_SIZE = 20
@@ -69,6 +69,7 @@ export type MsgState = {
    * These will be 'inserted' into chats by 'createdAt' timestamp
    */
   images: Record<ChatId, AppSchema.ChatMessage[]>
+  chatTree: ChatTree
 }
 
 const initState: MsgState = {
@@ -86,6 +87,7 @@ const initState: MsgState = {
   queue: [],
   textBeforeGenMore: undefined,
   canImageCaption: false,
+  chatTree: {},
 }
 
 export const msgStore = createStore<MsgState>(
@@ -110,14 +112,24 @@ export const msgStore = createStore<MsgState>(
 
   events.on(
     EVENTS.receiveMsgs,
-    (data: { characterId: string; chatId: string; messages: AppSchema.ChatMessage[] }) => {
+    (data: {
+      characterId: string
+      chatId: string
+      leafId?: string
+      messages: AppSchema.ChatMessage[]
+    }) => {
       data.messages.sort(sortAsc)
-      const trailing = data.messages.splice(-SOFT_PAGE_SIZE)
+      const tree = toChatTree(data.messages)
+      const leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+      const fullPath = resolveChatPath(tree, leaf)
+      const recent = fullPath.splice(-SOFT_PAGE_SIZE)
+
       msgStore.setState({
         activeCharId: data.characterId,
         activeChatId: data.chatId,
-        messageHistory: data.messages,
-        msgs: trailing,
+        messageHistory: fullPath,
+        msgs: recent,
+        chatTree: tree,
       })
 
       embedApi.embedChat(data.chatId, data.messages)
@@ -349,6 +361,11 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (res.result) onSuccess?.()
+    },
+
+    async *fork({ chatTree }, messageId: string) {
+      const path = resolveChatPath(chatTree, messageId)
+      yield { msgs: path, messageHistory: [] }
     },
 
     async *retry(
@@ -823,7 +840,7 @@ subscribe(
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
   async (body) => {
-    const { msgs, activeChatId, messageHistory } = msgStore.getState()
+    const { msgs, activeChatId, messageHistory, chatTree } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     const msg = body.msg as AppSchema.ChatMessage
@@ -843,6 +860,7 @@ subscribe(
         messageId: body.msg._id,
       },
       textBeforeGenMore: undefined,
+      chatTree: updateChatTree(chatTree, msg),
     })
 
     // If the message is from a user don't clear the "waiting for response" flags
@@ -1096,29 +1114,3 @@ subscribe(
     onCharacterMessageReceived(msg)
   }
 )
-
-// type MsgTree = Record<string, { depth: number; msg: AppSchema.ChatMessage }>
-// type MsgDepths = Array<string[]>
-// type ResolvedTree = { tree: MsgTree; depths: MsgDepths }
-
-// function toChatTree(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]): ResolvedTree {
-//   const tree: MsgTree = {}
-//   const depths: MsgDepths = []
-
-//   let depth = 0
-//   let parent: string | undefined
-//   for (const msg of messages) {
-//     tree[msg._id] = {
-//       depth,
-//       msg,
-//     }
-//     depths.push([msg._id])
-//     parent = msg._id
-//   }
-
-//   return { tree, depths }
-// }
-
-// function resolveChatTree(tree: MsgTree, leaf: string): AppSchema.ChatMessage[] {
-//   return []
-// }

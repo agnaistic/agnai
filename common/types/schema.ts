@@ -19,7 +19,6 @@ import * as Saga from './saga'
 export type AllDoc =
   | AppSchema.Announcement
   | AppSchema.Chat
-  | AppSchema.ChatTree
   | AppSchema.ChatMessage
   | AppSchema.Character
   | AppSchema.User
@@ -41,11 +40,6 @@ export type AllDoc =
 export type OAuthScope = keyof typeof oauthScopes
 
 export const oauthScopes = ['characters', 'chats', 'presets', 'profile'] as const
-
-export type ChatBranch = {
-  parent: string
-  children: { [key: string]: number }
-}
 
 export namespace AppSchema {
   export interface Configuration {
@@ -332,15 +326,6 @@ export namespace AppSchema {
 
   export interface SagaSession extends Saga.Session {
     kind: 'saga-session'
-  }
-
-  export interface ChatTree {
-    _id: string
-    kind: 'chat-tree'
-    chatId: string
-    userId: string
-
-    tree: Record<string, ChatBranch>
   }
 
   export interface Chat {
