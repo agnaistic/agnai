@@ -1,6 +1,11 @@
 import { Component, Show, createSignal, createEffect, createMemo } from 'solid-js'
 import type { JSX } from 'solid-js'
-import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
+import {
+  AIAdapter,
+  PresetAISettings,
+  ThirdPartyFormat,
+  samplerDisableValues,
+} from '../../common/adapters'
 import { isValidServiceSetting } from './util'
 import { markdown } from './markdown'
 
@@ -49,11 +54,24 @@ const RangeInput: Component<{
     return isValid ? '' : ' hidden'
   })
 
+  const disableSampler = () => {
+    if (!props.aiSetting) return
+    const value = samplerDisableValues[props.aiSetting]
+    if (value === undefined) return
+
+    setValue(value)
+  }
+
   return (
     <div class={`relative pt-1 ${hide()} ${props.parentClass || ''}`}>
       <ul class="w-full">
-        <div class="flex flex-row gap-2">
+        <div class="flex flex-row justify-between gap-2">
           <label class="form-label block-block">{props.label}</label>
+          <Show when={props.aiSetting && props.aiSetting in samplerDisableValues}>
+            <a class="link text-xs" onClick={disableSampler}>
+              Disable
+            </a>
+          </Show>
         </div>
         <input
           id={props.fieldName}

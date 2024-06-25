@@ -316,9 +316,25 @@ export type PresetAISettings = Omit<
   | 'order'
 >
 
-/**
- * This is al
- */
+export const samplerDisableValues: { [key in keyof PresetAISettings]?: number } = {
+  dynatemp_range: 0,
+  dynatemp_exponent: 0,
+  minP: 0,
+  smoothingFactor: 0,
+  smoothingCurve: 1,
+  topP: 1,
+  topK: 0,
+  topA: 0,
+  mirostatTau: 0,
+  mirostatLR: 0,
+  typicalP: 1,
+  repetitionPenalty: 1,
+  repetitionPenaltySlope: 0,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  tailFreeSampling: 1,
+}
+
 export const adapterSettings: {
   [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
 } = {

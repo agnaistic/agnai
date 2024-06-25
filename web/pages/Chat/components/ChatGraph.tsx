@@ -13,8 +13,6 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
   let cyRef: any
 
   const [graph, setGraph] = createSignal<cyto.Core>()
-  const [leaf, setLeaf] = createSignal(props.leafId)
-
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
     cyRef = ref
     redraw(tree)
@@ -100,12 +98,6 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
           const color = ele.id() === leafId ? 'hl-500' : 'bg-500'
           ele.style({ 'background-color': getSettingColor(color) })
         })
-
-        setLeaf(leafId)
-
-        // const result = graph()?.layout({ name: 'dagre', rankDir: props.dir || 'LR' } as any)
-        // result?.run()
-        // graph()?.fit()
       }
     )
   )

@@ -19,7 +19,6 @@ import {
   THIRDPARTY_FORMATS,
   MISTRAL_MODELS,
 } from '../../common/adapters'
-import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { presetStore, settingStore, userStore } from '../store'
 import PromptEditor, { BasicPromptTemplate } from './PromptEditor'
@@ -86,7 +85,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
     return match
   })
 
-  const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
+  const tabs = ['General', 'Prompt', 'Memory', 'Samplers', 'Toggles']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
   const onServiceChange = (opt: Option<string>) => {
@@ -177,7 +176,16 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           pane={pane.showing()}
           tab={tabs[tab()]}
         />
-        <GenSettings
+        <SamplerSettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          format={format()}
+          pane={pane.showing()}
+          tab={tabs[tab()]}
+          sub={sub()}
+        />
+        <SamplerToggles
           disabled={props.disabled}
           inherit={props.inherit}
           service={service()}
@@ -764,7 +772,7 @@ const PromptSettings: Component<
   )
 }
 
-const GenSettings: Component<
+const SamplerSettings: Component<
   Props & {
     pane: boolean
     format?: ThirdPartyFormat
@@ -773,7 +781,7 @@ const GenSettings: Component<
   }
 > = (props) => {
   return (
-    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Advanced' }}>
+    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
       <Card class="flex flex-col gap-4">
         <RangeInput
           fieldName="temp"
@@ -860,46 +868,6 @@ const GenSettings: Component<
           format={props.format}
         />
 
-        <TextInput
-          fieldName="cfgOppose"
-          label="CFG Opposing Prompt"
-          helperText={
-            <>
-              A prompt that would generate the opposite of what you want. Leave empty if unsure.
-              Classifier Free Guidance. See{' '}
-              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
-                NovelAI's CFG docs
-              </a>{' '}
-              for more information.
-            </>
-          }
-          value={props.inherit?.cfgOppose || ''}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'cfgScale'}
-          format={props.format}
-        />
-
-        <Select
-          fieldName="phraseRepPenalty"
-          label={'Phrase Repetition Penalty'}
-          helperText={
-            'Penalizes token sequences, reducing the chance of generations repeating earlier text.'
-          }
-          items={[
-            { label: 'Very Aggressive', value: 'very_aggressive' },
-            { label: 'Aggressive', value: 'aggressive' },
-            { label: 'Medium', value: 'medium' },
-            { label: 'Light', value: 'light' },
-            { label: 'Very Light', value: 'very_light' },
-            { label: 'Off', value: 'off' },
-          ]}
-          value={props.inherit?.phraseRepPenalty || 'aggressive'}
-          service={props.service}
-          aiSetting="phraseRepPenalty"
-          format={props.format}
-        />
-
         <RangeInput
           fieldName="minP"
           label="Min P"
@@ -912,16 +880,6 @@ const GenSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'minP'}
-        />
-
-        <Toggle
-          fieldName="tempLast"
-          label="Temperature Last"
-          helperText="When using Min P, enabling this will make temperature the last sampler to be applied"
-          value={props.inherit?.tempLast ?? false}
-          service={props.service}
-          format={props.format}
-          aiSetting="tempLast"
         />
 
         <RangeInput
@@ -937,6 +895,7 @@ const GenSettings: Component<
           format={props.format}
           aiSetting={'topP'}
         />
+
         <RangeInput
           fieldName="topK"
           label="Top K"
@@ -1059,7 +1018,7 @@ const GenSettings: Component<
             props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
           }
           disabled={props.disabled}
-          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
+          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltyRange'}
           format={props.format}
         />
@@ -1074,7 +1033,7 @@ const GenSettings: Component<
             props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
           }
           disabled={props.disabled}
-          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
+          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltySlope'}
           format={props.format}
         />
@@ -1113,10 +1072,6 @@ const GenSettings: Component<
           aiSetting={'epsilonCutoff'}
           format={props.format}
         />
-        <Show when={!props.service}>
-          <Divider />
-          <div class="text-2xl"> OpenAI</div>
-        </Show>
         <RangeInput
           fieldName="frequencyPenalty"
           label="Frequency Penalty"
@@ -1143,10 +1098,137 @@ const GenSettings: Component<
           aiSetting={'presencePenalty'}
           format={props.format}
         />
-        <Show when={!props.service}>
-          <Divider />
-          <div class="text-2xl">TextGen / Ooba</div>
-        </Show>
+        <RangeInput
+          fieldName="encoderRepitionPenalty"
+          label="Encoder Repetion Penalty"
+          helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
+          min={0.8}
+          max={1.5}
+          step={0.01}
+          value={
+            props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty
+          }
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'encoderRepitionPenalty'}
+          format={props.format}
+        />
+
+        <RangeInput
+          fieldName="penaltyAlpha"
+          label="Penalty Alpha"
+          helperText="The values balance the model confidence and the degeneration penalty in contrastive search decoding"
+          min={0}
+          max={5}
+          step={0.01}
+          value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'penaltyAlpha'}
+          format={props.format}
+        />
+
+        <RangeInput
+          fieldName="numBeams"
+          label="Number of Beams"
+          helperText="Number of beams for beam search. 1 means no beam search."
+          min={1}
+          max={20}
+          step={1}
+          value={props.inherit?.numBeams ?? 1}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'numBeams'}
+          format={props.format}
+        />
+
+        <SamplerOrder service={props.service} inherit={props.inherit} />
+      </Card>
+    </div>
+  )
+}
+
+const SamplerToggles: Component<
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
+> = (props) => {
+  return (
+    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Toggles' }}>
+      <Card class="flex flex-col gap-4">
+        <TextInput
+          fieldName="cfgOppose"
+          label="CFG Opposing Prompt"
+          helperText={
+            <>
+              A prompt that would generate the opposite of what you want. Leave empty if unsure.
+              Classifier Free Guidance. See{' '}
+              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
+                NovelAI's CFG docs
+              </a>{' '}
+              for more information.
+            </>
+          }
+          value={props.inherit?.cfgOppose || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'cfgScale'}
+          format={props.format}
+        />
+
+        <Select
+          fieldName="phraseRepPenalty"
+          label={'Phrase Repetition Penalty'}
+          helperText={
+            'Penalizes token sequences, reducing the chance of generations repeating earlier text.'
+          }
+          items={[
+            { label: 'Very Aggressive', value: 'very_aggressive' },
+            { label: 'Aggressive', value: 'aggressive' },
+            { label: 'Medium', value: 'medium' },
+            { label: 'Light', value: 'light' },
+            { label: 'Very Light', value: 'very_light' },
+            { label: 'Off', value: 'off' },
+          ]}
+          value={props.inherit?.phraseRepPenalty || 'aggressive'}
+          service={props.service}
+          aiSetting="phraseRepPenalty"
+          format={props.format}
+        />
+
+        <Toggle
+          fieldName="tempLast"
+          label="Temperature Last"
+          helperText="When using Min P, enabling this will make temperature the last sampler to be applied"
+          value={props.inherit?.tempLast ?? false}
+          service={props.service}
+          format={props.format}
+          aiSetting="tempLast"
+        />
+
+        <Toggle
+          fieldName="mirostatToggle"
+          label="Use Mirostat"
+          helperText={
+            <>
+              Activates the Mirostat sampling technique. It aims to control perplexity during
+              sampling. See the {` `}
+              <A class="link" href="https://arxiv.org/abs/2007.14966">
+                paper
+              </A>
+              {'.'} Aphrodite only supports mode 2 (on) or 0 (off).
+            </>
+          }
+          value={props.inherit?.mirostatToggle ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'mirostatToggle'}
+          format={props.format}
+        />
+
         <Toggle
           fieldName="tokenHealing"
           label="Token Healing"
@@ -1187,21 +1269,7 @@ const GenSettings: Component<
           aiSetting="skipSpecialTokens"
           format={props.format}
         />
-        <RangeInput
-          fieldName="encoderRepitionPenalty"
-          label="Encoder Repetion Penalty"
-          helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
-          min={0.8}
-          max={1.5}
-          step={0.01}
-          value={
-            props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty
-          }
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'encoderRepitionPenalty'}
-          format={props.format}
-        />
+
         <Toggle
           fieldName="doSample"
           label="DO Sample"
@@ -1212,19 +1280,7 @@ const GenSettings: Component<
           aiSetting={'doSample'}
           format={props.format}
         />
-        <RangeInput
-          fieldName="penaltyAlpha"
-          label="Penalty Alpha"
-          helperText="The values balance the model confidence and the degeneration penalty in contrastive search decoding"
-          min={0}
-          max={5}
-          step={0.01}
-          value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'penaltyAlpha'}
-          format={props.format}
-        />
+
         <Toggle
           fieldName="earlyStopping"
           label="Early Stopping"
@@ -1233,19 +1289,6 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'earlyStopping'}
-          format={props.format}
-        />
-        <RangeInput
-          fieldName="numBeams"
-          label="Number of Beams"
-          helperText="Number of beams for beam search. 1 means no beam search."
-          min={1}
-          max={20}
-          step={1}
-          value={props.inherit?.numBeams ?? 1}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'numBeams'}
           format={props.format}
         />
 
