@@ -14,6 +14,8 @@ import {
   Delete,
   X,
   Zap,
+  Split,
+  MoreHorizontal,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -21,7 +23,6 @@ import {
   createMemo,
   createSignal,
   For,
-  JSX,
   Match,
   onCleanup,
   onMount,
@@ -50,6 +51,9 @@ import { trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
+import { FeatureFlags } from '/web/store/flags'
+import { DropMenu } from '/web/shared/DropMenu'
+import { ChatTree } from '/common/chat'
 
 type MessageProps = {
   msg: SplitMessage
@@ -98,6 +102,8 @@ const Message: Component<MessageProps> = (props) => {
   const [img, setImg] = createSignal('h-full')
   const opts = createSignal(false)
 
+  const showOpt = createSignal(false)
+
   const [obs] = createSignal(
     new ResizeObserver(() => {
       setImg(`calc(${Math.min(avatarRef?.clientHeight, 10000)}px + 1em)`)
@@ -107,23 +113,7 @@ const Message: Component<MessageProps> = (props) => {
   onMount(() => obs().observe(avatarRef))
   onCleanup(() => obs().disconnect())
 
-  const bgStyles = createMemo(() => {
-    const base: JSX.CSSProperties =
-      props.msg.characterId && !props.msg.userId
-        ? ctx.bg.bot
-        : props.msg.ooc
-        ? ctx.bg.ooc
-        : ctx.bg.user
-
-    const styles = { ...base }
-    const show = opts[0]()
-    if (show) {
-      styles['backdrop-filter'] = ''
-    }
-
-    return styles
-  })
-
+  const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
   const content = createMemo(() => {
     const msgV2 = getMessageContent(ctx, props, state)
     return msgV2
@@ -145,14 +135,9 @@ const Message: Component<MessageProps> = (props) => {
     editRef?.focus()
   }
 
-  const opacityClass = props.msg.ooc ? 'opacity-50' : ''
-
-  const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
-
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
-      style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
@@ -160,9 +145,13 @@ const Message: Component<MessageProps> = (props) => {
       data-lastsplit="true"
       classList={{
         'first-in-ctx-window': user.ui.contextWindowLine && props.firstInserted,
+        'bg-chat-bot': !props.msg.ooc && !props.msg.userId,
+        'bg-chat-user': !props.msg.ooc && !!props.msg.userId,
+        'bg-chat-ooc': !!props.msg.ooc,
+        unblur: showOpt[0](),
       }}
     >
-      <div class={`flex w-full ${opacityClass}`}>
+      <div class={`flex w-full`} classList={{ 'opacity-50': !!props.msg.ooc }}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
           <div class="break-words">
             <span
@@ -248,13 +237,32 @@ const Message: Component<MessageProps> = (props) => {
                   data-user-time={isUser}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show when={canShowMeta(props.msg, ctx.promptHistory[props.msg._id])}>
+                  <Show when={ctx.flags.debug}>
+                    <tr>
+                      <td class="pr-2">
+                        <b>id</b>
+                      </td>
+                      <td>
+                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}
+                      </td>
+                    </tr>
+                  </Show>
+                  <Show
+                    when={
+                      ctx.flags.debug || canShowMeta(props.msg, ctx.promptHistory[props.msg._id])
+                    }
+                  >
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
                           'Message Information',
-                          <Meta msg={props.msg} history={ctx.promptHistory[props.msg._id]} />
+                          <Meta
+                            msg={props.msg}
+                            history={ctx.promptHistory[props.msg._id]}
+                            flags={ctx.flags}
+                            tree={ctx.chatTree}
+                          />
                         )
                       }
                     >
@@ -283,6 +291,7 @@ const Message: Component<MessageProps> = (props) => {
                     tts={!!props.tts}
                     partial={props.partial}
                     show={opts}
+                    showMore={showOpt}
                     textBeforeGenMore={props.textBeforeGenMore}
                   />
                 </Match>
@@ -443,28 +452,20 @@ const MessageOptions: Component<{
   show: Signal<boolean>
   textBeforeGenMore?: string
   onRemove: () => void
+  showMore: Signal<boolean>
 }> = (props) => {
+  const closer = (action: () => void) => {
+    return () => {
+      action()
+      props.showMore[1](false)
+    }
+  }
+
   return (
     <div class="mr-3 flex items-center gap-4 text-sm">
-      <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
-        <div
-          onClick={() => !props.partial && chatStore.computePrompt(props.msg, true)}
-          class="icon-button prompt-btn"
-          classList={{ disabled: !!props.partial }}
-        >
-          <Terminal size={16} />
-        </div>
-      </Show>
-
       <Show when={props.chatEditing && props.msg.adapter !== 'image'}>
         <div class="edit-btn icon-button" onClick={props.startEdit}>
           <Pencil size={18} />
-        </div>
-      </Show>
-
-      <Show when={props.chatEditing}>
-        <div class="delete-btn icon-button" onClick={props.onRemove}>
-          <Trash size={18} />
         </div>
       </Show>
 
@@ -475,12 +476,63 @@ const MessageOptions: Component<{
         }
       >
         <div
-          class="icon-button refresh-btn"
+          class="refresh-btn icon-button"
           onClick={() => !props.partial && retryMessage(props.msg, props.msg)}
         >
           <RefreshCw size={18} />
         </div>
       </Show>
+
+      <div class="flex items-center" onClick={() => props.showMore[1](true)}>
+        <MoreHorizontal class="icon-button" />
+      </div>
+      <DropMenu
+        class="p-1"
+        horz="left"
+        vert="down"
+        show={props.showMore[0]()}
+        close={() => props.showMore[1](false)}
+      >
+        <div class="flex flex-col gap-1">
+          <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
+            <Button
+              alignLeft
+              size="sm"
+              schema="secondary"
+              class="prompt-btn w-full"
+              onClick={closer(() => !props.partial && chatStore.computePrompt(props.msg, true))}
+            >
+              <Terminal size={18} /> Prompt
+            </Button>
+          </Show>
+
+          <Show when={!props.last}>
+            <Button
+              alignLeft
+              size="sm"
+              schema="secondary"
+              class="fork-btn w-full"
+              onClick={closer(() => !props.partial && msgStore.fork(props.msg._id))}
+            >
+              <Split size={18} />
+              Fork
+            </Button>
+          </Show>
+
+          <Show when={props.chatEditing}>
+            <Button
+              alignLeft
+              size="sm"
+              schema="red"
+              class="delete-btn w-full"
+              onClick={closer(props.onRemove)}
+            >
+              <Trash size={18} /> Delete
+            </Button>
+          </Show>
+        </div>
+      </DropMenu>
+
       <Show
         when={
           (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
@@ -568,11 +620,15 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) => {
+const Meta: Component<{
+  msg: AppSchema.ChatMessage
+  history?: any
+  flags: FeatureFlags
+  tree: ChatTree
+}> = (props) => {
   let ref: any
 
   if (!props.msg) return null
-  if (!props.msg.meta && !props.history && !props.msg.adapter) return null
 
   const updateImagePrompt = () => {
     const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
@@ -580,6 +636,15 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
       toastStore.success('Image prompt updated')
     })
   }
+
+  const descendants = createMemo(() => {
+    const self = props.tree[props.msg._id]
+    if (!self) return []
+
+    return Array.from(self.children.values())
+  })
+
+  const depth = props.tree[props.msg._id]?.depth || -1
 
   return (
     <form ref={ref} class="flex w-full flex-col gap-2">
@@ -591,6 +656,26 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
                 <b>Adapter</b>
               </td>
               <td>{props.msg.adapter}</td>
+            </tr>
+          </Show>
+          <Show when={depth >= 0}>
+            <tr>
+              <td>
+                <b>depth</b>
+              </td>
+              <td>#{depth + 1}</td>
+            </tr>
+          </Show>
+          <Show when={descendants().length > 0 && props.flags.debug}>
+            <tr>
+              <td>
+                <b>descendants</b>
+              </td>
+              <td>
+                {descendants()
+                  .map((d) => d.slice(0, 4))
+                  .join(', ')}
+              </td>
             </tr>
           </Show>
           <For each={Object.entries(props.msg.meta || {})}>

@@ -8,7 +8,6 @@ import * as msgs from './messages'
 import * as memory from './memory'
 import * as scenario from './scenario'
 import * as oauth from './oauth'
-import * as tree from './tree'
 import * as subs from './subscriptions'
 import * as announce from './announcements'
 
@@ -25,7 +24,6 @@ export const store = {
   memory,
   scenario,
   oauth,
-  tree,
   subs,
   announce,
 }

@@ -209,6 +209,7 @@ export const CLAUDE_MODELS = {
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
   ClaudeV3_Haiku: 'claude-3-haiku-20240307',
+  ClaudeV35_Sonnet: 'claude-3-5-sonnet-20240620',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
@@ -316,9 +317,25 @@ export type PresetAISettings = Omit<
   | 'order'
 >
 
-/**
- * This is al
- */
+export const samplerDisableValues: { [key in keyof PresetAISettings]?: number } = {
+  dynatemp_range: 0,
+  dynatemp_exponent: 0,
+  minP: 0,
+  smoothingFactor: 0,
+  smoothingCurve: 1,
+  topP: 1,
+  topK: 0,
+  topA: 0,
+  mirostatTau: 0,
+  mirostatLR: 0,
+  typicalP: 1,
+  repetitionPenalty: 1,
+  repetitionPenaltySlope: 0,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  tailFreeSampling: 1,
+}
+
 export const adapterSettings: {
   [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
 } = {
@@ -339,7 +356,7 @@ export const adapterSettings: {
   tempLast: ['agnaistic', 'tabby', 'exllamav2'],
   dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
-  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby'],
+  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   smoothingCurve: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),

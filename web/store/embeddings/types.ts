@@ -24,6 +24,14 @@ export type WorkerRequest =
   | { type: 'initSimilarity'; model: string }
   | { type: 'initCaptioning'; model: string }
   | { type: 'captionImage'; image: string; requestId: string }
+  | {
+      type: 'queryChat'
+      chatId: string
+      text: string
+      requestId: string
+      beforeDate: string
+      path: string[]
+    }
   | { type: 'query'; chatId: string; text: string; requestId: string; beforeDate?: string }
   | RequestChatEmbed
   | RequestDocEmbed

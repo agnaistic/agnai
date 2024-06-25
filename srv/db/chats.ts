@@ -12,16 +12,6 @@ export async function getChatOnly(id: string) {
   return chat
 }
 
-export async function getChatWithTree(chatId: string) {
-  const [chat, tree] = await Promise.all([getChatOnly(chatId), getChatTree(chatId)])
-  return { chat, tree }
-}
-
-export async function getChatTree(chatId: string) {
-  const tree = await db('chat-tree').findOne({ chatId })
-  return tree
-}
-
 export async function getChat(id: string) {
   const chat = await db('chat').findOne({ _id: id })
   if (!chat) return

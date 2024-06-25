@@ -30,7 +30,7 @@ const VolumeControl: Component<{
 
   return (
     <div class={`relative pt-1 ${props.parentClass || ''}`}>
-      <label class="form-label block-block">{props.label}</label>
+      <label class="form-label">{props.label}</label>
 
       <Show when={props.helperText}>
         <p class="helper-text">{props.helperText}</p>

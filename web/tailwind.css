@@ -310,7 +310,7 @@ body {
    * Tooltips
    */
   .tooltip {
-    position: relative;
+    /* position: relative; */
     display: inline-block;
   }
 

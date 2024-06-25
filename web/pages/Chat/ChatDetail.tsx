@@ -34,6 +34,7 @@ import { ChatHeader } from './ChatHeader'
 import { ChatFooter } from './ChatFooter'
 import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
+import { ChatGraphModal } from './components/GraphModal'
 
 export { ChatDetail as default }
 
@@ -350,6 +351,11 @@ const ChatDetail: Component = () => {
 
         msgStore.request(msg.chatId, msg.characterId)
       }
+
+      if (ev.key === 'g') {
+        ev.preventDefault()
+        chatStore.option({ options: false, modal: 'graph' })
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)
@@ -484,6 +490,15 @@ const ChatDetail: Component = () => {
         <ChatExport show={true} close={clearModal} />
       </Show>
 
+      <Show when={chats.opts.modal === 'graph'}>
+        <ChatGraphModal
+          tree={ctx.chatTree}
+          show
+          close={clearModal}
+          leafId={chatMsgs().slice(-1)[0]?._id || ''}
+        />
+      </Show>
+
       <Show when={chats.opts.modal === 'delete'}>
         <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={clearModal} />
       </Show>
@@ -509,12 +524,12 @@ const ChatDetail: Component = () => {
         message={
           <TitleCard type="rose" class="flex flex-col gap-4">
             <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
+            <div>This will fork your conversation from the greeting message.</div>
           </TitleCard>
         }
         show={chats.opts.confirm}
         confirm={() => {
-          chatStore.restartChat(chats.chat!._id)
+          msgStore.fork('root')
           chatStore.option({ confirm: false })
         }}
         close={() => chatStore.option({ confirm: false })}

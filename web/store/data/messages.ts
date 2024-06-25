@@ -39,7 +39,7 @@ export type PromptEntities = {
   autoReplyAs?: string
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
-  lastMessage?: { msg: string; date: string }
+  lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
 }
 
@@ -276,6 +276,7 @@ export async function generateResponse(opts: GenerateOpts) {
     replyAs: removeAvatar(props.replyAs),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
+    parent: props.parent?._id,
     lastMessage: entities.lastMessage?.date,
     chatEmbeds,
     userEmbeds,
@@ -462,7 +463,12 @@ async function getRetrievalBreakpoint(
   if (!bp) return { users, chats: undefined }
 
   const chats = settings.memoryChatEmbedLimit
-    ? await embedApi.query(chat._id, text, bp.createdAt)
+    ? await embedApi.queryChat(
+        chat._id,
+        text,
+        bp.createdAt,
+        messages.map((m) => m._id)
+      )
     : undefined
   return { users, chats }
 }
@@ -477,6 +483,7 @@ export type GenerateProps = {
   messages: AppSchema.ChatMessage[]
   continue?: string
   impersonate?: AppSchema.Character
+  parent?: AppSchema.ChatMessage
 }
 
 async function getGenerateProps(
@@ -505,6 +512,7 @@ async function getGenerateProps(
     replyAs: entities.char,
     messages: entities.messages.slice(),
     impersonate: entities.impersonating,
+    parent: getMessageParent(opts.kind, entities.messages),
   }
 
   if ('text' in opts) {
@@ -669,7 +677,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
     return {
       ...entities,
       messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-      lastMessage: getLastMessage(entities.messages),
+      lastMessage: getLastUserMessage(entities.messages),
     }
   }
 
@@ -678,7 +686,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   return {
     ...entities,
     messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-    lastMessage: getLastMessage(entities.messages),
+    lastMessage: getLastUserMessage(entities.messages),
   }
 }
 
@@ -833,11 +841,11 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
 /**
  *
  */
-function getLastMessage(messages: AppSchema.ChatMessage[]) {
+function getLastUserMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    return { msg: msg.msg, date: msg.createdAt }
+    return { msg: msg.msg, date: msg.createdAt, id: msg._id, parent: msg.parent }
   }
 }
 
@@ -855,5 +863,37 @@ function messageToLine(opts: {
       opts.sender.handle ||
       'You'
     return `${entity}: ${msg.msg}`
+  }
+}
+
+function getMessageParent(
+  kind: GenerateOpts['kind'],
+  messages: AppSchema.ChatMessage[]
+): AppSchema.ChatMessage | undefined {
+  const i = messages.length
+
+  switch (kind) {
+    case 'retry': {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        if (!msg.userId) continue
+        return msg
+      }
+    }
+
+    case 'continue': {
+      const msg = messages[i - 2]
+      return msg
+    }
+
+    case 'send-noreply':
+    case 'send-event:ooc':
+    case 'send-event:character':
+    case 'send-event:hidden':
+    case 'send-event:world':
+    case 'send':
+    case 'ooc': {
+      return messages[i - 1]
+    }
   }
 }

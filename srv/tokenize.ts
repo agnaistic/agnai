@@ -14,10 +14,12 @@ const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
 const gpt2Json = readFileSync(resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json'))
 const cohereJson = readFileSync(resolve(__dirname, 'sp-models', 'cohere.json'))
+const qwen2Json = readFileSync(resolve(__dirname, 'sp-models', 'qwen2.json'))
 const llama3Json = readFileSync(resolve(__dirname, 'sp-models', 'llama3.json'))
 
 let claudeEncoder: Tokenizer
 let cohereEncoder: Tokenizer
+let qwen2Encoder: Tokenizer
 let llama3Encoder: Tokenizer
 let krake: Encoder
 let euterpe: Encoder
@@ -43,6 +45,7 @@ let mistral: Encoder
 let yi: Encoder
 let cohere: Encoder
 let llama3: Encoder
+let qwen2: Encoder
 
 export type EncoderType =
   | 'novel'
@@ -55,6 +58,7 @@ export type EncoderType =
   | 'mistral'
   | 'yi'
   | 'cohere'
+  | 'qwen2'
 
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
@@ -109,6 +113,9 @@ export function getEncoderByName(type: EncoderType) {
 
     case 'llama3':
       return llama3
+
+    case 'qwen2':
+      return qwen2
   }
 }
 
@@ -248,6 +255,20 @@ export async function prepareTokenizers() {
         },
         count: (value) => {
           const tokens = llama3Encoder.encode(value)
+          return tokens.length
+        },
+      }
+    }
+    {
+      qwen2Encoder = await mlc.Tokenizer.fromJSON(qwen2Json)
+      qwen2 = {
+        decode: (tokens) => qwen2Encoder.decode(Int32Array.from(tokens)),
+        encode: (value) => {
+          const tokens = Array.from(qwen2Encoder.encode(value))
+          return tokens
+        },
+        count: (value) => {
+          const tokens = qwen2Encoder.encode(value)
           return tokens.length
         },
       }

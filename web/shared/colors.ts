@@ -1,12 +1,18 @@
 import { JSX } from 'solid-js'
 
-export function getRgbaFromVar(cssVar: string, opacity: number): JSX.CSSProperties {
+export function getRgbaFromVar(cssVar: string, opacity: number, id?: string): JSX.CSSProperties {
   const hex = getSettingColor(cssVar)
   const rgb = hexToRgb(hex)
   if (!rgb) return {}
 
+  const background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`
+
+  if (id) {
+    setRootVariable(`--rgba-${id}`, background)
+  }
+
   return {
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`,
+    background,
     'backdrop-filter': 'blur(5px)',
   }
 }

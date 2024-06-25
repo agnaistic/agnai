@@ -178,15 +178,8 @@ export const generateMessageV2 = handle(async (req, res) => {
       senderId: userId,
       ooc: body.kind === 'ooc',
       event: undefined,
+      parent: body.parent,
     })
-
-    if (body.parent) {
-      await store.tree.assignMessageParent({
-        chatId: chat._id,
-        parentId: body.parent,
-        messageId: userMsg._id,
-      })
-    }
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   } else if (body.kind.startsWith('send-event:')) {
@@ -197,6 +190,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       senderId: undefined,
       ooc: false,
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -333,6 +327,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   const actions: AppSchema.ChatAction[] = []
+  let treeLeafId = ''
 
   switch (body.kind) {
     case 'summary': {
@@ -368,15 +363,8 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         retries,
         event: undefined,
+        parent: userMsg?._id,
       })
-
-      if (body.parent && userMsg) {
-        await store.tree.assignMessageParent({
-          chatId: chat._id,
-          parentId: userMsg._id,
-          messageId: msg._id,
-        })
-      }
 
       sendMany(members, {
         type: 'message-created',
@@ -387,6 +375,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         generate: true,
         actions,
       })
+      treeLeafId = requestId
       break
     }
 
@@ -398,12 +387,14 @@ export const generateMessageV2 = handle(async (req, res) => {
 
         await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
+          parent: body.parent,
           actions,
           adapter,
           meta,
           state: 'retried',
           retries: nextRetries,
         })
+        treeLeafId = body.replacing._id
         sendMany(members, {
           type: 'message-retry',
           requestId,
@@ -428,7 +419,9 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           retries,
           event: undefined,
+          parent: body.parent,
         })
+        treeLeafId = requestId
         sendMany(members, {
           type: 'message-created',
           requestId,
@@ -449,6 +442,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         state: 'continued',
       })
+      treeLeafId = body.continuing._id
       sendMany(members, {
         type: 'message-retry',
         requestId,
@@ -463,7 +457,11 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
   }
 
-  await store.chats.update(chatId, {})
+  if (treeLeafId) {
+    await store.chats.update(chatId, { treeLeafId })
+  } else {
+    await store.chats.update(chatId, {})
+  }
 })
 
 async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Response) {

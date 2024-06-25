@@ -10,6 +10,7 @@ import {
   Camera,
   VenetianMask,
   AlertTriangle,
+  Map,
 } from 'lucide-solid'
 import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
@@ -26,8 +27,8 @@ export type ChatModal =
   | 'memory'
   | 'members'
   | 'delete'
-  | 'updateGaslightToUseSystemPrompt'
   | 'none'
+  | 'graph'
 
 const ChatOptions: Component<{
   adapterLabel: string
@@ -170,12 +171,19 @@ const ChatOptions: Component<{
           <Row>
             <Item
               onClick={() => {
+                props.setModal('graph')
+              }}
+            >
+              <Map />
+              Chat Graph
+            </Item>
+            <Item
+              onClick={() => {
                 chatStore.option({ confirm: true, options: false })
               }}
-              center
               hide={!isOwner()}
             >
-              <AlertTriangle /> Restart Chat <AlertTriangle />
+              <AlertTriangle /> Restart <AlertTriangle />
             </Item>
           </Row>
         </Show>
