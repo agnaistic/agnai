@@ -1219,13 +1219,12 @@ const SamplerToggles: Component<
               <A class="link" href="https://arxiv.org/abs/2007.14966">
                 paper
               </A>
-              {'.'} Aphrodite only supports mode 2 (on) or 0 (off).
             </>
           }
           value={props.inherit?.mirostatToggle ?? false}
           disabled={props.disabled}
           service={props.service}
-          aiSetting={'mirostatToggle'}
+          aiSetting={'mirostatLR'}
           format={props.format}
         />
 
