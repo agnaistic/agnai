@@ -524,12 +524,12 @@ const ChatDetail: Component = () => {
         message={
           <TitleCard type="rose" class="flex flex-col gap-4">
             <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
+            <div>This will fork your conversation from the greeting message.</div>
           </TitleCard>
         }
         show={chats.opts.confirm}
         confirm={() => {
-          chatStore.restartChat(chats.chat!._id)
+          msgStore.fork('root')
           chatStore.option({ confirm: false })
         }}
         close={() => chatStore.option({ confirm: false })}

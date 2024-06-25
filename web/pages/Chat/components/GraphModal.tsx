@@ -23,6 +23,7 @@ export const ChatGraphModal: Component<{
   }
 
   const reset = () => {
+    cy()?.reset()
     cy()?.fit()
   }
 

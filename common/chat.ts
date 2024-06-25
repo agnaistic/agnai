@@ -27,7 +27,9 @@ export function toChatTree(messages: AppSchema.ChatMessage[]): ChatTree {
   }
 
   for (const { msg } of Object.values(tree)) {
-    if (!msg.parent) continue
+    if (!msg.parent) {
+      continue
+    }
     const parent = tree[msg.parent]
     if (!parent) continue
     parent.children.add(msg._id)

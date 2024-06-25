@@ -363,9 +363,20 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *fork({ chatTree }, messageId: string) {
+    async *fork({ chatTree, msgs, messageHistory }, messageId: 'root' | string) {
+      if (messageId === 'root') {
+        const first = messageHistory[0] || msgs[0]
+
+        if (!first) {
+          toastStore.warn('Could not restart: No root message found')
+          return
+        }
+
+        messageId = first._id
+      }
       const path = resolveChatPath(chatTree, messageId)
-      yield { msgs: path, messageHistory: [] }
+      const page = path.splice(-SOFT_PAGE_SIZE)
+      yield { msgs: page, messageHistory: path }
     },
 
     async *retry(

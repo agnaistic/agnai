@@ -13,6 +13,7 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
   let cyRef: any
 
   const [graph, setGraph] = createSignal<cyto.Core>()
+  const [leaf, setLeaf] = createSignal(props.leafId)
 
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
     cyRef = ref
@@ -22,35 +23,17 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
   const redraw = (tree: ChatTree) => {
     graph()?.destroy()
 
-    const nodes = Object.values(tree).map((node) => {
-      return {
-        data: {
-          id: node.msg._id,
-          label: props.leafId === node.msg._id ? '***' : node.msg._id.slice(0, 3),
-        },
-      }
-    })
-
-    const edges = Object.values(tree)
-      .filter((node) => node.children.size !== 0)
-      .map((node) => {
-        return Array.from(node.children.values()).map((child) => ({
-          data: { source: node.msg._id, target: child },
-        }))
-      })
-      .flat()
-
     const cy = cyto({
       container: cyRef,
       layout: { name: 'dagre', rankDir: props.dir || 'LR' } as any,
 
       style: [
-        {
-          selector: 'node',
-          style: {
-            'background-color': getSettingColor('hl-500'),
-          },
-        },
+        // {
+        //   selector: 'node',
+        //   style: {
+        //     'background-color': getSettingColor('hl-500'),
+        //   },
+        // },
 
         {
           selector: 'edge',
@@ -72,12 +55,9 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
         },
       ],
 
-      elements: {
-        nodes,
-        edges,
-      },
       panningEnabled: true,
       wheelSensitivity: 0.1,
+      elements: getElements(props.tree, props.leafId),
     })
 
     cy.on('click', 'node', function (this: any, evt) {
@@ -87,6 +67,7 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
 
     const win: any = window
     win.cy = cy
+    cy.reset()
     cy.fit()
     cy.center()
 
@@ -97,14 +78,35 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
   createEffect(
     on(
       () => props.tree,
-      (tree) => redraw(tree)
+      (tree) => {
+        const cy = graph()
+        if (!cy) return
+
+        redraw(tree)
+      }
     )
   )
 
   createEffect(
     on(
       () => props.leafId,
-      (leafIf) => redraw(props.tree)
+      (leafId) => {
+        const cy = graph()
+        if (!cy) return
+
+        const nodes = cy.nodes()
+
+        nodes.each((ele) => {
+          const color = ele.id() === leafId ? 'hl-500' : 'bg-500'
+          ele.style({ 'background-color': getSettingColor(color) })
+        })
+
+        setLeaf(leafId)
+
+        // const result = graph()?.layout({ name: 'dagre', rankDir: props.dir || 'LR' } as any)
+        // result?.run()
+        // graph()?.fit()
+      }
     )
   )
 
@@ -131,4 +133,32 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
       {/* <div class="left-0 top-0 z-50 h-full w-full" ref={(ref) => init(ref, props.tree)}></div> */}
     </div>
   )
+}
+
+function getElements(tree: ChatTree, leafId: string) {
+  const elements: cyto.ElementDefinition[] = []
+
+  for (const node of Object.values(tree)) {
+    elements.push({
+      group: 'nodes',
+      data: { id: node.msg._id, label: node.msg._id.slice(0, 3) },
+      style: {
+        'background-color':
+          leafId === node.msg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
+      },
+    })
+  }
+
+  for (const node of Object.values(tree)) {
+    if (node.children.size === 0) continue
+
+    for (const child of Array.from(node.children.values())) {
+      elements.push({
+        group: 'edges',
+        data: { source: node.msg._id, target: child },
+      })
+    }
+  }
+
+  return elements
 }
