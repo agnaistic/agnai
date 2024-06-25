@@ -26,13 +26,6 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
       layout: { name: 'dagre', rankDir: props.dir || 'LR' } as any,
 
       style: [
-        // {
-        //   selector: 'node',
-        //   style: {
-        //     'background-color': getSettingColor('hl-500'),
-        //   },
-        // },
-
         {
           selector: 'edge',
           style: {
@@ -59,6 +52,11 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string
     })
 
     cy.on('click', 'node', function (this: any, evt) {
+      const id = this.id()
+      msgStore.fork(id)
+    })
+
+    cy.on('tap', 'node', function (this: any, evt) {
       const id = this.id()
       msgStore.fork(id)
     })
