@@ -279,6 +279,7 @@ const GeneralSettings: Component<
     ClaudeV3_Opus: 'Claude v3 Opus',
     ClaudeV3_Sonnet: 'Claude v3 Sonnet',
     ClaudeV3_Haiku: 'Claude v3 Haiku',
+    ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
   } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
@@ -794,6 +795,7 @@ const SamplerSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'temp'}
+          recommended={props.sub?.preset.temp}
         />
         <RangeInput
           fieldName="dynatemp_range"
@@ -806,6 +808,7 @@ const SamplerSettings: Component<
           disabled={props.disabled}
           service={props.service} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
+          recommended={props.sub?.preset.dynatemp_range}
         />
 
         <RangeInput
@@ -819,6 +822,7 @@ const SamplerSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'dynatemp_exponent'}
+          recommended={props.sub?.preset.dynatemp_exponent}
         />
         <RangeInput
           fieldName="smoothingFactor"
@@ -831,6 +835,7 @@ const SamplerSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingFactor'}
+          recommended={props.sub?.preset.dynatemp_exponent}
         />
         <RangeInput
           fieldName="smoothingCurve"
@@ -843,6 +848,7 @@ const SamplerSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingCurve'}
+          recommended={props.sub?.preset.smoothingCurve}
         />
         <RangeInput
           fieldName="cfgScale"
@@ -880,6 +886,7 @@ const SamplerSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'minP'}
+          recommended={props.sub?.preset.minP}
         />
 
         <RangeInput
@@ -894,6 +901,7 @@ const SamplerSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topP'}
+          recommended={props.sub?.preset.topP}
         />
 
         <RangeInput
@@ -908,6 +916,7 @@ const SamplerSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topK'}
+          recommended={props.sub?.preset.topK}
         />
         <RangeInput
           fieldName="topA"
@@ -921,6 +930,7 @@ const SamplerSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topA'}
+          recommended={props.sub?.preset.topA}
         />
 
         <Toggle
@@ -980,6 +990,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'tailFreeSampling'}
           format={props.format}
+          recommended={props.sub?.preset.tailFreeSampling}
         />
         <RangeInput
           fieldName="typicalP"
@@ -993,6 +1004,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'typicalP'}
           format={props.format}
+          recommended={props.sub?.preset.typicalP}
         />
         <RangeInput
           fieldName="repetitionPenalty"
@@ -1006,6 +1018,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'repetitionPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenalty}
         />
         <RangeInput
           fieldName="repetitionPenaltyRange"
@@ -1021,6 +1034,7 @@ const SamplerSettings: Component<
           service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltyRange'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenaltyRange}
         />
         <RangeInput
           fieldName="repetitionPenaltySlope"
@@ -1036,6 +1050,7 @@ const SamplerSettings: Component<
           service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltySlope'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenaltySlope}
         />
         <RangeInput
           fieldName="etaCutoff"
@@ -1084,6 +1099,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'frequencyPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.frequencyPenalty}
         />
         <RangeInput
           fieldName="presencePenalty"
@@ -1097,6 +1113,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'presencePenalty'}
           format={props.format}
+          recommended={props.sub?.preset.presencePenalty}
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
@@ -1112,6 +1129,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'encoderRepitionPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.encoderRepitionPenalty}
         />
 
         <RangeInput
@@ -1126,6 +1144,7 @@ const SamplerSettings: Component<
           service={props.service}
           aiSetting={'penaltyAlpha'}
           format={props.format}
+          recommended={props.sub?.preset.penaltyAlpha}
         />
 
         <RangeInput
@@ -1207,6 +1226,7 @@ const SamplerToggles: Component<
           service={props.service}
           format={props.format}
           aiSetting="tempLast"
+          recommended={props.sub?.preset.tempLast}
         />
 
         <Toggle
@@ -1226,6 +1246,7 @@ const SamplerToggles: Component<
           service={props.service}
           aiSetting={'mirostatLR'}
           format={props.format}
+          recommended={props.sub?.preset.mirostatToggle}
         />
 
         <Toggle
@@ -1237,6 +1258,7 @@ const SamplerToggles: Component<
           service={props.service}
           aiSetting={'tokenHealing'}
           format={props.format}
+          recommended={props.sub?.preset.tokenHealing}
         />
         <Toggle
           fieldName="addBosToken"
@@ -1247,6 +1269,7 @@ const SamplerToggles: Component<
           service={props.service}
           aiSetting={'addBosToken'}
           format={props.format}
+          recommended={props.sub?.preset.addBosToken}
         />
         <Toggle
           fieldName="banEosToken"
@@ -1257,6 +1280,7 @@ const SamplerToggles: Component<
           service={props.service}
           aiSetting={'banEosToken'}
           format={props.format}
+          recommended={props.sub?.preset.banEosToken}
         />
         <Toggle
           fieldName="skipSpecialTokens"
@@ -1267,6 +1291,7 @@ const SamplerToggles: Component<
           service={props.service}
           aiSetting="skipSpecialTokens"
           format={props.format}
+          recommended={props.sub?.preset.skipSpecialTokens}
         />
 
         <Toggle

@@ -19,6 +19,7 @@ const RangeInput: Component<{
   max: number
   step: number
   disabled?: boolean
+  recommended?: number
   onChange?: (value: number) => void
 
   service?: AIAdapter
@@ -66,7 +67,15 @@ const RangeInput: Component<{
     <div class={`relative pt-1 ${hide()} ${props.parentClass || ''}`}>
       <ul class="w-full">
         <div class="flex flex-row justify-between gap-2">
-          <label class="form-label block-block">{props.label}</label>
+          <span>
+            <label class="form-label">{props.label}</label>
+            <Show when={props.recommended !== undefined}>
+              <span class="text-xs italic text-gray-500">
+                &nbsp;(Recommended: {props.recommended?.toString()})
+              </span>
+            </Show>
+          </span>
+
           <Show when={props.aiSetting && props.aiSetting in samplerDisableValues}>
             <a class="link text-xs" onClick={disableSampler}>
               Disable

@@ -209,6 +209,7 @@ export const CLAUDE_MODELS = {
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
   ClaudeV3_Haiku: 'claude-3-haiku-20240307',
+  ClaudeV35_Sonnet: 'claude-3-5-sonnet-20240620',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
