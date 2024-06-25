@@ -31,6 +31,7 @@ const tokenizers = [
   { label: 'Mistral', value: 'mistral' },
   { label: 'Yi', value: 'yi' },
   { label: 'Cohere', value: 'cohere' },
+  { label: 'Qwen2', value: 'qwen2' },
 ]
 
 export const Subscription: Component = () => {
