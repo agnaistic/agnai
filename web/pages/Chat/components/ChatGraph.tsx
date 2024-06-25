@@ -9,7 +9,7 @@ export { ChatGraph as default }
 
 cyto.use(dagre)
 
-export const ChatGraph: Component<{ tree: ChatTree; leafId: string }> = (props) => {
+export const ChatGraph: Component<{ tree: ChatTree; leafId: string; dir?: string }> = (props) => {
   let cyRef: any
 
   const [graph, setGraph] = createSignal<cyto.Core>()
@@ -42,7 +42,7 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string }> = (props) 
 
     const cy = cyto({
       container: cyRef,
-      layout: { name: 'dagre', rankDir: 'LR' } as any,
+      layout: { name: 'dagre', rankDir: props.dir || 'LR' } as any,
 
       style: [
         {
@@ -76,9 +76,8 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string }> = (props) 
         nodes,
         edges,
       },
-      zoom: 0.5,
-      zoomingEnabled: false,
       panningEnabled: true,
+      wheelSensitivity: 0.1,
     })
 
     cy.on('click', 'node', function (this: any, evt) {
@@ -88,6 +87,7 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string }> = (props) 
 
     const win: any = window
     win.cy = cy
+    cy.fit()
     cy.center()
 
     setGraph(cy)
@@ -105,6 +105,17 @@ export const ChatGraph: Component<{ tree: ChatTree; leafId: string }> = (props) 
     on(
       () => props.leafId,
       (leafIf) => redraw(props.tree)
+    )
+  )
+
+  createEffect(
+    on(
+      () => props.dir,
+      (dir) => {
+        const result = graph()?.layout({ name: 'dagre', rankDir: dir || 'LR' } as any)
+        result?.run()
+        graph()?.fit()
+      }
     )
   )
 

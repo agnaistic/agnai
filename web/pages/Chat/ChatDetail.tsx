@@ -351,6 +351,11 @@ const ChatDetail: Component = () => {
 
         msgStore.request(msg.chatId, msg.characterId)
       }
+
+      if (ev.key === 'g') {
+        ev.preventDefault()
+        chatStore.option({ options: false, modal: 'graph' })
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)

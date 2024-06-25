@@ -66,6 +66,7 @@ export const embedApi = {
   embedFile,
   embedPlainText,
   query,
+  queryChat,
   loadDocument,
   removeDocument: async (docId: string) => {
     await docCache.deleteDoc(docId)
@@ -213,7 +214,7 @@ function embedChat(chatId: string, messages: AppSchema.ChatMessage[]) {
   post('embedChat', { chatId, messages })
 }
 
-async function query(chatId: string, text: string, before?: string): Promise<QueryResult> {
+async function queryChat(chatId: string, text: string, before: string, path: string[]) {
   const requestId = v4()
   if (!EMBED_READY) {
     return { type: 'result', requestId, messages: [] }
@@ -230,7 +231,29 @@ async function query(chatId: string, text: string, before?: string): Promise<Que
     })
   })
 
-  post('query', { requestId, chatId, text, beforeDate: before })
+  post('queryChat', { requestId, chatId, text, beforeDate: before, path })
+
+  return promise
+}
+
+async function query(chatId: string, text: string): Promise<QueryResult> {
+  const requestId = v4()
+  if (!EMBED_READY) {
+    return { type: 'result', requestId, messages: [] }
+  }
+
+  const promise = new Promise<QueryResult>((resolve) => {
+    const timer = setTimeout(() => {
+      console.warn('Embedding request timed out')
+      resolve({ type: 'result', requestId, messages: [] })
+    }, 1000)
+    embedCallbacks.set(requestId, (msg) => {
+      clearTimeout(timer)
+      resolve(msg)
+    })
+  })
+
+  post('query', { requestId, chatId, text })
 
   return promise
 }

@@ -644,6 +644,8 @@ const Meta: Component<{
     return Array.from(self.children.values())
   })
 
+  const depth = props.tree[props.msg._id]?.depth || -1
+
   return (
     <form ref={ref} class="flex w-full flex-col gap-2">
       <Card>
@@ -656,7 +658,15 @@ const Meta: Component<{
               <td>{props.msg.adapter}</td>
             </tr>
           </Show>
-          <Show when={descendants().length > 0}>
+          <Show when={depth >= 0}>
+            <tr>
+              <td>
+                <b>depth</b>
+              </td>
+              <td>#{depth + 1}</td>
+            </tr>
+          </Show>
+          <Show when={descendants().length > 0 && props.flags.debug}>
             <tr>
               <td>
                 <b>descendants</b>

@@ -463,7 +463,12 @@ async function getRetrievalBreakpoint(
   if (!bp) return { users, chats: undefined }
 
   const chats = settings.memoryChatEmbedLimit
-    ? await embedApi.query(chat._id, text, bp.createdAt)
+    ? await embedApi.queryChat(
+        chat._id,
+        text,
+        bp.createdAt,
+        messages.map((m) => m._id)
+      )
     : undefined
   return { users, chats }
 }

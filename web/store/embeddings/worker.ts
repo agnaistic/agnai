@@ -95,6 +95,25 @@ const handlers: {
     await docCache.saveDoc(msg.documentId, msg)
     embed(msg)
   },
+  queryChat: async (query) => {
+    if (!embeddings[query.chatId]) return
+    const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
+
+    const path = new Set(query.path)
+
+    const embeds = Object.values(embeddings[query.chatId])
+      .filter((msg) => {
+        if (!path.has(msg.meta.id)) return false
+        const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
+        return msg.msg !== query.text && isBefore
+      })
+      .map((msg) => {
+        const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
+        return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
+      })
+      .sort(rank)
+    post('result', { messages: embeds, requestId: query.requestId })
+  },
   query: async (query) => {
     if (!Embedder) {
       post('result', { messages: [], requestId: query.requestId })
@@ -103,19 +122,6 @@ const handlers: {
 
     const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
     const start = Date.now()
-    if (embeddings[query.chatId]) {
-      const embeds = Object.values(embeddings[query.chatId])
-        .filter((msg) => {
-          const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
-          return msg.msg !== query.text && isBefore
-        })
-        .map((msg) => {
-          const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
-          return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
-        })
-        .sort(rank)
-      post('result', { messages: embeds, requestId: query.requestId })
-    }
 
     if (documents[query.chatId]) {
       const embeds = documents[query.chatId]
@@ -200,7 +206,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
         entityId: msg.characterId || msg.userId || '',
         msg: msg.msg,
         embed: embedding,
-        meta: { created: msg.createdAt },
+        meta: { id: msg._id, created: msg.createdAt },
       }
     }
 
@@ -233,6 +239,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   const next = embedQueue.shift()
   if (next) {
+    await new Promise((res) => setTimeout(res, 50))
     embed(next)
   }
 }

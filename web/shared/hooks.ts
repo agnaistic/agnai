@@ -1,4 +1,4 @@
-import { Accessor, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
+import { Accessor, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
 import { userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
@@ -201,6 +201,21 @@ export function useDraft(id: string) {
 export function clearDraft(id: string) {
   const key = `chat:${id}:draft`
   localStorage.removeItem(key)
+}
+
+export function useLocalStorage<T = any>(id: string, initialValue: T) {
+  const key = `agnaistic-ls-${id}`
+  const init = localStorage.getItem(id) || JSON.stringify(initialValue)
+
+  const [value, setValue] = createSignal<T>(JSON.parse(init))
+
+  const update = (next: T) => {
+    localStorage.setItem(key, JSON.stringify(next))
+    setValue(next as any)
+    return next
+  }
+
+  return [value, update] as Signal<T>
 }
 
 export function useEffect(callback: () => void | Function): void {

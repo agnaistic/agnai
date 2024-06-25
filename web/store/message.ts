@@ -609,7 +609,7 @@ export const msgStore = createStore<MsgState>(
   }
 })
 
-const [debouncedEmbed] = createDebounce((chatId: string, history: any) => {
+const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)
 }, 250)
 
