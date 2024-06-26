@@ -9,6 +9,7 @@ import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
 import { getScenarioEventType } from '/common/scenario'
+import { concatenateSentence } from '/common/util'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -325,7 +326,9 @@ export const generateMessageV2 = handle(async (req, res) => {
     return
   }
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const responseText =
+    body.kind === 'continue' ? concatenateSentence(body.continuing.msg, generated) : generated
+
   const actions: AppSchema.ChatAction[] = []
   let treeLeafId = ''
 
@@ -567,7 +570,8 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   if (error) return
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const responseText =
+    body.kind === 'continue' ? concatenateSentence(body.continuing.msg, generated) : generated
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined

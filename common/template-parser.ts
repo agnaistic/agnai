@@ -138,7 +138,30 @@ export async function parseTemplate(
     parts.ujb = render(parts.ujb, opts)
   }
 
-  const ast = parser.parse(template, {}) as PNode[]
+  let ast = parser.parse(template, {}) as PNode[]
+
+  /**
+   * Continuing the previous message:
+   * In this case our goal is to end the prompt as close to the
+   * last message as possible.
+   */
+  if (opts.continue) {
+    const historyIndex = ast.findIndex(
+      (node) =>
+        typeof node !== 'string' &&
+        ((node.kind === 'placeholder' && node.value === 'history') ||
+          (node.kind === 'each' && node.value === 'history'))
+    )
+    if (historyIndex !== -1) {
+      const node = ast[historyIndex] as PlaceHolder | IteratorNode
+      // replace iterator with normalized history
+      if (node.kind === 'each' && node.value === 'history') {
+        ast[historyIndex] = { kind: 'placeholder', value: 'history' } as PlaceHolder
+      }
+      ast = ast.slice(0, historyIndex + 1)
+    }
+  }
+
   readInserts(opts, ast)
   let output = render(template, opts, ast)
   let unusedTokens = 0

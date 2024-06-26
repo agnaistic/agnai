@@ -422,10 +422,6 @@ export async function buildPromptParts(
 
   const post = createPostPrompt(opts)
 
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
   const linesForMemory = [...lines].reverse()
   const books: AppSchema.MemoryBook[] = []
   if (replyAs.characterBook) books.push(replyAs.characterBook)
