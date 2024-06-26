@@ -6,7 +6,13 @@ import TextInput from './TextInput'
 
 export { Sortable as default }
 
-export type SortItem = { id: number; value: string | number; label: string; enabled?: boolean }
+export type SortItem = {
+  id: number
+  value: string | number
+  label: string
+  enabled?: boolean
+  onClick?: (item: { id: number; value: string | number; enabled?: boolean }) => void
+}
 
 const Sortable: Component<{
   field?: string
@@ -17,6 +23,8 @@ const Sortable: Component<{
   onItemClick?: (id: number) => void
   setSorter?: (sort: Sort) => void
   disabled?: boolean
+  itemClass?: string
+  parentClass?: string
 }> = (props) => {
   let ref: HTMLUListElement
   let field: HTMLInputElement
@@ -88,7 +96,11 @@ const Sortable: Component<{
 
   return (
     <>
-      <div class={`${props.disabled ? 'pointer-events-none opacity-50' : ''}`}>
+      <div
+        class={`${props.disabled ? 'pointer-events-none opacity-50' : ''} ${
+          props.parentClass || ''
+        }`}
+      >
         <FormLabel label={props.label} helperText={props.helperText} />
         <Show when={!!props.field}>
           <TextInput fieldName={props.field!} parentClass="hidden" ref={(ele) => (field = ele)} />
@@ -100,9 +112,18 @@ const Sortable: Component<{
               if (!match) return null
               return (
                 <li
-                  class="flex h-10 items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2"
+                  class={`flex h-10 items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2 ${
+                    props.itemClass || ''
+                  }`}
                   data-id={match.id}
-                  onClick={() => onClick(+match.id)}
+                  onClick={() => {
+                    onClick(+match.id)
+                    item().onClick?.({
+                      id: +match.id,
+                      value: item().value,
+                      enabled: item().enabled,
+                    })
+                  }}
                   classList={{
                     'cursor-pointer': item().enabled !== undefined,
                     'bg-800': enabled()[match.id] !== undefined ? true : !enabled()[match.id],

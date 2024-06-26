@@ -47,10 +47,6 @@ const ChatOptions: Component<{
     chatStore.option({ hideOoc: !chats.opts.hideOoc })
   }
 
-  const toggleEditing = () => {
-    chatStore.option({ editing: !chats.opts.editing })
-  }
-
   const toggleScreenshot = (value: boolean) => {
     chatStore.option({ screenshot: value })
   }
@@ -107,18 +103,6 @@ const ChatOptions: Component<{
             </div>
           </Option>
         </Show>
-
-        <Option onClick={toggleEditing} hide={!isOwner()}>
-          <div class="flex w-full items-center justify-between">
-            <div>Enable Chat Editing</div>
-            <Toggle
-              class="flex items-center"
-              fieldName="editChat"
-              value={chats.opts.editing}
-              onChange={toggleEditing}
-            />
-          </div>
-        </Option>
 
         <Option onClick={() => props.togglePane('character')} hide={!isOwner()}>
           <User /> Main Character

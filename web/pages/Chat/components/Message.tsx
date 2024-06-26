@@ -23,6 +23,7 @@ import {
   createMemo,
   createSignal,
   For,
+  JSX,
   Match,
   onCleanup,
   onMount,
@@ -44,7 +45,7 @@ import {
   VoiceState,
 } from '../../../store'
 import { markdown } from '../../../shared/markdown'
-import Button from '/web/shared/Button'
+import Button, { ButtonSchema } from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
 import { trimSentence } from '/common/util'
@@ -54,6 +55,9 @@ import { Card } from '/web/shared/Card'
 import { FeatureFlags } from '/web/store/flags'
 import { DropMenu } from '/web/shared/DropMenu'
 import { ChatTree } from '/common/chat'
+import { Portal } from 'solid-js/web'
+import { UI } from '/common/types'
+import { LucideProps } from 'lucide-solid/dist/types/types'
 
 type MessageProps = {
   msg: SplitMessage
@@ -281,9 +285,8 @@ const Message: Component<MessageProps> = (props) => {
                   }
                 >
                   <MessageOptions
-                    char={ctx.char!}
+                    ui={user.ui}
                     msg={props.msg}
-                    chatEditing={props.editing}
                     edit={edit}
                     startEdit={startEdit}
                     onRemove={props.onRemove}
@@ -442,8 +445,7 @@ function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
 
 const MessageOptions: Component<{
   msg: SplitMessage
-  char: AppSchema.Character
-  chatEditing: boolean
+  ui: UI.UISettings
   tts: boolean
   edit: Accessor<boolean>
   startEdit: () => void
@@ -454,6 +456,8 @@ const MessageOptions: Component<{
   onRemove: () => void
   showMore: Signal<boolean>
 }> = (props) => {
+  const showInner = createMemo(() => Object.values(props.ui.msgOptsInline || {}).some((v) => !!v))
+
   const closer = (action: () => void) => {
     return () => {
       action()
@@ -461,78 +465,128 @@ const MessageOptions: Component<{
     }
   }
 
+  const open = createMemo(() => props.showMore[0]())
+
+  const logic = createMemo(() => {
+    const items: Record<
+      UI.MessageOption,
+      {
+        key: UI.MessageOption
+        outer: { outer: boolean; pos: number }
+        label: string
+        class: string
+        onClick: () => void
+        show: boolean
+        schema?: ButtonSchema
+        icon: (props: LucideProps) => JSX.Element
+      }
+    > = {
+      prompt: {
+        key: 'prompt',
+        label: 'Prompt',
+        class: 'prompt-btn',
+        outer: props.ui.msgOptsInline.prompt,
+        show: !!props.msg.characterId && props.msg.adapter !== 'image',
+        onClick: () => !props.partial && chatStore.computePrompt(props.msg, true),
+        icon: Terminal,
+      },
+
+      edit: {
+        key: 'edit',
+        label: 'Edit',
+        class: 'edit-btn',
+        outer: props.ui.msgOptsInline.edit,
+        show: props.msg.adapter !== 'image',
+        onClick: props.startEdit,
+        icon: Pencil,
+      },
+
+      fork: {
+        key: 'fork',
+        label: 'Fork',
+        class: 'fork-btn',
+        show: !props.last,
+        outer: props.ui.msgOptsInline.fork,
+        onClick: () => !props.partial && msgStore.fork(props.msg._id),
+        icon: Split,
+      },
+
+      regen: {
+        key: 'regen',
+        class: 'refresh-btn',
+        label: 'Regenerate',
+        outer: props.ui.msgOptsInline.regen,
+        show:
+          (props.last || (props.msg.adapter === 'image' && !!props.msg.imagePrompt)) &&
+          !!props.msg.characterId,
+        onClick: () => !props.partial && retryMessage(props.msg, props.msg),
+        icon: RefreshCw,
+      },
+
+      trash: {
+        key: 'trash',
+        label: 'Delete',
+        show: true,
+        outer: props.ui.msgOptsInline.trash,
+        onClick: props.onRemove,
+        class: 'delete-btn',
+        schema: 'red',
+        icon: Trash,
+      },
+    }
+
+    return items
+  })
+
+  const order = createMemo(() => {
+    open()
+    logic()
+
+    return Object.entries(props.ui.msgOptsInline)
+      .sort((l, r) => l[1].pos - r[1].pos)
+      .map(([key, item]) => ({ key: key as UI.MessageOption, ...item }))
+  })
+
   return (
     <div class="mr-3 flex items-center gap-4 text-sm">
-      <Show when={props.chatEditing && props.msg.adapter !== 'image'}>
-        <div class="edit-btn icon-button" onClick={props.startEdit}>
-          <Pencil size={18} />
-        </div>
-      </Show>
+      <div class="contents" id={`outer-${props.msg._id}`}></div>
 
-      <Show
-        when={
-          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
-          props.msg.characterId
-        }
-      >
-        <div
-          class="refresh-btn icon-button"
-          onClick={() => !props.partial && retryMessage(props.msg, props.msg)}
-        >
-          <RefreshCw size={18} />
-        </div>
-      </Show>
+      <For each={order()}>
+        {(item) => {
+          const def = logic()[item.key]
+
+          return (
+            <MessageOption
+              id={props.msg._id}
+              outer={def.outer.outer}
+              show={def.show}
+              label={def.label}
+              open={open()}
+              onClick={closer(def.onClick)}
+              class={def.class}
+              schema={def.schema}
+            >
+              {def.icon({ size: 18 })}
+            </MessageOption>
+          )
+        }}
+      </For>
 
       <div class="flex items-center" onClick={() => props.showMore[1](true)}>
         <MoreHorizontal class="icon-button" />
       </div>
-      <DropMenu
-        class="p-1"
-        horz="left"
-        vert="down"
-        show={props.showMore[0]()}
-        close={() => props.showMore[1](false)}
-      >
-        <div class="flex flex-col gap-1">
-          <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
-            <Button
-              alignLeft
-              size="sm"
-              schema="secondary"
-              class="prompt-btn w-full"
-              onClick={closer(() => !props.partial && chatStore.computePrompt(props.msg, true))}
-            >
-              <Terminal size={18} /> Prompt
-            </Button>
-          </Show>
 
-          <Show when={!props.last}>
-            <Button
-              alignLeft
-              size="sm"
-              schema="secondary"
-              class="fork-btn w-full"
-              onClick={closer(() => !props.partial && msgStore.fork(props.msg._id))}
-            >
-              <Split size={18} />
-              Fork
-            </Button>
-          </Show>
-
-          <Show when={props.chatEditing}>
-            <Button
-              alignLeft
-              size="sm"
-              schema="red"
-              class="delete-btn w-full"
-              onClick={closer(props.onRemove)}
-            >
-              <Trash size={18} /> Delete
-            </Button>
-          </Show>
-        </div>
-      </DropMenu>
-
+      <Show when={showInner()}>
+        <DropMenu
+          class="p-1"
+          horz="left"
+          vert="down"
+          show={open()}
+          close={() => props.showMore[1](false)}
+        >
+          <div class="flex flex-col gap-1" id={`inner-${props.msg._id}`}></div>
+        </DropMenu>
+      </Show>
       <Show
         when={
           (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
@@ -557,6 +611,42 @@ const MessageOptions: Component<{
         </div>
       </Show>
     </div>
+  )
+}
+
+const MessageOption: Component<{
+  schema?: ButtonSchema
+  class?: string
+  id: string
+  open: boolean | undefined
+  show: boolean | undefined
+  outer: boolean
+  onClick: () => void
+  label: string
+  children: any
+}> = (props) => {
+  const show = createMemo(() => (!props.outer && props.open) || props.outer)
+
+  return (
+    <Show when={props.show && show()}>
+      <Portal mount={document.querySelector(`#${props.outer ? 'outer' : 'inner'}-${props.id}`)!}>
+        <Show when={props.outer}>
+          <div class={`icon-button ${props.class || ''}`}>{props.children}</div>
+        </Show>
+
+        <Show when={!props.outer}>
+          <Button
+            class={`${props.class || ''} w-full`}
+            schema={props.schema || 'secondary'}
+            onClick={props.onClick}
+            size="sm"
+            alignLeft
+          >
+            {props.children} {props.label}
+          </Button>
+        </Show>
+      </Portal>
+    </Show>
   )
 }
 

@@ -517,10 +517,23 @@ export const userStore = createStore<UserState>(
       return { ui: next }
     },
 
-    async receiveUI(_, update: UI.UISettings) {
+    async receiveUI({ ui }, update: UI.UISettings) {
       const current = update[update.mode]
       await updateTheme(update)
-      return { ui: update, current }
+
+      const keys = Object.keys(defaultUIsettings.msgOptsInline) as UI.MessageOption[]
+
+      for (const key of keys) {
+        if (!update.msgOptsInline[key]) {
+          update.msgOptsInline[key] = { ...defaultUIsettings.msgOptsInline[key] }
+        }
+
+        if (!defaultUIsettings.msgOptsInline[key]) {
+          delete update.msgOptsInline[key]
+        }
+      }
+
+      return { ui: { ...ui, ...update }, current }
     },
 
     setBackground(_, file: FileInputResult | null) {
@@ -772,6 +785,10 @@ function getUIsettings(guest = false) {
   if (!ui.dark.chatEmphasisColor) {
     ui.dark.chatQuoteColor = UI.defaultUIsettings.dark.chatQuoteColor
     ui.light.chatQuoteColor = UI.defaultUIsettings.light.chatQuoteColor
+  }
+
+  if (!ui.msgOptsInline) {
+    ui.msgOptsInline = UI.defaultUIsettings.msgOptsInline
   }
 
   return ui

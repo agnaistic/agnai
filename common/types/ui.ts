@@ -42,6 +42,8 @@ export type CustomUI = {
   chatQuoteColor: string
 }
 
+export type MessageOption = 'edit' | 'regen' | 'trash' | 'fork' | 'prompt'
+
 export type UISettings = {
   theme: string
   themeBg?: string
@@ -59,6 +61,7 @@ export type UISettings = {
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
   mobileSendOnEnter: boolean
+  msgOptsInline: { [key in MessageOption]: { outer: boolean; pos: number } }
 
   viewMode?: 'split' | 'standard'
   viewHeight?: number
@@ -136,5 +139,13 @@ export const defaultUIsettings: UISettings = {
     chatTextColor: '--text-800',
     chatEmphasisColor: '--text-600',
     chatQuoteColor: '--text-800',
+  },
+
+  msgOptsInline: {
+    edit: { outer: true, pos: 0 },
+    prompt: { outer: false, pos: 3 },
+    fork: { outer: false, pos: 2 },
+    regen: { outer: true, pos: 1 },
+    trash: { outer: false, pos: 4 },
   },
 }
