@@ -631,7 +631,9 @@ const MessageOption: Component<{
     <Show when={props.show && show()}>
       <Portal mount={document.querySelector(`#${props.outer ? 'outer' : 'inner'}-${props.id}`)!}>
         <Show when={props.outer}>
-          <div class={`icon-button ${props.class || ''}`}>{props.children}</div>
+          <div class={`icon-button ${props.class || ''}`} onClick={props.onClick}>
+            {props.children}
+          </div>
         </Show>
 
         <Show when={!props.outer}>
