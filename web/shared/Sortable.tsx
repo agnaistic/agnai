@@ -112,18 +112,8 @@ const Sortable: Component<{
               if (!match) return null
               return (
                 <li
-                  class={`flex h-10 items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2 ${
-                    props.itemClass || ''
-                  }`}
+                  class={` border-[1px] border-[var(--bg-700)] ${props.itemClass || ''}`}
                   data-id={match.id}
-                  onClick={() => {
-                    onClick(+match.id)
-                    item().onClick?.({
-                      id: +match.id,
-                      value: item().value,
-                      enabled: item().enabled,
-                    })
-                  }}
                   classList={{
                     'cursor-pointer': item().enabled !== undefined,
                     'bg-800': enabled()[match.id] !== undefined ? true : !enabled()[match.id],
@@ -131,7 +121,19 @@ const Sortable: Component<{
                     'text-[var(--coolgray-800)]': enabled()[match.id] === false,
                   }}
                 >
-                  <Menu size={16} color="var(--bg-500)" /> {match.label}
+                  <a
+                    class="flex h-10 w-full items-center gap-2 pl-2"
+                    onClick={() => {
+                      onClick(+match.id)
+                      item().onClick?.({
+                        id: +match.id,
+                        value: item().value,
+                        enabled: item().enabled,
+                      })
+                    }}
+                  >
+                    <Menu size={16} color="var(--bg-500)" /> {match.label}
+                  </a>
                 </li>
               )
             }}

@@ -41,7 +41,9 @@ export const ChatGraphModal: Component<{
         </>
       }
     >
-      <div>Click on a node to load the path. Click and drag to move the graph.</div>
+      <div class="text-sm">
+        Click a node to load the path. Click&Drag to move the graph. Pinch/Scroll to zoom.
+      </div>
       <Graph tree={props.tree} leafId={props.leafId} dir={dir()} />
     </Modal>
   )
