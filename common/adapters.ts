@@ -216,6 +216,7 @@ export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV3_Opus]: true,
   [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
   [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
+  [CLAUDE_MODELS.ClaudeV35_Sonnet]: true,
 }
 
 export const NOVEL_MODELS = {

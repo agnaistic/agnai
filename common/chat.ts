@@ -2,13 +2,17 @@ import { AppSchema } from './types'
 
 type Created = { _id: string; createdAt: string }
 
-export type ChatTree = Record<
-  string,
-  { depth: number; msg: AppSchema.ChatMessage; children: Set<string> }
->
+export type ChatTree = Record<string, ChatNode>
+
+export type ChatNode = {
+  depth: number
+  msg: AppSchema.ChatMessage
+  children: Set<string>
+}
+
 export type ChatDepths = Record<number, string[]>
 
-export function toChatTree(messages: AppSchema.ChatMessage[]): ChatTree {
+export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree; root: string } {
   const tree: ChatTree = {}
 
   for (let i = 0; i < messages.length; i++) {
@@ -35,7 +39,7 @@ export function toChatTree(messages: AppSchema.ChatMessage[]): ChatTree {
     parent.children.add(msg._id)
   }
 
-  return tree
+  return { tree, root: messages[0]?._id || '' }
 }
 
 export function updateChatTree(tree: ChatTree, msg: AppSchema.ChatMessage) {

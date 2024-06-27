@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, onCleanup } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
@@ -13,10 +13,21 @@ import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
 import { Save } from 'lucide-solid'
+import { Card } from '/web/shared/Card'
+import Sortable, { SortItem } from '/web/shared/Sortable'
+import { defaultUIsettings } from '/common/types/ui'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
 function noop() {}
+
+const msgInlineLabels: Record<UI.MessageOption, string> = {
+  edit: 'Edit',
+  regen: 'Regenerate',
+  prompt: 'Prompt View',
+  fork: 'Fork',
+  trash: 'Delete',
+}
 
 const UISettings: Component = () => {
   const state = userStore()
@@ -41,6 +52,41 @@ const UISettings: Component = () => {
   }, 50)
 
   onCleanup(() => unsubCustomUi())
+
+  const [inline, setInline] = createSignal<SortItem[]>([])
+
+  // const receiveInlineItems = ()
+
+  const updateInline = (items: SortItem[]) => {
+    const next = { ...defaultUIsettings.msgOptsInline }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      next[item.value as UI.MessageOption] = {
+        outer: !!item.enabled,
+        pos: i,
+      }
+    }
+
+    console.log('updating', next)
+    userStore.saveUI({ msgOptsInline: next })
+  }
+
+  createEffect(
+    on(
+      () => state.ui.msgOptsInline,
+      (opts) => {
+        if (inline().length) return
+
+        const next = Object.entries(opts).map(([key, item], i) => ({
+          id: i,
+          value: key,
+          label: msgInlineLabels[key as UI.MessageOption],
+          enabled: item.outer,
+        }))
+        setInline(next)
+      }
+    )
+  )
 
   return (
     <>
@@ -115,6 +161,36 @@ const UISettings: Component = () => {
 
       <Divider />
       <h3 class="text-md font-bold">Chat Settings</h3>
+
+      <Card>
+        <FormLabel
+          label="Inline Message Options"
+          helperText="Enable which message options appear 'inline' in a message. The rest will reside in the 'more options' drop menu"
+        ></FormLabel>
+        <Show when={inline().length > 0}>
+          <Sortable items={inline()} onChange={updateInline} />
+        </Show>
+        <div class="flex flex-wrap gap-2 rounded-md">
+          {/* <For each={Object.entries(msgInlineOpts)}>
+            {([opt, label]) => (
+              <Button
+                size="sm"
+                schema={state.ui.msgOptsInline[opt as UI.MessageOption] ? 'green' : 'secondary'}
+                onClick={() =>
+                  userStore.saveUI({
+                    msgOptsInline: {
+                      ...state.ui.msgOptsInline,
+                      [opt]: !state.ui.msgOptsInline[opt as UI.MessageOption],
+                    },
+                  })
+                }
+              >
+                {label}
+              </Button>
+            )}
+          </For> */}
+        </div>
+      </Card>
 
       <Toggle
         label="Trim Incomplete Sentences"

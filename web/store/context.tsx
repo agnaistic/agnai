@@ -150,7 +150,7 @@ export function ContextProvider(props: { children: any }) {
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
       info,
-      chatTree: msgs.chatTree,
+      chatTree: msgs.graph.tree,
     }
 
     setState(next)

@@ -22,7 +22,6 @@ import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
-import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { usePaneManager } from './shared/hooks'
@@ -63,7 +62,6 @@ const App: Component = () => {
       </Show>
       <Route path="/chat/:id" component={ChatDetail} />
       <Route path={['/info', '/']} component={HomePage} />
-      <Route path="/changelog" component={ChangeLog} />
       <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
       <Route
         path="/presets"

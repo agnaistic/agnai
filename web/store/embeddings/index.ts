@@ -20,7 +20,9 @@ type WikiItem = {
 const models = {
   // embedding: 'Xenova/all-mpnet-base-v2',
   embedding: 'Xenova/all-MiniLM-L6-v2',
-  captioning: 'Xenova/vit-gpt2-image-captioning',
+  // captioning: 'Xenova/vit-gpt2-image-captioning',
+  // WIP
+  captioning: 'http://localhost:5000/api/caption',
 }
 
 // @ts-ignore
