@@ -1,7 +1,7 @@
-import { Component, Index, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, For, Index, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
 import Sort from 'sortablejs'
 import { FormLabel } from './FormLabel'
-import { Menu } from 'lucide-solid'
+import { Menu, Power } from 'lucide-solid'
 import TextInput from './TextInput'
 
 export { Sortable as default }
@@ -105,40 +105,57 @@ const Sortable: Component<{
         <Show when={!!props.field}>
           <TextInput fieldName={props.field!} parentClass="hidden" ref={(ele) => (field = ele)} />
         </Show>
-        <ul ref={ref!}>
-          <Index each={items()}>
-            {(item) => {
-              const match = items().find((i) => i.id === item().id)
-              if (!match) return null
-              return (
-                <li
-                  class={` border-[1px] border-[var(--bg-700)] ${props.itemClass || ''}`}
-                  data-id={match.id}
-                  classList={{
-                    'cursor-pointer': item().enabled !== undefined,
-                    'bg-800': enabled()[match.id] !== undefined ? true : !enabled()[match.id],
-                    'bg-900': enabled()[match.id] === false,
-                    'text-[var(--coolgray-800)]': enabled()[match.id] === false,
-                  }}
-                >
-                  <a
-                    class="flex h-10 w-full items-center gap-2 pl-2"
+
+        <div class="flex gap-1">
+          <ul class="w-full" ref={ref!}>
+            <Index each={items()}>
+              {(item) => {
+                const match = items().find((i) => i.id === item().id)
+                if (!match) return null
+                return (
+                  <li
+                    class={` border-[1px] border-[var(--bg-700)] ${props.itemClass || ''}`}
+                    data-id={match.id}
+                    classList={{
+                      'cursor-pointer': item().enabled !== undefined,
+                      'bg-800': enabled()[match.id] !== undefined ? true : !enabled()[match.id],
+                      'bg-900': enabled()[match.id] === false,
+                      'text-[var(--coolgray-800)]': enabled()[match.id] === false,
+                    }}
+                  >
+                    <a class="flex h-10 w-full items-center gap-2 pl-2">
+                      <Menu size={16} color="var(--bg-500)" /> {match.label}
+                    </a>
+                  </li>
+                )
+              }}
+            </Index>
+          </ul>
+          <div class="flex flex-col">
+            <For each={items()}>
+              {(item) => {
+                const match = items().find((i) => i.id === item.id)
+                if (!match || match.enabled === undefined) return null
+
+                return (
+                  <div
+                    class="icon-button flex h-10 w-10 items-center justify-center"
                     onClick={() => {
                       onClick(+match.id)
-                      item().onClick?.({
+                      item.onClick?.({
                         id: +match.id,
-                        value: item().value,
-                        enabled: item().enabled,
+                        value: item.value,
+                        enabled: item.enabled,
                       })
                     }}
                   >
-                    <Menu size={16} color="var(--bg-500)" /> {match.label}
-                  </a>
-                </li>
-              )
-            }}
-          </Index>
-        </ul>
+                    <Power size={16} />
+                  </div>
+                )
+              }}
+            </For>
+          </div>
+        </div>
       </div>
     </>
   )

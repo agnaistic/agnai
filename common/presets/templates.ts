@@ -113,10 +113,8 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 
 {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
 {{/each}}
-{{#if ujb}}<bot>
-{{ujb}}</bot>
-{{/if}}
-<bot>{{post}}`,
+
+<bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
 {{#if system_prompt}}{{system_prompt}}
 {{/if}}
