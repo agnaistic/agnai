@@ -23,6 +23,7 @@ type Embeddings = {
 // let Tokenizer: PreTrainedTokenizer
 let Embedder: Pipeline
 let Captioner: Pipeline
+let HttpCaptioner: (base64: string) => Promise<any>
 
 const embeddings: Embeddings = {}
 const documents: Record<string, Array<EmbedDocument & { embed: Tensor }>> = {}
@@ -50,6 +51,20 @@ const handlers: {
   },
   initCaptioning: async (msg) => {
     console.log(`[caption] loading`)
+
+    if (msg.model.startsWith('http')) {
+      HttpCaptioner = (base64: string) =>
+        fetch(msg.model, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        })
+          .then((r) => r.json())
+          .then((res) => res.caption.trim())
+      post('captionLoaded', {})
+      console.log('[caption] http ready')
+      return
+    }
     Captioner = await pipeline('image-to-text', msg.model, {
       // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
@@ -60,8 +75,16 @@ const handlers: {
     post('captionLoaded', {})
   },
   captionImage: async (msg) => {
-    if (!Captioner) return
     const base64 = msg.image.includes(',') ? msg.image.split(',')[1] : msg.image
+
+    if (HttpCaptioner) {
+      const caption = await HttpCaptioner(base64)
+      console.log(`[caption] done`, caption)
+      post('caption', { requestId: msg.requestId, caption })
+      return
+    }
+
+    if (!Captioner) return
 
     const buffer = Buffer.from(base64, 'base64')
     const blob = new Blob([new Uint8Array(buffer)])
