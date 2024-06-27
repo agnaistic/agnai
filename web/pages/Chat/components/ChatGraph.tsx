@@ -47,6 +47,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
             color: getSettingColor('hl-500'),
             label: 'data(label)',
             'text-valign': 'top',
+            'font-weight': 600,
           },
         },
 
@@ -148,25 +149,12 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
     <div
       class="flex h-full max-h-[400px] min-h-[400px] w-full justify-center p-4"
       ref={(ref) => init(ref, graph.tree)}
-    >
-      {/* <div class="left-0 top-0 z-50 h-full w-full" ref={(ref) => init(ref, props.tree)}></div> */}
-    </div>
+    ></div>
   )
 }
 
 function getElements(tree: ChatTree, root: string, leafId: string) {
   const elements: cyto.ElementDefinition[] = []
-
-  // for (const node of Object.values(tree)) {
-  //   elements.push({
-  //     group: 'nodes',
-  //     data: { id: node.msg._id, label: node.msg._id.slice(0, 3) },
-  //     style: {
-  //       'background-color':
-  //         leafId === node.msg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
-  //     },
-  //   })
-  // }
 
   const short = getShorthandTree(tree, root)
   const visited = new Set<string>()
@@ -183,7 +171,9 @@ function getElements(tree: ChatTree, root: string, leafId: string) {
         style: {
           shape: smsg._id === root ? 'star' : 'ellipse',
           'background-color':
-            leafId === smsg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
+            root === smsg._id || leafId === smsg._id
+              ? getSettingColor('hl-500')
+              : getSettingColor('bg-500'),
         },
       })
     }
