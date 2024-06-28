@@ -550,14 +550,17 @@ export const msgStore = createStore<MsgState>(
       }
 
       const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
-      const res = await msgsApi.deleteMessages(activeChatId, deleteIds)
+      const nextMsgs = msgs.filter((msg) => !removed.has(msg._id))
+      const removed = new Set(deleteIds)
+
+      const leafId = nextMsgs.slice(-1)[0]?._id || ''
+      const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId)
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
-      const removed = new Set(deleteIds)
-      return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
+      return { msgs: nextMsgs }
     },
     stopSpeech() {
       stopSpeech()

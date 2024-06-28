@@ -654,9 +654,9 @@ async function createMessage(
   })
 }
 
-export async function deleteMessages(chatId: string, msgIds: string[]) {
+export async function deleteMessages(chatId: string, msgIds: string[], leafId: string) {
   if (isLoggedIn()) {
-    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds })
+    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds, leafId })
     return res
   }
 
@@ -664,6 +664,17 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
   const ids = new Set(msgIds)
   const next = msgs.filter((msg) => ids.has(msg._id) === false)
   await localApi.saveMessages(chatId, next)
+
+  const chats = await localApi.loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  if (chat && leafId) {
+    const nextChat: AppSchema.Chat = {
+      ...chat,
+      treeLeafId: leafId,
+      updatedAt: new Date().toISOString(),
+    }
+    await localApi.saveChats(replace(chatId, chats, nextChat))
+  }
 
   return localApi.result({ success: true })
 }
