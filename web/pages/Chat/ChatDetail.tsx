@@ -428,7 +428,7 @@ const ChatDetail: Component = () => {
               </div>
             </Show>
             <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <Button onClick={generateFirst}>Generate Message</Button>
               </div>
             </Show>

@@ -126,7 +126,18 @@ export const msgStore = createStore<MsgState>(
     }) => {
       data.messages.sort(sortAsc)
       const graph = toChatGraph(data.messages)
-      const leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+
+      let leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+
+      // If the leaf has been deleted then the path won't load
+      // So, if the leaf doesn't exist, use the most recent message
+      if (data.leafId) {
+        const node = graph.tree[data.leafId]
+        if (!node) {
+          leaf = data.messages.slice(-1)[0]?._id || ''
+        }
+      }
+
       const fullPath = resolveChatPath(graph.tree, leaf)
       const recent = fullPath.splice(-SOFT_PAGE_SIZE)
 

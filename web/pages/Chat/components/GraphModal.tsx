@@ -37,8 +37,8 @@ export const ChatGraphModal: Component<{
       footer={
         <>
           <Button onClick={() => setShort(short() === 'full' ? 'short' : 'full')}>
-            <Show when={short() === 'short'} fallback={'Detailed'}>
-              Summary
+            <Show when={short() === 'short'} fallback={'Collapse Graph'}>
+              Expand Graph
             </Show>
           </Button>
           <Button onClick={reset}>Reset View</Button>
