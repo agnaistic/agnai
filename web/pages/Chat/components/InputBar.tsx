@@ -121,6 +121,11 @@ const InputBar: Component<{
     return `Send a message...`
   })
 
+  const impersonationTitle = createMemo(() => {
+    if (chars.impersonating) return `Impersonating ${chars.impersonating.name}`
+    return `Open impersonation menu`
+  })
+
   const [saveDraft, disposeSaveDraftDebounce] = createDebounce((text: string) => {
     draft.update(text)
   }, 50)
@@ -233,17 +238,20 @@ const InputBar: Component<{
         </div>
       </Show>
 
-      <div class="flex items-center sm:hidden">
+      <div class="flex items-center">
         <a
           href="#"
           role="button"
           aria-label="Open impersonation menu"
+          title={impersonationTitle()}
           class="icon-button"
+          classList={{ 'text-[var(--text-700)]': !!chars.impersonating }}
           onClick={() => settingStore.toggleImpersonate(true)}
         >
           <AvatarIcon
             avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
             format={{ corners: 'circle', size: 'sm' }}
+            active={!!chars.impersonating}
             class="mr-2"
           />
         </a>
