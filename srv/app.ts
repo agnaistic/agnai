@@ -9,6 +9,7 @@ import { setupSockets } from './api/ws'
 import { config } from './config'
 import { createServer } from './server'
 import pipeline from './api/pipeline'
+import { getDb } from './db/client'
 
 export function createApp() {
   const upload = multer({
@@ -40,6 +41,17 @@ export function createApp() {
 
   app.use('/v1', keyedRouter)
   app.use('/api', api)
+
+  if (config.db.host || config.db.uri) {
+    app.get('/healthcheck', (_, res) => {
+      try {
+        getDb()
+        res.status(200).json({ message: 'okay', status: true })
+      } catch (ex) {
+        res.status(503).json({ message: 'Database not ready', status: false })
+      }
+    })
+  }
 
   if (config.pipelineProxy) {
     app.use('/pipeline', pipeline)

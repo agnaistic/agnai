@@ -5,6 +5,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
 import { storage } from '/web/shared/util'
+import { replace } from '/common/util'
 
 type StorageKey = keyof typeof KEYS
 
@@ -269,6 +270,15 @@ export async function saveChars(state: AppSchema.Character[]) {
   await saveItem('characters', state)
 }
 
+export async function saveChat(chatId: string, update: Partial<AppSchema.Chat>) {
+  const chats = await loadItem('chats')
+  const chat = chats.find((c) => c._id === chatId)
+  if (!chat) return
+
+  const next = replace(chatId, chats, update)
+  await saveItem('chats', next)
+}
+
 export async function saveChats(state: AppSchema.Chat[]) {
   await saveItem('chats', state)
 }
@@ -356,6 +366,7 @@ export function result<T>(result: T) {
 
 export const localApi = {
   saveChars,
+  saveChat,
   saveChats,
   saveConfig,
   saveMessages,

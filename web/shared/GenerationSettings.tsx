@@ -167,6 +167,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           pane={pane.showing()}
           setFormat={setFormat}
           tab={tabs[tab()]}
+          sub={sub()}
         />
         <PromptSettings
           disabled={props.disabled}
@@ -175,6 +176,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
+          sub={sub()}
         />
         <SamplerSettings
           disabled={props.disabled}
@@ -205,9 +207,17 @@ const GeneralSettings: Component<
     setFormat: (format: ThirdPartyFormat) => void
     format?: ThirdPartyFormat
     tab: string
+    sub?: AppSchema.SubscriptionOption
   }
 > = (props) => {
   const cfg = settingStore()
+
+  const maxCtx = createMemo(() => {
+    if (!props.sub?.preset.maxContextLength) return
+
+    const max = Math.floor(props.sub?.preset.maxContextLength / 1000)
+    return `${max}K`
+  })
 
   const [replicate, setReplicate] = createStore({
     model: props.inherit?.replicateModelName,
@@ -260,27 +270,6 @@ const GeneralSettings: Component<
 
     return base
   })
-
-  const CLAUDE_LABELS = {
-    ClaudeV2: 'Latest: Claude v2',
-    ClaudeV2_1: 'Claude v2.1',
-    ClaudeV2_0: 'Claude v2.0',
-    ClaudeV1_100k: 'Latest: Claude v1 100K',
-    ClaudeV1_3_100k: 'Claude v1.3 100K',
-    ClaudeV1: 'Latest: Claude v1',
-    ClaudeV1_3: 'Claude v1.3',
-    ClaudeV1_2: 'Claude v1.2',
-    ClaudeV1_0: 'Claude v1.0',
-    ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
-    ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
-    ClaudeInstantV1: 'Latest: Claude Instant v1',
-    ClaudeInstantV1_1: 'Claude Instant v1.1',
-    ClaudeInstantV1_0: 'Claude Instant v1.0',
-    ClaudeV3_Opus: 'Claude v3 Opus',
-    ClaudeV3_Sonnet: 'Claude v3 Sonnet',
-    ClaudeV3_Haiku: 'Claude v3 Haiku',
-    ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
-  } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
     const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
@@ -520,6 +509,8 @@ const GeneralSettings: Component<
           disabled={props.disabled}
           format={props.format}
           onChange={(val) => setTokens(val)}
+          recommended={props.sub?.preset.maxTokens}
+          recommendLabel="Max"
         />
         <RangeInput
           fieldName="maxContextLength"
@@ -538,6 +529,8 @@ const GeneralSettings: Component<
           value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
           disabled={props.disabled}
           onChange={(val) => setContext(val)}
+          recommended={maxCtx()}
+          recommendLabel="Max"
         />
         <Toggle
           fieldName="streamResponse"
@@ -571,7 +564,12 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 const PromptSettings: Component<
-  Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
 > = (props) => {
   const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
@@ -612,6 +610,7 @@ const PromptSettings: Component<
             items={FORMATS}
             value={props.inherit?.modelFormat || 'Alpaca'}
             hide={useAdvanced() === 'basic'}
+            recommend={props.sub?.preset.modelFormat}
           />
           <Select
             fieldName="useAdvancedPrompt"
@@ -1603,3 +1602,24 @@ function ensureArray(value: any): number[] {
 
   return value.map((v: any) => (typeof v === 'number' ? v : +v)).filter((v: number) => isNaN(v))
 }
+
+const CLAUDE_LABELS = {
+  ClaudeV2: 'Latest: Claude v2',
+  ClaudeV2_1: 'Claude v2.1',
+  ClaudeV2_0: 'Claude v2.0',
+  ClaudeV1_100k: 'Latest: Claude v1 100K',
+  ClaudeV1_3_100k: 'Claude v1.3 100K',
+  ClaudeV1: 'Latest: Claude v1',
+  ClaudeV1_3: 'Claude v1.3',
+  ClaudeV1_2: 'Claude v1.2',
+  ClaudeV1_0: 'Claude v1.0',
+  ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
+  ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
+  ClaudeInstantV1: 'Latest: Claude Instant v1',
+  ClaudeInstantV1_1: 'Claude Instant v1.1',
+  ClaudeInstantV1_0: 'Claude Instant v1.0',
+  ClaudeV3_Opus: 'Claude v3 Opus',
+  ClaudeV3_Sonnet: 'Claude v3 Sonnet',
+  ClaudeV3_Haiku: 'Claude v3 Haiku',
+  ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
+} satisfies Record<keyof typeof CLAUDE_MODELS, string>

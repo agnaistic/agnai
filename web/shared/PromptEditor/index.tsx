@@ -73,7 +73,10 @@ const v2placeholders = {
 
 const helpers: { [key in InterpAll]?: JSX.Element | string } = {
   char: 'Character name',
-  user: `Your character's or profile name`,
+  user: `Your impersonated character's name. Your profile name if you aren't impersonating a character`,
+  scenario: `Your main character's scenario`,
+  personality: `The personality of the replying character`,
+  example_dialogue: `The example dialogue of the replying character`,
 
   system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
   ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
@@ -86,6 +89,8 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
 
   insert:
     "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
+
+  memory: `Text retrieved from your Memory Book(s)`,
 
   longterm_memory:
     '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',

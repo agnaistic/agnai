@@ -86,6 +86,7 @@ export function getCachedSubscriptions(user?: AppSchema.User | null) {
       guidance: !!sub.guidanceCapable,
       preset: {
         name: sub.name,
+
         maxContextLength: sub.maxContextLength,
         maxTokens: sub.maxTokens,
         frequencyPenalty: sub.frequencyPenalty,
@@ -110,6 +111,15 @@ export function getCachedSubscriptions(user?: AppSchema.User | null) {
         encoderRepitionPenalty: sub.encoderRepitionPenalty,
         mirostatLR: sub.mirostatLR,
         mirostatTau: sub.mirostatTau,
+        allowGuestUsage: sub.allowGuestUsage,
+        dynatemp_exponent: sub.dynatemp_exponent,
+        dynatemp_range: sub.dynatemp_range,
+        modelFormat: sub.modelFormat,
+        penaltyAlpha: sub.penaltyAlpha,
+        smoothingCurve: sub.smoothingCurve,
+        smoothingFactor: sub.smoothingFactor,
+        skipSpecialTokens: sub.skipSpecialTokens,
+        tempLast: sub.tempLast,
       },
     }))
     .sort((l, r) => (l.level === r.level ? l.name.localeCompare(r.name) : l.level - r.level))

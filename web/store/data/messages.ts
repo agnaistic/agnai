@@ -18,7 +18,7 @@ import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { UserEmbed } from '/common/types/memory'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
-import { replace } from '/common/util'
+import { exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
@@ -661,9 +661,7 @@ export async function deleteMessages(chatId: string, msgIds: string[], leafId: s
   }
 
   const msgs = await localApi.getMessages(chatId)
-  const ids = new Set(msgIds)
-  const next = msgs.filter((msg) => ids.has(msg._id) === false)
-  await localApi.saveMessages(chatId, next)
+  await localApi.saveMessages(chatId, exclude(msgs, msgIds))
 
   const chats = await localApi.loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
@@ -704,6 +702,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
 async function getGuestEntities() {
   const { active } = getStore('chat').getState()
   if (!active) return
+  const { msgs, messageHistory } = getStore('messages').getState()
 
   const chat = active.chat
   const char = active.char
@@ -716,7 +715,6 @@ async function getGuestEntities() {
 
   const allScenarios = await loadItem('scenario')
   const profile = await loadItem('profile')
-  const messages = await localApi.getMessages(chat?._id)
   const user = await loadItem('config')
   const settings = await getGuestPreset(user, chat)
   const scenarios = allScenarios?.filter(
@@ -733,7 +731,7 @@ async function getGuestEntities() {
     user,
     profile,
     book,
-    messages,
+    messages: messageHistory.concat(msgs),
     settings,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
