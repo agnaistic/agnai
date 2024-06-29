@@ -19,7 +19,8 @@ const RangeInput: Component<{
   max: number
   step: number
   disabled?: boolean
-  recommended?: number
+  recommended?: number | string
+  recommendLabel?: string | JSX.Element
   onChange?: (value: number) => void
 
   service?: AIAdapter
@@ -71,7 +72,7 @@ const RangeInput: Component<{
             <label class="form-label">{props.label}</label>
             <Show when={props.recommended !== undefined}>
               <span class="text-xs italic text-gray-500">
-                &nbsp;(Recommended: {props.recommended?.toString()})
+                &nbsp;({props.recommendLabel || 'Recommended'}: {props.recommended?.toString()})
               </span>
             </Show>
           </span>

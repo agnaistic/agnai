@@ -42,7 +42,7 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
   return { tree, root: messages[0]?._id || '' }
 }
 
-export function updateChatTree(tree: ChatTree, msg: AppSchema.ChatMessage) {
+export function updateChatTreeNode(tree: ChatTree, msg: AppSchema.ChatMessage) {
   tree[msg._id] = {
     msg,
     children: new Set(),
@@ -56,7 +56,19 @@ export function updateChatTree(tree: ChatTree, msg: AppSchema.ChatMessage) {
     parent.children.add(msg._id)
   }
 
-  return tree
+  return Object.assign({}, tree)
+}
+
+export function removeChatTreeNodes(tree: ChatTree, ids: string[]) {
+  for (const id of ids) {
+    const parent = tree[id]
+    if (parent) {
+      parent.children.delete(id)
+    }
+    delete tree[id]
+  }
+
+  return Object.assign({}, tree)
 }
 
 export function getChatDepths(tree: ChatTree) {

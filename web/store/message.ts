@@ -16,8 +16,15 @@ import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/tex
 import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
-import { findOne, replace } from '/common/util'
-import { ChatTree, resolveChatPath, sortAsc, toChatGraph, updateChatTree } from '/common/chat'
+import { exclude, findOne, replace } from '/common/util'
+import {
+  ChatTree,
+  removeChatTreeNodes,
+  resolveChatPath,
+  sortAsc,
+  toChatGraph,
+  updateChatTreeNode,
+} from '/common/chat'
 import { embedApi } from './embeddings'
 
 const SOFT_PAGE_SIZE = 20
@@ -126,7 +133,18 @@ export const msgStore = createStore<MsgState>(
     }) => {
       data.messages.sort(sortAsc)
       const graph = toChatGraph(data.messages)
-      const leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+
+      let leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+
+      // If the leaf has been deleted then the path won't load
+      // So, if the leaf doesn't exist, use the most recent message
+      if (data.leafId) {
+        const node = graph.tree[data.leafId]
+        if (!node) {
+          leaf = data.messages.slice(-1)[0]?._id || ''
+        }
+      }
+
       const fullPath = resolveChatPath(graph.tree, leaf)
       const recent = fullPath.splice(-SOFT_PAGE_SIZE)
 
@@ -532,21 +550,27 @@ export const msgStore = createStore<MsgState>(
 
       msgStore.swapMessage(msgId, position, onSuccess)
     },
-    async deleteMessages({ msgs, activeChatId }, fromId: string, deleteOne?: boolean) {
+    async deleteMessages({ msgs, activeChatId, graph }, fromId: string, deleteOne?: boolean) {
       const index = msgs.findIndex((m) => m._id === fromId)
       if (index === -1) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
       const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
-      const res = await msgsApi.deleteMessages(activeChatId, deleteIds)
+      const removed = new Set(deleteIds)
+      const nextMsgs = msgs.filter((msg) => !removed.has(msg._id))
+
+      const leafId = nextMsgs.slice(-1)[0]?._id || ''
+      const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId)
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
-      const removed = new Set(deleteIds)
-      return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
+      return {
+        msgs: nextMsgs,
+        graph: { tree: removeChatTreeNodes(graph.tree, deleteIds), root: graph.root },
+      }
     },
     stopSpeech() {
       stopSpeech()
@@ -857,7 +881,7 @@ subscribe(
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
   async (body) => {
-    const { msgs, activeChatId, messageHistory, graph } = msgStore.getState()
+    const { msgs, activeChatId, graph } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     const msg = body.msg as AppSchema.ChatMessage
@@ -878,7 +902,7 @@ subscribe(
       },
       textBeforeGenMore: undefined,
       graph: {
-        tree: updateChatTree(graph.tree, msg),
+        tree: updateChatTreeNode(graph.tree, msg),
         root: graph.root,
       },
     })
@@ -896,7 +920,9 @@ subscribe(
     }
 
     if (!isLoggedIn()) {
-      await localApi.saveMessages(body.chatId, messageHistory.concat(nextMsgs))
+      const allMsgs = await localApi.getMessages(body.chatId)
+      await localApi.saveChat(body.chatId, { treeLeafId: msg._id })
+      await localApi.saveMessages(body.chatId, allMsgs.concat(msg))
     }
 
     if (msg.userId && msg.userId != user?._id) {
@@ -1008,23 +1034,40 @@ subscribe('message-warning', { warning: 'string' }, (body) => {
 
 subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   const ids = new Set(body.ids)
-  const { msgs } = msgStore.getState()
-  msgStore.setState({ msgs: msgs.filter((msg) => !ids.has(msg._id)) })
+  const { msgs, graph } = msgStore.getState()
+
+  msgStore.setState({
+    msgs: msgs.filter((msg) => !ids.has(msg._id)),
+    graph: {
+      tree: removeChatTreeNodes(graph.tree, body.ids),
+      root: graph.root,
+    },
+  })
 })
 
 const updateMsgSub = (body: any) => {
-  const { msgs } = msgStore.getState()
+  const { msgs, graph } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
-  const nextMsgs = replace(body.messageId, msgs, {
-    imagePrompt: body.imagePrompt || prev?.imagePrompt,
+
+  if (!prev) return
+
+  const next: ChatMessageExt = {
+    ...prev,
     msg: body.message || prev?.msg,
     retries: body.retries || prev?.retries,
     actions: body.actions || prev?.actions,
     voiceUrl: undefined,
     extras: body.extras || prev?.extras,
-  })
+  }
+  const nextMsgs = replace(body.messageId, msgs, next)
 
-  msgStore.setState({ msgs: nextMsgs })
+  msgStore.setState({
+    msgs: nextMsgs,
+    graph: {
+      tree: updateChatTreeNode(graph.tree, next),
+      root: graph.root,
+    },
+  })
 }
 
 subscribe(
@@ -1098,23 +1141,27 @@ subscribe(
   'guest-message-created',
   { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
   async (body) => {
-    const { messageHistory, msgs, activeChatId, retrying } = msgStore.getState()
+    const { activeChatId, retrying, graph, msgs } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     if (retrying) {
       body.msg._id = retrying._id
     }
 
+    const allMsgs = await localApi.getMessages(body.chatId)
+
     const msg = body.msg as AppSchema.ChatMessage
-    const next = msgs.filter((m) => m._id !== retrying?._id).concat(msg)
+    const next = allMsgs.filter((m) => m._id !== retrying?._id).concat(msg)
     const speech = getMessageSpeechInfo(msg, userStore.getState().user)
 
     const chats = await localApi.loadItem('chats')
-    await localApi.saveChats(replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
-    await localApi.saveMessages(body.chatId, messageHistory.concat(next))
+    await localApi.saveChats(
+      replace(body.chatId, chats, { updatedAt: new Date().toISOString(), treeLeafId: body.msg._id })
+    )
+    await localApi.saveMessages(body.chatId, next)
 
     msgStore.setState({
-      msgs: next,
+      msgs: exclude(msgs, body.msg._id).concat(msg),
       retrying: undefined,
       partial: undefined,
       waiting: undefined,
@@ -1127,6 +1174,10 @@ subscribe(
         messageId: body.msg._id,
       },
       textBeforeGenMore: undefined,
+      graph: {
+        tree: updateChatTreeNode(graph.tree, msg),
+        root: graph.root,
+      },
     })
 
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)

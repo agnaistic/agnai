@@ -326,6 +326,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const parent = getNewMessageParent(body, userMsg)
   const actions: AppSchema.ChatAction[] = []
   let treeLeafId = ''
 
@@ -363,7 +364,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         retries,
         event: undefined,
-        parent: userMsg?._id,
+        parent,
       })
 
       sendMany(members, {
@@ -387,7 +388,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
         await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
-          parent: body.parent,
+          parent,
           actions,
           adapter,
           meta,
@@ -419,7 +420,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           retries,
           event: undefined,
-          parent: body.parent,
+          parent,
         })
         treeLeafId = requestId
         sendMany(members, {
@@ -491,12 +492,14 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
       characterId: body.impersonate?._id,
       ooc: body.kind === 'ooc',
       event: undefined,
+      parent: body.parent,
     })
   } else if (body.kind.startsWith('send-event:')) {
     newMsg = newMessage(v4(), chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
   }
 
@@ -571,6 +574,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
+  const parent = getNewMessageParent(body, newMsg)
 
   if (body.kind === 'retry' && body.replacing) {
     retries = [body.replacing.msg].concat(retries).concat(body.replacing.retries || [])
@@ -583,6 +587,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     meta,
     event: undefined,
     retries,
+    parent,
   })
 
   switch (body.kind) {
@@ -623,6 +628,7 @@ function newMessage(
     meta?: any
     event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
+    parent?: string
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {
@@ -673,4 +679,26 @@ async function ensureBotMembership(
 
   update.characters = characters
   await store.chats.update(chat._id, update)
+}
+
+function getNewMessageParent(body: GenRequest, userMsg: AppSchema.ChatMessage | undefined): string {
+  switch (body.kind) {
+    case 'summary':
+    case 'chat-query':
+      return ''
+
+    case 'retry':
+    case 'continue':
+      return body.parent || ''
+
+    case 'request':
+    case 'ooc':
+    case 'self':
+    case 'send':
+    case 'send-event:character':
+    case 'send-event:hidden':
+    case 'send-event:ooc':
+    case 'send-event:world':
+      return userMsg?._id || ''
+  }
 }

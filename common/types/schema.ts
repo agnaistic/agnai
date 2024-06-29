@@ -137,7 +137,7 @@ export namespace AppSchema {
     level: number
     service: AIAdapter
     guidance: boolean
-    preset: GenSettings
+    preset: GenSettings & Pick<SubscriptionPreset, 'allowGuestUsage'>
   }
 
   export interface AppConfig {

@@ -20,6 +20,7 @@ export const AgnaisticSettings: Component<{
 
     return config.subs
       .filter((sub) => sub.level <= level)
+      .filter((sub) => (level === -1 ? !!sub.preset.allowGuestUsage : true))
       .map((sub) => ({ label: sub.name, value: sub._id, level: sub.level }))
       .sort((l, r) => r.level - l.level)
   })

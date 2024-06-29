@@ -45,7 +45,7 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   },
   ChatML: {
     openUser: '<|im_start|>user\n',
-    closeUser: '<|im_end>',
+    closeUser: '<|im_end|>',
     openBot: '<|im_start|>assistant\n',
     closeBot: '<|im_end|>',
     openSystem: '<|im_start|>system\n',

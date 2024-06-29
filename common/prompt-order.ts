@@ -39,6 +39,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     {{/each}}`,
     post: `### Response:\n{{post}}`,
     system_prompt: `{{#if system_prompt}}### Instruction:\n{{system_prompt}}{{/if}}`,
+    ujb: `{{#if ujb}}({{ujb}}){{/if}}`,
   },
   Vicuna: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
@@ -49,6 +50,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     {{/each}}`,
     post: `ASSISTANT: {{post}}`,
     system_prompt: `{{#if system_prompt}}SYSTEM: {{system_prompt}}{{/if}}`,
+    ujb: `{{#if ujb}}({{ujb}}){{/if}}`,
   },
   Mistral: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
