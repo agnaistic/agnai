@@ -633,7 +633,7 @@ export function isUsableService(
 ) {
   switch (service) {
     case 'agnaistic': {
-      const level = user?.sub?.level ?? -1
+      const level = user?.admin ? Infinity : user?.sub?.level ?? -1
       const match = config.subs.some((sub) => sub.level <= level)
       return match
     }
