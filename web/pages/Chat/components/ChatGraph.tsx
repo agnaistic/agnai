@@ -279,6 +279,19 @@ function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undef
       const end = tree[child]
       if (!end) continue
 
+      if (end.children.size === 1) {
+        const subpath = getPathSkips(tree, end.msg._id)
+        if (!subpath) continue
+        if (!Array.isArray(subpath)) {
+          paths.push({ start, end: subpath.end, length: length + subpath.length })
+          continue
+        }
+
+        const mapped = subpath.map((sub) => ({ start, end: sub.end, length: length + sub.length }))
+        paths.push(...mapped)
+        continue
+      }
+
       paths.push({ start, end, length })
     }
     return paths
