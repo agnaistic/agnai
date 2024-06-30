@@ -205,7 +205,7 @@ export function clearDraft(id: string) {
 
 export function useLocalStorage<T = any>(id: string, initialValue: T) {
   const key = `agnaistic-ls-${id}`
-  const init = localStorage.getItem(id) || JSON.stringify(initialValue)
+  const init = localStorage.getItem(key) || JSON.stringify(initialValue)
 
   const [value, setValue] = createSignal<T>(JSON.parse(init))
 

@@ -2,8 +2,9 @@ import cyto from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
-import { msgStore } from '/web/store'
+import { msgStore, settingStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'
+import { FeatureFlags } from '/web/store/flags'
 
 export { ChatGraph as default }
 
@@ -15,6 +16,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
   let cyRef: any
 
   const graph = msgStore((s) => s.graph)
+  const flags = settingStore((s) => s.flags)
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
@@ -66,7 +68,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
       elements:
         props.nodes === 'full'
           ? getAllElements(graph.tree, props.leafId)
-          : getElements(graph.tree, graph.root, props.leafId),
+          : getElements(graph.tree, graph.root, props.leafId, flags),
     })
 
     cy.on('click', 'node', function (this: any, evt) {
@@ -93,6 +95,8 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
     on(
       () => graph.tree,
       (tree) => {
+        const win: any = window
+        win.tree = { ...graph.tree }
         const cy = instance()
         if (!cy) return
 
@@ -147,22 +151,26 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
 
   return (
     <div
-      class="flex h-full max-h-[400px] min-h-[400px] w-full justify-center p-4"
+      class="flex h-full min-h-[400px] w-full justify-center p-4"
       ref={(ref) => init(ref, graph.tree)}
     ></div>
   )
 }
 
-function getElements(tree: ChatTree, root: string, leafId: string) {
+function getElements(tree: ChatTree, root: string, leafId: string, flags: FeatureFlags) {
   const elements: cyto.ElementDefinition[] = []
 
-  const short = getShorthandTree(tree, root)
+  const short = getShorthandTree(tree, root, flags)
   const visited = new Set<string>()
   for (const {
     start: { msg: smsg },
     end: { msg: emsg },
     length,
   } of short) {
+    if (flags.debug) {
+      console.log(`${smsg._id.slice(0, 4)} --> ${emsg._id.slice(0, 4)}`)
+    }
+
     if (!visited.has(smsg._id)) {
       visited.add(smsg._id)
       elements.push({
@@ -194,6 +202,10 @@ function getElements(tree: ChatTree, root: string, leafId: string) {
       group: 'edges',
       data: { source: smsg._id, target: emsg._id, label: `${length}` },
     })
+  }
+
+  if (flags.debug) {
+    console.log('\n########\n')
   }
 
   return elements
@@ -229,26 +241,16 @@ function getAllElements(tree: ChatTree, leafId: string) {
 
 type PathSkip = { start: ChatNode; end: ChatNode; length: number }
 
-function getShorthandTree(tree: ChatTree, root: string) {
-  const edges: Array<PathSkip> = []
-  const skips = getPathSkips(tree, root)
-
-  if (!skips) return edges
-
-  if (Array.isArray(skips)) {
-    edges.push(...skips)
-    for (const skip of skips) {
-      const subskips = getShorthandTree(tree, skip.end.msg._id)
-      edges.push(...subskips)
-    }
-  } else {
-    edges.push(skips)
+function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
+  if (flags.debug) {
+    console.log('eval: ', root)
   }
 
-  return edges
+  const skips = getPathSkips(tree, root, flags)
+  return skips || []
 }
 
-function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undefined {
+function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip[] | undefined {
   const start = tree[id]
 
   const visited = new Set<string>([id])
@@ -259,7 +261,7 @@ function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undef
   do {
     if (curr.children.size === 0) {
       if (id === curr.msg._id) return
-      return { start, end: curr, length }
+      return [{ start, end: curr, length }]
     }
 
     if (curr.children.size === 1) {
@@ -274,13 +276,48 @@ function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undef
       continue
     }
 
-    const paths: PathSkip[] = []
+    const edges: PathSkip[] = []
+
+    if (start.msg._id !== curr.msg._id) {
+      edges.push({ start, end: curr, length })
+    }
     for (const child of curr.children) {
       const end = tree[child]
       if (!end) continue
 
-      paths.push({ start, end, length })
+      edges.push({ start: curr, end, length: 1 })
+
+      const inner = getPathSkips(tree, child, flags)
+      if (inner) {
+        edges.push(...inner)
+      }
     }
-    return paths
+    return edges
+
+    // for (const child of curr.children) {
+    //   const end = tree[child]
+    //   if (!end) continue
+
+    //   if (flags.debug) {
+    //     // if (end.children.size === 1) {
+    //     //   const subpath = getPathSkips(tree, end.msg._id, flags)
+    //     //   if (!subpath) continue
+    //     //   if (!Array.isArray(subpath)) {
+    //     //     paths.push({ start, end: subpath.end, length: length + subpath.length })
+    //     //     continue
+    //     //   }
+    //     //   const mapped = subpath.map((sub) => ({
+    //     //     start,
+    //     //     end: sub.end,
+    //     //     length: length + sub.length,
+    //     //   }))
+    //     //   paths.push(...mapped)
+    //     //   continue
+    //     // }
+    //   }
+
+    //   paths.push({ start: curr, end, length })
+    // }
+    return edges
   } while (true)
 }

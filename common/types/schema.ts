@@ -81,6 +81,9 @@ export namespace AppSchema {
 
     ttsEnabled: boolean
     ttsHost: string
+
+    maxGuidanceTokens: number
+    maxGuidanceVariables: number
   }
 
   export type ImageModel = {

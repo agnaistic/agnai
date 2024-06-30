@@ -13,6 +13,7 @@ interface Props {
   close: () => void
   footer?: JSX.Element
   maxWidth?: 'full' | 'half'
+  maxHeight?: boolean
   fixedHeight?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
   tabs?: TabHook
@@ -52,6 +53,7 @@ const Modal: Component<Props> = (props) => {
             ref={autofocus}
             onSubmit={props.onSubmit || defaultSubmit}
             class={`modal-height bg-900 z-50 my-auto w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
+            classList={{ 'h-full': props.maxHeight }}
             role="dialog"
             aria-modal="true"
             aria-label={props.ariaLabel}
@@ -97,7 +99,10 @@ const Modal: Component<Props> = (props) => {
             </Switch>
 
             {/* 132px is the height of the title + footer*/}
-            <div class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}>
+            <div
+              class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}
+              classList={{ 'h-full': props.maxHeight }}
+            >
               {props.children}
             </div>
             <Show when={props.footer}>
