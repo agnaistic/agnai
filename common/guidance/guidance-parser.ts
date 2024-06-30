@@ -54,6 +54,15 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
 ): Promise<{ result: string; values: T }> {
   const { infer, placeholders } = opts
   const nodes = guidanceParse(inject(template, placeholders))
+  const requestedTokens = calculateNodeCounts(nodes)
+
+  if (requestedTokens.tokens > 1000) {
+    throw new Error(`Cannot run guidance: Template is requesting too many tokens (>1000)`)
+  }
+
+  if (requestedTokens.vars > 15) {
+    throw new Error(`Cannot run guidance: Template requests too many variables (>15)`)
+  }
 
   let prompt = ''
   let values: any = {}
@@ -107,6 +116,27 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
   }
 
   return { result: prompt, values: { ...previous, ...values } }
+}
+
+export function calculateGuidanceCounts(template: string, placeholders?: Record<string, string>) {
+  const nodes = guidanceParse(inject(template, placeholders))
+  return calculateNodeCounts(nodes)
+}
+
+function calculateNodeCounts(nodes: PNode[]) {
+  const requestedTokens = nodes.reduce(
+    (count, node) => {
+      if (node.kind !== 'variable') return count
+
+      return {
+        tokens: (node.tokens || 200) + count.tokens,
+        vars: count.vars + 1,
+      }
+    },
+    { tokens: 0, vars: 0 }
+  )
+
+  return requestedTokens
 }
 
 function inject(template: string, placeholders?: Record<string, string>) {

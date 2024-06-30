@@ -20,7 +20,11 @@ import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
 import { deepClone, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
-import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
+import {
+  GuidanceParams,
+  calculateGuidanceCounts,
+  runGuidance,
+} from '/common/guidance/guidance-parser'
 import { getCachedSubscriptionPresets } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 
@@ -155,6 +159,15 @@ export async function guidanceAsync(opts: InferenceRequest) {
   }
 
   if (sub?.preset?.guidanceCapable && (sub.tier?.guidanceAccess || opts.user.admin)) {
+    const counts = calculateGuidanceCounts(opts.prompt, opts.placeholders)
+    if (counts.tokens > 1000) {
+      throw new Error(`Cannot run guidance: Template is requesting too many tokens (>1000)`)
+    }
+
+    if (counts.vars > 15) {
+      throw new Error(`Cannot run guidance: Template requests too many variables (>15)`)
+    }
+
     const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
     if (!result.values) {
       try {

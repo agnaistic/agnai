@@ -245,23 +245,9 @@ function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
   if (flags.debug) {
     console.log('eval: ', root)
   }
-  const edges: Array<PathSkip> = []
+
   const skips = getPathSkips(tree, root, flags)
   return skips || []
-  if (!skips) return edges
-
-  edges.push(...skips)
-
-  for (const skip of skips) {
-    if (skip.end.children.size === 0) continue
-
-    const subskips = getShorthandTree(tree, skip.end.msg._id, flags)
-    if (subskips) {
-      edges.push(...subskips)
-    }
-  }
-
-  return edges
 }
 
 function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip[] | undefined {
