@@ -95,6 +95,8 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
     on(
       () => graph.tree,
       (tree) => {
+        const win: any = window
+        win.tree = { ...graph.tree }
         const cy = instance()
         if (!cy) return
 
@@ -165,6 +167,10 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
     end: { msg: emsg },
     length,
   } of short) {
+    if (flags.debug) {
+      console.log(`${smsg._id.slice(0, 4)} --> ${emsg._id.slice(0, 4)}`)
+    }
+
     if (!visited.has(smsg._id)) {
       visited.add(smsg._id)
       elements.push({
@@ -196,6 +202,10 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
       group: 'edges',
       data: { source: smsg._id, target: emsg._id, label: `${length}` },
     })
+  }
+
+  if (flags.debug) {
+    console.log('\n########\n')
   }
 
   return elements
@@ -232,29 +242,29 @@ function getAllElements(tree: ChatTree, leafId: string) {
 type PathSkip = { start: ChatNode; end: ChatNode; length: number }
 
 function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
+  if (flags.debug) {
+    console.log('eval: ', root)
+  }
   const edges: Array<PathSkip> = []
   const skips = getPathSkips(tree, root, flags)
-
+  return skips || []
   if (!skips) return edges
 
-  if (Array.isArray(skips)) {
-    edges.push(...skips)
-    for (const skip of skips) {
-      const subskips = getShorthandTree(tree, skip.end.msg._id, flags)
+  edges.push(...skips)
+
+  for (const skip of skips) {
+    if (skip.end.children.size === 0) continue
+
+    const subskips = getShorthandTree(tree, skip.end.msg._id, flags)
+    if (subskips) {
       edges.push(...subskips)
     }
-  } else {
-    edges.push(skips)
   }
 
   return edges
 }
 
-function getPathSkips(
-  tree: ChatTree,
-  id: string,
-  flags: FeatureFlags
-): PathSkip | PathSkip[] | undefined {
+function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip[] | undefined {
   const start = tree[id]
 
   const visited = new Set<string>([id])
@@ -265,7 +275,7 @@ function getPathSkips(
   do {
     if (curr.children.size === 0) {
       if (id === curr.msg._id) return
-      return { start, end: curr, length }
+      return [{ start, end: curr, length }]
     }
 
     if (curr.children.size === 1) {
@@ -280,32 +290,48 @@ function getPathSkips(
       continue
     }
 
-    const paths: PathSkip[] = []
+    const edges: PathSkip[] = []
+
+    if (start.msg._id !== curr.msg._id) {
+      edges.push({ start, end: curr, length })
+    }
     for (const child of curr.children) {
       const end = tree[child]
       if (!end) continue
 
-      if (flags.debug) {
-        if (end.children.size === 1) {
-          const subpath = getPathSkips(tree, end.msg._id, flags)
-          if (!subpath) continue
-          if (!Array.isArray(subpath)) {
-            paths.push({ start, end: subpath.end, length: length + subpath.length })
-            continue
-          }
+      edges.push({ start: curr, end, length: 1 })
 
-          const mapped = subpath.map((sub) => ({
-            start,
-            end: sub.end,
-            length: length + sub.length,
-          }))
-          paths.push(...mapped)
-          continue
-        }
+      const inner = getPathSkips(tree, child, flags)
+      if (inner) {
+        edges.push(...inner)
       }
-
-      paths.push({ start, end, length })
     }
-    return paths
+    return edges
+
+    // for (const child of curr.children) {
+    //   const end = tree[child]
+    //   if (!end) continue
+
+    //   if (flags.debug) {
+    //     // if (end.children.size === 1) {
+    //     //   const subpath = getPathSkips(tree, end.msg._id, flags)
+    //     //   if (!subpath) continue
+    //     //   if (!Array.isArray(subpath)) {
+    //     //     paths.push({ start, end: subpath.end, length: length + subpath.length })
+    //     //     continue
+    //     //   }
+    //     //   const mapped = subpath.map((sub) => ({
+    //     //     start,
+    //     //     end: sub.end,
+    //     //     length: length + sub.length,
+    //     //   }))
+    //     //   paths.push(...mapped)
+    //     //   continue
+    //     // }
+    //   }
+
+    //   paths.push({ start: curr, end, length })
+    // }
+    return edges
   } while (true)
 }
