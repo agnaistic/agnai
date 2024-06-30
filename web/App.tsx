@@ -3,7 +3,7 @@ import './tailwind.css'
 import './app.css'
 import './dots.css'
 import '@melloware/coloris/dist/coloris.css'
-import { Component, createMemo, JSX, Show, lazy, onMount } from 'solid-js'
+import { Component, createMemo, JSX, Show, lazy, onMount, Switch, Match } from 'solid-js'
 import { Route, Router, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
@@ -172,24 +172,33 @@ const Layout: Component<{ children?: any }> = (props) => {
                 'content-background': !isChat(),
               }}
             >
-              <Show when={cfg.init}>
-                {props.children}
-                <Maintenance />
-              </Show>
-              <Show when={!cfg.init && cfg.initLoading}>
-                <div class="flex h-[80vh] items-center justify-center">
-                  <Loading />
-                </div>
-              </Show>
+              <Switch>
+                <Match when={cfg.init}>
+                  {props.children}
+                  <Maintenance />
+                </Match>
 
-              <Show when={!cfg.init && !cfg.initLoading}>
-                <div class="flex flex-col items-center gap-2">
-                  <div>Agnaistic failed to load</div>
-                  <div>
-                    <Button onClick={reload}>Try Again</Button>
+                <Match when={cfg.initLoading}>
+                  <div class="flex h-[80vh] flex-col items-center justify-center gap-2">
+                    <div>
+                      Login issues? Try{' '}
+                      <a class="link" onClick={() => userStore.logout()}>
+                        Logging out
+                      </a>{' '}
+                      then log back in.
+                    </div>
+                    <Loading />
                   </div>
-                </div>
-              </Show>
+                </Match>
+                <Match when>
+                  <div class="flex flex-col items-center gap-2">
+                    <div>Agnaistic failed to load</div>
+                    <div>
+                      <Button onClick={reload}>Try Again</Button>
+                    </div>
+                  </div>
+                </Match>
+              </Switch>
             </div>
           </main>
         </div>
