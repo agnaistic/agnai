@@ -159,12 +159,13 @@ export async function guidanceAsync(opts: InferenceRequest) {
   }
 
   if (sub?.preset?.guidanceCapable && (sub.tier?.guidanceAccess || opts.user.admin)) {
+    const srv = await store.admin.getServerConfiguration()
     const counts = calculateGuidanceCounts(opts.prompt, opts.placeholders)
-    if (counts.tokens > 1000) {
+    if (srv.maxGuidanceTokens && counts.tokens > srv.maxGuidanceTokens) {
       throw new Error(`Cannot run guidance: Template is requesting too many tokens (>1000)`)
     }
 
-    if (counts.vars > 15) {
+    if (srv.maxGuidanceVariables && counts.vars > srv.maxGuidanceVariables) {
       throw new Error(`Cannot run guidance: Template requests too many variables (>15)`)
     }
 

@@ -96,6 +96,8 @@ const updateConfiguration = handle(async ({ body }) => {
     kind: 'configuration',
     privacyUpdated: '',
     tosUpdated: '',
+    maxGuidanceTokens: 1000,
+    maxGuidanceVariables: 15,
     ...body,
   })
 

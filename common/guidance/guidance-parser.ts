@@ -1,5 +1,6 @@
 import peggy from 'peggy'
 import { grammar } from './grammar'
+import { store } from '/srv/db'
 
 type PNode = VarNode | TextNode
 
@@ -54,13 +55,15 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
 ): Promise<{ result: string; values: T }> {
   const { infer, placeholders } = opts
   const nodes = guidanceParse(inject(template, placeholders))
-  const requestedTokens = calculateNodeCounts(nodes)
 
-  if (requestedTokens.tokens > 1000) {
+  const srv = await store.admin.getServerConfiguration()
+  const counts = calculateNodeCounts(nodes)
+
+  if (srv.maxGuidanceTokens && counts.tokens > srv.maxGuidanceTokens) {
     throw new Error(`Cannot run guidance: Template is requesting too many tokens (>1000)`)
   }
 
-  if (requestedTokens.vars > 15) {
+  if (srv.maxGuidanceVariables && counts.vars > srv.maxGuidanceVariables) {
     throw new Error(`Cannot run guidance: Template requests too many variables (>15)`)
   }
 

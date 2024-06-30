@@ -34,6 +34,8 @@ export async function getServerConfiguration() {
     supportEmail: '',
     ttsEnabled: false,
     ttsHost: '',
+    maxGuidanceTokens: 1000,
+    maxGuidanceVariables: 15,
   }
 
   await db('configuration').insertOne(next)

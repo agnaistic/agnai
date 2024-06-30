@@ -9,6 +9,7 @@ import { FieldUpdater, getStrictForm, useRowHelper } from '/web/shared/util'
 import { SaveIcon } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Divider from '/web/shared/Divider'
+import { Card } from '/web/shared/Card'
 
 export { ServerConfiguration as default }
 
@@ -50,6 +51,8 @@ const ServerConfiguration: Component = () => {
       supportEmail: 'string',
       ttsEnabled: 'boolean',
       ttsHost: 'string',
+      maxGuidanceTokens: 'number',
+      maxGuidanceVariables: 'number',
     })
 
     adminStore.updateServerConfig({
@@ -104,6 +107,23 @@ const ServerConfiguration: Component = () => {
           value={state.serverConfig?.ttsHost}
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
+
+        <Card>
+          <TextInput
+            fieldName="maxGuidanceTokens"
+            label="Max Guidance Tokens"
+            helperText="Max number of tokens a saga/guidance template can reques. Set to 0 to disable."
+            type="number"
+            value={state.serverConfig?.maxGuidanceTokens ?? 1000}
+          />
+          <TextInput
+            fieldName="maxGuidanceVariables"
+            label="Max Guidance Variables"
+            helperText="Max number of variables a saga/guidance template can request. Set to 0 to disable."
+            type="number"
+            value={state.serverConfig?.maxGuidanceVariables ?? 15}
+          />
+        </Card>
 
         <TextInput
           fieldName="supportEmail"
