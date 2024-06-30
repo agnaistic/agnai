@@ -2,8 +2,9 @@ import cyto from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
-import { msgStore } from '/web/store'
+import { msgStore, settingStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'
+import { FeatureFlags } from '/web/store/flags'
 
 export { ChatGraph as default }
 
@@ -15,6 +16,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
   let cyRef: any
 
   const graph = msgStore((s) => s.graph)
+  const flags = settingStore((s) => s.flags)
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
@@ -66,7 +68,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
       elements:
         props.nodes === 'full'
           ? getAllElements(graph.tree, props.leafId)
-          : getElements(graph.tree, graph.root, props.leafId),
+          : getElements(graph.tree, graph.root, props.leafId, flags),
     })
 
     cy.on('click', 'node', function (this: any, evt) {
@@ -153,10 +155,10 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
   )
 }
 
-function getElements(tree: ChatTree, root: string, leafId: string) {
+function getElements(tree: ChatTree, root: string, leafId: string, flags: FeatureFlags) {
   const elements: cyto.ElementDefinition[] = []
 
-  const short = getShorthandTree(tree, root)
+  const short = getShorthandTree(tree, root, flags)
   const visited = new Set<string>()
   for (const {
     start: { msg: smsg },
@@ -229,16 +231,16 @@ function getAllElements(tree: ChatTree, leafId: string) {
 
 type PathSkip = { start: ChatNode; end: ChatNode; length: number }
 
-function getShorthandTree(tree: ChatTree, root: string) {
+function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
   const edges: Array<PathSkip> = []
-  const skips = getPathSkips(tree, root)
+  const skips = getPathSkips(tree, root, flags)
 
   if (!skips) return edges
 
   if (Array.isArray(skips)) {
     edges.push(...skips)
     for (const skip of skips) {
-      const subskips = getShorthandTree(tree, skip.end.msg._id)
+      const subskips = getShorthandTree(tree, skip.end.msg._id, flags)
       edges.push(...subskips)
     }
   } else {
@@ -248,7 +250,11 @@ function getShorthandTree(tree: ChatTree, root: string) {
   return edges
 }
 
-function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undefined {
+function getPathSkips(
+  tree: ChatTree,
+  id: string,
+  flags: FeatureFlags
+): PathSkip | PathSkip[] | undefined {
   const start = tree[id]
 
   const visited = new Set<string>([id])
@@ -279,17 +285,23 @@ function getPathSkips(tree: ChatTree, id: string): PathSkip | PathSkip[] | undef
       const end = tree[child]
       if (!end) continue
 
-      if (end.children.size === 1) {
-        const subpath = getPathSkips(tree, end.msg._id)
-        if (!subpath) continue
-        if (!Array.isArray(subpath)) {
-          paths.push({ start, end: subpath.end, length: length + subpath.length })
+      if (flags.debug) {
+        if (end.children.size === 1) {
+          const subpath = getPathSkips(tree, end.msg._id, flags)
+          if (!subpath) continue
+          if (!Array.isArray(subpath)) {
+            paths.push({ start, end: subpath.end, length: length + subpath.length })
+            continue
+          }
+
+          const mapped = subpath.map((sub) => ({
+            start,
+            end: sub.end,
+            length: length + sub.length,
+          }))
+          paths.push(...mapped)
           continue
         }
-
-        const mapped = subpath.map((sub) => ({ start, end: sub.end, length: length + sub.length }))
-        paths.push(...mapped)
-        continue
       }
 
       paths.push({ start, end, length })
