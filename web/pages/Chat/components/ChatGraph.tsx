@@ -147,7 +147,7 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
 
   return (
     <div
-      class="flex h-full max-h-[400px] min-h-[400px] w-full justify-center p-4"
+      class="flex h-full min-h-[400px] w-full justify-center p-4"
       ref={(ref) => init(ref, graph.tree)}
     ></div>
   )

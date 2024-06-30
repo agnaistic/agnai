@@ -33,6 +33,7 @@ export const ChatGraphModal: Component<{
       show={props.show}
       close={props.close}
       maxWidth="full"
+      maxHeight
       title="Chat Graph"
       footer={
         <>
