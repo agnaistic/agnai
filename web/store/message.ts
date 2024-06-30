@@ -1151,7 +1151,7 @@ subscribe(
     const allMsgs = await localApi.getMessages(body.chatId)
 
     const msg = body.msg as AppSchema.ChatMessage
-    const next = allMsgs.filter((m) => m._id !== retrying?._id).concat(msg)
+    const next = allMsgs.filter((m) => m._id !== retrying?._id && m._id !== msg._id).concat(msg)
     const speech = getMessageSpeechInfo(msg, userStore.getState().user)
 
     const chats = await localApi.loadItem('chats')
@@ -1161,7 +1161,7 @@ subscribe(
     await localApi.saveMessages(body.chatId, next)
 
     msgStore.setState({
-      msgs: exclude(msgs, body.msg._id).concat(msg),
+      msgs: exclude(msgs, [body.msg._id]).concat(msg),
       retrying: undefined,
       partial: undefined,
       waiting: undefined,
