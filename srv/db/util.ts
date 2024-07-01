@@ -6,7 +6,7 @@ import { defaultChars } from '../../common/characters'
 
 const ALGO = 'aes-192-cbc'
 const KEY = crypto.scryptSync(config.jwtSecret, 'salt', 24)
-const KEY_LB = crypto.scryptSync(config.jwtSecret + '\n', 'salt', 24)
+const KEY_LB = crypto.scryptSync(`${config.jwtSecret}\n`, 'salt', 24)
 
 export function now() {
   return new Date().toISOString()
@@ -36,8 +36,11 @@ export function decryptText(text: string) {
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
   } catch (ex) {}
 
-  const decipher = crypto.createDecipheriv(ALGO, KEY_LB, Buffer.from(iv, 'hex'))
-  return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
+  try {
+    const decipher = crypto.createDecipheriv(ALGO, KEY_LB, Buffer.from(iv, 'hex'))
+    return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
+  } catch (ex) {}
+  throw new Error(`Could not read API key: Try re-entering your service API key.`)
 }
 
 export const STARTER_CHARACTER: AppSchema.Character = {
