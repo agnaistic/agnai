@@ -905,6 +905,7 @@ function getMessageParent(
     case 'send-event:hidden':
     case 'send-event:world':
     case 'send':
+    case 'request':
     case 'ooc': {
       return messages[i - 1]
     }

@@ -17,6 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Node and PNPM
+        uses: ./.github/actions/install-node-pnpm
+        with:
+          node-version: ${{  env.node-version  }}
+          pnpm-version: ${{  env.pnpm-version  }}
+
       - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
         id: cache-step
