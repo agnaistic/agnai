@@ -138,7 +138,9 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{
 {{/if}}
 {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
 {{/if}}
-***  
+
+Then the roleplay chat between {{char}} and {{user}} begins.
+
 {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
 {{/each}}
 {{#if ujb}}### Instruction:
