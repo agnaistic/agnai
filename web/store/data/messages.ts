@@ -542,6 +542,9 @@ async function getGenerateProps(
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
         const replacing = entities.messages[index]
 
+        const replaceParent = entities.messages[index - 1]
+        props.parent = replaceParent
+
         // Retrying an impersonated message - We'll use the "auto-reply as" or the "main character"
         if (replacing?.userId) {
           props.replyAs = getBot(active.replyAs || active.char._id)
@@ -651,6 +654,7 @@ async function createMessage(
     text: text.parsed,
     kind: opts.kind,
     impersonate,
+    parent: getMessageParent(opts.kind, props.messages)?._id,
   })
 }
 

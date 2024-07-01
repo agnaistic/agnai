@@ -23,6 +23,7 @@ const sendValidator = {
   ],
   text: 'string',
   impersonate: 'any?',
+  parent: 'string?',
 } as const
 
 const genValidator = {
@@ -95,6 +96,7 @@ export const createMessage = handle(async (req) => {
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -111,7 +113,10 @@ export const createMessage = handle(async (req) => {
       senderId: userId,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
+
+    await store.chats.update(chatId, { treeLeafId: userMsg._id })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
