@@ -1,4 +1,4 @@
-name: Web deploy
+name: Web deploy (to DEV)
 
 on:
   push:
@@ -51,6 +51,6 @@ jobs:
         with:
           aws_key_id: ${{ secrets.S3_ASSET_ACCESS_KEY }}
           aws_secret_access_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
-          aws_bucket: ${{ secrets.S3_PRD_ASSET_BUCKET }}
+          aws_bucket: ${{ secrets.S3_DEV_ASSET_BUCKET }}
           source_dir: 'dist'
           destination_dir: ''
