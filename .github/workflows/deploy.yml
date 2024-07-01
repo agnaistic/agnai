@@ -38,7 +38,3 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
           docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
-
-      - name: Update Service
-        run: |
-          sh .github/deploy.sh ${{ secrets.SSH_SERVER }}
