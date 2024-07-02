@@ -18,7 +18,7 @@ export default function Footer() {
             Cosplay Fans
           </h3>
           <div class="mx-auto max-w-2xl">
-            <p class="font-display text-[14px] md:font-displayMedium md:text-[22px]">
+            <p class="font-clash text-[14px] md:font-clash-semibold md:text-[22px]">
               Cosplay Fans powers immersive experiences with your favorite cosplay creators,
               allowing users to live chat and view private content.
             </p>
@@ -29,7 +29,7 @@ export default function Footer() {
             <h3 class="font-['ClashDisplay-Bold'] text-[20px] text-[#4A72FF] md:text-[30px]">
               Information
             </h3>
-            <div class="font-display text-[14px] md:font-displayMedium md:text-lg">
+            <div class="font-clash text-[14px] md:font-clash-semibold md:text-lg">
               <p class="my-4">Live Chat</p>
               <p class="my-4">Creators</p>
               <p class="my-4">FAQ</p>
@@ -40,7 +40,7 @@ export default function Footer() {
             <h3 class="font-['ClashDisplay-Bold'] text-[20px] text-[#4A72FF] md:text-[30px]">
               Privacy Policy
             </h3>
-            <div class="font-display text-[14px] md:font-displayMedium md:text-lg">
+            <div class="font-clash text-[14px] md:font-clash-semibold md:text-lg">
               <p class="my-4">Terms of Service</p>
               <p class="my-4">2257 Statement</p>
               <p class="my-4">DMCA Policy</p>
@@ -51,7 +51,7 @@ export default function Footer() {
             <h3 class="font-['ClashDisplay-Bold'] text-[20px] text-[#4A72FF] md:text-[30px]">
               Contact Us
             </h3>
-            <div class="text-[14px]md:font-displayMedium font-display md:text-lg">
+            <div class="text-[14px]md:font-clash-semibold font-clash md:text-lg">
               <p class="my-4">Billing</p>
               <p class="my-4">Support</p>
               <p class="my-4">Become a Creator</p>
@@ -68,7 +68,7 @@ export default function Footer() {
             <img class="h-[28px] w-[50px] md:h-[49px] md:w-[88px]" src={card4} alt="payment card" />
           </div>
           <div class="flex justify-center md:justify-end">
-            <div class="inline-block text-center font-display text-[14px] md:text-left md:font-displayMedium md:text-lg">
+            <div class="inline-block text-center font-clash text-[14px] md:text-left md:font-clash-semibold md:text-lg">
               <p>All Rights Reserved 2024</p>
             </div>
           </div>

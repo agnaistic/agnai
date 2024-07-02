@@ -20,6 +20,9 @@ dependencies:
   '@dqbd/tiktoken':
     specifier: ^1.0.2
     version: 1.0.2
+  '@solidjs/meta':
+    specifier: ^0.29.4
+    version: 0.29.4(solid-js@1.8.16)
   adm-zip:
     specifier: ^0.5.10
     version: 0.5.10
@@ -2810,6 +2813,14 @@ packages:
     resolution: {integrity: sha512-CqAwKb2T5Vi72+rhebSsqNZ9o67buYRdEJrIFzRXz3U59QqezuuxPsyzTSVCacwS5Pf109VRsgCJQoxKRoECZQ==}
     peerDependencies:
       solid-js: ^1.6.12
+    dependencies:
+      solid-js: 1.8.16
+    dev: false
+
+  /@solidjs/meta@0.29.4(solid-js@1.8.16):
+    resolution: {integrity: sha512-zdIWBGpR9zGx1p1bzIPqF5Gs+Ks/BH8R6fWhmUa/dcK1L2rUC8BAcZJzNRYBQv74kScf1TSOs0EY//Vd/I0V8g==}
+    peerDependencies:
+      solid-js: '>=1.8.4'
     dependencies:
       solid-js: 1.8.16
     dev: false

@@ -14,7 +14,7 @@ import ethnicityIcon from '/web/asset/aifans/traits-icons-ethnicity.png'
 const ModelTraits = (props: any) => {
   return (
     <div>
-      <div class="mb-2 mt-10 font-display md:mt-8">ABOUT ME:</div>
+      <div class="mb-2 mt-10 font-clash md:mt-8">ABOUT ME:</div>
       <div class="grid grid-cols-2 gap-x-10 gap-y-10 md:gap-x-20 md:gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
         <ModelAttribute title="PERSONALITY" value="Outgoing, Seductive" image={personalityIcon} />
         <ModelAttribute title="OCCUPATION" value="Influencer" image={occupationIcon} />

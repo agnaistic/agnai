@@ -64,7 +64,7 @@ const ModelPage: Component = () => {
     <div class="h-full w-full bg-black">
       <div class="h-full w-full bg-model-backdrop">
         <div class="relative w-full">
-          <div class="absolute left-3 right-3 top-3 md:relative md:left-auto md:right-auto md:top-auto md:bg-white/5 ">
+          <div class="absolute left-3 right-3 top-3 z-50 md:relative md:left-auto md:right-auto md:top-auto md:bg-white/5 ">
             <div class="xl:container md:mx-auto md:px-5 lg:px-[20px] xl:px-[40px] 2xl:max-w-[1775px] 2xl:px-[60px]  ">
               <Header />
             </div>
@@ -76,7 +76,7 @@ const ModelPage: Component = () => {
               </div>
               <div class="md:ml-6">
                 <div class="mx-[22px] my-[14px] flex">
-                  <h1 class="font-display text-[40px] leading-[40px] text-white">
+                  <h1 class="font-clash text-[40px] leading-[40px] text-white">
                     {character()?.name}
                   </h1>
                   <img src={favoriteIcon} class="ml-2 h-[20px] w-[20px]" />
@@ -84,23 +84,23 @@ const ModelPage: Component = () => {
                 <div class="flex">
                   <div class="ml-[22px] flex items-center">
                     <img src={clockIcon} class="h-[44px] w-[44px]" />
-                    <span class="ml-2 font-display text-[16px]">30 MIN AGO</span>
+                    <span class="ml-2 font-clash text-[16px]">30 MIN AGO</span>
                   </div>
                   <div class="ml-7 flex items-center">
                     <img src={locationIcon} class="h-[44px] w-[44px]" />
-                    <span class="ml-2 font-display text-[16px]">United States</span>
+                    <span class="ml-2 font-clash text-[16px]">United States</span>
                   </div>
                 </div>
                 <div class="mx-[22px] mb-[30px] mt-[18px]">
                   <div class="md:flex md:flex-col-reverse">
-                    <p class="break-all font-display text-[18px] 2xl:max-w-2xl">
+                    <p class="break-all font-clash text-[18px] 2xl:max-w-2xl">
                       {character()?.description || defaultDescription}
                     </p>
-                    <div class="mt-[30px] md:mb-4 md:mt-0 lg:flex">
-                      <div class="lg:mr-5">
+                    <div class="mt-[30px] flex flex-col gap-3 md:mb-4 md:mt-0 lg:flex-row lg:gap-5">
+                      <div>
                         <LiveChatButton />
                       </div>
-                      <div class="lg:mr-5">
+                      <div>
                         <GradientButton
                           title="LIKES &nbsp; 3,576"
                           colorStart="#E12F8F"

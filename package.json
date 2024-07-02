@@ -80,6 +80,7 @@
     "@aws-sdk/client-s3": "^3.309.0",
     "@css-hooks/solid": "^1.0.1",
     "@dqbd/tiktoken": "^1.0.2",
+    "@solidjs/meta": "^0.29.4",
     "adm-zip": "^0.5.10",
     "bcryptjs": "^2.4.3",
     "chance": "^1.1.11",

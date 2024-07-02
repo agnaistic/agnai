@@ -24,6 +24,7 @@ import arrow_right from '/web/shared/assets/img/arrow-right.png'
 import { createEffect, onMount } from 'solid-js'
 import { characterStore } from '/web/store'
 import { AppSchema } from '/common/types'
+import { setComponentPageTitle } from '/web/shared/util'
 const images = [profile1, profile2, profile3, profile4]
 
 export default function Home() {
@@ -50,26 +51,25 @@ export default function Home() {
     if (!chars.loaded) {
       characterStore.getCharacters()
     }
+    setComponentPageTitle('Home')
   })
 
   createEffect(() => {
-    // console.log('JB', chars.list)
+    console.log('JB', chars.list)
   })
 
   return (
     <div class="h-full w-full bg-black">
       <div class="h-full w-full bg-model-backdrop">
         <div class="relative w-full">
-          <div class="absolute left-3 right-3 top-3">
-            <div class="px-8">
-              <Header />
-            </div>
+          <div class="absolute left-3 right-3 top-3 z-50">
+            <Header />
           </div>
           <div>
             <Hero />
             <Card popular={chars.list} />
             <Footer />
-            <div class="fixed bottom-0 z-50 w-full md:hidden">
+            <div class="fixed bottom-0 z-10 w-full md:hidden">
               <BottomBar />
             </div>
           </div>

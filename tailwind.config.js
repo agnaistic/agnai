@@ -3,9 +3,9 @@ module.exports = {
   content: ['./web/**/*.{html,tsx}'],
   theme: {
     fontFamily: {
-      display: 'ClashDisplay-Regular, sans-serif',
-      displayMedium: 'ClashDisplay-Medium, sans-serif',
-      displayBold: 'ClashDisplay-Semibold, sans-serif',
+      clash: 'ClashDisplay-Regular, sans-serif',
+      ['clash-semibold']: 'ClashDisplay-Medium, sans-serif',
+      ['clash-bold']: 'ClashDisplay-Semibold, sans-serif',
     },
     extend: {
       backgroundImage: {
@@ -17,10 +17,10 @@ module.exports = {
       boxShadow: {
         hero: '0px 0px 10px 0px rgba(0, 0, 0, 0.60)',
       },
-      screens: {
-        xs: '768px',
-        sm: '1024px',
-      },
+      // screens: {
+      //   xs: '768px',
+      //   sm: '1024px',
+      // },
       colors: {
         background: '#090b10',
         'background-lighter': '#0d1017',
@@ -41,11 +41,16 @@ module.exports = {
             100: '#10E0F9',
             200: '#4A72FF',
           },
+          gray: {
+            100: '#949494',
+            900: '#1e1f22',
+          },
           pink: {
             100: '#FF23FF',
             200: '#FF00B8',
           },
           purple: '#B14DFF',
+          red: '#E12F42',
         },
       },
       fontSize: {

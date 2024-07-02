@@ -23,6 +23,7 @@ import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
+import ChatDetailAiFans from './pages/AiFans/Chat/ChatDetailAiFans'
 import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
@@ -46,6 +47,10 @@ import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
 import LoginModal from './pages/AiFans/LoginModal'
 import ModelPage from './pages/AiFans/ModelPage'
+import Header from './shared/aifans/Header'
+import ChatLeftNav from './pages/AiFans/Chat/ChatLeftNav'
+import ChatRecentChatsNav from './pages/AiFans/Chat/ChatRecentChatsNav'
+import ChatRightNav from './pages/AiFans/Chat/ChatRightNav'
 
 const App: Component = () => {
   const state = userStore()
@@ -61,12 +66,13 @@ const App: Component = () => {
       <ChubRoutes />
       <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
       <Route path="/chats" component={CharacterChats} />
-      <Route path="/chat" component={ChatDetail} />
+      <Route path="/chat" component={ChatDetailAiFans} />
       <Show when={cfg.config.guidanceAccess || state.user?.admin}>
         <Route path="/saga" component={SagaList} />
         <Route path="/saga/:id" component={SagaDetail} />
       </Show>
-      <Route path="/chat/:id" component={ChatDetail} />
+      <Route path="/chat/:id" component={ChatDetailAiFans} />
+      <Route path="/chatog/:id" component={ChatDetail} />
       <Route path={['/info']} component={HomePage} />
       <Route path="/changelog" component={ChangeLog} />
       <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
@@ -154,7 +160,11 @@ const Layout: Component<{ children?: any }> = (props) => {
   })
 
   const isAiFansPage = createMemo(() => {
-    return location.pathname === '/' || location.pathname.startsWith('/model/')
+    return (
+      location.pathname === '/' ||
+      location.pathname.startsWith('/model/') ||
+      location.pathname.startsWith('/chat/')
+    )
   })
 
   const bg = createMemo(() => {
@@ -188,57 +198,85 @@ const Layout: Component<{ children?: any }> = (props) => {
   })
 
   return (
-    <ContextProvider>
-      <style>{css}</style>
-      <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] flex flex-col justify-between">
-        <Show when={!isAiFansPage()}>
-          <NavBar />
-        </Show>
-        <div class="flex w-full grow flex-row">
-          <Show when={!isAiFansPage()}>
-            <Navigation />
-          </Show>
-          <main class="w-full" data-background style={bg()}>
-            <div class={containerDivStyles()} classList={containerDivClasslist()}>
-              <Show when={cfg.init}>
-                {props.children}
-                <Maintenance />
-              </Show>
-              <Show when={!cfg.init && cfg.initLoading}>
-                <div class="flex h-[80vh] items-center justify-center">
-                  <Loading />
-                </div>
-              </Show>
-
-              <Show when={!cfg.init && !cfg.initLoading}>
-                <div class="flex flex-col items-center gap-2">
-                  <div>CosplayFans failed to load</div>
-                  <div>
-                    <Button onClick={reload}>Try Again</Button>
-                  </div>
-                </div>
-              </Show>
+    <>
+      <Show when={isChat()}>
+        <div id="app" class="flex h-screen w-screen flex-col overflow-hidden">
+          <div class="w-full  border-b border-b-cosplay-gray-100 xl:container md:mx-auto md:px-5  lg:px-[20px] xl:px-[40px] 2xl:max-w-[1775px] 2xl:px-[60px]">
+            <div class="m-3 ">
+              <Header />
             </div>
-          </main>
+          </div>
+          <div id="main" class="grid flex-grow  grid-cols-[auto_auto_1fr_auto]">
+            <div class="hidden border-r border-r-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
+              <ChatLeftNav />
+            </div>
+            <div class="hidden border-r border-r-cosplay-gray-100 bg-cosplay-gray-900  px-4 py-6 sm:block">
+              <ChatRecentChatsNav />
+            </div>
+            <div class="bg-black">{props.children}</div>
+            <div class="hidden w-[406px] border-l border-l-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
+              <ChatRightNav />
+            </div>
+          </div>
+          <div id="footer"></div>
         </div>
-      </div>
-      <Toasts />
-      <ImpersonateModal
-        show={cfg.showImpersonate}
-        close={() => settingStore.toggleImpersonate(false)}
-      />
-      <InfoModal />
-      <LoginModal />
-      <ProfileModal />
-      <For each={rootModals.modals}>{(modal) => modal.element}</For>
-      <ImageModal />
+        <Toasts />
+      </Show>
 
-      <div
-        class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
-        classList={{ hidden: !cfg.overlay }}
-        onClick={() => settingStore.toggleOverlay(false)}
-      ></div>
-    </ContextProvider>
+      <Show when={!isChat()}>
+        <ContextProvider>
+          <style>{css}</style>
+          <div class="flex flex-col justify-between">
+            <Show when={!isAiFansPage()}>
+              <NavBar />
+            </Show>
+            <div class="flex w-full grow flex-row">
+              <Show when={!isAiFansPage()}>
+                <Navigation />
+              </Show>
+              <main class="w-full" data-background style={bg()}>
+                <div class={containerDivStyles()} classList={containerDivClasslist()}>
+                  <Show when={cfg.init}>
+                    {props.children}
+                    <Maintenance />
+                  </Show>
+                  <Show when={!cfg.init && cfg.initLoading}>
+                    <div class="flex h-[80vh] items-center justify-center">
+                      <Loading />
+                    </div>
+                  </Show>
+
+                  <Show when={!cfg.init && !cfg.initLoading}>
+                    <div class="flex flex-col items-center gap-2">
+                      <div>CosplayFans failed to load</div>
+                      <div>
+                        <Button onClick={reload}>Try Again</Button>
+                      </div>
+                    </div>
+                  </Show>
+                </div>
+              </main>
+            </div>
+          </div>
+          <Toasts />
+          <ImpersonateModal
+            show={cfg.showImpersonate}
+            close={() => settingStore.toggleImpersonate(false)}
+          />
+          <InfoModal />
+          <LoginModal />
+          <ProfileModal />
+          <For each={rootModals.modals}>{(modal) => modal.element}</For>
+          <ImageModal />
+
+          <div
+            class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
+            classList={{ hidden: !cfg.overlay }}
+            onClick={() => settingStore.toggleOverlay(false)}
+          ></div>
+        </ContextProvider>
+      </Show>
+    </>
   )
 }
 

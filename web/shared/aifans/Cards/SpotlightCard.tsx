@@ -22,21 +22,32 @@ const SpotlightCard = (props: Props) => {
                                 "
       >
         <div class="flex items-center justify-between p-2">
-          <span class="text-[24px] font-[600] leading-[40px] text-white">
+          <span class="font-clash-semibold text-[24px] leading-[40px] text-white">
             {props.name || 'Yae Miko'}
           </span>
-          <img class="h-[27px] w-[27px]" src={flame} alt="" />
+          <img
+            class="h-12 w-12 group-hover:hidden"
+            src="/images/creator-spotlight-flame.png"
+            alt=""
+          />
+
+          <img
+            class="hidden h-12 w-12 group-hover:block"
+            src="/images/creator-spotlight-flame-hover.png"
+            alt=""
+          />
         </div>
-        <p class="p-2 text-[14px] font-[400] leading-[24px] text-white md:text-[12px]">
+
+        <p class="p-2 font-clash text-sm leading-[24px] text-white">
           Dressing up as a Genshin Impact character is so awsome to me. Come check out my private
           pics and if I’m online come say hello:)
         </p>
         <div class="flex items-center justify-between p-2">
-          <span class="text-[14px] font-[500] leading-normal text-[#10E0F9]">
+          <span class="font-clash text-[14px] leading-normal text-[#10E0F9]">
             {props.realName || 'Clara Lu'}
           </span>
-          <span class="text-[14px] font-[500] leading-normal text-[#10E0F9]">12K VIEWS</span>
-          <span class="text-[14px] font-[500] leading-normal text-[#10E0F9]">5K LIKES</span>
+          <span class="font-clash text-[14px] leading-normal text-[#10E0F9]">12K VIEWS</span>
+          <span class="font-clash text-[14px] leading-normal text-[#10E0F9]">5K LIKES</span>
         </div>
       </div>
     </div>

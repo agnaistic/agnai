@@ -30,7 +30,6 @@ const LoginPage: Component = () => {
 
   return (
     <div class="flex w-full flex-col items-center">
-      <div class="my-4 border-b border-white/5" />
       <div class="w-full max-w-lg">
         <Show when={register()}>
           <RegisterForm isLoading={store.loading} />
@@ -155,12 +154,12 @@ const LoginForm: Component<FormProps> = (props) => {
   return (
     <FormContainer>
       <div>
-        <h1 class="my-2 font-display text-xl">User Log In</h1>
-        <h2 class="font-display text-xl text-cosplay-blue-200">Log In</h2>
+        <h1 class="my-2 font-clash text-xl">User Log In</h1>
+        <h2 class="font-clash text-xl text-cosplay-blue-200">Log In</h2>
       </div>
       <form onSubmit={login} class="my-2 flex flex-col gap-6">
-        <div class="flex flex-col gap-2 font-display">
-          <label class="font-displayMedium" for="username">
+        <div class="flex flex-col gap-2 font-clash">
+          <label class="font-clash-semibold" for="username">
             Username or Email
           </label>
           <TextInput

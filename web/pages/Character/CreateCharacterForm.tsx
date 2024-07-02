@@ -285,7 +285,7 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Basic', 'Advanced', 'Images'], 0)
+  const tabs = useTabs(['Basic', 'Advanced', 'Model Info', 'Images'], 0)
 
   let spriteRef: any
 
@@ -657,6 +657,13 @@ export const CreateCharacterForm: Component<{
 
             <div class={`flex flex-col gap-2`} classList={{ hidden: tabs.current() !== 'Images' }}>
               <ImageSettings cfg={editor.state.imageSettings} inherit />
+            </div>
+
+            <div
+              class={`flex flex-col gap-2`}
+              classList={{ hidden: tabs.current() !== 'Model Info' }}
+            >
+              JB!!!
             </div>
 
             <Show when={!props.close}>

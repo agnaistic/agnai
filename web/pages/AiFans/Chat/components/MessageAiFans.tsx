@@ -1,0 +1,688 @@
+import './Message.css'
+import * as Purify from 'dompurify'
+import {
+  Check,
+  DownloadCloud,
+  Info,
+  PauseCircle,
+  Pencil,
+  PlusCircle,
+  RefreshCw,
+  Repeat1,
+  Terminal,
+  Trash,
+  X,
+  Zap,
+} from 'lucide-solid'
+import {
+  Accessor,
+  Component,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Signal,
+  Switch,
+} from 'solid-js'
+import { BOT_REPLACE, SELF_REPLACE } from '../../../../../common/prompt'
+import { AppSchema } from '../../../../../common/types/schema'
+import AvatarIcon, { CharacterAvatar } from '../../../../shared/AvatarIcon'
+import { getAssetUrl, getStrictForm } from '../../../../shared/util'
+import {
+  chatStore,
+  userStore,
+  msgStore,
+  settingStore,
+  toastStore,
+  ChatState,
+  VoiceState,
+} from '../../../../store'
+import { markdown } from '../../../../shared/markdown'
+import Button from '/web/shared/Button'
+import { rootModalStore } from '/web/store/root-modal'
+import { ContextState, useAppContext } from '/web/store/context'
+import { trimSentence } from '/common/util'
+import { EVENTS, events } from '/web/emitter'
+import TextInput from '/web/shared/TextInput'
+import { Card } from '/web/shared/Card'
+import { formatAMPM } from '/web/shared/aifans/lib/date-util'
+
+type MessageProps = {
+  msg: SplitMessage
+  last?: boolean
+  swipe?: string | false
+  confirmSwipe?: () => void
+  cancelSwipe?: () => void
+  onRemove: () => void
+  editing: boolean
+  tts?: boolean
+  children?: any
+  retrying?: AppSchema.ChatMessage
+  partial?: string
+  sendMessage: (msg: string, ooc: boolean) => void
+  isPaneOpen: boolean
+  showHiddenEvents?: boolean
+  textBeforeGenMore?: string
+  voice?: VoiceState
+  firstInserted?: boolean
+}
+
+const anonNames = new Map<string, number>()
+
+let anonId = 0
+function getAnonName(entityId: string) {
+  if (!anonNames.has(entityId)) {
+    anonNames.set(entityId, ++anonId)
+  }
+
+  const id = anonNames.get(entityId)
+  return `User ${id}`
+}
+
+const MessageAiFans: Component<MessageProps> = (props) => {
+  let editRef: HTMLDivElement
+  let avatarRef: any
+
+  const [ctx] = useAppContext()
+  const user = userStore()
+  const state = chatStore()
+  const [edit, setEdit] = createSignal(false)
+  const isBot = !!props.msg.characterId
+  const isUser = !!props.msg.userId
+  const [img, setImg] = createSignal('h-full')
+  const opts = createSignal(false)
+
+  const [obs] = createSignal(
+    new ResizeObserver(() => {
+      setImg(`calc(${Math.min(avatarRef?.clientHeight, 10000)}px + 1em)`)
+    })
+  )
+
+  onMount(() => obs().observe(avatarRef))
+  onCleanup(() => obs().disconnect())
+
+  const bgStyles = createMemo(() => {
+    const base: JSX.CSSProperties =
+      props.msg.characterId && !props.msg.userId
+        ? ctx.bg.bot
+        : props.msg.ooc
+        ? ctx.bg.ooc
+        : ctx.bg.user
+
+    const styles = { ...base }
+    const show = opts[0]()
+    if (show) {
+      styles['backdrop-filter'] = ''
+    }
+
+    return styles
+  })
+
+  const content = createMemo(() => {
+    const msgV2 = getMessageContent(ctx, props, state)
+    return msgV2
+  })
+
+  const saveEdit = () => {
+    if (!editRef) return
+    msgStore.editMessage(props.msg._id, editRef.innerText)
+    setEdit(false)
+  }
+
+  const cancelEdit = () => setEdit(false)
+
+  const startEdit = () => {
+    setEdit(true)
+    if (editRef) {
+      editRef.innerText = props.msg.msg
+    }
+    editRef?.focus()
+  }
+
+  const opacityClass = props.msg.ooc ? 'opacity-50' : ''
+
+  const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
+
+  const messageClass = isBot
+    ? 'bg-gradient-to-r from-cosplay-purple to-cosplay-blue-200 rounded-tl-none'
+    : 'bg-cosplay-gray-900 border border-cosplay-gray-100 rounded-br-none'
+
+  const timeString = createMemo(() => {
+    const date = new Date(props.msg.createdAt)
+    return formatAMPM(date)
+  })
+
+  return (
+    <div class="flex flex-col">
+      <div
+        class={``}
+        data-sender={props.msg.characterId ? 'bot' : 'user'}
+        data-bot={props.msg.characterId ? ctx.char?.name : ''}
+        data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
+        data-last={props.last?.toString()}
+        data-lastsplit="true"
+        classList={{
+          'first-in-ctx-window': user.ui.contextWindowLine && props.firstInserted,
+        }}
+      >
+        <div class={`flex w-full ${opacityClass}`}>
+          <div class={`flex h-fit w-full select-text flex-col gap-1`}>
+            <div class="break-words">
+              {/* 
+              <span
+                class={`float-left pr-3`}
+                style={{ 'min-height': user.ui.imageWrap ? '' : img() }}
+                data-bot-avatar={isBot}
+                data-user-avatar={isUser}
+              >
+                <Switch>
+                  <Match when={props.msg.event === 'world' || props.msg.event === 'ooc'}>
+                    <div
+                      class={`avatar-${
+                        format().size
+                      } flex shrink-0 items-center justify-center pt-3`}
+                    >
+                      <Zap />
+                    </div>
+                  </Match>
+
+                  <Match when={props.voice === 'generating'}>
+                    <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                      <AvatarIcon format={format()} Icon={DownloadCloud} />
+                    </div>
+                  </Match>
+
+                  <Match when={props.voice === 'playing'}>
+                    <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                      <AvatarIcon format={format()} Icon={PauseCircle} />
+                    </div>
+                  </Match>
+
+                  <Match when={ctx.allBots[props.msg.characterId!]}>
+                    <CharacterAvatar
+                      char={ctx.allBots[props.msg.characterId!]}
+                      format={format()}
+                      openable
+                      bot
+                      zoom={1.75}
+                    />
+                  </Match>
+
+                  <Match when={!props.msg.characterId}>
+                    <AvatarIcon
+                      format={format()}
+                      Icon={DownloadCloud}
+                      avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                      anonymize={ctx.anonymize}
+                    />
+                  </Match>
+                </Switch>
+              </span>
+              
+              <span class="flex flex-row justify-end pb-1">
+                <Switch>
+                  <Match
+                    when={
+                      !edit() &&
+                      !props.swipe &&
+                      user.user?._id === ctx.chat?.userId &&
+                      ctx.chat?.mode !== 'companion'
+                    }
+                  >
+                    <MessageOptions
+                      char={ctx.char!}
+                      msg={props.msg}
+                      chatEditing={props.editing}
+                      edit={edit}
+                      startEdit={startEdit}
+                      onRemove={props.onRemove}
+                      last={props.last}
+                      tts={!!props.tts}
+                      partial={props.partial}
+                      show={opts}
+                      textBeforeGenMore={props.textBeforeGenMore}
+                    />
+                  </Match>
+
+                  <Match when={edit()}>
+                    <div class="cancel-edit-btn mr-4 flex items-center gap-4 text-sm">
+                      <div class="icon-button text-red-500" onClick={cancelEdit}>
+                        <X size={22} />
+                      </div>
+                      <div class="confirm-edit-btn icon-button text-green-500" onClick={saveEdit}>
+                        <Check size={22} />
+                      </div>
+                    </div>
+                  </Match>
+
+                  <Match when={props.last && props.swipe}>
+                    <div class="mr-4 flex items-center gap-4 text-sm">
+                      <X
+                        size={22}
+                        class="cursor-pointer text-red-500"
+                        onClick={props.cancelSwipe}
+                      />
+                      <Check
+                        size={22}
+                        class="cursor-pointer text-green-500"
+                        onClick={props.confirmSwipe}
+                      />
+                    </div>
+                  </Match>
+                </Switch>
+              </span>
+                  */}
+              <div
+                ref={avatarRef}
+                class={`flex ${isBot ? 'justify-start' : 'justify-end'}`}
+                classList={{ 'overflow-hidden': !user.ui.imageWrap }}
+              >
+                <Switch>
+                  <Match when={props.msg.adapter === 'image'}>
+                    <div class="flex flex-wrap gap-2">
+                      <img
+                        class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                        src={getAssetUrl(props.msg.msg)}
+                        onClick={() =>
+                          settingStore.showImage(props.msg.msg, [
+                            toImageDeleteButton(props.msg._id, 0),
+                          ])
+                        }
+                      />
+                      <For each={props.msg.extras || []}>
+                        {(src, i) => (
+                          <img
+                            class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                            src={getAssetUrl(src)}
+                            onClick={() =>
+                              settingStore.showImage(src, [
+                                toImageDeleteButton(props.msg._id, i() + 1),
+                              ])
+                            }
+                          />
+                        )}
+                      </For>
+                      <div
+                        class="icon-button mx-2 flex items-center"
+                        onClick={() => msgStore.createImage(props.msg._id, true)}
+                      >
+                        <PlusCircle size={20} />
+                      </div>
+                    </div>
+                  </Match>
+                  <Match when={!edit() && content().type === 'message'}>
+                    <Show when={props.msg.adapter !== 'partial'}>
+                      <p
+                        class={`rendered-markdown m-4 mb-2 inline-flex flex-col items-start rounded-xl px-4 py-4 pr-4 font-clash [&>p>em]:text-gray-400 ${
+                          content().class
+                        } ${messageClass}`}
+                        data-bot-message={!props.msg.userId}
+                        data-user-message={!!props.msg.userId}
+                        innerHTML={content().message}
+                      />
+                    </Show>
+                    <Show when={props.msg.adapter === 'partial' && props.last}>
+                      <span class="flex h-8 w-12 items-center justify-center">
+                        <span class="dot-flashing bg-[var(--hl-700)]"></span>
+                      </span>
+                    </Show>
+                    <Show when={!props.partial && props.last}>
+                      <div class="flex items-center justify-center gap-2">
+                        <For each={props.msg.actions}>
+                          {(item) => (
+                            <Button
+                              size="sm"
+                              schema="gray"
+                              onClick={() => sendAction(props.sendMessage, item)}
+                            >
+                              {item.emote}
+                            </Button>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </Match>
+                  <Match when={!edit() && content().type !== 'message'}>
+                    <p
+                      classList={{ hidden: content().type === 'waiting' }}
+                      class={`rendered-markdown m-4 mb-2 inline-flex flex-col items-start rounded-xl px-4 py-4 pr-4 font-clash [&>p>em]:text-gray-400 ${
+                        content().class
+                      } ${messageClass}`}
+                      data-bot-message={!props.msg.userId}
+                      data-user-message={!!props.msg.userId}
+                      innerHTML={content().message}
+                    />
+                    <div class="flex h-8 w-12 items-center justify-center">
+                      <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                    </div>
+                  </Match>
+                  <Match when={edit()}>
+                    <div
+                      class="msg-edit-text-box"
+                      ref={editRef!}
+                      contentEditable={true}
+                      onKeyUp={(ev) => {
+                        if (ev.key === 'Escape') cancelEdit()
+                        if (ev.altKey && ev.key === 's') {
+                          ev.preventDefault()
+                          saveEdit()
+                        }
+                      }}
+                    ></div>
+                  </Match>
+                </Switch>
+              </div>
+            </div>
+            {props.last && props.children}
+          </div>
+        </div>
+      </div>
+      <div class={`mx-5 flex ${isBot ? 'justify-start' : 'justify-end'}`}>
+        <span
+          classList={{ invisible: ctx.anonymize }}
+          class={`message-date flex items-center font-clash text-[11px] leading-none text-cosplay-gray-100`}
+          data-bot-time={isBot}
+          data-user-time={isUser}
+        >
+          {timeString()}
+          <Show when={canShowMeta(props.msg, ctx.promptHistory[props.msg._id])}>
+            <span
+              class="text-600 hover:text-900 ml-1 cursor-pointer"
+              onClick={() =>
+                rootModalStore.info(
+                  'Message Information',
+                  <Meta msg={props.msg} history={ctx.promptHistory[props.msg._id]} />
+                )
+              }
+            >
+              <Info size={14} />
+            </span>
+          </Show>
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export default MessageAiFans
+
+export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
+
+function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
+  return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))
+}
+
+const MessageOptions: Component<{
+  msg: SplitMessage
+  char: AppSchema.Character
+  chatEditing: boolean
+  tts: boolean
+  edit: Accessor<boolean>
+  startEdit: () => void
+  last?: boolean
+  partial?: string
+  show: Signal<boolean>
+  textBeforeGenMore?: string
+  onRemove: () => void
+}> = (props) => {
+  return (
+    <div class="mr-3 flex items-center gap-4 text-sm">
+      <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
+        <div
+          onClick={() => !props.partial && chatStore.computePrompt(props.msg, true)}
+          class="icon-button prompt-btn"
+          classList={{ disabled: !!props.partial }}
+        >
+          <Terminal size={16} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing && props.msg.adapter !== 'image'}>
+        <div class="edit-btn icon-button" onClick={props.startEdit}>
+          <Pencil size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing}>
+        <div class="delete-btn icon-button" onClick={props.onRemove}>
+          <Trash size={18} />
+        </div>
+      </Show>
+
+      <Show
+        when={
+          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
+          props.msg.characterId
+        }
+      >
+        <div
+          class="icon-button refresh-btn"
+          onClick={() => !props.partial && retryMessage(props.msg, props.msg)}
+        >
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+      <Show
+        when={
+          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
+          props.msg.characterId &&
+          !!props.textBeforeGenMore
+        }
+      >
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.continuation(props.msg.chatId, undefined, true)}
+        >
+          <Repeat1 size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.last && !props.msg.characterId}>
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
+        >
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
+  if (original.adapter !== 'image') {
+    msgStore.retry(split.chatId, original._id)
+  } else {
+    msgStore.createImage(split._id)
+  }
+}
+
+function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {
+  // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
+  // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
+  // https://github.com/showdownjs/showdown/issues/669
+
+  const html = Purify.sanitize(
+    wrapWithQuoteElement(
+      markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+    )
+  )
+
+  return html
+}
+
+function wrapWithQuoteElement(str: string) {
+  return str.replace(
+    // we first match code blocks AND html tags
+    // to ensure we do NOTHING to what's inside them
+    // then we match "regular quotes" and“'pretty quotes” as capture group
+    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    wrapCaptureGroups
+  )
+}
+
+/** For use as a String#replace(str, cb) callback */
+function wrapCaptureGroups(
+  match: string,
+  regularQuoted?: string /** regex capture group 1 */,
+  curlyQuoted?: string /** regex capture group 2 */
+) {
+  if (regularQuoted) {
+    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
+  } else if (curlyQuoted) {
+    return '<q>“' + curlyQuoted.replace(/\u201C|\u201D/g, '') + '”</q>'
+  } else {
+    return match
+  }
+}
+
+function sendAction(_send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
+  events.emit(EVENTS.setInputText, action)
+}
+
+function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
+  if (adapter === 'image') {
+    return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+  }
+
+  const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+  return parsed
+}
+
+const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) => {
+  let ref: any
+
+  if (!props.msg) return null
+  if (!props.msg.meta && !props.history && !props.msg.adapter) return null
+
+  const updateImagePrompt = () => {
+    const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
+    msgStore.editMessageProp(props.msg._id, { imagePrompt }, () => {
+      toastStore.success('Image prompt updated')
+    })
+  }
+
+  return (
+    <form ref={ref} class="flex w-full flex-col gap-2">
+      <Card>
+        <table class="text-sm">
+          <Show when={props.msg.adapter}>
+            <tr>
+              <td class="pr-2">
+                <b>Adapter</b>
+              </td>
+              <td>{props.msg.adapter}</td>
+            </tr>
+          </Show>
+          <For each={Object.entries(props.msg.meta || {})}>
+            {([key, value]) => (
+              <tr>
+                <td class="pr-2">
+                  <b>{key}</b>
+                </td>
+                <td>{value as string}</td>
+              </tr>
+            )}
+          </For>
+        </table>
+      </Card>
+
+      <Show when={props.msg.imagePrompt}>
+        <Card>
+          <TextInput
+            helperText={
+              <>
+                Image Prompt -{' '}
+                <span class="link" onClick={updateImagePrompt}>
+                  Save
+                </span>
+              </>
+            }
+            parentClass="text-sm"
+            isMultiline
+            value={props.msg.imagePrompt}
+            fieldName="imagePrompt"
+          />
+        </Card>
+      </Show>
+
+      <Show when={props.history}>
+        <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
+          <Show
+            when={typeof props.history === 'string'}
+            fallback={JSON.stringify(props.history, null, 2)}
+          >
+            {props.history}
+          </Show>
+        </pre>
+      </Show>
+    </form>
+  )
+}
+
+function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
+  if (!msg) return false
+  if (msg._id === 'partial') return false
+  return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
+}
+
+function toImageDeleteButton(msgId: string, position: number) {
+  return {
+    schema: 'red' as const,
+    text: 'Delete Image',
+    onClick: () => {
+      msgStore.removeMessageImage(msgId, position)
+      settingStore.clearImage()
+    },
+  }
+}
+
+function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
+  const isRetry = props.retrying?._id === props.msg._id
+  const isPartial = props.msg._id === 'partial'
+
+  if (isRetry || isPartial) {
+    if (props.partial) {
+      return {
+        type: 'partial',
+        message: renderMessage(ctx, props.partial!, false, 'partial'),
+        class: 'streaming-markdown',
+      }
+    }
+
+    if (isPartial && props.msg.msg) {
+      return {
+        type: 'partial',
+        message: renderMessage(ctx, props.msg.msg, false, 'partial'),
+        class: 'streaming-markdown',
+      }
+    }
+
+    return { type: 'waiting', message: '', class: 'not-streaming' }
+  }
+
+  let message = props.msg.msg
+
+  if (props.last && props.swipe) message = props.swipe
+  if (props.msg.event && !props.showHiddenEvents) {
+    message = message.replace(/\(OOC:.+\)/, '')
+  }
+
+  if (ctx.anonymize) {
+    message = state.chatProfiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
+  }
+
+  if (ctx.trimSentences && !props.msg.userId) {
+    message = trimSentence(message)
+  }
+
+  return {
+    type: 'message',
+    message: renderMessage(ctx, message, !!props.msg.userId, props.msg.adapter),
+    class: 'not-streaming',
+  }
+}

@@ -11,7 +11,7 @@ interface Props {
 
 const ModelPhotoCard = (props: Props) => {
   return (
-    <div class="mb-7 rounded-3xl bg-gradient-to-r from-cosplay-blue-200/10 to-cosplay-pink-100/10 px-4 pb-5 pt-7 font-display last:mb-0 md:last:mb-7">
+    <div class="mb-7 rounded-3xl bg-gradient-to-r from-cosplay-blue-200/10 to-cosplay-pink-100/10 px-4 pb-5 pt-7 font-clash last:mb-0 md:last:mb-7">
       <div class={`rounded-lg ${props.locked ? 'blur-lg' : ''}`}>
         <img src={SampleCardImage} class="w-full" />
       </div>
