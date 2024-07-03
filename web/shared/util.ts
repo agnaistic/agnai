@@ -54,6 +54,7 @@ export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
 export const storage = {
   getItem,
   setItem,
+
   removeItem,
   clear,
 

@@ -11,7 +11,7 @@ export const defaults = {
   image: {
     sampler: SD_SAMPLER['DPM++ 2M'],
     model: 'Deliberate',
-    negative: `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`,
+    negative: ``,
   },
 }
 

@@ -7,8 +7,6 @@ import { NovelSettings } from '../../common/types/image-schema'
 
 const baseUrl = `https://image.novelai.net/ai`
 
-// const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
-
 const defaultSettings: NovelSettings = {
   type: 'novel',
   model: NOVEL_IMAGE_MODEL.Full,
