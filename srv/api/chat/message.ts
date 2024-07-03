@@ -694,9 +694,9 @@ function getNewMessageParent(body: GenRequest, userMsg: AppSchema.ChatMessage | 
 
     case 'retry':
     case 'continue':
+    case 'request':
       return body.parent || ''
 
-    case 'request':
     case 'ooc':
     case 'self':
     case 'send':

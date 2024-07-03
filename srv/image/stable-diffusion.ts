@@ -38,8 +38,7 @@ export type SDRequest = {
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
-  const { user } = opts
-  const config = await getConfig(user)
+  const config = await getConfig(opts)
   const payload = getPayload(config.kind, opts, config.model)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
@@ -81,14 +80,16 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   return { ext: 'png', content: buffer }
 }
 
-async function getConfig(user: AppSchema.User): Promise<{
+async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
   params?: string
   model?: AppSchema.ImageModel
 }> {
+  const type = settings?.type || user.images?.type
+
   const userHost = user.images?.sd.url || defaultSettings.url
-  if (user.images?.type !== 'agnai') {
+  if (type !== 'agnai') {
     return { kind: 'user', host: userHost }
   }
 

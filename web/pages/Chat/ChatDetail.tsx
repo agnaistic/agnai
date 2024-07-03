@@ -356,6 +356,11 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         chatStore.option({ options: false, modal: 'graph' })
       }
+
+      if (ev.key === 'p') {
+        ev.preventDefault()
+        msgStore.createImage()
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)

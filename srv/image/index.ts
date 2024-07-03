@@ -9,7 +9,7 @@ import { handleSDImage } from './stable-diffusion'
 import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
 
-const DEFAULT_NEGATIVE = `disfigured, deformed, poorly, blurry, lowres, fused, malformed, misshapen, duplicated, grainy, distorted`
+const DEFAULT_NEGATIVE = ``
 
 export async function generateImage(
   { user, chatId, messageId, ...opts }: ImageGenerateRequest,
@@ -98,17 +98,29 @@ export async function generateImage(
   try {
     switch (imageSettings?.type || 'horde') {
       case 'novel':
-        image = await handleNovelImage({ user, prompt, negative }, log, guestId)
+        image = await handleNovelImage(
+          { user, prompt, negative, settings: imageSettings },
+          log,
+          guestId
+        )
         break
 
       case 'sd':
       case 'agnai':
-        image = await handleSDImage({ user, prompt, negative }, log, guestId)
+        image = await handleSDImage(
+          { user, prompt, negative, settings: imageSettings },
+          log,
+          guestId
+        )
         break
 
       case 'horde':
       default:
-        image = await handleHordeImage({ user, prompt, negative }, log, guestId)
+        image = await handleHordeImage(
+          { user, prompt, negative, settings: imageSettings },
+          log,
+          guestId
+        )
         break
     }
   } catch (ex: any) {
