@@ -22,7 +22,7 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { useEffect, usePaneManager } from '/web/shared/hooks'
-import { emptyMsg, InfiniteScroll, insertImageMessages, SwipeMessage } from './helpers'
+import { emptyMsg, LoadMore, insertImageMessages, SwipeMessage } from './helpers'
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
@@ -438,7 +438,7 @@ const ChatDetail: Component = () => {
               </div>
             </Show>
             {/* Original Slot location */}
-            <InfiniteScroll canFetch={chars.ready} />
+            <LoadMore canFetch={chars.ready} />
 
             <Index each={chatMsgs()}>
               {(msg, i) => (
