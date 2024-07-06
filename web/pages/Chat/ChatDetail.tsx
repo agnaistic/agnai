@@ -245,6 +245,8 @@ const ChatDetail: Component = () => {
 
     if (params.id !== chats.chat?._id) {
       chatStore.getChat(params.id)
+    } else {
+      characterStore.loadImpersonate(params.id)
     }
   })
 

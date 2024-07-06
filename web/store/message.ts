@@ -4,7 +4,7 @@ import { EVENTS, events } from '../emitter'
 import { createDebounce, getAssetUrl } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
-import { subscribe } from './socket'
+import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { GenerateOpts, msgsApi } from './data/messages'
 import { imageApi } from './data/image'
@@ -53,7 +53,13 @@ export type MsgState = {
   msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
-  waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string; characterId: string }
+  waiting?: {
+    chatId: string
+    mode?: GenerateOpts['kind']
+    userId?: string
+    characterId: string
+    messageId?: string
+  }
   nextLoading: boolean
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
@@ -540,6 +546,13 @@ export const msgStore = createStore<MsgState>(
       if (res.result) {
         onSuccess?.()
       }
+
+      if (res.result?.messageId) {
+        yield {
+          partial: '',
+          waiting: { chatId, mode, characterId: activeCharId, messageId: res.result.messageId },
+        }
+      }
     },
     async *confirmSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
@@ -649,6 +662,15 @@ export const msgStore = createStore<MsgState>(
     },
   }
 })
+
+setInterval(() => {
+  const { waiting, retrying, graph } = msgStore.getState()
+  const id = waiting?.messageId || retrying?._id
+  if (!id) return
+  if (!retrying && graph.tree[id]) return
+
+  publish({ type: 'message-ready', messageId: id, updatedAt: retrying?.updatedAt })
+}, 4000)
 
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)
@@ -873,71 +895,78 @@ subscribe(
 
 subscribe(
   'message-created',
-  {
-    msg: 'any',
-    chatId: 'string',
-    generate: 'boolean?',
-    requestId: 'string?',
-    actions: [{ emote: 'string', action: 'string' }, '?'],
-  } as const,
-  async (body) => {
-    const { msgs, activeChatId, graph } = msgStore.getState()
-    if (activeChatId !== body.chatId) return
-
-    const msg = body.msg as AppSchema.ChatMessage
-    const user = userStore.getState().user
-
-    const speech = getMessageSpeechInfo(msg, user)
-    const nextMsgs = msgs.concat(msg)
-
-    const isUserMsg = !!msg.userId
-
-    msgStore.setState({
-      lastInference: {
-        requestId: body.requestId!,
-        text: body.msg.msg,
-        characterId: body.msg.characterId,
-        chatId: body.chatId,
-        messageId: body.msg._id,
-      },
-      textBeforeGenMore: undefined,
-      graph: {
-        tree: updateChatTreeNode(graph.tree, msg),
-        root: graph.root,
-      },
-    })
-
-    // If the message is from a user don't clear the "waiting for response" flags
-    if (isUserMsg && !body.generate) {
-      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
-    } else {
-      msgStore.setState({
-        msgs: nextMsgs,
-        partial: undefined,
-        waiting: undefined,
-        speaking: speech?.speaking,
-      })
-    }
-
-    if (!isLoggedIn()) {
-      const allMsgs = await localApi.getMessages(body.chatId)
-      await localApi.saveChat(body.chatId, { treeLeafId: msg._id })
-      await localApi.saveMessages(body.chatId, allMsgs.concat(msg))
-    }
-
-    if (msg.userId && msg.userId != user?._id) {
-      chatStore.getMemberProfile(body.chatId, msg.userId)
-    }
-
-    if (body.msg.adapter === 'image') return
-
-    if (speech && !isUserMsg) {
-      msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
-    }
-
-    onCharacterMessageReceived(msg)
-  }
+  { msg: 'any', chatId: 'string', generate: 'boolean?', requestId: 'string?' } as const,
+  onMessageCreated
 )
+
+subscribe(
+  'message-completed',
+  { msg: 'any', chatId: 'string', generate: 'boolean?', requestId: 'string?' } as const,
+  onMessageCreated
+)
+
+async function onMessageCreated(body: {
+  msg: any
+  chatId: string
+  generate?: boolean
+  requestId?: string
+}) {
+  const { msgs, activeChatId, graph } = msgStore.getState()
+  if (activeChatId !== body.chatId) return
+
+  const msg = body.msg as AppSchema.ChatMessage
+  const user = userStore.getState().user
+
+  const speech = getMessageSpeechInfo(msg, user)
+  const nextMsgs = msgs.filter((m) => m._id !== msg._id).concat(msg)
+
+  const isUserMsg = !!msg.userId
+
+  msgStore.setState({
+    lastInference: {
+      requestId: body.requestId!,
+      text: body.msg.msg,
+      characterId: body.msg.characterId,
+      chatId: body.chatId,
+      messageId: body.msg._id,
+    },
+    textBeforeGenMore: undefined,
+    graph: {
+      tree: updateChatTreeNode(graph.tree, msg),
+      root: graph.root,
+    },
+  })
+
+  // If the message is from a user don't clear the "waiting for response" flags
+  if (isUserMsg && !body.generate) {
+    msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
+  } else {
+    msgStore.setState({
+      msgs: nextMsgs,
+      partial: undefined,
+      waiting: undefined,
+      speaking: speech?.speaking,
+    })
+  }
+
+  if (!isLoggedIn()) {
+    const allMsgs = await localApi.getMessages(body.chatId)
+    await localApi.saveChat(body.chatId, { treeLeafId: msg._id })
+    await localApi.saveMessages(body.chatId, allMsgs.concat(msg))
+  }
+
+  if (msg.userId && msg.userId != user?._id) {
+    chatStore.getMemberProfile(body.chatId, msg.userId)
+  }
+
+  if (body.msg.adapter === 'image') return
+
+  if (speech && !isUserMsg) {
+    msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+  }
+
+  onCharacterMessageReceived(msg)
+}
 
 function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
   if (!msg.characterId || msg.event || msg.ooc) return

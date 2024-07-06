@@ -204,6 +204,13 @@ export const generateMessageV2 = handle(async (req, res) => {
     return { success: true }
   }
 
+  const messageId =
+    body.kind === 'retry'
+      ? body.replacing?._id ?? requestId
+      : body.kind === 'continue'
+      ? body.continuing?._id
+      : requestId
+
   /**
    * For group chats we won't worry about lock integrity.
    * We still need to create the user message and broadcast it,
@@ -218,6 +225,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       success: true,
       generating: false,
       message: 'User message created',
+      messageId,
     })
   }
 
@@ -231,7 +239,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
   }
 
-  res.json({ requestId, success: true, generating: true, message: 'Generating message' })
+  res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
   const { stream, adapter, ...metadata } = await createChatStream(
@@ -245,13 +253,6 @@ export const generateMessageV2 = handle(async (req, res) => {
   let retries: string[] = []
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
-
-  const messageId =
-    body.kind === 'retry'
-      ? body.replacing?._id ?? requestId
-      : body.kind === 'continue'
-      ? body.continuing?._id
-      : requestId
 
   try {
     for await (const gen of stream) {

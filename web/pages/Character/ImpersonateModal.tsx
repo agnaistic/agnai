@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import Modal from '/web/shared/Modal'
-import { characterStore, userStore } from '/web/store'
+import { characterStore, chatStore, userStore } from '/web/store'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
@@ -10,9 +10,10 @@ import PageHeader from '/web/shared/PageHeader'
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const chars = characterStore((s) => s.characters)
   const user = userStore()
+  const chat = chatStore((s) => s.active)
 
   const onSelect = (char?: AppSchema.Character) => {
-    characterStore.impersonate(char)
+    characterStore.impersonate(char, chat?.chat._id)
     props.close()
   }
 

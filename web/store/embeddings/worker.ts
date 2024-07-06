@@ -240,8 +240,8 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
       deleted++
     }
 
-    const pre = deleted > 0 ? '+' : ''
-    console.log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
+    // const pre = deleted > 0 ? '+' : ''
+    // console.log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
   }
 
   if (msg.type === 'embedDocument') {

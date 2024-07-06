@@ -68,7 +68,7 @@ function onMessage(msg: MessageEvent<any>) {
       if (payload.type === 'service-prompt') {
         console.log(`Prompt\n${payload.prompt}`)
       } else if (payload.type !== 'image-generated') {
-        console.log(JSON.stringify(payload))
+        console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
       } else {
         console.log(
           `[${new Date().toLocaleTimeString()}]`,
