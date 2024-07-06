@@ -9,14 +9,13 @@ import { get } from '../request'
 import { getAppConfig } from '../settings'
 import { entityUpload, handleForm } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
-import { sendAll } from '../ws'
+import { sendAll, sendOne } from '../ws'
 import { v4 } from 'uuid'
 import { getRegisteredAdapters } from '/srv/adapter/register'
 import { AIAdapter } from '/common/adapters'
 import { config } from '/srv/config'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
-import { publishOne } from '../ws/handle'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser } from '/srv/db/user'
 
@@ -140,7 +139,7 @@ export const updateUI = handle(async ({ userId, body }) => {
 
   await store.users.updateUserUI(userId, body)
 
-  publishOne(userId, { type: 'ui-update', ui: body })
+  sendOne(userId, { type: 'ui-update', ui: body })
 
   return { success: true }
 })

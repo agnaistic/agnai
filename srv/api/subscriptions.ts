@@ -7,8 +7,8 @@ import { store } from '../db'
 import { encryptText } from '../db/util'
 import billing, { stripe } from './billing'
 import { config } from '../config'
-import { publishAll } from './ws/handle'
 import { patreon } from './user/patreon'
+import { sendAll } from './ws'
 
 const subSetting = {
   ...presetValidator,
@@ -78,7 +78,7 @@ const replaceSubPreset = handle(async ({ body, params }) => {
 
   await store.subs.replaceSubscription(id, body.replacementId)
 
-  publishAll({
+  sendAll({
     type: 'subscription-replaced',
     subscriptionId: id,
     replacementId: body.replacementId,

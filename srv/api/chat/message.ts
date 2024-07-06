@@ -7,7 +7,6 @@ import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
-import { publishMany } from '../ws/handle'
 import { getScenarioEventType } from '/common/scenario'
 
 type GenRequest = UnwrapBody<typeof genValidator>
@@ -675,7 +674,7 @@ async function ensureBotMembership(
     // Ensure the caller's character is up to date
     Object.assign(impersonate, actual)
     characters[impersonate._id] = false
-    publishMany(members, {
+    sendMany(members, {
       type: 'chat-character-added',
       chatId: chat._id,
       character: actual,

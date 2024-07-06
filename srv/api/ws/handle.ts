@@ -42,11 +42,3 @@ function parse(data: any) {
     return
   }
 }
-
-export function publishMany<T extends { type: string }>(userIds: string[], data: T) {}
-
-export function publishOne<T extends { type: string }>(userId: string, data: T) {}
-
-export function publishAll<T extends { type: string }>(data: T) {}
-
-export function publishGuest<T extends { type: string }>(socketId: string, data: T) {}
