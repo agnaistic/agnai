@@ -172,7 +172,7 @@ export function getAssetUrl(filename: string) {
 export function setAssetPrefix(prefix: string) {
   if (!prefix && assetPrefix) return
 
-  storage.setItem(PREFIX_CACHE_KEY, prefix)
+  storage.localSetItem(PREFIX_CACHE_KEY, prefix)
   assetPrefix = prefix
 }
 

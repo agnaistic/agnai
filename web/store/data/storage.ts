@@ -243,7 +243,7 @@ export async function saveMessages(chatId: string, messages: AppSchema.ChatMessa
   if (SELF_HOSTING) {
     return api.post(`/json/messages/${chatId}`, messages)
   } else {
-    storage.setItem(key, JSON.stringify(messages))
+    await storage.setItem(key, JSON.stringify(messages))
   }
 }
 
@@ -334,7 +334,7 @@ export async function loadItem<TKey extends keyof typeof KEYS>(
     }
 
     const fallback = fallbacks[key]
-    storage.setItem(key, JSON.stringify(fallback))
+    await storage.setItem(key, JSON.stringify(fallback))
 
     return fallback
   }
