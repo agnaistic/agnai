@@ -1,15 +1,9 @@
 import { ChevronLeft, ChevronRight } from 'lucide-solid'
-import { Component, JSX, Show, createSignal, onMount } from 'solid-js'
+import { Component, JSX, Show } from 'solid-js'
 import Button from '/web/shared/Button'
 import { chatStore, msgStore } from '/web/store'
 import { AppSchema, UI } from '/common/types'
-import { createDebounce } from '/web/shared/util'
 import { getRootRgb } from '/web/shared/colors'
-
-const [onEnter] = createDebounce((loading: boolean) => {
-  if (loading) return
-  msgStore.getNextMessages()
-}, 250)
 
 export const SwipeMessage: Component<{
   chatId: string
@@ -45,37 +39,23 @@ export const SwipeMessage: Component<{
 
 export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
   const state = msgStore((s) => ({
-    loading: s.nextLoading,
     msgs: s.msgs,
-    history: s.messageHistory.length,
+    history: s.messageHistory,
   }))
   const chat = chatStore((s) => ({ loaded: s.loaded }))
-  const [ready, setReady] = createSignal(false)
-
-  onMount(() => {
-    setTimeout(() => {
-      setReady(true)
-    }, 1500)
-  })
 
   return (
-    <Show when={chat.loaded && state.msgs.length > 0 && ready()}>
+    <Show when={chat.loaded && state.msgs.length > 0}>
       <div class="flex w-full justify-center overflow-hidden">
-        <Show when={!state.loading}>
-          <a
-            class="link"
-            classList={{ hidden: state.history > 0 }}
-            onClick={() => {
-              if (!props.canFetch) return
-              onEnter(state.loading)
-            }}
-          >
-            Load more
-          </a>
-        </Show>
-        <Show when={state.loading}>
-          <div class="dot-flashing bg-[var(--hl-700)]"></div>
-        </Show>
+        <a
+          class="link"
+          classList={{ hidden: state.history.length === 0 }}
+          onClick={() => {
+            msgStore.getNextMessages()
+          }}
+        >
+          Load more
+        </a>
       </div>
     </Show>
   )
