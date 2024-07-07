@@ -27,7 +27,7 @@ export type AllDoc =
   | AppSchema.ChatMember
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
-  | AppSchema.SubscriptionPreset
+  | AppSchema.SubscriptionModel
   | AppSchema.SubscriptionTier
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
@@ -134,13 +134,13 @@ export namespace AppSchema {
     updatedAt: string
   }
 
-  export interface SubscriptionOption {
+  export interface SubscriptionModelOption {
     _id: string
     name: string
     level: number
     service: AIAdapter
     guidance: boolean
-    preset: GenSettings & Pick<SubscriptionPreset, 'allowGuestUsage'>
+    preset: GenSettings & Pick<SubscriptionModel, 'allowGuestUsage'>
   }
 
   export interface AppConfig {
@@ -168,7 +168,7 @@ export namespace AppSchema {
       workers: HordeWorker[]
     }
     openRouter: { models: OpenRouterModel[] }
-    subs: Array<SubscriptionOption>
+    subs: Array<SubscriptionModelOption>
 
     /** @todo remove after next deployment */
     tier?: AppSchema.SubscriptionTier
@@ -495,7 +495,7 @@ export namespace AppSchema {
     userId: string
   }
 
-  export interface SubscriptionPreset extends GenSettings {
+  export interface SubscriptionModel extends GenSettings {
     _id: string
     kind: 'subscription-setting'
     subLevel: number

@@ -25,7 +25,7 @@ import {
   calculateGuidanceCounts,
   runGuidance,
 } from '/common/guidance/guidance-parser'
-import { getCachedSubscriptionPresets } from '../db/subscriptions'
+import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 
 let version = ''
@@ -246,7 +246,7 @@ function setRequestService(opts: InferenceRequest) {
 
       case 'agnaistic': {
         if (model) {
-          const preset = getCachedSubscriptionPresets().find((pre) => pre._id === model)
+          const preset = getCachedSubscriptionModels().find((pre) => pre._id === model)
           if (preset) settings = deepClone(preset)
         }
 

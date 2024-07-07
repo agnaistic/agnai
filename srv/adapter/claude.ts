@@ -16,9 +16,9 @@ import {
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 import { getTokenCounter } from '../tokenize'
-import { publishOne } from '../api/ws/handle'
 import { CLAUDE_CHAT_MODELS } from '/common/adapters'
 import { CompletionItem, toChatCompletionPayload } from './chat-completion'
+import { sendOne } from '../api/ws'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -250,7 +250,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
           yield { error: message }
           return
         }
-        publishOne(userId, { type: 'notification', level: 'warn', message })
+        sendOne(userId, { type: 'notification', level: 'warn', message })
         break
       }
 
@@ -276,7 +276,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
             return
           }
 
-          publishOne(userId, { type: 'notification', level: 'warn', message })
+          sendOne(userId, { type: 'notification', level: 'warn', message })
           break
         case 'ping':
           break

@@ -204,18 +204,28 @@ export function clearDraft(id: string) {
 }
 
 export function useLocalStorage<T = any>(id: string, initialValue: T) {
-  const key = `agnaistic-ls-${id}`
-  const init = localStorage.getItem(key) || JSON.stringify(initialValue)
-
-  const [value, setValue] = createSignal<T>(JSON.parse(init))
+  const init = getStoredValue(id, initialValue)
+  const [value, setValue] = createSignal<T>(init)
 
   const update = (next: T) => {
-    localStorage.setItem(key, JSON.stringify(next))
+    setStoredValue(id, next)
     setValue(next as any)
     return next
   }
 
   return [value, update] as Signal<T>
+}
+
+export function getStoredValue<T = any>(id: string, initialValue: T) {
+  const key = `agnaistic-ls-${id}`
+  const init = localStorage.getItem(key) || JSON.stringify(initialValue)
+  const value = JSON.parse(init)
+  return value
+}
+
+export function setStoredValue(id: string, value: any) {
+  const key = `agnaistic-ls-${id}`
+  localStorage.setItem(key, JSON.stringify(value))
 }
 
 export function useEffect(callback: () => void | Function): void {

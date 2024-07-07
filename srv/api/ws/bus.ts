@@ -2,7 +2,29 @@ import * as os from 'os'
 import * as redis from 'redis'
 import { config } from '../../config'
 import { logger } from '../../logger'
-import { getAllCount, publishAll, publishGuest, publishMany, publishOne } from './handle'
+import { AppSocket } from './types'
+import { PING_INTERVAL_MS } from '/common/util'
+
+export const allSockets = new Map<string, AppSocket>()
+export const userSockets = new Map<string, AppSocket[]>()
+
+setInterval(() => {
+  for (const cli of allSockets.values()) {
+    const socket = cli as AppSocket
+    if (cli.appVersion >= 1 === false) continue
+
+    if (socket.isAlive === false) {
+      socket.misses++
+
+      if (socket.misses >= 5) {
+        return socket.terminate()
+      }
+    }
+
+    socket.isAlive = false
+    socket.dispatch({ type: 'ping' })
+  }
+}, PING_INTERVAL_MS)
 
 let connected = false
 
@@ -25,6 +47,17 @@ export const clients = {
 }
 
 let nonBusMaxCount = 0
+
+export function getAllCount() {
+  let versioned = 0
+  for (const cli of allSockets.values()) {
+    if (cli.appVersion > 0) {
+      versioned++
+    }
+  }
+
+  return { count: allSockets.size, versioned }
+}
 
 export function getLiveCounts() {
   if (!connected)
@@ -131,17 +164,42 @@ type BusMessage<T extends { type: string } = { type: string }> =
 function handleBus(msg: BusMessage) {
   try {
     switch (msg.target) {
-      case 'one':
-        return publishOne(msg.userId, msg.data)
+      case 'one': {
+        let count = 0
+        const sockets = userSockets.get(msg.userId)
 
-      case 'many':
-        return publishMany(msg.userIds, msg.data)
+        if (!sockets) return count
 
-      case 'all':
-        return publishAll(msg.data)
+        for (const socket of sockets) {
+          socket.send(JSON.stringify(msg.data))
+          count++
+        }
+        return count
+      }
 
-      case 'guest':
-        return publishGuest(msg.socketId, msg.data)
+      case 'many': {
+        const unique = Array.from(new Set(msg.userIds))
+        for (const userId of unique) {
+          handleBus({ target: 'one', userId, data: msg.data })
+        }
+        return
+      }
+
+      case 'all': {
+        for (const [, sockets] of userSockets.entries()) {
+          for (const socket of sockets) {
+            socket.send(JSON.stringify(msg.data))
+          }
+        }
+        return
+      }
+
+      case 'guest': {
+        const socket = allSockets.get(msg.socketId)
+        if (!socket) return
+        socket.send(JSON.stringify(msg.data))
+        return
+      }
     }
   } catch (ex) {}
 }

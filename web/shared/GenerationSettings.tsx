@@ -51,7 +51,7 @@ import { samplerServiceMap } from '/common/sampler-order'
 export { GenerationSettings as default }
 
 type Props = {
-  inherit?: Partial<Omit<AppSchema.SubscriptionPreset, 'kind'>>
+  inherit?: Partial<Omit<AppSchema.SubscriptionModel, 'kind'>>
   disabled?: boolean
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
@@ -59,7 +59,7 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
-  const subs = settingStore((s) => s.config.subs)
+  const settings = settingStore()
   const userState = userStore()
   const [search, setSearch] = useSearchParams()
   const pane = usePaneManager()
@@ -78,7 +78,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
 
   const sub = createMemo(() => {
     if (props.inherit?.service !== 'agnaistic') return
-    const match = subs.find(
+    const match = settings.config.subs.find(
       (sub) => sub._id === props.inherit?.registered?.agnaistic?.subscriptionId
     )
 
@@ -207,7 +207,7 @@ const GeneralSettings: Component<
     setFormat: (format: ThirdPartyFormat) => void
     format?: ThirdPartyFormat
     tab: string
-    sub?: AppSchema.SubscriptionOption
+    sub?: AppSchema.SubscriptionModelOption
   }
 > = (props) => {
   const cfg = settingStore()
@@ -568,7 +568,7 @@ const PromptSettings: Component<
     pane: boolean
     format?: ThirdPartyFormat
     tab: string
-    sub?: AppSchema.SubscriptionOption
+    sub?: AppSchema.SubscriptionModelOption
   }
 > = (props) => {
   const gaslights = presetStore((s) => ({ list: s.templates }))
@@ -777,7 +777,7 @@ const SamplerSettings: Component<
     pane: boolean
     format?: ThirdPartyFormat
     tab: string
-    sub?: AppSchema.SubscriptionOption
+    sub?: AppSchema.SubscriptionModelOption
   }
 > = (props) => {
   return (
@@ -1171,7 +1171,7 @@ const SamplerToggles: Component<
     pane: boolean
     format?: ThirdPartyFormat
     tab: string
-    sub?: AppSchema.SubscriptionOption
+    sub?: AppSchema.SubscriptionModelOption
   }
 > = (props) => {
   return (

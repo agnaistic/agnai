@@ -13,7 +13,7 @@ type PresetState = {
   importing?: AppSchema.UserGenPreset
   presets: AppSchema.UserGenPreset[]
   templates: AppSchema.PromptTemplate[]
-  subs: AppSchema.SubscriptionPreset[]
+  subs: AppSchema.SubscriptionModel[]
   saving: boolean
 }
 
@@ -131,7 +131,7 @@ export const presetStore = createStore<PresetState>(
     async *createSubscription(
       { subs },
       sub: SubscriptionUpdate,
-      onSuccess?: (sub: AppSchema.SubscriptionPreset) => void
+      onSuccess?: (sub: AppSchema.SubscriptionModel) => void
     ) {
       const res = await api.post('/admin/subscriptions', sub)
       if (res.error) toastStore.error(`Failed to create subscription: ${res.error}`)

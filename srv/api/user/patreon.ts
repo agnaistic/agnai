@@ -4,8 +4,8 @@ import { StatusError } from '../wrap'
 import { AppSchema, Patreon } from '/common/types'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { store } from '/srv/db'
-import { publishOne } from '../ws/handle'
 import { command } from '/srv/domains'
+import { sendOne } from '../ws'
 
 export const patreon = {
   authorize,
@@ -133,7 +133,7 @@ async function revalidatePatron(userId: string) {
 
   const existing = await store.users.findByPatreonUserId(patron.user.id)
   if (existing && existing._id !== userId) {
-    publishOne(userId, {
+    sendOne(userId, {
       type: 'notification',
       level: 'warn',
       message:

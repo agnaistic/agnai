@@ -76,6 +76,10 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
   const done = new Set<string>()
 
   for (const node of nodes) {
+    if (opts.reguidance && reruns.size === 0) {
+      break
+    }
+
     switch (node.kind) {
       case 'text':
         prompt += node.text

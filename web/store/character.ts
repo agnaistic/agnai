@@ -9,6 +9,7 @@ import { imageApi } from './data/image'
 import { getAssetUrl, storage, toMap } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
 import { getUserId } from './api'
+import { getStoredValue, setStoredValue } from '../shared/hooks'
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -101,17 +102,18 @@ export const characterStore = createStore<CharacterState>(
     EVENTS.charsReceived,
     async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
       const state = get()
-      const id = await storage.getItem(IMPERSONATE_KEY)
-      let impersonating =
-        !state.impersonating && id
-          ? chars.concat(temps).find((ch) => ch._id === id)
-          : state.impersonating
+      let id = await getStoredValue(`${chatId}-impersonate`, '')
+      if (!id) {
+        id = storage.localGetItem(IMPERSONATE_KEY) || ''
+      }
+      let impersonating = id ? chars.concat(temps).find((ch) => ch._id === id) : state.impersonating
 
       if (id?.startsWith('temp') && temps.every((ch) => ch._id !== id)) {
         impersonating = undefined
       }
 
       set({ chatChars: { chatId, list: chars, map: toMap(chars) }, impersonating })
+      characterStore.loadImpersonate(chatId)
     }
   )
 
@@ -199,9 +201,23 @@ export const characterStore = createStore<CharacterState>(
       }
     },
 
-    impersonate(_, char?: AppSchema.Character) {
-      storage.setItem(IMPERSONATE_KEY, char?._id || '')
+    impersonate(_, char?: AppSchema.Character, chatId?: string) {
+      if (!chatId) {
+        storage.setItem(IMPERSONATE_KEY, char?._id || '')
+      } else {
+        setStoredValue(`${chatId}-impersonate`, char?._id || '')
+      }
       return { impersonating: char || undefined }
+    },
+
+    async loadImpersonate({ chatChars: { list }, impersonating: current }, chatId: string) {
+      let id = await getStoredValue(`${chatId}-impersonate`, '')
+      if (!id) {
+        id = storage.localGetItem(IMPERSONATE_KEY) || ''
+      }
+      const impersonating = id ? list.find((ch) => ch._id === id) : current
+
+      return { impersonating }
     },
 
     async *createCharacter(

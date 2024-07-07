@@ -1,5 +1,4 @@
 import needle from 'needle'
-import { publishOne } from '../api/ws/handle'
 import { getTokenCounter } from '../tokenize'
 import { requestStream } from './stream'
 import { AdapterProps } from './type'
@@ -17,6 +16,7 @@ import {
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
 import { AppLog } from '../logger'
+import { sendOne } from '../api/ws'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -132,7 +132,7 @@ export const streamCompletion: CompletionGenerator = async function* (
           return
         }
 
-        publishOne(userId, { type: 'notification', level: 'warn', message })
+        sendOne(userId, { type: 'notification', level: 'warn', message })
         break
       }
 

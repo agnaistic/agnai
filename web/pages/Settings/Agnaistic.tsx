@@ -11,14 +11,14 @@ export const AgnaisticSettings: Component<{
   inherit?: Partial<AppSchema.UserGenPreset>
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user, tiers: s.tiers, sub: s.sub }))
-  const config = settingStore((s) => s.config)
+  const settings = settingStore()
 
   const opts = createMemo(() => {
     const tier = state.user ? getUserSubscriptionTier(state.user!, state.tiers) : undefined
     const tierLevel = tier?.level ?? -1
     const level = state.user?.admin ? Infinity : tierLevel
 
-    return config.subs
+    return settings.config.subs
       .filter((sub) => sub.level <= level)
       .filter((sub) => (level === -1 ? !!sub.preset.allowGuestUsage : true))
       .map((sub) => ({ label: sub.name, value: sub._id, level: sub.level }))

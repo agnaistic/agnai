@@ -72,7 +72,7 @@ const TURBO_MODELS = new Set<string>([
 export function getTokenCounter(
   adapter: AIAdapter | 'main',
   model: string | undefined,
-  sub?: AppSchema.SubscriptionPreset
+  sub?: AppSchema.SubscriptionModel
 ): TokenCounter {
   if (sub?.tokenizer) {
     const tokenizer = getEncoderByName(sub.tokenizer as EncoderType)

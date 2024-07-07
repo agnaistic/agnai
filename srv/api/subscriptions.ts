@@ -7,8 +7,8 @@ import { store } from '../db'
 import { encryptText } from '../db/util'
 import billing, { stripe } from './billing'
 import { config } from '../config'
-import { publishAll } from './ws/handle'
 import { patreon } from './user/patreon'
+import { sendAll } from './ws'
 
 const subSetting = {
   ...presetValidator,
@@ -78,7 +78,7 @@ const replaceSubPreset = handle(async ({ body, params }) => {
 
   await store.subs.replaceSubscription(id, body.replacementId)
 
-  publishAll({
+  sendAll({
     type: 'subscription-replaced',
     subscriptionId: id,
     replacementId: body.replacementId,
@@ -166,14 +166,13 @@ router.get('/tiers', getTiers)
 router.get('/tiers/:id', getTier)
 router.use('/billing/subscribe', billing)
 
-router.use(isAdmin)
-router.get('/subscriptions', get)
-router.post('/subscriptions', create)
-router.post('/subscriptions/:id/replace', replaceSubPreset)
-router.post('/subscriptions/:id', update)
-router.delete('/subscriptions/:id', remove)
-router.post('/tiers', createTier)
-router.post('/tiers/:id', updateTier)
-router.get('/billing/products', getProducts)
+router.get('/subscriptions', isAdmin, get)
+router.post('/subscriptions', isAdmin, create)
+router.post('/subscriptions/:id/replace', isAdmin, replaceSubPreset)
+router.post('/subscriptions/:id', isAdmin, update)
+router.delete('/subscriptions/:id', isAdmin, remove)
+router.post('/tiers', isAdmin, createTier)
+router.post('/tiers/:id', isAdmin, updateTier)
+router.get('/billing/products', isAdmin, getProducts)
 
 export { router as default }
