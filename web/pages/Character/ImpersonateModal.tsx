@@ -13,7 +13,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
   const chat = chatStore((s) => s.active)
 
   const onSelect = (char?: AppSchema.Character) => {
-    characterStore.impersonate(char, chat?.chat._id)
+    characterStore.impersonate(char, chat?.chat?._id)
     props.close()
   }
 
