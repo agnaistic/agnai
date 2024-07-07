@@ -79,7 +79,7 @@ export type AdapterProps = {
 
   subscription?: {
     level: number
-    preset?: AppSchema.SubscriptionPreset
+    preset?: AppSchema.SubscriptionModel
     error?: string
     warning?: string
   }

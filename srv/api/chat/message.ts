@@ -332,7 +332,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   const parent = getNewMessageParent(body, userMsg)
-  const actions: AppSchema.ChatAction[] = []
+  const updatedAt = new Date().toISOString()
   let treeLeafId = ''
 
   switch (body.kind) {
@@ -365,7 +365,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         message: responseText,
         adapter,
         ooc: false,
-        actions,
         meta,
         retries,
         event: undefined,
@@ -379,7 +378,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         adapter,
         generate: true,
-        actions,
       })
       treeLeafId = requestId
       break
@@ -391,10 +389,9 @@ export const generateMessageV2 = handle(async (req, res) => {
           .concat(retries)
           .concat(body.replacing.retries || [])
 
-        await store.msgs.editMessage(body.replacing._id, {
+        const next = await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
           parent,
-          actions,
           adapter,
           meta,
           state: 'retried',
@@ -406,12 +403,12 @@ export const generateMessageV2 = handle(async (req, res) => {
           requestId,
           chatId,
           messageId: body.replacing._id,
-          message: responseText,
-          retries: nextRetries,
-          actions,
+          message: next?.msg,
+          retries: next?.retries,
           adapter,
           generate: true,
           meta,
+          updatedAt: next?.updatedAt,
         })
       } else {
         const msg = await store.msgs.createChatMessage({
@@ -420,7 +417,6 @@ export const generateMessageV2 = handle(async (req, res) => {
           characterId: replyAs._id,
           message: responseText,
           adapter,
-          actions,
           ooc: false,
           meta,
           retries,
@@ -435,7 +431,6 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           adapter,
           generate: true,
-          actions,
         })
       }
       break
@@ -458,15 +453,16 @@ export const generateMessageV2 = handle(async (req, res) => {
         adapter,
         generate: true,
         meta,
+        updatedAt,
       })
       break
     }
   }
 
   if (treeLeafId) {
-    await store.chats.update(chatId, { treeLeafId })
+    await store.chats.update(chatId, { treeLeafId, updatedAt })
   } else {
-    await store.chats.update(chatId, {})
+    await store.chats.update(chatId, { updatedAt })
   }
 })
 

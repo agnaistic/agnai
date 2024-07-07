@@ -6,7 +6,7 @@ import { now, replace } from '/common/util'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
-export type SubscriptionUpdate = Omit<AppSchema.SubscriptionPreset, 'kind' | '_id' | 'deletedAt'>
+export type SubscriptionUpdate = Omit<AppSchema.SubscriptionModel, 'kind' | '_id' | 'deletedAt'>
 
 export const presetApi = {
   getPresets,

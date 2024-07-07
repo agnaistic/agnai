@@ -833,6 +833,7 @@ subscribe(
     extras: ['string?'],
     meta: 'any?',
     retries: ['string?'],
+    updatedAt: 'string?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {
@@ -869,6 +870,7 @@ subscribe(
       meta: body.meta,
       extras: body.extras || prev?.extras,
       retries: body.retries,
+      updatedAt: body.updatedAt || new Date().toISOString(),
     }
 
     if (retrying?._id === body.messageId) {
@@ -895,21 +897,34 @@ subscribe(
 
 subscribe(
   'message-created',
-  { msg: 'any', chatId: 'string', generate: 'boolean?', requestId: 'string?' } as const,
-  onMessageCreated
+  {
+    msg: 'any',
+    chatId: 'string',
+    generate: 'boolean?',
+    requestId: 'string?',
+    retry: 'boolean?',
+  } as const,
+  onMessageReceived
 )
 
 subscribe(
   'message-completed',
-  { msg: 'any', chatId: 'string', generate: 'boolean?', requestId: 'string?' } as const,
-  onMessageCreated
+  {
+    msg: 'any',
+    chatId: 'string',
+    generate: 'boolean?',
+    requestId: 'string?',
+    retry: 'boolean?',
+  } as const,
+  onMessageReceived
 )
 
-async function onMessageCreated(body: {
+async function onMessageReceived(body: {
   msg: any
   chatId: string
   generate?: boolean
   requestId?: string
+  retry?: boolean
 }) {
   const { msgs, activeChatId, graph } = msgStore.getState()
   if (activeChatId !== body.chatId) return
@@ -918,9 +933,14 @@ async function onMessageCreated(body: {
   const user = userStore.getState().user
 
   const speech = getMessageSpeechInfo(msg, user)
-  const nextMsgs = msgs.filter((m) => m._id !== msg._id).concat(msg)
 
   const isUserMsg = !!msg.userId
+
+  const isRetry = !!graph.tree[msg._id]
+  const tree = updateChatTreeNode(graph.tree, msg)
+  const nextMsgs = isRetry
+    ? msgs.map((m) => (m._id === msg._id ? msg : m))
+    : msgs.filter((m) => m._id !== msg._id).concat(msg)
 
   msgStore.setState({
     lastInference: {
@@ -932,7 +952,7 @@ async function onMessageCreated(body: {
     },
     textBeforeGenMore: undefined,
     graph: {
-      tree: updateChatTreeNode(graph.tree, msg),
+      tree,
       root: graph.root,
     },
   })
@@ -945,6 +965,7 @@ async function onMessageCreated(body: {
       msgs: nextMsgs,
       partial: undefined,
       waiting: undefined,
+      retrying: undefined,
       speaking: speech?.speaking,
     })
   }

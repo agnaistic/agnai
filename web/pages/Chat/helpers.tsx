@@ -44,7 +44,11 @@ export const SwipeMessage: Component<{
 }
 
 export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
-  const state = msgStore((s) => ({ loading: s.nextLoading, msgs: s.msgs }))
+  const state = msgStore((s) => ({
+    loading: s.nextLoading,
+    msgs: s.msgs,
+    history: s.messageHistory.length,
+  }))
   const chat = chatStore((s) => ({ loaded: s.loaded }))
   const [ready, setReady] = createSignal(false)
 
@@ -60,6 +64,7 @@ export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
         <Show when={!state.loading}>
           <a
             class="link"
+            classList={{ hidden: state.history > 0 }}
             onClick={() => {
               if (!props.canFetch) return
               onEnter(state.loading)

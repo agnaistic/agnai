@@ -10,7 +10,7 @@ export type WebMessage =
   | { type: 'version'; version: number }
   | { type: 'ping' }
   | { type: 'pong' }
-  | { type: 'message-ready'; messageId: string; updateAt?: string }
+  | { type: 'message-ready'; messageId: string; updatedAt?: string }
 
 type Handlers = {
   [key in WebMessage['type']]: (
@@ -68,16 +68,22 @@ export const handlers: Handlers = {
   },
   'message-ready': async (client: AppSocket, data) => {
     const msg = await store.msgs.getMessage(data.messageId)
-    if (!msg) return
+    if (!msg) {
+      return
+    }
 
     // If retrying, ignore the message if it is unchanged
-    if (data.updateAt && msg.updatedAt === data.updateAt) return
+    if (data.updatedAt && msg.updatedAt === data.updatedAt) {
+      return
+    }
 
     const chat = await store.chats.getChatOnly(msg.chatId)
-    if (!chat) return
+    if (!chat) {
+      return
+    }
 
     const members = chat.memberIds.concat(client.userId)
-    const isChatMember = !chat.memberIds.concat(chat.userId).includes(client.userId)
+    const isChatMember = chat.memberIds.concat(chat.userId).includes(client.userId)
     if (!isChatMember) return
 
     sendMany(members, {
@@ -85,6 +91,7 @@ export const handlers: Handlers = {
       chatId: msg.chatId,
       generate: true,
       msg,
+      retry: !!data.updatedAt,
     })
   },
 }

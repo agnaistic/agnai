@@ -365,30 +365,6 @@ async function loadSlotConfig(serverSlots?: string) {
   }
 }
 
-setInterval(async () => {
-  const { config } = settingStore.getState()
-  if (!config.subs.length) return
-
-  const res = await usersApi.getSubscriptions()
-  if (!res.result) return
-
-  if (!isDirty(res.result.subscriptions, config.subs)) return
-
-  const opts = res.result.subscriptions.map((sub) => ({ label: sub.name, value: sub._id }))
-  const next = {
-    ...config,
-    subs: res.result.subscriptions,
-    registered: config.registered.map((reg) => {
-      if (reg.name !== 'agnaistic') return reg
-      const settings = reg.settings.map((s) =>
-        s.field === 'subscriptionId' ? { ...s, setting: { ...s.setting, options: opts } } : s
-      )
-      return { ...reg, settings }
-    }),
-  }
-  settingStore.setState({ config: next })
-}, 60000)
-
 subscribe('configuration-update', { configuration: 'any' }, (body) => {
   const { config } = settingStore.getState()
   settingStore.setState({
@@ -399,33 +375,36 @@ subscribe('configuration-update', { configuration: 'any' }, (body) => {
   })
 })
 
+subscribe('submodel-updated', { model: 'any' }, (body) => {
+  const { config } = settingStore.getState()
+  const incoming: AppSchema.SubscriptionModelOption = body.model
+
+  const exists = config.subs.find((sub) => sub._id === incoming._id)
+
+  const next = exists
+    ? config.subs.map((sub) => (sub._id === incoming._id ? incoming : sub))
+    : config.subs.concat(incoming)
+
+  const opts = next.map((sub) => ({ label: sub.name, value: sub._id }))
+
+  const registered = config.registered.map((reg) => {
+    if (reg.name !== 'agnaistic') return reg
+    const settings = reg.settings.map((s) =>
+      s.field === 'subscriptionId' ? { ...s, setting: { ...s.setting, options: opts } } : s
+    )
+    return { ...reg, settings }
+  })
+
+  settingStore.setState({ config: { ...config, subs: next, registered } })
+})
+
 subscribe(
   'subscription-replaced',
   { subscriptionId: 'string', replacementId: 'string' },
   (body) => {
     const { config } = settingStore.getState()
     const next = config.subs.filter((sub) => sub._id !== body.subscriptionId)
-    return {
-      config: { ...config, subs: next },
-    }
+
+    settingStore.setState({ config: { ...config, subs: next } })
   }
 )
-
-function isDirty<T extends { _id: string; level: number }>(left: T[], right: T[]) {
-  if (left.length !== right.length) return true
-  const ids = new Set<string>()
-  const levels = new Map<string, number>()
-  for (const l of left) {
-    ids.add(l._id)
-    levels.set(l._id, l.level)
-  }
-
-  for (const r of right) {
-    ids.add(r._id)
-    const level = levels.get(r._id)
-    if (level !== r.level) return true
-  }
-
-  if (ids.size !== left.length) return true
-  return false
-}

@@ -35,7 +35,7 @@ const tokenizers = [
 ]
 
 export const Subscription: Component = () => {
-  const { updateTitle } = setComponentPageTitle('Subscription')
+  const { updateTitle } = setComponentPageTitle('Subscription Model')
   let ref: any
 
   const params = useParams()
@@ -43,13 +43,13 @@ export const Subscription: Component = () => {
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
-  const [editing, setEditing] = createSignal<AppSchema.SubscriptionPreset>()
+  const [editing, setEditing] = createSignal<AppSchema.SubscriptionModel>()
   const [deleting, setDeleting] = createSignal(false)
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
   const [service, setService] = createSignal<AIAdapter>()
   const [replacing, setReplacing] = createSignal(false)
 
-  const onEdit = (preset: AppSchema.SubscriptionPreset) => {
+  const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
   }
 
@@ -454,7 +454,7 @@ const emptyPreset: AppSchema.GenSettings = {
 const EditPreset: Component<{
   show: boolean
   close: () => void
-  select: (preset: AppSchema.SubscriptionPreset) => void
+  select: (preset: AppSchema.SubscriptionModel) => void
 }> = (props) => {
   const params = useParams()
 

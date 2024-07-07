@@ -5,10 +5,10 @@ import { now } from './util'
 import { config } from '../config'
 import { WithId } from 'mongodb'
 
-let PAGE_SIZE = config.limits.msgPageSize
-if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
-  PAGE_SIZE = 0
-}
+// let PAGE_SIZE = config.limits.msgPageSize
+// if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
+//   PAGE_SIZE = 0
+// }
 
 export type NewMessage = {
   _id?: string
@@ -113,7 +113,7 @@ export async function editMessage(
 export async function getMessages(chatId: string, before?: string) {
   // The initial fetch will retrieve PAGE_SIZE messages.
   // This is to ensure that users have sufficient messages in their application state to build prompts with enough context.
-  let pageSize = PAGE_SIZE
+  let pageSize = 0
   if (!before) {
     before = now()
   }
