@@ -12,7 +12,7 @@ import {
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
-import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
@@ -34,6 +34,7 @@ import { ChatHeader } from './ChatHeader'
 import { ChatFooter } from './ChatFooter'
 import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
+import { ChatGraphModal } from './components/GraphModal'
 
 export { ChatDetail as default }
 
@@ -277,11 +278,23 @@ const ChatDetail: Component = () => {
     })
   }
 
+  const discardSwipe = (msgId: string, index: number) => {
+    msgStore.discardSwipe(msgId, index, () => {
+      setSwipe(Math.max(index - 1, 0))
+    })
+  }
+
   const indexOfLastRPMessage = createMemo(() => {
-    return msgs.msgs.reduceRight(
-      (prev, curr, i) => (prev > -1 ? prev : !curr.ooc && curr.adapter !== 'image' ? i : -1),
-      -1
-    )
+    const msgs = chatMsgs()
+
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const curr = msgs[i]
+      if (!curr.ooc && curr.adapter !== 'image') {
+        return i
+      }
+    }
+
+    return -1
   })
 
   const generateFirst = () => {
@@ -338,6 +351,11 @@ const ChatDetail: Component = () => {
 
         msgStore.request(msg.chatId, msg.characterId)
       }
+
+      if (ev.key === 'g') {
+        ev.preventDefault()
+        chatStore.option({ options: false, modal: 'graph' })
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)
@@ -375,7 +393,7 @@ const ChatDetail: Component = () => {
     )
   })
 
-  onCleanup(clearScrollMonitor)
+  onCleanup(sticky.clear)
 
   return (
     <>
@@ -400,7 +418,7 @@ const ChatDetail: Component = () => {
         <section
           data-messages
           class={`mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto`}
-          ref={monitorScroll}
+          ref={sticky.monitor}
         >
           <div id="chat-messages" class="flex w-full flex-col gap-2">
             <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
@@ -410,7 +428,7 @@ const ChatDetail: Component = () => {
               </div>
             </Show>
             <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
-              <div class="flex justify-center">
+              <div class="flex justify-center gap-2">
                 <Button onClick={generateFirst}>Generate Message</Button>
               </div>
             </Show>
@@ -430,6 +448,7 @@ const ChatDetail: Component = () => {
                     }
                     confirmSwipe={() => confirmSwipe(msg()._id)}
                     cancelSwipe={cancelSwipe}
+                    discardSwipe={() => discardSwipe(msg()._id, swipe())}
                     tts={tts()}
                     retrying={msgs.retrying}
                     partial={msgs.partial}
@@ -471,6 +490,15 @@ const ChatDetail: Component = () => {
         <ChatExport show={true} close={clearModal} />
       </Show>
 
+      <Show when={chats.opts.modal === 'graph'}>
+        <ChatGraphModal
+          tree={ctx.chatTree}
+          show
+          close={clearModal}
+          leafId={chatMsgs().slice(-1)[0]?._id || ''}
+        />
+      </Show>
+
       <Show when={chats.opts.modal === 'delete'}>
         <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={clearModal} />
       </Show>
@@ -496,42 +524,16 @@ const ChatDetail: Component = () => {
         message={
           <TitleCard type="rose" class="flex flex-col gap-4">
             <div class="flex justify-center font-bold">Are you sure?</div>
-            <div>This will delete ALL messages in this conversation.</div>
+            <div>This will fork your conversation from the greeting message.</div>
           </TitleCard>
         }
         show={chats.opts.confirm}
         confirm={() => {
-          chatStore.restartChat(chats.chat!._id)
+          msgStore.fork('root')
           chatStore.option({ confirm: false })
         }}
         close={() => chatStore.option({ confirm: false })}
       />
     </>
   )
-}
-
-let scrollMonitor: any
-
-function monitorScroll(ref: HTMLElement) {
-  let bottom = true
-
-  ref.onscroll = (ev) => {
-    const pos = ref.scrollTop
-
-    if (pos >= 0) {
-      bottom = true
-    } else {
-      bottom = false
-    }
-  }
-
-  scrollMonitor = setInterval(() => {
-    if (bottom && ref.scrollTop !== 0) {
-      ref.scrollTop = 0
-    }
-  }, 1000 / 30)
-}
-
-function clearScrollMonitor() {
-  clearInterval(scrollMonitor)
 }

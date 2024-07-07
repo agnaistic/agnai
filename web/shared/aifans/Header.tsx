@@ -1,9 +1,13 @@
-import { A } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 import { userStore } from '/web/store'
 import { isLoggedIn } from '/web/store/api'
 import Logo from '/web/asset/aifans/svg/logo.svg'
+import Button from '../Button'
 
 const Header = () => {
+  const nav = useNavigate()
+  const user = userStore()
+
   return (
     <div class="flex  items-center justify-between font-clash md:h-[98px] ">
       <div class="flex items-center gap-2">
@@ -18,7 +22,16 @@ const Header = () => {
         <button class="bg-opacity-7 text-shadow hidden h-7 w-28 flex-shrink-0 rounded-md border border-white bg-[#0000001e] font-clash text-xs font-medium text-white shadow backdrop-blur lg:block">
           CREATORS
         </button>
-        <button class="bg-opacity-7 text-shadow hidden h-7 w-28 flex-shrink-0 rounded-md border border-white bg-[#0000001e] font-clash text-xs font-medium text-white shadow backdrop-blur lg:block">
+        <button
+          onClick={() => {
+            if (!isLoggedIn()) {
+              userStore.loginModal(true)
+            } else {
+              return nav('/chat/')
+            }
+          }}
+          class="bg-opacity-7 text-shadow hidden h-7 w-28 flex-shrink-0 items-center justify-center rounded-md border border-white bg-[#0000001e] font-clash text-xs font-medium text-white shadow backdrop-blur lg:flex"
+        >
           LIVE CHAT
         </button>
         <button
@@ -38,6 +51,19 @@ const Header = () => {
           >
             SIGN IN
           </button>
+        )}
+        {isLoggedIn() && (
+          <Button
+            schema="warning"
+            onClick={() => {
+              userStore.logout()
+              window.location.reload()
+            }}
+            class="text-shadow hidden h-[30px] w-[90px] flex-shrink-0 items-center justify-center rounded-md border border-white bg-gradient-to-r from-purple-600 to-blue-600 font-clash text-xs font-medium text-white shadow lg:flex"
+          >
+            {user.profile?.handle}
+            <img src="/images/chevron-icon-down-white.png" class="h-[7px] w-[10px]" />
+          </Button>
         )}
       </div>
     </div>

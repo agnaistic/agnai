@@ -19,7 +19,6 @@ import {
   THIRDPARTY_FORMATS,
   MISTRAL_MODELS,
 } from '../../common/adapters'
-import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { presetStore, settingStore, userStore } from '../store'
 import PromptEditor, { BasicPromptTemplate } from './PromptEditor'
@@ -86,7 +85,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
     return match
   })
 
-  const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
+  const tabs = ['General', 'Prompt', 'Memory', 'Samplers', 'Toggles']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
   const onServiceChange = (opt: Option<string>) => {
@@ -168,6 +167,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           pane={pane.showing()}
           setFormat={setFormat}
           tab={tabs[tab()]}
+          sub={sub()}
         />
         <PromptSettings
           disabled={props.disabled}
@@ -176,8 +176,18 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           tab={tabs[tab()]}
+          sub={sub()}
         />
-        <GenSettings
+        <SamplerSettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          format={format()}
+          pane={pane.showing()}
+          tab={tabs[tab()]}
+          sub={sub()}
+        />
+        <SamplerToggles
           disabled={props.disabled}
           inherit={props.inherit}
           service={service()}
@@ -197,9 +207,17 @@ const GeneralSettings: Component<
     setFormat: (format: ThirdPartyFormat) => void
     format?: ThirdPartyFormat
     tab: string
+    sub?: AppSchema.SubscriptionOption
   }
 > = (props) => {
   const cfg = settingStore()
+
+  const maxCtx = createMemo(() => {
+    if (!props.sub?.preset.maxContextLength) return
+
+    const max = Math.floor(props.sub?.preset.maxContextLength / 1000)
+    return `${max}K`
+  })
 
   const [replicate, setReplicate] = createStore({
     model: props.inherit?.replicateModelName,
@@ -252,26 +270,6 @@ const GeneralSettings: Component<
 
     return base
   })
-
-  const CLAUDE_LABELS = {
-    ClaudeV2: 'Latest: Claude v2',
-    ClaudeV2_1: 'Claude v2.1',
-    ClaudeV2_0: 'Claude v2.0',
-    ClaudeV1_100k: 'Latest: Claude v1 100K',
-    ClaudeV1_3_100k: 'Claude v1.3 100K',
-    ClaudeV1: 'Latest: Claude v1',
-    ClaudeV1_3: 'Claude v1.3',
-    ClaudeV1_2: 'Claude v1.2',
-    ClaudeV1_0: 'Claude v1.0',
-    ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
-    ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
-    ClaudeInstantV1: 'Latest: Claude Instant v1',
-    ClaudeInstantV1_1: 'Claude Instant v1.1',
-    ClaudeInstantV1_0: 'Claude Instant v1.0',
-    ClaudeV3_Opus: 'Claude v3 Opus',
-    ClaudeV3_Sonnet: 'Claude v3 Sonnet',
-    ClaudeV3_Haiku: 'Claude v3 Haiku',
-  } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
     const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
@@ -511,6 +509,8 @@ const GeneralSettings: Component<
           disabled={props.disabled}
           format={props.format}
           onChange={(val) => setTokens(val)}
+          recommended={props.sub?.preset.maxTokens}
+          recommendLabel="Max"
         />
         <RangeInput
           fieldName="maxContextLength"
@@ -529,6 +529,8 @@ const GeneralSettings: Component<
           value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
           disabled={props.disabled}
           onChange={(val) => setContext(val)}
+          recommended={maxCtx()}
+          recommendLabel="Max"
         />
         <Toggle
           fieldName="streamResponse"
@@ -562,7 +564,12 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 const PromptSettings: Component<
-  Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
 > = (props) => {
   const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
@@ -603,6 +610,7 @@ const PromptSettings: Component<
             items={FORMATS}
             value={props.inherit?.modelFormat || 'Alpaca'}
             hide={useAdvanced() === 'basic'}
+            recommend={props.sub?.preset.modelFormat}
           />
           <Select
             fieldName="useAdvancedPrompt"
@@ -764,7 +772,7 @@ const PromptSettings: Component<
   )
 }
 
-const GenSettings: Component<
+const SamplerSettings: Component<
   Props & {
     pane: boolean
     format?: ThirdPartyFormat
@@ -773,7 +781,7 @@ const GenSettings: Component<
   }
 > = (props) => {
   return (
-    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Advanced' }}>
+    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
       <Card class="flex flex-col gap-4">
         <RangeInput
           fieldName="temp"
@@ -786,6 +794,7 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'temp'}
+          recommended={props.sub?.preset.temp}
         />
         <RangeInput
           fieldName="dynatemp_range"
@@ -798,6 +807,7 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
+          recommended={props.sub?.preset.dynatemp_range}
         />
 
         <RangeInput
@@ -811,6 +821,7 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'dynatemp_exponent'}
+          recommended={props.sub?.preset.dynatemp_exponent}
         />
         <RangeInput
           fieldName="smoothingFactor"
@@ -823,6 +834,7 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingFactor'}
+          recommended={props.sub?.preset.dynatemp_exponent}
         />
         <RangeInput
           fieldName="smoothingCurve"
@@ -835,6 +847,7 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'smoothingCurve'}
+          recommended={props.sub?.preset.smoothingCurve}
         />
         <RangeInput
           fieldName="cfgScale"
@@ -860,46 +873,6 @@ const GenSettings: Component<
           format={props.format}
         />
 
-        <TextInput
-          fieldName="cfgOppose"
-          label="CFG Opposing Prompt"
-          helperText={
-            <>
-              A prompt that would generate the opposite of what you want. Leave empty if unsure.
-              Classifier Free Guidance. See{' '}
-              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
-                NovelAI's CFG docs
-              </a>{' '}
-              for more information.
-            </>
-          }
-          value={props.inherit?.cfgOppose || ''}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'cfgScale'}
-          format={props.format}
-        />
-
-        <Select
-          fieldName="phraseRepPenalty"
-          label={'Phrase Repetition Penalty'}
-          helperText={
-            'Penalizes token sequences, reducing the chance of generations repeating earlier text.'
-          }
-          items={[
-            { label: 'Very Aggressive', value: 'very_aggressive' },
-            { label: 'Aggressive', value: 'aggressive' },
-            { label: 'Medium', value: 'medium' },
-            { label: 'Light', value: 'light' },
-            { label: 'Very Light', value: 'very_light' },
-            { label: 'Off', value: 'off' },
-          ]}
-          value={props.inherit?.phraseRepPenalty || 'aggressive'}
-          service={props.service}
-          aiSetting="phraseRepPenalty"
-          format={props.format}
-        />
-
         <RangeInput
           fieldName="minP"
           label="Min P"
@@ -912,6 +885,7 @@ const GenSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'minP'}
+          recommended={props.sub?.preset.minP}
         />
 
         <RangeInput
@@ -926,7 +900,9 @@ const GenSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topP'}
+          recommended={props.sub?.preset.topP}
         />
+
         <RangeInput
           fieldName="topK"
           label="Top K"
@@ -939,6 +915,7 @@ const GenSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topK'}
+          recommended={props.sub?.preset.topK}
         />
         <RangeInput
           fieldName="topA"
@@ -952,6 +929,7 @@ const GenSettings: Component<
           service={props.service}
           format={props.format}
           aiSetting={'topA'}
+          recommended={props.sub?.preset.topA}
         />
 
         <Toggle
@@ -1011,6 +989,7 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'tailFreeSampling'}
           format={props.format}
+          recommended={props.sub?.preset.tailFreeSampling}
         />
         <RangeInput
           fieldName="typicalP"
@@ -1024,6 +1003,7 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'typicalP'}
           format={props.format}
+          recommended={props.sub?.preset.typicalP}
         />
         <RangeInput
           fieldName="repetitionPenalty"
@@ -1037,6 +1017,7 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'repetitionPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenalty}
         />
         <RangeInput
           fieldName="repetitionPenaltyRange"
@@ -1049,9 +1030,10 @@ const GenSettings: Component<
             props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
           }
           disabled={props.disabled}
-          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
+          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltyRange'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenaltyRange}
         />
         <RangeInput
           fieldName="repetitionPenaltySlope"
@@ -1064,9 +1046,10 @@ const GenSettings: Component<
             props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
           }
           disabled={props.disabled}
-          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
+          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltySlope'}
           format={props.format}
+          recommended={props.sub?.preset.repetitionPenaltySlope}
         />
         <RangeInput
           fieldName="etaCutoff"
@@ -1103,10 +1086,6 @@ const GenSettings: Component<
           aiSetting={'epsilonCutoff'}
           format={props.format}
         />
-        <Show when={!props.service}>
-          <Divider />
-          <div class="text-2xl"> OpenAI</div>
-        </Show>
         <RangeInput
           fieldName="frequencyPenalty"
           label="Frequency Penalty"
@@ -1119,6 +1098,7 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'frequencyPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.frequencyPenalty}
         />
         <RangeInput
           fieldName="presencePenalty"
@@ -1132,40 +1112,7 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'presencePenalty'}
           format={props.format}
-        />
-        <Show when={!props.service}>
-          <Divider />
-          <div class="text-2xl">TextGen / Ooba</div>
-        </Show>
-        <Toggle
-          fieldName="addBosToken"
-          label="Add BOS Token"
-          helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
-          value={props.inherit?.addBosToken ?? true}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'addBosToken'}
-          format={props.format}
-        />
-        <Toggle
-          fieldName="banEosToken"
-          label="Ban EOS Token"
-          helperText="Ban the end of sequence token. This forces the model to never end the generation prematurely."
-          value={props.inherit?.banEosToken ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'banEosToken'}
-          format={props.format}
-        />
-        <Toggle
-          fieldName="skipSpecialTokens"
-          label="Skip Special Tokens"
-          helperText="Some specific models need this unset."
-          value={props.inherit?.skipSpecialTokens ?? true}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting="skipSpecialTokens"
-          format={props.format}
+          recommended={props.sub?.preset.presencePenalty}
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
@@ -1181,17 +1128,9 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'encoderRepitionPenalty'}
           format={props.format}
+          recommended={props.sub?.preset.encoderRepitionPenalty}
         />
-        <Toggle
-          fieldName="doSample"
-          label="DO Sample"
-          helperText="If doing contrastive search, disable this."
-          value={props.inherit?.doSample ?? true}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'doSample'}
-          format={props.format}
-        />
+
         <RangeInput
           fieldName="penaltyAlpha"
           label="Penalty Alpha"
@@ -1204,17 +1143,9 @@ const GenSettings: Component<
           service={props.service}
           aiSetting={'penaltyAlpha'}
           format={props.format}
+          recommended={props.sub?.preset.penaltyAlpha}
         />
-        <Toggle
-          fieldName="earlyStopping"
-          label="Early Stopping"
-          helperText="Controls the stopping condition for beam-based methods, like beam-search."
-          value={props.inherit?.earlyStopping ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'earlyStopping'}
-          format={props.format}
-        />
+
         <RangeInput
           fieldName="numBeams"
           label="Number of Beams"
@@ -1226,6 +1157,161 @@ const GenSettings: Component<
           disabled={props.disabled}
           service={props.service}
           aiSetting={'numBeams'}
+          format={props.format}
+        />
+
+        <SamplerOrder service={props.service} inherit={props.inherit} />
+      </Card>
+    </div>
+  )
+}
+
+const SamplerToggles: Component<
+  Props & {
+    pane: boolean
+    format?: ThirdPartyFormat
+    tab: string
+    sub?: AppSchema.SubscriptionOption
+  }
+> = (props) => {
+  return (
+    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Toggles' }}>
+      <Card class="flex flex-col gap-4">
+        <TextInput
+          fieldName="cfgOppose"
+          label="CFG Opposing Prompt"
+          helperText={
+            <>
+              A prompt that would generate the opposite of what you want. Leave empty if unsure.
+              Classifier Free Guidance. See{' '}
+              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
+                NovelAI's CFG docs
+              </a>{' '}
+              for more information.
+            </>
+          }
+          value={props.inherit?.cfgOppose || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'cfgScale'}
+          format={props.format}
+        />
+
+        <Select
+          fieldName="phraseRepPenalty"
+          label={'Phrase Repetition Penalty'}
+          helperText={
+            'Penalizes token sequences, reducing the chance of generations repeating earlier text.'
+          }
+          items={[
+            { label: 'Very Aggressive', value: 'very_aggressive' },
+            { label: 'Aggressive', value: 'aggressive' },
+            { label: 'Medium', value: 'medium' },
+            { label: 'Light', value: 'light' },
+            { label: 'Very Light', value: 'very_light' },
+            { label: 'Off', value: 'off' },
+          ]}
+          value={props.inherit?.phraseRepPenalty || 'aggressive'}
+          service={props.service}
+          aiSetting="phraseRepPenalty"
+          format={props.format}
+        />
+
+        <Toggle
+          fieldName="tempLast"
+          label="Temperature Last"
+          helperText="When using Min P, enabling this will make temperature the last sampler to be applied"
+          value={props.inherit?.tempLast ?? false}
+          service={props.service}
+          format={props.format}
+          aiSetting="tempLast"
+          recommended={props.sub?.preset.tempLast}
+        />
+
+        <Toggle
+          fieldName="mirostatToggle"
+          label="Use Mirostat"
+          helperText={
+            <>
+              Activates the Mirostat sampling technique. It aims to control perplexity during
+              sampling. See the {` `}
+              <A class="link" href="https://arxiv.org/abs/2007.14966">
+                paper
+              </A>
+            </>
+          }
+          value={props.inherit?.mirostatToggle ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'mirostatLR'}
+          format={props.format}
+          recommended={props.sub?.preset.mirostatToggle}
+        />
+
+        <Toggle
+          fieldName="tokenHealing"
+          label="Token Healing"
+          helperText="Backs up the generation process by one token then constrains the output's first token to equal the last token of your prompt."
+          value={props.inherit?.tokenHealing ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'tokenHealing'}
+          format={props.format}
+          recommended={props.sub?.preset.tokenHealing}
+        />
+        <Toggle
+          fieldName="addBosToken"
+          label="Add BOS Token"
+          helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
+          value={props.inherit?.addBosToken ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'addBosToken'}
+          format={props.format}
+          recommended={props.sub?.preset.addBosToken}
+        />
+        <Toggle
+          fieldName="banEosToken"
+          label="Ban EOS Token"
+          helperText="Ban the end of sequence token. This forces the model to never end the generation prematurely."
+          value={props.inherit?.banEosToken ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'banEosToken'}
+          format={props.format}
+          recommended={props.sub?.preset.banEosToken}
+        />
+        <Toggle
+          fieldName="skipSpecialTokens"
+          label="Skip Special Tokens"
+          helperText="Some specific models need this unset."
+          value={props.inherit?.skipSpecialTokens ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting="skipSpecialTokens"
+          format={props.format}
+          recommended={props.sub?.preset.skipSpecialTokens}
+        />
+
+        <Toggle
+          fieldName="doSample"
+          label="DO Sample"
+          helperText="If doing contrastive search, disable this."
+          value={props.inherit?.doSample ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'doSample'}
+          format={props.format}
+        />
+
+        <Toggle
+          fieldName="earlyStopping"
+          label="Early Stopping"
+          helperText="Controls the stopping condition for beam-based methods, like beam-search."
+          value={props.inherit?.earlyStopping ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'earlyStopping'}
           format={props.format}
         />
 
@@ -1516,3 +1602,24 @@ function ensureArray(value: any): number[] {
 
   return value.map((v: any) => (typeof v === 'number' ? v : +v)).filter((v: number) => isNaN(v))
 }
+
+const CLAUDE_LABELS = {
+  ClaudeV2: 'Latest: Claude v2',
+  ClaudeV2_1: 'Claude v2.1',
+  ClaudeV2_0: 'Claude v2.0',
+  ClaudeV1_100k: 'Latest: Claude v1 100K',
+  ClaudeV1_3_100k: 'Claude v1.3 100K',
+  ClaudeV1: 'Latest: Claude v1',
+  ClaudeV1_3: 'Claude v1.3',
+  ClaudeV1_2: 'Claude v1.2',
+  ClaudeV1_0: 'Claude v1.0',
+  ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
+  ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
+  ClaudeInstantV1: 'Latest: Claude Instant v1',
+  ClaudeInstantV1_1: 'Claude Instant v1.1',
+  ClaudeInstantV1_0: 'Claude Instant v1.0',
+  ClaudeV3_Opus: 'Claude v3 Opus',
+  ClaudeV3_Sonnet: 'Claude v3 Sonnet',
+  ClaudeV3_Haiku: 'Claude v3 Haiku',
+  ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
+} satisfies Record<keyof typeof CLAUDE_MODELS, string>

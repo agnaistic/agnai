@@ -7,6 +7,11 @@ export function replace<T extends { _id: string }>(id: string, list: T[], item: 
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
 
+export function exclude<T extends { _id: string }>(list: T[], ids: string[]) {
+  const set = new Set(ids)
+  return list.filter((item) => !set.has(item._id))
+}
+
 export function findOne<T extends { _id: string }>(id: string, list: T[]): T | void {
   for (const item of list) {
     if (item._id === id) return item

@@ -71,7 +71,7 @@ export const verifyPatreonOauth = handle(async (req) => {
 })
 
 export const unlinkPatreon = handle(async (req) => {
-  await store.users.updateUser(req.userId, { patreon: null as any, patreonUserId: null as any })
+  await store.users.unlinkPatreonAccount(req.userId, 'user initiated')
 
   return { success: true }
 })

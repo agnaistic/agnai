@@ -8,6 +8,7 @@ let connected = false
 
 type LiveCount = {
   count: number
+  versioned: number
   hostname: string
   date: Date
   max: number
@@ -31,7 +32,7 @@ export function getLiveCounts() {
       entries: [
         {
           hostname: `${os.hostname()}-${process.pid}`,
-          count: getAllCount(),
+          ...getAllCount(),
           date: new Date(),
           max: nonBusMaxCount,
         },
@@ -75,7 +76,7 @@ export async function initMessageBus() {
       const count = getAllCount()
       clients.pub.publish(
         COUNT_EVENT,
-        JSON.stringify({ count, hostname: `${os.hostname()}-${process.pid}` })
+        JSON.stringify({ ...count, hostname: `${os.hostname()}-${process.pid}` })
       )
     }, 2000)
 
@@ -99,7 +100,7 @@ export async function initMessageBus() {
     connected = true
   } catch (ex) {
     setInterval(() => {
-      nonBusMaxCount = Math.max(getAllCount(), nonBusMaxCount)
+      nonBusMaxCount = Math.max(getAllCount().count, nonBusMaxCount)
     }, 5000)
     logger.warn(
       `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`

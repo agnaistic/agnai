@@ -23,6 +23,7 @@ import { useRootModal } from '/web/shared/hooks'
 const tokenizers = [
   { label: 'None', value: '' },
   { label: 'Llama', value: 'llama' },
+  { label: 'Llama 3', value: 'llama3' },
   { label: 'Turbo', value: 'turbo' },
   { label: 'DaVinci', value: 'davinci' },
   { label: 'Novel Kayra', value: 'novel-modern' },
@@ -30,6 +31,7 @@ const tokenizers = [
   { label: 'Mistral', value: 'mistral' },
   { label: 'Yi', value: 'yi' },
   { label: 'Cohere', value: 'cohere' },
+  { label: 'Qwen2', value: 'qwen2' },
 ]
 
 export const Subscription: Component = () => {
@@ -441,8 +443,8 @@ const emptyPreset: AppSchema.GenSettings = {
   temp: 0.85,
   topK: 0,
   topP: 1,
-  tailFreeSampling: 0.95,
-  repetitionPenalty: 1.1,
+  tailFreeSampling: 1,
+  repetitionPenalty: 1,
   repetitionPenaltyRange: 64,
   maxContextLength: 4090,
   maxTokens: 250,

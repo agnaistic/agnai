@@ -10,14 +10,15 @@ import {
   Camera,
   VenetianMask,
   AlertTriangle,
+  Map,
 } from 'lucide-solid'
 import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
-import { getRootRgb } from '../../shared/util'
 import { Card } from '/web/shared/Card'
+import { getRootRgb } from '/web/shared/colors'
 
 export type ChatModal =
   | 'export'
@@ -26,8 +27,8 @@ export type ChatModal =
   | 'memory'
   | 'members'
   | 'delete'
-  | 'updateGaslightToUseSystemPrompt'
   | 'none'
+  | 'graph'
 
 const ChatOptions: Component<{
   adapterLabel: string
@@ -44,10 +45,6 @@ const ChatOptions: Component<{
 
   const toggleOocMessages = () => {
     chatStore.option({ hideOoc: !chats.opts.hideOoc })
-  }
-
-  const toggleEditing = () => {
-    chatStore.option({ editing: !chats.opts.editing })
   }
 
   const toggleScreenshot = (value: boolean) => {
@@ -107,18 +104,6 @@ const ChatOptions: Component<{
           </Option>
         </Show>
 
-        <Option onClick={toggleEditing} hide={!isOwner()}>
-          <div class="flex w-full items-center justify-between">
-            <div>Enable Chat Editing</div>
-            <Toggle
-              class="flex items-center"
-              fieldName="editChat"
-              value={chats.opts.editing}
-              onChange={toggleEditing}
-            />
-          </div>
-        </Option>
-
         <Option onClick={() => props.togglePane('character')} hide={!isOwner()}>
           <User /> Main Character
         </Option>
@@ -170,12 +155,19 @@ const ChatOptions: Component<{
           <Row>
             <Item
               onClick={() => {
+                props.setModal('graph')
+              }}
+            >
+              <Map />
+              Chat Graph
+            </Item>
+            <Item
+              onClick={() => {
                 chatStore.option({ confirm: true, options: false })
               }}
-              center
               hide={!isOwner()}
             >
-              <AlertTriangle /> Restart Chat <AlertTriangle />
+              <AlertTriangle /> Restart <AlertTriangle />
             </Item>
           </Row>
         </Show>

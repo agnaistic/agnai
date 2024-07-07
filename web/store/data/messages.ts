@@ -18,7 +18,7 @@ import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { UserEmbed } from '/common/types/memory'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
-import { replace } from '/common/util'
+import { exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
@@ -39,7 +39,7 @@ export type PromptEntities = {
   autoReplyAs?: string
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
-  lastMessage?: { msg: string; date: string }
+  lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
 }
 
@@ -124,8 +124,8 @@ export async function guidance<T = any>(
   return res.result!.values
 }
 
-export async function swapMessage(msg: AppSchema.ChatMessage, _msg: string, _retries: string[]) {
-  return swapMessageProps(msg, { msg: _msg, retries: _retries })
+export async function swapMessage(msg: AppSchema.ChatMessage, text: string, retries: string[]) {
+  return swapMessageProps(msg, { msg: text, retries })
 }
 
 export async function swapMessageProps(
@@ -276,6 +276,7 @@ export async function generateResponse(opts: GenerateOpts) {
     replyAs: removeAvatar(props.replyAs),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
+    parent: props.parent?._id,
     lastMessage: entities.lastMessage?.date,
     chatEmbeds,
     userEmbeds,
@@ -462,7 +463,12 @@ async function getRetrievalBreakpoint(
   if (!bp) return { users, chats: undefined }
 
   const chats = settings.memoryChatEmbedLimit
-    ? await embedApi.query(chat._id, text, bp.createdAt)
+    ? await embedApi.queryChat(
+        chat._id,
+        text,
+        bp.createdAt,
+        messages.map((m) => m._id)
+      )
     : undefined
   return { users, chats }
 }
@@ -477,6 +483,7 @@ export type GenerateProps = {
   messages: AppSchema.ChatMessage[]
   continue?: string
   impersonate?: AppSchema.Character
+  parent?: AppSchema.ChatMessage
 }
 
 async function getGenerateProps(
@@ -505,6 +512,7 @@ async function getGenerateProps(
     replyAs: entities.char,
     messages: entities.messages.slice(),
     impersonate: entities.impersonating,
+    parent: getMessageParent(opts.kind, entities.messages),
   }
 
   if ('text' in opts) {
@@ -533,6 +541,9 @@ async function getGenerateProps(
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
         const replacing = entities.messages[index]
+
+        const replaceParent = entities.messages[index - 1]
+        props.parent = replaceParent
 
         // Retrying an impersonated message - We'll use the "auto-reply as" or the "main character"
         if (replacing?.userId) {
@@ -643,19 +654,29 @@ async function createMessage(
     text: text.parsed,
     kind: opts.kind,
     impersonate,
+    parent: getMessageParent(opts.kind, props.messages)?._id,
   })
 }
 
-export async function deleteMessages(chatId: string, msgIds: string[]) {
+export async function deleteMessages(chatId: string, msgIds: string[], leafId: string) {
   if (isLoggedIn()) {
-    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds })
+    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds, leafId })
     return res
   }
 
   const msgs = await localApi.getMessages(chatId)
-  const ids = new Set(msgIds)
-  const next = msgs.filter((msg) => ids.has(msg._id) === false)
-  await localApi.saveMessages(chatId, next)
+  await localApi.saveMessages(chatId, exclude(msgs, msgIds))
+
+  const chats = await localApi.loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  if (chat && leafId) {
+    const nextChat: AppSchema.Chat = {
+      ...chat,
+      treeLeafId: leafId,
+      updatedAt: new Date().toISOString(),
+    }
+    await localApi.saveChats(replace(chatId, chats, nextChat))
+  }
 
   return localApi.result({ success: true })
 }
@@ -669,7 +690,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
     return {
       ...entities,
       messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-      lastMessage: getLastMessage(entities.messages),
+      lastMessage: getLastUserMessage(entities.messages),
     }
   }
 
@@ -678,13 +699,14 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   return {
     ...entities,
     messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-    lastMessage: getLastMessage(entities.messages),
+    lastMessage: getLastUserMessage(entities.messages),
   }
 }
 
 async function getGuestEntities() {
   const { active } = getStore('chat').getState()
   if (!active) return
+  const { msgs, messageHistory } = getStore('messages').getState()
 
   const chat = active.chat
   const char = active.char
@@ -697,7 +719,6 @@ async function getGuestEntities() {
 
   const allScenarios = await loadItem('scenario')
   const profile = await loadItem('profile')
-  const messages = await localApi.getMessages(chat?._id)
   const user = await loadItem('config')
   const settings = await getGuestPreset(user, chat)
   const scenarios = allScenarios?.filter(
@@ -714,7 +735,7 @@ async function getGuestEntities() {
     user,
     profile,
     book,
-    messages,
+    messages: messageHistory.concat(msgs),
     settings,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
@@ -833,11 +854,11 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
 /**
  *
  */
-function getLastMessage(messages: AppSchema.ChatMessage[]) {
+function getLastUserMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    return { msg: msg.msg, date: msg.createdAt }
+    return { msg: msg.msg, date: msg.createdAt, id: msg._id, parent: msg.parent }
   }
 }
 
@@ -855,5 +876,38 @@ function messageToLine(opts: {
       opts.sender.handle ||
       'You'
     return `${entity}: ${msg.msg}`
+  }
+}
+
+function getMessageParent(
+  kind: GenerateOpts['kind'],
+  messages: AppSchema.ChatMessage[]
+): AppSchema.ChatMessage | undefined {
+  const i = messages.length
+
+  switch (kind) {
+    case 'retry': {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        if (!msg.userId) continue
+        return msg
+      }
+    }
+
+    case 'continue': {
+      const msg = messages[i - 2]
+      return msg
+    }
+
+    case 'send-noreply':
+    case 'send-event:ooc':
+    case 'send-event:character':
+    case 'send-event:hidden':
+    case 'send-event:world':
+    case 'send':
+    case 'request':
+    case 'ooc': {
+      return messages[i - 1]
+    }
   }
 }

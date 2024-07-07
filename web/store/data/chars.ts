@@ -3,7 +3,8 @@ import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
-import { appendFormOptional, getAssetUrl, strictAppendFormOptional } from '/web/shared/util'
+import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
+import { getImageData } from './image'
 
 export const charsApi = {
   getCharacterDetail,
@@ -120,7 +121,11 @@ export async function deleteCharacter(charId: string) {
   return { result: true, error: undefined }
 }
 
-export async function editCharacter(charId: string, { avatar: file, ...char }: UpdateCharacter) {
+export async function editCharacter(
+  charId: string,
+  { avatar: file, ...char }: UpdateCharacter,
+  previous?: AppSchema.Character
+) {
   if (isLoggedIn()) {
     const form = new FormData()
     appendFormOptional(form, 'name', char.name)
@@ -133,7 +138,11 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     appendFormOptional(form, 'tags', char.tags || [], JSON.stringify)
     strictAppendFormOptional(form, 'sampleChat', char.sampleChat)
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
-    appendFormOptional(form, 'avatar', file)
+
+    if (file) {
+      appendFormOptional(form, 'avatar', file)
+    }
+
     appendFormOptional(form, 'visualType', char.visualType)
     appendFormOptional(form, 'sprite', JSON.stringify(char.sprite))
     appendFormOptional(form, 'imageSettings', JSON.stringify(char.imageSettings))
@@ -235,36 +244,6 @@ export async function createCharacter(char: NewCharacter) {
   await localApi.saveChars(next)
 
   return { result: newChar, error: undefined }
-}
-
-export const ALLOWED_TYPES = new Map([
-  ['jpg', 'image/jpeg'],
-  ['jpeg', 'image/jpeg'],
-  ['png', 'image/png'],
-  ['apng', 'image/apng'],
-  ['gif', 'image/gif'],
-])
-
-export async function getImageData(file?: File | Blob | string) {
-  if (!file) return
-
-  if (typeof file === 'string') {
-    const image = await fetch(getAssetUrl(file)).then((res) => res.blob())
-    const ext = file.split('.').slice(-1)[0]
-    const mimetype = ALLOWED_TYPES.get(ext) || 'image/png'
-    file = new File([image], 'downloaded.png', { type: mimetype })
-  }
-
-  const reader = new FileReader()
-
-  return new Promise<string>((resolve, reject) => {
-    reader.readAsDataURL(file as File | Blob)
-
-    reader.onload = (evt) => {
-      if (!evt.target?.result) return reject(new Error(`Failed to process image`))
-      resolve(evt.target.result.toString())
-    }
-  })
 }
 
 export async function getFileBuffer(file?: File) {

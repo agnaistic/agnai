@@ -9,7 +9,6 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
-import { treesApi } from './data/tree'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
@@ -239,6 +238,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
         events.emit(EVENTS.receiveMsgs, {
           chatId: id,
+          leafId: res.result.chat.treeLeafId,
           characterId: res.result.character._id,
           messages: res.result.messages,
         })
@@ -557,18 +557,6 @@ export const chatStore = createStore<ChatState>('chat', {
 
     closePrompt() {
       return { prompt: undefined }
-    },
-
-    async forkChat({ active }, messageId: string) {
-      if (!active) return
-      const res = await treesApi.forkChat(active.chat._id, messageId)
-      if (res.result) {
-        events.emit(EVENTS.receiveMsgs, {
-          characterId: active.chat.characterId,
-          chatId: active.chat._id,
-          messages: res.result.messages,
-        })
-      }
     },
   }
 })

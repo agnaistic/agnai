@@ -23,6 +23,7 @@ const sendValidator = {
   ],
   text: 'string',
   impersonate: 'any?',
+  parent: 'string?',
 } as const
 
 const genValidator = {
@@ -95,6 +96,7 @@ export const createMessage = handle(async (req) => {
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -111,7 +113,10 @@ export const createMessage = handle(async (req) => {
       senderId: userId,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
+
+    await store.chats.update(chatId, { treeLeafId: userMsg._id })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -178,15 +183,8 @@ export const generateMessageV2 = handle(async (req, res) => {
       senderId: userId,
       ooc: body.kind === 'ooc',
       event: undefined,
+      parent: body.parent,
     })
-
-    if (body.parent) {
-      await store.tree.assignMessageParent({
-        chatId: chat._id,
-        parentId: body.parent,
-        messageId: userMsg._id,
-      })
-    }
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   } else if (body.kind.startsWith('send-event:')) {
@@ -197,6 +195,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       senderId: undefined,
       ooc: false,
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -332,7 +331,9 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const parent = getNewMessageParent(body, userMsg)
   const actions: AppSchema.ChatAction[] = []
+  let treeLeafId = ''
 
   switch (body.kind) {
     case 'summary': {
@@ -368,15 +369,8 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         retries,
         event: undefined,
+        parent,
       })
-
-      if (body.parent && userMsg) {
-        await store.tree.assignMessageParent({
-          chatId: chat._id,
-          parentId: userMsg._id,
-          messageId: msg._id,
-        })
-      }
 
       sendMany(members, {
         type: 'message-created',
@@ -387,22 +381,26 @@ export const generateMessageV2 = handle(async (req, res) => {
         generate: true,
         actions,
       })
+      treeLeafId = requestId
       break
     }
 
     case 'retry': {
       if (body.replacing) {
+        const nextRetries = [body.replacing.msg]
+          .concat(retries)
+          .concat(body.replacing.retries || [])
+
         await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
+          parent,
           actions,
           adapter,
           meta,
           state: 'retried',
-          retries: body.replacing.retries,
+          retries: nextRetries,
         })
-        const nextRetries = [body.replacing.msg]
-          .concat(retries)
-          .concat(body.replacing.retries || [])
+        treeLeafId = body.replacing._id
         sendMany(members, {
           type: 'message-retry',
           requestId,
@@ -427,7 +425,9 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           retries,
           event: undefined,
+          parent,
         })
+        treeLeafId = requestId
         sendMany(members, {
           type: 'message-created',
           requestId,
@@ -448,6 +448,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         state: 'continued',
       })
+      treeLeafId = body.continuing._id
       sendMany(members, {
         type: 'message-retry',
         requestId,
@@ -462,7 +463,11 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
   }
 
-  await store.chats.update(chatId, {})
+  if (treeLeafId) {
+    await store.chats.update(chatId, { treeLeafId })
+  } else {
+    await store.chats.update(chatId, {})
+  }
 })
 
 async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Response) {
@@ -492,12 +497,14 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
       characterId: body.impersonate?._id,
       ooc: body.kind === 'ooc',
       event: undefined,
+      parent: body.parent,
     })
   } else if (body.kind.startsWith('send-event:')) {
     newMsg = newMessage(v4(), chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
       event: getScenarioEventType(body.kind),
+      parent: body.parent,
     })
   }
 
@@ -572,6 +579,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
+  const parent = getNewMessageParent(body, newMsg)
 
   if (body.kind === 'retry' && body.replacing) {
     retries = [body.replacing.msg].concat(retries).concat(body.replacing.retries || [])
@@ -584,6 +592,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     meta,
     event: undefined,
     retries,
+    parent,
   })
 
   switch (body.kind) {
@@ -624,6 +633,7 @@ function newMessage(
     meta?: any
     event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
+    parent?: string
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {
@@ -674,4 +684,26 @@ async function ensureBotMembership(
 
   update.characters = characters
   await store.chats.update(chat._id, update)
+}
+
+function getNewMessageParent(body: GenRequest, userMsg: AppSchema.ChatMessage | undefined): string {
+  switch (body.kind) {
+    case 'summary':
+    case 'chat-query':
+      return ''
+
+    case 'retry':
+    case 'continue':
+      return body.parent || ''
+
+    case 'request':
+    case 'ooc':
+    case 'self':
+    case 'send':
+    case 'send-event:character':
+    case 'send-event:hidden':
+    case 'send-event:ooc':
+    case 'send-event:world':
+      return userMsg?._id || ''
+  }
 }

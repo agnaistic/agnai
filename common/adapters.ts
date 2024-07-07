@@ -134,7 +134,11 @@ export const OPENAI_MODELS = {
   GPT4_32k_0613: 'gpt-4-32k-0613',
   GPT45_1106: 'gpt-4-1106-preview',
   GPT45_0125: 'gpt-4-0125-preview',
-  GPT45_Preview: 'gpt-4-turbo-preview', // latest GPT 4 Turbo
+  GPT45_Preview: 'gpt-4-turbo-preview',
+  GPT4_Turbo_Preview: 'gpt-4-turbo-preview',
+  GPT4_Turbo: 'gpt-4-turbo',
+  GPT4_Turbo_0409: 'gpt-4-turbo-2024-04-09',
+  GPT4_Omni: 'gpt-4o',
 } as const
 
 export const MISTRAL_MODELS = {
@@ -144,6 +148,24 @@ export const MISTRAL_MODELS = {
   MistralMedium: 'mistral-medium-latest',
   MistralLarge: 'mistral-large-latest',
 } as const
+
+export const OPENAI_CONTEXTS: Record<string, number> = {
+  [OPENAI_MODELS.Turbo]: 16300,
+  [OPENAI_MODELS.Turbo0613]: 16300,
+  [OPENAI_MODELS.Turbo1106]: 16300,
+  [OPENAI_MODELS.Turbo_16k]: 16300,
+  [OPENAI_MODELS.GPT4]: 8100,
+  [OPENAI_MODELS.GPT4_0314]: 8100,
+  [OPENAI_MODELS.GPT4_0613]: 8100,
+  [OPENAI_MODELS.GPT4_32k]: 32000,
+  [OPENAI_MODELS.GPT4_32k_0314]: 32000,
+  [OPENAI_MODELS.GPT4_32k_0613]: 32000,
+  [OPENAI_MODELS.GPT45_1106]: 128000,
+  [OPENAI_MODELS.GPT45_0125]: 128000,
+  [OPENAI_MODELS.GPT45_Preview]: 128000,
+  [OPENAI_MODELS.GPT4_Turbo_0409]: 128000,
+  [OPENAI_MODELS.GPT4_Omni]: 120000,
+}
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
@@ -160,6 +182,8 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT45_1106]: true,
   [OPENAI_MODELS.GPT45_0125]: true,
   [OPENAI_MODELS.GPT45_Preview]: true,
+  [OPENAI_MODELS.GPT4_Turbo_0409]: true,
+  [OPENAI_MODELS.GPT4_Omni]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
@@ -185,12 +209,14 @@ export const CLAUDE_MODELS = {
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
   ClaudeV3_Haiku: 'claude-3-haiku-20240307',
+  ClaudeV35_Sonnet: 'claude-3-5-sonnet-20240620',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV3_Opus]: true,
   [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
   [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
+  [CLAUDE_MODELS.ClaudeV35_Sonnet]: true,
 }
 
 export const NOVEL_MODELS = {
@@ -292,9 +318,25 @@ export type PresetAISettings = Omit<
   | 'order'
 >
 
-/**
- * This is al
- */
+export const samplerDisableValues: { [key in keyof PresetAISettings]?: number } = {
+  dynatemp_range: 0,
+  dynatemp_exponent: 0,
+  minP: 0,
+  smoothingFactor: 0,
+  smoothingCurve: 1,
+  topP: 1,
+  topK: 0,
+  topA: 0,
+  mirostatTau: 0,
+  mirostatLR: 0,
+  typicalP: 1,
+  repetitionPenalty: 1,
+  repetitionPenaltySlope: 0,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  tailFreeSampling: 1,
+}
+
 export const adapterSettings: {
   [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
 } = {
@@ -312,9 +354,10 @@ export const adapterSettings: {
     'tabby',
     'mistral',
   ],
+  tempLast: ['agnaistic', 'tabby', 'exllamav2'],
   dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
-  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby'],
+  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   smoothingCurve: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
@@ -416,8 +459,9 @@ export const adapterSettings: {
   trimStop: ['koboldcpp'],
 
   addBosToken: ['ooba', 'agnaistic', 'tabby'],
-  banEosToken: ['ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  doSample: ['ooba', 'agnaistic'],
+  banEosToken: ['ooba', 'aphrodite', 'tabby'],
+  tokenHealing: ['agnaistic', 'exllamav2', 'ooba', 'tabby'],
+  doSample: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
   earlyStopping: ['ooba'],

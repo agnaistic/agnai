@@ -19,6 +19,7 @@ export type SDRequest = {
   seed: number
   sampler_name: string
   n_iter: number
+  clip_skip: number
   batch_size: number
   steps: number
   cfg_scale: number
@@ -130,6 +131,7 @@ function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppS
     // hr_scale: 1.5,
     // hr_second_pass_steps: 15,
     // hr_upscaler: "",
+    clip_skip: opts.user.images?.clipSkip ?? model?.init.clipSkip ?? 0,
     height: opts.user.images?.height ?? model?.init.height ?? 384,
     width: opts.user?.images?.width ?? model?.init.width ?? 384,
     n_iter: 1,

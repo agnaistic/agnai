@@ -23,6 +23,7 @@ type Embeddings = {
 // let Tokenizer: PreTrainedTokenizer
 let Embedder: Pipeline
 let Captioner: Pipeline
+let HttpCaptioner: (base64: string) => Promise<any>
 
 const embeddings: Embeddings = {}
 const documents: Record<string, Array<EmbedDocument & { embed: Tensor }>> = {}
@@ -50,6 +51,20 @@ const handlers: {
   },
   initCaptioning: async (msg) => {
     console.log(`[caption] loading`)
+
+    if (msg.model.startsWith('http')) {
+      HttpCaptioner = (base64: string) =>
+        fetch(msg.model, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        })
+          .then((r) => r.json())
+          .then((res) => res.caption.trim())
+      post('captionLoaded', {})
+      console.log('[caption] http ready')
+      return
+    }
     Captioner = await pipeline('image-to-text', msg.model, {
       // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
@@ -60,8 +75,16 @@ const handlers: {
     post('captionLoaded', {})
   },
   captionImage: async (msg) => {
-    if (!Captioner) return
     const base64 = msg.image.includes(',') ? msg.image.split(',')[1] : msg.image
+
+    if (HttpCaptioner) {
+      const caption = await HttpCaptioner(base64)
+      console.log(`[caption] done`, caption)
+      post('caption', { requestId: msg.requestId, caption })
+      return
+    }
+
+    if (!Captioner) return
 
     const buffer = Buffer.from(base64, 'base64')
     const blob = new Blob([new Uint8Array(buffer)])
@@ -95,6 +118,25 @@ const handlers: {
     await docCache.saveDoc(msg.documentId, msg)
     embed(msg)
   },
+  queryChat: async (query) => {
+    if (!embeddings[query.chatId]) return
+    const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
+
+    const path = new Set(query.path)
+
+    const embeds = Object.values(embeddings[query.chatId])
+      .filter((msg) => {
+        if (!path.has(msg.meta.id)) return false
+        const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
+        return msg.msg !== query.text && isBefore
+      })
+      .map((msg) => {
+        const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
+        return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
+      })
+      .sort(rank)
+    post('result', { messages: embeds, requestId: query.requestId })
+  },
   query: async (query) => {
     if (!Embedder) {
       post('result', { messages: [], requestId: query.requestId })
@@ -103,19 +145,6 @@ const handlers: {
 
     const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
     const start = Date.now()
-    if (embeddings[query.chatId]) {
-      const embeds = Object.values(embeddings[query.chatId])
-        .filter((msg) => {
-          const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
-          return msg.msg !== query.text && isBefore
-        })
-        .map((msg) => {
-          const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
-          return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
-        })
-        .sort(rank)
-      post('result', { messages: embeds, requestId: query.requestId })
-    }
 
     if (documents[query.chatId]) {
       const embeds = documents[query.chatId]
@@ -200,7 +229,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
         entityId: msg.characterId || msg.userId || '',
         msg: msg.msg,
         embed: embedding,
-        meta: { created: msg.createdAt },
+        meta: { id: msg._id, created: msg.createdAt },
       }
     }
 
@@ -233,6 +262,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   const next = embedQueue.shift()
   if (next) {
+    await new Promise((res) => setTimeout(res, 50))
     embed(next)
   }
 }

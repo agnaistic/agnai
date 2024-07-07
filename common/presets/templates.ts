@@ -45,7 +45,7 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   },
   ChatML: {
     openUser: '<|im_start|>user\n',
-    closeUser: '<|im_end>',
+    closeUser: '<|im_end|>',
     openBot: '<|im_start|>assistant\n',
     closeBot: '<|im_end|>',
     openSystem: '<|im_start|>system\n',
@@ -113,10 +113,8 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 
 {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
 {{/each}}
-{{#if ujb}}<bot>
-{{ujb}}</bot>
-{{/if}}
-<bot>{{post}}`,
+
+<bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
 {{#if system_prompt}}{{system_prompt}}
 {{/if}}
@@ -140,7 +138,9 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{
 {{/if}}
 {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
 {{/if}}
-***  
+
+Then the roleplay chat between {{char}} and {{user}} begins.
+
 {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
 {{/each}}
 {{#if ujb}}### Instruction:

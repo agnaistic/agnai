@@ -14,11 +14,11 @@ import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
 import { ModelFormat } from '../presets/templates'
+import * as Saga from './saga'
 
 export type AllDoc =
   | AppSchema.Announcement
   | AppSchema.Chat
-  | AppSchema.ChatTree
   | AppSchema.ChatMessage
   | AppSchema.Character
   | AppSchema.User
@@ -34,15 +34,12 @@ export type AllDoc =
   | AppSchema.ApiKey
   | AppSchema.PromptTemplate
   | AppSchema.Configuration
+  | AppSchema.SagaTemplate
+  | AppSchema.SagaSession
 
 export type OAuthScope = keyof typeof oauthScopes
 
 export const oauthScopes = ['characters', 'chats', 'presets', 'profile'] as const
-
-export type ChatBranch = {
-  parent: string
-  children: { [key: string]: number }
-}
 
 export namespace AppSchema {
   export interface Configuration {
@@ -84,13 +81,16 @@ export namespace AppSchema {
 
     ttsEnabled: boolean
     ttsHost: string
+
+    maxGuidanceTokens: number
+    maxGuidanceVariables: number
   }
 
   export type ImageModel = {
     name: string
     desc: string
-    init: { steps: number; cfg: number; height: number; width: number }
-    limit: { steps: number; cfg: number; height: number; width: number }
+    init: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
+    limit: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
   }
 
   export interface Announcement {
@@ -140,7 +140,7 @@ export namespace AppSchema {
     level: number
     service: AIAdapter
     guidance: boolean
-    preset: GenSettings
+    preset: GenSettings & Pick<SubscriptionPreset, 'allowGuestUsage'>
   }
 
   export interface AppConfig {
@@ -316,13 +316,19 @@ export namespace AppSchema {
     enabled: boolean
   }
 
-  export interface ChatTree {
-    _id: string
-    kind: 'chat-tree'
-    chatId: string
-    userId: string
+  export interface SagaField {
+    name: string
+    label: string
+    visible: boolean
+    type: 'string' | 'number' | 'boolean'
+  }
 
-    tree: Record<string, ChatBranch>
+  export interface SagaTemplate extends Saga.Template {
+    kind: 'saga-template'
+  }
+
+  export interface SagaSession extends Saga.Session {
+    kind: 'saga-session'
   }
 
   export interface Chat {
@@ -397,6 +403,7 @@ export namespace AppSchema {
     event?: ScenarioEventType | undefined
     state?: string
     values?: Record<string, string | number | boolean>
+    parent?: string
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
@@ -509,6 +516,7 @@ export namespace AppSchema {
     service?: AIAdapter
 
     temp: number
+    tempLast?: boolean
     dynatemp_range?: number
     dynatemp_exponent?: number
     smoothingFactor?: number
@@ -530,8 +538,11 @@ export namespace AppSchema {
     doSample?: boolean
     penaltyAlpha?: number
     numBeams?: number
+
     addBosToken?: boolean
     banEosToken?: boolean
+    tokenHealing?: boolean
+
     earlyStopping?: boolean
     stopSequences?: string[]
     trimStop?: boolean

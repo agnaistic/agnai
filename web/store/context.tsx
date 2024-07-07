@@ -4,12 +4,15 @@ import { characterStore } from './character'
 import { settingStore } from './settings'
 import { chatStore } from './chat'
 import { AppSchema } from '/common/types'
-import { getSettingColor, userStore } from './user'
-import { hexToRgb, toMap } from '../shared/util'
+import { userStore } from './user'
+import { toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
 import { PresetInfo, getClientPreset } from '../shared/adapter'
+import { getRgbaFromVar } from '../shared/colors'
+import { msgStore } from './message'
+import { ChatTree } from '/common/chat'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -45,6 +48,7 @@ export type ContextState = {
     ooc: JSX.CSSProperties
   }
   promptHistory: any
+  chatTree: ChatTree
   info?: PresetInfo
 }
 
@@ -65,6 +69,7 @@ const initial: ContextState = {
     ooc: {},
   },
   promptHistory: {},
+  chatTree: {},
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -76,17 +81,21 @@ export function ContextProvider(props: { children: any }) {
   const chats = chatStore()
   const users = userStore()
   const cfg = settingStore()
+  const msgs = msgStore()
 
   const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(
       users.current.botBackground || 'bg-800',
-      users.ui.msgOpacity
+      users.ui.msgOpacity,
+      'chat-bot'
     )
     const userBackground = getRgbaFromVar(
       users.current.msgBackground || 'bg-800',
-      users.ui.msgOpacity
+      users.ui.msgOpacity,
+      'chat-user'
     )
-    const oocBackground = getRgbaFromVar('bg-1000', users.ui.msgOpacity)
+
+    const oocBackground = getRgbaFromVar('bg-1000', users.ui.msgOpacity, 'chat-ooc')
 
     return {
       bot: botBackground,
@@ -141,6 +150,7 @@ export function ContextProvider(props: { children: any }) {
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
       info,
+      chatTree: msgs.graph.tree,
     }
 
     setState(next)
@@ -153,15 +163,4 @@ export function useAppContext() {
   const [state, setState] = useContext(AppContext)
 
   return [state, { setState }] as const
-}
-
-function getRgbaFromVar(cssVar: string, opacity: number): JSX.CSSProperties {
-  const hex = getSettingColor(cssVar)
-  const rgb = hexToRgb(hex)
-  if (!rgb) return {}
-
-  return {
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`,
-    'backdrop-filter': 'blur(5px)',
-  }
 }

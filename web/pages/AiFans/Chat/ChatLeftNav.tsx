@@ -6,8 +6,8 @@ const ChatLeftNav = (props: any) => {
     <div class="flex h-full flex-col justify-between">
       <div class="flex flex-col gap-5 p-4">
         <GenerateButton title="GENERATE IMAGE" />
-        <ChatLeftNavItem icon="/images/nav-home-icon.png" title="Home" />
-        <ChatLeftNavItem icon="/images/nav-chat-icon.png" title="Chat" />
+        <ChatLeftNavItem icon="/images/nav-home-icon.png" title="Home" href="/" />
+        <ChatLeftNavItem icon="/images/nav-chat-icon.png" title="Chat" href="/chat" />
         <ChatLeftNavItem icon="/images/nav-gallery-icon.png" title="Gallery" />
         <ChatLeftNavItem
           icon="/images/nav-character-requests-icon.png"

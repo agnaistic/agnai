@@ -2,7 +2,7 @@ import Values from 'values.js'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import { createDebounce, getRootVariable, hexToRgb, storage, setRootVariable } from '../shared/util'
+import { createDebounce, storage } from '../shared/util'
 import { api, clearAuth, getAuth, getUserId, isLoggedIn, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -14,6 +14,13 @@ import { defaultUIsettings } from '/common/types/ui'
 import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { getUserSubscriptionTier } from '/common/util'
+import {
+  getColorShades,
+  getRootVariable,
+  getSettingColor,
+  hexToRgb,
+  setRootVariable,
+} from '../shared/colors'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -514,10 +521,23 @@ export const userStore = createStore<UserState>(
       return { ui: next }
     },
 
-    async receiveUI(_, update: UI.UISettings) {
+    async receiveUI({ ui }, update: UI.UISettings) {
       const current = update[update.mode]
       await updateTheme(update)
-      return { ui: update, current }
+
+      const keys = Object.keys(defaultUIsettings.msgOptsInline) as UI.MessageOption[]
+
+      for (const key of keys) {
+        if (!update.msgOptsInline[key]) {
+          update.msgOptsInline[key] = { ...defaultUIsettings.msgOptsInline[key] }
+        }
+
+        if (!defaultUIsettings.msgOptsInline[key]) {
+          delete update.msgOptsInline[key]
+        }
+      }
+
+      return { ui: { ...ui, ...update }, current }
     },
 
     setBackground(_, file: FileInputResult | null) {
@@ -773,6 +793,10 @@ function getUIsettings(guest = false) {
     ui.light.chatQuoteColor = UI.defaultUIsettings.light.chatQuoteColor
   }
 
+  if (!ui.msgOptsInline) {
+    ui.msgOptsInline = UI.defaultUIsettings.msgOptsInline
+  }
+
   return ui
 }
 
@@ -783,54 +807,6 @@ async function setBackground(content: any) {
   }
 
   await storage.setItem(BACKGROUND_KEY, content)
-}
-
-function adjustColor(color: string, percent: number, target = 0) {
-  if (color.startsWith('--')) {
-    color = getSettingColor(color)
-  } else if (!color.startsWith('#')) {
-    color = '#' + color
-  }
-
-  const step = [0, 0, 0]
-
-  const hex = [1, 3, 5]
-    .map((v, i) => {
-      const val = parseInt(color.substring(v, v + 2), 16)
-      step[i] = target !== 0 ? (val + target) / 100 : 0
-      return val
-    })
-    .map((v, i) => {
-      if (target !== 0) return v + percent * step[i]
-      return (v * (100 + percent)) / 100
-    })
-    .map((v) => Math.min(v, 255))
-    .map((v) => Math.round(v))
-    .map((v) => v.toString(16).padStart(2, '0'))
-    .join('')
-
-  return '#' + hex
-}
-
-function getColorShades(color: string) {
-  const colors: string[] = [adjustColor(color, -100), color]
-  for (let i = 2; i <= 9; i++) {
-    const next = adjustColor(color, i * 100)
-    colors.push(next)
-  }
-
-  return colors
-}
-
-export function getSettingColor(color: string) {
-  if (!color) return ''
-  if (color.startsWith('#')) return color
-  return getRootVariable(color)
-}
-
-export function getAsCssVar(color: string) {
-  if (color.startsWith('--')) return `var(${color})`
-  return `var(--${color})`
 }
 
 function getUIKey(guest = false) {

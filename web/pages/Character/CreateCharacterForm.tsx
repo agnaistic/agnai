@@ -31,7 +31,6 @@ import { characterStore, tagStore, toastStore, memoryStore, chatStore } from '..
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
-import { getImageData } from '../../store/data/chars'
 import Select, { Option } from '../../shared/Select'
 import TagInput from '../../shared/TagInput'
 import { CultureCodes } from '../../shared/CultureCodes'
@@ -59,6 +58,8 @@ import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
 import { getAssetUrl } from '/web/shared/util'
 import { ImageSettings } from '../Settings/Image/ImageSettings'
+import { v4 } from 'uuid'
+import { imageApi } from '/web/store/data/image'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -171,7 +172,7 @@ export const CreateCharacterForm: Component<{
     if (!query.import) return
     try {
       const { file, json } = await downloadCharacterHub(query.import)
-      const imageData = await getImageData(file)
+      const imageData = await imageApi.getImageData(file)
       const char = jsonToCharacter(json)
       editor.load(char)
       editor.update({
@@ -180,6 +181,7 @@ export const CreateCharacterForm: Component<{
         avatar: file,
         personaKind: 'text',
       })
+      editor.receiveAvatar(file)
 
       setImage(imageData)
       toastStore.success(`Successfully downloaded from Character Hub`)
@@ -234,18 +236,16 @@ export const CreateCharacterForm: Component<{
     }
 
     const file = files[0].file
-    editor.update('avatar', file)
-    const data = await getImageData(file)
+    const data = await editor.receiveAvatar(file)
     setImage(data)
   }
 
   const onSubmit = async (ev: Event) => {
-    const payload = editor.payload()
-    payload.avatar = editor.state.avatar
+    const payload = editor.payload(true)
 
     if (props.temp && props.chat) {
       if (editor.state.avatar) {
-        const data = await getImageData(editor.state.avatar)
+        const data = await imageApi.getImageData(editor.state.avatar)
         payload.avatar = data
       }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, (result) => {
@@ -697,7 +697,7 @@ export const CreateCharacterForm: Component<{
         close={() => setImport(false)}
         onSave={(char, imgs) => {
           editor.load(char[0])
-          editor.update('avatar', imgs[0])
+          editor.receiveAvatar(imgs[0]!)
           setImage(imgs[0] as any)
           setImport(false)
         }}
@@ -1068,7 +1068,7 @@ const ReelControl: Component<{ editor: CharEditor }> = (props) => {
     const base64 = await props.editor.createAvatar()
     if (!base64) return
 
-    await props.editor.imageCache.addImage(base64)
+    await props.editor.imageCache.addImage(base64, `${v4()}.png`)
   }
 
   const size = 14

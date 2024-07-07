@@ -1,4 +1,4 @@
-import { Component, JSX, For, createMemo } from 'solid-js'
+import { Component, JSX, For, createMemo, Show } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
@@ -20,6 +20,8 @@ const Select: Component<{
   disabled?: boolean
   classList?: Record<string, boolean>
   onChange?: (item: Option) => void
+  recommend?: string
+  recommendLabel?: string
 
   service?: AIAdapter
   format?: ThirdPartyFormat
@@ -39,13 +41,29 @@ const Select: Component<{
     return isValid ? '' : ' hidden'
   })
 
+  const recommend = createMemo(() => {
+    if (!props.recommend) return
+    const item = props.items.find((i) => i.value === props.recommend)
+    return item ? item.label : props.recommend
+  })
+
   return (
     <div class={`${hide()} max-w-full`} classList={props.classList}>
       <FormLabel
-        label={props.label}
+        label={
+          <span>
+            <label class="form-label">{props.label}</label>
+            <Show when={recommend() !== undefined}>
+              <span class="text-xs italic text-gray-500">
+                &nbsp;({props.recommendLabel || 'Recommended'}: {recommend()?.toString()})
+              </span>
+            </Show>
+          </span>
+        }
         helperText={props.helperText}
         helperMarkdown={props.helperMarkdown}
       />
+
       <div class="flex items-center">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select

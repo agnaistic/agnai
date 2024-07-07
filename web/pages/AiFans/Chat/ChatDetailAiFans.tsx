@@ -38,6 +38,7 @@ import ChatHeaderAiFans from './ChatHeaderAiFans'
 import Header from '/web/shared/aifans/Header'
 import MessageAiFans from './components/MessageAiFans'
 import { ChatFooterAiFans } from './ChatFooterAiFans'
+import { isLoggedIn } from '/web/store/api'
 
 export { ChatDetail as default }
 
@@ -247,8 +248,11 @@ const ChatDetail: Component = () => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName}` : 'Chat')
 
-    if (!params.id) {
-      if (!chats.lastId) return nav('/character/list')
+    // if (!isLoggedIn()) {
+    //   return nav('/')
+    // }
+
+    if (!params.id && chats.lastId) {
       return nav(`/chat/${chats.lastId}`)
     }
 
@@ -256,7 +260,7 @@ const ChatDetail: Component = () => {
       chatStore.getChat(params.id)
     }
 
-    console.log('chatStore', chatStore)
+    // console.log('chatStore', chatStore)
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
@@ -389,8 +393,16 @@ const ChatDetail: Component = () => {
 
   onCleanup(clearScrollMonitor)
 
+  if (!chats?.lastId) {
+    return (
+      <div class="flex items-center justify-center p-5">
+        <p class="text-2xl">Select a conversation</p>
+      </div>
+    )
+  }
+
   return (
-    <div class="flex h-[calc(100vh-122px)] flex-col overflow-hidden">
+    <div class="flex h-[calc(100vh-62px)] flex-col overflow-hidden md:h-[calc(100vh-122px)]">
       <div class="flex">
         <ChatHeaderAiFans image={chats.char?.avatar} name={chats.char?.name} id={chats.char?._id} />
       </div>

@@ -1,3 +1,4 @@
+import * as Purify from 'dompurify'
 import {
   Component,
   For,
@@ -9,6 +10,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
   onMount,
 } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
@@ -17,7 +19,6 @@ import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
 import { formatResponse, sagaStore } from './state'
 import { markdown } from '/web/shared/markdown'
-import { SagaSession, SagaTemplate } from '/web/store/data/saga'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import {
@@ -39,10 +40,39 @@ import { Pill } from '/web/shared/Card'
 import { getTemplateFields, toSessionUrl } from './util'
 import { SessionList } from './List'
 import { toastStore, userStore } from '/web/store'
+import { Saga } from '/common/types'
+import { getRgbaFromVar } from '/web/shared/colors'
+import { trimSentence } from '/common/util'
+import { sticky } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
-  const state = sagaStore()
   const user = userStore()
+  const state = sagaStore((s) => {
+    const responses = s.state.responses.map((res) => trimResponse(res, user.ui.trimSentences))
+    const init = s.state.init ? trimResponse(s.state.init, user.ui.trimSentences) : undefined
+
+    return {
+      ...s,
+      responses,
+      init,
+    }
+  })
+
+  const ui = createMemo(() => {
+    const alt = `${user.ui.chatAlternating ?? 0}%`
+    return {
+      response: {
+        ...getRgbaFromVar(user.current.botBackground || 'bg-800', user.ui.msgOpacity),
+        width: `calc(100% - ${alt})`,
+        'margin-left': alt,
+      },
+      input: {
+        ...getRgbaFromVar(user.current.msgBackground || 'bg-800', user.ui.msgOpacity),
+        width: `calc(100% - ${alt}%)`,
+        'margin-right': alt,
+      },
+    }
+  })
 
   const params = useParams()
   const [search, setSearch] = useSearchParams()
@@ -111,6 +141,8 @@ export const SagaDetail: Component = (props) => {
     })
   }
 
+  onCleanup(sticky.clear)
+
   return (
     <>
       <ModeDetail
@@ -124,17 +156,19 @@ export const SagaDetail: Component = (props) => {
         split={headerImage()}
         splitHeight={user.ui.viewHeight ?? 30}
       >
-        <div class="flex flex-col gap-2">
-          <Show when={!!state.state.init}>
+        <section class="flex flex-col gap-2" ref={sticky.monitor}>
+          <Show when={!!state.init}>
             <Response
               template={state.template}
               type="intro"
-              msg={state.state.init!}
+              msg={state.init!}
               session={state.state}
+              ui={ui()}
+              busy={state.busy}
             />
           </Show>
 
-          <Index each={state.state.responses}>
+          <Index each={state.responses}>
             {(res, i) => (
               <>
                 <Response
@@ -143,6 +177,8 @@ export const SagaDetail: Component = (props) => {
                   msg={res()}
                   session={state.state}
                   index={i}
+                  ui={ui()}
+                  busy={state.busy}
                 />
                 <Response
                   template={state.template}
@@ -151,14 +187,17 @@ export const SagaDetail: Component = (props) => {
                   session={state.state}
                   siblings={state.state.responses.length}
                   index={i}
-                />
+                  ui={ui()}
+                  busy={state.busy}
+                >
+                  <Show when={state.busy && i === state.state.responses.length - 1}>
+                    <Loading type="flashing" />
+                  </Show>
+                </Response>
               </>
             )}
           </Index>
-          <Show when={state.busy}>
-            <Loading type="flashing" />
-          </Show>
-        </div>
+        </section>
       </ModeDetail>
       <Show when={load()}>
         <LoadModal close={() => setLoad(false)} />
@@ -183,7 +222,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
   )
 }
 
-const Header: Component<{ template: SagaTemplate; session: SagaSession }> = (props) => {
+const Header: Component<{ template: Saga.Template; session: Saga.Session }> = (props) => {
   const [_, setParams] = useSearchParams()
   return (
     <div class="flex w-full justify-between rounded-md p-1">
@@ -212,7 +251,7 @@ const Footer: Component<{
   const params = useParams()
   const nav = useNavigate()
 
-  const onSave = (session: SagaSession) => {
+  const onSave = (session: Saga.Session) => {
     toastStore.success('Session saved')
     if (session._id !== params.id) {
       nav(toSessionUrl(session._id))
@@ -296,12 +335,15 @@ const MainMenu = () => {
 }
 
 const Response: Component<{
-  template: SagaTemplate
-  session: SagaSession
+  template: Saga.Template
+  session: Saga.Session
+  ui: Record<string, JSX.CSSProperties>
   type: 'input' | 'response' | 'intro'
   siblings?: number
   msg: Record<string, any>
   index?: number
+  children?: any
+  busy: boolean
 }> = (props) => {
   const [edit, setEdit] = createSignal(false)
   const [mods, setMods] = createStore<Record<string, string>>({})
@@ -362,23 +404,62 @@ const Response: Component<{
     }
   }
 
+  const content = createMemo(() => renderMessage(text()))
+
   return (
     <>
       <div
-        class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
-        classList={{
-          'bg-800': props.type === 'intro' || props.type === 'response',
-          'bg-700': props.type === 'input',
-        }}
+        class="rendered-markdown flex flex-col gap-1 rounded-md px-2 py-[6px]"
+        style={{ ...(props.ui[props.type] || props.ui.response) }}
       >
+        <div class="flex justify-between gap-1 py-1">
+          <div>
+            <Show when={canRetry() && !!props.children}>{props.children}</Show>
+          </div>
+          <div class="flex items-end justify-end gap-1">
+            <Show when={!edit()}>
+              <Button size="pill" schema="icon" onClick={startEdit} disabled={props.busy}>
+                <Pencil size={16} />
+              </Button>
+
+              <Show when={props.type === 'response'}>
+                <Button
+                  size="pill"
+                  schema="icon"
+                  onClick={() => sagaStore.deleteResponse(props.index!)}
+                >
+                  <Trash size={16} />
+                </Button>
+                <Button
+                  size="pill"
+                  schema="icon"
+                  onClick={() => sagaStore.retry()}
+                  classList={{ hidden: !canRetry() }}
+                  disabled={props.busy}
+                >
+                  <RefreshCw class="icon-button" size={16} />
+                </Button>
+              </Show>
+            </Show>
+
+            <Show when={edit()}>
+              <Button size="pill" schema="success" onClick={save}>
+                Save
+              </Button>
+              <Button size="pill" schema="error" onClick={() => setEdit(false)}>
+                Cancel
+              </Button>
+            </Show>
+          </div>
+        </div>
         <Show when={!edit()}>
-          <div innerHTML={markdown.makeHtml(text())} />
+          <div innerHTML={content()} />
         </Show>
         <Show when={edit()}>
           <div class="flex flex-col gap-1">
             <For each={fields()}>
               {(field) => (
-                <div class="bg-700 p-1 text-sm">
+                <div class="bg-700 rounded-md p-1 text-sm">
                   <Pill small type="hl">
                     {field}
                   </Pill>
@@ -392,40 +473,6 @@ const Response: Component<{
             </For>
           </div>
         </Show>
-        <div class="flex justify-end gap-1">
-          <Show when={!edit()}>
-            <Button size="pill" schema="clear" onClick={startEdit}>
-              <Pencil size={20} />
-            </Button>
-
-            <Show when={props.type === 'response'}>
-              <Button
-                size="pill"
-                schema="clear"
-                onClick={() => sagaStore.deleteResponse(props.index!)}
-              >
-                <Trash size={20} />
-              </Button>
-              <Button
-                size="pill"
-                schema="clear"
-                onClick={() => sagaStore.retry()}
-                classList={{ hidden: !canRetry() }}
-              >
-                <RefreshCw size={20} />
-              </Button>
-            </Show>
-          </Show>
-
-          <Show when={edit()}>
-            <Button size="pill" schema="success" onClick={save}>
-              Save
-            </Button>
-            <Button size="pill" schema="error" onClick={() => setEdit(false)}>
-              Cancel
-            </Button>
-          </Show>
-        </div>
       </div>
     </>
   )
@@ -438,4 +485,47 @@ const Label: Component<{ label: string; children: JSX.Element }> = (props) => {
       <div class="bg-900 rounded-r-md px-2 py-1">{props.children}</div>
     </div>
   )
+}
+
+function renderMessage(msg: string) {
+  return Purify.sanitize(
+    wrapWithQuoteElement(markdown.makeHtml(msg).replace(/&amp;nbsp;/g, '&nbsp;'))
+  )
+}
+
+function wrapWithQuoteElement(str: string) {
+  return str.replace(
+    // we first match code blocks AND html tags
+    // to ensure we do NOTHING to what's inside them
+    // then we match "regular quotes" and“'pretty quotes” as capture group
+    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    wrapCaptureGroups
+  )
+}
+
+/** For use as a String#replace(str, cb) callback */
+function wrapCaptureGroups(
+  match: string,
+  regularQuoted?: string /** regex capture group 1 */,
+  curlyQuoted?: string /** regex capture group 2 */
+) {
+  if (regularQuoted) {
+    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
+  } else if (curlyQuoted) {
+    return '<q>“' + curlyQuoted.replace(/\u201C|\u201D/g, '') + '”</q>'
+  } else {
+    return match
+  }
+}
+
+function trimResponse(res: Record<string, any>, trim?: boolean) {
+  if (!trim) return res
+
+  const next = Object.assign({}, res)
+
+  for (const [key, value] of Object.entries(res)) {
+    next[key] = typeof value === 'string' ? trimSentence(value) : value
+  }
+
+  return next
 }

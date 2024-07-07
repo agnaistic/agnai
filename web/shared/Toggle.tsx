@@ -19,6 +19,7 @@ export const Toggle: Component<{
   format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   classList?: Record<string, boolean>
+  recommended?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -42,7 +43,16 @@ export const Toggle: Component<{
     >
       <Show when={props.label && !props.reverse}>
         <FormLabel
-          label={props.label}
+          label={
+            <span>
+              <label class="form-label">{props.label}</label>
+              <Show when={props.recommended !== undefined}>
+                <span class="text-xs italic text-gray-500">
+                  &nbsp;(Recommended: {props.recommended?.toString()})
+                </span>
+              </Show>
+            </span>
+          }
           helperText={props.helperText}
           helperMarkdown={props.helperMarkdown}
         />

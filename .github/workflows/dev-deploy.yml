@@ -59,20 +59,3 @@ jobs:
           aws_bucket: ${{ secrets.S3_DEV_ASSET_BUCKET }}
           source_dir: 'dist'
           destination_dir: ''
-
-      # - name: Build image
-      #   run: |
-      #     docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev --build-arg SHA=$GITHUB_SHA .
-      #     docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
-
-      # - name: Log in to Container Registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-
-      # - name: Publish
-      #   run: |
-      #     docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev
-      #     docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
-
-      # - name: Update Service
-      #   run: |
-      #     sh .github/dev-deploy.sh ${{ secrets.SSH_SERVER }}

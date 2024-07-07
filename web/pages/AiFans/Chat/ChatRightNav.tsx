@@ -14,11 +14,13 @@ const ChatRightNav = (props: any) => {
   return (
     <div class="flex h-[calc(100vh-122px)] flex-col overflow-x-hidden overflow-y-scroll">
       <div class="relative h-[488px] w-[406px] flex-shrink-0 overflow-hidden">
-        <img
-          class="absolute h-full w-full object-cover"
-          src={'/images/image-generator-placeholder-1.jpg'}
-          alt="user"
-        />
+        {chats.char?.avatar && (
+          <img
+            class="absolute h-full w-full object-cover"
+            src={getAssetUrl(chats.char?.avatar)}
+            alt="user"
+          />
+        )}
       </div>
       <div class="border-b border-b-cosplay-gray-100 px-8 py-[18px]">
         <div class="flex flex-row items-end">

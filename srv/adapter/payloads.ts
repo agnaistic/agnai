@@ -16,10 +16,13 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 }
 
 function getBasePayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen, prompt } = opts
+  const { gen, prompt, subscription } = opts
+
+  const service = subscription?.preset?.service || gen.service
+  const format = subscription?.preset?.thirdPartyFormat || gen.thirdPartyFormat
 
   // Agnaistic
-  if (gen.service !== 'kobold') {
+  if (service !== 'kobold') {
     const body: any = {
       prompt,
       context_limit: gen.maxContextLength,
@@ -50,6 +53,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stopping_strings: getStoppingStrings(opts, stops),
       dynamic_temperature: gen.dynatemp_range ? true : false,
       smoothing_factor: gen.smoothingFactor,
+      token_healing: gen.tokenHealing,
+      temp_last: gen.tempLast,
       tfs: gen.tailFreeSampling,
       mirostat_mode: gen.mirostatTau ? 2 : 0,
       mirostat_tau: gen.mirostatTau,
@@ -70,7 +75,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'mistral') {
+  if (format === 'mistral') {
     const body = {
       messages: [{ role: 'user', content: prompt }],
       model: gen.mistralModel!,
@@ -83,7 +88,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'tabby') {
+  if (format === 'tabby') {
     const body: any = {
       prompt,
       top_k: gen.topK,
@@ -106,6 +111,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
       stream: gen.streamResponse,
+      token_healing: gen.tokenHealing,
+      temperature_last: gen.minP ? !!gen.tempLast : false,
     }
 
     if (gen.dynatemp_range) {
@@ -117,7 +124,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'llamacpp') {
+  if (format === 'llamacpp') {
     const body = {
       prompt,
       temperature: gen.temp,
@@ -142,7 +149,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'ooba') {
+  if (format === 'ooba') {
     const body: any = {
       prompt,
       temperature: gen.temp,
@@ -180,7 +187,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'aphrodite') {
+  if (format === 'aphrodite') {
     const body: any = {
       model: gen.thirdPartyModel || '',
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
@@ -223,7 +230,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (gen.thirdPartyFormat === 'exllamav2') {
+  if (format === 'exllamav2') {
     const body = {
       request_id: opts.requestId,
       action: 'infer',
@@ -236,12 +243,15 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stop_conditions: getStoppingStrings(opts, stops),
       typical: gen.typicalP,
       rep_pen: gen.repetitionPenalty,
+      freq_pen: gen.frequencyPenalty,
+      pres_pen: gen.presencePenalty,
       min_p: gen.minP,
+      token_healing: !!gen.tokenHealing,
     }
     return body
   }
 
-  if (gen.thirdPartyFormat === 'koboldcpp') {
+  if (format === 'koboldcpp') {
     const body = {
       n: 1,
       max_context_length: gen.maxContextLength,

@@ -15,9 +15,11 @@ export const baseUrl =
   PORT === '1234' || PORT === '3001' || HOST === 'localhost' || HOST === '127.0.0.1'
     ? `${PROTO}//${HOST}:3001`
     : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
-    ? `${PROTO}//lb-api.agnai.chat`
+    ? `${PROTO}//prd-api.agnai.chat`
     : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-    ? `${PROTO}//api.agnai.chat`
+    ? `${PROTO}//prd-api.agnai.chat`
+    : HOST === 'stg.agnai.chat'
+    ? `${PROTO}//stg-api.agnai.chat`
     : location.origin
 
 export const api = {
@@ -103,6 +105,15 @@ async function callApi<T = any>(
   }).catch((err) => ({ error: err }))
 
   if ('error' in res) {
+    if (isSessionExpired() && fullUrl.includes(baseUrl)) {
+      events.emit(EVENTS.sessionExpired)
+      return {
+        result: undefined,
+        status: 401,
+        error: 'Your session has expired. Please login again.',
+      }
+    }
+
     return { result: undefined, status: 503, error: res.error.message || res.error }
   }
 
@@ -176,7 +187,19 @@ async function* callApiStream<T = any>(path: string, opts: RequestInit) {
 }
 
 export function setAuth(jwt: string) {
-  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 30 })
+  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 120 })
+}
+
+function isSessionExpired() {
+  const jwt = getAuth()
+
+  // No jwt = no session
+  if (!jwt) return false
+
+  const token = getTokenBody(jwt)
+  const expiry = new Date(token.exp * 1000)
+
+  return Date.now() > expiry.valueOf()
 }
 
 export function getAuth() {
@@ -202,7 +225,7 @@ export function getUserId() {
 function getTokenBody(jwt: string) {
   const [_head, body, _sign] = jwt.split('.')
   const data = JSON.parse(window.atob(body))
-  return data as any
+  return data as { admin: boolean; exp: number; iat: number; userId: string; username: string }
 }
 
 export function setAltAuth(jwt: string) {

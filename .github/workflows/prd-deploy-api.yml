@@ -1,0 +1,43 @@
+name: Deploy to PRD (API only)
+
+on: workflow_dispatch
+
+env:
+  IMAGE_NAME: agnaistic
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: 'none'
+
+      - name: Add known host
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
+
+      - name: Build
+        run: |
+          docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest --build-arg SHA=$GITHUB_SHA .
+          docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
+
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Publish
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
+
+      - name: Update Service
+        run: |
+          sh .github/deploy.sh ${{ secrets.SSH_SERVER }}

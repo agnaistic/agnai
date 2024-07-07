@@ -1,5 +1,6 @@
 import peggy from 'peggy'
 import { grammar } from './grammar'
+import { store } from '/srv/db'
 
 type PNode = VarNode | TextNode
 
@@ -55,6 +56,17 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
   const { infer, placeholders } = opts
   const nodes = guidanceParse(inject(template, placeholders))
 
+  const srv = await store.admin.getServerConfiguration()
+  const counts = calculateNodeCounts(nodes)
+
+  if (srv.maxGuidanceTokens && counts.tokens > srv.maxGuidanceTokens) {
+    throw new Error(`Cannot run guidance: Template is requesting too many tokens (>1000)`)
+  }
+
+  if (srv.maxGuidanceVariables && counts.vars > srv.maxGuidanceVariables) {
+    throw new Error(`Cannot run guidance: Template requests too many variables (>15)`)
+  }
+
   let prompt = ''
   let values: any = {}
   const previous: any = opts.previous || {}
@@ -107,6 +119,27 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
   }
 
   return { result: prompt, values: { ...previous, ...values } }
+}
+
+export function calculateGuidanceCounts(template: string, placeholders?: Record<string, string>) {
+  const nodes = guidanceParse(inject(template, placeholders))
+  return calculateNodeCounts(nodes)
+}
+
+function calculateNodeCounts(nodes: PNode[]) {
+  const requestedTokens = nodes.reduce(
+    (count, node) => {
+      if (node.kind !== 'variable') return count
+
+      return {
+        tokens: (node.tokens || 200) + count.tokens,
+        vars: count.vars + 1,
+      }
+    },
+    { tokens: 0, vars: 0 }
+  )
+
+  return requestedTokens
 }
 
 function inject(template: string, placeholders?: Record<string, string>) {

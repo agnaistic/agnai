@@ -1,0 +1,70 @@
+name: Deploy to PRD (Web + API)
+
+on: workflow_dispatch
+
+env:
+  IMAGE_NAME: agnaistic
+  node-version: '18.4.0'
+  pnpm-version: 8.6.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node and PNPM
+        uses: ./.github/actions/install-node-pnpm
+        with:
+          node-version: ${{  env.node-version  }}
+          pnpm-version: ${{  env.pnpm-version  }}
+
+      - name: Get cached dependencies
+        # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
+        id: cache-step
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: 'none'
+
+      - name: Add known host
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
+
+      - name: Install project dependencies
+        if: steps.cache-step.outputs.cache-hit != 'true'
+        run: |
+          ls -la
+          echo $NODE_ENV
+          pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        env:
+          INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
+        run: |
+          pnpm run build:prod
+          cp dist/index.html dist/original.html
+          node .github/inject.js
+
+      - name: Update Backend
+        run: |
+          sh .github/deploy.sh ${{ secrets.SSH_SERVER }}
+
+      - name: Update Frontend
+        uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.S3_ASSET_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
+          aws_bucket: ${{ secrets.S3_PRD_ASSET_BUCKET }}
+          source_dir: 'dist'
+          destination_dir: ''

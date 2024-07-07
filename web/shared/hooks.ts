@@ -1,11 +1,11 @@
-import { Accessor, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
+import { Accessor, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
-import { hexToRgb } from './util'
+import { userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
+import { getSettingColor, hexToRgb } from './colors'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
@@ -201,6 +201,21 @@ export function useDraft(id: string) {
 export function clearDraft(id: string) {
   const key = `chat:${id}:draft`
   localStorage.removeItem(key)
+}
+
+export function useLocalStorage<T = any>(id: string, initialValue: T) {
+  const key = `agnaistic-ls-${id}`
+  const init = localStorage.getItem(key) || JSON.stringify(initialValue)
+
+  const [value, setValue] = createSignal<T>(JSON.parse(init))
+
+  const update = (next: T) => {
+    localStorage.setItem(key, JSON.stringify(next))
+    setValue(next as any)
+    return next
+  }
+
+  return [value, update] as Signal<T>
 }
 
 export function useEffect(callback: () => void | Function): void {

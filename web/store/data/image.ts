@@ -9,10 +9,10 @@ import { parseTemplate } from '/common/template-parser'
 import { neat } from '/common/util'
 import { AppSchema } from '/common/types'
 import { localApi } from './storage'
-import { getImageData } from './chars'
 import { subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
+import { md5 } from './md5'
 
 type GenerateOpts = {
   chatId?: string
@@ -27,11 +27,21 @@ type GenerateOpts = {
   onDone: (image: string) => void
 }
 
+export const ALLOWED_TYPES = new Map([
+  ['jpg', 'image/jpeg'],
+  ['jpeg', 'image/jpeg'],
+  ['png', 'image/png'],
+  ['apng', 'image/apng'],
+  ['gif', 'image/gif'],
+])
+
 export const imageApi = {
   generateImage,
   generateImageWithPrompt,
   generateImageAsync,
   dataURLtoFile,
+  getImageData,
+  ALLOWED_TYPES,
 }
 
 export async function generateImage({ chatId, messageId, onDone, ...opts }: GenerateOpts) {
@@ -128,6 +138,14 @@ export async function generateImageAsync(
   }
 
   const requestId = v4()
+
+  const promise = new Promise<ImageResult>((resolve, reject) => {
+    callbacks.set(requestId, (image) => {
+      if (image.error) return reject(new Error(image.error))
+      resolve(image)
+    })
+  })
+
   await api.post<{ success: boolean }>(`/character/image`, {
     prompt,
     user,
@@ -137,12 +155,7 @@ export async function generateImageAsync(
     requestId,
   })
 
-  return new Promise<ImageResult>((resolve, reject) => {
-    callbacks.set(requestId, (image) => {
-      if (image.error) return reject(new Error(image.error))
-      resolve(image)
-    })
-  })
+  return promise
 }
 
 const callbacks = new Map<string, (result: ImageResult) => void>()
@@ -160,6 +173,10 @@ subscribe(
     const url = getAssetUrl(body.image)
     const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
     const file = new File([image], `${body.source}.png`, { type: 'image/png' })
+
+    const hash = md5(await image.text())
+    Object.assign(file, { hash })
+
     const data = await getImageData(file)
 
     callback({ image: url, file, data })
@@ -274,12 +291,33 @@ function getSummaryTemplate(service: AIAdapter) {
   }
 }
 
-async function dataURLtoFile(base64: string) {
-  if (!base64.startsWith('data')) {
-    base64 = `data:image/png;base64,${base64}`
-  }
-
+export async function dataURLtoFile(base64: string, name?: string): Promise<File> {
   return fetch(base64)
     .then((res) => res.blob())
-    .then((buf) => new File([buf], 'avatar.png', { type: 'image/png' }))
+    .then(async (buf) => {
+      const file = new File([buf], name || 'avatar.png', { type: 'image/png' })
+      return file
+    })
+}
+
+export async function getImageData(file: File | Blob | string | undefined, name?: string) {
+  if (!file) return
+
+  if (typeof file === 'string') {
+    const image = await fetch(getAssetUrl(file)).then((res) => res.blob())
+    const ext = file.split('.').slice(-1)[0]
+    const mimetype = ALLOWED_TYPES.get(ext) || 'image/png'
+    file = new File([image], name || 'downloaded.png', { type: mimetype })
+  }
+
+  const reader = new FileReader()
+
+  return new Promise<string>((resolve, reject) => {
+    reader.readAsDataURL(file as File | Blob)
+
+    reader.onload = (evt) => {
+      if (!evt.target?.result) return reject(new Error(`Failed to process image`))
+      resolve(evt.target.result.toString())
+    }
+  })
 }

@@ -43,7 +43,14 @@ const handlers: Record<string, Handler> = {
 }
 
 export function getAllCount() {
-  return allSockets.size
+  let versioned = 0
+  for (const cli of allSockets.values()) {
+    if (cli.appVersion > 0) {
+      versioned++
+    }
+  }
+
+  return { count: allSockets.size, versioned }
 }
 
 export function handleMessage(client: AppSocket) {

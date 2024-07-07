@@ -97,16 +97,18 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
     const {
       imageCfg,
-      imageHeight,
       imageSteps,
       imageType,
+      imageClipSkip,
       imageWidth,
+      imageHeight,
       imageNegative,
       imagePrefix,
       imageSuffix,
+
       sdSampler,
-      agnaiModel,
-      agnaiSampler,
+      agnaiModel = '',
+      agnaiSampler = '',
       sdUrl,
       hordeImageModel,
       hordeSampler,
@@ -146,6 +148,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       images: {
         type: imageType,
         cfg: imageCfg,
+        clipSkip: imageClipSkip,
         height: imageHeight,
         width: imageWidth,
         steps: imageSteps,
@@ -166,7 +169,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           sampler: sdSampler,
           url: sdUrl,
         },
-        agnai: { model: agnaiModel, sampler: agnaiSampler },
+        agnai: { model: agnaiModel || '', sampler: agnaiSampler || '' },
       },
     })
   }
@@ -274,8 +277,10 @@ const settingsForm = {
   useLocalPipeline: 'boolean?',
   summariseChat: 'boolean?',
   summaryPrompt: 'string?',
+
   imageType: ['horde', 'sd', 'novel', 'agnai'],
   imageSteps: 'number',
+  imageClipSkip: 'number',
   imageCfg: 'number',
   imageWidth: 'number',
   imageHeight: 'number',
@@ -292,8 +297,8 @@ const settingsForm = {
   sdUrl: 'string',
   sdSampler: 'string',
 
-  agnaiModel: 'string',
-  agnaiSampler: 'string',
+  agnaiModel: 'string?',
+  agnaiSampler: 'string?',
 
   speechToTextEnabled: 'boolean',
   speechToTextAutoSubmit: 'boolean',

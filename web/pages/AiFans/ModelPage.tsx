@@ -1,5 +1,5 @@
-import { Component, createEffect, createSignal, onMount } from 'solid-js'
-import { characterStore } from '/web/store'
+import { Component, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { AllChat, characterStore, chatStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { useParams } from '@solidjs/router'
 import { getAssetUrl, setComponentPageTitle } from '/web/shared/util'
@@ -16,12 +16,14 @@ import LiveChatButton from '/web/shared/aifans/model/buttons/LiveChatButton'
 import GenerateButton from '/web/shared/aifans/model/buttons/GenerateButton'
 import Footer from '/web/shared/aifans/Footer'
 import Header from '/web/shared/aifans/Header'
+import { ChatCharacter } from '../Character/util'
 
 const ModelPage: Component = () => {
   const params = useParams()
 
   const [character, setCharacter] = createSignal<AppSchema.Character | undefined>(undefined)
   const [avatarUrl, setAvatarUrl] = createSignal<string | undefined>(undefined)
+  const [liveChatId, setLiveChatId] = createSignal<string | undefined>(undefined)
 
   const chars = characterStore((s) => ({
     list: s.characters.list,
@@ -30,6 +32,19 @@ const ModelPage: Component = () => {
       {}
     ),
     loaded: s.characters.loaded,
+  }))
+
+  const state = chatStore((s) => ({
+    chats: s.allChats.map((chat) => ({
+      _id: chat._id,
+      name: chat.name,
+      createdAt: chat.createdAt,
+      updatedAt: chat.updatedAt,
+      characterId: chat.characterId,
+      characters: toChatListState(s.allChars.map, chat),
+      messageCount: chat.messageCount,
+    })),
+    chars: s.allChars.map,
   }))
 
   onMount(() => {
@@ -52,6 +67,31 @@ const ModelPage: Component = () => {
     const avatar = character()?.avatar
     if (avatar) {
       setAvatarUrl(getAssetUrl(avatar))
+    }
+  })
+
+  const chats = createMemo(() => {
+    const filterCharId = params.id
+
+    return state.chats.filter((chat) => {
+      if (filterCharId && !chat.characters.some((c) => c._id === filterCharId)) return false
+
+      return true
+    })
+  })
+
+  createEffect(() => {
+    console.log('chats', chats())
+
+    const latestChat = chats().sort(function (a, b) {
+      // Turn your strings into dates, and then subtract them
+      // to get a value that is either negative, positive, or zero.
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
+
+    if (latestChat && latestChat[0]) {
+      setLiveChatId(latestChat[0]._id)
+      console.log('liveChatId()', liveChatId())
     }
   })
 
@@ -98,7 +138,7 @@ const ModelPage: Component = () => {
                     </p>
                     <div class="mt-[30px] flex flex-col gap-3 md:mb-4 md:mt-0 lg:flex-row lg:gap-5">
                       <div>
-                        <LiveChatButton />
+                        <LiveChatButton href={liveChatId()} />
                       </div>
                       <div>
                         <GradientButton
@@ -127,4 +167,40 @@ const ModelPage: Component = () => {
     </div>
   )
 }
+
+function toCharacterIds(characters?: Record<string, boolean>) {
+  if (!characters) return []
+
+  const ids: string[] = []
+  for (const [id, enabled] of Object.entries(characters)) {
+    if (enabled) ids.push(id)
+  }
+  return ids
+}
+
+function toChatListState(chars: Record<string, AppSchema.Character>, chat: AllChat) {
+  const charIds = [chat.characterId].concat(toCharacterIds(chat.characters))
+
+  const seen = new Set<string>()
+  const rows: ChatCharacter[] = []
+  for (const id of charIds) {
+    if (seen.has(id)) continue
+    seen.add(id)
+    const char = chars[id]
+    if (!char) {
+      rows.push({ _id: '', name: 'Unknown', description: '', avatar: '' })
+      continue
+    }
+
+    rows.push({
+      _id: char._id,
+      name: char.name,
+      description: char.description || '',
+      avatar: char.avatar,
+    })
+  }
+
+  return rows
+}
+
 export default ModelPage

@@ -3,8 +3,8 @@ import './tailwind.css'
 import './app.css'
 import './dots.css'
 import '@melloware/coloris/dist/coloris.css'
-import { Component, createMemo, JSX, Show, lazy, onMount } from 'solid-js'
-import { Route, Router, useLocation, useMatch } from '@solidjs/router'
+import { Component, createMemo, JSX, Show, lazy, onMount, Switch, Match } from 'solid-js'
+import { Route, Router, useLocation, useParams } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
@@ -24,7 +24,6 @@ import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
 import ChatDetailAiFans from './pages/AiFans/Chat/ChatDetailAiFans'
-import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { usePaneManager } from './shared/hooks'
@@ -51,6 +50,7 @@ import Header from './shared/aifans/Header'
 import ChatLeftNav from './pages/AiFans/Chat/ChatLeftNav'
 import ChatRecentChatsNav from './pages/AiFans/Chat/ChatRecentChatsNav'
 import ChatRightNav from './pages/AiFans/Chat/ChatRightNav'
+import RedirectToHomepage from './pages/AiFans/RedirectToHomepage'
 
 const App: Component = () => {
   const state = userStore()
@@ -60,46 +60,55 @@ const App: Component = () => {
     <Router root={Layout}>
       <Route path="/" component={HomePageAiFans} />
       <Route path="/model/:id" component={ModelPage} />
-      <CharacterRoutes />
-      <ScenarioRoutes />
+
       <Route path="/discord" component={() => <Redirect external="https://discord.agnai.chat" />} />
-      <ChubRoutes />
-      <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
-      <Route path="/chats" component={CharacterChats} />
-      <Route path="/chat" component={ChatDetailAiFans} />
-      <Show when={cfg.config.guidanceAccess || state.user?.admin}>
-        <Route path="/saga" component={SagaList} />
-        <Route path="/saga/:id" component={SagaDetail} />
-      </Show>
-      <Route path="/chat/:id" component={ChatDetailAiFans} />
-      <Route path="/chatog/:id" component={ChatDetail} />
+
       <Route path={['/info']} component={HomePage} />
-      <Route path="/changelog" component={ChangeLog} />
-      <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
-      <Route
-        path="/presets"
-        component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
-      />
-      <Show when={cfg.flags.sounds}>
-        <Route path="/sounds" component={SoundsPage} />
-      </Show>
-      <Route path="/oauth/patreon" component={PatreonOauth} />
-      <Route path="/profile" component={() => <ProfilePage />} />
-      <Route path="/settings" component={() => <Settings />} />
-      <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />
-      <Route path="/memory/:id" component={lazy(() => import('./pages/Memory/EditMemoryPage'))} />
+
       <Route path="/terms-of-service" component={lazy(() => import('./pages/TermsOfService'))} />
       <Route path="/checkout">
         <Route path="/success" component={CheckoutSuccess} />
         <Route path="/cancel" component={CheckoutCancel} />
       </Route>
       <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
-      <Route path="/guides">
-        <Route path="/pipeline" component={PipelineGuide} />
-        <Route path="/memory" component={MemoryGuide} />
-        <Route path="/novel" component={NovelGuide} />
-      </Route>
+
       <Show when={state.loggedIn}>
+        <Route path="/chat" component={ChatDetailAiFans} />
+        <Route path="/chat/:id" component={ChatDetailAiFans} />
+        <Route path="/chatog/:id" component={ChatDetail} />
+
+        <CharacterRoutes />
+        <ScenarioRoutes />
+
+        <ChubRoutes />
+        <Route path="/chats/create/:id?" component={() => <CreateChatForm />} />
+        <Route path="/chats" component={CharacterChats} />
+
+        <Show when={cfg.config.guidanceAccess || state.user?.admin}>
+          <Route path="/saga" component={SagaList} />
+          <Route path="/saga/:id" component={SagaDetail} />
+        </Show>
+
+        <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
+        <Route
+          path="/presets"
+          component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
+        />
+        <Show when={cfg.flags.sounds}>
+          <Route path="/sounds" component={SoundsPage} />
+        </Show>
+        <Route path="/oauth/patreon" component={PatreonOauth} />
+        <Route path="/profile" component={() => <ProfilePage />} />
+        <Route path="/settings" component={() => <Settings />} />
+        <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />
+        <Route path="/memory/:id" component={lazy(() => import('./pages/Memory/EditMemoryPage'))} />
+
+        <Route path="/guides">
+          <Route path="/pipeline" component={PipelineGuide} />
+          <Route path="/memory" component={MemoryGuide} />
+          <Route path="/novel" component={NovelGuide} />
+        </Route>
+
         <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
         <Show when={state.user?.admin}>
           <Route path="/admin/metrics" component={lazy(() => import('./pages/Admin/Metrics'))} />
@@ -129,7 +138,7 @@ const App: Component = () => {
         <Route path={['/login', '/login/remember']} component={LoginPage} />
       </Show>
       <Route path="/faq" component={FAQ} />
-      <Route path="*" component={HomePage} />
+      <Route path="*" component={RedirectToHomepage} />
     </Router>
   )
 }
@@ -139,6 +148,7 @@ const Layout: Component<{ children?: any }> = (props) => {
   const cfg = settingStore()
   const location = useLocation()
   const pane = usePaneManager()
+  const params = useParams()
 
   const maxW = createMemo((): string => {
     if (pane.showing()) return 'max-w-full'
@@ -210,13 +220,15 @@ const Layout: Component<{ children?: any }> = (props) => {
             <div class="hidden border-r border-r-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
               <ChatLeftNav />
             </div>
-            <div class="hidden border-r border-r-cosplay-gray-100 bg-cosplay-gray-900  px-4 py-6 sm:block">
+            <div class="hidden h-[calc(100vh-122px)] overflow-x-hidden overflow-y-scroll  border-r border-r-cosplay-gray-100 bg-cosplay-gray-900 px-4 py-6 sm:block">
               <ChatRecentChatsNav />
             </div>
             <div class="bg-black">{props.children}</div>
-            <div class="hidden w-[406px] border-l border-l-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
-              <ChatRightNav />
-            </div>
+            <Show when={params.id}>
+              <div class="hidden w-[406px] border-l border-l-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
+                <ChatRightNav />
+              </div>
+            </Show>
           </div>
           <div id="footer"></div>
         </div>
@@ -236,24 +248,33 @@ const Layout: Component<{ children?: any }> = (props) => {
               </Show>
               <main class="w-full" data-background style={bg()}>
                 <div class={containerDivStyles()} classList={containerDivClasslist()}>
-                  <Show when={cfg.init}>
-                    {props.children}
-                    <Maintenance />
-                  </Show>
-                  <Show when={!cfg.init && cfg.initLoading}>
-                    <div class="flex h-[80vh] items-center justify-center">
-                      <Loading />
-                    </div>
-                  </Show>
+                  <Switch>
+                    <Match when={cfg.init}>
+                      {props.children}
+                      <Maintenance />
+                    </Match>
 
-                  <Show when={!cfg.init && !cfg.initLoading}>
-                    <div class="flex flex-col items-center gap-2">
-                      <div>CosplayFans failed to load</div>
-                      <div>
-                        <Button onClick={reload}>Try Again</Button>
+                    <Match when={cfg.initLoading}>
+                      <div class="flex h-[80vh] flex-col items-center justify-center gap-2">
+                        <div>
+                          Login issues? Try{' '}
+                          <a class="link" onClick={() => userStore.logout()}>
+                            Logging out
+                          </a>{' '}
+                          then log back in.
+                        </div>
+                        <Loading />
                       </div>
-                    </div>
-                  </Show>
+                    </Match>
+                    <Match when>
+                      <div class="flex flex-col items-center gap-2">
+                        <div>CosplayFans failed to load</div>
+                        <div>
+                          <Button onClick={reload}>Try Again</Button>
+                        </div>
+                      </div>
+                    </Match>
+                  </Switch>
                 </div>
               </main>
             </div>

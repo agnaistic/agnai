@@ -14,6 +14,7 @@ import { getCachedTiers, getTier } from './subscriptions'
 import { store } from '.'
 import { patreon } from '../api/user/patreon'
 import { getUserSubscriptionTier } from '/common/util'
+import { command } from '../domains'
 
 export type NewUser = {
   username: string
@@ -209,6 +210,11 @@ export function verifyJwt(token: string): any {
     return payload
   } catch (ex) {}
 
+  try {
+    const payload = jwt.verify(token, `${config.jwtSecret}\n`)
+    return payload
+  } catch (ex) {}
+
   if (config.jwtPrivateKey) {
     try {
       const payload = jwt.verify(token, config.jwtPrivateKey)
@@ -346,4 +352,15 @@ export async function validateSubscription(user: AppSchema.User) {
 export function getUserSubTier(user: AppSchema.User) {
   const tiers = getCachedTiers()
   return getUserSubscriptionTier(user, tiers)
+}
+
+export async function unlinkPatreonAccount(userId: string, reason: string) {
+  const user = await getUser(userId)
+
+  if (!user?.patreon || !user?.patreonUserId) {
+    return
+  }
+
+  await store.users.updateUser(userId, { patreon: null as any, patreonUserId: null as any })
+  await command.patron.unlink(user.patreonUserId, { userId, reason })
 }

@@ -30,6 +30,7 @@ import { presetStore } from '/web/store'
 import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { formatHolders } from '/common/prompt-order'
+import { Toggle } from '/web/shared/Toggle'
 
 type Placeholder = {
   required: boolean
@@ -72,7 +73,10 @@ const v2placeholders = {
 
 const helpers: { [key in InterpAll]?: JSX.Element | string } = {
   char: 'Character name',
-  user: `Your character's or profile name`,
+  user: `Your impersonated character's name. Your profile name if you aren't impersonating a character`,
+  scenario: `Your main character's scenario`,
+  personality: `The personality of the replying character`,
+  example_dialogue: `The example dialogue of the replying character`,
 
   system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
   ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
@@ -85,6 +89,8 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
 
   insert:
     "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
+
+  memory: `Text retrieved from your Memory Book(s)`,
 
   longterm_memory:
     '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',
@@ -422,6 +428,9 @@ export const BasicPromptTemplate: Component<{
     })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
   )
 
+  const isMobile = createMemo(() => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+  const [lockPromptOrder, setLockPromptOrder] = createSignal(isMobile())
+
   const updateRef = (items: SortItem[]) => {
     ref.value = items.map((n) => `${n.value}=${n.enabled ? 'on' : 'off'}`).join(',')
   }
@@ -448,12 +457,26 @@ export const BasicPromptTemplate: Component<{
           helperMarkdown="Ordering of elements within your prompt. Click on an element to exclude it.
           Enable **Advanced Prompting** for full control and customization."
         />
-        <Select
-          fieldName="promptOrderFormat"
-          items={items}
-          value={props.inherit?.promptOrderFormat || 'Alpaca'}
+        <div class="flex flex-wrap gap-4">
+          <Select
+            fieldName="promptOrderFormat"
+            items={items}
+            value={props.inherit?.promptOrderFormat || 'Alpaca'}
+          />
+          <Toggle
+            fieldName="lockPromptOrder"
+            label="Lock Prompt Order"
+            helperMarkdown="Prevent reordering of prompt elements. Useful for mobile devices."
+            value={lockPromptOrder()}
+            onChange={setLockPromptOrder}
+          />
+        </div>
+        <Sortable
+          items={mod()}
+          onChange={updateRef}
+          onItemClick={onClick}
+          disabled={lockPromptOrder()}
         />
-        <Sortable items={mod()} onChange={updateRef} onItemClick={onClick} />
         <TextInput
           fieldName="promptOrder"
           parentClass="hidden"

@@ -6,6 +6,9 @@
   --text-emphasis-color: unset;
   --text-quote-color: unset;
 
+  --tooltip-x: 0;
+  --tooltip-y: 0;
+
   --hl-100: #e0f2fe;
   --hl-200: #bae6fd;
   --hl-300: #7dd3fc;
@@ -223,4 +226,9 @@
   --coolgray-1000: #0b111f;
 
   --highlight: rgb(14 165 233);
+
+  --rgba-chat-bot: rgba(0, 0, 0);
+  --rgba-chat-user: rgba(0, 0, 0);
+  --rgba-chat-ooc: rgb(0, 0, 0);
+  --rgba-chat-alpha: 0.75;
 }
