@@ -897,11 +897,6 @@ function getMessageParent(
       }
     }
 
-    case 'continue': {
-      const msg = messages[i - 2]
-      return msg
-    }
-
     case 'send-noreply':
     case 'send-event:ooc':
     case 'send-event:character':
@@ -909,8 +904,13 @@ function getMessageParent(
     case 'send-event:world':
     case 'send':
     case 'request':
+    case 'self':
     case 'ooc': {
       return messages[i - 1]
+    }
+
+    case 'continue': {
+      return
     }
   }
 }

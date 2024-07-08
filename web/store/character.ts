@@ -101,18 +101,8 @@ export const characterStore = createStore<CharacterState>(
   events.on(
     EVENTS.charsReceived,
     async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
-      const state = get()
-      let id = await getStoredValue(`${chatId}-impersonate`, '')
-      if (!id) {
-        id = storage.localGetItem(IMPERSONATE_KEY) || ''
-      }
-      let impersonating = id ? chars.concat(temps).find((ch) => ch._id === id) : state.impersonating
-
-      if (id?.startsWith('temp') && temps.every((ch) => ch._id !== id)) {
-        impersonating = undefined
-      }
-
-      set({ chatChars: { chatId, list: chars, map: toMap(chars) }, impersonating })
+      const allChars = chars.concat(temps)
+      set({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
       characterStore.loadImpersonate(chatId)
     }
   )
@@ -203,7 +193,7 @@ export const characterStore = createStore<CharacterState>(
 
     async impersonate(_, char?: AppSchema.Character, chatId?: string) {
       if (!chatId) {
-        await storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
+        storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
       } else {
         setStoredValue(`${chatId}-impersonate`, char?._id || '')
       }
