@@ -114,11 +114,7 @@ export const characterStore = createStore<CharacterState>(
 
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
     const state = get()
-    const id = await storage.getItem(IMPERSONATE_KEY)
     const userId = getUserId()
-
-    const impersonating =
-      !state.impersonating && id ? chars.find((ch) => ch._id === id) : state.impersonating
 
     set({
       characters: {
@@ -126,8 +122,13 @@ export const characterStore = createStore<CharacterState>(
         list: chars.filter((ch) => ch.userId === userId),
         loaded: Date.now(),
       },
-      impersonating,
     })
+
+    if (state.impersonating || !state.chatChars.chatId) return
+
+    if (state.chatChars.chatId) {
+      characterStore.loadImpersonate(state.chatChars.chatId)
+    }
   })
 
   return {
@@ -200,13 +201,16 @@ export const characterStore = createStore<CharacterState>(
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate({ chatChars: { list }, impersonating: current }, chatId: string) {
+    async loadImpersonate(
+      { chatChars: { list }, characters: { list: allList }, impersonating: current },
+      chatId: string
+    ) {
       let id = await getStoredValue(`${chatId}-impersonate`, '')
       if (!id) {
         id = storage.localGetItem(IMPERSONATE_KEY) || ''
       }
-      const impersonating = id ? list.find((ch) => ch._id === id) : current
 
+      const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
       return { impersonating }
     },
 
