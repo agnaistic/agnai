@@ -22,6 +22,7 @@ type CharacterState = {
     map: Record<string, AppSchema.Character>
   }
   editing?: AppSchema.Character
+  activeChatId: string
   chatChars: {
     chatId: string
     list: AppSchema.Character[]
@@ -64,6 +65,7 @@ export type UpdateCharacter = Partial<
 const initState: CharacterState = {
   loading: false,
   creating: false,
+  activeChatId: '',
   characters: { loaded: 0, list: [], map: {} },
   chatChars: { chatId: '', list: [], map: {} },
   generate: {
@@ -103,13 +105,21 @@ export const characterStore = createStore<CharacterState>(
     async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
       const allChars = chars.concat(temps)
       set({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
-      characterStore.loadImpersonate(chatId)
+      characterStore.loadImpersonate()
     }
   )
 
   events.on(EVENTS.init, (data) => {
     if (!data.characters) return
     events.emit(EVENTS.allChars, data.characters)
+  })
+
+  events.on(EVENTS.chatOpened, (chatId: string) => {
+    set({ activeChatId: chatId })
+  })
+
+  events.on(EVENTS.chatClosed, () => {
+    set({ activeChatId: '' })
   })
 
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
@@ -124,11 +134,9 @@ export const characterStore = createStore<CharacterState>(
       },
     })
 
-    if (state.impersonating || !state.chatChars.chatId) return
+    if (state.impersonating) return
 
-    if (state.chatChars.chatId) {
-      characterStore.loadImpersonate(state.chatChars.chatId)
-    }
+    characterStore.loadImpersonate()
   })
 
   return {
@@ -165,50 +173,37 @@ export const characterStore = createStore<CharacterState>(
         return toastStore.error('Failed to retrieve characters')
       }
 
-      if (res.result && state.impersonating) {
+      if (res.result) {
         return {
           characters: {
             list: res.result.characters,
             map: toMap(res.result.characters),
             loaded: Date.now(),
           },
-          loading: false,
-        }
-      }
-
-      if (res.result && !state.impersonating) {
-        const id = await storage.getItem(IMPERSONATE_KEY)
-        const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
-
-        return {
-          characters: {
-            list: res.result.characters,
-            map: toMap(res.result.characters),
-            loaded: Date.now(),
-          },
-          impersonating,
           loading: false,
         }
       }
     },
 
-    async impersonate(_, char?: AppSchema.Character, chatId?: string) {
-      if (!chatId) {
+    async impersonate({ activeChatId }, char?: AppSchema.Character) {
+      if (!activeChatId) {
         storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
       } else {
-        setStoredValue(`${chatId}-impersonate`, char?._id || '')
+        setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
       }
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate(
-      { chatChars: { list }, characters: { list: allList }, impersonating: current },
-      chatId: string
-    ) {
-      let id = await getStoredValue(`${chatId}-impersonate`, '')
-      if (!id) {
-        id = storage.localGetItem(IMPERSONATE_KEY) || ''
-      }
+    async loadImpersonate({
+      activeChatId,
+      chatChars: { list },
+      characters: { list: allList },
+      impersonating: current,
+    }) {
+      const fallback = storage.localGetItem(IMPERSONATE_KEY) || ''
+      let id = activeChatId ? getStoredValue(`${activeChatId}-impersonate`, fallback) : fallback
+
+      if (!id) return
 
       const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
       return { impersonating }

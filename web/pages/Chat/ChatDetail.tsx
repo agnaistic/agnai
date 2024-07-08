@@ -35,6 +35,7 @@ import { ChatFooter } from './ChatFooter'
 import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
+import { events } from '/web/emitter'
 
 export { ChatDetail as default }
 
@@ -146,7 +147,13 @@ const ChatDetail: Component = () => {
 
   onMount(() => {
     chatStore.computePrompt(msgs.msgs[msgs.msgs.length - 1], false)
+    events.emit('chat-opened', params.id)
     setLinesAddedCount(chats.linesAddedCount)
+  })
+
+  onCleanup(() => {
+    sticky.clear()
+    events.emit('chat-closed')
   })
 
   const firstInsertedMsgIndex = createMemo(() => {
@@ -244,9 +251,7 @@ const ChatDetail: Component = () => {
     }
 
     if (params.id !== chats.chat?._id) {
-      chatStore.getChat(params.id)
-    } else {
-      characterStore.loadImpersonate(params.id)
+      chatStore.openChat(params.id)
     }
   })
 
@@ -399,8 +404,6 @@ const ChatDetail: Component = () => {
       </section>
     )
   })
-
-  onCleanup(sticky.clear)
 
   return (
     <>

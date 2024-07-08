@@ -17,6 +17,8 @@ export const EVENTS = {
   tierReceived: 'tier-received',
   configUpdated: 'server-config-updated',
   checkoutSuccess: 'checkout-success',
+  chatOpened: 'chat-opened',
+  chatClosed: 'chat-closed',
 } as const
 
 type EventType = (typeof EVENTS)[keyof typeof EVENTS]
