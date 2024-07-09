@@ -357,7 +357,7 @@ const AgnaiSettings: Component = () => {
         fieldName="agnaiSampler"
         items={samplers}
         label="Sampler"
-        value={state.user?.images?.sd.sampler || SD_SAMPLER['DPM++ SDE']}
+        value={state.user?.images?.agnai?.sampler || SD_SAMPLER['DPM++ SDE']}
       />
 
       <Show when={!!model()}>
