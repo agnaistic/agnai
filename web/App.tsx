@@ -224,7 +224,7 @@ const Layout: Component<{ children?: any }> = (props) => {
               <ChatRecentChatsNav />
             </div>
             <div class="bg-black">{props.children}</div>
-            <Show when={params.id}>
+            <Show when={cfg.showRightNav}>
               <div class="hidden w-[406px] border-l border-l-cosplay-gray-100 bg-cosplay-gray-900 sm:block">
                 <ChatRightNav />
               </div>

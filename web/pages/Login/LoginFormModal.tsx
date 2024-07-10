@@ -21,7 +21,7 @@ const LoginFormModal = ({ onClickLogin }: Props) => {
   return (
     <Show when={user.showLogin}>
       <div
-        class="fixed bottom-0  left-0 right-0 top-0  z-[49] flex h-screen items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur"
+        class="fixed bottom-0  left-0 right-0 top-0  z-[99] flex h-screen items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur"
         onClick={(e) => {
           userStore.loginModal(false)
         }}

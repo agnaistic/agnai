@@ -393,80 +393,88 @@ const ChatDetail: Component = () => {
 
   onCleanup(clearScrollMonitor)
 
-  if (!chats?.lastId) {
-    return (
-      <div class="flex items-center justify-center p-5">
-        <p class="text-2xl">Select a conversation</p>
-      </div>
-    )
-  }
-
   return (
     <div class="flex h-[calc(100vh-62px)] flex-col overflow-hidden md:h-[calc(100vh-122px)]">
-      <div class="flex">
-        <ChatHeaderAiFans image={chats.char?.avatar} name={chats.char?.name} id={chats.char?._id} />
-      </div>
-
-      <section data-messages class={`flex w-full flex-1 flex-col-reverse gap-4 overflow-auto`}>
-        <div id="chat-messages" class="flex w-full flex-col gap-2">
-          {/* Original Slot location */}
-          <InfiniteScroll canFetch={chars.ready} />
-
-          <Index each={chatMsgs()}>
-            {(msg, i) => (
-              <>
-                <MessageAiFans
-                  msg={msg()}
-                  editing={chats.opts.editing}
-                  last={i === indexOfLastRPMessage()}
-                  onRemove={() => setRemoveId(msg()._id)}
-                  swipe={msg()._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]}
-                  confirmSwipe={() => confirmSwipe(msg()._id)}
-                  cancelSwipe={cancelSwipe}
-                  tts={tts()}
-                  retrying={msgs.retrying}
-                  partial={msgs.partial}
-                  sendMessage={sendMessage}
-                  isPaneOpen={pane.showing()}
-                  textBeforeGenMore={msgs.textBeforeGenMore}
-                  voice={msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined}
-                  firstInserted={i === firstInsertedMsgIndex()}
-                >
-                  {isOwner() && retries()?.list?.length! > 1 && i === indexOfLastRPMessage() && (
-                    <SwipeMessage
-                      chatId={chats.chat?._id!}
-                      pos={swipe()}
-                      prev={clickSwipe(-1)}
-                      next={clickSwipe(1)}
-                      list={retries()?.list || []}
-                    />
-                  )}
-                </MessageAiFans>
-              </>
-            )}
-          </Index>
-          <Show when={waitingMsg()}>
-            <MessageAiFans
-              msg={waitingMsg()!}
-              onRemove={() => {}}
-              editing={chats.opts.editing}
-              sendMessage={sendMessage}
-              isPaneOpen={pane.showing()}
-            />
-          </Show>
+      <Show when={!chats?.lastId}>
+        <div class="flex items-center justify-center p-5">
+          <p class="text-2xl">Select a conversation</p>
         </div>
-      </section>
+      </Show>
 
-      <div>
-        <ChatFooterAiFans
-          ctx={ctx}
-          isOwner={isOwner()}
-          pills={characterPills()}
-          requestMessage={requestMessage}
-          sendMessage={sendMessage}
-          swipe={swipe()}
-        />
-      </div>
+      <Show when={chats?.lastId}>
+        <div class="flex">
+          <ChatHeaderAiFans
+            image={chats.char?.avatar}
+            name={chats.char?.name}
+            id={chats.char?._id}
+            opened={true}
+          />
+        </div>
+        <section data-messages class={`flex w-full flex-1 flex-col-reverse gap-4 overflow-auto`}>
+          <div id="chat-messages" class="flex w-full flex-col gap-2">
+            {/* Original Slot location */}
+            <InfiniteScroll canFetch={chars.ready} />
+
+            <Index each={chatMsgs()}>
+              {(msg, i) => (
+                <>
+                  <MessageAiFans
+                    msg={msg()}
+                    editing={chats.opts.editing}
+                    last={i === indexOfLastRPMessage()}
+                    onRemove={() => setRemoveId(msg()._id)}
+                    swipe={
+                      msg()._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                    }
+                    confirmSwipe={() => confirmSwipe(msg()._id)}
+                    cancelSwipe={cancelSwipe}
+                    tts={tts()}
+                    retrying={msgs.retrying}
+                    partial={msgs.partial}
+                    sendMessage={sendMessage}
+                    isPaneOpen={pane.showing()}
+                    textBeforeGenMore={msgs.textBeforeGenMore}
+                    voice={
+                      msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
+                    }
+                    firstInserted={i === firstInsertedMsgIndex()}
+                  >
+                    {isOwner() && retries()?.list?.length! > 1 && i === indexOfLastRPMessage() && (
+                      <SwipeMessage
+                        chatId={chats.chat?._id!}
+                        pos={swipe()}
+                        prev={clickSwipe(-1)}
+                        next={clickSwipe(1)}
+                        list={retries()?.list || []}
+                      />
+                    )}
+                  </MessageAiFans>
+                </>
+              )}
+            </Index>
+            <Show when={waitingMsg()}>
+              <MessageAiFans
+                msg={waitingMsg()!}
+                onRemove={() => {}}
+                editing={chats.opts.editing}
+                sendMessage={sendMessage}
+                isPaneOpen={pane.showing()}
+              />
+            </Show>
+          </div>
+        </section>
+
+        <div>
+          <ChatFooterAiFans
+            ctx={ctx}
+            isOwner={isOwner()}
+            pills={characterPills()}
+            requestMessage={requestMessage}
+            sendMessage={sendMessage}
+            swipe={swipe()}
+          />
+        </div>
+      </Show>
     </div>
   )
 

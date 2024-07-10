@@ -21,6 +21,7 @@ export type SettingState = {
   }
 
   showMenu: boolean
+  showRightNav: boolean
   showImpersonate: boolean
   fullscreen: boolean
   config: AppSchema.AppConfig
@@ -59,6 +60,7 @@ const initState: SettingState = {
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
   showMenu: false,
+  showRightNav: true,
   showImpersonate: false,
   fullscreen: false,
   models: [],
@@ -162,6 +164,9 @@ export const settingStore = createStore<SettingState>(
     },
     menu({ showMenu }) {
       return { showMenu: !showMenu, overlay: !showMenu }
+    },
+    rightNav({ showRightNav }) {
+      return { showRightNav: !showRightNav }
     },
     closeMenu: () => {
       return { showMenu: false, overlay: false }

@@ -1,13 +1,17 @@
 import { A } from '@solidjs/router'
 import { getAssetUrl } from '/web/shared/util'
+import { settingStore } from '/web/store'
 
 interface Props {
   image?: string
   name?: string
   id?: string
+  opened?: boolean
 }
 
 const ChatHeaderAiFans = (props: Props) => {
+  const state = settingStore()
+
   return (
     <div class="flex flex-1 items-center justify-between border-b border-b-[#949494] p-4">
       <div class="flex items-center">
@@ -27,7 +31,10 @@ const ChatHeaderAiFans = (props: Props) => {
           <h1 class="ml-3 font-clash-bold text-2xl">{props.name}</h1>
         </A>
       </div>
-      <button>
+      <button
+        class={state.showRightNav ? 'rotate-180' : ''}
+        onClick={() => settingStore.rightNav()}
+      >
         <img src="/images/open-panel-button.png" class="w-9" />
       </button>
     </div>

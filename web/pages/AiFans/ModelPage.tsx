@@ -1,7 +1,7 @@
 import { Component, createEffect, createMemo, createSignal, onMount } from 'solid-js'
-import { AllChat, characterStore, chatStore } from '/web/store'
+import { AllChat, characterStore, chatStore, userStore } from '/web/store'
 import { AppSchema } from '/common/types'
-import { useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import { getAssetUrl, setComponentPageTitle } from '/web/shared/util'
 import { isLoggedIn } from '/web/store/api'
 
@@ -20,6 +20,7 @@ import { ChatCharacter } from '../Character/util'
 
 const ModelPage: Component = () => {
   const params = useParams()
+  const nav = useNavigate()
 
   const [character, setCharacter] = createSignal<AppSchema.Character | undefined>(undefined)
   const [avatarUrl, setAvatarUrl] = createSignal<string | undefined>(undefined)
@@ -95,6 +96,16 @@ const ModelPage: Component = () => {
     }
   })
 
+  const onClickToChat = () => {
+    const lastChatId = liveChatId()
+    if (isLoggedIn()) {
+      const href = lastChatId ? `/chat/${lastChatId}` : '/chat/'
+      nav(href)
+    } else {
+      userStore.loginModal(true)
+    }
+  }
+
   const defaultDescription = `Hi I’m Candice Nice, a vibrant influencer who loves to please my followers with a
                 cheerful and playful personality. I just love to dress as Harley Quinn and bring her
                 to life through cosplay. From intimate moments to exotic adventures, my passion for
@@ -138,7 +149,7 @@ const ModelPage: Component = () => {
                     </p>
                     <div class="mt-[30px] flex flex-col gap-3 md:mb-4 md:mt-0 lg:flex-row lg:gap-5">
                       <div>
-                        <LiveChatButton href={liveChatId()} />
+                        <LiveChatButton onClick={onClickToChat} />
                       </div>
                       <div>
                         <GradientButton
@@ -146,10 +157,11 @@ const ModelPage: Component = () => {
                           colorStart="#E12F8F"
                           colorEnd="#E12F42"
                           image={heartIcon}
+                          onClick={onClickToChat}
                         />
                       </div>
                       <div>
-                        <GenerateButton />
+                        <GenerateButton onClick={onClickToChat} />
                       </div>
                     </div>
                   </div>

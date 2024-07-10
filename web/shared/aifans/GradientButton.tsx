@@ -5,6 +5,7 @@ interface Props {
   image?: string
   colorStart?: string
   colorEnd?: string
+  onClick?: () => void
 }
 
 const GradientButton = (props: Props) => {
@@ -13,6 +14,7 @@ const GradientButton = (props: Props) => {
 
   return (
     <button
+      onClick={props.onClick}
       class={`flex h-12 w-full items-center justify-between rounded-md border border-white bg-gradient-to-r font-bold lg:flex-row-reverse ${gradientFrom} ${gradientTo}  pl-3 pr-[17px] font-clash text-xl  md:h-9 md:pr-3 md:text-[15px] `}
     >
       <span>{props.title}</span>
