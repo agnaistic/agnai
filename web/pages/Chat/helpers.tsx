@@ -46,7 +46,7 @@ export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
 
   return (
     <Show when={chat.loaded && state.msgs.length > 0}>
-      <div class="flex w-full justify-center overflow-hidden">
+      <div class="flex w-full justify-center">
         <a
           class="link"
           classList={{ hidden: state.history.length === 0 }}

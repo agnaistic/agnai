@@ -254,6 +254,7 @@ export const inferenceApi = wrap(async (req, res) => {
     streamResponse: body.stream,
     name: '',
     maxTokens: body.max_tokens,
+    temp: body.temperature,
     minP: body.min_p,
     topP: body.top_p,
     topA: body.top_a,
