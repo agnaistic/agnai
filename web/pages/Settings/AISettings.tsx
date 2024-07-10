@@ -250,7 +250,7 @@ export default AISettings
 const ApiAccessHelp = neat`
   The subscriber API endpoint uses the *OpenAI Text Completion* format.
 
-  1. Select your \`API Access Preset\`: This preset will be used for your API calls.
+  1. Select your \`API Access Preset\`: This preset will be used for your API calls. Change this on your settings page.
   2. Generate your API Key.
   3. Use the API URL \`https://api.agnai.chat\` and your generated API key.
 

@@ -53,6 +53,14 @@ const validInferenceApi = {
   placeholders: 'any?',
   lists: 'any?',
   previous: 'any?',
+  dynatemp: 'any?',
+  dynatemp_range: 'number?',
+  smoothing_factor: 'number?',
+  smoothing_curve: 'number?',
+  tfs: 'number?',
+  ban_eos_token: 'boolean?',
+  add_bos_token: 'boolean?',
+  temperature_last: 'boolean?',
 } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
@@ -254,6 +262,7 @@ export const inferenceApi = wrap(async (req, res) => {
     streamResponse: body.stream,
     name: '',
     maxTokens: body.max_tokens,
+    temp: body.temperature,
     minP: body.min_p,
     topP: body.top_p,
     topA: body.top_a,
@@ -272,6 +281,18 @@ export const inferenceApi = wrap(async (req, res) => {
     mirostatLR: body.mirostat_eta,
     registered: preset.registered,
     stopSequences: body.stop,
+    smoothingCurve: body.smoothing_curve,
+    smoothingFactor: body.smoothing_factor,
+    tailFreeSampling: body.tfs,
+    banEosToken: body.ban_eos_token,
+    addBosToken: body.add_bos_token,
+    tempLast: body.temperature_last,
+  }
+
+  if ('dynatemp' in body && !!body.dynatemp) {
+    settings.dynatemp_range = body.dynatemp_range
+  } else {
+    settings.dynatemp_range = body.dynatemp_range
   }
 
   const request: InferenceRequest = {

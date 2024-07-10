@@ -220,7 +220,7 @@ export const chatStore = createStore<ChatState>('chat', {
         },
       }
     },
-    async *getChat(_, id: string, clear = true) {
+    async *openChat(_, id: string, clear = true) {
       if (clear) {
         yield { loaded: false, active: undefined }
       }
@@ -490,7 +490,7 @@ export const chatStore = createStore<ChatState>('chat', {
     async restartChat(_, chatId: string) {
       const res = await chatsApi.restartChat(chatId)
       if (res.result) {
-        chatStore.getChat(chatId, false)
+        chatStore.openChat(chatId, false)
       }
 
       if (res.error) {

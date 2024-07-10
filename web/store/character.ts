@@ -22,6 +22,7 @@ type CharacterState = {
     map: Record<string, AppSchema.Character>
   }
   editing?: AppSchema.Character
+  activeChatId: string
   chatChars: {
     chatId: string
     list: AppSchema.Character[]
@@ -64,6 +65,7 @@ export type UpdateCharacter = Partial<
 const initState: CharacterState = {
   loading: false,
   creating: false,
+  activeChatId: '',
   characters: { loaded: 0, list: [], map: {} },
   chatChars: { chatId: '', list: [], map: {} },
   generate: {
@@ -101,19 +103,9 @@ export const characterStore = createStore<CharacterState>(
   events.on(
     EVENTS.charsReceived,
     async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
-      const state = get()
-      let id = await getStoredValue(`${chatId}-impersonate`, '')
-      if (!id) {
-        id = storage.localGetItem(IMPERSONATE_KEY) || ''
-      }
-      let impersonating = id ? chars.concat(temps).find((ch) => ch._id === id) : state.impersonating
-
-      if (id?.startsWith('temp') && temps.every((ch) => ch._id !== id)) {
-        impersonating = undefined
-      }
-
-      set({ chatChars: { chatId, list: chars, map: toMap(chars) }, impersonating })
-      characterStore.loadImpersonate(chatId)
+      const allChars = chars.concat(temps)
+      set({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
+      characterStore.loadImpersonate()
     }
   )
 
@@ -122,13 +114,18 @@ export const characterStore = createStore<CharacterState>(
     events.emit(EVENTS.allChars, data.characters)
   })
 
+  events.on(EVENTS.chatOpened, (chatId: string) => {
+    set({ activeChatId: chatId })
+  })
+
+  events.on(EVENTS.chatClosed, () => {
+    set({ activeChatId: '' })
+    characterStore.loadImpersonate()
+  })
+
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
     const state = get()
-    const id = await storage.getItem(IMPERSONATE_KEY)
     const userId = getUserId()
-
-    const impersonating =
-      !state.impersonating && id ? chars.find((ch) => ch._id === id) : state.impersonating
 
     set({
       characters: {
@@ -136,8 +133,11 @@ export const characterStore = createStore<CharacterState>(
         list: chars.filter((ch) => ch.userId === userId),
         loaded: Date.now(),
       },
-      impersonating,
     })
+
+    if (state.impersonating) return
+
+    characterStore.loadImpersonate()
   })
 
   return {
@@ -174,49 +174,39 @@ export const characterStore = createStore<CharacterState>(
         return toastStore.error('Failed to retrieve characters')
       }
 
-      if (res.result && state.impersonating) {
+      if (res.result) {
         return {
           characters: {
             list: res.result.characters,
             map: toMap(res.result.characters),
             loaded: Date.now(),
           },
-          loading: false,
-        }
-      }
-
-      if (res.result && !state.impersonating) {
-        const id = await storage.getItem(IMPERSONATE_KEY)
-        const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
-
-        return {
-          characters: {
-            list: res.result.characters,
-            map: toMap(res.result.characters),
-            loaded: Date.now(),
-          },
-          impersonating,
           loading: false,
         }
       }
     },
 
-    async impersonate(_, char?: AppSchema.Character, chatId?: string) {
-      if (!chatId) {
-        await storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
+    async impersonate({ activeChatId }, char?: AppSchema.Character) {
+      if (!activeChatId) {
+        storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
       } else {
-        setStoredValue(`${chatId}-impersonate`, char?._id || '')
+        setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
       }
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate({ chatChars: { list }, impersonating: current }, chatId: string) {
-      let id = await getStoredValue(`${chatId}-impersonate`, '')
-      if (!id) {
-        id = storage.localGetItem(IMPERSONATE_KEY) || ''
-      }
-      const impersonating = id ? list.find((ch) => ch._id === id) : current
+    async loadImpersonate({
+      activeChatId,
+      chatChars: { list },
+      characters: { list: allList },
+      impersonating: current,
+    }) {
+      const fallback = storage.localGetItem(IMPERSONATE_KEY) || ''
+      let id = activeChatId ? getStoredValue(`${activeChatId}-impersonate`, fallback) : fallback
 
+      if (!id) return
+
+      const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
       return { impersonating }
     },
 

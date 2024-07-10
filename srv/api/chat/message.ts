@@ -684,12 +684,15 @@ async function ensureBotMembership(
 
 function getNewMessageParent(body: GenRequest, userMsg: AppSchema.ChatMessage | undefined): string {
   switch (body.kind) {
+    case 'continue': {
+      return body.continuing?.parent
+    }
+
     case 'summary':
     case 'chat-query':
       return ''
 
     case 'retry':
-    case 'continue':
     case 'request':
       return body.parent || ''
 
