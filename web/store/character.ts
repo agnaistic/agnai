@@ -120,6 +120,7 @@ export const characterStore = createStore<CharacterState>(
 
   events.on(EVENTS.chatClosed, () => {
     set({ activeChatId: '' })
+    characterStore.loadImpersonate()
   })
 
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {

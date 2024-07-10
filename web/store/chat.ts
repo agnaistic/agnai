@@ -248,7 +248,6 @@ export const chatStore = createStore<ChatState>('chat', {
 
         const isMultiChars = charCount > 0 || tempCount > 0
 
-        events.emit(EVENTS.chatOpened, id)
         events.emit(
           EVENTS.charsReceived,
           id,
