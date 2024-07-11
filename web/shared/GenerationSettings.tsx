@@ -576,7 +576,7 @@ const PromptSettings: Component<
     typeof props.inherit?.useAdvancedPrompt === 'string'
       ? props.inherit.useAdvancedPrompt
       : props.inherit?.useAdvancedPrompt === true || props.inherit?.useAdvancedPrompt === undefined
-      ? 'validate'
+      ? 'no-validation'
       : 'basic'
   )
 
@@ -615,12 +615,10 @@ const PromptSettings: Component<
           <Select
             fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"
-            helperMarkdown="**Validated**: Automatically inserts important (i.e., history and post-amble) placeholders during prompt assembly.
-            **Unvalidated**: No auto-insertion is applied during prompt assembly."
+            helperMarkdown="**Advanced**: Have complete control over the prompt. No 'missing' placeholders will be inserted."
             items={[
               { label: 'Basic', value: 'basic' },
-              { label: 'Validated', value: 'validate' },
-              { label: 'Unvalidated', value: 'no-validation' },
+              { label: 'Advanced', value: 'no-validation' },
             ]}
             value={useAdvanced()}
             onChange={(ev) => setAdvanced(ev.value as any)}
@@ -1495,7 +1493,6 @@ export function getPresetFormData(ref: any) {
     useAdvancedPrompt: 'string?',
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
-    promptTemplateId: 'string?',
     modelFormat: 'string?',
   })
 

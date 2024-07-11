@@ -252,12 +252,12 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{
 {{/if}}
 Then the roleplay chat begins.<|im_end|>
 
-{{#each msg}}{{#if .isbot}}<|im_start|>assistant{{/if}}{{#if .isuser}}<|im_start|>user{{/if}}
-{{.name}}: {{.msg}}<|im_end|>
+{{#each msg}}<|im_start|>[{{.name}}]
+{{.msg}}<|im_end|>
 {{/each}}
 {{#if ujb}}<|im_start|>system
 {{ujb}}<|im_end|>
 {{/if}}
-<|im_start|>assistant
+<|im_start|>[{{char}}]
 {{post}}`,
 }

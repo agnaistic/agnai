@@ -1,11 +1,11 @@
 import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
-import { ADAPTER_LABELS } from '../../../common/adapters'
+import { ADAPTER_LABELS, adaptersToOptions } from '../../../common/adapters'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { adaptersToOptions, getStrictForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 import {
   chatStore,
   msgStore,

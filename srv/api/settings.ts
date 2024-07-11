@@ -41,6 +41,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   if (!user?.admin && configuration) {
     configuration.imagesHost = ''
     configuration.ttsHost = ''
+    configuration.ttsApiKey = ''
   }
 
   if (!appConfig) {

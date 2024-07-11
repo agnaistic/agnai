@@ -32,7 +32,8 @@ export async function getServerConfiguration() {
     imagesHost: '',
     imagesModels: [],
     supportEmail: '',
-    ttsEnabled: false,
+    ttsAccess: 'off',
+    ttsApiKey: '',
     ttsHost: '',
     maxGuidanceTokens: 1000,
     maxGuidanceVariables: 15,
@@ -42,7 +43,7 @@ export async function getServerConfiguration() {
   return next
 }
 
-export async function updateServerConfiguration(update: AppSchema.Configuration) {
+export async function updateServerConfiguration(update: Partial<AppSchema.Configuration>) {
   await db('configuration').updateOne({ kind: 'configuration' }, { $set: update }, { upsert: true })
   const cfg = await getServerConfiguration()
   return cfg

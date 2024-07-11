@@ -140,7 +140,7 @@ const PromptEditor: Component<
   {
     fieldName: string
     service?: AIAdapter
-    inherit?: Partial<AppSchema.GenSettings>
+    inherit?: Partial<AppSchema.UserGenPreset>
     disabled?: boolean
     value?: string
     onChange?: (value: string) => void
@@ -386,6 +386,7 @@ const PromptEditor: Component<
           }}
           currentTemplateId={templateId() || props.inherit?.promptTemplateId}
           currentTemplate={template()}
+          presetId={props.inherit?._id}
         />
       </Show>
     </div>

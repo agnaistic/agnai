@@ -12,6 +12,10 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     body.dynatemp_exponent = gen.dynatemp_exponent
   }
 
+  if (opts.kind === 'continue') {
+    gen.tokenHealing = true
+  }
+
   return body
 }
 

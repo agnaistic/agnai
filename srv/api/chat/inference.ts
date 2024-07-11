@@ -366,6 +366,7 @@ export const inferenceApi = wrap(async (req, res) => {
     }
   }
 
+  await releaseLock(req.userId)
   res.end()
 })
 

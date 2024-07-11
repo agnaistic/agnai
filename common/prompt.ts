@@ -89,8 +89,8 @@ export type BuildPromptOpts = {
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
-export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
-export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
+export const BOT_REPLACE = /(\{\{char\}\}|\{\{name\}\})/gi
+export const SELF_REPLACE = /(\{\{user\}\})/gi
 export const START_REPLACE = /(<START>)/gi
 
 const HOLDER_NAMES = {
@@ -159,8 +159,13 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const template = getTemplate(opts)
+  let template = getTemplate(opts)
   const templateSize = await encoder(template)
+
+  if (opts.modelFormat) {
+    template = replaceTags(template, opts.modelFormat)
+  }
+
   /**
    * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
    * are retrieved based on the number of history messages we return here.
@@ -237,13 +242,11 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
 
-  const validate = opts.settings?.useAdvancedPrompt !== 'no-validation'
-
-  if (!validate) {
-    return template
+  // Deprecated
+  if (opts.settings?.useAdvancedPrompt === 'validate') {
+    return ensureValidTemplate(template)
   }
-
-  return ensureValidTemplate(template)
+  return template
 }
 
 type InjectOpts = {

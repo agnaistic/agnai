@@ -541,6 +541,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = await createPromptParts(
         {
           ...entities,
+          modelFormat: entities.settings.modelFormat,
           lastMessage: entities.lastMessage?.date || '',
           replyAs,
           sender: entities.profile,
@@ -551,6 +552,11 @@ export const chatStore = createStore<ChatState>('chat', {
         },
         encoder
       )
+
+      // const parsed = entities.settings.modelFormat
+      //   ? replaceTags(prompt.template.parsed, entities.settings.modelFormat)
+      //   : prompt.template.parsed
+      // prompt.template.parsed = parsed
 
       return { prompt: { ...prompt, shown } }
     },

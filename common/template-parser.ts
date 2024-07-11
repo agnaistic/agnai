@@ -22,6 +22,8 @@ function loadParser() {
   }
 }
 
+const HISTORY_MARKER = '__history__marker__'
+
 type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
 
 type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
@@ -144,6 +146,14 @@ export async function parseTemplate(
   let unusedTokens = 0
   let linesAddedCount = 0
 
+  /** Remove everything after history to attempt to perform a 'continue' */
+  if (opts.continue && output.includes(HISTORY_MARKER)) {
+    const index = output.indexOf(HISTORY_MARKER)
+    if (index > -1) {
+      output = output.slice(0, index + HISTORY_MARKER.length)
+    }
+  }
+
   /** Replace iterators */
   if (opts.limit && opts.limit.output) {
     for (const [id, { lines, src }] of Object.entries(opts.limit.output)) {
@@ -177,7 +187,7 @@ export async function parseTemplate(
     }
   }
 
-  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trimStart()
+  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
@@ -479,7 +489,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
   }
 
   if (isHistory && opts.limit?.output) {
-    const id = '__' + v4() + '__'
+    const id = HISTORY_MARKER
     opts.limit.output[id] = { src: holder, lines: output }
     return id
   }

@@ -79,8 +79,9 @@ export namespace AppSchema {
     imagesHost: string
     imagesModels: ImageModel[]
 
-    ttsEnabled: boolean
     ttsHost: string
+    ttsApiKey: string
+    ttsAccess: 'off' | 'users' | 'subscribers' | 'admins'
 
     maxGuidanceTokens: number
     maxGuidanceVariables: number

@@ -185,6 +185,9 @@
     "url": "^0.11.1",
     "util": "^0.12.3",
     "values.js": "^2.1.1",
+    "vite": "^5.3.3",
+    "vite-plugin-solid": "^2.10.2",
+    "vite-tsconfig-paths": "^4.3.2",
     "zustand": "^4.5.2"
   },
   "alias": {

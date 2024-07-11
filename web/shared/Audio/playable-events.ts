@@ -1,4 +1,4 @@
-import { TypedEventEmitter, TypedEventMap } from 'common/typed-event-emitter'
+import { TypedEventEmitter, TypedEventMap } from '/common/typed-event-emitter'
 
 export interface PlayableEvent extends TypedEventMap {
   'menu-item-clicked':

@@ -85,7 +85,7 @@ async function getTemplates() {
   return localApi.result({ templates })
 }
 
-async function createTemplate(template: { name: string; template: string }) {
+async function createTemplate(template: { name: string; template: string; presetId?: string }) {
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.PromptTemplate>(`/user/templates`, template)
     return res
@@ -107,7 +107,10 @@ async function createTemplate(template: { name: string; template: string }) {
   return localApi.result(next)
 }
 
-async function updateTemplate(id: string, update: { name: string; template: string }) {
+async function updateTemplate(
+  id: string,
+  update: { name: string; template: string; presetId?: string }
+) {
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.PromptTemplate>(`/user/templates/${id}`, update)
     return res

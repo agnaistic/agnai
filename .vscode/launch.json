@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch API",
+      "name": "Launch API + Watch",
       "program": "${workspaceFolder}/srv/start.ts",
       "request": "launch",
       "sourceMaps": true,
@@ -13,6 +13,15 @@
       "type": "node",
       "console": "integratedTerminal",
       "preLaunchTask": "build server"
+    },
+    {
+      "name": "Launch API",
+      "program": "${workspaceFolder}/srv/start.ts",
+      "request": "launch",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node",
+      "console": "integratedTerminal"
     },
     {
       "name": "Attach",

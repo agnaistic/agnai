@@ -652,7 +652,7 @@ export const CreateCharacterForm: Component<{
               class={`flex flex-col gap-2`}
               classList={{ hidden: tabs.current() !== 'Advanced' }}
             >
-              <AdvanceedOptions editor={editor} />
+              <AdvancedOptions editor={editor} />
             </div>
 
             <div class={`flex flex-col gap-2`} classList={{ hidden: tabs.current() !== 'Images' }}>
@@ -950,7 +950,7 @@ const MemoryBookPicker: Component<{
   )
 }
 
-const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
+const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
   return (
     <>
       <Card class="flex flex-col gap-2">

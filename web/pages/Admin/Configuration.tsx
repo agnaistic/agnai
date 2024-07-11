@@ -40,6 +40,7 @@ const ServerConfiguration: Component = () => {
   const submit = () => {
     const body = getStrictForm(form, {
       apiAccess: ['off', 'users', 'subscribers', 'admins'],
+      ttsAccess: ['off', 'users', 'subscribers', 'admins'],
       slots: 'string',
       maintenance: 'boolean',
       maintenanceMessage: 'string',
@@ -50,6 +51,7 @@ const ServerConfiguration: Component = () => {
       imagesEnabled: 'boolean',
       supportEmail: 'string',
       ttsEnabled: 'boolean',
+      ttsApiKey: 'string',
       ttsHost: 'string',
       maxGuidanceTokens: 'number',
       maxGuidanceVariables: 'number',
@@ -94,17 +96,41 @@ const ServerConfiguration: Component = () => {
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 
+        <Select
+          fieldName="ttsAccess"
+          label="TTS Access Level"
+          items={[
+            { label: 'Off', value: 'off' },
+            { label: 'All Users', value: 'users' },
+            { label: 'Subscribers', value: 'subscribers' },
+            { label: 'Adminstrators', value: 'admins' },
+          ]}
+          value={state.serverConfig?.ttsAccess || 'off'}
+        />
+
         <TextInput
           fieldName="ttsHost"
           label={
             <>
               <div class="flex gap-2">
                 <div>Agnaistic TTS Host</div>
-                <Toggle fieldName="ttsEnabled" value={state.serverConfig?.ttsEnabled} />
               </div>
             </>
           }
           value={state.serverConfig?.ttsHost}
+          classList={{ hidden: !state.adapters.includes('agnaistic') }}
+        />
+
+        <TextInput
+          fieldName="ttsApiKey"
+          label={
+            <>
+              <div class="flex gap-2">
+                <div>Agnaistic TTS Key</div>
+              </div>
+            </>
+          }
+          value={''}
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 

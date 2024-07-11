@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="Agnai.chat" />
+    <meta property="twitter:title" content="Agnai.chat" />
+    <meta
+      property="twitter:description"
+      content="AI chat with seamless integration to your favorite AI services"
+    />
+    <meta
+      property="og:description"
+      content="AI chat with seamless integration to your favorite AI services"
+    />
+    <link href="./web/tailwind.css" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=block"
+      rel="stylesheet"
+    />
+    <title>Agnaistic</title>
+  </head>
+  <body>
+    <div id="root"><!-- TODO(11b): Fallback when no JS. --></div>
+    <script type="module" src="./web/index.tsx"></script>
+    <script>
+      window.agnai_version = '{{unknown}}';
+      console.log(window.agnai_version);
+    </script>
+  </body>
+</html>

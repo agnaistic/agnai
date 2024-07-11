@@ -6,13 +6,13 @@ import Button from '../Button'
 import GenerationSettings, { getPresetFormData } from '../GenerationSettings'
 import { toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
-import { adapterSettings } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
+import { adapterSettings } from '../util'
 
 export const ModeGenSettings: Component<{
   // chat: AppSchema.Chat

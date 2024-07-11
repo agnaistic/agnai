@@ -261,7 +261,7 @@ function setRequestService(opts: InferenceRequest) {
   opts.service = service
 
   settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  settings.temp = opts.temp ?? 0.5
+  settings.temp = settings.temp ?? 0.5
 
   if (settings.service === 'openai') {
     settings.topP = 1

@@ -18,7 +18,7 @@ import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { UserEmbed } from '/common/types/memory'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
-import { exclude, replace } from '/common/util'
+import { deepClone, exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
@@ -794,8 +794,13 @@ function getAuthGenSettings(
   chat: AppSchema.Chat,
   user: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
-  const presets = getStore('presets').getState().presets
-  const preset = getChatPreset(chat, user, presets)
+  const { presets, templates } = getStore('presets').getState()
+  const preset = deepClone(getChatPreset(chat, user, presets))
+
+  if (preset.promptTemplateId) {
+    const template = templates.find((t) => t._id === preset.promptTemplateId)
+    preset.gaslight = template?.template || preset.gaslight
+  }
 
   applySubscriptionAdjustment(preset)
 

@@ -36,6 +36,7 @@ export const apiKeyUsage: any = async (req: AppRequest, _: any, next: NextFuncti
   }
 
   req.fullUser = access.user
+  req.log.setBindings({ user: access.user.username, guest: undefined })
 
   next()
 }

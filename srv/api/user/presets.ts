@@ -95,20 +95,30 @@ export const deleteUserPreset = handle(async ({ params }) => {
 })
 
 export const createTemplate = handle(async ({ body, userId }) => {
-  assertValid({ name: 'string', template: 'string' }, body)
+  assertValid({ name: 'string', template: 'string', presetId: 'string?' }, body)
   const template = await store.presets.createTemplate(userId, {
     name: body.name || '',
     template: body.template,
   })
+
+  if (body.presetId) {
+    await store.presets.updateUserPreset(userId, body.presetId, { promptTemplateId: template._id })
+  }
+
   return template
 })
 
 export const updateTemplate = handle(async ({ body, userId, params }) => {
-  assertValid({ name: 'string', template: 'string' }, body)
+  assertValid({ name: 'string', template: 'string', presetId: 'string?' }, body)
   await store.presets.updateTemplate(userId, params.id, {
     name: body.name,
     template: body.template,
   })
+
+  if (body.presetId) {
+    await store.presets.updateUserPreset(userId, body.presetId, { promptTemplateId: params.id })
+  }
+
   const next = await store.presets.getTemplate(params.id)
   return next
 })

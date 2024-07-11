@@ -21,7 +21,7 @@ export const VoiceIdSelect: Component<{
   createEffect(
     on(list, (list) => {
       let voicesList: Option[]
-      if (!list || !list.length) {
+      if (!list) {
         voicesList = [{ value: '', label: 'Voices loading...' }]
       } else {
         voicesList = list.map((v) => ({ value: v.id, label: v.label }))

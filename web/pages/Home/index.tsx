@@ -1,6 +1,6 @@
 import './home.scss'
 import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
-import { adaptersToOptions, getAssetUrl, setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { announceStore, chatStore, settingStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
 import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
@@ -12,6 +12,7 @@ import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
 import WizardIcon from '/web/icons/WizardIcon'
 import Slot from '/web/shared/Slot'
+import { adaptersToOptions } from '/common/adapters'
 
 const enum Sub {
   None,

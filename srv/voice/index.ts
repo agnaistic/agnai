@@ -175,7 +175,7 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | 
     case 'novel':
       return novelTtsHandler
 
-    case 'agnai':
+    case 'agnaistic':
       return agnaiTtsHandler
 
     default:
