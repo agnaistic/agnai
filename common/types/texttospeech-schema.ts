@@ -44,7 +44,8 @@ export type NovelTtsSettings = {
 
 export type AgnaiTtsSettings = {
   service: 'agnaistic'
-  seed?: string
+  voiceId: string
+  seed?: number
   rate?: number
 }
 

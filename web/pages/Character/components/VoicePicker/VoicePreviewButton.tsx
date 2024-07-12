@@ -30,9 +30,6 @@ export const VoicePreviewButton: Component<{
   const playVoicePreview = async () => {
     const service = props.service
     let voiceId = props.voiceId
-    if (service === 'agnaistic') {
-      voiceId = 'none'
-    }
 
     const preview = voicePreviewUrl()
     if (!service || !voiceId) return

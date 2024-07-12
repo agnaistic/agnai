@@ -110,10 +110,10 @@ export const VoicePicker: Component<{
 
     switch (svc) {
       case 'agnaistic': {
-        if (!voice) return undefined
         return {
           service: 'agnaistic',
           ...agnaiTts,
+          voiceId: voice!,
         }
       }
 
@@ -121,8 +121,8 @@ export const VoicePicker: Component<{
         if (!voice) return undefined
         return {
           service: 'elevenlabs',
-          voiceId: voice,
           ...elevenlabs,
+          voiceId: voice,
         }
       }
 
@@ -130,8 +130,8 @@ export const VoicePicker: Component<{
         if (!voice) return undefined
         return {
           service: 'webspeechsynthesis',
-          voiceId: voice,
           ...webspeechsynthesis,
+          voiceId: voice,
         }
       }
 
@@ -139,8 +139,8 @@ export const VoicePicker: Component<{
         if (!voice) return undefined
         return {
           service: 'novel',
-          voiceId: voice,
           ...novelTts,
+          voiceId: voice,
         }
       }
 

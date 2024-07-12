@@ -17,9 +17,9 @@ export const AgnaisticTtsSettings: Component<{
     update({ seed: generateRandomSeed(12) })
   }
 
-  function generateRandomSeed(length: number) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789_'
-    return [...Array(length)].map(() => chars[Math.floor(Math.random() * chars.length)]).join('')
+  function generateRandomSeed(maxLength: number) {
+    const seed = Math.trunc(Math.random() * (Math.pow(10, maxLength) / 10))
+    return seed
   }
 
   return (
@@ -27,10 +27,12 @@ export const AgnaisticTtsSettings: Component<{
       <div class="flex items-end">
         <TextInput
           fieldName="agnaisticSeed"
+          type="number"
           label="Seed"
-          helperText="Allows you to create a custom voice using a seed of your choice. Overrides the voice."
+          helperText="*Select 'Use Seed' in Voice* - Allows you to create a custom voice using a seed of your choice. "
           value={props.settings.seed ?? ''}
-          onChange={(ev) => update({ seed: ev.currentTarget.value })}
+          onChange={(ev) => update({ seed: +ev.currentTarget.value })}
+          onInput={(ev) => update({ seed: +ev.currentTarget.value })}
         />
         <Button class="ml-2 rounded-lg" onClick={() => generate()}>
           <RefreshCw size={24} />

@@ -10,14 +10,26 @@ import { config } from '../config'
 const validator: Validator = {
   service: 'string',
   voiceId: 'string',
-  seed: 'string?',
+  seed: 'number?',
 }
 
 const handleAgnaiVoicesList = async (
   user: AppSchema.User,
   guestId: string | undefined
 ): Promise<VoiceListResponse['voices']> => {
-  return []
+  return [
+    { label: 'Use Seed', id: 'random' },
+    { label: 'Angie', id: 'angie' },
+    { label: 'Daniel', id: 'daniel' },
+    { label: 'Geralt', id: 'geralt' },
+    { label: 'Jennifer', id: 'jlaw' },
+    { label: 'Emma', id: 'emma' },
+    { label: 'Halle', id: 'halle' },
+    { label: 'Denny', id: 'deniro' },
+    { label: 'Freeman', id: 'freeman' },
+    { label: 'Tom', id: 'tom' },
+    { label: 'William', id: 'william' },
+  ]
 }
 
 const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
@@ -69,13 +81,20 @@ const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
   const key = (cfg.ttsApiKey ? decryptText(cfg.ttsApiKey) : config.auth.inferenceKey) || ''
   const auth = `id=${user._id}&level=${level}&key=${key}`
 
-  const url = `${cfg.ttsHost}?type=voice&key=${config.auth.inferenceKey}&model=voice&${auth}`
-  const result = await needle('post', url, JSON.stringify({ text, seed: voice.seed }), {
-    json: true,
-    headers: {
-      accept: 'application/json',
-    },
-  })
+  const infix = cfg.ttsHost.includes('?') ? '&' : '?'
+
+  const url = `${cfg.ttsHost}${infix}type=voice&key=${config.auth.inferenceKey}&model=voice&${auth}`
+  const result = await needle(
+    'post',
+    url,
+    JSON.stringify({ text, seed: voice.seed, voice_id: voice.voiceId }),
+    {
+      json: true,
+      headers: {
+        accept: 'application/json',
+      },
+    }
+  )
 
   if (result.statusCode !== 200) {
     throw new Error(JSON.stringify(result.body))
