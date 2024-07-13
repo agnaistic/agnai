@@ -3,10 +3,13 @@ import { loggedIn } from '../auth'
 import {
   changePassword,
   createApiKey,
+  linkGoogleAccount,
   login,
+  oathGoogleLogin,
   register,
   remoteLogin,
   resyncPatreon,
+  unlinkGoogleAccount,
   unlinkPatreon,
   verifyOauthKey,
   verifyPatreonOauth,
@@ -46,6 +49,9 @@ import { deleteUserAccount } from './delete-user'
 const router = Router()
 
 router.post('/login/callback', loggedIn, remoteLogin)
+router.post('/login/google', oathGoogleLogin)
+router.post('/link-google', loggedIn, linkGoogleAccount)
+router.post('/unlink-google', loggedIn, unlinkGoogleAccount)
 router.post('/login', login)
 router.post('/register', register)
 router.post('/services/novel', novelLogin)

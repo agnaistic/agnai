@@ -101,7 +101,7 @@ const App: Component = () => {
           />
           <Route
             path="/admin/subscriptions/:id"
-            component={lazy(() => import('./pages/Admin/Subscription'))}
+            component={lazy(() => import('./pages/Admin/SubscriptionModel'))}
           />
           <Route
             path={['/admin/announcements', '/admin/announcements/:id']}

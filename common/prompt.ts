@@ -912,3 +912,37 @@ export function resolveScenario(
 
   return result.trim()
 }
+
+type JsonType =
+  | { type: 'string'; title?: string; maxLength?: number }
+  | { type: 'integer'; title?: string }
+  | { type: 'enum'; enum: string[]; title?: string }
+
+type JsonSchema = {
+  title: string
+  type: 'object'
+  properties: Record<string, JsonType>
+}
+
+export const schema = {
+  str: (title?: string, maxLength?: number) => ({ type: 'string', title, maxLength }),
+  int: (title?: string) => ({ type: 'integer', title }),
+  enum: (values: string[], title?: string) => ({ type: 'enum', enum: values, title }),
+} satisfies Record<string, (...args: any[]) => JsonType>
+
+export function toJsonSchema(body: Record<string, JsonType>): JsonSchema {
+  const schema: JsonSchema = {
+    title: 'Response',
+    type: 'object',
+    properties: {},
+  }
+
+  const props: JsonSchema['properties'] = {}
+
+  for (const [key, def] of Object.entries(body)) {
+    props[key] = def
+  }
+
+  schema.properties = props
+  return schema
+}

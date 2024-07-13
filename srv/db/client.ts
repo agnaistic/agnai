@@ -103,6 +103,8 @@ export async function createIndexes() {
     { 'patreon.user.attributes.email': 1 },
     { name: 'user_patreonEmail' }
   )
+  await db('user').createIndex({ 'google.sub': 1 }, { name: 'user_googleSub' })
+  await db('user').createIndex({ 'google.email': 1 }, { name: 'user_googleEmail' })
 
   await db('saga-template').createIndex({ userId: 1 }, { name: 'saga-template_userId' })
   await db('saga-session').createIndex({ userId: 1 }, { name: 'saga-session_userId' })

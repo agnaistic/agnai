@@ -174,6 +174,8 @@ export namespace AppSchema {
     /** @todo remove after next deployment */
     tier?: AppSchema.SubscriptionTier
     serverConfig?: Configuration
+
+    googleClientId: string | undefined
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -288,6 +290,11 @@ export namespace AppSchema {
         tierId: string
         level: number
       }
+    }
+
+    google?: {
+      sub: any
+      email: any
     }
 
     billing?: {

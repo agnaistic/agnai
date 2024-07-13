@@ -125,6 +125,11 @@ export const config = {
     chatCounts: !!env('CHAT_COUNTS', ''),
   },
 
+  google: {
+    clientId: env('GOOGLE_CLIENT_ID', ''),
+    secret: env('GOOGLE_CLIENT_SECRET', ''),
+  },
+
   patreon: {
     redirect: env('PATREON_REDIRECT_URI', 'http://localhost:1234/oauth/patreon'),
     campaign_id: env('PATREON_CAMPAIGN_ID', ''),

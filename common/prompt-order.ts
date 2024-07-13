@@ -95,8 +95,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`<|im_start|>system
     Then the roleplay chat between {{user}} and {{char}} begins.<|im_end|>
     
-    {{#each msg}}<|im_start|>[{{.name}}]\n{{.msg}}<|im_end|>{{/each}}`,
-    post: neat`POST<|im_start|>[{{char}}]
+    {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}
+    {{.name}}: {{.msg}}<|im_end|>{{/each}}`,
+    post: neat`POST<|im_start|>assistant
     {{post}}`,
     system_prompt: neat`{{#if system_prompt}}<|im_start|>system
     {{system_prompt}}<|im_end|>{{/if}}`,

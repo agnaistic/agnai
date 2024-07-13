@@ -56,6 +56,7 @@ const ServerConfiguration: Component = () => {
       ttsHost: 'string',
       maxGuidanceTokens: 'number',
       maxGuidanceVariables: 'number',
+      googleClientId: 'string',
     })
 
     adminStore.updateServerConfig({

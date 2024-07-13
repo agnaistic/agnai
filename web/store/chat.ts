@@ -541,6 +541,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = await createPromptParts(
         {
           ...entities,
+          impersonate: entities.impersonating,
           modelFormat: entities.settings.modelFormat,
           lastMessage: entities.lastMessage?.date || '',
           replyAs,

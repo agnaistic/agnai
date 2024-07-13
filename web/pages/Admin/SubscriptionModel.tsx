@@ -35,7 +35,7 @@ const tokenizers = [
   { label: 'Qwen2', value: 'qwen2' },
 ]
 
-export const Subscription: Component = () => {
+export const SubscriptionModel: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription Model')
   let ref: any
 
@@ -382,7 +382,7 @@ export const Subscription: Component = () => {
   )
 }
 
-export default Subscription
+export default SubscriptionModel
 
 const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) => {
   let form: any

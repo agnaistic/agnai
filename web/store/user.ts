@@ -152,6 +152,68 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async *unlinkGoogleAccount(_, success?: () => void) {
+      const res = await api.post('/user/unlink-google')
+      if (res.result) {
+        yield { user: res.result.user }
+        toastStore.success('Google Account unlinked')
+        return
+      }
+
+      toastStore.error(`Could not unlinked Google: ${res.error}`)
+    },
+
+    async *handleGoogleCallback(
+      _,
+      action: 'login' | 'link',
+      data: { credential: string },
+      success?: () => void
+    ) {
+      if (action !== 'login' && !isLoggedIn()) {
+        toastStore.error(`Cannot link account: Not signed in`)
+        return
+      }
+      yield { loading: true }
+
+      const res = await api.post(action === 'link' ? '/user/link-google' : '/user/login/google', {
+        token: data.credential,
+      })
+
+      yield { loading: false }
+
+      switch (action) {
+        case 'link': {
+          if (res.result) {
+            toastStore.success('Successfully linked Google account')
+            yield { user: res.result.user }
+            success?.()
+            return
+          }
+
+          toastStore.error(`Could not link account: ${res.error}`)
+          return
+        }
+
+        case 'login': {
+          if (res.result) {
+            yield {
+              loggedIn: true,
+              user: res.result.user,
+              profile: res.result.profile,
+              jwt: res.result.token,
+            }
+            setAuth(res.result.token)
+            success?.()
+            publish({ type: 'login', token: res.result.token })
+            events.emit(EVENTS.loggedIn)
+            return
+          }
+
+          toastStore.error(`Could not sign in: ${res.error}`)
+        }
+      }
+    },
+
     async *startCheckout({ billingLoading }, tierId: string) {
       if (billingLoading) return
       yield { billingLoading: true }
@@ -438,7 +500,6 @@ export const userStore = createStore<UserState>(
         jwt: res.result.token,
       }
 
-      toastStore.success('Welcome to Agnaistic')
       onSuccess?.()
       publish({ type: 'login', token: res.result.token })
     },

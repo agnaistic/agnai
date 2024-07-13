@@ -73,6 +73,7 @@ export type InferenceRequest = {
   temp?: number
   stop?: string[]
   reguidance?: string[]
+  jsonSchema?: any
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -221,6 +222,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     previous: opts.previous,
     placeholders: opts.placeholders,
     lists: opts.lists,
+    jsonSchema: opts.jsonSchema,
   })
 
   return { stream }

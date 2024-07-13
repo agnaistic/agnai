@@ -74,6 +74,8 @@ export async function getAppConfig(user?: AppSchema.User) {
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
+      googleClientId:
+        !!config.google.clientId && !!config.google.secret ? config.google.clientId : undefined,
     }
   }
 

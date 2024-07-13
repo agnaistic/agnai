@@ -72,6 +72,7 @@ export type AdapterProps = {
   requestId: string
   encoder?: TokenCounter
 
+  jsonSchema?: any
   guidance?: boolean
   placeholders?: Record<string, string>
   lists?: Record<string, string[]>

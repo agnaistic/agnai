@@ -43,6 +43,12 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   text: 'Plain Text',
 }
 
+export const JSON_SCHEMA_SUPPORTED: { [key in AIAdapter | ThirdPartyFormat]?: boolean } = {
+  agnaistic: true,
+  llamacpp: true,
+  tabby: true,
+}
+
 export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   openai: 'openai',
   'openai-chat': 'openai',
