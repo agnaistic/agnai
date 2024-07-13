@@ -242,11 +242,12 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
 
-  // Deprecated
-  if (opts.settings?.useAdvancedPrompt === 'validate') {
-    return ensureValidTemplate(template)
+  if (opts.settings?.useAdvancedPrompt === 'no-validation') {
+    return template
   }
-  return template
+
+  // Deprecated
+  return ensureValidTemplate(template)
 }
 
 type InjectOpts = {
