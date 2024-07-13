@@ -1,4 +1,4 @@
-import { AlertTriangle, Pill, Save, VenetianMask, X } from 'lucide-solid'
+import { AlertTriangle, Save, VenetianMask, X } from 'lucide-solid'
 import {
   Component,
   Match,
@@ -25,7 +25,6 @@ import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
 import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
-import { store } from '/srv/db'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
