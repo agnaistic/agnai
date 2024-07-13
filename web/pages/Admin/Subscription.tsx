@@ -19,6 +19,7 @@ import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
+import { Page } from '/web/Layout'
 
 const tokenizers = [
   { label: 'None', value: '' },
@@ -202,7 +203,7 @@ export const Subscription: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader
         title={
           <A class="link" href="/admin/subscriptions">
@@ -377,7 +378,7 @@ export const Subscription: Component = () => {
           </div>
         }
       />
-    </>
+    </Page>
   )
 }
 

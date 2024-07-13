@@ -11,6 +11,7 @@ import { getStrictForm, toLocalTime } from '/web/shared/util'
 import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
+import { Page } from '/web/Layout'
 
 export { AnnoucementPage as default }
 
@@ -47,7 +48,7 @@ const AnnoucementList: Component = (props) => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Manage Announcements" />
       <div class="flex w-full justify-end">
         <Button onClick={() => nav('/admin/announcements/new')}>
@@ -93,7 +94,7 @@ const AnnoucementList: Component = (props) => {
           )}
         </For>
       </div>
-    </>
+    </Page>
   )
 }
 
@@ -148,7 +149,7 @@ const Announcement: Component<{}> = (props) => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Announcement" />
 
       <form ref={ref!} class="flex flex-col gap-2">
@@ -194,6 +195,6 @@ const Announcement: Component<{}> = (props) => {
           ></div>
         </div>
       </form>
-    </>
+    </Page>
   )
 }

@@ -1,13 +1,14 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { Page } from '/web/Layout'
 
 const NovelGuide: Component = () => {
   return (
-    <>
+    <Page>
       <PageHeader title="NovelAI Guide"></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
-    </>
+    </Page>
   )
 }
 

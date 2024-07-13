@@ -10,6 +10,7 @@ import { SaveIcon } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Divider from '/web/shared/Divider'
 import { Card } from '/web/shared/Card'
+import { Page } from '/web/Layout'
 
 export { ServerConfiguration as default }
 
@@ -66,7 +67,7 @@ const ServerConfiguration: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Server Configuration" />
 
       <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
@@ -213,7 +214,7 @@ const ServerConfiguration: Component = () => {
           </Button>
         </div>
       </form>
-    </>
+    </Page>
   )
 }
 

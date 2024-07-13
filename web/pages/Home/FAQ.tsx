@@ -1,13 +1,14 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { Page } from '/web/Layout'
 
 const FAQ: Component = () => {
   return (
-    <>
+    <Page>
       <PageHeader title="FAQ" subtitle="Frequently Asked Questions"></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(faq)}></div>
-    </>
+    </Page>
   )
 }
 

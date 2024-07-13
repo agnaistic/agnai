@@ -6,6 +6,7 @@ import Loading from '/web/shared/Loading'
 import Button from '/web/shared/Button'
 import { Plus, Upload } from 'lucide-solid'
 import ImportScenarioModal from './components/ImportScenarioModal'
+import { Page } from '/web/Layout'
 
 const ScenarioList: Component = () => {
   const scenarioState = scenarioStore()
@@ -33,7 +34,7 @@ const ScenarioList: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader
         title={
           <div class="flex w-full justify-between">
@@ -92,7 +93,7 @@ const ScenarioList: Component = () => {
       </Switch>
 
       <ImportScenarioModal show={showImport()} close={() => setShowImport(false)} />
-    </>
+    </Page>
   )
 }
 

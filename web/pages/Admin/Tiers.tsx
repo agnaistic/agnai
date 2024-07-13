@@ -9,6 +9,7 @@ import { getStrictForm } from '/web/shared/util'
 import Button from '/web/shared/Button'
 import Select from '/web/shared/Select'
 import { TierCard } from '../Profile/TierCard'
+import { Page } from '/web/Layout'
 
 export { TiersPage as default }
 
@@ -127,7 +128,7 @@ const TiersPage: Component = (props) => {
   })
 
   return (
-    <>
+    <Page>
       <PageHeader title="Subscription Tier" />
 
       <A href="/admin/subscriptions" class="link">
@@ -230,6 +231,6 @@ const TiersPage: Component = (props) => {
           </div>
         </form>
       </Card>
-    </>
+    </Page>
   )
 }

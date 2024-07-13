@@ -36,6 +36,7 @@ import { isLoggedIn } from '/web/store/api'
 import { AppSchema } from '/common/types'
 import { isEligible } from './util'
 import { ADAPTER_LABELS } from '/common/adapters'
+import { Page } from '/web/Layout'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -200,7 +201,7 @@ const CreateChatForm: Component<{
   })
 
   return (
-    <>
+    <Page>
       <PageHeader title={`Create Chat with ${state.char?.name}`} />
       <form ref={ref}>
         <div class="mb-2 text-sm">
@@ -382,7 +383,7 @@ const CreateChatForm: Component<{
           </Card>
         </Show>
       </form>
-    </>
+    </Page>
   )
 }
 

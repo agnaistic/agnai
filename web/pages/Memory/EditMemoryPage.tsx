@@ -10,6 +10,7 @@ import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import { Save } from 'lucide-solid'
 import { emptyBookWithEmptyEntry } from '/common/memory'
+import { Page } from '/web/Layout'
 
 const EditMemoryPage = () => {
   const { updateTitle } = setComponentPageTitle('Memory book')
@@ -70,7 +71,7 @@ const EditMemoryPage = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Edit Memory Book" />
       <Show when={!!editing()}>
         <form ref={ref} onSubmit={saveBook}>
@@ -134,7 +135,7 @@ const EditMemoryPage = () => {
           </div>
         </form>
       </Show>
-    </>
+    </Page>
   )
 }
 

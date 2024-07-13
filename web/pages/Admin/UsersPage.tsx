@@ -11,6 +11,7 @@ import Select from '/web/shared/Select'
 import { A } from '@solidjs/router'
 import { elapsedSince, getUserSubscriptionTier, now } from '/common/util'
 import type Stripe from 'stripe'
+import { Page } from '/web/Layout'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -53,7 +54,7 @@ const UsersPage: Component = () => {
   })
 
   return (
-    <div>
+    <Page>
       <PageHeader title="User Management" />
 
       <A href="/admin/metrics" class="link">
@@ -106,7 +107,7 @@ const UsersPage: Component = () => {
           name={info()?.name!}
         />
       </div>
-    </div>
+    </Page>
   )
 }
 

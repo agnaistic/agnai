@@ -10,6 +10,7 @@ import { getUsableServices, setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
+import { Page } from '/web/Layout'
 
 const PresetList: Component = () => {
   setComponentPageTitle('Presets')
@@ -49,7 +50,7 @@ const PresetList: Component = () => {
   })
 
   return (
-    <>
+    <Page>
       <PageHeader title="Generation Presets" />
       <div class="mb-4 flex w-full justify-end gap-2">
         <A href="/presets/new">
@@ -128,7 +129,7 @@ const PresetList: Component = () => {
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
       />
-    </>
+    </Page>
   )
 }
 

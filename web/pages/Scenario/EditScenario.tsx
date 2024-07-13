@@ -11,6 +11,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { ConfirmModal } from '/web/shared/Modal'
 import { ExportScenarioModal } from './components/DownloadScenarioModal'
 import EditScenarioEvents from './EditScenarioEvents'
+import { Page } from '/web/Layout'
 
 const CreateScenario: Component = () => {
   let ref: any
@@ -39,7 +40,7 @@ const CreateScenario: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader
         title={
           <div class="flex w-full justify-between">
@@ -139,7 +140,7 @@ const CreateScenario: Component = () => {
         close={() => setShowDownload(false)}
         scenario={showDownload() ? state.scenario : undefined}
       />
-    </>
+    </Page>
   )
 }
 

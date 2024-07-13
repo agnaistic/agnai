@@ -1,6 +1,7 @@
 import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { markdown } from '../../shared/markdown'
+import { Page } from '/web/Layout'
 
 const text = `
 **Dated September 27, 2023**
@@ -94,10 +95,10 @@ You agree not to use the Model or Derivatives of the Model:
 
 const TermsOfServicePage: Component = () => {
   return (
-    <div>
+    <Page>
       <PageHeader title={<>Agnaistic Terms of Service</>} />
       <div class="markdown flex flex-col gap-4" innerHTML={markdown.makeHtml(text)}></div>
-    </div>
+    </Page>
   )
 }
 

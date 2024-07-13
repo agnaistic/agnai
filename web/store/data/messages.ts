@@ -661,13 +661,29 @@ async function createMessage(
   })
 }
 
-export async function deleteMessages(chatId: string, msgIds: string[], leafId: string) {
+export async function deleteMessages(
+  chatId: string,
+  msgIds: string[],
+  leafId: string,
+  parents: Record<string, string>
+) {
   if (isLoggedIn()) {
-    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds, leafId })
+    const res = await api.method('delete', `/chat/${chatId}/messages`, {
+      ids: msgIds,
+      leafId,
+      parents,
+    })
     return res
   }
 
   const msgs = await localApi.getMessages(chatId)
+
+  for (const msg of msgs) {
+    const parent = parents[msg._id]
+    if (!parent) continue
+    msg.parent = parent
+  }
+
   await localApi.saveMessages(chatId, exclude(msgs, msgIds))
 
   const chats = await localApi.loadItem('chats')

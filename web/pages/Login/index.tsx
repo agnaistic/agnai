@@ -9,6 +9,7 @@ import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
+import { Page } from '/web/Layout'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
@@ -28,7 +29,7 @@ const LoginPage: Component = () => {
   })
 
   return (
-    <div class="flex w-full flex-col items-center">
+    <Page class="flex w-full flex-col items-center">
       <div class="my-4 border-b border-white/5" />
       <PageHeader
         title={<div class="flex w-full justify-center">Welcome</div>}
@@ -87,7 +88,7 @@ const LoginPage: Component = () => {
           </p>
         </div>
       </div>
-    </div>
+    </Page>
   )
 }
 

@@ -23,6 +23,7 @@ import { useNavigate } from '@solidjs/router'
 import { isLoggedIn } from '/web/store/api'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
+import { Page } from '/web/Layout'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
@@ -113,7 +114,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   )
 
   return (
-    <>
+    <Page>
       <PageHeader title="Your Profile" subPage />
       <form ref={formRef!} onSubmit={submit} aria-label="Edit profile">
         <div class="flex flex-col gap-4">
@@ -207,7 +208,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
       </form>
       <PasswordModal show={pass()} close={() => setPass(false)} />
       <DeleteAccountModal show={del()} close={() => setDel(false)} />
-    </>
+    </Page>
   )
 }
 

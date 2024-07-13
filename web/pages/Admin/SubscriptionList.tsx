@@ -9,6 +9,7 @@ import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import Divider from '/web/shared/Divider'
 import { SolidCard } from '/web/shared/Card'
+import { Page } from '/web/Layout'
 
 const SubscriptionList: Component = () => {
   setComponentPageTitle('Subscriptions')
@@ -37,7 +38,7 @@ const SubscriptionList: Component = () => {
   })
 
   return (
-    <>
+    <Page>
       <PageHeader title="Subscriptions" />
       <A href="/admin/metrics" class="link">
         ← Back to Manage
@@ -165,7 +166,7 @@ const SubscriptionList: Component = () => {
         confirm={deleteSub}
         message="Are you sure you wish to delete this subscription?"
       />
-    </>
+    </Page>
   )
 }
 

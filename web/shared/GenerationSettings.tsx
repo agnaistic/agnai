@@ -786,7 +786,7 @@ const SamplerSettings: Component<
           label="Temperature"
           helperText="Randomness of sampling. High values can increase creativity but may make text less sensible. Lower values will make text more predictable but can become repetitious."
           min={0.1}
-          max={20}
+          max={5}
           step={0.01}
           value={props.inherit?.temp || defaultPresets.basic.temp}
           disabled={props.disabled}
@@ -930,29 +930,10 @@ const SamplerSettings: Component<
           recommended={props.sub?.preset.topA}
         />
 
-        <Toggle
-          fieldName="mirostatToggle"
-          label="Use Mirostat"
-          helperText={
-            <>
-              Activates the Mirostat sampling technique. It aims to control perplexity during
-              sampling. See the {` `}
-              <A class="link" href="https://arxiv.org/abs/2007.14966">
-                paper
-              </A>
-              {'.'} Aphrodite only supports mode 2 (on) or 0 (off).
-            </>
-          }
-          value={props.inherit?.mirostatToggle ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'mirostatToggle'}
-          format={props.format}
-        />
         <RangeInput
           fieldName="mirostatTau"
           label="Mirostat Tau"
-          helperText="Mirostat aims to keep the text at a fixed complexity set by tau."
+          helperText="*Enable Mirotstat in the Toggles section* Mirostat aims to keep the text at a fixed complexity set by tau."
           min={0}
           max={6}
           step={0.01}
