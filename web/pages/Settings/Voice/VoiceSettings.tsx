@@ -7,8 +7,11 @@ import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 import NovelTtsSettings from './NovelTtsSettings'
 import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
+import AgnaisticSettings from './AgnaisticSettings'
+import { isAgnaisticSpeechAllowed } from '/web/shared/Audio/speech'
 
 const ttsServiceTabs = {
+  agnaistic: 'Agnaistic',
   webspeechsynthesis: 'Web Speech Synthesis',
   elevenlabs: 'ElevenLabs',
   novel: 'NovelAI Text To Speech',
@@ -19,9 +22,21 @@ type Tab = keyof typeof ttsServiceTabs
 export const VoiceSettings: Component = () => {
   const state = userStore()
 
+  const canUseTts = createMemo(() => {
+    return isAgnaisticSpeechAllowed()
+  })
+
   const [tab, setTab] = createSignal(0)
-  const tabs: Tab[] = ['webspeechsynthesis', 'elevenlabs', 'novel']
-  const currentTab = createMemo(() => tabs[tab()])
+
+  const tabs = createMemo(() => {
+    const opts: Tab[] = ['webspeechsynthesis', 'elevenlabs', 'novel']
+    if (canUseTts()) {
+      opts.unshift('agnaistic')
+    }
+    return opts
+  })
+
+  const currentTab = createMemo(() => tabs()[tab()])
   const subclass = 'flex flex-col gap-4'
 
   return (
@@ -84,10 +99,14 @@ export const VoiceSettings: Component = () => {
         <p class="text-lg font-bold">Voice Services</p>
 
         <div class="my-2">
-          <Tabs tabs={tabs.map((t) => ttsServiceTabs[t])} selected={tab} select={setTab} />
+          <Tabs tabs={tabs().map((t) => ttsServiceTabs[t])} selected={tab} select={setTab} />
         </div>
 
         <div class="flex flex-col gap-4">
+          <div class={currentTab() === 'agnaistic' ? subclass : 'hidden'}>
+            <AgnaisticSettings />
+          </div>
+
           <div class={currentTab() === 'webspeechsynthesis' ? subclass : 'hidden'}>
             <WebSpeechSynthesisSettings />
           </div>

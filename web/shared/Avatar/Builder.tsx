@@ -9,6 +9,7 @@ import { ColorPickerV2 } from '../ColorPicker'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
 import { calcBounds, getAttrColor, getColorProp } from './hooks'
 import AvatarCanvas from './Canvas'
+import { Page } from '/web/Layout'
 
 const AvatarBuilder: Component<{
   body?: FullSprite
@@ -70,7 +71,7 @@ const AvatarBuilder: Component<{
   })
 
   return (
-    <>
+    <Page>
       <Show when={!props.noHeader}>
         <PageHeader title="Character Builder" />
       </Show>
@@ -123,7 +124,7 @@ const AvatarBuilder: Component<{
           </section>
         </main>
       </div>
-    </>
+    </Page>
   )
 }
 

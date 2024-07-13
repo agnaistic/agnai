@@ -20,6 +20,7 @@ import { useSearchParams } from '@solidjs/router'
 import Modal from '/web/shared/Modal'
 import { THIRDPARTY_FORMATS } from '/common/adapters'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
+import { Page } from '/web/Layout'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -193,7 +194,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   )
 
   return (
-    <>
+    <Page>
       <PageHeader
         title="Settings"
         subtitle={
@@ -250,7 +251,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           <div class="flex justify-end gap-2 pt-4">{footer}</div>
         </Show>
       </form>
-    </>
+    </Page>
   )
 }
 

@@ -17,7 +17,7 @@ import { config } from '/srv/config'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
-import { getUser } from '/srv/db/user'
+import { getUser, toSafeUser } from '/srv/db/user'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const replicate = await getLanguageModels()
@@ -426,63 +426,5 @@ export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
   if (!user) return
 
-  if (user.patreon) {
-    user.patreon.access_token = ''
-    user.patreon.refresh_token = ''
-    user.patreon.scope = ''
-    user.patreon.token_type = ''
-  }
-
-  if (user.novelApiKey) {
-    user.novelApiKey = ''
-  }
-
-  user.hordeKey = ''
-  user.apiKey = user.apiKey ? '*********' : 'Not set'
-
-  if (user.oaiKey) {
-    user.oaiKeySet = true
-    user.oaiKey = ''
-  }
-
-  if (user.mistralKey) {
-    user.mistralKeySet = true
-    user.mistralKey = ''
-  }
-
-  if (user.scaleApiKey) {
-    user.scaleApiKeySet = true
-    user.scaleApiKey = ''
-  }
-
-  if (user.claudeApiKey) {
-    user.claudeApiKey = ''
-    user.claudeApiKeySet = true
-  }
-
-  if (user.thirdPartyPassword) {
-    user.thirdPartyPassword = ''
-    user.thirdPartyPasswordSet = true
-  }
-
-  if (user.elevenLabsApiKey) {
-    user.elevenLabsApiKey = ''
-    user.elevenLabsApiKeySet = true
-  }
-
-  for (const svc of getRegisteredAdapters()) {
-    if (!user.adapterConfig) break
-    if (!user.adapterConfig[svc.name]) continue
-
-    const secrets = svc.settings.filter((opt) => opt.secret)
-
-    for (const secret of secrets) {
-      if (user.adapterConfig[svc.name]![secret.field]) {
-        user.adapterConfig[svc.name]![secret.field] = ''
-        user.adapterConfig[svc.name]![secret.field + 'Set'] = true
-      }
-    }
-  }
-
-  return user
+  return toSafeUser(user)
 }

@@ -12,6 +12,7 @@ import { PlusIcon, TrashIcon } from 'lucide-solid'
 import { GuidanceHelp } from './Help'
 import { toSessionUrl } from './util'
 import { Saga } from '/common/types'
+import { Page } from '/web/Layout'
 
 export const SagaList: Component = (props) => {
   const nav = useNavigate()
@@ -57,7 +58,7 @@ export const SagaList: Component = (props) => {
   )
 
   return (
-    <>
+    <Page>
       <PageHeader title="Preview: Sagas" subtitle={Subtitle} />
       <div class="flex w-full flex-col gap-1">
         <SolidCard class="rendered-markdown">
@@ -83,7 +84,7 @@ export const SagaList: Component = (props) => {
         <GuidanceHelp />
         <Divider />
       </div>
-    </>
+    </Page>
   )
 }
 

@@ -29,7 +29,8 @@ export const VoicePreviewButton: Component<{
 
   const playVoicePreview = async () => {
     const service = props.service
-    const voiceId = props.voiceId
+    let voiceId = props.voiceId
+
     const preview = voicePreviewUrl()
     if (!service || !voiceId) return
 

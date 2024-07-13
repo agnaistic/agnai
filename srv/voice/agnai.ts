@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { TextToSpeechAdapter, VoiceListResponse } from './types'
 import { AppSchema } from '../../common/types/schema'
-import { StatusError, errors } from '../api/wrap'
+import { StatusError } from '../api/wrap'
 import { Validator } from '/common/valid'
 import { decryptText } from '../db/util'
 import { store } from '../db'
@@ -10,14 +10,26 @@ import { config } from '../config'
 const validator: Validator = {
   service: 'string',
   voiceId: 'string',
-  seed: 'string?',
+  seed: 'number?',
 }
 
 const handleAgnaiVoicesList = async (
   user: AppSchema.User,
   guestId: string | undefined
 ): Promise<VoiceListResponse['voices']> => {
-  return []
+  return [
+    { label: 'Use Seed', id: 'random' },
+    { label: 'Angie', id: 'angie' },
+    { label: 'Daniel', id: 'daniel' },
+    { label: 'Geralt', id: 'geralt' },
+    { label: 'Jennifer', id: 'jlaw' },
+    { label: 'Emma', id: 'emma' },
+    { label: 'Halle', id: 'halle' },
+    { label: 'Denny', id: 'deniro' },
+    { label: 'Freeman', id: 'freeman' },
+    { label: 'Tom', id: 'tom' },
+    { label: 'William', id: 'william' },
+  ]
 }
 
 const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
@@ -25,19 +37,64 @@ const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
   log,
   guestId
 ) => {
-  if (voice.service !== 'agnai') throw new Error('Invalid service')
+  if (voice.service !== 'agnaistic') throw new Error('Invalid service')
   const cfg = await store.admin.getServerConfiguration()
-  const token = getToken(user, guestId)
 
-  //https://api.novelai.net/ai/generate-voice?text=This%20is%20a%20test%20for%20text%20to%20speech.%20A%20little%20harsh%2C%20a%20little%20slow%2C%20but%20always%20on%20point.&voice=-1&seed=Aini&opus=true&version=v2
-  const url = `${cfg.ttsHost}?type=tts&key=${config.auth.inferenceKey}&model=tts&`
-  const result = await needle('post', url, JSON.stringify({ text, seed: voice.seed }), {
-    json: true,
-    headers: {
-      accept: 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-  })
+  if (cfg.ttsAccess === 'off') {
+    throw new Error(`Voice generation is disabled`)
+  }
+
+  let level = user.admin ? 99999 : await store.users.validateSubscription(user)
+  if (level === undefined) {
+    level = -1
+  }
+
+  if (level instanceof Error && cfg.ttsAccess !== 'users') {
+    throw level
+  }
+
+  if (typeof level !== 'number') {
+    level = -1
+  }
+
+  switch (cfg.ttsAccess) {
+    case 'admins':
+      if (!user.admin) {
+        throw new StatusError(`Voice generation not allowed`, 403)
+      }
+      break
+
+    case 'subscribers':
+      if (level < 0) {
+        throw new StatusError(`Voice generation not allowed`, 403)
+      }
+      break
+
+    case 'users': {
+      if (guestId) {
+        throw new StatusError(`Voice generation available to registered users only`, 403)
+      }
+      break
+    }
+  }
+
+  const key = (cfg.ttsApiKey ? decryptText(cfg.ttsApiKey) : config.auth.inferenceKey) || ''
+  const auth = `id=${user._id}&level=${level}&key=${key}`
+
+  const infix = cfg.ttsHost.includes('?') ? '&' : '?'
+
+  const url = `${cfg.ttsHost}${infix}type=voice&key=${config.auth.inferenceKey}&model=voice&${auth}`
+  const result = await needle(
+    'post',
+    url,
+    JSON.stringify({ text, seed: voice.seed, voice_id: voice.voiceId }),
+    {
+      json: true,
+      headers: {
+        accept: 'application/json',
+      },
+    }
+  )
 
   if (result.statusCode !== 200) {
     throw new Error(JSON.stringify(result.body))
@@ -51,14 +108,6 @@ const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
     content: result.body.output,
     ext: 'url',
   }
-}
-
-function getToken(user: AppSchema.User, guestId: string | undefined) {
-  let key: string | undefined
-  if (guestId) key = user.novelApiKey
-  else if (user.novelApiKey) key = decryptText(user.novelApiKey!)
-  if (!key) throw errors.Forbidden
-  return key
 }
 
 export const agnaiTtsHandler = {

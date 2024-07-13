@@ -1,10 +1,5 @@
 import { AppSchema } from './types/schema'
 
-export type AIAdapter = (typeof AI_ADAPTERS)[number]
-export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
-export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
-export type ThirdPartyFormat = (typeof THIRDPARTY_FORMATS)[number]
-
 export type AdapterSetting = {
   /** The name of the field within the settings object */
   field: string
@@ -46,6 +41,12 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   sbf: 'SBF',
   attributes: 'Attributes (NovelAI)',
   text: 'Plain Text',
+}
+
+export const JSON_SCHEMA_SUPPORTED: { [key in AIAdapter | ThirdPartyFormat]?: boolean } = {
+  agnaistic: true,
+  llamacpp: true,
+  tabby: true,
 }
 
 export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
@@ -337,141 +338,8 @@ export const samplerDisableValues: { [key in keyof PresetAISettings]?: number } 
   tailFreeSampling: 1,
 }
 
-export const adapterSettings: {
-  [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
-} = {
-  temp: [
-    'kobold',
-    'novel',
-    'ooba',
-    'horde',
-    'openai',
-    'scale',
-    'claude',
-    'goose',
-    'agnaistic',
-    'aphrodite',
-    'tabby',
-    'mistral',
-  ],
-  tempLast: ['agnaistic', 'tabby', 'exllamav2'],
-  dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite'],
-  dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
-  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
-  smoothingCurve: ['kobold', 'aphrodite'],
-  maxTokens: AI_ADAPTERS.slice(),
-  maxContextLength: AI_ADAPTERS.slice(),
-  antiBond: ['openai', 'scale'],
-  prefixNameAppend: ['openai', 'claude'],
-
-  swipesPerGeneration: ['aphrodite'],
-  epsilonCutoff: ['aphrodite'],
-  etaCutoff: ['aphrodite'],
-
-  prefill: ['claude'],
-
-  topP: [
-    'horde',
-    'kobold',
-    'claude',
-    'ooba',
-    'openai',
-    'novel',
-    'agnaistic',
-    'exllamav2',
-    'openai-chat',
-    'aphrodite',
-    'tabby',
-    'mistral',
-  ],
-  repetitionPenalty: [
-    'horde',
-    'novel',
-    'kobold',
-    'ooba',
-    'agnaistic',
-    'exllamav2',
-    'aphrodite',
-    'tabby',
-  ],
-  repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'tabby'],
-  repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
-  tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  minP: ['llamacpp', 'kobold', 'koboldcpp', 'exllamav2', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  topK: [
-    'horde',
-    'novel',
-    'kobold',
-    'ooba',
-    'claude',
-    'agnaistic',
-    'exllamav2',
-    'aphrodite',
-    'tabby',
-  ],
-  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'exllamav2', 'aphrodite', 'tabby'],
-
-  mirostatToggle: ['aphrodite', 'tabby'],
-  mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby'],
-  mirostatTau: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby'],
-  cfgScale: ['novel', 'ooba', 'tabby'],
-  cfgOppose: ['novel', 'ooba', 'tabby'],
-  phraseRepPenalty: ['novel'],
-  phraseBias: ['novel'],
-
-  thirdPartyUrl: ['kobold', 'ooba'],
-  thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby'],
-  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'openai', 'openai-chat'],
-
-  claudeModel: ['claude'],
-  novelModel: ['novel'],
-  mistralModel: ['mistral'],
-  oaiModel: ['openai', 'openai-chat'],
-  frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat', 'aphrodite', 'tabby'],
-  presencePenalty: ['openai', 'kobold', 'novel', 'openai-chat', 'aphrodite', 'tabby'],
-  streamResponse: [
-    'openai',
-    'kobold',
-    'novel',
-    'claude',
-    'ooba',
-    'agnaistic',
-    'openai-chat',
-    'aphrodite',
-    'tabby',
-    'mistral',
-  ],
-  openRouterModel: ['openrouter'],
-  stopSequences: [
-    'ooba',
-    'agnaistic',
-    'novel',
-    'mancer',
-    'llamacpp',
-    'horde',
-    'exllamav2',
-    'kobold',
-    'aphrodite',
-    'tabby',
-  ],
-  trimStop: ['koboldcpp'],
-
-  addBosToken: ['ooba', 'agnaistic', 'tabby'],
-  banEosToken: ['ooba', 'aphrodite', 'tabby'],
-  tokenHealing: ['agnaistic', 'exllamav2', 'ooba', 'tabby'],
-  doSample: ['ooba'],
-  encoderRepitionPenalty: ['ooba'],
-  penaltyAlpha: ['ooba'],
-  earlyStopping: ['ooba'],
-  numBeams: ['ooba'],
-
-  replicateModelName: ['replicate'],
-  replicateModelVersion: ['replicate'],
-  replicateModelType: ['replicate'],
-
-  skipSpecialTokens: ['ooba', 'kobold'],
+export function adaptersToOptions(adapters: AIAdapter[]) {
+  return adapters.map((adp) => ({ label: ADAPTER_LABELS[adp], value: adp }))
 }
 
 export type RegisteredAdapter = {
@@ -552,3 +420,8 @@ export const samplerOrders: { [key in AIAdapter]?: Array<keyof PresetAISettings>
     'mirostatTau',
   ],
 }
+
+export type AIAdapter = (typeof AI_ADAPTERS)[number]
+export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
+export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
+export type ThirdPartyFormat = (typeof THIRDPARTY_FORMATS)[number]

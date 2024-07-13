@@ -28,6 +28,7 @@ const emptyCfg: AppSchema.AppConfig = {
   },
   openRouter: { models: [] },
   subs: [],
+  googleClientId: '',
 }
 
 let SELF_HOSTING = false

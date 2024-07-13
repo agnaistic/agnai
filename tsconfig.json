@@ -2,10 +2,10 @@
   "compilerOptions": {
     "strict": true,
     "incremental": true,
-    "target": "ES2020" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "ESNext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     "jsx": "preserve" /* Specify what JSX code is generated. */,
     "jsxImportSource": "solid-js" /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */,
-    "module": "CommonJS" /* Specify what module code is generated. */,
+    "module": "ESNext" /* Specify what module code is generated. */,
     "moduleResolution": "node" /* Specify how TypeScript looks up a file from a given module specifier. */,
     "noEmit": true /* Disable emitting files from a compilation. */,
     "allowSyntheticDefaultImports": true /* Allow 'import x from y' when a module doesn't have a default export. */,

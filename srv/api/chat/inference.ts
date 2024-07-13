@@ -21,6 +21,7 @@ const validInference = {
   user: 'any',
   service: 'string',
   presetId: 'string?',
+  json_schema: 'any?',
 } as const
 
 const validInferenceApi = {
@@ -61,6 +62,7 @@ const validInferenceApi = {
   ban_eos_token: 'boolean?',
   add_bos_token: 'boolean?',
   temperature_last: 'boolean?',
+  json_schema: 'any?',
 } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
@@ -192,6 +194,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     lists: body.lists,
     reguidance: body.reguidance,
     requestId: body.requestId,
+    jsonSchema: body.json_schema,
   }
 
   const result = await guidanceAsync(props)
@@ -366,6 +369,7 @@ export const inferenceApi = wrap(async (req, res) => {
     }
   }
 
+  await releaseLock(req.userId)
   res.end()
 })
 
@@ -386,6 +390,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     prompt: body.prompt,
     service: body.service,
     guest: userId ? undefined : socketId,
+    jsonSchema: body.json_schema,
   })
 
   return { response: inference.generated, meta: inference.meta }

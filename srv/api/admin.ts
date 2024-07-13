@@ -4,6 +4,7 @@ import { store } from '../db'
 import { isAdmin, loggedIn } from './auth'
 import { StatusError, handle } from './wrap'
 import { getLiveCounts, sendAll } from './ws/bus'
+import { encryptText } from '../db/util'
 
 const router = Router()
 
@@ -84,22 +85,31 @@ const updateConfiguration = handle(async ({ body }) => {
       enabledAdapters: ['string'],
       imagesEnabled: 'boolean',
       imagesHost: 'string',
-      ttsEnabled: 'boolean',
+      ttsAccess: ['off', 'users', 'subscribers', 'admins'],
       ttsHost: 'string',
+      ttsApiKey: 'string?',
       imagesModels: ['any'],
       supportEmail: 'string',
     },
     body
   )
 
-  const next = await store.admin.updateServerConfiguration({
-    kind: 'configuration',
+  const update = {
+    kind: 'configuration' as const,
     privacyUpdated: '',
     tosUpdated: '',
     maxGuidanceTokens: 1000,
     maxGuidanceVariables: 15,
     ...body,
-  })
+  }
+
+  if (!update.ttsApiKey) {
+    delete update.ttsApiKey
+  } else {
+    update.ttsApiKey = encryptText(update.ttsApiKey)
+  }
+
+  const next = await store.admin.updateServerConfiguration(update)
 
   return next
 })

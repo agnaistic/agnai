@@ -78,7 +78,11 @@ export async function generateTextToSpeech(
   }
 
   try {
-    output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+    if (audio.ext === 'url') {
+      output = audio.content.toString()
+    } else {
+      output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+    }
   } catch (ex: any) {
     log.error({ err: ex }, 'Failed to generate audio')
     throw new StatusError(`Could not generate audio: ${ex.message || ex}`, 500)
@@ -175,7 +179,7 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | 
     case 'novel':
       return novelTtsHandler
 
-    case 'agnai':
+    case 'agnaistic':
       return agnaiTtsHandler
 
     default:

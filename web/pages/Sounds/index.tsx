@@ -6,12 +6,13 @@ import { Card } from '../../shared/Card'
 import SoundpackPreview from './SoundpackPreview'
 import { audioStore } from '/web/store'
 import { SoundpackPicker } from './SoundpackPicker'
+import { Page } from '/web/Layout'
 
 const SoundsPage: Component<{}> = (props) => {
   const audio = audioStore()
 
   return (
-    <>
+    <Page>
       <PageHeader title="Sounds" />
 
       <Card>
@@ -68,7 +69,7 @@ const SoundsPage: Component<{}> = (props) => {
 
         <SoundpackPreview soundpackId={audio.selectedSoundpacks.global} />
       </div>
-    </>
+    </Page>
   )
 }
 

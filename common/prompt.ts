@@ -89,8 +89,8 @@ export type BuildPromptOpts = {
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
-export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
-export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
+export const BOT_REPLACE = /(\{\{char\}\}|\{\{name\}\})/gi
+export const SELF_REPLACE = /(\{\{user\}\})/gi
 export const START_REPLACE = /(<START>)/gi
 
 const HOLDER_NAMES = {
@@ -159,8 +159,13 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const template = getTemplate(opts)
+  let template = getTemplate(opts)
   const templateSize = await encoder(template)
+
+  if (opts.modelFormat) {
+    template = replaceTags(template, opts.modelFormat)
+  }
+
   /**
    * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
    * are retrieved based on the number of history messages we return here.
@@ -237,12 +242,11 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
 
-  const validate = opts.settings?.useAdvancedPrompt !== 'no-validation'
-
-  if (!validate) {
+  if (opts.settings?.useAdvancedPrompt === 'no-validation') {
     return template
   }
 
+  // Deprecated
   return ensureValidTemplate(template)
 }
 
@@ -908,4 +912,38 @@ export function resolveScenario(
   }
 
   return result.trim()
+}
+
+type JsonType =
+  | { type: 'string'; title?: string; maxLength?: number }
+  | { type: 'integer'; title?: string }
+  | { type: 'enum'; enum: string[]; title?: string }
+
+type JsonSchema = {
+  title: string
+  type: 'object'
+  properties: Record<string, JsonType>
+}
+
+export const schema = {
+  str: (title?: string, maxLength?: number) => ({ type: 'string', title, maxLength }),
+  int: (title?: string) => ({ type: 'integer', title }),
+  enum: (values: string[], title?: string) => ({ type: 'enum', enum: values, title }),
+} satisfies Record<string, (...args: any[]) => JsonType>
+
+export function toJsonSchema(body: Record<string, JsonType>): JsonSchema {
+  const schema: JsonSchema = {
+    title: 'Response',
+    type: 'object',
+    properties: {},
+  }
+
+  const props: JsonSchema['properties'] = {}
+
+  for (const [key, def] of Object.entries(body)) {
+    props[key] = def
+  }
+
+  schema.properties = props
+  return schema
 }

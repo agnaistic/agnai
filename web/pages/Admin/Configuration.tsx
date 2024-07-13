@@ -10,6 +10,7 @@ import { SaveIcon } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Divider from '/web/shared/Divider'
 import { Card } from '/web/shared/Card'
+import { Page } from '/web/Layout'
 
 export { ServerConfiguration as default }
 
@@ -40,6 +41,7 @@ const ServerConfiguration: Component = () => {
   const submit = () => {
     const body = getStrictForm(form, {
       apiAccess: ['off', 'users', 'subscribers', 'admins'],
+      ttsAccess: ['off', 'users', 'subscribers', 'admins'],
       slots: 'string',
       maintenance: 'boolean',
       maintenanceMessage: 'string',
@@ -50,9 +52,11 @@ const ServerConfiguration: Component = () => {
       imagesEnabled: 'boolean',
       supportEmail: 'string',
       ttsEnabled: 'boolean',
+      ttsApiKey: 'string',
       ttsHost: 'string',
       maxGuidanceTokens: 'number',
       maxGuidanceVariables: 'number',
+      googleClientId: 'string',
     })
 
     adminStore.updateServerConfig({
@@ -64,7 +68,7 @@ const ServerConfiguration: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Server Configuration" />
 
       <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
@@ -94,17 +98,41 @@ const ServerConfiguration: Component = () => {
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 
+        <Select
+          fieldName="ttsAccess"
+          label="TTS Access Level"
+          items={[
+            { label: 'Off', value: 'off' },
+            { label: 'All Users', value: 'users' },
+            { label: 'Subscribers', value: 'subscribers' },
+            { label: 'Adminstrators', value: 'admins' },
+          ]}
+          value={state.serverConfig?.ttsAccess || 'off'}
+        />
+
         <TextInput
           fieldName="ttsHost"
           label={
             <>
               <div class="flex gap-2">
                 <div>Agnaistic TTS Host</div>
-                <Toggle fieldName="ttsEnabled" value={state.serverConfig?.ttsEnabled} />
               </div>
             </>
           }
           value={state.serverConfig?.ttsHost}
+          classList={{ hidden: !state.adapters.includes('agnaistic') }}
+        />
+
+        <TextInput
+          fieldName="ttsApiKey"
+          label={
+            <>
+              <div class="flex gap-2">
+                <div>Agnaistic TTS Key</div>
+              </div>
+            </>
+          }
+          value={''}
           classList={{ hidden: !state.adapters.includes('agnaistic') }}
         />
 
@@ -187,7 +215,7 @@ const ServerConfiguration: Component = () => {
           </Button>
         </div>
       </form>
-    </>
+    </Page>
   )
 }
 

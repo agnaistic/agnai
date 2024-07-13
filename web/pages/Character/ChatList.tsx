@@ -24,6 +24,7 @@ import {
 } from './util'
 import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import { Page } from '/web/Layout'
 
 const baseSortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -159,7 +160,7 @@ const CharacterChats: Component = () => {
   )
 
   return (
-    <div class="flex flex-col gap-2">
+    <Page class="flex flex-col gap-2">
       <PageHeader
         title={
           <div class="flex w-full justify-between">
@@ -242,7 +243,7 @@ const CharacterChats: Component = () => {
         close={() => setImport(false)}
         char={chars.list.find((c) => c._id === charId())}
       />
-    </div>
+    </Page>
   )
 }
 

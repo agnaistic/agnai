@@ -1,4 +1,4 @@
-export type TTSService = 'webspeechsynthesis' | 'elevenlabs' | 'novel' | 'agnai'
+export type TTSService = 'webspeechsynthesis' | 'elevenlabs' | 'novel' | 'agnaistic'
 
 export type TTSSettings = {
   enabled: boolean
@@ -43,8 +43,9 @@ export type NovelTtsSettings = {
 }
 
 export type AgnaiTtsSettings = {
-  service: 'agnai'
-  seed: number
+  service: 'agnaistic'
+  voiceId: string
+  seed?: number
   rate?: number
 }
 

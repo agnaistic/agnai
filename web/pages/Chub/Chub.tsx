@@ -10,6 +10,7 @@ import { AppSchema } from '/common/types'
 import ChubImportCharModal from './ChubImportChar'
 import ChubImportBookModal from './ChubImportBook'
 import { useNavigate, useParams } from '@solidjs/router'
+import { Page } from '/web/Layout'
 
 const chubTabs = {
   characters: 'Characters',
@@ -40,7 +41,7 @@ const Chub: Component = () => {
   const tabClass = `flex flex-col gap-4`
 
   return (
-    <>
+    <Page>
       <PageHeader title="Character Hub" />
 
       <div class="my-2">
@@ -93,7 +94,7 @@ const Chub: Component = () => {
           book={bookModal()!.book}
         />
       </Show>
-    </>
+    </Page>
   )
 }
 

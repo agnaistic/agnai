@@ -78,6 +78,7 @@ const initState: SettingState = {
     horde: { workers: [], models: [] },
     openRouter: { models: [] },
     subs: [],
+    googleClientId: '',
   },
   replicate: {},
   flags: getFlags(),

@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { A, useLocation, useNavigate, useSearchParams } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
@@ -9,6 +9,8 @@ import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
+import { Page } from '/web/Layout'
+import { useGoogleReady } from '/web/shared/hooks'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
@@ -28,7 +30,7 @@ const LoginPage: Component = () => {
   })
 
   return (
-    <div class="flex w-full flex-col items-center">
+    <Page class="flex w-full flex-col items-center">
       <div class="my-4 border-b border-white/5" />
       <PageHeader
         title={<div class="flex w-full justify-center">Welcome</div>}
@@ -87,7 +89,7 @@ const LoginPage: Component = () => {
           </p>
         </div>
       </div>
-    </div>
+    </Page>
   )
 }
 
@@ -137,11 +139,13 @@ const RegisterForm: Component<FormProps> = (props) => {
 }
 
 const LoginForm: Component<FormProps> = (props) => {
+  let refGoogle: any
   const navigate = useNavigate()
   const [query] = useSearchParams()
   const loc = useLocation()
   const state = settingStore()
   const [error, setError] = createSignal<string>()
+  const google = useGoogleReady()
 
   createEffect(() => {
     if (state.initLoading) return
@@ -154,6 +158,34 @@ const LoginForm: Component<FormProps> = (props) => {
       return
     }
   })
+
+  createEffect(
+    on(
+      () => google(),
+      () => {
+        const win: any = window
+        const api = win.google?.accounts?.id
+
+        if (!api) return
+
+        if (state.config.googleClientId) {
+          api.initialize({
+            client_id: state.config.googleClientId,
+            callback: (result: any) => {
+              userStore.handleGoogleCallback('login', result, () => navigate('/dashboard'))
+            },
+          })
+
+          api.renderButton(refGoogle, {
+            theme: 'filled_black',
+            size: 'large',
+            type: 'standard',
+            text: 'signin_with',
+          })
+        }
+      }
+    )
+  )
 
   const handleLogin = () => {
     userStore.remoteLogin((token) => {
@@ -194,6 +226,18 @@ const LoginForm: Component<FormProps> = (props) => {
       <Button type="submit" disabled={props.isLoading || !!error()}>
         {props.isLoading ? 'Logging in...' : 'Login'}
       </Button>
+
+      <div
+        class="flex justify-center"
+        ref={(ref) => {
+          refGoogle = ref
+        }}
+        id="g_id_onload"
+        data-context="signin"
+        data-ux_mode="popup"
+        data-login_uri={`${location.origin}/oauth/google`}
+        data-itp_support="true"
+      ></div>
     </form>
   )
 }

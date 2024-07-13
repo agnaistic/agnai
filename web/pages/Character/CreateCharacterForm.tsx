@@ -60,6 +60,7 @@ import { getAssetUrl } from '/web/shared/util'
 import { ImageSettings } from '../Settings/Image/ImageSettings'
 import { v4 } from 'uuid'
 import { imageApi } from '/web/store/data/image'
+import { Page } from '/web/Layout'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -285,12 +286,12 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Basic', 'Advanced', 'Images'], 0)
+  const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], 0)
 
   let spriteRef: any
 
   return (
-    <>
+    <Page>
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           title={`${
@@ -365,7 +366,7 @@ export const CreateCharacterForm: Component<{
 
             <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
 
-            <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Basic' }}>
+            <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Persona' }}>
               <Button
                 size="sm"
                 class="w-fit"
@@ -648,11 +649,42 @@ export const CreateCharacterForm: Component<{
               </Card>
             </div>
 
+            <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Voice' }}>
+              <Card class="flex flex-col gap-3">
+                <h4 class="text-md font-bold">Voice</h4>
+                <Toggle
+                  fieldName="voiceDisabled"
+                  value={editor.state.voiceDisabled}
+                  label="Disable Character's Voice"
+                  helperText="Toggle on to disable this character from automatically speaking"
+                />
+
+                <VoicePicker
+                  value={editor.state.voice}
+                  culture={editor.state.culture}
+                  onChange={(voice) => editor.update('voice', voice)}
+                />
+
+                <Select
+                  fieldName="culture"
+                  label="Language"
+                  helperText={`The language this character speaks and understands.${
+                    editor.state.culture.startsWith('en') ?? true
+                      ? ''
+                      : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
+                  }`}
+                  value={editor.state.culture}
+                  items={CultureCodes}
+                  onChange={(option) => editor.update('culture', option.value)}
+                />
+              </Card>
+            </div>
+
             <div
               class={`flex flex-col gap-2`}
               classList={{ hidden: tabs.current() !== 'Advanced' }}
             >
-              <AdvanceedOptions editor={editor} />
+              <AdvancedOptions editor={editor} />
             </div>
 
             <div class={`flex flex-col gap-2`} classList={{ hidden: tabs.current() !== 'Images' }}>
@@ -698,7 +730,7 @@ export const CreateCharacterForm: Component<{
       />
 
       <AvatarModal url={imgUrl()} close={() => setImageUrl('')} />
-    </>
+    </Page>
   )
 }
 
@@ -950,7 +982,7 @@ const MemoryBookPicker: Component<{
   )
 }
 
-const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
+const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
   return (
     <>
       <Card class="flex flex-col gap-2">
@@ -969,7 +1001,7 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
         <TextInput
           isMultiline
           fieldName="postHistoryInstructions"
-          label="(Jailbreak) Post-conversation History Instructions (optional)"
+          label="Character Jailbreak (optional)"
           helperText={
             <span>
               {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}
@@ -1022,34 +1054,6 @@ const AdvanceedOptions: Component<{ editor: CharEditor }> = (props) => {
           label="Character Version (optional)"
           placeholder="any text e.g. 1, 2, v1, v1fempov..."
           value={props.editor.state.characterVersion}
-        />
-      </Card>
-      <Card class="flex flex-col gap-3">
-        <h4 class="text-md font-bold">Voice</h4>
-        <Toggle
-          fieldName="voiceDisabled"
-          value={props.editor.state.voiceDisabled}
-          label="Disable Character's Voice"
-          helperText="Toggle on to disable this character from automatically speaking"
-        />
-        <div>
-          <VoicePicker
-            value={props.editor.state.voice}
-            culture={props.editor.state.culture}
-            onChange={(voice) => props.editor.update('voice', voice)}
-          />
-        </div>
-        <Select
-          fieldName="culture"
-          label="Language"
-          helperText={`The language this character speaks and understands.${
-            props.editor.state.culture.startsWith('en') ?? true
-              ? ''
-              : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
-          }`}
-          value={props.editor.state.culture}
-          items={CultureCodes}
-          onChange={(option) => props.editor.update('culture', option.value)}
         />
       </Card>
     </>

@@ -79,8 +79,9 @@ export namespace AppSchema {
     imagesHost: string
     imagesModels: ImageModel[]
 
-    ttsEnabled: boolean
     ttsHost: string
+    ttsApiKey: string
+    ttsAccess: 'off' | 'users' | 'subscribers' | 'admins'
 
     maxGuidanceTokens: number
     maxGuidanceVariables: number
@@ -173,6 +174,8 @@ export namespace AppSchema {
     /** @todo remove after next deployment */
     tier?: AppSchema.SubscriptionTier
     serverConfig?: Configuration
+
+    googleClientId: string | undefined
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -287,6 +290,11 @@ export namespace AppSchema {
         tierId: string
         level: number
       }
+    }
+
+    google?: {
+      sub: any
+      email: any
     }
 
     billing?: {

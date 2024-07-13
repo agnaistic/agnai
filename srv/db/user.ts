@@ -15,6 +15,7 @@ import { store } from '.'
 import { patreon } from '../api/user/patreon'
 import { getUserSubscriptionTier } from '/common/util'
 import { command } from '../domains'
+import { getRegisteredAdapters } from '../adapter/register'
 
 export type NewUser = {
   username: string
@@ -85,7 +86,7 @@ export async function authenticate(username: string, password: string) {
 
   const token = await createAccessToken(username, user)
 
-  return { token, profile, user: { ...user, hash: undefined } }
+  return { token, profile, user: toSafeUser(user) }
 }
 
 export async function createUser(newUser: NewUser, admin?: boolean) {
@@ -144,7 +145,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   }
   await db('profile').insertOne(profile)
   const token = await createAccessToken(newUser.username, user)
-  return { profile, token, user }
+  return { profile, token, user: toSafeUser(user) }
 }
 
 export async function createAccessToken(username: string, user: AppSchema.User) {
@@ -293,6 +294,11 @@ export async function findByPatreonUserId(id: string) {
   return user
 }
 
+export async function findByGoogleSub(id: string) {
+  const user = await db('user').findOne({ 'google.sub': id })
+  return user
+}
+
 const ONE_HOUR_MS = 60000 * 60
 
 export async function validateSubscription(user: AppSchema.User) {
@@ -360,4 +366,72 @@ export async function unlinkPatreonAccount(userId: string, reason: string) {
 
   await store.users.updateUser(userId, { patreon: null as any, patreonUserId: null as any })
   await command.patron.unlink(user.patreonUserId, { userId, reason })
+}
+
+export function toSafeUser(user: AppSchema.User) {
+  if (user.patreon) {
+    user.patreon.access_token = ''
+    user.patreon.refresh_token = ''
+    user.patreon.scope = ''
+    user.patreon.token_type = ''
+  }
+
+  if (user.google) {
+    user.google = {
+      sub: user.google.sub,
+    } as any
+  }
+
+  if (user.novelApiKey) {
+    user.novelApiKey = ''
+  }
+
+  user.hordeKey = ''
+  user.apiKey = user.apiKey ? '*********' : 'Not set'
+
+  if (user.oaiKey) {
+    user.oaiKeySet = true
+    user.oaiKey = ''
+  }
+
+  if (user.mistralKey) {
+    user.mistralKeySet = true
+    user.mistralKey = ''
+  }
+
+  if (user.scaleApiKey) {
+    user.scaleApiKeySet = true
+    user.scaleApiKey = ''
+  }
+
+  if (user.claudeApiKey) {
+    user.claudeApiKey = ''
+    user.claudeApiKeySet = true
+  }
+
+  if (user.thirdPartyPassword) {
+    user.thirdPartyPassword = ''
+    user.thirdPartyPasswordSet = true
+  }
+
+  if (user.elevenLabsApiKey) {
+    user.elevenLabsApiKey = ''
+    user.elevenLabsApiKeySet = true
+  }
+
+  for (const svc of getRegisteredAdapters()) {
+    if (!user.adapterConfig) break
+    if (!user.adapterConfig[svc.name]) continue
+
+    const secrets = svc.settings.filter((opt) => opt.secret)
+
+    for (const secret of secrets) {
+      if (user.adapterConfig[svc.name]![secret.field]) {
+        user.adapterConfig[svc.name]![secret.field] = ''
+        user.adapterConfig[svc.name]![secret.field + 'Set'] = true
+      }
+    }
+  }
+
+  return user
 }

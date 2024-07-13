@@ -1,6 +1,7 @@
 import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { markdown } from '../../shared/markdown'
+import { Page } from '/web/Layout'
 
 const text = `
 We at Agnaistic (together with our affiliates, "we", "our" or "us") respect your privacy and are strongly committed to keeping secure any information we obtain from you or about you. This Privacy Policy describes our practices with respect to Personal Information we collect from or about you when you use our website and services (collectively, "Services"). Our use of that data is governed by our customer agreements covering access to and use of those offerings.
@@ -137,10 +138,10 @@ Please contact us on our [discord server ("https://discord.agnai.chat")](https:/
 
 const PrivacyPolicyPage: Component = () => {
   return (
-    <div>
+    <Page>
       <PageHeader title={<>Agnaistic Privacy Policy</>} />
       <div class="markdown flex flex-col gap-4" innerHTML={markdown.makeHtml(text)}></div>
-    </div>
+    </Page>
   )
 }
 export default PrivacyPolicyPage

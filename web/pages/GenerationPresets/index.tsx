@@ -13,6 +13,7 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
+import { Page } from '/web/Layout'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -135,15 +136,15 @@ export const GenerationPresetsPage: Component = () => {
 
   if (params.id && params.id !== 'new' && !state.editing) {
     return (
-      <>
+      <Page>
         <PageHeader title="Generation Presets" />
         <Loading />
-      </>
+      </Page>
     )
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Generation Presets" />
       <div class="flex flex-col gap-2 pb-10">
         <Show when={params.id === 'default'}>
@@ -208,7 +209,7 @@ export const GenerationPresetsPage: Component = () => {
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
       />
-    </>
+    </Page>
   )
 }
 

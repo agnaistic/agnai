@@ -2,6 +2,7 @@ import { Component, createEffect, createSignal, on, onMount } from 'solid-js'
 import { TTSService } from '/common/types'
 import Select, { Option } from '/web/shared/Select'
 import { voiceStore } from '/web/store/voice'
+import { isAgnaisticSpeechAllowed } from '/web/shared/Audio/speech'
 
 export const VoiceServiceSelect: Component<{
   value: TTSService | undefined
@@ -19,10 +20,17 @@ export const VoiceServiceSelect: Component<{
     on(
       () => services,
       (services) => {
-        const values: Option<TTSService | ''>[] = [
-          { value: '', label: 'None' },
-          ...services.map((svc) => ({ label: svc.label, value: svc.type })),
-        ]
+        const canUseAgnai = isAgnaisticSpeechAllowed()
+
+        const values: Option<TTSService | ''>[] = [{ value: '', label: 'None' }]
+
+        if (canUseAgnai) {
+          values.push({ label: 'Agnaistic', value: 'agnaistic' })
+        }
+
+        for (const svc of services) {
+          values.push({ label: svc.label, value: svc.type })
+        }
         const current = props.value
         if (current && !values.find((v) => v.value === current)) {
           values.push({ value: current, label: current })

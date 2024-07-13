@@ -328,3 +328,24 @@ export function getWidthPlatform(width: number) {
 export function getPagePlatform(width: number) {
   return width > 1600 ? 'xl' : width > 1024 ? 'lg' : 'sm'
 }
+
+export function useGoogleReady() {
+  const [ready, setReady] = createSignal(false)
+
+  createEffect(() => {
+    const timer = setInterval(() => {
+      const win: any = window
+      if (win.default_gsi) {
+        console.log('ready')
+        setReady(true)
+        clearInterval(timer)
+      } else {
+        console.log('not ready')
+      }
+    }, 500)
+
+    return () => clearInterval(timer)
+  })
+
+  return ready
+}

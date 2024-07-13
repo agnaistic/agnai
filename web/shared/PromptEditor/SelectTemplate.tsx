@@ -19,6 +19,7 @@ export const SelectTemplate: Component<{
   select: (id: string, template: string) => void
   currentTemplateId: string | undefined
   currentTemplate: string | undefined
+  presetId: string | undefined
 }> = (props) => {
   const state = presetStore((s) => ({ templates: s.templates }))
 
@@ -76,7 +77,8 @@ export const SelectTemplate: Component<{
       if (!match) return opts.length
 
       setOpt(id)
-      setTemplate(props.currentTemplate || match.template)
+      const existing = state.templates.find((t) => t._id === id)
+      setTemplate(existing?.template || props.currentTemplate || match.template)
       setBuiltin(match.template)
     }
 
@@ -89,7 +91,33 @@ export const SelectTemplate: Component<{
         Cancel
       </Button>
       <Switch>
-        <Match when={canSaveTemplate()}>
+        <Match when={canSaveTemplate() && !!props.presetId}>
+          <Button
+            onClick={() => {
+              const id = opt()
+              const orig = state.templates.find((t) => t._id === id)
+              const update = template()
+              if (!orig) {
+                toastStore.error(`Cannot find template to save`)
+                return
+              }
+
+              presetStore.updateTemplate(
+                opt(),
+                { name: orig.name, template: update, presetId: props.presetId },
+                () => {
+                  toastStore.success('Prompt template updated')
+                  props.select(id, update)
+                  props.close()
+                }
+              )
+            }}
+          >
+            Save and Use
+          </Button>
+        </Match>
+
+        <Match when={canSaveTemplate() && !props.presetId}>
           <Button
             onClick={() => {
               const id = opt()
@@ -120,13 +148,13 @@ export const SelectTemplate: Component<{
               const name =
                 matches.length > 0 ? `Custom ${opt()} #${matches.length + 1}` : `Custom ${opt()}`
 
-              presetStore.createTemplate(name, template(), (id) => {
+              presetStore.createTemplate(name, template(), props.presetId, (id) => {
                 props.select(id, template())
                 props.close()
               })
             }}
           >
-            Save As
+            Create and Use
           </Button>
         </Match>
 

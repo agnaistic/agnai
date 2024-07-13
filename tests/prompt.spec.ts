@@ -127,11 +127,9 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
-  it('uses the correct replaces for all instances of {{char}}, {{user}}, <BOT>, and <USER>, case insensitive', async () => {
-    const input =
-      '{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}, <BOT> drinks <USER>, <bot> boops <user>, <Bot> kicks <User>'
-    const expected =
-      'Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad, Haruhi drinks Chad, Haruhi boops Chad, Haruhi kicks Chad'
+  it('uses the correct replaces for all instances of {{char}}, {{user}} case insensitive', async () => {
+    const input = '{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}'
+    const expected = 'Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad'
     const actual = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
     expect(actual).to.equal(expected)
   })

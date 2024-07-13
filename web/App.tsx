@@ -32,7 +32,6 @@ import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
 import { ContextProvider } from './store/context'
-import PipelineGuide from './pages/Guides/Pipeline'
 import MemoryGuide from './pages/Guides/Memory'
 import NovelGuide from './pages/Guides/NovelAI'
 import { ImageModal } from './pages/Chat/ImageModal'
@@ -82,7 +81,6 @@ const App: Component = () => {
       </Route>
       <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
       <Route path="/guides">
-        <Route path="/pipeline" component={PipelineGuide} />
         <Route path="/memory" component={MemoryGuide} />
         <Route path="/novel" component={NovelGuide} />
       </Route>
@@ -103,7 +101,7 @@ const App: Component = () => {
           />
           <Route
             path="/admin/subscriptions/:id"
-            component={lazy(() => import('./pages/Admin/Subscription'))}
+            component={lazy(() => import('./pages/Admin/SubscriptionModel'))}
           />
           <Route
             path={['/admin/announcements', '/admin/announcements/:id']}

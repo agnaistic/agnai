@@ -73,6 +73,7 @@ export type InferenceRequest = {
   temp?: number
   stop?: string[]
   reguidance?: string[]
+  jsonSchema?: any
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -221,6 +222,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     previous: opts.previous,
     placeholders: opts.placeholders,
     lists: opts.lists,
+    jsonSchema: opts.jsonSchema,
   })
 
   return { stream }
@@ -261,7 +263,7 @@ function setRequestService(opts: InferenceRequest) {
   opts.service = service
 
   settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  settings.temp = opts.temp ?? 0.5
+  settings.temp = settings.temp ?? 0.5
 
   if (settings.service === 'openai') {
     settings.topP = 1

@@ -18,7 +18,7 @@ import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { UserEmbed } from '/common/types/memory'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
-import { exclude, replace } from '/common/util'
+import { deepClone, exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
@@ -661,13 +661,29 @@ async function createMessage(
   })
 }
 
-export async function deleteMessages(chatId: string, msgIds: string[], leafId: string) {
+export async function deleteMessages(
+  chatId: string,
+  msgIds: string[],
+  leafId: string,
+  parents: Record<string, string>
+) {
   if (isLoggedIn()) {
-    const res = await api.method('delete', `/chat/${chatId}/messages`, { ids: msgIds, leafId })
+    const res = await api.method('delete', `/chat/${chatId}/messages`, {
+      ids: msgIds,
+      leafId,
+      parents,
+    })
     return res
   }
 
   const msgs = await localApi.getMessages(chatId)
+
+  for (const msg of msgs) {
+    const parent = parents[msg._id]
+    if (!parent) continue
+    msg.parent = parent
+  }
+
   await localApi.saveMessages(chatId, exclude(msgs, msgIds))
 
   const chats = await localApi.loadItem('chats')
@@ -794,8 +810,13 @@ function getAuthGenSettings(
   chat: AppSchema.Chat,
   user: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
-  const presets = getStore('presets').getState().presets
-  const preset = getChatPreset(chat, user, presets)
+  const { presets, templates } = getStore('presets').getState()
+  const preset = deepClone(getChatPreset(chat, user, presets))
+
+  if (preset.promptTemplateId) {
+    const template = templates.find((t) => t._id === preset.promptTemplateId)
+    preset.gaslight = template?.template || preset.gaslight
+  }
 
   applySubscriptionAdjustment(preset)
 

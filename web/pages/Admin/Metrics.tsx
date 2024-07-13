@@ -7,6 +7,7 @@ import { adminStore } from '../../store'
 import { Card } from '/web/shared/Card'
 import TextInput from '/web/shared/TextInput'
 import { ConfirmModal } from '/web/shared/Modal'
+import { Page } from '/web/Layout'
 
 const MetricsPage: Component = () => {
   let refForm: any
@@ -26,7 +27,7 @@ const MetricsPage: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader title="Metrics" />
       <div class="mb-4 flex gap-4">
         <Button onClick={adminStore.getMetrics}>Refresh</Button>
@@ -74,7 +75,7 @@ const MetricsPage: Component = () => {
         confirm={sendAll}
         message="Are you sure you wish to send a message to all users?"
       />
-    </>
+    </Page>
   )
 }
 

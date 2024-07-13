@@ -21,6 +21,7 @@ import { CharacterFolderView } from './components/CharacterFolderView'
 import Modal from '/web/shared/Modal'
 import { CreateCharacterForm } from './CreateCharacterForm'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import { Page } from '/web/Layout'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -143,7 +144,7 @@ const CharacterList: Component = () => {
   })
 
   return (
-    <>
+    <Page>
       <PageHeader
         title={
           <div class="flex w-full justify-between">
@@ -245,7 +246,7 @@ const CharacterList: Component = () => {
         close={() => setImport(false)}
         onSave={onImport}
       />
-    </>
+    </Page>
   )
 }
 

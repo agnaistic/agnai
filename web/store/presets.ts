@@ -8,6 +8,7 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { replace } from '/common/util'
 
 type PresetState = {
   importing?: AppSchema.UserGenPreset
@@ -196,9 +197,10 @@ export const presetStore = createStore<PresetState>(
       { templates },
       name: string,
       template: string,
+      presetId: string | undefined,
       done?: (templateId: string) => void
     ) {
-      const res = await presetApi.createTemplate({ name, template })
+      const res = await presetApi.createTemplate({ name, template, presetId })
       if (res.result) {
         yield { templates: templates.concat(res.result) }
         done?.(res.result._id)
@@ -213,12 +215,12 @@ export const presetStore = createStore<PresetState>(
     async *updateTemplate(
       { templates },
       id: string,
-      update: { name: string; template: string },
+      update: { name: string; template: string; presetId?: string },
       done?: () => void
     ) {
       const res = await presetApi.updateTemplate(id, update)
       if (res.result) {
-        const next = templates.map((t) => (t._id === id ? { ...t, ...update } : t))
+        const next = replace(id, templates, { name: update.name, template: update.template })
         yield { templates: next }
         done?.()
         return

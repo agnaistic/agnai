@@ -19,6 +19,7 @@ import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
+import { Page } from '/web/Layout'
 
 const tokenizers = [
   { label: 'None', value: '' },
@@ -34,7 +35,7 @@ const tokenizers = [
   { label: 'Qwen2', value: 'qwen2' },
 ]
 
-export const Subscription: Component = () => {
+export const SubscriptionModel: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription Model')
   let ref: any
 
@@ -202,7 +203,7 @@ export const Subscription: Component = () => {
   }
 
   return (
-    <>
+    <Page>
       <PageHeader
         title={
           <A class="link" href="/admin/subscriptions">
@@ -377,11 +378,11 @@ export const Subscription: Component = () => {
           </div>
         }
       />
-    </>
+    </Page>
   )
 }
 
-export default Subscription
+export default SubscriptionModel
 
 const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) => {
   let form: any

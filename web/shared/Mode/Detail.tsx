@@ -65,7 +65,7 @@ export const ModeDetail: Component<{
                 slotContainer = ref
                 slots.load(ref)
               }}
-              class="sticky top-0 flex h-fit w-full justify-center"
+              class="sticky top-0 flex h-fit w-full justify-center "
               classList={{ hidden: cfg.config.tier?.disableSlots }}
             >
               <Switch>
@@ -79,7 +79,7 @@ export const ModeDetail: Component<{
 
           <section
             style={{ 'grid-area': 'content' }}
-            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto"
+            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto px-2 sm:px-3"
             classList={{
               'justify-center': !props.showPane || mode() === 'popup',
               'justify-end gap-1 justify-self-center flex-row flex':

@@ -1,16 +1,17 @@
 import { Component } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { markdown } from '/web/shared/markdown'
+import { Page } from '/web/Layout'
 
 const PipelineGuide: Component = () => {
   return (
-    <>
+    <Page>
       <PageHeader
         title="Pipeline Guide"
         subtitle="How to install and use the Agnai Pipeline API"
       ></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
-    </>
+    </Page>
   )
 }
 

@@ -1,6 +1,7 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
 import { clamp } from '/common/util'
+import { toJsonSchema } from '/common/prompt'
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen } = opts
@@ -12,6 +13,10 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     body.dynatemp_exponent = gen.dynatemp_exponent
   }
 
+  if (opts.kind === 'continue') {
+    gen.tokenHealing = true
+  }
+
   return body
 }
 
@@ -20,6 +25,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const service = subscription?.preset?.service || gen.service
   const format = subscription?.preset?.thirdPartyFormat || gen.thirdPartyFormat
+
+  const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
   // Agnaistic
   if (service !== 'kobold') {
@@ -63,6 +70,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       placeholders: opts.placeholders,
       lists: opts.lists,
       previous: opts.previous,
+      json_schema,
     }
 
     if (gen.dynatemp_range) {
@@ -113,6 +121,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stream: gen.streamResponse,
       token_healing: gen.tokenHealing,
       temperature_last: gen.minP ? !!gen.tempLast : false,
+      json_schema,
     }
 
     if (gen.dynatemp_range) {
@@ -145,6 +154,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
+      json_schema,
     }
     return body
   }

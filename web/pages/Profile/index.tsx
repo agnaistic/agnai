@@ -7,13 +7,13 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onMount,
 } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore, settingStore, toastStore, userStore } from '../../store'
@@ -23,6 +23,8 @@ import { useNavigate } from '@solidjs/router'
 import { isLoggedIn } from '/web/store/api'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
+import { Page } from '/web/Layout'
+import { useGoogleReady } from '/web/shared/hooks'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
@@ -75,14 +77,17 @@ export const ProfileModal: Component = () => {
 
 const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => {
   let formRef: HTMLFormElement
+  let googleRef: any
 
   setComponentPageTitle('My profile')
   const nav = useNavigate()
   const state = userStore()
   const admin = adminStore()
+  const settings = settingStore()
   const [pass, setPass] = createSignal(false)
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
+  const google = useGoogleReady()
 
   const onAvatar = (files: FileInputResult[]) => {
     const [file] = files
@@ -101,6 +106,38 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
     userStore.getConfig()
   })
 
+  const initGoogle = () => {
+    const win: any = window
+    const api = win.google?.accounts?.id
+
+    if (!api) return
+
+    if (settings.config.googleClientId) {
+      api.initialize({
+        client_id: settings.config.googleClientId,
+        callback: (result: any) => {
+          userStore.handleGoogleCallback('link', result)
+        },
+      })
+
+      api.renderButton(googleRef, {
+        theme: 'filled_black',
+        size: 'large',
+        type: 'standard',
+        text: 'signin_with',
+      })
+    }
+  }
+
+  createEffect(
+    on(
+      () => google(),
+      () => {
+        initGoogle()
+      }
+    )
+  )
+
   onMount(() => {
     props.footer?.(footer)
   })
@@ -113,8 +150,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   )
 
   return (
-    <>
-      <PageHeader title="Your Profile" subPage />
+    <Page>
       <form ref={formRef!} onSubmit={submit} aria-label="Edit profile">
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
@@ -128,7 +164,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
           </div>
 
           <TitleCard type="orange" ariaRole="note" ariaLabel="Impersonate">
-            <div class="flex flex-wrap items-center">
+            <div class="flex flex-wrap items-center justify-center">
               You can{' '}
               <div class="inline">
                 <Button class="mx-1" size="sm" onClick={() => settingStore.toggleImpersonate(true)}>
@@ -139,6 +175,45 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
               icon at the top of the main menu.
             </div>
           </TitleCard>
+
+          <Show when={state.user?._id !== 'anon' && settings.config.googleClientId}>
+            <div class="flex justify-center">
+              <TitleCard class="flex w-fit flex-col items-center justify-center gap-1" type="hl">
+                <Show when={!state.user?.google?.sub}>
+                  <div class="flex justify-center text-sm font-bold">
+                    Link with Google to enable Sign-in with Google
+                  </div>
+                  <div
+                    class="flex justify-center"
+                    ref={(ref) => {
+                      googleRef = ref
+                    }}
+                    id="g_id_onload"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-login_uri={`${location.origin}/oauth/google`}
+                    data-itp_support="true"
+                  ></div>
+                </Show>
+
+                <Show when={!!state.user?.google?.sub}>
+                  <div class="flex justify-center text-sm font-bold">
+                    Your account is Linked to Google
+                  </div>
+                  <div class="flex justify-center">
+                    <Button
+                      class="justify-center"
+                      size="sm"
+                      schema="warning"
+                      onClick={() => userStore.unlinkGoogleAccount(() => initGoogle())}
+                    >
+                      Unlink Google Account
+                    </Button>
+                  </div>
+                </Show>
+              </TitleCard>
+            </div>
+          </Show>
 
           <TextInput
             label="ID"
@@ -207,7 +282,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
       </form>
       <PasswordModal show={pass()} close={() => setPass(false)} />
       <DeleteAccountModal show={del()} close={() => setDel(false)} />
-    </>
+    </Page>
   )
 }
 

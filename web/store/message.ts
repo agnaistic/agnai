@@ -569,12 +569,31 @@ export const msgStore = createStore<MsgState>(
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
+      const parents: any = {}
+      if (deleteOne) {
+        const node = graph.tree[fromId]
+
+        if (node) {
+          const children = node.children
+          for (const child of children) {
+            parents[child] = node.msg.parent
+          }
+        }
+      }
+
       const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
       const removed = new Set(deleteIds)
-      const nextMsgs = msgs.filter((msg) => !removed.has(msg._id))
+      const nextMsgs = msgs
+        .filter((msg) => !removed.has(msg._id))
+        .map((msg) => {
+          const parent = parents[msg._id]
+          if (!parent) return msg
+
+          return { ...msg, parent }
+        })
 
       const leafId = nextMsgs.slice(-1)[0]?._id || ''
-      const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId)
+      const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId, parents)
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)

@@ -5,11 +5,11 @@ import Button from '/web/shared/Button'
 import { RefreshCw } from 'lucide-solid'
 import RangeInput from '/web/shared/RangeInput'
 
-export const NovelTtsSettings: Component<{
-  settings: VoiceSettingForm<'novel'>
-  onChange: (value: VoiceSettingForm<'novel'>) => void
+export const AgnaisticTtsSettings: Component<{
+  settings: VoiceSettingForm<'agnaistic'>
+  onChange: (value: VoiceSettingForm<'agnaistic'>) => void
 }> = (props) => {
-  const update = (diff: Partial<VoiceSettingForm<'novel'>>) => {
+  const update = (diff: Partial<VoiceSettingForm<'agnaistic'>>) => {
     props.onChange({ ...props.settings, ...diff })
   }
 
@@ -17,20 +17,22 @@ export const NovelTtsSettings: Component<{
     update({ seed: generateRandomSeed(12) })
   }
 
-  function generateRandomSeed(length: number) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789_'
-    return [...Array(length)].map(() => chars[Math.floor(Math.random() * chars.length)]).join('')
+  function generateRandomSeed(maxLength: number) {
+    const seed = Math.trunc(Math.random() * (Math.pow(10, maxLength) / 10))
+    return seed
   }
 
   return (
     <>
       <div class="flex items-end">
         <TextInput
-          fieldName="novelSeed"
+          fieldName="agnaisticSeed"
+          type="number"
           label="Seed"
-          helperText="Allows you to create a custom voice using a seed of your choice. Overrides the voice."
+          helperText="*Select 'Use Seed' in Voice* - Allows you to create a custom voice using a seed of your choice. "
           value={props.settings.seed ?? ''}
-          onInput={(ev) => update({ seed: ev.currentTarget.value })}
+          onChange={(ev) => update({ seed: +ev.currentTarget.value })}
+          onInput={(ev) => update({ seed: +ev.currentTarget.value })}
         />
         <Button class="ml-2 rounded-lg" onClick={() => generate()}>
           <RefreshCw size={24} />
@@ -38,7 +40,7 @@ export const NovelTtsSettings: Component<{
       </div>
 
       <RangeInput
-        fieldName="novelRate"
+        fieldName="agnaisticRate"
         label="Playback Rate"
         helperText=""
         min={0.5}

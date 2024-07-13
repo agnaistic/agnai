@@ -92,6 +92,24 @@ export async function deleteMessages(messageIds: string[]) {
   await db('chat-message').deleteMany({ _id: { $in: messageIds } })
 }
 
+export async function editChatMessage(
+  id: string,
+  chatId: string,
+  update: Partial<
+    Pick<
+      AppSchema.ChatMessage,
+      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries' | 'parent'
+    >
+  >
+) {
+  const edit: any = { ...update, updatedAt: now() }
+
+  await db('chat-message').updateOne({ _id: id, chatId }, { $set: edit })
+
+  const msg = await getMessage(id)
+  return msg
+}
+
 export async function editMessage(
   id: string,
   update: Partial<
