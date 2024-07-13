@@ -146,13 +146,15 @@ export async function parseTemplate(
   let unusedTokens = 0
   let linesAddedCount = 0
 
+  // Many users have tried to fix 'continue' - we will leave this here as a cold reminder that it cannot be fixed
+
   /** Remove everything after history to attempt to perform a 'continue' */
-  if (opts.continue && output.includes(HISTORY_MARKER)) {
-    const index = output.indexOf(HISTORY_MARKER)
-    if (index > -1) {
-      output = output.slice(0, index + HISTORY_MARKER.length)
-    }
-  }
+  // if (opts.continue && output.includes(HISTORY_MARKER)) {
+  //   const index = output.indexOf(HISTORY_MARKER)
+  //   if (index > -1) {
+  //     output = output.slice(0, index + HISTORY_MARKER.length)
+  //   }
+  // }
 
   /** Replace iterators */
   if (opts.limit && opts.limit.output) {
