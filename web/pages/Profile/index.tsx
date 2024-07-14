@@ -112,9 +112,9 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
     if (!api) return
 
-    if (settings.config.googleClientId) {
+    if (settings.config.serverConfig?.googleClientId) {
       api.initialize({
-        client_id: settings.config.googleClientId,
+        client_id: settings.config.serverConfig?.googleClientId,
         callback: (result: any) => {
           userStore.handleGoogleCallback('link', result)
         },
@@ -176,7 +176,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </TitleCard>
 
-          <Show when={state.user?._id !== 'anon' && settings.config.googleClientId}>
+          <Show when={state.user?._id !== 'anon' && settings.config.serverConfig?.googleClientId}>
             <div class="flex justify-center">
               <TitleCard class="flex w-fit flex-col items-center justify-center gap-1" type="hl">
                 <Show when={!state.user?.google?.sub}>
@@ -200,16 +200,18 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   <div class="flex justify-center text-sm font-bold">
                     Your account is Linked to Google
                   </div>
-                  <div class="flex justify-center">
-                    <Button
-                      class="justify-center"
-                      size="sm"
-                      schema="warning"
-                      onClick={() => userStore.unlinkGoogleAccount(() => initGoogle())}
-                    >
-                      Unlink Google Account
-                    </Button>
-                  </div>
+                  <Show when={state.user?._id !== state.user?.google?.sub}>
+                    <div class="flex justify-center">
+                      <Button
+                        class="justify-center"
+                        size="sm"
+                        schema="warning"
+                        onClick={() => userStore.unlinkGoogleAccount(() => initGoogle())}
+                      >
+                        Unlink Google Account
+                      </Button>
+                    </div>
+                  </Show>
                 </Show>
               </TitleCard>
             </div>

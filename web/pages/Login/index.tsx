@@ -168,9 +168,9 @@ const LoginForm: Component<FormProps> = (props) => {
 
         if (!api) return
 
-        if (state.config.googleClientId) {
+        if (state.config.serverConfig?.googleClientId) {
           api.initialize({
-            client_id: state.config.googleClientId,
+            client_id: state.config.serverConfig?.googleClientId,
             callback: (result: any) => {
               userStore.handleGoogleCallback('login', result, () => navigate('/dashboard'))
             },

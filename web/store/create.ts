@@ -81,7 +81,7 @@ export function send(name: string, action: any, state: any) {
 
 type HandlerArgs<T> = T extends (first: any, ...args: infer U) => any ? U : never
 
-type StateSetter<S> = (next: Partial<S>) => void
+type StateSetter<S> = (next: Partial<S>) => Promise<void>
 
 export function createStore<State extends {}>(name: string, init: State) {
   let setter: any
@@ -107,7 +107,7 @@ export function createStore<State extends {}>(name: string, init: State) {
       setter(next)
     }
 
-    const rawHandlers = handlers(getter, wrappedSetter)
+    const rawHandlers = handlers(getter, wrappedSetter as any)
 
     for (const [key, handler] of Object.entries(rawHandlers) as Array<[keyof Handler, any]>) {
       wrapped[key] = async (...args: any[]) => {
@@ -146,7 +146,7 @@ export function createStore<State extends {}>(name: string, init: State) {
     }
 
     type Wrapped = {
-      [key in keyof Handler]: (...args: HandlerArgs<Handler[key]>) => void
+      [key in keyof Handler]: (...args: HandlerArgs<Handler[key]>) => Promise<void>
     }
 
     const useStore = <T = State>(selector?: (state: State) => T) => {

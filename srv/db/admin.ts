@@ -37,6 +37,7 @@ export async function getServerConfiguration() {
     ttsHost: '',
     maxGuidanceTokens: 1000,
     maxGuidanceVariables: 15,
+    googleClientId: '',
   }
 
   await db('configuration').insertOne(next)

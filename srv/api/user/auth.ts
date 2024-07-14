@@ -5,7 +5,6 @@ import { OAuthScope, oauthScopes } from '/common/types'
 import { patreon } from './patreon'
 import { getSafeUserConfig } from './settings'
 import { OAuth2Client } from 'google-auth-library'
-import { config } from '/srv/config'
 import { createAccessToken, toSafeUser } from '/srv/db/user'
 
 const GOOGLE = new OAuth2Client()
@@ -31,13 +30,15 @@ export const login = handle(async (req) => {
 export const oathGoogleLogin = handle(async ({ log, body }) => {
   assertValid({ token: 'string' }, body)
 
-  if (!config.google.secret) {
+  const config = await store.admin.getServerConfiguration().catch(() => undefined)
+
+  if (!config?.googleClientId) {
     throw new StatusError('Not allowed', 405)
   }
 
   const token = await GOOGLE.verifyIdToken({
     idToken: body.token,
-    audience: config.google.clientId,
+    audience: config.googleClientId,
   })
 
   const payload = token.getPayload()
@@ -63,21 +64,33 @@ export const oathGoogleLogin = handle(async ({ log, body }) => {
 })
 
 export const unlinkGoogleAccount = handle(async ({ userId }) => {
-  const user = await store.users.updateUser(userId, { google: null as any })
-  return { user }
+  const user = await store.users.getUser(userId)
+  if (!user) throw new StatusError('User not found', 404)
+
+  if (!user.google?.sub) throw new StatusError('Account not linked with Google', 400)
+  if (user.google.sub === user._id)
+    throw new StatusError('Account registered using Google - Cannot be unlinked', 400)
+
+  const next = await store.users.updateUser(userId, { google: null as any })
+  return { user: next }
 })
 
 export const linkGoogleAccount = handle(async ({ body, userId }) => {
   assertValid({ token: 'string' }, body)
 
   const user = await store.users.getUser(userId)
+  const config = await store.admin.getServerConfiguration().catch(() => undefined)
+
+  if (!config?.googleClientId) {
+    throw new StatusError('Not allowed', 405)
+  }
 
   if (!user) throw new StatusError('Unauthorized: Account not found', 401)
   if (user.google?.sub) throw new StatusError('Account already linked to Google', 400)
 
   const token = await GOOGLE.verifyIdToken({
     idToken: body.token,
-    audience: config.google.clientId,
+    audience: config.googleClientId,
   })
 
   const payload = token.getPayload()
