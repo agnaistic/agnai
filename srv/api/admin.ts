@@ -90,6 +90,7 @@ const updateConfiguration = handle(async ({ body }) => {
       ttsApiKey: 'string?',
       imagesModels: ['any'],
       supportEmail: 'string',
+      googleClientId: 'string',
     },
     body
   )

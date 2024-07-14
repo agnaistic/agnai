@@ -12,7 +12,7 @@ export function isAgnaisticSpeechAllowed() {
   const settings = settingStore.getState()
   const tts = settings.config.serverConfig?.ttsAccess
 
-  if (tts === 'off') return false
+  if (!tts || tts === 'off') return false
 
   if (state.user?.admin) return true
   if (tts === 'subscribers' && (!state.sub?.level || state.sub?.level < 0)) return false

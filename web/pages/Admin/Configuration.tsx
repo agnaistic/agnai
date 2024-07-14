@@ -1,4 +1,13 @@
-import { Component, For, Signal, createSignal } from 'solid-js'
+import {
+  Component,
+  For,
+  Match,
+  Signal,
+  Switch,
+  createEffect,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { adminStore, settingStore, userStore } from '/web/store'
 import { useNavigate } from '@solidjs/router'
 import PageHeader from '/web/shared/PageHeader'
@@ -11,6 +20,7 @@ import Button from '/web/shared/Button'
 import Divider from '/web/shared/Divider'
 import { Card } from '/web/shared/Card'
 import { Page } from '/web/Layout'
+import Loading from '/web/shared/Loading'
 
 export { ServerConfiguration as default }
 
@@ -18,9 +28,11 @@ const ServerConfiguration: Component = () => {
   let form: HTMLFormElement
   const user = userStore()
   const nav = useNavigate()
-  const state = settingStore((s) => s.config)
 
-  const [slots, setSlots] = createSignal(state.serverConfig?.slots || '{}')
+  const settings = settingStore((s) => s.config)
+  const state = adminStore()
+
+  const [slots, setSlots] = createSignal(state.config?.slots || '{}')
 
   if (!user.user?.admin) {
     nav('/')
@@ -35,8 +47,13 @@ const ServerConfiguration: Component = () => {
   }
 
   const models = createSignal(
-    Array.isArray(state.serverConfig?.imagesModels) ? state.serverConfig.imagesModels : []
+    Array.isArray(state.config?.imagesModels) ? state.config.imagesModels : []
   )
+
+  onMount(async () => {
+    await adminStore.getConfiguration()
+    setSlots(state.config?.slots || '{}')
+  })
 
   const submit = () => {
     const body = getStrictForm(form, {
@@ -67,154 +84,175 @@ const ServerConfiguration: Component = () => {
     })
   }
 
+  createEffect(() => {
+    const data = state.config
+    console.log('data', !!data)
+  })
+
   return (
     <Page>
       <PageHeader title="Server Configuration" />
 
-      <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
-        <Select
-          fieldName="apiAccess"
-          label="API Access Level"
-          items={[
-            { label: 'Off', value: 'off' },
-            { label: 'All Users', value: 'users' },
-            { label: 'Subscribers', value: 'subscribers' },
-            { label: 'Adminstrators', value: 'admins' },
-          ]}
-          value={state.serverConfig?.apiAccess || 'off'}
-        />
+      <Switch>
+        <Match when={!state.config}>
+          <div class="mt-24 flex justify-center">
+            <Loading />
+          </div>
+        </Match>
 
-        <TextInput
-          fieldName="imagesHost"
-          label={
-            <>
-              <div class="flex gap-2">
-                <div>Agnaistic Images Host</div>
-                <Toggle fieldName="imagesEnabled" value={state.serverConfig?.imagesEnabled} />
-              </div>
-            </>
-          }
-          value={state.serverConfig?.imagesHost}
-          classList={{ hidden: !state.adapters.includes('agnaistic') }}
-        />
+        <Match when>
+          <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
+            <Card bg="bg-500">
+              <TextInput
+                fieldName="supportEmail"
+                label="Support Email"
+                helperText="If provided, a link to this email will be added to the main navigation"
+                value={state.config?.supportEmail}
+              />
 
-        <Select
-          fieldName="ttsAccess"
-          label="TTS Access Level"
-          items={[
-            { label: 'Off', value: 'off' },
-            { label: 'All Users', value: 'users' },
-            { label: 'Subscribers', value: 'subscribers' },
-            { label: 'Adminstrators', value: 'admins' },
-          ]}
-          value={state.serverConfig?.ttsAccess || 'off'}
-        />
+              <Toggle
+                fieldName="maintenance"
+                label="Maintenace Mode Enabled"
+                helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
+                value={state.config?.maintenance}
+              />
 
-        <TextInput
-          fieldName="ttsHost"
-          label={
-            <>
-              <div class="flex gap-2">
-                <div>Agnaistic TTS Host</div>
-              </div>
-            </>
-          }
-          value={state.serverConfig?.ttsHost}
-          classList={{ hidden: !state.adapters.includes('agnaistic') }}
-        />
+              <TextInput
+                fieldName="maintenanceMessage"
+                isMultiline
+                label="Maintenance Message"
+                helperText="Markdown is supported"
+                value={state.config?.maintenanceMessage}
+              />
+            </Card>
 
-        <TextInput
-          fieldName="ttsApiKey"
-          label={
-            <>
-              <div class="flex gap-2">
-                <div>Agnaistic TTS Key</div>
-              </div>
-            </>
-          }
-          value={''}
-          classList={{ hidden: !state.adapters.includes('agnaistic') }}
-        />
+            <Card bg="bg-500">
+              <TextInput
+                fieldName="googleClientId"
+                label="Google Client ID"
+                helperText="Used for Sign In"
+                value={state.config?.googleClientId}
+              />
 
-        <Card>
-          <TextInput
-            fieldName="maxGuidanceTokens"
-            label="Max Guidance Tokens"
-            helperText="Max number of tokens a saga/guidance template can reques. Set to 0 to disable."
-            type="number"
-            value={state.serverConfig?.maxGuidanceTokens ?? 1000}
-          />
-          <TextInput
-            fieldName="maxGuidanceVariables"
-            label="Max Guidance Variables"
-            helperText="Max number of variables a saga/guidance template can request. Set to 0 to disable."
-            type="number"
-            value={state.serverConfig?.maxGuidanceVariables ?? 15}
-          />
-        </Card>
+              <TextInput
+                fieldName="slots"
+                label="Slots Configuration"
+                helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
+                value={slots()}
+                onInput={formatSlots}
+                isMultiline
+              />
+            </Card>
 
-        <TextInput
-          fieldName="supportEmail"
-          label="Support Email"
-          helperText="If provided, a link to this email will be added to the main navigation"
-          value={state.serverConfig?.supportEmail}
-        />
+            <Card bg="bg-500">
+              <Toggle
+                fieldName="policiesEnabled"
+                label="Enable Policies"
+                helperText="Display TOS and Privacy Statements"
+                disabled
+                class="hidden"
+              />
 
-        <ImageModels signal={models} />
+              <TextInput
+                fieldName="termsOfService"
+                label="Terms of Service"
+                helperText="Not yet implemented"
+                isMultiline
+                disabled
+              />
+              <TextInput
+                fieldName="privacyStatement"
+                label="PrivacyStatement"
+                helperText="Not yet implemented"
+                isMultiline
+                disabled
+              />
+            </Card>
 
-        <Toggle
-          fieldName="maintenance"
-          label="Maintenace Mode Enabled"
-          helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
-          value={state.serverConfig?.maintenance}
-        />
+            <Select
+              fieldName="apiAccess"
+              label="API Access Level"
+              items={[
+                { label: 'Off', value: 'off' },
+                { label: 'All Users', value: 'users' },
+                { label: 'Subscribers', value: 'subscribers' },
+                { label: 'Adminstrators', value: 'admins' },
+              ]}
+              value={state.config?.apiAccess || 'off'}
+            />
 
-        <TextInput
-          fieldName="maintenanceMessage"
-          isMultiline
-          label="Maintenance Message"
-          helperText="Markdown is supported"
-          value={state.serverConfig?.maintenanceMessage}
-        />
+            <Card bg="bg-500">
+              <Select
+                fieldName="ttsAccess"
+                label="Voice Access Level"
+                items={[
+                  { label: 'Off', value: 'off' },
+                  { label: 'All Users', value: 'users' },
+                  { label: 'Subscribers', value: 'subscribers' },
+                  { label: 'Adminstrators', value: 'admins' },
+                ]}
+                value={state.config?.ttsAccess || 'off'}
+              />
 
-        <TextInput
-          fieldName="slots"
-          label="Slots Configuration"
-          helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
-          value={slots()}
-          onInput={formatSlots}
-          isMultiline
-        />
+              <TextInput
+                fieldName="ttsHost"
+                label="Voice Host"
+                helperText="Full URL with Path - Include any query parameters"
+                value={state.config?.ttsHost}
+                classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+              />
 
-        <Toggle
-          fieldName="policiesEnabled"
-          label="Enable Policies"
-          helperText="Display TOS and Privacy Statements"
-          disabled
-          class="hidden"
-        />
+              <TextInput
+                fieldName="ttsApiKey"
+                label="Voice API Key"
+                value={''}
+                classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+              />
+            </Card>
 
-        <TextInput
-          fieldName="termsOfService"
-          label="Terms of Service"
-          helperText="Not yet implemented"
-          isMultiline
-          disabled
-        />
-        <TextInput
-          fieldName="privacyStatement"
-          label="PrivacyStatement"
-          helperText="Not yet implemented"
-          isMultiline
-          disabled
-        />
+            <Card bg="bg-500">
+              <TextInput
+                fieldName="maxGuidanceTokens"
+                label="Max Guidance Tokens"
+                helperText="Max number of tokens a saga/guidance template can reques. Set to 0 to disable."
+                type="number"
+                value={state.config?.maxGuidanceTokens ?? 1000}
+              />
+              <TextInput
+                fieldName="maxGuidanceVariables"
+                label="Max Guidance Variables"
+                helperText="Max number of variables a saga/guidance template can request. Set to 0 to disable."
+                type="number"
+                value={state.config?.maxGuidanceVariables ?? 15}
+              />
+            </Card>
 
-        <div class="flex justify-end">
-          <Button onClick={submit} class="w-fit">
-            <SaveIcon /> Save
-          </Button>
-        </div>
-      </form>
+            <Card bg="bg-500">
+              <TextInput
+                fieldName="imagesHost"
+                label={
+                  <>
+                    <div class="flex gap-2">
+                      <div>Images Host (A1111 Compatible)</div>
+                      <Toggle fieldName="imagesEnabled" value={state.config?.imagesEnabled} />
+                    </div>
+                  </>
+                }
+                value={state.config?.imagesHost}
+                classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+              />
+
+              <ImageModels signal={models} />
+            </Card>
+
+            <div class="flex justify-end">
+              <Button onClick={submit} class="w-fit">
+                <SaveIcon /> Save
+              </Button>
+            </div>
+          </form>
+        </Match>
+      </Switch>
     </Page>
   )
 }

@@ -35,6 +35,7 @@ type AdminState = {
   prices: Stripe.Price[]
   patreonTiers: Patreon.Tier[]
   impersonating: boolean
+  config?: AppSchema.Configuration
 }
 
 export const adminStore = createStore<AdminState>('admin', {
@@ -178,6 +179,12 @@ export const adminStore = createStore<AdminState>('admin', {
 
       if (res.error) {
         toastStore.error(`Failed to retrieve products: ${res.error}`)
+      }
+    },
+    async getConfiguration() {
+      const res = await api.get('/settings')
+      if (res.result) {
+        return { config: res.result.serverConfig }
       }
     },
   }
