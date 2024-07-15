@@ -28,6 +28,8 @@ const TextInput: Component<{
   step?: number
   readonly?: boolean
   classList?: Record<string, boolean>
+  input?: JSX.InputHTMLAttributes<HTMLInputElement>
+  textarea?: JSX.TextareaHTMLAttributes<HTMLTextAreaElement>
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -198,6 +200,7 @@ const TextInput: Component<{
             lang={props.lang}
             ref={onRef}
             step={props.step}
+            {...props.input}
           />
         }
       >
@@ -222,6 +225,7 @@ const TextInput: Component<{
           onKeyDown={(ev) => props.onKeyDown?.(ev)}
           onchange={handleChange}
           onInput={handleInput}
+          {...props.textarea}
         />
       </Show>
     </div>

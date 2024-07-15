@@ -5,6 +5,7 @@ import {
   getLinesForPrompt,
   buildPromptParts,
   resolveScenario,
+  JsonType,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -41,6 +42,7 @@ export type PromptEntities = {
   impersonating?: AppSchema.Character
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
+  imageData?: string
 }
 
 export const msgsApi = {
@@ -212,7 +214,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string }
+  | { kind: 'chat-query'; text: string; schema?: Record<string, JsonType> }
 
 export async function generateResponse(opts: GenerateOpts) {
   const { active } = chatStore.getState()
@@ -252,6 +254,7 @@ export async function generateResponse(opts: GenerateOpts) {
   //   )
   // }
 
+  const jsonSchema = opts.kind === 'chat-query' ? opts.schema : undefined
   const request: GenerateRequestV2 = {
     requestId: v4(),
     kind: opts.kind,
@@ -278,8 +281,20 @@ export async function generateResponse(opts: GenerateOpts) {
     characters: removeAvatars(entities.characters),
     parent: props.parent?._id,
     lastMessage: entities.lastMessage?.date,
+    jsonSchema,
     chatEmbeds,
     userEmbeds,
+  }
+
+  if (
+    opts.kind === 'send' ||
+    opts.kind === 'request' ||
+    opts.kind === 'continue' ||
+    opts.kind === 'retry' ||
+    opts.kind === 'self' ||
+    opts.kind === 'chat-query'
+  ) {
+    request.imageData = entities.imageData
   }
 
   const res = await api.post<{ requestId: string; messageId?: string }>(
@@ -725,7 +740,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
 async function getGuestEntities() {
   const { active } = getStore('chat').getState()
   if (!active) return
-  const { msgs, messageHistory } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
 
   const chat = active.chat
   const char = active.char
@@ -762,6 +777,7 @@ async function getGuestEntities() {
     characters,
     impersonating,
     scenarios,
+    imageData: attachments[chat._id]?.image,
   }
 }
 
@@ -779,7 +795,7 @@ function getAuthedPromptEntities() {
     .getState()
     .books.list.find((book) => book._id === chat.memoryId)
 
-  const { msgs, messageHistory } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
   const settings = getAuthGenSettings(chat, user)!
   const scenarios = getStore('scenario')
     .getState()
@@ -803,6 +819,7 @@ function getAuthedPromptEntities() {
     characters,
     impersonating,
     scenarios,
+    imageData: attachments[chat._id]?.image,
   }
 }
 

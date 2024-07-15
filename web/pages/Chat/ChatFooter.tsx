@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { VenetianMask } from 'lucide-solid'
+import { CircleX, VenetianMask } from 'lucide-solid'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
@@ -17,7 +17,7 @@ export const ChatFooter: Component<{
   sendMessage: (message: string, ooc: boolean, onSucces?: () => void) => void
 }> = (props) => {
   const user = userStore()
-  const msgs = msgStore((s) => ({ waiting: s.waiting }))
+  const msgs = msgStore((s) => ({ waiting: s.waiting, attachments: s.attachments }))
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
   const chats = chatStore((s) => ({
     opts: s.opts,
@@ -29,6 +29,12 @@ export const ChatFooter: Component<{
   }))
 
   const [ooc, setOoc] = createSignal<boolean>()
+  const attachment = createMemo(() => {
+    if (!props.ctx.chat) return
+    const attachment = msgs.attachments[props.ctx.chat._id]
+    if (!attachment) return
+    return attachment.image
+  })
 
   const isGroupChat = createMemo(() => {
     if (!chats.participantIds?.length) return false
@@ -49,7 +55,7 @@ export const ChatFooter: Component<{
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
   return (
-    <div class="mb-2 w-full">
+    <div class="mb-2 flex w-full flex-col">
       <Show when={isSelfRemoved()}>
         <div class="flex w-full max-w-full justify-center">
           You have been removed from the conversation
@@ -82,6 +88,14 @@ export const ChatFooter: Component<{
         </div>
       </Show>
       <Show when={!!chats.chat}>
+        <Show when={!!attachment()}>
+          <div class="flex h-[40x] items-center gap-2 pl-4">
+            <img src={attachment()} class="h-[40px] rounded-md" />
+            <div class="icon-button">
+              <CircleX size={16} onClick={() => msgStore.removeAttachment(props.ctx?.chat?._id!)} />
+            </div>
+          </div>
+        </Show>
         <InputBar
           chat={chats.chat!}
           swiped={props.swipe !== 0}

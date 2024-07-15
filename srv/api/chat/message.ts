@@ -69,6 +69,8 @@ const genValidator = {
   lastMessage: 'string?',
   chatEmbeds: 'any?',
   userEmbeds: 'any?',
+  imageData: 'string?',
+  jsonSchema: 'any?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {

@@ -71,6 +71,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       lists: opts.lists,
       previous: opts.previous,
       json_schema,
+      imageData: opts.imageData,
     }
 
     if (gen.dynatemp_range) {

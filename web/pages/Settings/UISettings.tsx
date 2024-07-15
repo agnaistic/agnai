@@ -223,11 +223,14 @@ const UISettings: Component = () => {
             <b>Standard</b>: Messages take up the entire chat screen.
             <br />
             <b>Split</b>: Character's avatar appears at the top of the screen
+            <br />
+            <b>Background</b>: Character's avatar will become the Chat Background
           </>
         }
         items={[
           { label: 'Standard', value: 'standard' },
           { label: 'Split', value: 'split' },
+          { label: 'Background', value: 'background' },
         ]}
         value={state.ui.viewMode || 'standard'}
         onChange={(next) => userStore.saveUI({ viewMode: next.value as any })}

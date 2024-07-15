@@ -63,7 +63,7 @@ export type UISettings = {
   mobileSendOnEnter: boolean
   msgOptsInline: { [key in MessageOption]: { outer: boolean; pos: number } }
 
-  viewMode?: 'split' | 'standard'
+  viewMode?: 'split' | 'standard' | 'background'
   viewHeight?: number
 
   chatWidth?: ChatWidth

@@ -27,7 +27,7 @@ import ProfilePage, { ProfileModal } from './pages/Profile'
 import { usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
-import { css, getMaxChatWidth } from './shared/util'
+import { css, getAssetUrl, getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
@@ -41,6 +41,7 @@ import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
 import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
+import { characterStore, chatStore } from './store'
 
 const App: Component = () => {
   const state = userStore()
@@ -124,6 +125,8 @@ const Layout: Component<{ children?: any }> = (props) => {
   const cfg = settingStore()
   const location = useLocation()
   const pane = usePaneManager()
+  const chat = chatStore((s) => ({ active: s.active }))
+  const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const maxW = createMemo((): string => {
     if (pane.showing()) return 'max-w-full'
@@ -144,14 +147,29 @@ const Layout: Component<{ children?: any }> = (props) => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
 
+  const bgImage = createMemo(() => {
+    const map = chars.chars.map
+    const chatId = chars.chatId
+
+    if (state.ui.viewMode === 'background' && chatId) {
+      const char = map[chat.active?.char?._id!]
+
+      if (char?.visualType !== 'sprite' && typeof char?.avatar === 'string') {
+        return { 'background-image': `url(${getAssetUrl(char.avatar)})`, 'background-size': 'auto' }
+      }
+    }
+
+    return { 'background-image': `url(${state.background})`, 'background-size': 'cover' }
+  })
+
   const bg = createMemo(() => {
+    const props = bgImage()
+    const img = !cfg.anonymize ? props : undefined
     const styles: JSX.CSSProperties = {
-      'background-image':
-        state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
       'background-repeat': 'no-repeat',
-      'background-size': 'cover',
       'background-position': 'center',
       'background-color': isChat() ? undefined : '',
+      ...img,
     }
     return styles
   })

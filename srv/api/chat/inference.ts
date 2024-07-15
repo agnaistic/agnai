@@ -22,6 +22,7 @@ const validInference = {
   service: 'string',
   presetId: 'string?',
   json_schema: 'any?',
+  imageData: 'string?',
 } as const
 
 const validInferenceApi = {
@@ -391,6 +392,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     service: body.service,
     guest: userId ? undefined : socketId,
     jsonSchema: body.json_schema,
+    imageData: body.imageData,
   })
 
   return { response: inference.generated, meta: inference.meta }

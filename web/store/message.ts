@@ -26,6 +26,7 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
+import { JsonType } from '/common/prompt'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -73,7 +74,6 @@ export type MsgState = {
   textBeforeGenMore: string | undefined
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
   // cache: Record<string, AppSchema.ChatMessage>
-  branch?: AppSchema.ChatMessage[]
   canImageCaption: boolean
 
   /**
@@ -82,6 +82,9 @@ export type MsgState = {
    * These will be 'inserted' into chats by 'createdAt' timestamp
    */
   images: Record<ChatId, AppSchema.ChatMessage[]>
+
+  /** Attachments, mapped by Chat ID  */
+  attachments: Record<string, { image: string } | undefined>
   graph: {
     tree: ChatTree
     root: string
@@ -103,6 +106,7 @@ const initState: MsgState = {
   queue: [],
   textBeforeGenMore: undefined,
   canImageCaption: false,
+  attachments: {},
   graph: {
     tree: {},
     root: '',
@@ -167,6 +171,12 @@ export const msgStore = createStore<MsgState>(
   )
 
   return {
+    setAttachment({ attachments }, chatId: string, base64: string) {
+      return { attachments: { ...attachments, [chatId]: { image: base64 } } }
+    },
+    removeAttachment({ attachments }, chatId: string) {
+      return { attachments: { ...attachments, [chatId]: undefined } }
+    },
     async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
       if (nextLoading) return
 
@@ -486,6 +496,39 @@ export const msgStore = createStore<MsgState>(
 
       if (res.result) {
         queryCallbacks.set(res.result.requestId, onSuccess)
+      }
+
+      if (res.error) {
+        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
+      }
+    },
+
+    async *chatJson(
+      { waiting },
+      chatId: string,
+      message: string,
+      schema: Record<string, JsonType>,
+      onSuccess: (response: string) => any
+    ) {
+      if (waiting) return
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        return
+      }
+
+      const res = await msgsApi
+        .generateResponse({ kind: 'chat-query', text: message, schema })
+        .catch((err) => ({ error: err.message, result: undefined }))
+
+      if (res.result) {
+        queryCallbacks.set(res.result.requestId, (response) => {
+          try {
+            const json = JSON.parse(response.trim())
+            onSuccess(json)
+          } catch (ex) {
+            onSuccess(response)
+          }
+        })
       }
 
       if (res.error) {
