@@ -24,7 +24,7 @@ import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
-import { usePaneManager } from './shared/hooks'
+import { useCharacterBg, usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getAssetUrl, getMaxChatWidth } from './shared/util'
@@ -125,8 +125,6 @@ const Layout: Component<{ children?: any }> = (props) => {
   const cfg = settingStore()
   const location = useLocation()
   const pane = usePaneManager()
-  const chat = chatStore((s) => ({ active: s.active }))
-  const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const maxW = createMemo((): string => {
     if (pane.showing()) return 'max-w-full'
@@ -147,32 +145,7 @@ const Layout: Component<{ children?: any }> = (props) => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
 
-  const bgImage = createMemo(() => {
-    const map = chars.chars.map
-    const chatId = chars.chatId
-
-    if (state.ui.viewMode === 'background' && chatId) {
-      const char = map[chat.active?.char?._id!]
-
-      if (char?.visualType !== 'sprite' && typeof char?.avatar === 'string') {
-        return { 'background-image': `url(${getAssetUrl(char.avatar)})`, 'background-size': 'auto' }
-      }
-    }
-
-    return { 'background-image': `url(${state.background})`, 'background-size': 'cover' }
-  })
-
-  const bg = createMemo(() => {
-    const props = bgImage()
-    const img = !cfg.anonymize ? props : undefined
-    const styles: JSX.CSSProperties = {
-      'background-repeat': 'no-repeat',
-      'background-position': 'center',
-      'background-color': isChat() ? undefined : '',
-      ...img,
-    }
-    return styles
-  })
+  const bgStyles = useCharacterBg('layout')
 
   return (
     <ContextProvider>
@@ -181,7 +154,7 @@ const Layout: Component<{ children?: any }> = (props) => {
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
-          <main class="w-full overflow-y-auto" data-background style={bg()}>
+          <main class="w-full overflow-y-auto" data-background style={bgStyles()}>
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} px-2 sm:px-3`}
               classList={{

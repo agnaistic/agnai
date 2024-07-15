@@ -3,7 +3,7 @@ import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { settingStore, userStore } from '/web/store'
 import { getHeaderBg } from '/web/pages/Chat/helpers'
-import { usePane, useResizeObserver } from '../hooks'
+import { useCharacterBg, usePane, useResizeObserver } from '../hooks'
 import Slot from '../Slot'
 
 export const ModeDetail: Component<{
@@ -41,6 +41,7 @@ export const ModeDetail: Component<{
   let slotContainer: HTMLDivElement
 
   const header = createMemo(() => getHeaderBg(user.ui.mode))
+  const bgStyles = useCharacterBg('page')
 
   return (
     <>
@@ -78,7 +79,7 @@ export const ModeDetail: Component<{
           </header>
 
           <section
-            style={{ 'grid-area': 'content' }}
+            style={{ 'grid-area': 'content', ...bgStyles() }}
             class="content my-2 flex w-full flex-row gap-1 overflow-y-auto px-2 sm:px-3"
             classList={{
               'justify-center': !props.showPane || mode() === 'popup',

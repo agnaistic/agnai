@@ -1,11 +1,13 @@
-import { Accessor, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
+import { Accessor, JSX, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { userStore } from '../store'
+import { characterStore, chatStore, settingStore, userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
-import { useSearchParams } from '@solidjs/router'
+import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
+import { getAssetUrl } from './util'
+import { baseUrl } from '../store/api'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
@@ -44,6 +46,49 @@ export type ImageCache = ReturnType<typeof useImageCache>
 type ImageCacheOpts = {
   clean?: boolean
   include?: string[]
+}
+
+export function useCharacterBg(src: 'layout' | 'page') {
+  const location = useLocation()
+
+  const isChat = createMemo(() => {
+    return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
+  })
+
+  const state = userStore()
+  const cfg = settingStore()
+  const chat = chatStore((s) => ({ active: s.active }))
+  const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
+
+  const bg = createMemo(() => {
+    if (cfg.anonymize) return {}
+    if (src === 'layout' && isChat()) return {}
+
+    const base: JSX.CSSProperties = {
+      'background-repeat': 'no-repeat',
+      'background-position': 'center',
+      'background-color': isChat() ? undefined : '',
+    }
+
+    const char = chars.chars.map[chat.active?.char?._id!]
+    if (
+      !isChat() ||
+      state.ui.viewMode !== 'background' ||
+      !char ||
+      char.visualType === 'sprite' ||
+      !char.avatar
+    ) {
+      return { ...base, 'background-image': `url(${state.background})`, 'background-size': 'cover' }
+    }
+
+    return {
+      ...base,
+      'background-image': `url(${getAssetUrl(char.avatar)})`,
+      'background-size': 'auto',
+    }
+  })
+
+  return bg
 }
 
 export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
