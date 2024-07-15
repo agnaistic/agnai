@@ -7,7 +7,6 @@ import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
 import { getAssetUrl } from './util'
-import { baseUrl } from '../store/api'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
