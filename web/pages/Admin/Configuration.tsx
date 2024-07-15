@@ -44,6 +44,7 @@ const ServerConfiguration: Component = () => {
   onMount(async () => {
     await adminStore.getConfiguration()
     setSlots(state.config?.slots || '{}')
+    models[1](state.config?.imagesModels || [])
   })
 
   const submit = () => {
