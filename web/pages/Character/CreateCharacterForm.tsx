@@ -21,13 +21,21 @@ import {
   ArrowRight,
   WandSparkles,
   RotateCcw,
+  SlidersVertical,
 } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, tagStore, toastStore, memoryStore, chatStore } from '../../store'
+import {
+  characterStore,
+  tagStore,
+  toastStore,
+  memoryStore,
+  chatStore,
+  userStore,
+} from '../../store'
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -52,7 +60,6 @@ import { CharEditor, useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
-import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
@@ -61,6 +68,7 @@ import { ImageSettings } from '../Settings/Image/ImageSettings'
 import { v4 } from 'uuid'
 import { imageApi } from '/web/store/data/image'
 import { Page } from '/web/Layout'
+import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -85,8 +93,10 @@ export const CreateCharacterForm: Component<{
   close?: () => void
   onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
-  let ref: any
+  let personaRef: any
   const nav = useNavigate()
+  const user = userStore()
+
   const isPage = props.close === undefined
 
   const paneOrPopup = usePane()
@@ -102,6 +112,7 @@ export const CreateCharacterForm: Component<{
 
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
+  const [openPreset, setOpenPreset] = createSignal(false)
 
   const editor = useCharEditor()
 
@@ -128,8 +139,6 @@ export const CreateCharacterForm: Component<{
     sample: 0,
   })
 
-  const [genService, setGenService] = createSignal<string>(editor.genOptions()[0]?.value || '')
-  const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
   const [showImport, setImport] = createSignal(false)
@@ -151,15 +160,6 @@ export const CreateCharacterForm: Component<{
     const t = tokens()
     return t.name + t.persona + t.scenario
   })
-
-  const generateCharacter = async (fields?: GenField[]) => {
-    setCreating(true)
-    try {
-      await editor.generateCharacter(genService(), fields)
-    } finally {
-      setCreating(false)
-    }
-  }
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -192,7 +192,7 @@ export const CreateCharacterForm: Component<{
   })
 
   createEffect(() => {
-    if (!ref) return
+    if (!personaRef) return
 
     // We know we're waiting for a character to edit, so let's just wait
     if (!state.edit && srcId()) return
@@ -310,7 +310,7 @@ export const CreateCharacterForm: Component<{
         class="relative text-base"
         onSubmit={onSubmit}
         ref={(form) => {
-          ref = form
+          personaRef = form
           editor.prepare(form)
         }}
       >
@@ -343,6 +343,9 @@ export const CreateCharacterForm: Component<{
             </Show>
 
             <div class="flex justify-end gap-2 text-[1em]">
+              <Button onClick={() => setOpenPreset(true)}>
+                <SlidersVertical size={24} />
+              </Button>
               <Button onClick={() => setImport(true)}>
                 <Import /> Import
               </Button>
@@ -425,18 +428,6 @@ export const CreateCharacterForm: Component<{
                     parentClass="w-full"
                     value={editor.state.description}
                   />
-                  <Show when={editor.canGuidance}>
-                    <div class="flex justify-end gap-2 sm:justify-start">
-                      <Select
-                        fieldName="chargenService"
-                        items={editor.genOptions()}
-                        onChange={(item) => setGenService(item.value)}
-                      />
-                      <Button onClick={() => generateCharacter()} disabled={creating()}>
-                        {creating() ? 'Generating...' : 'Generate'}
-                      </Button>
-                    </div>
-                  </Show>
                 </div>
               </Card>
 
@@ -508,8 +499,7 @@ export const CreateCharacterForm: Component<{
                           label={
                             <>
                               <Regenerate
-                                fields={['appearance']}
-                                service={genService()}
+                                field={'appearance'}
                                 editor={editor}
                                 allowed={editor.canGuidance}
                               />
@@ -537,12 +527,7 @@ export const CreateCharacterForm: Component<{
                   label={
                     <>
                       Scenario{' '}
-                      <Regenerate
-                        fields={['scenario']}
-                        service={genService()}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                      />
+                      <Regenerate field={'scenario'} editor={editor} allowed={editor.canGuidance} />
                     </>
                   }
                   helperText="The current circumstances and context of the conversation and the characters."
@@ -552,46 +537,20 @@ export const CreateCharacterForm: Component<{
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
                 />
               </Card>
-              <Card class="flex flex-col gap-3">
-                <TextInput
-                  isMultiline
-                  fieldName="greeting"
-                  label={
-                    <>
-                      Greeting{' '}
-                      <Regenerate
-                        fields={['greeting']}
-                        service={genService()}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                      />
-                    </>
-                  }
-                  helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
-                  placeholder={
-                    "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
-                  }
-                  value={editor.state.greeting}
-                  class="h-60"
-                  tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
-                />
-                <AlternateGreetingsInput
-                  greetings={editor.state.alternateGreetings}
-                  setGreetings={(next) => editor.update({ alternateGreetings: next })}
-                />
-              </Card>
+
               <Card class="flex flex-col gap-3">
                 <div>
                   <FormLabel
                     label={
                       <div class="flex items-center gap-1">
-                        Persona Schema{' '}
-                        <Regenerate
-                          fields={['personality']}
-                          service={genService()}
-                          editor={editor}
-                          allowed={editor.canGuidance}
-                        />{' '}
+                        Personality{' '}
+                        <Show when={editor.state.personaKind === 'text'}>
+                          <Regenerate
+                            field={'persona'}
+                            editor={editor}
+                            allowed={editor.canGuidance}
+                          />{' '}
+                        </Show>
                       </div>
                     }
                     helperText={
@@ -609,16 +568,39 @@ export const CreateCharacterForm: Component<{
                     fieldName="kind"
                     items={personaFormats()}
                     value={editor.state.personaKind}
-                    onChange={(kind) => editor.update({ personaKind: kind.value as any })}
+                    onChange={(kind) => editor.updateKind(kind as any, personaRef)}
                   />
                 </div>
 
                 <PersonaAttributes
                   value={editor.state.persona.attributes}
-                  plainText={editor.state.personaKind === 'text'}
                   schema={editor.state.personaKind}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  form={ref}
+                  form={personaRef}
+                  editor={editor}
+                />
+              </Card>
+              <Card class="flex flex-col gap-3">
+                <TextInput
+                  isMultiline
+                  fieldName="greeting"
+                  label={
+                    <>
+                      Greeting{' '}
+                      <Regenerate field={'greeting'} editor={editor} allowed={editor.canGuidance} />
+                    </>
+                  }
+                  helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
+                  placeholder={
+                    "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
+                  }
+                  value={editor.state.greeting}
+                  class="h-60"
+                  tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
+                />
+                <AlternateGreetingsInput
+                  greetings={editor.state.alternateGreetings}
+                  setGreetings={(next) => editor.update({ alternateGreetings: next })}
                 />
               </Card>
               <Card>
@@ -629,8 +611,7 @@ export const CreateCharacterForm: Component<{
                     <>
                       Sample Conversation{' '}
                       <Regenerate
-                        fields={['example1', 'example2']}
-                        service={genService()}
+                        field={'sampleChat'}
                         editor={editor}
                         allowed={editor.canGuidance}
                       />
@@ -730,43 +711,46 @@ export const CreateCharacterForm: Component<{
       />
 
       <AvatarModal url={imgUrl()} close={() => setImageUrl('')} />
+
+      <Show when={openPreset()}>
+        <Modal
+          title="Update Preset"
+          show
+          close={() => setOpenPreset(false)}
+          maxWidth="full"
+          maxHeight
+        >
+          <sub>This preset used for character generation</sub>
+          <ModeGenSettings
+            presetId={user.user?.defaultPreset}
+            onPresetChanged={(id) => userStore.updatePartialConfig({ defaultPreset: id })}
+            close={() => setOpenPreset(false)}
+            hideTabs={['General', 'Memory', 'Prompt']}
+          />
+        </Modal>
+      </Show>
     </Page>
   )
 }
 
 const Regenerate: Component<{
-  service: string
-  fields: GenField[]
+  field: string
+  trait?: string
   editor: CharEditor
   allowed: boolean
-  children?: any
 }> = (props) => {
   return (
     <Switch>
       <Match when={!props.allowed}>{null}</Match>
-      {/* <Match when={props.editor.generating()}>
-        <span
-          class="cursor-not-allowed text-[var(--hl-700)]"
-          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
-        >
-          Regenerating...
-        </span>
-      </Match> */}
-      <Match when={props.allowed}>
-        {/* <span
-          class="link"
-          onClick={() => props.editor.generateCharacter(props.service, props.fields)
-        >
-          Regenerate
-        </span> */}
 
+      <Match when={props.allowed}>
         <Button
-          size="pill"
+          size="sm"
           class="inline-block"
-          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+          onClick={() => props.editor.generateField(props.field, props.trait)}
           disabled={props.editor.generating()}
         >
-          {props.children || 'Regenerate'}
+          <WandSparkles size={16} />
         </Button>
       </Match>
     </Switch>

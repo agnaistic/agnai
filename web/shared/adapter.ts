@@ -52,7 +52,7 @@ export function getDefaultUserPreset() {
   return preset
 }
 
-export function getUserPreset(presetId?: string) {
+export function getUserPreset(presetId?: string): Partial<AppSchema.GenSettings> | undefined {
   if (!presetId) return
   if (isDefaultPreset(presetId)) return defaultPresets[presetId]
 

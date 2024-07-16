@@ -234,7 +234,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   yield { prompt }
 
-  log.debug({ ...body, prompt: null }, 'Agnaistic payload')
+  log.debug({ ...body, prompt: null, imageData: null }, 'Agnaistic payload')
 
   log.debug(`Prompt:\n${prompt}`)
 

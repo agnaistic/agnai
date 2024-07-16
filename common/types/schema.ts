@@ -143,7 +143,13 @@ export namespace AppSchema {
     level: number
     service: AIAdapter
     guidance: boolean
-    preset: GenSettings & Pick<SubscriptionModel, 'allowGuestUsage'>
+    preset: GenSettings &
+      Pick<
+        SubscriptionModel,
+        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service'
+      > & {
+        kind: 'submodel'
+      }
   }
 
   export interface AppConfig {

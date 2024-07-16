@@ -50,12 +50,15 @@ import { samplerServiceMap } from '/common/sampler-order'
 
 export { GenerationSettings as default }
 
+export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
+
 type Props = {
   inherit?: Partial<Omit<AppSchema.SubscriptionModel, 'kind'>>
   disabled?: boolean
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
   disableService?: boolean
+  hideTabs?: PresetTab[]
 }
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
@@ -85,7 +88,12 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
     return match
   })
 
-  const tabs = ['General', 'Prompt', 'Memory', 'Samplers', 'Toggles']
+  const tabs = createMemo(() => {
+    const list: PresetTab[] = ['General', 'Prompt', 'Memory', 'Samplers', 'Toggles']
+    if (!props.hideTabs) return list
+
+    return list.filter((tab) => !props.hideTabs!.includes(tab))
+  })
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
   const onServiceChange = (opt: Option<string>) => {
@@ -157,7 +165,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
             setSearch({ tab: ev })
           }}
           selected={tab}
-          tabs={tabs}
+          tabs={tabs()}
         />
         <GeneralSettings
           disabled={props.disabled}
@@ -166,7 +174,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           format={format()}
           pane={pane.showing()}
           setFormat={setFormat}
-          tab={tabs[tab()]}
+          tab={tabs()[tab()]}
           sub={sub()}
         />
         <PromptSettings
@@ -175,7 +183,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           service={service()}
           format={format()}
           pane={pane.showing()}
-          tab={tabs[tab()]}
+          tab={tabs()[tab()]}
           sub={sub()}
         />
         <SamplerSettings
@@ -184,7 +192,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           service={service()}
           format={format()}
           pane={pane.showing()}
-          tab={tabs[tab()]}
+          tab={tabs()[tab()]}
           sub={sub()}
         />
         <SamplerToggles
@@ -193,7 +201,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
           service={service()}
           format={format()}
           pane={pane.showing()}
-          tab={tabs[tab()]}
+          tab={tabs()[tab()]}
           sub={sub()}
         />
       </div>

@@ -1,4 +1,4 @@
-import type { PromptParts } from '../../common/prompt'
+import type { JsonType, PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 import { Memory, TokenCounter } from '/common/types'
@@ -34,6 +34,11 @@ export type GenerateRequestV2 = {
   continuing?: AppSchema.ChatMessage
   characters: Record<string, AppSchema.Character>
   impersonate?: AppSchema.Character
+
+  jsonSchema?: Record<string, JsonType>
+
+  /** Base64 */
+  imageData?: string
 
   /** Chat Tree  */
   parent?: string
@@ -72,6 +77,7 @@ export type AdapterProps = {
   requestId: string
   encoder?: TokenCounter
 
+  imageData?: string
   jsonSchema?: any
   guidance?: boolean
   placeholders?: Record<string, string>

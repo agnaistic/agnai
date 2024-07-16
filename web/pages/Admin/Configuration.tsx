@@ -1,13 +1,4 @@
-import {
-  Component,
-  For,
-  Match,
-  Signal,
-  Switch,
-  createEffect,
-  createSignal,
-  onMount,
-} from 'solid-js'
+import { Component, For, Match, Signal, Switch, createSignal, onMount } from 'solid-js'
 import { adminStore, settingStore, userStore } from '/web/store'
 import { useNavigate } from '@solidjs/router'
 import PageHeader from '/web/shared/PageHeader'
@@ -53,6 +44,7 @@ const ServerConfiguration: Component = () => {
   onMount(async () => {
     await adminStore.getConfiguration()
     setSlots(state.config?.slots || '{}')
+    models[1](state.config?.imagesModels || [])
   })
 
   const submit = () => {
@@ -83,11 +75,6 @@ const ServerConfiguration: Component = () => {
       enabledAdapters: [],
     })
   }
-
-  createEffect(() => {
-    const data = state.config
-    console.log('data', !!data)
-  })
 
   return (
     <Page>

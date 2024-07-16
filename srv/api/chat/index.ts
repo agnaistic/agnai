@@ -17,11 +17,12 @@ import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
-import { generateActions, guidance, inference, inferenceApi } from './inference'
+import { generateActions, guidance, inference, inferenceApi, inferenceStream } from './inference'
 
 const router = Router()
 
 router.post('/inference', inference)
+router.post('/inference-stream', inferenceStream)
 router.post('/completion', apiKeyUsage, inferenceApi)
 router.post('/guidance', guidance)
 router.post('/reguidance', guidance)

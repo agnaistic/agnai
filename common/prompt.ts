@@ -914,21 +914,40 @@ export function resolveScenario(
   return result.trim()
 }
 
-type JsonType =
-  | { type: 'string'; title?: string; maxLength?: number }
-  | { type: 'integer'; title?: string }
-  | { type: 'enum'; enum: string[]; title?: string }
+export type JsonType =
+  | { type: 'string'; description?: string; title?: string; maxLength?: number }
+  | { type: 'integer'; title?: string; description?: string }
+  | { type: 'enum'; enum: string[]; title?: string; description?: string }
 
-type JsonSchema = {
+export type JsonSchema = {
   title: string
   type: 'object'
   properties: Record<string, JsonType>
 }
 
 export const schema = {
-  str: (title?: string, maxLength?: number) => ({ type: 'string', title, maxLength }),
-  int: (title?: string) => ({ type: 'integer', title }),
-  enum: (values: string[], title?: string) => ({ type: 'enum', enum: values, title }),
+  str: (o?: { desc?: string; title?: string; maxLength?: number }) => ({
+    type: 'string',
+    title: o?.title,
+    maxLength: o?.maxLength,
+  }),
+  int: (o?: { title?: string; desc?: string }) => ({
+    type: 'integer',
+    title: o?.title,
+    description: o?.desc,
+  }),
+  enum: (o: { values: string[]; title?: string; desc?: string }) => ({
+    type: 'enum',
+    enum: o.values,
+    title: o.title,
+    description: o.desc,
+  }),
+  bool: (o?: { title?: string; desc?: string }) => ({
+    type: 'enum',
+    enum: ['true', 'false'],
+    title: o?.title,
+    description: o?.desc,
+  }),
 } satisfies Record<string, (...args: any[]) => JsonType>
 
 export function toJsonSchema(body: Record<string, JsonType>): JsonSchema {

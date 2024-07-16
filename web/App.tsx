@@ -3,7 +3,7 @@ import './tailwind.css'
 import './app.css'
 import './dots.css'
 import '@melloware/coloris/dist/coloris.css'
-import { Component, createMemo, JSX, Show, lazy, onMount, Switch, Match } from 'solid-js'
+import { Component, createMemo, Show, lazy, onMount, Switch, Match } from 'solid-js'
 import { Route, Router, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
@@ -24,7 +24,7 @@ import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
 import Settings from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
-import { usePaneManager } from './shared/hooks'
+import { useCharacterBg, usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getMaxChatWidth } from './shared/util'
@@ -144,17 +144,7 @@ const Layout: Component<{ children?: any }> = (props) => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
 
-  const bg = createMemo(() => {
-    const styles: JSX.CSSProperties = {
-      'background-image':
-        state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
-      'background-repeat': 'no-repeat',
-      'background-size': 'cover',
-      'background-position': 'center',
-      'background-color': isChat() ? undefined : '',
-    }
-    return styles
-  })
+  const bgStyles = useCharacterBg('layout')
 
   return (
     <ContextProvider>
@@ -163,7 +153,7 @@ const Layout: Component<{ children?: any }> = (props) => {
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
-          <main class="w-full overflow-y-auto" data-background style={bg()}>
+          <main class="w-full overflow-y-auto" data-background style={bgStyles()}>
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} px-2 sm:px-3`}
               classList={{

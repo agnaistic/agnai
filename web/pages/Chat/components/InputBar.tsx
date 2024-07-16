@@ -35,8 +35,8 @@ import WizardIcon from '/web/icons/WizardIcon'
 import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
-import { embedApi } from '/web/store/embeddings'
 import AvatarIcon from '/web/shared/AvatarIcon'
+import { ALLOWED_TYPES } from '/web/store/data/image'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -93,6 +93,7 @@ const InputBar: Component<{
   const [cleared, setCleared] = createSignal(0, { equals: false })
   const [complete, setComplete] = createSignal(false)
   const [listening, setListening] = createSignal(false)
+  const [dragging, setDragging] = createSignal(false)
 
   const completeOpts = createMemo(() => {
     const list = ctx.activeBots.map((char) => ({ label: char.name, value: char._id }))
@@ -214,10 +215,25 @@ const InputBar: Component<{
     const [file] = files
     if (!file) return
 
-    const buffer = await getFileAsDataURL(file.file)
-    const caption = await embedApi.captionImage(buffer.content)
-    setText(`*{{user}} shows {{char}} a picture that contains: ${caption}*`)
-    send()
+    return attach(file.file)
+  }
+
+  const attach = async (file: File) => {
+    const ext = file.name.split('.').slice(-1)[0]
+    const isAllowed = ALLOWED_TYPES.has(ext)
+    if (!isAllowed) {
+      toastStore.warn(`Invalid file type: Must be an image`)
+      return
+    }
+
+    const buffer = await getFileAsDataURL(file)
+    if (file.size > 1024 * 1024 * 1024) {
+      toastStore.warn(`Attachment exceeds size limit (1MB)`)
+      return
+    }
+
+    msgStore.setAttachment(props.chat._id, buffer.content)
+    setMenu(false)
   }
 
   return (
@@ -266,6 +282,7 @@ const InputBar: Component<{
         value={text()}
         placeholder={placeholder()}
         parentClass="flex w-full"
+        classList={{ 'blur-md': dragging() }}
         class="input-bar rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === '@') {
@@ -281,6 +298,19 @@ const InputBar: Component<{
           }
         }}
         onInput={updateText}
+        textarea={{
+          onDragOver: () => setDragging(true),
+          onDragExit: () => setDragging(false),
+          onDragEnd: () => setDragging(false),
+          onDrop: (ev) => {
+            ev.preventDefault()
+            setDragging(false)
+            const file = ev.dataTransfer?.files[0]
+            if (!file) return
+
+            attach(file)
+          },
+        }}
       />
       <Button schema="clear" onClick={onButtonClick} class="h-full px-2 py-2">
         <MoreHorizontal class="icon-button" />
@@ -356,7 +386,7 @@ const InputBar: Component<{
               accept="image/jpg,image/png,image/jpeg"
             />
             <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
-              Send Image
+              Attach Image
             </LabelButton>
           </Show>
         </div>

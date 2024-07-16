@@ -5,6 +5,7 @@ import {
   getLinesForPrompt,
   buildPromptParts,
   resolveScenario,
+  JsonType,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -23,8 +24,11 @@ import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
 import { embedApi } from '../embeddings'
-import { replaceTags } from '/common/presets/templates'
+import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { settingStore } from '../settings'
+import { subscribe } from '../socket'
+
+export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -41,6 +45,7 @@ export type PromptEntities = {
   impersonating?: AppSchema.Character
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
+  imageData?: string
 }
 
 export const msgsApi = {
@@ -52,35 +57,107 @@ export const msgsApi = {
   generateResponse,
   deleteMessages,
   basicInference,
+  inferenceStream,
   guidance,
   getActiveTemplateParts,
+  getInferencePreset,
+  replaceUniversalTags,
 }
 
 type InferenceOpts = {
   prompt: string
   settings?: Partial<AppSchema.GenSettings>
-  service?: string
+  overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
 }
+
+export type StreamCallback = (res: string, state: InferenceState) => any
 
 export async function basicInference({ prompt, settings }: InferenceOpts) {
   const requestId = v4()
   const { user } = userStore.getState()
 
-  const preset = getUserPreset(user?.defaultPreset)
   if (!user) {
     toastStore.error(`Could not get user settings. Refresh and try again.`)
     return
   }
 
+  const preset = getInferencePreset(settings)
+
   const res = await api.method<{ response: string; meta: any }>('post', `/chat/inference`, {
     requestId,
     user,
     prompt,
-    settings: settings || preset,
+    settings: { ...preset, stream: false },
   })
 
   return res
+}
+
+export async function inferenceStream(
+  opts: InferenceOpts,
+  onTick: (msg: string, state: InferenceState) => any
+) {
+  const { overrides, settings, prompt } = opts
+  const requestId = v4()
+  const { user } = userStore.getState()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const preset = getInferencePreset(settings)
+
+  if (preset && overrides) {
+    Object.assign(preset, overrides)
+  }
+
+  inferenceCallback.set(requestId, onTick)
+
+  const res = await api.method<{ requestId: string; generating: boolean }>(
+    'post',
+    `/chat/inference-stream`,
+    {
+      requestId,
+      user,
+      prompt,
+      settings: { ...preset, stream: false },
+    }
+  )
+
+  if (res.error) {
+    onTick(res.error, 'error')
+  }
+
+  if (!res.result?.generating) {
+    inferenceCallback.delete(requestId)
+  }
+}
+
+export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
+  if (!format) {
+    const preset = getInferencePreset()
+    format = preset.modelFormat || 'Alpaca'
+  }
+
+  return replaceTags(prompt, format)
+}
+
+export function getInferencePreset(
+  settings?: Partial<AppSchema.GenSettings>
+): Partial<AppSchema.GenSettings> {
+  if (settings) return settings
+  const { user } = userStore.getState()
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return {}
+  }
+
+  const preset = getUserPreset(user?.defaultPreset)
+  const fallback = settingStore.getState().config.subs.find((s) => s.preset.isDefaultSub)
+
+  return preset || fallback?.preset || {}
 }
 
 export async function guidance<T = any>(
@@ -93,7 +170,7 @@ export async function guidance<T = any>(
     rerun?: string[]
   }
 ): Promise<T> {
-  const { prompt, service, maxTokens, settings, previous, lists, rerun, placeholders } = opts
+  const { prompt, maxTokens, settings, previous, lists, rerun, placeholders } = opts
   const requestId = opts.requestId || v4()
   const { user } = userStore.getState()
 
@@ -101,15 +178,12 @@ export async function guidance<T = any>(
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const fallback = service === 'default' || !service ? getUserPreset(user.defaultPreset) : undefined
-
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
     presetId: opts.presetId,
-    settings: opts.presetId ? undefined : settings || fallback,
+    settings: opts.presetId ? undefined : getInferencePreset(settings),
     prompt,
-    service: service || settings?.service || fallback?.service,
     maxTokens,
     previous,
     lists,
@@ -212,7 +286,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string }
+  | { kind: 'chat-query'; text: string; schema?: Record<string, JsonType> }
 
 export async function generateResponse(opts: GenerateOpts) {
   const { active } = chatStore.getState()
@@ -252,6 +326,7 @@ export async function generateResponse(opts: GenerateOpts) {
   //   )
   // }
 
+  const jsonSchema = opts.kind === 'chat-query' ? opts.schema : undefined
   const request: GenerateRequestV2 = {
     requestId: v4(),
     kind: opts.kind,
@@ -278,8 +353,20 @@ export async function generateResponse(opts: GenerateOpts) {
     characters: removeAvatars(entities.characters),
     parent: props.parent?._id,
     lastMessage: entities.lastMessage?.date,
+    jsonSchema,
     chatEmbeds,
     userEmbeds,
+  }
+
+  if (
+    opts.kind === 'send' ||
+    opts.kind === 'request' ||
+    opts.kind === 'continue' ||
+    opts.kind === 'retry' ||
+    opts.kind === 'self' ||
+    opts.kind === 'chat-query'
+  ) {
+    request.imageData = entities.imageData
   }
 
   const res = await api.post<{ requestId: string; messageId?: string }>(
@@ -725,7 +812,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
 async function getGuestEntities() {
   const { active } = getStore('chat').getState()
   if (!active) return
-  const { msgs, messageHistory } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
 
   const chat = active.chat
   const char = active.char
@@ -762,6 +849,7 @@ async function getGuestEntities() {
     characters,
     impersonating,
     scenarios,
+    imageData: attachments[chat._id]?.image,
   }
 }
 
@@ -779,7 +867,7 @@ function getAuthedPromptEntities() {
     .getState()
     .books.list.find((book) => book._id === chat.memoryId)
 
-  const { msgs, messageHistory } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
   const settings = getAuthGenSettings(chat, user)!
   const scenarios = getStore('scenario')
     .getState()
@@ -803,6 +891,7 @@ function getAuthedPromptEntities() {
     characters,
     impersonating,
     scenarios,
+    imageData: attachments[chat._id]?.image,
   }
 }
 
@@ -935,3 +1024,37 @@ function getMessageParent(
     }
   }
 }
+
+const inferenceCallback = new Map<string, (response: string, state: InferenceState) => void>()
+
+subscribe('inference-partial', { partial: 'string', requestId: 'string' }, (body) => {
+  const cb = inferenceCallback.get(body.requestId)
+  if (!cb) return
+
+  cb(body.partial, 'partial')
+})
+
+subscribe('inference', { requestId: 'string', response: 'string' }, (body) => {
+  const cb = inferenceCallback.get(body.requestId)
+  if (!cb) return
+
+  cb(body.response, 'done')
+  inferenceCallback.delete(body.requestId)
+})
+
+subscribe('inference-error', { requestId: 'string', error: 'string' }, (body) => {
+  const cb = inferenceCallback.get(body.requestId)
+  if (!cb) return
+
+  cb(body.error, 'error')
+  inferenceCallback.delete(body.requestId)
+  toastStore.error(`Inference failed: ${body.error}`)
+})
+
+subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body) => {
+  const cb = inferenceCallback.get(body.requestId)
+  if (!cb) return
+
+  cb(body.warning, 'warning')
+  toastStore.warn(`Inference warning: ${body.warning}`)
+})

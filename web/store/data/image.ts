@@ -235,7 +235,6 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   const values = await msgsApi.guidance<{ summary: string }>({
     prompt,
     settings,
-    service: settings.service,
   })
   return values.summary
 }

@@ -16,8 +16,9 @@ const router = Router()
 
 let appConfig: AppSchema.AppConfig
 
-const getSettings = handle(async () => {
-  const config = await getAppConfig()
+const getSettings = handle(async ({ userId }) => {
+  const user = userId ? await store.users.getUser(userId) : undefined
+  const config = await getAppConfig(user!)
   return config
 })
 

@@ -16,7 +16,7 @@ import {
 } from '/web/store'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
-import { GenField, generateChar, regenerateCharProp } from './generate-char'
+import { generateField } from './generate-char'
 import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
@@ -201,25 +201,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     return opts
   })
 
-  // createEffect(async () => {
-  //   const orig = original()?.originalAvatar
-
-  //   if (orig && !cache.state.images.includes('original')) {
-  //     await cache.addImage(orig, 'original')
-  //   }
-
-  //   const file = state.avatar || orig
-  //   if (!file) {
-  //     setImageData(undefined)
-  //     return
-  //   }
-
-  //   const data = await imageApi.getImageData(file)
-  //   setImageData(data)
-
-  //   untrack(() => cache.state.images)
-  // })
-
   createEffect(async () => {
     const nextImage = cache.state.image
 
@@ -267,39 +248,44 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     return receiveAvatar(avatar)
   }
 
-  const generateCharacter = async (service: string, fields?: GenField[]) => {
-    try {
-      if (generating()) {
-        toastStore.warn(`Cannot generate: Already generating`)
-        return
-      }
+  const genField = async (field: string, trait?: string) => {
+    const char = payload(false)
 
-      setGenerating(true)
-      if (state.personaKind === 'text') {
-        setState('personaKind', 'attributes')
-      }
-      const char = payload()
-
-      const prevAvatar = state.avatar
-      const prevSprite = state.sprite
-
-      if (fields?.length) {
-        const result = await regenerateCharProp(char, service, state.personaKind, fields)
-        load(result)
-      } else {
-        const result = await generateChar(
-          char.name,
-          char.description || 'a random character',
-          service,
-          state.personaKind
-        )
-        load(result)
-      }
-      setState('avatar', prevAvatar)
-      setState('sprite', prevSprite)
-    } finally {
-      setGenerating(false)
+    if (generating()) {
+      toastStore.warn(`Cannot generate: Already generating`)
+      return
     }
+
+    setGenerating(true)
+
+    generateField({
+      char,
+      prop: field,
+      trait,
+      tick: (res, st) => {
+        if (st === 'done' || st === 'error') {
+          setGenerating(false)
+        }
+
+        if (st !== 'done' && st !== 'partial') return
+
+        if (field === 'persona') {
+          const attributes = { ...char.persona.attributes }
+          if (!trait) {
+            attributes.text = [res]
+          } else {
+            attributes[trait] = [res]
+          }
+
+          setState('persona', { ...char.persona, attributes })
+          return
+        }
+
+        if (field in state) {
+          setState(field as keyof EditState, res)
+        }
+      },
+    })
   }
 
   const reset = async () => {
@@ -394,9 +380,27 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
+  const updateKind = (kind: EditState['personaKind'], ref: any) => {
+    const attributes = getAttributeMap(ref)
+    const next = Object.values(attributes)
+      .map((values) => values.filter((v) => !!v.trim()).join(', '))
+      .join('\n\n')
+
+    if (kind === 'text') {
+      setState({ personaKind: 'text', persona: { kind: 'text', attributes: { text: [next] } } })
+      return
+    }
+
+    setState({
+      personaKind: 'attributes',
+      persona: { kind: 'attributes', attributes: { personality: [next] } },
+    })
+  }
+
   return {
     state,
     update: setState,
+    updateKind,
     reset,
     load,
     convert,
@@ -409,7 +413,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     avatar: imageData,
     generating,
     canGuidance: genOptions().length > 0,
-    generateCharacter,
+    generateField: genField,
     generateAvatar,
     prepare: setForm,
     imageCache: cache,
