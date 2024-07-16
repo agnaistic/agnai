@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-solid'
+import { Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
@@ -88,12 +88,12 @@ const PersonaAttributes: Component<{
     <>
       <Show when={!props.hideLabel}>
         <FormLabel
-          label="Personality"
+          label=""
           helperText={
             <>
               <span>
                 <Show when={!props.plainText}>
-                  It is highly recommended to always include the <b>personality</b> attribute.
+                  It is highly recommended to always include the <b>personality</b> attribute.&nbsp;
                   <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates,
                   loves.
                 </Show>
@@ -114,7 +114,7 @@ const PersonaAttributes: Component<{
             class="text-input-min-h-override"
             value={props.value?.text?.join('\n\n')}
             isMultiline
-            placeholder="{{char}} is a tall man who likes {{user}}."
+            placeholder="Example: {{char}} is a tall man who likes {{user}}."
             tokenCount={() => updateCount()}
             disabled={props.disabled}
           />
@@ -163,7 +163,7 @@ const Attribute: Component<{
           disabled={props.disabled}
         />
         <Button schema="red" onClick={() => props.remove(props.index)}>
-          <X size={16} class="" />
+          <Trash size={24} class="" />
         </Button>
       </div>
       <div class="">

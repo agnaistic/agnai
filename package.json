@@ -177,6 +177,7 @@
     "querystring-es3": "^0.2.1",
     "showdown": "^2.1.0",
     "solid-js": "1.8.17",
+    "solid-refresh": "^0.7.5",
     "sortablejs": "^1.15.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
@@ -191,7 +192,13 @@
     "vite-tsconfig-paths": "^4.3.2",
     "zustand": "^4.5.2"
   },
+  "@parcel/resolver-default": {
+    "packageExports": true
+  },
   "alias": {
     "easy-speech": "easy-speech/dist/EasySpeech.cjs.js"
+  },
+  "exports": {
+    "easy-speech": "./node_modules/easy-speech/dist/EasySpeech.cjs.js"
   }
 }

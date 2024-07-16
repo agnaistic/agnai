@@ -4,7 +4,6 @@ import {
   defaultPresets,
   isDefaultPreset,
   getFallbackPreset,
-  getInferencePreset,
 } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
@@ -66,7 +65,7 @@ export type InferenceRequest = {
    * - [service]/[model] E.g. novel/krake-v2
    * - [service] E.g. novel
    */
-  service: string
+  // service: string
   log: AppLog
   retries?: number
   maxTokens?: number
@@ -82,7 +81,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
   let error: any
 
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const { stream } = await createInferenceStream(opts)
+    const { stream, service } = await createInferenceStream(opts)
 
     let generated = ''
     let meta: any = {}
@@ -99,7 +98,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
         sendOne(opts.user._id, {
           type: 'guidance-partial',
           partial,
-          adapter: opts.service,
+          adapter: service,
           requestId: opts.requestId,
         })
         continue
@@ -123,7 +122,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
       }
     }
 
-    if (opts.guidance && opts.service === 'agnaistic') {
+    if (opts.guidance && opts.settings?.service === 'agnaistic') {
       try {
         const values = JSON.parse(generated)
         return { generated, prompt, meta, values: Object.assign({}, opts.previous, values) }
@@ -138,7 +137,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 }
 
 export async function guidanceAsync(opts: InferenceRequest) {
-  const settings = setRequestService(opts)
+  const settings = await getRequestPreset(opts)
   const sub = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings || settings)
 
   const previous = { ...opts.previous }
@@ -195,7 +194,7 @@ export async function guidanceAsync(opts: InferenceRequest) {
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
-  const settings = setRequestService(opts)
+  const settings = await getRequestPreset(opts)
 
   if (opts.stop) {
     settings.stopSequences = opts.stop
@@ -227,61 +226,49 @@ export async function createInferenceStream(opts: InferenceRequest) {
     imageData: opts.imageData,
   })
 
-  return { stream }
+  return { stream, service: settings.service || '' }
 }
 
-function setRequestService(opts: InferenceRequest) {
-  const [service, model] = opts.service.split('/')
-  let settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
+async function getRequestPreset(opts: InferenceRequest) {
+  let preset: Partial<AppSchema.GenSettings> | undefined
 
-  if (model) {
-    switch (service as AIAdapter) {
-      case 'openai':
-        settings.oaiModel = model
-        break
+  if (opts.settings) {
+    const model = getCachedSubscriptionModels().find((m) => m._id === opts.settings?._id)
+    if (model) {
+      preset = model
+    } else {
+      preset = opts.settings
+    }
+  } else if (opts.user.defaultPreset) {
+    if (isDefaultPreset(opts.user.defaultPreset)) {
+      preset = deepClone(defaultPresets[opts.user.defaultPreset])
+    }
 
-      case 'claude':
-        settings.claudeModel = model
-        break
-
-      case 'novel':
-        settings.novelModel = model
-        break
-
-      case 'agnaistic': {
-        if (model) {
-          const preset = getCachedSubscriptionModels().find((pre) => pre._id === model)
-          if (preset) settings = deepClone(preset)
-        }
-
-        if (!settings.registered) settings.registered = {}
-        if (!settings.registered.agnaistic) settings.registered.agnaistic = {}
-        settings.registered.agnaistic.subscriptionId = model
-        break
-      }
+    const user = await store.presets.getUserPreset(opts.user.defaultPreset)
+    if (user) {
+      preset = user
+    }
+  } else {
+    const models = getCachedSubscriptionModels()
+    const model = models.find((m) => m.isDefaultSub)
+    if (model) {
+      preset = model
     }
   }
 
-  opts.service = service
-
-  settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  settings.temp = settings.temp ?? 0.5
-
-  if (settings.service === 'openai') {
-    settings.topP = 1
-    settings.frequencyPenalty = 0
-    settings.presencePenalty = 0
+  if (!preset) {
+    throw new StatusError('Could not locate preset for inference request', 400)
   }
 
-  if (settings.thirdPartyUrl) {
-    opts.user.koboldUrl = settings.thirdPartyUrl
+  if (preset.thirdPartyUrl) {
+    opts.user.koboldUrl = preset.thirdPartyUrl
   }
 
-  if (opts.settings?.thirdPartyFormat) {
-    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  if (preset.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = preset.thirdPartyFormat
   }
 
-  return settings
+  return preset
 }
 
 export async function createChatStream(

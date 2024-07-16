@@ -915,7 +915,7 @@ export function resolveScenario(
 }
 
 export type JsonType =
-  | { type: 'string'; title?: string; maxLength?: number; description?: string }
+  | { type: 'string'; description?: string; title?: string; maxLength?: number }
   | { type: 'integer'; title?: string; description?: string }
   | { type: 'enum'; enum: string[]; title?: string; description?: string }
 
@@ -926,10 +926,9 @@ export type JsonSchema = {
 }
 
 export const schema = {
-  str: (o?: { title?: string; maxLength?: number; desc?: string }) => ({
+  str: (o?: { desc?: string; title?: string; maxLength?: number }) => ({
     type: 'string',
     title: o?.title,
-    description: o?.desc,
     maxLength: o?.maxLength,
   }),
   int: (o?: { title?: string; desc?: string }) => ({

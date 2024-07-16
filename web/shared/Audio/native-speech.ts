@@ -1,4 +1,4 @@
-import EasySpeech from 'easy-speech'
+import EasySpeech from '/web/pkg/easy-speech.js'
 import { AppSchema, VoiceWebSynthesisSettings } from '/common/types'
 import { toastStore } from '/web/store'
 

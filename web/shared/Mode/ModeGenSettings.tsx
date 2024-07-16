@@ -3,7 +3,7 @@ import { Component, createEffect, createMemo, createSignal, For, JSX, Show } fro
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
-import GenerationSettings, { getPresetFormData } from '../GenerationSettings'
+import GenerationSettings, { getPresetFormData, PresetTab } from '../GenerationSettings'
 import { toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { AutoPreset, getPresetOptions } from '../adapter'
@@ -15,9 +15,9 @@ import TextInput from '/web/shared/TextInput'
 import { adapterSettings } from '../util'
 
 export const ModeGenSettings: Component<{
-  // chat: AppSchema.Chat
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
+  hideTabs?: PresetTab[]
   close?: () => void
   footer?: (children: JSX.Element) => void
 }> = (props) => {
@@ -156,7 +156,7 @@ export const ModeGenSettings: Component<{
         <For each={presets()}>
           {(preset) => (
             <Show when={selected() === preset._id!}>
-              <GenerationSettings inherit={preset} onSave={onSave} />
+              <GenerationSettings hideTabs={props.hideTabs} inherit={preset} onSave={onSave} />
             </Show>
           )}
         </For>

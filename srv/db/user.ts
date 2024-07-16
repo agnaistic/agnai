@@ -10,7 +10,7 @@ import { errors, StatusError } from '../api/wrap'
 import { encryptPassword, now } from './util'
 import { defaultChars } from '/common/characters'
 import { resyncSubscription } from '../api/billing/stripe'
-import { getCachedTiers, getTier } from './subscriptions'
+import { getCachedSubscriptionModels, getCachedTiers, getTier } from './subscriptions'
 import { store } from '.'
 import { patreon } from '../api/user/patreon'
 import { getUserSubscriptionTier } from '/common/util'
@@ -145,6 +145,71 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   }
   await db('profile').insertOne(profile)
   const token = await createAccessToken(newUser.username, user)
+
+  const sub = getCachedSubscriptionModels().find((m) => m.isDefaultSub)
+  if (sub) {
+    const preset: AppSchema.UserGenPreset = {
+      _id: v4(),
+      kind: 'gen-setting',
+      maxTokens: sub.maxTokens,
+      name: 'My Preset',
+      repetitionPenalty: sub.repetitionPenalty,
+      repetitionPenaltyRange: sub.repetitionPenaltyRange,
+      repetitionPenaltySlope: sub.repetitionPenaltySlope,
+      tailFreeSampling: sub.tailFreeSampling,
+      temp: sub.temp,
+      topA: sub.topA,
+      topK: sub.topK,
+      topP: sub.topP,
+      typicalP: sub.typicalP,
+      userId: user._id,
+      addBosToken: sub.addBosToken,
+      antiBond: sub.antiBond,
+      banEosToken: sub.banEosToken,
+      cfgOppose: sub.cfgOppose,
+      cfgScale: sub.cfgScale,
+      doSample: sub.doSample,
+      dynatemp_exponent: sub.dynatemp_exponent,
+      dynatemp_range: sub.dynatemp_range,
+      earlyStopping: sub.earlyStopping,
+      encoderRepitionPenalty: sub.encoderRepitionPenalty,
+      epsilonCutoff: sub.epsilonCutoff,
+      frequencyPenalty: sub.frequencyPenalty,
+      etaCutoff: sub.etaCutoff,
+      gaslight: sub.gaslight,
+      maxContextLength: sub.maxContextLength,
+      registered: sub.registered,
+      memoryChatEmbedLimit: sub.memoryChatEmbedLimit,
+      memoryContextLimit: sub.memoryContextLimit,
+      memoryDepth: sub.memoryDepth,
+      memoryReverseWeight: sub.memoryReverseWeight,
+      memoryUserEmbedLimit: sub.memoryUserEmbedLimit,
+      minP: sub.minP,
+      mirostatLR: sub.mirostatLR,
+      mirostatTau: sub.mirostatTau,
+      modelFormat: sub.modelFormat,
+      mirostatToggle: sub.mirostatToggle,
+      penaltyAlpha: sub.penaltyAlpha,
+      phraseBias: sub.phraseBias,
+      phraseRepPenalty: sub.phraseRepPenalty,
+      presencePenalty: sub.presencePenalty,
+      prefill: sub.prefill,
+      streamResponse: sub.streamResponse,
+      thirdPartyFormat: sub.thirdPartyFormat,
+      thirdPartyModel: sub.thirdPartyModel,
+      service: sub.service,
+      smoothingCurve: sub.smoothingCurve,
+      smoothingFactor: sub.smoothingFactor,
+      tokenHealing: sub.tokenHealing,
+      tempLast: sub.tempLast,
+      trimStop: sub.trimStop,
+    }
+
+    await db('gen-setting').insertOne(preset)
+    await db('user').updateOne({ _id: user._id }, { $set: { defaultPreset: preset._id } })
+    user.defaultPreset = preset._id
+  }
+
   return { profile, token, user: toSafeUser(user) }
 }
 

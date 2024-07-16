@@ -2,7 +2,8 @@
   "presets": ["solid"],
   "env": {
     "development": {
-      "plugins": []
+      "presets": ["babel-preset-solid"],
+      "plugins": ["module:solid-refresh/babel"]
     }
   }
 }

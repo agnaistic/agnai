@@ -98,8 +98,15 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
     service: sub.service!,
     guidance: !!sub.guidanceCapable,
     preset: {
+      kind: 'submodel',
+      service: sub.service,
+      _id: sub._id,
+      tokenHealing: sub.tokenHealing,
+      mirostatToggle: sub.mirostatToggle,
+      streamResponse: sub.streamResponse,
       name: sub.name,
-
+      isDefaultSub: sub.isDefaultSub,
+      tokenizer: sub.tokenizer,
       maxContextLength: sub.maxContextLength,
       maxTokens: sub.maxTokens,
       frequencyPenalty: sub.frequencyPenalty,
