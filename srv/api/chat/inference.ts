@@ -424,7 +424,7 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log }, res)
 
   await obtainLock(sendId, 15)
 
-  send(sendId, { type: 'inference-prompt', prompt })
+  send(sendId, { type: 'inference-prompt', prompt: body.prompt })
 
   try {
     for await (const gen of stream) {

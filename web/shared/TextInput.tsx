@@ -55,7 +55,9 @@ const TextInput: Component<{
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
   let inputRef: any
+
   const [tokens, setTokens] = createSignal(0)
+  const [height, setHeight] = createSignal(MIN_HEIGHT + 'px')
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
 
   const value = createMemo(() =>
@@ -87,7 +89,7 @@ const TextInput: Component<{
 
   const resize = () => {
     if (inputRef?.value === '') {
-      inputRef.style.height = `${MIN_HEIGHT}px`
+      setHeight(MIN_HEIGHT + 'px')
       return
     }
 
@@ -95,7 +97,7 @@ const TextInput: Component<{
 
     if (inputRef) {
       const next = +inputRef.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : inputRef.scrollHeight
-      inputRef.style.height = `${next}px`
+      setHeight(next + 'px')
     }
   }
 
@@ -217,6 +219,7 @@ const TextInput: Component<{
             'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
             (props.class || '')
           }
+          style={{ transition: 'height 0.4s ease-in-out', height: height() }}
           classList={{ 'py-2': !props.class?.includes('py-'), ...props.classList }}
           disabled={props.disabled}
           spellcheck={props.spellcheck}

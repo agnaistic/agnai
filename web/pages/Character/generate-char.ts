@@ -22,7 +22,7 @@ const parts: Record<string, (prop: string, trait?: string) => string> = {
   scenario: () => `Detailed description of the scene that the character is in`,
   appearance: () =>
     `Terse brief physical description of the character's eye color, hair color, height, clothes, body`,
-  trait: (_, trait) => `Terse description of {{name}}'s "${trait}" personality trait`,
+  trait: (_, trait) => `Description of {{name}}'s "${trait}" personality trait`,
   persona: () => `Outline of the personality and typical behavior of {{name}}`,
   greeting: () => `{{name}}'s first opening dialogue and actions in the scene`,
   sampleChat: () => `Example of {{name}}'s dialogue and actions`,
@@ -43,7 +43,7 @@ export async function generateField(opts: {
   tick: StreamCallback
 }) {
   const { char, prop, trait, tick } = opts
-  const handler = parts[prop]
+  const handler = prop === 'persona' && trait ? parts.trait : parts[prop]
   if (!handler) {
     toastStore.error(`Cannot generate character field: Invalid field (no handler)`)
     return
@@ -85,12 +85,12 @@ export async function generateField(opts: {
   ${infix}
 
   ${suffix}`
-    .replace(`/{{name}}/g`, char.name)
+    .replace(/{{name}}/g, char.name)
     .replace(/\n\n+/g, '\n\n')
 
   const prompt = replaceUniversalTags(template)
 
-  msgsApi.inferenceStream({ prompt }, tick)
+  msgsApi.inferenceStream({ prompt, overrides: { stopSequences: ['\n', '###', '<|'] } }, tick)
 }
 
 function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string) {
@@ -108,7 +108,7 @@ function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string)
       return [key, value]
     })
     .filter(([_, v]) => !!v)
-    .map(([key, value]) => `<user>${handler(key)}</user>\n<bot>${value}</bot>`)
+    .map(([key, value]) => `<user>${handler('persona', key)}</user>\n<bot>${value}</bot>`)
     .join('\n\n')
 
   return prompt

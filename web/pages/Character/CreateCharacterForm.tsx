@@ -93,7 +93,7 @@ export const CreateCharacterForm: Component<{
   close?: () => void
   onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
-  let ref: any
+  let personaRef: any
   const nav = useNavigate()
   const user = userStore()
 
@@ -192,7 +192,7 @@ export const CreateCharacterForm: Component<{
   })
 
   createEffect(() => {
-    if (!ref) return
+    if (!personaRef) return
 
     // We know we're waiting for a character to edit, so let's just wait
     if (!state.edit && srcId()) return
@@ -310,7 +310,7 @@ export const CreateCharacterForm: Component<{
         class="relative text-base"
         onSubmit={onSubmit}
         ref={(form) => {
-          ref = form
+          personaRef = form
           editor.prepare(form)
         }}
       >
@@ -544,11 +544,13 @@ export const CreateCharacterForm: Component<{
                     label={
                       <div class="flex items-center gap-1">
                         Personality{' '}
-                        <Regenerate
-                          field={'persona'}
-                          editor={editor}
-                          allowed={editor.canGuidance}
-                        />{' '}
+                        <Show when={editor.state.personaKind === 'text'}>
+                          <Regenerate
+                            field={'persona'}
+                            editor={editor}
+                            allowed={editor.canGuidance}
+                          />{' '}
+                        </Show>
                       </div>
                     }
                     helperText={
@@ -566,16 +568,16 @@ export const CreateCharacterForm: Component<{
                     fieldName="kind"
                     items={personaFormats()}
                     value={editor.state.personaKind}
-                    onChange={(kind) => editor.update({ personaKind: kind.value as any })}
+                    onChange={(kind) => editor.updateKind(kind as any, personaRef)}
                   />
                 </div>
 
                 <PersonaAttributes
                   value={editor.state.persona.attributes}
-                  plainText={editor.state.personaKind === 'text'}
                   schema={editor.state.personaKind}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  form={ref}
+                  form={personaRef}
+                  editor={editor}
                 />
               </Card>
               <Card class="flex flex-col gap-3">
@@ -743,7 +745,7 @@ const Regenerate: Component<{
 
       <Match when={props.allowed}>
         <Button
-          size="pill"
+          size="sm"
           class="inline-block"
           onClick={() => props.editor.generateField(props.field, props.trait)}
           disabled={props.editor.generating()}

@@ -67,7 +67,7 @@ export const msgsApi = {
 type InferenceOpts = {
   prompt: string
   settings?: Partial<AppSchema.GenSettings>
-  service?: string
+  overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
 }
 
@@ -95,9 +95,10 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
 }
 
 export async function inferenceStream(
-  { prompt, settings }: InferenceOpts,
+  opts: InferenceOpts,
   onTick: (msg: string, state: InferenceState) => any
 ) {
+  const { overrides, settings, prompt } = opts
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -107,6 +108,10 @@ export async function inferenceStream(
   }
 
   const preset = getInferencePreset(settings)
+
+  if (preset && overrides) {
+    Object.assign(preset, overrides)
+  }
 
   inferenceCallback.set(requestId, onTick)
 
@@ -165,7 +170,7 @@ export async function guidance<T = any>(
     rerun?: string[]
   }
 ): Promise<T> {
-  const { prompt, service, maxTokens, settings, previous, lists, rerun, placeholders } = opts
+  const { prompt, maxTokens, settings, previous, lists, rerun, placeholders } = opts
   const requestId = opts.requestId || v4()
   const { user } = userStore.getState()
 
@@ -173,15 +178,12 @@ export async function guidance<T = any>(
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const fallback = service === 'default' || !service ? getUserPreset(user.defaultPreset) : undefined
-
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
     presetId: opts.presetId,
-    settings: opts.presetId ? undefined : settings || fallback,
+    settings: opts.presetId ? undefined : getInferencePreset(settings),
     prompt,
-    service: service || settings?.service || fallback?.service,
     maxTokens,
     previous,
     lists,

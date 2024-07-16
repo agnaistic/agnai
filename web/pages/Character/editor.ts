@@ -380,9 +380,27 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
+  const updateKind = (kind: EditState['personaKind'], ref: any) => {
+    const attributes = getAttributeMap(ref)
+    const next = Object.values(attributes)
+      .map((values) => values.filter((v) => !!v.trim()).join(', '))
+      .join('\n\n')
+
+    if (kind === 'text') {
+      setState({ personaKind: 'text', persona: { kind: 'text', attributes: { text: [next] } } })
+      return
+    }
+
+    setState({
+      personaKind: 'attributes',
+      persona: { kind: 'attributes', attributes: { personality: [next] } },
+    })
+  }
+
   return {
     state,
     update: setState,
+    updateKind,
     reset,
     load,
     convert,
