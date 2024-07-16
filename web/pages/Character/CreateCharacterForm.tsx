@@ -139,7 +139,6 @@ export const CreateCharacterForm: Component<{
     sample: 0,
   })
 
-  const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
   const [showImport, setImport] = createSignal(false)
