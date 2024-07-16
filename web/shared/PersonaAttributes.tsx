@@ -4,7 +4,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  For,
   Index,
   on,
   onMount,
@@ -201,10 +200,7 @@ const Attribute: Component<{
           disabled={props.disabled}
           onKeyUp={(ev) => setKey(ev.currentTarget.value)}
         />
-        <Button
-          schema="secondary"
-          onClick={() => props.editor.generateField('persona', props.attr.key)}
-        >
+        <Button schema="secondary" onClick={() => props.editor.generateField('persona', key())}>
           <WandSparkles />
         </Button>
         <Button schema="red" onClick={() => props.remove(props.index)}>
