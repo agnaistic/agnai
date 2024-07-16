@@ -33,7 +33,7 @@ const PersonaAttributes: Component<{
   tokenCount?: boolean | ((count: number) => void)
   form?: any
   disabled?: boolean
-  editor: CharEditor
+  editor?: CharEditor
 }> = (props) => {
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
@@ -164,7 +164,7 @@ const Attribute: Component<{
   onKey: (key: string, i: number) => void
   remove: (i: number) => void
   disabled?: boolean
-  editor: CharEditor
+  editor?: CharEditor
 }> = (props) => {
   let valueRef: any
   const [key, setKey] = createSignal(props.attr.key)
@@ -200,9 +200,11 @@ const Attribute: Component<{
           disabled={props.disabled}
           onKeyUp={(ev) => setKey(ev.currentTarget.value)}
         />
-        <Button schema="secondary" onClick={() => props.editor.generateField('persona', key())}>
-          <WandSparkles />
-        </Button>
+        <Show when={props.editor}>
+          <Button schema="secondary" onClick={() => props.editor?.generateField('persona', key())}>
+            <WandSparkles />
+          </Button>
+        </Show>
         <Button schema="red" onClick={() => props.remove(props.index)}>
           <Trash size={24} class="" />
         </Button>

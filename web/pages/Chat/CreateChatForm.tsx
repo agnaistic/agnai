@@ -353,7 +353,6 @@ const CreateChatForm: Component<{
                 <PersonaAttributes
                   value={state.char?.persona.attributes}
                   hideLabel
-                  plainText={state.char?.persona?.kind === 'text'}
                   schema={state.char?.persona.kind}
                   disabled={!useOverrides()}
                 />
@@ -365,7 +364,6 @@ const CreateChatForm: Component<{
                       <PersonaAttributes
                         value={item.persona.attributes}
                         hideLabel
-                        plainText={item.persona.kind === 'text'}
                         schema={state.char?.persona.kind}
                         disabled={!useOverrides()}
                       />

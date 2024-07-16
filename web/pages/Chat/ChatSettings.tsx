@@ -397,7 +397,7 @@ const ChatSettings: Component<{
             <PersonaAttributes
               value={state.chat?.overrides?.attributes || state.char?.persona?.attributes}
               hideLabel
-              plainText={kind() === 'text'}
+              schema={kind()}
             />
           </div>
         </Card>
