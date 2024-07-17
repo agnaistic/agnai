@@ -37,6 +37,13 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
     if (statusCode > 201) {
       emitter.push({ error: `SSE request failed with status code ${statusCode}` })
       emitter.done()
+    } else if (format === 'ollama') {
+      if (contentType.startsWith('application/x-ndjson')) return
+
+      emitter.push({
+        error: `SSE request received unexpected content-type ${headers['content-type']}`,
+      })
+      emitter.done()
     } else if (!contentType.startsWith('text/event-stream')) {
       emitter.push({
         error: `SSE request received unexpected content-type ${headers['content-type']}`,
@@ -54,9 +61,20 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
   stream.on('data', (chunk: Buffer) => {
     const data = incomplete + chunk.toString()
     incomplete = ''
-    const messages = data.split(/\r?\n\r?\n/)
+
+    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l)
 
     for (const msg of messages) {
+      if (format === 'ollama') {
+        const event = parseOllama(incomplete + msg, emitter)
+        const token = event?.response
+        if (!token) continue
+
+        const data = JSON.stringify({ token })
+        emitter.push({ data })
+        continue
+      }
+
       if (format === 'aphrodite') {
         const event = parseAphrodite(incomplete + msg, emitter)
         if (!event?.data) {
@@ -122,6 +140,24 @@ function parseAphrodite(msg: string, emitter: EventGenerator<ServerSentEvent>) {
   }
 
   return event
+}
+
+function parseOllama(msg: string, emitter: EventGenerator<ServerSentEvent>) {
+  const event: any = {}
+  const data = tryParse(msg)
+  if (!data) return event
+
+  Object.assign(event, data)
+  return event
+}
+
+function tryParse(value: any) {
+  try {
+    const obj = JSON.parse(value)
+    return obj
+  } catch (ex) {
+    return {}
+  }
 }
 
 function parseEvent(msg: string) {

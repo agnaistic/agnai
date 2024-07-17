@@ -49,6 +49,7 @@ type ImageCacheOpts = {
 
 export function useCharacterBg(src: 'layout' | 'page') {
   const location = useLocation()
+  const isMobile = useMobileDetect()
 
   const isChat = createMemo(() => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
@@ -63,27 +64,37 @@ export function useCharacterBg(src: 'layout' | 'page') {
     if (cfg.anonymize) return {}
     if (src === 'layout' && isChat()) return {}
 
+    const mobile = isMobile()
+
     const base: JSX.CSSProperties = {
       'background-repeat': 'no-repeat',
       'background-position': 'center',
       'background-color': isChat() ? undefined : '',
     }
 
+    const isBg = state.ui.viewMode?.startsWith('background')
     const char = chars.chars.map[chat.active?.char?._id!]
-    if (
-      !isChat() ||
-      state.ui.viewMode !== 'background' ||
-      !char ||
-      char.visualType === 'sprite' ||
-      !char.avatar
-    ) {
-      return { ...base, 'background-image': `url(${state.background})`, 'background-size': 'cover' }
+    if (!isChat() || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
+      console.log('bg', mobile)
+      return {
+        ...base,
+        'background-image': `url(${state.background})`,
+        'background-size': 'cover',
+      }
     }
 
+    const size =
+      state.ui.viewMode === 'background-contain'
+        ? 'contain'
+        : state.ui.viewMode === 'background-cover'
+        ? 'cover'
+        : mobile
+        ? 'contain'
+        : 'auto'
     return {
       ...base,
       'background-image': `url(${getAssetUrl(char.avatar)})`,
-      'background-size': 'auto',
+      'background-size': size,
     }
   })
 
@@ -363,6 +374,24 @@ export function useResizeObserver() {
   })
 
   return { size, load, loaded, platform }
+}
+
+export function useMobileDetect() {
+  const [mobile, setMobile] = createSignal(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const prev = mobile()
+      const next = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+      if (prev === next) return
+      setMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+    }, 2000)
+
+    return () => clearInterval(timer)
+  })
+
+  return mobile
 }
 
 export function getWidthPlatform(width: number) {

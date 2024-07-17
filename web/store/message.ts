@@ -451,7 +451,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
-        yield { partial: undefined, waiting: undefined }
+        yield { partial: undefined, waiting: undefined, retrying: undefined }
       } else if (res.result) {
         onSuccess?.()
       }

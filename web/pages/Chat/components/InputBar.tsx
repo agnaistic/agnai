@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
+import { ImagePlus, ImageUp, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
 import {
   Component,
   createMemo,
@@ -386,6 +386,7 @@ const InputBar: Component<{
               accept="image/jpg,image/png,image/jpeg"
             />
             <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
+              <ImageUp size={18} />
               Attach Image
             </LabelButton>
           </Show>
