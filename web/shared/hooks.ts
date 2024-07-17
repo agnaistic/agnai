@@ -75,7 +75,6 @@ export function useCharacterBg(src: 'layout' | 'page') {
     const isBg = state.ui.viewMode?.startsWith('background')
     const char = chars.chars.map[chat.active?.char?._id!]
     if (!isChat() || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
-      console.log('bg', mobile)
       return {
         ...base,
         'background-image': `url(${state.background})`,

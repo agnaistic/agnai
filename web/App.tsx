@@ -155,7 +155,7 @@ const Layout: Component<{ children?: any }> = (props) => {
           <Navigation />
           <main class="w-full overflow-y-auto" data-background style={bgStyles()}>
             <div
-              class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} px-2 sm:px-3`}
+              class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
               classList={{
                 'content-background': !isChat(),
               }}

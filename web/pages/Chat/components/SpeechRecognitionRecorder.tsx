@@ -235,11 +235,12 @@ export const SpeechRecognitionRecorder: Component<{
       <Show when={speechRecognition() && settings.enabled}>
         <Button
           schema="clear"
-          class={`${isListening() ? 'text-red-500' : 'text-gray-500'}`}
+          class={`${isListening() ? 'text-red-500' : 'text-gray-500'} ${props.class || ''} `}
           onClick={toggleListening}
         >
           <Mic
             size={18}
+            class="h-6"
             classList={{
               'animate-pulse': pendingRecord() || isHearing(),
             }}
