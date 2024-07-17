@@ -97,7 +97,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     
     {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}
     {{.name}}: {{.msg}}<|im_end|>{{/each}}`,
-    post: neat`POST<|im_start|>assistant
+    post: neat`<|im_start|>assistant
     {{post}}`,
     system_prompt: neat`{{#if system_prompt}}<|im_start|>system
     {{system_prompt}}<|im_end|>{{/if}}`,

@@ -84,6 +84,52 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
+  if (format === 'ollama') {
+    const payload: any = {
+      prompt,
+      model: gen.thirdPartyModel,
+      stream: !!gen.streamResponse,
+      system: '',
+      format: opts.jsonSchema ? 'json' : undefined,
+
+      options: {
+        seed: Math.trunc(Math.random() * 1_000_000_000),
+        num_predict: gen.maxTokens,
+        top_k: gen.topK,
+        top_p: gen.topP,
+        tfs_z: gen.tailFreeSampling,
+        typical_p: gen.typicalP,
+        repeat_last_n: gen.repetitionPenaltyRange,
+        temperature: gen.temp,
+        repeat_penalty: gen.repetitionPenalty,
+        presence_penalty: gen.presencePenalty,
+        frequency_penalty: gen.frequencyPenalty,
+        mirostat: gen.mirostatToggle && gen.mirostatTau ? 2 : 0,
+        mirostat_tau: gen.mirostatTau,
+        mirostat_eta: gen.mirostatLR,
+        stop: getStoppingStrings(opts, stops),
+
+        // ignore_eos: false,
+        // min_p: gen.min_p,
+        dynatemp_range: gen.dynatemp_range,
+        dynatemp_exponent: gen.dynatemp_exponent,
+      },
+    }
+
+    if (opts.jsonSchema) {
+      const schema = JSON.stringify(opts.jsonSchema, null, 2)
+      payload.prompt += `\nRespond using the following JSON Schema:\n${schema}`
+    }
+
+    if (opts.imageData) {
+      const comma = opts.imageData.indexOf(',')
+      const base64 = opts.imageData.slice(comma + 1)
+      payload.images = [base64]
+    }
+
+    return payload
+  }
+
   if (format === 'mistral') {
     const body = {
       messages: [{ role: 'user', content: prompt }],

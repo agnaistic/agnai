@@ -515,10 +515,10 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
   switch (node.value) {
     case 'char':
-      return (opts.replyAs || opts.char).name || ''
+      return ((opts.replyAs || opts.char).name || '').trim()
 
     case 'user':
-      return opts.impersonate?.name || opts.sender?.handle || 'You'
+      return (opts.impersonate?.name || opts.sender?.handle || 'You').trim()
 
     case 'example_dialogue':
       return opts.parts?.sampleChat?.join('\n') || ''

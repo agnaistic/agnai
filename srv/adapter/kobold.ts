@@ -37,6 +37,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'ollama' ||
     opts.gen.thirdPartyFormat === 'ooba' ||
     opts.gen.thirdPartyFormat === 'mistral' ||
     opts.gen.thirdPartyFormat === 'tabby' ||
@@ -124,9 +125,7 @@ async function dispatch(opts: AdapterProps, body: any) {
   const baseURL = normalizeUrl(opts.gen.thirdPartyUrl || opts.user.koboldUrl)
 
   const headers: any = await getHeaders(opts)
-  if (opts.gen.thirdPartyFormat === 'aphrodite') {
-    await validateModel(opts, baseURL, body, headers)
-  }
+  await validateModel(opts, baseURL, body, headers)
 
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
@@ -151,6 +150,13 @@ async function dispatch(opts: AdapterProps, body: any) {
         ? oai.streamCompletion(opts.user._id, url, headers, body, 'mistral', opts.log)
         : fullCompletion(url, body, headers, 'mistral', opts.log)
       return stream
+    }
+
+    case 'ollama': {
+      const url = `${baseURL}/api/generate`
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
     }
 
     default:
@@ -341,7 +347,7 @@ const streamCompletion = async function* (
       }
 
       tokens.push(token)
-      yield { token: token }
+      yield { token }
     }
   } catch (err: any) {
     yield { error: `${format} streaming request failed: ${err.message || err}` }
@@ -358,19 +364,42 @@ const streamCompletion = async function* (
 }
 
 async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {
-  if (opts.gen.thirdPartyFormat !== 'aphrodite') return
+  if (opts.gen.thirdPartyFormat === 'aphrodite') {
+    const res = await needle('get', `${baseURL}/v1/models`, { headers, json: true })
 
-  const res = await needle('get', `${baseURL}/v1/models`, { headers, json: true })
+    const code = res.statusCode ?? 400
+    if (code >= 400) {
+      return
+    }
 
-  const code = res.statusCode ?? 400
-  if (code >= 400) {
-    return
+    if (!Array.isArray(res.body.data)) return
+    const names = res.body.data.map((data: any) => data.id) as string[]
+
+    if (!payload.model || !names.includes(payload.model)) {
+      payload.model = names[0]
+    }
   }
 
-  if (!Array.isArray(res.body.data)) return
-  const names = res.body.data.map((data: any) => data.id) as string[]
+  if (opts.gen.thirdPartyFormat === 'ollama') {
+    const res = await needle('get', `${baseURL}/api/tags`, { headers, json: true })
+    const code = res.statusCode ?? 400
+    if (code >= 400) {
+      return
+    }
 
-  if (!payload.model || !names.includes(payload.model)) {
-    payload.model = names[0]
+    if (!Array.isArray(res.body.models)) return
+    const models = res.body.models as Array<{ name: string; model: string }>
+    if (!models.length) return
+
+    if (!payload.model) {
+      payload.model = models[0].name
+      return
+    }
+
+    const match = models.find((m) => m.name === payload.model)
+    if (!match) {
+      payload.model = models[0].name
+      return
+    }
   }
 }
