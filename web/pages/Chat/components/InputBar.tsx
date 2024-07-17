@@ -237,9 +237,9 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-end justify-center">
+    <div class="relative flex items-end justify-center rounded-md bg-[var(--bg-800)]">
       <Show when={props.showOocToggle}>
-        <div class="cursor-pointer p-2" onClick={toggleOoc}>
+        <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
           <Show when={!props.ooc}>
             <WizardIcon />
           </Show>
@@ -249,7 +249,7 @@ const InputBar: Component<{
         </div>
       </Show>
 
-      <div class="flex items-center sm:hidden">
+      <div class="flex h-[40px] items-center sm:hidden">
         <a
           href="#"
           role="button"
@@ -312,7 +312,11 @@ const InputBar: Component<{
           },
         }}
       />
-      <Button schema="clear" onClick={onButtonClick} class="h-full px-2 py-2">
+      <Button
+        schema="clear"
+        onClick={onButtonClick}
+        class="h-full rounded-l-none bg-[var(--bg-800)] px-2 py-2"
+      >
         <MoreHorizontal class="icon-button" />
       </Button>
 
@@ -394,13 +398,16 @@ const InputBar: Component<{
       </DropMenu>
       <Switch>
         <Match when={user.user?.speechtotext && (text() === '' || listening())}>
-          <SpeechRecognitionRecorder
-            culture={props.char?.culture}
-            onText={(value) => setText(value)}
-            onSubmit={() => send()}
-            cleared={cleared}
-            listening={setListening}
-          />
+          <div class="flex h-full items-center">
+            <SpeechRecognitionRecorder
+              culture={props.char?.culture}
+              onText={(value) => setText(value)}
+              onSubmit={() => send()}
+              cleared={cleared}
+              listening={setListening}
+              class="h-full bg-[var(--bg-800)]"
+            />
+          </div>
         </Match>
 
         <Match when>

@@ -52,8 +52,15 @@ export const ModeDetail: Component<{
       </Show>
 
       <Show when={!props.loading}>
-        <section class="mode">
-          <header class="flex flex-col gap-2" style={{ 'grid-area': 'header' }}>
+        <section
+          class="mode pl-2 pr-2 sm:pl-3"
+          style={bgStyles()}
+          classList={{
+            'sm:pr-0': props.showPane,
+            'sm:pr-3': !props.showPane,
+          }}
+        >
+          <header class="flex flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
             <div
               class="hidden items-center justify-between rounded-md sm:flex"
               classList={{ 'sm:flex': !!props.header }}
@@ -79,8 +86,8 @@ export const ModeDetail: Component<{
           </header>
 
           <section
-            style={{ 'grid-area': 'content', ...bgStyles() }}
-            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto px-2 sm:px-3"
+            style={{ 'grid-area': 'content' }}
+            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto"
             classList={{
               'justify-center': !props.showPane || mode() === 'popup',
               'justify-end gap-1 justify-self-center flex-row flex':
