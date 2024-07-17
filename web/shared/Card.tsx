@@ -195,7 +195,7 @@ export const Pill: Component<{
 
   return (
     <span
-      class={`border-[1px] px-2 py-1 text-sm`}
+      class={`flex items-center border-[1px] px-2 py-1 text-sm`}
       style={bg()}
       onClick={props.onClick}
       classList={{

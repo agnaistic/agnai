@@ -377,21 +377,31 @@ export const CreateCharacterForm: Component<{
                   rootModalStore.info(
                     'AI Character Generation',
                     <>
-                      1. Fill out the <Pill small>Description</Pill> field
-                      <br />
-                      2. Select the Service you wish to use
-                      <br />
-                      3. Click{' '}
-                      <Pill inverse type="hl" small>
-                        Generate
-                      </Pill>
-                      &nbsp;- It may take 30-60 seconds to generate.
-                      <br />
-                      4. Adjust the <Pill small>Description</Pill> and click{' '}
-                      <Pill type="hl" inverse small>
-                        Regenerate
-                      </Pill>
-                      &nbsp;to regenerate a specific field.
+                      <p class="inline-flex gap-1">
+                        1. Fill out <Pill small>Name</Pill> and <Pill small>Description</Pill>{' '}
+                        fields
+                      </p>
+                      <p class="inline-flex gap-1">
+                        2. <i>(Optional)</i> Choose or update your preset{' '}
+                        <Pill inverse type="hl" small>
+                          <SlidersVertical size={14} />
+                        </Pill>
+                      </p>
+                      <p class="inline-flex gap-1">
+                        3. Click{' '}
+                        <Pill inverse type="hl" small>
+                          <WandSparkles size={14} />
+                        </Pill>
+                        &nbsp;on the field you'd like to generate.
+                      </p>
+
+                      <p class="inline-flex gap-1">
+                        4. Adjust the <Pill small>Description</Pill> and click{' '}
+                        <Pill inverse type="hl" small>
+                          <WandSparkles size={14} />
+                        </Pill>
+                        &nbsp;to regenerate.
+                      </p>
                     </>
                   )
                 }}
