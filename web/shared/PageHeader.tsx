@@ -10,6 +10,7 @@ import {
 } from 'solid-js'
 import Divider from './Divider'
 import Slot from './Slot'
+import { useRef } from './hooks'
 
 type Props = {
   title: string | JSX.Element
@@ -23,7 +24,7 @@ type Props = {
 }
 
 const PageHeader: Component<Props> = (props) => {
-  let ref: HTMLDivElement
+  const [ref, onRef] = useRef()
   const [_sticky, setSticky] = createSignal(true)
 
   createEffect(() => {
@@ -52,13 +53,13 @@ const PageHeader: Component<Props> = (props) => {
       </Show>
 
       <Show when={!props.noslot}>
-        <div ref={ref!} class="mb-2 flex w-full justify-center">
+        <div ref={onRef} class="mb-2 flex w-full justify-center">
           <Switch>
             <Match when={ref!}>
               <Slot
                 sticky
                 slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'}
-                parent={ref!}
+                parent={ref()}
               />
             </Match>
           </Switch>

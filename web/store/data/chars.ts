@@ -5,6 +5,7 @@ import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
 import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
 import { getImageData } from './image'
+import { replace } from '/common/util'
 
 export const charsApi = {
   getCharacterDetail,
@@ -13,6 +14,7 @@ export const charsApi = {
   editAvatar,
   deleteCharacter,
   editCharacter,
+  editPartialCharacter,
   createCharacter,
   getImageBuffer: getFileBuffer,
   setFavorite,
@@ -119,6 +121,25 @@ export async function deleteCharacter(charId: string) {
   await localApi.saveChats(next.chats)
 
   return { result: true, error: undefined }
+}
+
+export async function editPartialCharacter(charId: string, update: Partial<AppSchema.Character>) {
+  if (isLoggedIn()) {
+    const res = await api.post<AppSchema.Character>(`/character/${charId}/update`, update)
+    return res
+  }
+
+  const chars = await loadItem('characters')
+  const next = replace(charId, chars, update)
+
+  const nextChar = next.find((ch) => ch._id === charId)
+
+  if (!nextChar) {
+    return localApi.error(`Character update failed: Character not found`)
+  }
+
+  await localApi.saveChars(next)
+  return localApi.result(nextChar)
 }
 
 export async function editCharacter(

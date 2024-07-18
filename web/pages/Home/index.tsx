@@ -13,6 +13,7 @@ import { markdown } from '/web/shared/markdown'
 import WizardIcon from '/web/icons/WizardIcon'
 import Slot from '/web/shared/Slot'
 import { adaptersToOptions } from '/common/adapters'
+import { useRef } from '/web/shared/hooks'
 
 const enum Sub {
   None,
@@ -22,7 +23,7 @@ const enum Sub {
 }
 
 const HomePage: Component = () => {
-  let ref: any
+  const [ref, onRef] = useRef()
   setComponentPageTitle('Information')
   const [sub, setSub] = createSignal(Sub.None)
 
@@ -62,8 +63,8 @@ const HomePage: Component = () => {
           </span>
         </div>
 
-        <div class="w-full" ref={ref}>
-          <Slot slot="leaderboard" parent={ref} />
+        <div class="w-full" ref={onRef}>
+          <Slot slot="leaderboard" parent={ref()} />
         </div>
 
         <Show when={cfg.config.patreon}>
@@ -299,7 +300,7 @@ const BorderCard: Component<{ children: any; href: string; ariaLabel?: string }>
 }
 
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
-  let ref: any
+  const [ref, onRef] = useRef()
   return (
     <>
       <section class="flex flex-col gap-2" aria-labelledby="homeAnnouncements">
@@ -326,8 +327,8 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
             </div>
           )}
         </For>
-        <div ref={ref} class="my-1 w-full">
-          <Slot slot="content" parent={ref} />
+        <div ref={onRef} class="my-1 w-full">
+          <Slot slot="content" parent={ref()} />
         </div>
       </section>
     </>

@@ -85,6 +85,13 @@ export async function updateCharacter(id: string, userId: string, char: Characte
   return getCharacter(userId, id)
 }
 
+export async function partialUpdateCharacter(id: string, userId: string, char: CharacterUpdate) {
+  const edit = { ...char, updatedAt: now() }
+
+  await db('character').updateOne({ _id: id, userId }, { $set: edit })
+  return getCharacter(userId, id)
+}
+
 export async function getCharacter(
   userId: string,
   id: string

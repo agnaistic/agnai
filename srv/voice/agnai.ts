@@ -83,7 +83,13 @@ const handleAgnaiTextToSpeech: TextToSpeechAdapter = async (
 
   const infix = cfg.ttsHost.includes('?') ? '&' : '?'
 
-  const url = `${cfg.ttsHost}${infix}type=voice&key=${config.auth.inferenceKey}&model=voice&${auth}`
+  const parts = ['type=voice', `key=${config.auth.inferenceKey}`, auth]
+
+  if (!cfg.ttsHost.includes('model=')) {
+    parts.push(`model=voice`)
+  }
+
+  const url = `${cfg.ttsHost}${infix}${parts.join('&')}`
   const result = await needle(
     'post',
     url,

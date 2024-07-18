@@ -29,7 +29,6 @@ import {
   createSignal,
   JSX,
   Match,
-  onMount,
   Show,
   Switch,
 } from 'solid-js'
@@ -44,7 +43,7 @@ import {
   userStore,
 } from './store'
 import Slot from './shared/Slot'
-import { useEffect, usePaneManager, useResizeObserver, useWindowSize } from './shared/hooks'
+import { useEffect, usePaneManager, useRef, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
@@ -654,12 +653,13 @@ const EndItem: Component<{ children: any }> = (props) => {
 }
 
 const Slots: Component = (props) => {
-  let ref: HTMLDivElement
+  const [ref, onRef] = useRef()
   const state = settingStore()
   const { load } = useResizeObserver()
 
-  onMount(() => {
-    load(ref)
+  createEffect(() => {
+    const ele = ref()
+    if (ele) load(ele)
   })
 
   const [rendered, setRendered] = createSignal(false)
@@ -673,8 +673,8 @@ const Slots: Component = (props) => {
   })
 
   return (
-    <div ref={ref!} class="h-full w-full">
-      <Slot parent={ref!} slot="menu" />
+    <div ref={onRef} class="h-full w-full">
+      <Slot parent={ref()} slot="menu" />
     </div>
   )
 }

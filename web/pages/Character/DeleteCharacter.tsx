@@ -18,11 +18,9 @@ const DeleteCharacterModal: Component<{
   const onArchive = () => {
     if (!props.char) return
     if (props.char.tags?.includes('archived')) return
-    characterStore.editCharacter(
+    characterStore.editPartialCharacter(
       props.char._id,
-      {
-        tags: props.char.tags?.concat('archived') ?? ['archived'],
-      },
+      { tags: props.char.tags?.concat('archived') ?? ['archived'] },
       props.close
     )
   }

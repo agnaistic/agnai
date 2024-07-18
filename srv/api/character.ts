@@ -3,7 +3,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
-import { entityUpload, handleForm } from './upload'
+import { entityUpload, entityUploadBase64, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterUpdate } from '../db/characters'
@@ -12,10 +12,11 @@ import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
 import { isObject, tryParse } from '/common/util'
+import { assertStrict } from '/common/valid/validate'
 
 const router = Router()
 
-const characterValidator = {
+const characterForm = {
   name: 'string?',
   description: 'string?',
   appearance: 'string?',
@@ -47,8 +48,20 @@ const characterValidator = {
   characterVersion: 'string?',
 } as const
 
+const characterPost = {
+  ...characterForm,
+  voiceDisabled: 'boolean?',
+  persona: 'any?',
+  voice: 'any?',
+  tags: ['string?'],
+  imageSettings: 'any?',
+  alternateGreetings: ['string?'],
+  extensions: 'any?',
+  insert: 'any?',
+} as const
+
 const newCharacterValidator = {
-  ...characterValidator,
+  ...characterForm,
   name: 'string',
   scenario: 'string',
   greeting: 'string',
@@ -137,9 +150,59 @@ const getCharacters = handle(async ({ userId }) => {
   return { characters: chars }
 })
 
-const editCharacter = handle(async (req) => {
+const editPartCharacter = handle(async ({ body, params, userId }) => {
+  const id = params.id
+  assertStrict({ type: characterPost }, body)
+
+  const update: CharacterUpdate = body
+
+  if (update.avatar?.startsWith('data:image/png;base64')) {
+    const filename = await entityUploadBase64('char', id, update.avatar)
+    update.avatar = `${filename}?v=${v4().slice(0, 4)}`
+  }
+
+  if (!Array.isArray(update.alternateGreetings)) {
+    delete update.alternateGreetings
+  }
+
+  if (update.characterBook) {
+    try {
+      assertValid(validBook, update.characterBook)
+    } catch (ex: any) {
+      throw new StatusError(
+        `Could not update character: Character book could not be parsed - ${ex.message}`,
+        400
+      )
+    }
+  }
+
+  if (update.extensions && !isObject(update.extensions)) {
+    throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
+  }
+
+  if (body.imageSettings) {
+    try {
+      update.imageSettings = JSON.parse(body.imageSettings)
+    } catch (ex: any) {
+      throw new StatusError(`Character 'imageSettings' could not be parsed: ${ex.message}`, 400)
+    }
+  }
+
+  if (update.persona) {
+    try {
+      assertValid(personaValidator, update.persona)
+    } catch (ex: any) {
+      throw new StatusError(`Character 'persona' could not be parsed: ${ex.message}`, 400)
+    }
+  }
+
+  const char = await store.characters.partialUpdateCharacter(id, userId, update)
+  return char
+})
+
+const editFullCharacter = handle(async (req) => {
   const id = req.params.id
-  const body = handleForm(req, characterValidator)
+  const body = handleForm(req, characterForm)
 
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
   const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
@@ -289,7 +352,8 @@ router.post('/image', createImage)
 router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
-router.post('/:id', editCharacter)
+router.post('/:id/update', editPartCharacter)
+router.post('/:id', editFullCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)
 router.post('/:id/favorite', editCharacterFavorite)

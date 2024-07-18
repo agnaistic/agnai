@@ -47,6 +47,16 @@ type ImageCacheOpts = {
   include?: string[]
 }
 
+export function useRef<T = HTMLElement>() {
+  const [ref, setRef] = createSignal<T | undefined>()
+
+  const onRef = (ele: T) => {
+    setRef(ele as any)
+  }
+
+  return [ref, onRef] as const
+}
+
 export function useCharacterBg(src: 'layout' | 'page') {
   const location = useLocation()
   const isMobile = useMobileDetect()
@@ -362,6 +372,8 @@ export function useResizeObserver() {
 
   const load = (ref: HTMLElement) => {
     if (!ref) return
+    if (loaded()) return
+
     setLoaded(true)
     obs().observe(ref)
     setSize({ w: ref.clientWidth, h: ref.clientHeight })

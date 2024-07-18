@@ -254,7 +254,7 @@ export const CreateCharacterForm: Component<{
         if (paneOrPopup() === 'popup') props.close?.()
       })
     } else if (!forceNew() && props.editId) {
-      characterStore.editCharacter(props.editId, payload, () => {
+      characterStore.editFullCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
         } else if (paneOrPopup() === 'popup') {
