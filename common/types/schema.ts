@@ -146,7 +146,7 @@ export namespace AppSchema {
     preset: GenSettings &
       Pick<
         SubscriptionModel,
-        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service'
+        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service' | 'levels'
       > & {
         kind: 'submodel'
       }
@@ -509,6 +509,12 @@ export namespace AppSchema {
     userId: string
   }
 
+  export interface SubscriptionModelLevel {
+    level: number
+    maxTokens: number
+    maxContextLength: number
+  }
+
   export interface SubscriptionModel extends GenSettings {
     _id: string
     kind: 'subscription-setting'
@@ -523,6 +529,7 @@ export namespace AppSchema {
     deletedAt?: string
     tokenizer?: string
     guidanceCapable?: boolean
+    levels: SubscriptionModelLevel[]
   }
 
   export interface GenSettings {

@@ -140,6 +140,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       smoothingFactor: sub.smoothingFactor,
       skipSpecialTokens: sub.skipSpecialTokens,
       tempLast: sub.tempLast,
+      levels: sub.levels,
     },
   }
 }
