@@ -3,6 +3,7 @@ import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { getAISettingServices, isValidServiceSetting } from './util'
+import { forms } from '../emitter'
 
 export type Option<T extends string = string> = {
   label: string
@@ -30,9 +31,11 @@ const Select: Component<{
   hide?: boolean
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
-    if (!props.onChange) return
-    const item = props.items.find((item) => item.value === ev.currentTarget.value)
-    props.onChange(item!)
+    if (props.onChange) {
+      const item = props.items.find((item) => item.value === ev.currentTarget.value)
+      props.onChange(item!)
+    }
+    forms.emit(props.fieldName, ev.currentTarget.value)
   }
 
   const hide = createMemo(() => {

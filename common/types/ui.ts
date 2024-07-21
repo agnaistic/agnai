@@ -2,7 +2,7 @@ export const BG_THEME = ['truegray', 'coolgray', 'bluegray'] as const
 
 export const UI_FONT = ['default', 'lato'] as const
 
-export const AVATAR_SIZES = ['hide', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
+export const AVATAR_SIZES = ['hide', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'max3xl'] as const
 export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 
 export const CHAT_WIDTHS = ['full', 'narrow', 'xl', '2xl', '3xl', 'fill'] as const

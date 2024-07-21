@@ -1,14 +1,24 @@
-import { Component, Show, createMemo, JSX, createEffect, createSignal } from 'solid-js'
+import {
+  Component,
+  Show,
+  createMemo,
+  JSX,
+  createEffect,
+  createSignal,
+  Switch,
+  Match,
+} from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { createDebounce, isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 import { markdown } from './markdown'
+import { forms } from '../emitter'
 
 const MIN_HEIGHT = 40
 
-const TextInput: Component<{
+type Props = {
   fieldName: string
   label?: string | JSX.Element
   helperText?: string | JSX.Element
@@ -30,6 +40,7 @@ const TextInput: Component<{
   classList?: Record<string, boolean>
   input?: JSX.InputHTMLAttributes<HTMLInputElement>
   textarea?: JSX.TextareaHTMLAttributes<HTMLTextAreaElement>
+  children?: any
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -53,7 +64,17 @@ const TextInput: Component<{
   service?: AIAdapter
   format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
-}> = (props) => {
+}
+
+export const ButtonInput: Component<Props & { children: any }> = (props) => {
+  return (
+    <TextInput {...props} parentClass={`${props.parentClass || ''} input-buttons`}>
+      {props.children}
+    </TextInput>
+  )
+}
+
+const TextInput: Component<Props> = (props) => {
   let inputRef: any
 
   const [tokens, setTokens] = createSignal(0)
@@ -131,6 +152,7 @@ const TextInput: Component<{
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
     props.onChange?.(ev)
+    forms.emit(props.fieldName, ev.currentTarget.value)
   }
 
   const handleInput = async (
@@ -139,6 +161,7 @@ const TextInput: Component<{
     resize()
     props.onInput?.(ev)
     props.onInputText?.(ev.currentTarget.value)
+    forms.emit(props.fieldName, ev.currentTarget.value)
   }
 
   const hide = createMemo(() => {
@@ -172,9 +195,34 @@ const TextInput: Component<{
           </Show>
         </label>
       </Show>
-      <Show
-        when={props.isMultiline}
-        fallback={
+      <Switch>
+        <Match when={props.isMultiline}>
+          <textarea
+            id={props.fieldName}
+            name={props.fieldName}
+            ref={onRef}
+            required={props.required}
+            readOnly={props.readonly}
+            placeholder={placeholder()}
+            aria-placeholder={placeholder()}
+            value={value()}
+            class={
+              'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
+              (props.class || '')
+            }
+            style={{ transition: 'height 0.2s ease-in-out', height: height() }}
+            classList={{ 'py-2': !props.class?.includes('py-'), ...props.classList }}
+            disabled={props.disabled}
+            spellcheck={props.spellcheck}
+            lang={props.lang}
+            onKeyUp={(ev) => props.onKeyUp?.(ev)}
+            onKeyDown={(ev) => props.onKeyDown?.(ev)}
+            onchange={handleChange}
+            onInput={handleInput}
+            {...props.textarea}
+          />
+        </Match>
+        <Match when={!props.children}>
           <input
             id={props.fieldName}
             name={props.fieldName}
@@ -204,33 +252,42 @@ const TextInput: Component<{
             step={props.step}
             {...props.input}
           />
-        }
-      >
-        <textarea
-          id={props.fieldName}
-          name={props.fieldName}
-          ref={onRef}
-          required={props.required}
-          readOnly={props.readonly}
-          placeholder={placeholder()}
-          aria-placeholder={placeholder()}
-          value={value()}
-          class={
-            'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
-            (props.class || '')
-          }
-          style={{ transition: 'height 0.4s ease-in-out', height: height() }}
-          classList={{ 'py-2': !props.class?.includes('py-'), ...props.classList }}
-          disabled={props.disabled}
-          spellcheck={props.spellcheck}
-          lang={props.lang}
-          onKeyUp={(ev) => props.onKeyUp?.(ev)}
-          onKeyDown={(ev) => props.onKeyDown?.(ev)}
-          onchange={handleChange}
-          onInput={handleInput}
-          {...props.textarea}
-        />
-      </Show>
+        </Match>
+        <Match when>
+          <div class="input-buttons">
+            <input
+              id={props.fieldName}
+              name={props.fieldName}
+              type={props.type || 'text'}
+              required={props.required}
+              readOnly={props.readonly}
+              placeholder={placeholder()}
+              aria-placeholder={placeholder()}
+              value={value()}
+              class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
+              classList={{
+                'w-full': !props.class?.includes('w-'),
+                ...props.classList,
+              }}
+              onkeyup={(ev) => {
+                updateCount()
+                props.onKeyUp?.(ev)
+              }}
+              onKeyDown={(ev) => props.onKeyDown?.(ev)}
+              onChange={handleChange}
+              onInput={handleInput}
+              disabled={props.disabled}
+              pattern={props.pattern}
+              spellcheck={props.spellcheck}
+              lang={props.lang}
+              ref={onRef}
+              step={props.step}
+              {...props.input}
+            />
+            {props.children}
+          </div>
+        </Match>
+      </Switch>
     </div>
   )
 }

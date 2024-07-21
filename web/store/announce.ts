@@ -7,12 +7,14 @@ type AnnounceState = {
   list: AppSchema.Announcement[]
   admin: AppSchema.Announcement[]
   loading: boolean
+  updated: Date
 }
 
 const initState: AnnounceState = {
   list: [],
   admin: [],
   loading: false,
+  updated: new Date(),
 }
 
 export const announceStore = createStore<AnnounceState>(
@@ -23,7 +25,7 @@ export const announceStore = createStore<AnnounceState>(
     async getAll() {
       const res = await api.get('/announce')
       if (res.result) {
-        return { list: res.result.announcements }
+        return { list: res.result.announcements, updated: new Date() }
       }
     },
     async getAllAdmin() {

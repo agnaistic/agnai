@@ -12,6 +12,7 @@ const valid = {
   hide: 'boolean',
 
   deletedAt: 'string?',
+  location: ['home', 'notification'],
 } as const
 
 const getPublicAnnouncements = handle(async () => {

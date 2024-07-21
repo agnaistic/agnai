@@ -299,6 +299,12 @@ export async function dataURLtoFile(base64: string, name?: string): Promise<File
     })
 }
 
+/**
+ * Returns image base64
+ * @param file
+ * @param name
+ * @returns
+ */
 export async function getImageData(file: File | Blob | string | undefined, name?: string) {
   if (!file) return
 

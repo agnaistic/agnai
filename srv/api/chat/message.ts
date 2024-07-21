@@ -274,6 +274,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       if ('partial' in gen) {
         const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
         sendMany(members, {
+          requestId: body.requestId,
           type: 'message-partial',
           kind: body.kind,
           partial: `${prefix}${gen.partial}`,

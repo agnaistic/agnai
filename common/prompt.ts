@@ -6,10 +6,14 @@ import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
-import { getMessageAuthor, getBotName, trimSentence } from './util'
+import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate } from './prompt-order'
 import { ModelFormat, replaceTags } from './presets/templates'
+
+export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
+
+export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -127,6 +131,66 @@ export const HOLDERS = {
   impersonating: /{{impersonating}}/gi,
   chatEmbed: /{{chat_embed}}/gi,
   userEmbed: /{{user_embed}}/gi,
+}
+
+const defaultFieldPrompt = neat`
+{{prop}}:
+{{value}}
+`
+export function buildModPrompt(opts: {
+  prompt: string
+  fields: string
+  char: Partial<AppSchema.Character>
+}) {
+  const aliases: { [key in keyof AppSchema.Character]?: string } = {
+    sampleChat: 'Example Dialogue',
+    postHistoryInstructions: 'Character Jailbreak',
+    systemPrompt: 'Character Instructions',
+  }
+
+  const props: Array<keyof AppSchema.Character> = [
+    'name',
+    'description',
+    'appearance',
+    'scenario',
+    'greeting',
+    'sampleChat',
+    'systemPrompt',
+    'postHistoryInstructions',
+  ]
+
+  const inject = (prop: string, value: string) =>
+    (opts.fields || defaultFieldPrompt)
+      .replace(/{{prop}}/gi, prop)
+      .replace(/{{value}}/gi, value)
+      .replace(/\n\n+/g, '\n')
+
+  const fields = props
+    .filter((f) => {
+      const value = opts.char[f]
+      if (typeof value !== 'string') return false
+      return !!value.trim()
+    })
+    .map((f) => {
+      const value = opts.char[f]
+      if (typeof value !== 'string') return ''
+
+      const prop = titlize(aliases[f] || f)
+      return inject(prop, value)
+    })
+
+  for (const [attr, values] of Object.entries(opts.char.persona?.attributes || {})) {
+    const value = values.join(', ')
+    if (!value.trim()) continue
+
+    fields.push(inject(`Attribute '${titlize(attr)}'`, value))
+  }
+
+  return opts.prompt.replace(/{{fields}}/gi, fields.join('\n\n'))
+}
+
+function titlize(str: string) {
+  return `${str[0].toUpperCase()}${str.slice(1).toLowerCase()}`
 }
 
 /**
@@ -914,15 +978,20 @@ export function resolveScenario(
   return result.trim()
 }
 
-export type JsonType =
-  | { type: 'string'; description?: string; title?: string; maxLength?: number }
-  | { type: 'integer'; title?: string; description?: string }
-  | { type: 'enum'; enum: string[]; title?: string; description?: string }
+export type JsonType = { title?: string; description?: string; valid?: string } & (
+  | { type: 'string'; maxLength?: number }
+  | { type: 'integer' }
+  | { type: 'enum'; enum: string[] }
+  | { type: 'bool' }
+)
+
+export type JsonProps = Record<string, JsonType>
 
 export type JsonSchema = {
   title: string
   type: 'object'
-  properties: Record<string, JsonType>
+  properties: JsonProps
+  required: string[]
 }
 
 export const schema = {
@@ -943,26 +1012,131 @@ export const schema = {
     description: o.desc,
   }),
   bool: (o?: { title?: string; desc?: string }) => ({
-    type: 'enum',
-    enum: ['true', 'false'],
+    type: 'bool',
+    enum: ['true', 'false', 'yes', 'no'],
     title: o?.title,
     description: o?.desc,
   }),
 } satisfies Record<string, (...args: any[]) => JsonType>
 
-export function toJsonSchema(body: Record<string, JsonType>): JsonSchema {
+export function toJsonSchema(body: JsonProps): JsonSchema {
   const schema: JsonSchema = {
     title: 'Response',
     type: 'object',
     properties: {},
+    required: [],
   }
 
   const props: JsonSchema['properties'] = {}
 
-  for (const [key, def] of Object.entries(body)) {
-    props[key] = def
+  for (let [key, def] of Object.entries(body)) {
+    key = key.replace(/_/g, ' ')
+    props[key] = { ...def }
+
+    delete props[key].valid
+    if (def.type === 'bool') {
+      props[key].type = 'enum'
+
+      // @ts-ignore
+      props[key].enum = ['true', 'false', 'yes', 'no']
+    }
   }
 
   schema.properties = props
+  schema.required = Object.keys(props)
   return schema
+}
+
+type ToJsonPrimitive<T extends JsonType> = T['type'] extends 'string'
+  ? string
+  : T['type'] extends 'integer'
+  ? number
+  : T['type'] extends 'bool'
+  ? boolean
+  : string[]
+
+type JsonValid<T extends JsonProps> = { [key in keyof T]: ToJsonPrimitive<T[key]> }
+
+export function fromJsonResponse<T extends JsonProps>(
+  schema: T,
+  response: any,
+  output: any = {}
+): JsonValid<T> {
+  const json: Record<string, any> = tryJsonParseResponse(response)
+
+  for (let [key, value] of Object.entries(json)) {
+    const underscored = key.replace(/ /g, '_')
+
+    if (underscored in schema) {
+      key = underscored
+    }
+
+    const def = schema[key]
+    if (!def) continue
+
+    output[key] = value
+    if (def.type === 'bool') {
+      output[key] = value.trim() === 'true' || value.trim() === 'yes'
+    }
+  }
+
+  return output as JsonValid<T>
+}
+
+export function tryJsonParseResponse(res: string) {
+  if (typeof res === 'object') return res
+  try {
+    const json = JSON.parse(res)
+    return json
+  } catch (ex) {}
+
+  try {
+    const json = JSON.parse(res + '}')
+    return json
+  } catch (ex) {}
+
+  try {
+    if (res.trim().endsWith(',')) {
+      const json = JSON.parse(res.slice(0, -1))
+      return json
+    }
+  } catch (ex) {}
+
+  return {}
+}
+
+export function onJsonTickHandler<T extends JsonProps>(
+  schema: T,
+  handler: (res: Partial<JsonValid<T>>, state: InferenceState) => void
+) {
+  let curr: Partial<JsonValid<T>> = {}
+  const parser: TickHandler = (res, state) => {
+    if (state === 'done') {
+      const body = fromJsonResponse(schema, tryJsonParseResponse(res))
+      if (Object.keys(body).length === 0) {
+        handler(curr, state)
+        return
+      }
+
+      handler(body, state)
+      return
+    }
+
+    if (state === 'partial') {
+      const body = fromJsonResponse(schema, tryJsonParseResponse(res))
+      const keys = Object.keys(body).length
+      if (keys === 0) return
+
+      const changed = Object.keys(curr).length !== keys
+      if (!changed) return
+
+      Object.assign(curr, body)
+      handler(curr, state)
+      return
+    }
+
+    handler(curr, state)
+  }
+
+  return parser
 }

@@ -62,7 +62,7 @@ const Character: Component<CardProps> = (props) => {
   return (
     <div
       ref={ref}
-      class="bg-800 flex flex-col items-center justify-between gap-1 rounded-lg border-[1px] border-[var(--bg-600)]"
+      class="bg-800 flex flex-col items-center justify-between gap-1 rounded-lg border-[1px] border-[var(--bg-700)]"
     >
       <div class="w-full">
         <Switch>

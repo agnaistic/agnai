@@ -26,7 +26,7 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
-import { JsonType } from '/common/prompt'
+import { JsonProps, TickHandler } from '/common/prompt'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -478,25 +478,16 @@ export const msgStore = createStore<MsgState>(
       processQueue()
     },
 
-    async *chatQuery(
-      { waiting },
-      chatId: string,
-      message: string,
-      onSuccess: (response: string) => void
-    ) {
+    async *chatQuery({ waiting, activeChatId }, message: string, onTick: TickHandler) {
       if (waiting) return
-      if (!chatId) {
+      if (!activeChatId) {
         toastStore.error('Could not send message: No active chat')
         return
       }
 
       const res = await msgsApi
-        .generateResponse({ kind: 'chat-query', text: message })
+        .generateResponse({ kind: 'chat-query', text: message }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.result) {
-        queryCallbacks.set(res.result.requestId, onSuccess)
-      }
 
       if (res.error) {
         toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
@@ -504,32 +495,20 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *chatJson(
-      { waiting },
-      chatId: string,
+      { waiting, activeChatId },
       message: string,
-      schema: Record<string, JsonType>,
-      onSuccess: (response: string) => any
+      schema: JsonProps,
+      onTick: TickHandler
     ) {
       if (waiting) return
-      if (!chatId) {
+      if (!activeChatId) {
         toastStore.error('Could not send message: No active chat')
         return
       }
 
       const res = await msgsApi
-        .generateResponse({ kind: 'chat-query', text: message, schema })
+        .generateResponse({ kind: 'chat-query', text: message, schema }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.result) {
-        queryCallbacks.set(res.result.requestId, (response) => {
-          try {
-            const json = JSON.parse(response.trim())
-            onSuccess(json)
-          } catch (ex) {
-            onSuccess(response)
-          }
-        })
-      }
 
       if (res.error) {
         toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)

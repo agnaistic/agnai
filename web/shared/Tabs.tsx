@@ -8,7 +8,7 @@ export type TabHook = {
 }
 
 const Tabs: Component<{
-  tabs: string[] | readonly string[]
+  tabs: string[]
   selected: () => number
   select: (idx: number) => void
   titles?: Array<JSX.Element | string>

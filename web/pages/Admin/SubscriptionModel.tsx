@@ -95,6 +95,7 @@ export const SubscriptionModel: Component = () => {
         subApiKey: '',
         subDisabled: false,
         allowGuestUsage: false,
+        levels: [],
       })
       return
     } else if (params.id === 'default') {
@@ -109,6 +110,7 @@ export const SubscriptionModel: Component = () => {
         subModel: '',
         subApiKey: '',
         subDisabled: false,
+        levels: [],
         kind: 'subscription-setting',
       })
       return

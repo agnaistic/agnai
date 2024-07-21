@@ -447,11 +447,10 @@ function getCharLooks(char: AppSchema.Character) {
 
 function tryParse<T = any>(value: string, prev?: string): T | undefined {
   try {
-    const parsed = tryParse(value)
-    if (parsed) return parsed
-
-    if (!prev) return JSON.parse(value)
-
+    if (!prev) {
+      const parsed = JSON.parse(value)
+      return parsed
+    }
     const joined = JSON.parse(prev + value)
     return joined
   } catch (ex) {

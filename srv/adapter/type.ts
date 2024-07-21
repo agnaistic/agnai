@@ -1,4 +1,4 @@
-import type { JsonType, PromptParts } from '../../common/prompt'
+import type { JsonProps, PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 import { Memory, TokenCounter } from '/common/types'
@@ -35,7 +35,7 @@ export type GenerateRequestV2 = {
   characters: Record<string, AppSchema.Character>
   impersonate?: AppSchema.Character
 
-  jsonSchema?: Record<string, JsonType>
+  jsonSchema?: JsonProps
 
   /** Base64 */
   imageData?: string

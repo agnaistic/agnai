@@ -125,6 +125,7 @@ export const TitleCard: Component<{
   center?: boolean
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
+  contentClass?: string
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
 
@@ -135,27 +136,31 @@ export const TitleCard: Component<{
 
     return {
       'background-color': `var(--${type}-${base})`,
-      'border-color': `var(--${type}-${base + mod})`,
+      border: `1px solid var(--${type}-${base + mod})`,
+      'border-radius': '0.375rem',
     }
   })
+
   return (
     <div
-      class={`flex flex-col gap-2 rounded-md border-[1px] ${props.class || ''}`}
+      class={`flex flex-col gap-2 ${props.class || ''}`}
       style={bg()}
       role={props.ariaRole}
       aria-label={props.ariaLabel}
     >
       <Show when={!!props.title}>
         <div
-          class={`flex rounded-t-md px-2 pt-2 text-xl font-bold ${
+          class={`flex rounded-t-md px-2 pt-2 text-lg font-bold ${
             props.center ? 'justify-center' : ''
           }`}
-          style={bg()}
         >
           {props.title}
         </div>
       </Show>
-      <div class="px-2 pb-2" classList={{ 'pt-2': !props.title }}>
+      <div
+        class={`rounded-b-md px-2 pb-2 text-sm ${props.contentClass || ''}`}
+        classList={{ 'pt-2': !props.title }}
+      >
         {props.children}
       </div>
     </div>
@@ -212,6 +217,39 @@ export const Pill: Component<{
     >
       {props.children}
     </span>
+  )
+}
+
+export const Badge: Component<{ children: any; type?: CardType; inverse?: boolean }> = (props) => {
+  const cfg = userStore((s) => s.ui)
+  const bg = createMemo((): JSX.CSSProperties => {
+    const type = props.type || 'bg'
+    let base = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? 800 : 200
+    let mod = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? -400 : 400
+    let text = 200
+
+    if (props.inverse) {
+      base = base === 800 ? 200 : 800
+      mod *= -1
+      text = 800
+    }
+
+    return {
+      'background-color': `var(--${type}-${base + mod})`,
+      'border-color': `var(--${type}-${base})`,
+      color: `var(--text-${text})`,
+    }
+  })
+
+  return (
+    <>
+      <span
+        style={bg()}
+        class={`flex h-5 w-5 items-center justify-center rounded-full text-[0.6rem] font-bold text-white`}
+      >
+        {props.children}
+      </span>
+    </>
   )
 }
 

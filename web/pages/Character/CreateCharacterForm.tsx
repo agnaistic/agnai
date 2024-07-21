@@ -22,10 +22,12 @@ import {
   WandSparkles,
   RotateCcw,
   SlidersVertical,
+  Dices,
+  BookPlus,
 } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import TextInput from '../../shared/TextInput'
+import TextInput, { ButtonInput } from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import {
@@ -63,12 +65,14 @@ import ImportCharacterModal from './ImportCharacter'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
-import { getAssetUrl } from '/web/shared/util'
+import { getAssetUrl, random } from '/web/shared/util'
 import { ImageSettings } from '../Settings/Image/ImageSettings'
 import { v4 } from 'uuid'
 import { imageApi } from '/web/store/data/image'
 import { Page } from '/web/Layout'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
+import { charsApi } from '/web/store/data/chars'
+import Tooltip from '/web/shared/Tooltip'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -113,6 +117,7 @@ export const CreateCharacterForm: Component<{
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
   const [openPreset, setOpenPreset] = createSignal(false)
+  const [presetFooter, setPresetFooter] = createSignal<JSX.Element>()
 
   const editor = useCharEditor()
 
@@ -269,6 +274,12 @@ export const CreateCharacterForm: Component<{
     }
   }
 
+  const onPublish = async () => {
+    const char = editor.payload(false)
+    const image = editor.state.avatar ? await imageApi.getImageData(editor.state.avatar) : undefined
+    charsApi.publishCharacter(char, image, (response) => {})
+  }
+
   const footer = (
     <>
       <Button onClick={cancel} schema="secondary">
@@ -279,6 +290,11 @@ export const CreateCharacterForm: Component<{
         <Save />
         {props.editId && !forceNew() ? 'Update' : 'Create'}
       </Button>
+      <Show when={user.user?.admin}>
+        <Button onClick={onPublish}>
+          <BookPlus /> Publish
+        </Button>
+      </Show>
     </>
   )
 
@@ -309,6 +325,7 @@ export const CreateCharacterForm: Component<{
       <form
         class="relative text-base"
         onSubmit={onSubmit}
+        id="character-form"
         ref={(form) => {
           personaRef = form
           editor.prepare(form)
@@ -344,7 +361,7 @@ export const CreateCharacterForm: Component<{
 
             <div class="flex justify-end gap-2 text-[1em]">
               <Button onClick={() => setOpenPreset(true)}>
-                <SlidersVertical size={24} />
+                <SlidersVertical size={24} /> Preset
               </Button>
               <Button onClick={() => setImport(true)}>
                 <Import /> Import
@@ -409,13 +426,39 @@ export const CreateCharacterForm: Component<{
                 <HelpCircle size={16} /> AI Character Generation
               </Button>
               <Card>
-                <TextInput
+                {/* <TextInput
                   fieldName="name"
                   required
                   label="Character Name"
                   placeholder=""
                   value={editor.state.name}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
+                /> */}
+                <ButtonInput
+                  fieldName="name"
+                  required
+                  label="Character Name"
+                  placeholder=""
+                  value={editor.state.name}
+                >
+                  <Button
+                    size="sm"
+                    schema="input"
+                    onClick={() => random('first', {}).then((name) => editor.update('name', name))}
+                  >
+                    <Dices size={12} />
+                  </Button>
+                </ButtonInput>
+              </Card>
+
+              <Card>
+                <TagInput
+                  availableTags={tagState.tags.map((t) => t.tag)}
+                  value={editor.state.tags}
+                  fieldName="_tags"
+                  label="Tags"
+                  helperText="Used to help you organize and filter your characters."
+                  onSelect={(tags) => editor.update({ tags })}
                 />
               </Card>
 
@@ -431,6 +474,7 @@ export const CreateCharacterForm: Component<{
                     </div>
                   }
                 />
+
                 <div class="flex w-full flex-col gap-2">
                   <TextInput
                     isMultiline
@@ -439,17 +483,6 @@ export const CreateCharacterForm: Component<{
                     value={editor.state.description}
                   />
                 </div>
-              </Card>
-
-              <Card>
-                <TagInput
-                  availableTags={tagState.tags.map((t) => t.tag)}
-                  value={editor.state.tags}
-                  fieldName="_tags"
-                  label="Tags"
-                  helperText="Used to help you organize and filter your characters."
-                  onSelect={(tags) => editor.update({ tags })}
-                />
               </Card>
 
               <Card class="flex w-full flex-col gap-4 sm:flex-row">
@@ -497,8 +530,12 @@ export const CreateCharacterForm: Component<{
                       <FileInput
                         class="w-full"
                         fieldName="avatar"
-                        label="Avatar"
-                        accept="image/png,image/jpeg,image/apng"
+                        label={
+                          <div class="flex gap-2">
+                            <div>Avatar</div>
+                          </div>
+                        }
+                        accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
                         onUpdate={updateFile}
                       />
                       <div class="flex w-full flex-col gap-2 sm:flex-row">
@@ -578,7 +615,6 @@ export const CreateCharacterForm: Component<{
                     fieldName="kind"
                     items={personaFormats()}
                     value={editor.state.personaKind}
-                    onChange={(kind) => editor.updateKind(kind as any, personaRef)}
                   />
                 </div>
 
@@ -727,15 +763,17 @@ export const CreateCharacterForm: Component<{
           title="Update Preset"
           show
           close={() => setOpenPreset(false)}
-          maxWidth="full"
+          maxWidth="half"
           maxHeight
+          footer={presetFooter()}
         >
           <sub>This preset used for character generation</sub>
           <ModeGenSettings
             presetId={user.user?.defaultPreset}
             onPresetChanged={(id) => userStore.updatePartialConfig({ defaultPreset: id })}
             close={() => setOpenPreset(false)}
-            hideTabs={['General', 'Memory', 'Prompt']}
+            hideTabs={['Memory', 'Prompt']}
+            footer={setPresetFooter}
           />
         </Modal>
       </Show>
@@ -750,20 +788,22 @@ const Regenerate: Component<{
   allowed: boolean
 }> = (props) => {
   return (
-    <Switch>
-      <Match when={!props.allowed}>{null}</Match>
+    <Tooltip tip="Name and description must be filled" disable={props.editor.canGenerate()}>
+      <Switch>
+        <Match when={!props.allowed}>{null}</Match>
 
-      <Match when={props.allowed}>
-        <Button
-          size="sm"
-          class="inline-block"
-          onClick={() => props.editor.generateField(props.field, props.trait)}
-          disabled={props.editor.generating()}
-        >
-          <WandSparkles size={16} />
-        </Button>
-      </Match>
-    </Switch>
+        <Match when={props.allowed}>
+          <Button
+            size="sm"
+            class="inline-block"
+            onClick={() => props.editor.generateField(props.field, props.trait)}
+            disabled={props.editor.generating() || !props.editor.canGenerate()}
+          >
+            <WandSparkles size={16} />
+          </Button>
+        </Match>
+      </Switch>
+    </Tooltip>
   )
 }
 
