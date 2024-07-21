@@ -59,7 +59,6 @@ export const forms = {
     const unsub = forms.sub(callback)
 
     onCleanup(() => {
-      console.log('cleanedup')
       unsub()
     })
 

@@ -447,15 +447,16 @@ function getCharLooks(char: AppSchema.Character) {
 
 function tryParse<T = any>(value: string, prev?: string): T | undefined {
   try {
-    if (!prev) {
-      const parsed = JSON.parse(value)
-      return parsed
-    }
-    const joined = JSON.parse(prev + value)
-    return joined
-  } catch (ex) {
-    return
-  }
+    const parsed = JSON.parse(value)
+    return parsed
+  } catch (ex) {}
+
+  try {
+    const parsed = JSON.parse(prev + value)
+    return parsed
+  } catch (ex) {}
+
+  return
 }
 
 export const requestFullCompletion: CompletionGenerator = async function* (

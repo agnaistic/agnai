@@ -68,7 +68,7 @@ type Props = {
 
 export const ButtonInput: Component<Props & { children: any }> = (props) => {
   return (
-    <TextInput {...props} parentClass={`${props.parentClass || ''} input-buttons`}>
+    <TextInput {...props} parentClass={`${props.parentClass || ''} input-buttons w-full`}>
       {props.children}
     </TextInput>
   )
@@ -254,7 +254,7 @@ const TextInput: Component<Props> = (props) => {
           />
         </Match>
         <Match when>
-          <div class="input-buttons">
+          <div class="input-buttons w-full">
             <input
               id={props.fieldName}
               name={props.fieldName}
