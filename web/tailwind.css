@@ -285,6 +285,11 @@ body {
     @apply border-[var(--bg-500)] bg-transparent enabled:hover:bg-[var(--bg-600)];
   }
 
+  .btn-input {
+    @apply btn-base;
+    @apply border-0 bg-transparent hover:bg-transparent;
+  }
+
   .btn-bordered {
     @apply btn-base;
     @apply border-[1px] border-[var(--bg-700)] bg-transparent hover:bg-[var(--bg-700)];

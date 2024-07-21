@@ -6,7 +6,7 @@ import '@melloware/coloris/dist/coloris.css'
 import { Component, createMemo, Show, lazy, onMount, Switch, Match } from 'solid-js'
 import { Route, Router, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
-import Toasts from './Toasts'
+import Notifications from './Toasts'
 import CharacterRoutes from './pages/Character'
 import ScenarioRoutes from './pages/Scenario'
 import { settingStore } from './store/settings'
@@ -191,7 +191,7 @@ const Layout: Component<{ children?: any }> = (props) => {
           </main>
         </div>
       </div>
-      <Toasts />
+      <Notifications />
       <ImpersonateModal
         show={cfg.showImpersonate}
         close={() => settingStore.toggleImpersonate(false)}
@@ -200,7 +200,6 @@ const Layout: Component<{ children?: any }> = (props) => {
       <ProfileModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
-
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
         classList={{ hidden: !cfg.overlay }}

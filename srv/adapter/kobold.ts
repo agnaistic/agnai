@@ -75,7 +75,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   yield { prompt: body.prompt }
 
   logger.debug(`Prompt:\n${body.prompt}`)
-  logger.debug({ ...body, prompt: null }, '3rd-party payload')
+  logger.debug({ ...body, prompt: null, images: null }, '3rd-party payload')
 
   const stream = await dispatch(opts, body)
 

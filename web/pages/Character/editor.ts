@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createSignal } from 'solid-js'
+import { batch, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
@@ -21,6 +21,7 @@ import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
+import { forms } from '/web/emitter'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -149,6 +150,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const user = userStore()
   const presets = presetStore()
   const settings = settingStore()
+
   const cache = useImageCache('avatars', { clean: true })
 
   const [original, setOriginal] = createSignal(editing)
@@ -157,6 +159,26 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const [form, setForm] = createSignal<any>()
   const [generating, setGenerating] = createSignal(false)
   const [imageId, setImageId] = createSignal('')
+
+  forms.useSub((field, value) => {
+    if (field === 'kind') {
+      updateKind(value as any)
+      return
+    }
+
+    if (field in state === false) return
+
+    setState(field as any, value)
+  })
+
+  const canGenerate = createMemo(
+    on(
+      () => `${state.name}${state.description}`,
+      () => {
+        return !!state.name.trim() && !!state.description.trim()
+      }
+    )
+  )
 
   const genOptions = createMemo(() => {
     if (!user.user) return []
@@ -380,8 +402,10 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  const updateKind = (kind: EditState['personaKind'], ref: any) => {
-    const attributes = getAttributeMap(ref)
+  const updateKind = (kind: EditState['personaKind']) => {
+    const ref = document.getElementById('character-form') as HTMLFormElement | null
+
+    const attributes = ref ? getAttributeMap(ref) : {}
     const next = Object.values(attributes)
       .map((values) => values.filter((v) => !!v.trim()).join(', '))
       .join('\n\n')
@@ -412,6 +436,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     receiveAvatar,
     avatar: imageData,
     generating,
+    canGenerate,
     canGuidance: genOptions().length > 0,
     generateField: genField,
     generateAvatar,
@@ -423,11 +448,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 function getPayload(ev: any, state: EditState, original?: NewCharacter) {
   const body = getStrictForm(ev, newCharGuard)
   const attributes = getAttributeMap(ev)
-
-  const persona = {
-    kind: body.kind,
-    attributes,
-  }
 
   const payload = {
     name: body.name,
@@ -455,8 +475,8 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     extensions: original?.extensions,
     characterVersion: body.characterVersion ?? '',
     persona: {
-      kind: state.personaKind,
-      attributes: persona.attributes,
+      kind: body.kind,
+      attributes,
     },
     imageSettings: {
       type: body.imageType,

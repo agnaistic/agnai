@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { api } from './api'
+import { api, isLoggedIn } from './api'
 import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -29,6 +29,8 @@ export const inviteStore = createStore<InviteState>(
 
   return {
     async getInvites() {
+      if (!isLoggedIn()) return
+
       const res = await api.get<{
         invites: AppSchema.ChatInvite[]
         chars: AppSchema.Character[]

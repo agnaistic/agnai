@@ -71,7 +71,7 @@ function onMessage(msg: MessageEvent<any>) {
     const onceHandlers = onceListeners.get(payload.type) || []
 
     if (!squelched.has(payload.type)) {
-      if (payload.type === 'service-prompt') {
+      if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
         console.log(`Prompt\n${payload.prompt}`)
       } else if (payload.type !== 'image-generated') {
         console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))

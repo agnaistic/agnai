@@ -56,7 +56,7 @@ export const PresetSelect: Component<{
   })
   const [showSelectModal, setShowSelectModal] = createSignal(false)
   const selectIdAndCloseModal = (id: string) => {
-    props.setPresetId(id)
+    props.setPresetId?.(id)
     setShowSelectModal(false)
     setFilter('')
   }

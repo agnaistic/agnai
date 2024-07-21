@@ -1,4 +1,14 @@
-import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
 import Button from '/web/shared/Button'
@@ -12,6 +22,7 @@ import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
 import { Page } from '/web/Layout'
+import Select from '/web/shared/Select'
 
 export { AnnoucementPage as default }
 
@@ -123,12 +134,27 @@ const Announcement: Component<{}> = (props) => {
     announceStore.getAllAdmin()
   })
 
+  createEffect(
+    on(
+      () => (state.item?.title || '') + (state.item?.content || ''),
+      () => {
+        if (state.item?.title) {
+          setTitle(state.item?.title)
+        }
+        if (state.item?.content) {
+          setContent(state.item.content)
+        }
+      }
+    )
+  )
+
   const onSave = () => {
     const body = getStrictForm(ref, {
       title: 'string',
       content: 'string',
       hide: 'boolean',
       showAt: 'string',
+      location: ['home', 'notification'],
     })
 
     const showAt = new Date(body.showAt)
@@ -160,6 +186,16 @@ const Announcement: Component<{}> = (props) => {
           label="Title"
           value={state.item?.title}
           onInput={(ev) => setTitle(ev.currentTarget.value)}
+        />
+        <Select
+          fieldName="location"
+          items={[
+            { label: 'Home', value: 'home' },
+            { label: 'Notification', value: 'notification' },
+          ]}
+          label="Location"
+          helperText="Appear on the homepage or notifications list"
+          value={state.item?.location || 'home'}
         />
         <TextInput
           fieldName="content"

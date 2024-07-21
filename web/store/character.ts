@@ -234,17 +234,49 @@ export const characterStore = createStore<CharacterState>(
         onSuccess?.(res.result)
       }
     },
-    async *editCharacter(
+    async *editPartialCharacter(
+      { characters: { list, map, loaded }, chatChars },
+      characterId: string,
+      char: Partial<AppSchema.Character>,
+      onSuccess?: () => void
+    ) {
+      const res = await charsApi.editPartialCharacter(characterId, char)
+
+      if (res.error) toastStore.error(`Failed to update character: ${res.error}`)
+
+      if (res.result) {
+        const next: AppSchema.Character = res.result
+        events.emit(EVENTS.charUpdated, res.result, 'updated')
+        toastStore.success(`Successfully updated character`)
+
+        const isChatChar = !!chatChars.map[next._id]
+        const nextChars = { ...chatChars }
+        if (isChatChar) {
+          nextChars.map = Object.assign({}, nextChars.map, { [next._id]: next })
+          nextChars.list = nextChars.list.map((ch) => (ch._id === next._id ? next : ch))
+        }
+
+        yield {
+          characters: {
+            list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
+            map: replace(map, characterId, res.result),
+            loaded,
+          },
+          chatChars: nextChars,
+        }
+        onSuccess?.()
+      }
+    },
+    async *editFullCharacter(
       { characters: { list, map, loaded }, chatChars },
       characterId: string,
       char: UpdateCharacter,
       onSuccess?: () => void
     ) {
       const previous = map[characterId]
-      const update = Object.assign({}, previous, char)
-      const res = await charsApi.editCharacter(characterId, update)
+      const res = await charsApi.editCharacter(characterId, char, previous)
 
-      if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
+      if (res.error) toastStore.error(`Failed to update character: ${res.error}`)
       if (res.result) {
         const next: AppSchema.Character = res.result
         events.emit(EVENTS.charUpdated, res.result, 'updated')

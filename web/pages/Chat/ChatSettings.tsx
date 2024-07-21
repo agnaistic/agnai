@@ -14,7 +14,7 @@ import {
   settingStore,
   userStore,
 } from '../../store'
-import { getChatPreset } from '../../../common/prompt'
+import { getChatPreset, schema } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
@@ -296,11 +296,17 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery(
-                    state.chat?._id!,
-                    'Generate a brief title for this conversation',
+                  msgStore.chatJson(
+                    'Provide information about the image provided.',
+                    {
+                      image_description: schema.str(),
+                      response: schema.str(),
+                      image_is_cartoon: schema.bool(),
+                      image_contains_people: schema.bool(),
+                      image_is_adult_content: schema.bool(),
+                    },
                     (msg) => {
-                      nameRef.value = msg
+                      nameRef.value = JSON.stringify(msg)
                     }
                   )
                 }

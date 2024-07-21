@@ -3,7 +3,7 @@ import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { settingStore, userStore } from '/web/store'
 import { getHeaderBg } from '/web/pages/Chat/helpers'
-import { useCharacterBg, usePane, useResizeObserver } from '../hooks'
+import { useCharacterBg, usePane, useRef, useResizeObserver } from '../hooks'
 import Slot from '../Slot'
 
 export const ModeDetail: Component<{
@@ -38,7 +38,7 @@ export const ModeDetail: Component<{
 
   const slots = useResizeObserver()
 
-  let slotContainer: HTMLDivElement
+  const [slot, onSlot] = useRef()
 
   const header = createMemo(() => getHeaderBg(user.ui.mode))
   const bgStyles = useCharacterBg('page')
@@ -70,7 +70,7 @@ export const ModeDetail: Component<{
             </div>
             <div
               ref={(ref) => {
-                slotContainer = ref
+                onSlot(ref)
                 slots.load(ref)
               }}
               class="sticky top-0 flex h-fit w-full justify-center "
@@ -78,8 +78,8 @@ export const ModeDetail: Component<{
             >
               <Switch>
                 <Match when={slots.size().w === 0}>{null}</Match>
-                <Match when={slotContainer!}>
-                  <Slot sticky="always" slot="leaderboard" parent={slotContainer!} />
+                <Match when={slot()}>
+                  <Slot sticky="always" slot="leaderboard" parent={slot()} />
                 </Match>
               </Switch>
             </div>

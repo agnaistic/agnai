@@ -6,6 +6,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
 } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
@@ -50,7 +51,7 @@ const VIDEO_AGE = 125 * 1000
 const Slot: Component<{
   slot: SlotKind
   sticky?: boolean | 'always'
-  parent: HTMLElement
+  parent: HTMLElement | undefined
   size?: SlotSize
 }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
@@ -104,17 +105,34 @@ const Slot: Component<{
   const resize = useResizeObserver()
   const parentSize = useResizeObserver()
 
+  createEffect(
+    on(
+      () => props.parent,
+      (parent) => {
+        if (parent && !parentSize.loaded()) {
+          parentSize.load(parent)
+        }
+      }
+    )
+  )
+
   if (props.parent && !parentSize.loaded()) {
     parentSize.load(props.parent)
   }
 
   const specs = createMemo(() => {
-    if (!cfg.ready) return null
+    const parent = props.parent
+    const ready = cfg.ready
+    if (!ready) return null
+
+    if (!parent) {
+      return
+    }
 
     resize.size()
     props.parent?.clientWidth
     parentSize.size()
-    const spec = getSpec(props.slot, props.parent, log)
+    const spec = getSpec(props.slot, parent, log)
     if (!spec) return null
 
     setActualId(spec.id)
@@ -223,6 +241,11 @@ const Slot: Component<{
   createEffect(async () => {
     if (!cfg.ready) {
       log('Not ready')
+      return
+    }
+
+    if (!props.parent) {
+      log('Not ready: Parent missing')
       return
     }
 

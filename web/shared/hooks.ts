@@ -1,15 +1,54 @@
 import { Accessor, JSX, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { characterStore, chatStore, settingStore, userStore } from '../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
 import { getAssetUrl } from './util'
+import { AutoPreset, getPresetOptions } from './adapter'
+import { ADAPTER_LABELS } from '/common/adapters'
+import { forms } from '../emitter'
 
 function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+}
+
+export function useFormField(field: string, init?: string) {
+  const [value, setValue] = createSignal(init || '')
+
+  forms.useSub((f, value) => {
+    if (f !== field) return
+    setValue(value)
+  })
+
+  return value
+}
+
+export function usePresetOptions() {
+  const presets = presetStore((s) => s.presets)
+  const user = userStore()
+
+  const options = createMemo(() => {
+    const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
+    const combined = [
+      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+    ].concat(opts)
+
+    const defaultPreset = presets.find((p) => p._id === user.user?.defaultPreset)
+    if (defaultPreset) {
+      const label = ADAPTER_LABELS[defaultPreset.service!]
+      combined.unshift({
+        label: `[${label}] Your Default Preset`,
+        value: '',
+        custom: true,
+      })
+    }
+    return combined
+  })
+
+  return options
 }
 
 export function useWindowSize(): {
@@ -45,6 +84,16 @@ export type ImageCache = ReturnType<typeof useImageCache>
 type ImageCacheOpts = {
   clean?: boolean
   include?: string[]
+}
+
+export function useRef<T = HTMLElement>() {
+  const [ref, setRef] = createSignal<T | undefined>()
+
+  const onRef = (ele: T) => {
+    setRef(ele as any)
+  }
+
+  return [ref, onRef] as const
 }
 
 export function useCharacterBg(src: 'layout' | 'page') {
@@ -362,6 +411,8 @@ export function useResizeObserver() {
 
   const load = (ref: HTMLElement) => {
     if (!ref) return
+    if (loaded()) return
+
     setLoaded(true)
     obs().observe(ref)
     setSize({ w: ref.clientWidth, h: ref.clientHeight })

@@ -3,7 +3,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
-import { entityUpload, handleForm } from './upload'
+import { entityUpload, entityUploadBase64, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterUpdate } from '../db/characters'
@@ -12,10 +12,14 @@ import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
 import { isObject, tryParse } from '/common/util'
+import { assertStrict } from '/common/valid/validate'
+import { buildModPrompt, fromJsonResponse } from '/common/prompt'
+import { createInferenceStream } from '../adapter/generate'
+import { sendOne } from './ws'
 
 const router = Router()
 
-const characterValidator = {
+const characterForm = {
   name: 'string?',
   description: 'string?',
   appearance: 'string?',
@@ -47,8 +51,20 @@ const characterValidator = {
   characterVersion: 'string?',
 } as const
 
+const characterPost = {
+  ...characterForm,
+  voiceDisabled: 'boolean?',
+  persona: 'any?',
+  voice: 'any?',
+  tags: ['string?'],
+  imageSettings: 'any?',
+  alternateGreetings: ['string?'],
+  extensions: 'any?',
+  insert: 'any?',
+} as const
+
 const newCharacterValidator = {
-  ...characterValidator,
+  ...characterForm,
   name: 'string',
   scenario: 'string',
   greeting: 'string',
@@ -137,9 +153,192 @@ const getCharacters = handle(async ({ userId }) => {
   return { characters: chars }
 })
 
-const editCharacter = handle(async (req) => {
+const publishCharacter = handle(async ({ userId, body, log }, res) => {
+  assertValid(
+    { requestId: 'string?', character: 'any?', characterId: 'any?', imageData: 'string?' },
+    body
+  )
+  const config = await store.admin.getServerConfiguration()
+
+  if (!config.modPresetId) {
+    throw new StatusError(`Mod preset not configured`, 400)
+  }
+
+  const user = await store.users.getUser(userId)
+  if (!user) {
+    throw new StatusError('Not authorized', 401)
+  }
+
+  const settings = await store.presets.getUserPreset(config.modPresetId)
+  if (!settings) {
+    throw new StatusError('Mod preset not found', 400)
+  }
+
+  let character = body.character
+
+  if (body.characterId) {
+    character = await store.characters.getCharacter(userId, body.characterId)
+  }
+
+  if (!character) {
+    throw new StatusError(`Character not provided`, 400)
+  }
+
+  const prompt = buildModPrompt({
+    char: character,
+    prompt: config.modPrompt,
+    fields: config.modFieldPrompt,
+  })
+
+  const requestId = body.requestId || v4()
+
+  const { stream, service } = await createInferenceStream({
+    requestId,
+    jsonSchema: config.modSchema,
+    user,
+    log,
+    prompt,
+    settings,
+    imageData: body.imageData,
+  })
+
+  res.json({ success: true, generating: true, requestId })
+
+  if (user.admin) {
+    sendOne(userId, { type: 'inference-prompt', prompt })
+  }
+
+  let response = ''
+  let partial = ''
+  let output: any = {}
+
+  try {
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        response = gen
+        continue
+      }
+
+      if ('meta' in gen && user.admin) {
+        sendOne(userId, { type: 'inference-meta', meta: gen.meta, requestId })
+      }
+
+      if ('partial' in gen) {
+        partial = gen.partial
+        fromJsonResponse(config.modSchema, gen.partial, output)
+        if (user.admin)
+          sendOne(userId, { type: 'inference-partial', partial, service, requestId, output })
+        continue
+      }
+
+      if ('error' in gen) {
+        sendOne(userId, { type: 'inference-error', partial, error: gen.error, requestId })
+        continue
+      }
+
+      if ('warning' in gen) {
+        sendOne(userId, { type: 'inference-warning', requestId, warning: gen.warning })
+        continue
+      }
+    }
+  } catch (ex: any) {
+    if (ex instanceof StatusError) {
+      sendOne(userId, {
+        type: 'inference-error',
+        partial,
+        error: `[${ex.status}] ${ex.message}`,
+        requestId,
+      })
+    } else {
+      sendOne(userId, { type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
+    }
+  }
+
+  if (!response) return
+  if (user.admin) sendOne(userId, { type: 'inference', requestId, response: response, output })
+
+  let acceptable = true
+  for (const [key, value] of Object.entries(output)) {
+    const def = config.modSchema[key]
+    if (!def) continue
+    if (!def.valid) continue
+
+    switch (def.type) {
+      case 'integer':
+      case 'string':
+        continue
+
+      case 'bool': {
+        const expected = def.valid === 'true'
+        if (value !== expected) acceptable = false
+        continue
+      }
+
+      case 'enum': {
+        const values = def.valid.split(',').map((v) => v.trim())
+        const valid = values.includes((value || '') as string)
+        if (!valid) acceptable = false
+        continue
+      }
+    }
+  }
+
+  sendOne(userId, { type: 'publish-response', acceptable, requestId })
+})
+
+const editPartCharacter = handle(async ({ body, params, userId }) => {
+  const id = params.id
+  assertStrict({ type: characterPost }, body)
+
+  const update: CharacterUpdate = body
+
+  if (update.avatar?.startsWith('data:image/png;base64')) {
+    const filename = await entityUploadBase64('char', id, update.avatar)
+    update.avatar = `${filename}?v=${v4().slice(0, 4)}`
+  }
+
+  if (!Array.isArray(update.alternateGreetings)) {
+    delete update.alternateGreetings
+  }
+
+  if (update.characterBook) {
+    try {
+      assertValid(validBook, update.characterBook)
+    } catch (ex: any) {
+      throw new StatusError(
+        `Could not update character: Character book could not be parsed - ${ex.message}`,
+        400
+      )
+    }
+  }
+
+  if (update.extensions && !isObject(update.extensions)) {
+    throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
+  }
+
+  if (body.imageSettings) {
+    try {
+      update.imageSettings = JSON.parse(body.imageSettings)
+    } catch (ex: any) {
+      throw new StatusError(`Character 'imageSettings' could not be parsed: ${ex.message}`, 400)
+    }
+  }
+
+  if (update.persona) {
+    try {
+      assertValid(personaValidator, update.persona)
+    } catch (ex: any) {
+      throw new StatusError(`Character 'persona' could not be parsed: ${ex.message}`, 400)
+    }
+  }
+
+  const char = await store.characters.partialUpdateCharacter(id, userId, update)
+  return char
+})
+
+const editFullCharacter = handle(async (req) => {
   const id = req.params.id
-  const body = handleForm(req, characterValidator)
+  const body = handleForm(req, characterForm)
 
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
   const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
@@ -289,7 +488,9 @@ router.post('/image', createImage)
 router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
-router.post('/:id', editCharacter)
+router.post('/publish', publishCharacter)
+router.post('/:id/update', editPartCharacter)
+router.post('/:id', editFullCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)
 router.post('/:id/favorite', editCharacterFavorite)

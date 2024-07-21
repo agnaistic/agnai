@@ -26,6 +26,10 @@
   @apply w-14 min-w-[3.5rem] overflow-hidden sm:w-24 sm:min-w-[6rem];
 }
 
+.avatar-max3xl {
+  @apply max-w-[3.5rem] overflow-hidden sm:max-w-[6rem];
+}
+
 .avatar-xs.avatar-circle {
   @apply h-6 min-h-[1.25rem] sm:h-6;
 }
@@ -51,5 +55,9 @@
 }
 
 .avatar-3xl.avatar-circle {
+  @apply h-14 min-h-[3.5rem] sm:h-24 sm:min-h-[6rem];
+}
+
+.avatar-max3xl.avatar-circle {
   @apply h-14 min-h-[3.5rem] sm:h-24 sm:min-h-[6rem];
 }

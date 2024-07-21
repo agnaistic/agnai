@@ -185,11 +185,25 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
       patreonToken: 'string?',
+      announcement: 'string?',
+      defaultPreset: 'string?',
     },
     body
   )
 
   const update: Partial<AppSchema.User> = {}
+
+  if (body.defaultPreset) {
+    const preset = await store.presets.getUserPreset(body.defaultPreset)
+    if (!preset || preset.userId !== userId) {
+      throw new StatusError(`Invalid preset`, 403)
+    }
+    update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.announcement) {
+    update.announcement = body.announcement
+  }
 
   if (body.novelApiKey) {
     await verifyNovelKey(body.novelApiKey)

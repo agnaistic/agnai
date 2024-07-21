@@ -13,6 +13,7 @@ import { markdown } from '/web/shared/markdown'
 import WizardIcon from '/web/icons/WizardIcon'
 import Slot from '/web/shared/Slot'
 import { adaptersToOptions } from '/common/adapters'
+import { useRef } from '/web/shared/hooks'
 
 const enum Sub {
   None,
@@ -22,7 +23,7 @@ const enum Sub {
 }
 
 const HomePage: Component = () => {
-  let ref: any
+  const [ref, onRef] = useRef()
   setComponentPageTitle('Information')
   const [sub, setSub] = createSignal(Sub.None)
 
@@ -50,7 +51,7 @@ const HomePage: Component = () => {
         </div>
       </Show>
 
-      <div class="flex flex-col gap-4 text-lg">
+      <div class="mx-2 flex flex-col gap-4 text-lg sm:mx-3">
         <div
           class="hidden justify-center text-6xl sm:flex"
           role="heading"
@@ -62,8 +63,8 @@ const HomePage: Component = () => {
           </span>
         </div>
 
-        <div class="w-full" ref={ref}>
-          <Slot slot="leaderboard" parent={ref} />
+        <div class="w-full" ref={onRef}>
+          <Slot slot="leaderboard" parent={ref()} />
         </div>
 
         <Show when={cfg.config.patreon}>
@@ -171,7 +172,7 @@ const RecentChats: Component = (props) => {
         Recent Conversations
       </div>
       <div
-        class="grid w-full grid-cols-2 gap-2 sm:grid-cols-4"
+        class="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4"
         classList={{ hidden: state.last.length === 0 }}
       >
         <For each={state.last}>
@@ -188,8 +189,8 @@ const RecentChats: Component = (props) => {
                 <Show when={char?.avatar}>
                   <AvatarIcon
                     noBorder
-                    class="flex items-center justify-center"
-                    format={{ corners: 'md', size: '3xl' }}
+                    class="flex items-center justify-start"
+                    format={{ corners: 'md', size: 'max3xl' }}
                     avatarUrl={getAssetUrl(char?.avatar || '')}
                   />
                 </Show>
@@ -299,10 +300,10 @@ const BorderCard: Component<{ children: any; href: string; ariaLabel?: string }>
 }
 
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
-  let ref: any
+  const [ref, onRef] = useRef()
   return (
     <>
-      <section class="flex flex-col gap-2" aria-labelledby="homeAnnouncements">
+      <section class="flex flex-col gap-4" aria-labelledby="homeAnnouncements">
         <div
           id="homeAnnouncements"
           class="flex items-end font-bold leading-[14px]"
@@ -312,7 +313,7 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
         </div>
         <For each={props.list}>
           {(item, i) => (
-            <div class="rounded-md border-[1px] border-[var(--hl-500)]">
+            <div class="rounded-md border-[1px] border-[var(--hl-700)]">
               <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
                 <div class="text-lg font-bold" role="heading">
                   {item.title}
@@ -326,8 +327,8 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
             </div>
           )}
         </For>
-        <div ref={ref} class="my-1 w-full">
-          <Slot slot="content" parent={ref} />
+        <div ref={onRef} class="my-1 w-full">
+          <Slot slot="content" parent={ref()} />
         </div>
       </section>
     </>

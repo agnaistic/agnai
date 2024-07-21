@@ -15,6 +15,7 @@ import { UISettings } from './ui'
 import { FullSprite } from './sprite'
 import { ModelFormat } from '../presets/templates'
 import * as Saga from './saga'
+import type { JsonProps } from '../prompt'
 
 export type AllDoc =
   | AppSchema.Announcement
@@ -87,6 +88,14 @@ export namespace AppSchema {
 
     maxGuidanceTokens: number
     maxGuidanceVariables: number
+
+    modPresetId: string
+    modPrompt: string
+    modFieldPrompt: string
+    modSchema: JsonProps
+
+    charlibPublish: 'off' | 'users' | 'subscribers' | 'moderators' | 'admins'
+    charlibGuidelines: string
   }
 
   export type ImageModel = {
@@ -102,6 +111,8 @@ export namespace AppSchema {
 
     title: string
     content: string
+
+    location?: 'notification' | 'home'
 
     /** Date ISO string */
     showAt: string
@@ -146,7 +157,7 @@ export namespace AppSchema {
     preset: GenSettings &
       Pick<
         SubscriptionModel,
-        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service'
+        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service' | 'levels'
       > & {
         kind: 'submodel'
       }
@@ -209,12 +220,16 @@ export namespace AppSchema {
 
     updatedAt?: string
 
+    /** Date ISO string of last seen announcement */
+    announcement?: string
+
     kind: 'user'
     username: string
     hash: string
     apiKey?: string
 
     admin: boolean
+    role?: 'moderator' | 'admin'
 
     novelApiKey: string
     novelModel: string
@@ -509,6 +524,12 @@ export namespace AppSchema {
     userId: string
   }
 
+  export interface SubscriptionModelLevel {
+    level: number
+    maxTokens: number
+    maxContextLength: number
+  }
+
   export interface SubscriptionModel extends GenSettings {
     _id: string
     kind: 'subscription-setting'
@@ -523,6 +544,7 @@ export namespace AppSchema {
     deletedAt?: string
     tokenizer?: string
     guidanceCapable?: boolean
+    levels: SubscriptionModelLevel[]
   }
 
   export interface GenSettings {

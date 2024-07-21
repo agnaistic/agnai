@@ -68,8 +68,9 @@ export const unlinkGoogleAccount = handle(async ({ userId }) => {
   if (!user) throw new StatusError('User not found', 404)
 
   if (!user.google?.sub) throw new StatusError('Account not linked with Google', 400)
-  if (user.google.sub === user._id)
+  if (`google_${user.google.sub}` === user.username) {
     throw new StatusError('Account registered using Google - Cannot be unlinked', 400)
+  }
 
   const next = await store.users.updateUser(userId, { google: null as any })
   return { user: next }

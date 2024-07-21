@@ -27,6 +27,31 @@ export function assertValid<T extends Validator>(
   }
 }
 
+/**
+ * @destructive
+ * Removes top-level properties from the object that aren't in the validator
+ */
+export function assertStrict<T extends Validator>(
+  opts: {
+    type: T
+    partial?: boolean
+    error?: string
+  },
+  compare: any
+): asserts compare is UnwrapBody<T> {
+  const { type, partial } = opts
+  const { errors } = validateBody(type, compare, { notThrow: true, partial })
+  if (errors.length) {
+    throw new Error(`${opts.error || 'Request body is invalid'}: ${errors.join(', ')}`)
+  }
+
+  for (const key in compare) {
+    if (key in type === false) {
+      delete compare[key]
+    }
+  }
+}
+
 export function isValidPartial<T extends Validator>(
   type: T,
   compare: any

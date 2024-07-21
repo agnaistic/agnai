@@ -29,7 +29,6 @@ import {
   createSignal,
   JSX,
   Match,
-  onMount,
   Show,
   Switch,
 } from 'solid-js'
@@ -44,27 +43,18 @@ import {
   userStore,
 } from './store'
 import Slot from './shared/Slot'
-import { useEffect, usePaneManager, useResizeObserver, useWindowSize } from './shared/hooks'
+import { useEffect, usePaneManager, useRef, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
-import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
 import Tooltip from './shared/Tooltip'
 import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
+import { Badge } from './shared/Card'
 
 const MobileNavHeader = () => {
-  const user = userStore()
-  const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
-
   return (
     <div class="flex min-h-[2rem] justify-between sm:hidden">
       <div class="w-8"></div>
-      <div>
-        {' '}
-        <span class="w-full text-center text-[1rem]">
-          Agn<span class="text-[var(--hl-500)]">ai</span>
-          {suffix()}
-        </span>
-      </div>
+      <div></div>
       <div class="w-8">
         <div class="icon-button">
           <X onClick={settingStore.menu} />
@@ -228,16 +218,16 @@ const UserNavigation: Component = () => {
           <span aria-hidden="true">Manage</span>
         </Item>
         <SubMenu>
-          <SubItem href="/admin/configuration" parent="/admin/" ariaLabel="Configuration">
+          <SubItem href="/admin/configuration" parent="/" ariaLabel="Configuration">
             Configuration
           </SubItem>
-          <SubItem href="/admin/users" parent="/admin/" ariaLabel="Users">
+          <SubItem href="/admin/users" parent="/" ariaLabel="Users">
             Users
           </SubItem>
-          <SubItem href="/admin/subscriptions" parent="/admin/" ariaLabel="Subscriptions">
+          <SubItem href="/admin/subscriptions" parent="/" ariaLabel="Subscriptions">
             Subscriptions
           </SubItem>
-          <SubItem href="/admin/announcements" parent="/admin/" ariaLabel="Announcements">
+          <SubItem href="/admin/announcements" parent="/" ariaLabel="Announcements">
             Announcements
           </SubItem>
         </SubMenu>
@@ -386,7 +376,7 @@ const NavIcons: Component<{
               >
                 <Bell fill="var(--bg-100)" aria-hidden="true" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
-                  <Badge>{count() > 9 ? '9+' : count()}</Badge>
+                  <Badge type="rose">{count() > 9 ? '9+' : count()}</Badge>
                 </span>
               </div>
             </Match>
@@ -654,12 +644,13 @@ const EndItem: Component<{ children: any }> = (props) => {
 }
 
 const Slots: Component = (props) => {
-  let ref: HTMLDivElement
+  const [ref, onRef] = useRef()
   const state = settingStore()
   const { load } = useResizeObserver()
 
-  onMount(() => {
-    load(ref)
+  createEffect(() => {
+    const ele = ref()
+    if (ele) load(ele)
   })
 
   const [rendered, setRendered] = createSignal(false)
@@ -673,8 +664,8 @@ const Slots: Component = (props) => {
   })
 
   return (
-    <div ref={ref!} class="h-full w-full">
-      <Slot parent={ref!} slot="menu" />
+    <div ref={onRef} class="h-full w-full">
+      <Slot parent={ref()} slot="menu" />
     </div>
   )
 }

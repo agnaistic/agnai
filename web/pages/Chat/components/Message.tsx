@@ -165,6 +165,7 @@ const Message: Component<MessageProps> = (props) => {
               data-user-avatar={isUser}
             >
               <Switch>
+                <Match when={user.ui.avatarSize === 'hide'}>{null}</Match>
                 <Match when={props.msg.event === 'world' || props.msg.event === 'ooc'}>
                   <div
                     class={`avatar-${format().size} flex shrink-0 items-center justify-center pt-3`}

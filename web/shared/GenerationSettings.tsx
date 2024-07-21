@@ -289,6 +289,16 @@ const GeneralSettings: Component<
 
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
+      <Select
+        fieldName="modelFormat"
+        label="Model Prompt Format"
+        helperMarkdown={`Which model's formatting to use if use "universal tags" in your prompt templates
+            (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
+        items={FORMATS}
+        value={props.inherit?.modelFormat || 'Alpaca'}
+        recommend={props.sub?.preset.modelFormat}
+      />
+
       <Show when={props.service === 'horde'}>
         <Card>
           <HordeDetails maxTokens={tokens()} maxContextLength={context()} />
@@ -611,16 +621,6 @@ const PromptSettings: Component<
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <Card class="flex flex-col gap-4">
-          <Select
-            fieldName="modelFormat"
-            label="Model Prompt Format"
-            helperMarkdown={`Which model's formatting to use if use "universal tags" in your prompt templates
-            (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
-            items={FORMATS}
-            value={props.inherit?.modelFormat || 'Alpaca'}
-            hide={useAdvanced() === 'basic'}
-            recommend={props.sub?.preset.modelFormat}
-          />
           <Select
             fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"

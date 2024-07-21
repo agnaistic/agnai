@@ -67,6 +67,13 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
     for (const msg of messages) {
       if (format === 'ollama') {
         const event = parseOllama(incomplete + msg, emitter)
+
+        if (event.error) {
+          const data = JSON.stringify({ error: event.error })
+          emitter.push({ data })
+          continue
+        }
+
         const token = event?.response
         if (!token) continue
 

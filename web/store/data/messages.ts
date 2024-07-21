@@ -5,7 +5,9 @@ import {
   getLinesForPrompt,
   buildPromptParts,
   resolveScenario,
-  JsonType,
+  InferenceState,
+  JsonProps,
+  TickHandler,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -27,8 +29,6 @@ import { embedApi } from '../embeddings'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { settingStore } from '../settings'
 import { subscribe } from '../socket'
-
-export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -62,6 +62,7 @@ export const msgsApi = {
   getActiveTemplateParts,
   getInferencePreset,
   replaceUniversalTags,
+  subscribe: inferenceSubscribe,
 }
 
 type InferenceOpts = {
@@ -69,11 +70,16 @@ type InferenceOpts = {
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
+  jsonSchema?: JsonProps
+
+  /** Base64 image */
+  image?: string
 }
 
 export type StreamCallback = (res: string, state: InferenceState) => any
 
-export async function basicInference({ prompt, settings }: InferenceOpts) {
+export async function basicInference(opts: InferenceOpts) {
+  let { overrides, settings, prompt, image } = opts
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -83,11 +89,18 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
   }
 
   const preset = getInferencePreset(settings)
+  if (preset && overrides) {
+    Object.assign(preset, overrides)
+  }
+
+  prompt = replaceUniversalTags(prompt, preset.modelFormat)
 
   const res = await api.method<{ response: string; meta: any }>('post', `/chat/inference`, {
     requestId,
     user,
     prompt,
+    imageData: image,
+    jsonSchema: opts.jsonSchema,
     settings: { ...preset, stream: false },
   })
 
@@ -98,7 +111,7 @@ export async function inferenceStream(
   opts: InferenceOpts,
   onTick: (msg: string, state: InferenceState) => any
 ) {
-  const { overrides, settings, prompt } = opts
+  let { overrides, settings, prompt } = opts
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -113,7 +126,9 @@ export async function inferenceStream(
     Object.assign(preset, overrides)
   }
 
-  inferenceCallback.set(requestId, onTick)
+  prompt = replaceUniversalTags(prompt, preset.modelFormat)
+
+  inferenceCallbacks.set(requestId, onTick)
 
   const res = await api.method<{ requestId: string; generating: boolean }>(
     'post',
@@ -122,7 +137,9 @@ export async function inferenceStream(
       requestId,
       user,
       prompt,
-      settings: { ...preset, stream: false },
+      imageData: opts.image,
+      jsonSchema: opts.jsonSchema,
+      settings: { ...preset, stream: true },
     }
   )
 
@@ -131,7 +148,7 @@ export async function inferenceStream(
   }
 
   if (!res.result?.generating) {
-    inferenceCallback.delete(requestId)
+    inferenceCallbacks.delete(requestId)
   }
 }
 
@@ -286,9 +303,12 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string; schema?: Record<string, JsonType> }
+  | { kind: 'chat-query'; text: string; schema?: JsonProps }
 
-export async function generateResponse(opts: GenerateOpts) {
+export async function generateResponse(
+  opts: GenerateOpts,
+  onTick?: (msg: string, state: InferenceState) => any
+) {
   const { active } = chatStore.getState()
 
   if (!active) {
@@ -373,7 +393,20 @@ export async function generateResponse(opts: GenerateOpts) {
     `/chat/${entities.chat._id}/generate`,
     request
   )
+
+  if (res.result && onTick) {
+    inferenceCallbacks.set(request.requestId, onTick)
+  }
+
   return res
+}
+
+export function inferenceSubscribe<T = any>(requestId: string, handler: TickHandler<T>) {
+  inferenceCallbacks.set(requestId, handler)
+
+  setTimeout(() => {
+    inferenceCallbacks.delete(requestId)
+  }, 60000 * 5)
 }
 
 async function getActiveTemplateParts() {
@@ -1025,34 +1058,70 @@ function getMessageParent(
   }
 }
 
-const inferenceCallback = new Map<string, (response: string, state: InferenceState) => void>()
+const inferenceCallbacks = new Map<string, TickHandler>()
 
-subscribe('inference-partial', { partial: 'string', requestId: 'string' }, (body) => {
-  const cb = inferenceCallback.get(body.requestId)
+/**
+ * Partials
+ */
+subscribe(
+  'inference-partial',
+  { partial: 'string', requestId: 'string', output: 'any?' },
+  (body) => {
+    const cb = inferenceCallbacks.get(body.requestId)
+    if (!cb) return
+
+    cb(body.partial, 'partial', body.output)
+  }
+)
+
+subscribe('message-partial', { requestId: 'string', partial: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.partial, 'partial')
 })
 
-subscribe('inference', { requestId: 'string', response: 'string' }, (body) => {
-  const cb = inferenceCallback.get(body.requestId)
+/**
+ * Completions
+ */
+subscribe('inference', { requestId: 'string', response: 'string', output: 'any?' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
+  if (!cb) return
+
+  cb(body.response, 'done', body.output)
+  inferenceCallbacks.delete(body.requestId)
+})
+
+subscribe('message-created', { requestId: 'string', msg: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
+  if (!cb) return
+
+  cb(body.msg, 'done')
+  inferenceCallbacks.delete(body.requestId)
+})
+
+subscribe('chat-query', { requestId: 'string', response: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.response, 'done')
-  inferenceCallback.delete(body.requestId)
+  inferenceCallbacks.delete(body.requestId)
 })
 
-subscribe('inference-error', { requestId: 'string', error: 'string' }, (body) => {
-  const cb = inferenceCallback.get(body.requestId)
+/**
+ * Errors
+ */
+subscribe('message-error', { requestId: 'string', error: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.error, 'error')
-  inferenceCallback.delete(body.requestId)
+  inferenceCallbacks.delete(body.requestId)
   toastStore.error(`Inference failed: ${body.error}`)
 })
 
 subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body) => {
-  const cb = inferenceCallback.get(body.requestId)
+  const cb = inferenceCallbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.warning, 'warning')

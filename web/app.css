@@ -112,3 +112,23 @@
   max-height: 50vh;
   max-height: 50svh;
 }
+
+.input-buttons {
+  position: relative;
+  display: inline-block;
+}
+
+.input-buttons input {
+  padding-right: 40px;
+}
+
+.input-buttons button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  top: 50%;
+  transform: translateY(-50%);
+}

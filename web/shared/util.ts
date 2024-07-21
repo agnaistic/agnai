@@ -12,6 +12,21 @@ const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
 
+type ChanceArg<T extends keyof Chance.Chance> = Chance.Chance[T] extends (arg: infer U) => any
+  ? U
+  : never
+
+export async function random<T extends keyof Chance.Chance>(kind: T, opts: ChanceArg<T>) {
+  const Chance = await import('chance').then((mod) => new mod.Chance())
+
+  const func: any = Chance[kind]
+  if (typeof func === 'function') {
+    return func.call(Chance, opts)
+  }
+
+  return ''
+}
+
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {
   const output = encodeURIComponent(
     typeof content === 'string' ? content : JSON.stringify(content, null, 2)
@@ -165,6 +180,9 @@ export function getAssetUrl(filename: string) {
 
 export function setAssetPrefix(prefix: string) {
   if (!prefix && assetPrefix) return
+  if (!prefix.startsWith('http')) {
+    prefix = `https://${prefix}`
+  }
 
   storage.localSetItem(PREFIX_CACHE_KEY, prefix)
   assetPrefix = prefix

@@ -200,7 +200,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   <div class="flex justify-center text-sm font-bold">
                     Your account is Linked to Google
                   </div>
-                  <Show when={state.user?._id !== state.user?.google?.sub}>
+                  <Show when={state.user?.username !== `google_${state.user?.google?.sub}`}>
                     <div class="flex justify-center">
                       <Button
                         class="justify-center"
