@@ -426,14 +426,6 @@ export const CreateCharacterForm: Component<{
                 <HelpCircle size={16} /> AI Character Generation
               </Button>
               <Card>
-                {/* <TextInput
-                  fieldName="name"
-                  required
-                  label="Character Name"
-                  placeholder=""
-                  value={editor.state.name}
-                  tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
-                /> */}
                 <ButtonInput
                   fieldName="name"
                   required
