@@ -122,11 +122,7 @@ export async function generateImageAsync(
 
   if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
     try {
-      const { text: image } = await horde.generateImage(
-        user,
-        prompt,
-        user.images?.negative || horde.defaults.image.negative
-      )
+      const { text: image } = await horde.generateImage(user, prompt, user.images?.negative || '')
 
       const file = await dataURLtoFile(image)
       const data = await getImageData(file)

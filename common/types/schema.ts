@@ -267,6 +267,7 @@ export namespace AppSchema {
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
     defaultPreset?: string
+    chargenPreset?: string
 
     createdAt?: string
 
