@@ -180,9 +180,9 @@ export function getAssetUrl(filename: string) {
 
 export function setAssetPrefix(prefix: string) {
   if (!prefix && assetPrefix) return
-  if (!prefix.startsWith('http')) {
-    prefix = `https://${prefix}`
-  }
+  // if (!prefix.startsWith('http')) {
+  //   prefix = `https://${prefix}`
+  // }
 
   storage.localSetItem(PREFIX_CACHE_KEY, prefix)
   assetPrefix = prefix
@@ -903,7 +903,7 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby', 'ollama'],
+  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby', 'ollama', 'vllm'],
   thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'openai', 'openai-chat'],
 
   claudeModel: ['claude'],

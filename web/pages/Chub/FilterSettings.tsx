@@ -18,6 +18,8 @@ const sorts = [
 
 const FilterSettings: Component = () => {
   const state = chubStore()
+  // const [include, setInclude] = createSignal<string[]>([])
+  // const [exclude, setExclude] = createSignal<string[]>([])
 
   const update = () => {
     chubStore.setPage(1)
@@ -25,8 +27,32 @@ const FilterSettings: Component = () => {
     chubStore.getBooks()
   }
 
+  // const available = createMemo(() => {
+  //   const inc = new Set(include())
+  //   const exc = new Set(exclude())
+
+  //   return state.officialTags
+  //     .filter((tag) => !inc.has(tag.name) && !exc.has(tag.name))
+  //     .map((t) => ({
+  //       label: `${t.name} (${t.non_private_projects_count})`,
+  //       value: t.name,
+  //     }))
+  // })
+
+  // createEffect(() => {
+  //   const includes = include()
+  //   chubStore.setTags(includes.join(','))
+  //   update()
+  // })
+
+  // createEffect(() => {
+  //   const excludes = exclude()
+  //   chubStore.setExcludeTags(excludes.join(','))
+  //   update()
+  // })
+
   return (
-    <>
+    <div class="relative flex flex-col gap-2">
       <Toggle
         fieldName="nsfw"
         label="NSFW"
@@ -37,6 +63,23 @@ const FilterSettings: Component = () => {
           update()
         }}
       />
+
+      {/* <TagInput
+        label="Includes"
+        helperText="Tags to include from search"
+        availableTags={available()}
+        onSelect={setInclude}
+        fieldName="chub_includes"
+      />
+
+      <TagInput
+        label="Excludes"
+        helperText="Tags to exclude from search"
+        availableTags={available()}
+        onSelect={setExclude}
+        fieldName="chub_excludes"
+      /> */}
+
       <TextInput
         fieldName="tags"
         label="Query Tags"
@@ -58,6 +101,7 @@ const FilterSettings: Component = () => {
           update()
         }}
       />
+
       <Select
         fieldName="sort"
         label="Sort By"
@@ -68,7 +112,7 @@ const FilterSettings: Component = () => {
           update()
         }}
       />
-    </>
+    </div>
   )
 }
 

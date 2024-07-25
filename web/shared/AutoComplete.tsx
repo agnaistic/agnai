@@ -77,7 +77,7 @@ export const AutoComplete: Component<{
 
   return (
     <ul
-      class="bg-900 absolute left-0 flex max-h-40 w-56 flex-col gap-[2px] overflow-y-auto rounded-md border-[1px] border-[var(--bg-700)]"
+      class="bg-900 absolute left-0 z-50 flex max-h-40 w-56 flex-col gap-[2px] overflow-y-auto rounded-md border-[1px] border-[var(--bg-700)]"
       classList={{ 'flex-col-reverse': props.dir === 'up' }}
       style={{
         [props.dir === 'up' ? 'bottom' : 'top']: `${props.offset ?? 44}px`,

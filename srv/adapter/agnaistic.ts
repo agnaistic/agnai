@@ -8,7 +8,7 @@ import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
 import { handleGooseAI } from './goose'
 import { handleHorde } from './horde'
-import { handleKobold } from './kobold'
+import { handleThirdParty } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
 import { handleOAI } from './openai'
@@ -200,7 +200,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     if (subPreset.service === 'kobold' && subPreset.thirdPartyFormat === 'llamacpp') {
       opts.gen.service = 'kobold'
-      handler = handleKobold
+      handler = handleThirdParty
     }
 
     if (subPreset.service === 'goose') {
@@ -364,8 +364,8 @@ export async function updateRegisteredSubs() {
 
 export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   novel: handleNovel,
-  kobold: handleKobold,
-  ooba: handleKobold,
+  kobold: handleThirdParty,
+  ooba: handleThirdParty,
   horde: handleHorde,
   openai: handleOAI,
   scale: handleScale,

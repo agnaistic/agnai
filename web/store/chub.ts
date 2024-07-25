@@ -1,11 +1,19 @@
-import { ChubItem } from '../pages/Chub/ChubItem'
+import { ChubItem as ChubEntity } from '../pages/Chub/ChubItem'
+import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { createStore } from './create'
 
-type ChubItem = {
+export type ChubEntity = {
   name: string
   description: string
   fullPath: string
   tagline?: string
+  topics: string[]
+
+  nChats: number
+  nMessages: number
+  rating: number
+  ratingCount: number
+  starCount: number
 }
 
 type ChubState = {
@@ -14,37 +22,56 @@ type ChubState = {
   excludeTags: string
   sort: string
   search: string
-  chars: ChubItem[]
-  books: ChubItem[]
+  chars: ChubEntity[]
+  books: ChubEntity[]
   page: number
   booksLoading: boolean
   charsLoading: boolean
+  officialTags: ChubTag[]
+}
+
+type ChubTag = {
+  id: number
+  name: string
+  non_private_projects_count: number
+  followers_count: number
+  title: string
 }
 
 export const CHUB_URL = `https://api.chub.ai/api`
 
 const initState: ChubState = {
-  nsfw: false,
+  nsfw: getStoredValue('chub-nsfw', false),
   tags: '',
   excludeTags: '',
-  sort: 'Creation Date',
+  sort: getStoredValue('chub-sort', 'Creation Date'),
   search: '',
   chars: [],
   books: [],
   page: 1,
   booksLoading: false,
   charsLoading: false,
+  officialTags: getStoredValue('chub-tags', []),
 }
 
 export const chubStore = createStore<ChubState>(
   'chub',
   initState
-)((_) => {
+)((_, setState) => {
+  fetch('https://api.chub.ai/tags')
+    .then((res) => res.json())
+    .then((result) => {
+      setStoredValue('chub-tags', result.tags)
+      setState({ officialTags: result.tags })
+    })
+    .catch(() => null)
+
   return {
     setSearch(_, query: string) {
       return { search: query }
     },
     setNSFW(_, nsfw: boolean) {
+      setStoredValue('chub-nsfw', nsfw)
       return { nsfw }
     },
     setTags(_, tags: string) {
@@ -54,12 +81,15 @@ export const chubStore = createStore<ChubState>(
       return { excludeTags: tags }
     },
     setSort(_, sort: string) {
+      setStoredValue('chub-sort', sort)
       return { sort }
     },
     setPage(_, page: number) {
       return { page }
     },
     async *getBooks(state) {
+      if (state.booksLoading) return
+
       const { nsfw, tags, sort, excludeTags, search, page } = state
       yield { booksLoading: true }
       const res = await fetch(
@@ -73,6 +103,8 @@ export const chubStore = createStore<ChubState>(
       yield { books: json.nodes }
     },
     async *getChars(state) {
+      if (state.charsLoading) return
+
       const { search, page, tags, excludeTags, nsfw, sort } = state
       yield { charsLoading: true }
       const res = await fetch(

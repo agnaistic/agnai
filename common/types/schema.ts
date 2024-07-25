@@ -4,17 +4,17 @@ import type {
   HordeModel,
   HordeWorker,
   OpenRouterModel,
-  PersonaFormat,
   RegisteredAdapter,
   ThirdPartyFormat,
 } from '../adapters'
+import * as Memory from './memory'
 import type { GenerationPreset } from '../presets'
 import type { BaseImageSettings, ImageSettings } from './image-schema'
-import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
-import { UISettings } from './ui'
-import { FullSprite } from './sprite'
-import { ModelFormat } from '../presets/templates'
+import type { TTSSettings } from './texttospeech-schema'
+import type { UISettings } from './ui'
 import * as Saga from './saga'
+import * as Library from './library'
+import * as Preset from './presets'
 import type { JsonProps } from '../prompt'
 
 export type AllDoc =
@@ -43,6 +43,23 @@ export type OAuthScope = keyof typeof oauthScopes
 export const oauthScopes = ['characters', 'chats', 'presets', 'profile'] as const
 
 export namespace AppSchema {
+  export type MemoryBook = Memory.MemoryBook
+  export type MemoryEntry = Memory.MemoryEntry
+
+  export type Persona = Library.Persona
+  export type BaseCharacter = Library.BaseCharacter
+  export type Character = Library.Character
+
+  export type GenSettings = Preset.GenSettings
+  export type UserGenPreset = Preset.UserGenPreset
+  export type PromptTemplate = Preset.PromptTemplate
+
+  export type SubscriptionTier = Preset.SubscriptionTier
+  export type SubscriptionModel = Preset.SubscriptionModel
+  export type SubscriptionModelOption = Preset.SubscriptionModelOption
+  export type SubscriptionModelLevel = Preset.SubscriptionModelLevel
+  export type SubscriptionType = 'native' | 'patreon' | 'manual'
+
   export interface Configuration {
     kind: 'configuration'
 
@@ -123,46 +140,6 @@ export namespace AppSchema {
     deletedAt?: string
   }
 
-  export interface SubscriptionTier {
-    kind: 'subscription-tier'
-    _id: string
-
-    productId: string
-    priceId: string
-    patreon?: {
-      tierId: string
-      cost: number
-    }
-    apiAccess: boolean
-    guidanceAccess: boolean
-    imagesAccess: boolean
-
-    name: string
-    description: string
-    cost: number
-    level: number
-    enabled: boolean
-    disableSlots?: boolean
-    createdAt: string
-    deletedAt?: string
-    updatedAt: string
-  }
-
-  export interface SubscriptionModelOption {
-    _id: string
-    name: string
-    level: number
-    service: AIAdapter
-    guidance: boolean
-    preset: GenSettings &
-      Pick<
-        SubscriptionModel,
-        'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service' | 'levels'
-      > & {
-        kind: 'submodel'
-      }
-  }
-
   export interface AppConfig {
     adapters: AIAdapter[]
     version: string
@@ -212,8 +189,6 @@ export namespace AppSchema {
     handle: string
     avatar?: string
   }
-
-  export type SubscriptionType = 'native' | 'patreon' | 'manual'
 
   export interface User {
     _id: string
@@ -438,60 +413,6 @@ export namespace AppSchema {
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
 
-  /** Description of the character or user */
-  export type Persona =
-    | {
-        kind: PersonaFormat
-        attributes: { [key: string]: string[] }
-      }
-    | { kind: 'text'; attributes: { text: [string] } }
-
-  export interface BaseCharacter {
-    _id: string
-    name: string
-    description?: string
-    appearance?: string
-    avatar?: string
-    persona: Persona
-    greeting: string
-    scenario: string
-    sampleChat: string
-  }
-
-  export interface Character extends BaseCharacter {
-    kind: 'character'
-    userId: string
-
-    culture?: string
-    tags?: string[]
-
-    visualType?: string
-    sprite?: FullSprite
-
-    createdAt: string
-    updatedAt: string
-    deletedAt?: string
-
-    favorite?: boolean
-
-    voice?: VoiceSettings
-    voiceDisabled?: boolean
-
-    image?: ImageSettings
-
-    // v2 stuff
-    alternateGreetings?: string[]
-    characterBook?: MemoryBook
-    extensions?: Record<string, any>
-    systemPrompt?: string
-    postHistoryInstructions?: string
-    insert?: { depth: number; prompt: string }
-    creator?: string
-    characterVersion?: string
-    folder?: string
-    imageSettings?: BaseImageSettings
-  }
-
   export interface ChatInvite {
     _id: string
     kind: 'chat-invite'
@@ -517,187 +438,6 @@ export namespace AppSchema {
 
     /** We return this top the caller requesting a lock. It is used to ensure the lock is valid during a transaction. */
     lockId: string
-  }
-
-  export interface UserGenPreset extends GenSettings {
-    _id: string
-    kind: 'gen-setting'
-    userId: string
-  }
-
-  export interface SubscriptionModelLevel {
-    level: number
-    maxTokens: number
-    maxContextLength: number
-  }
-
-  export interface SubscriptionModel extends GenSettings {
-    _id: string
-    kind: 'subscription-setting'
-    subLevel: number
-    subModel: string
-    subApiKey: string
-    subApiKeySet?: boolean
-    subServiceUrl?: string
-    subDisabled: boolean
-    allowGuestUsage?: boolean
-    isDefaultSub?: boolean
-    deletedAt?: string
-    tokenizer?: string
-    guidanceCapable?: boolean
-    levels: SubscriptionModelLevel[]
-  }
-
-  export interface GenSettings {
-    name: string
-    service?: AIAdapter
-
-    temp: number
-    tempLast?: boolean
-    dynatemp_range?: number
-    dynatemp_exponent?: number
-    smoothingFactor?: number
-    smoothingCurve?: number
-    maxTokens: number
-    maxContextLength?: number
-    repetitionPenalty: number
-    repetitionPenaltyRange: number
-    repetitionPenaltySlope: number
-    typicalP: number
-    minP?: number
-    topP: number
-    topK: number
-    topA: number
-    mirostatTau?: number
-    mirostatLR?: number
-    tailFreeSampling: number
-    encoderRepitionPenalty?: number
-    doSample?: boolean
-    penaltyAlpha?: number
-    numBeams?: number
-
-    addBosToken?: boolean
-    banEosToken?: boolean
-    tokenHealing?: boolean
-
-    earlyStopping?: boolean
-    stopSequences?: string[]
-    trimStop?: boolean
-    etaCutoff?: number
-    epsilonCutoff?: number
-    swipesPerGeneration?: number
-    mirostatToggle?: boolean
-
-    order?: number[]
-    disabledSamplers?: number[]
-
-    skipSpecialTokens?: boolean
-
-    phraseBias?: Array<{ bias: number; seq: string }>
-    phraseRepPenalty?: string
-    cfgScale?: number
-    cfgOppose?: string
-
-    systemPrompt?: string
-    ignoreCharacterSystemPrompt?: boolean
-    gaslight?: string
-    promptTemplateId?: string
-    modelFormat?: ModelFormat
-    useAdvancedPrompt?: 'basic' | 'validate' | 'no-validation'
-    promptOrderFormat?: string
-    promptOrder?: Array<{ placeholder: string; enabled: boolean }>
-    ultimeJailbreak?: string
-    prefixNameAppend?: boolean
-    prefill?: string
-    ignoreCharacterUjb?: boolean
-    antiBond?: boolean
-
-    frequencyPenalty?: number
-    presencePenalty?: number
-    oaiModel?: string
-    novelModel?: string
-    claudeModel?: string
-    mistralModel?: string
-    openRouterModel?: OpenRouterModel
-
-    thirdPartyUrl?: string
-    thirdPartyFormat?: ThirdPartyFormat
-    thirdPartyUrlNoSuffix?: boolean
-    thirdPartyModel?: string
-    thirdPartyKey?: string
-
-    replicateModelName?: string
-    replicateModelType?: string
-    replicateModelVersion?: string
-
-    streamResponse?: boolean
-
-    memoryDepth?: number
-    memoryContextLimit?: number
-    memoryReverseWeight?: boolean
-    memoryChatEmbedLimit?: number
-    memoryUserEmbedLimit?: number
-
-    src?: string
-
-    imageSettings?: BaseImageSettings
-
-    temporary?: Record<string, any>
-    registered?: { [key in AIAdapter]?: Record<string, any> }
-
-    updatedAt?: string
-  }
-
-  export interface PromptTemplate {
-    kind: 'prompt-template'
-    _id: string
-    name: string
-    template: string
-    userId: string
-    public?: boolean
-    createdAt: string
-    updatedAt: string
-  }
-
-  export interface MemoryBook {
-    kind: 'memory'
-    _id: string
-    name: string
-    description?: string
-    userId: string
-    entries: MemoryEntry[]
-
-    // currently unsupported V2 fields which are here so that we don't destroy them
-    scanDepth?: number
-    tokenBudget?: number
-    recursiveScanning?: boolean
-    extensions?: Record<string, any>
-  }
-
-  export interface MemoryEntry {
-    name: string
-
-    /** The text injected into the prompt */
-    entry: string
-
-    /** Keywords that trigger the entry to be injected */
-    keywords: string[]
-
-    /** When choosing which memories to discard, lowest priority will be discarded first */
-    priority: number
-
-    /** When determining what order to render the memories, the highest will be at the bottom  */
-    weight: number
-
-    enabled: boolean
-
-    // currently unsupported V2 fields which are here so that we don't destroy them
-    id?: number
-    comment?: string
-    selective?: boolean
-    secondaryKeys?: Array<string>
-    constant?: boolean
-    position?: 'before_char' | 'after_char'
   }
 
   export interface ScenarioBook {

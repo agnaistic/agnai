@@ -33,10 +33,11 @@ const base = {
   use_world_info: false,
 }
 
-export const handleKobold: ModelAdapter = async function* (opts) {
+export const handleThirdParty: ModelAdapter = async function* (opts) {
   const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'vllm' ||
     opts.gen.thirdPartyFormat === 'ollama' ||
     opts.gen.thirdPartyFormat === 'ooba' ||
     opts.gen.thirdPartyFormat === 'mistral' ||
@@ -131,13 +132,21 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'llamacpp':
       return llamaStream(baseURL, body)
 
+    case 'vllm': {
+      const url = body.messages ? `${baseURL}/v1/chat/completions` : `${baseURL}/v1/completions`
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
+
     case 'ooba':
     case 'aphrodite':
-    case 'tabby':
+    case 'tabby': {
       const url = `${baseURL}/v1/completions`
       return opts.gen.streamResponse
         ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
         : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
 
     case 'exllamav2': {
       const stream = await websocketStream({ url: baseURL, body })
@@ -195,6 +204,12 @@ async function getHeaders(opts: AdapterProps) {
       break
     }
 
+    case 'vllm': {
+      const apiKey = opts.guest ? password : decryptText(password)
+      headers['Authorization'] = `Bearer ${apiKey}`
+      headers['Accept'] = 'application/json'
+      break
+    }
     case 'tabby': {
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`
