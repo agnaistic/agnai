@@ -62,6 +62,7 @@ export interface SubscriptionModel extends GenSettings {
   deletedAt?: string
   tokenizer?: string
   guidanceCapable?: boolean
+  jsonSchemaCapable?: boolean
   levels: SubscriptionModelLevel[]
 }
 

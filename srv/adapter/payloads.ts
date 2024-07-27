@@ -104,20 +104,15 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
       temperature: gen.temp ?? 0.5,
       max_tokens: gen.maxTokens ?? 200,
-      best_of: gen.swipesPerGeneration,
 
       top_p: gen.topP ?? 1,
       min_p: gen.minP,
       top_k: gen.topK! < 1 ? -1 : gen.topK,
-      top_a: gen.topA,
       stop: getStoppingStrings(opts, stops),
       ignore_eos: gen.banEosToken,
 
-      tfs: gen.tailFreeSampling,
-      typical_p: gen.typicalP,
-
       repetition_penalty: gen.repetitionPenalty,
-      presence_penality: gen.presencePenalty ?? 0,
+      presence_penalty: gen.presencePenalty ?? 0,
       frequency_penalty: gen.frequencyPenalty ?? 0,
     }
 

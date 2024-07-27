@@ -10,6 +10,8 @@ export function promptOrderToTemplate(
   if (preamble) parts.push(preamble)
 
   for (const item of order) {
+    if (!item.enabled) continue
+
     const text = getOrderHolder(format, item.placeholder)
     if (text) {
       parts.push(text)
