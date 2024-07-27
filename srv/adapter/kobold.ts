@@ -3,7 +3,7 @@ import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { AdapterProps, ModelAdapter } from './type'
-import { requestStream, websocketStream } from './stream'
+import { requestStream } from './stream'
 import { llamaStream } from './dispatch'
 import { getStoppingStrings } from './prompt'
 import { ThirdPartyFormat } from '/common/adapters'
@@ -33,10 +33,11 @@ const base = {
   use_world_info: false,
 }
 
-export const handleKobold: ModelAdapter = async function* (opts) {
+export const handleThirdParty: ModelAdapter = async function* (opts) {
   const { members, characters, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'vllm' ||
     opts.gen.thirdPartyFormat === 'ollama' ||
     opts.gen.thirdPartyFormat === 'ooba' ||
     opts.gen.thirdPartyFormat === 'mistral' ||
@@ -75,7 +76,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   yield { prompt: body.prompt }
 
   logger.debug(`Prompt:\n${body.prompt}`)
-  logger.debug({ ...body, prompt: null, images: null }, '3rd-party payload')
+  logger.debug({ ...body, prompt: null, images: null, messages: null }, '3rd-party payload')
 
   const stream = await dispatch(opts, body)
 
@@ -131,17 +132,30 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'llamacpp':
       return llamaStream(baseURL, body)
 
-    case 'ooba':
-    case 'aphrodite':
-    case 'tabby':
-      const url = `${baseURL}/v1/completions`
+    case 'vllm': {
+      const url = opts.gen.thirdPartyUrlNoSuffix
+        ? baseURL
+        : body.messages
+        ? `${baseURL}/v1/chat/completions`
+        : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
         ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
         : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
+
+    case 'ooba':
+    case 'aphrodite':
+    case 'tabby': {
+      const url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/completions`
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
 
     case 'exllamav2': {
-      const stream = await websocketStream({ url: baseURL, body })
-      return stream
+      return opts.gen.streamResponse
+        ? streamCompletion(baseURL, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(baseURL, body, headers, opts.gen.thirdPartyFormat, opts.log)
     }
 
     case 'mistral': {
@@ -195,6 +209,12 @@ async function getHeaders(opts: AdapterProps) {
       break
     }
 
+    case 'vllm': {
+      const apiKey = opts.guest ? password : decryptText(password)
+      headers['Authorization'] = `Bearer ${apiKey}`
+      headers['Accept'] = 'application/json'
+      break
+    }
     case 'tabby': {
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`

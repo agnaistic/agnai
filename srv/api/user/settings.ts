@@ -168,6 +168,7 @@ const validConfig = {
   texttospeech: 'any?',
   images: 'any?',
   defaultPreset: 'string?',
+  chargenPreset: 'string?',
   adapterConfig: 'any?',
 } as const
 
@@ -187,6 +188,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       patreonToken: 'string?',
       announcement: 'string?',
       defaultPreset: 'string?',
+      chargenPreset: 'string?',
     },
     body
   )
@@ -199,6 +201,14 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       throw new StatusError(`Invalid preset`, 403)
     }
     update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.chargenPreset) {
+    const preset = await store.presets.getUserPreset(body.chargenPreset)
+    if (!preset || preset.userId !== userId) {
+      throw new StatusError(`Invalid preset`, 403)
+    }
+    update.chargenPreset = body.chargenPreset
   }
 
   if (body.announcement) {

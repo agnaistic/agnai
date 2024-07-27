@@ -761,8 +761,8 @@ export const CreateCharacterForm: Component<{
         >
           <sub>This preset used for character generation</sub>
           <ModeGenSettings
-            presetId={user.user?.defaultPreset}
-            onPresetChanged={(id) => userStore.updatePartialConfig({ defaultPreset: id })}
+            presetId={user.user?.chargenPreset || user.user?.defaultPreset}
+            onPresetChanged={(id) => userStore.updatePartialConfig({ chargenPreset: id })}
             close={() => setOpenPreset(false)}
             hideTabs={['Memory', 'Prompt']}
             footer={setPresetFooter}
@@ -788,8 +788,14 @@ const Regenerate: Component<{
           <Button
             size="sm"
             class="inline-block"
-            onClick={() => props.editor.generateField(props.field, props.trait)}
-            disabled={props.editor.generating() || !props.editor.canGenerate()}
+            onClick={() => {
+              if (!props.editor.canGenerate()) {
+                toastStore.warn(`Fill in the Name and Description to generate`)
+                return
+              }
+              props.editor.generateField(props.field, props.trait)
+            }}
+            disabled={props.editor.generating()}
           >
             <WandSparkles size={16} />
           </Button>

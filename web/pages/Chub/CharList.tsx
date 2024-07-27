@@ -23,6 +23,7 @@ const CharList: Component<{
         <For each={state.chars.slice(48 * (state.page - 1))}>
           {(char) => (
             <ChubItem
+              entity={char}
               loading={props.loading}
               name={char.name}
               fullPath={char.fullPath}

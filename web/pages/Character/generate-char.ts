@@ -1,6 +1,7 @@
 import { AppSchema } from '/common/types'
 import { neat } from '/common/util'
-import { toastStore } from '/web/store'
+import { getUserPreset } from '/web/shared/adapter'
+import { toastStore, userStore } from '/web/store'
 import { msgsApi, replaceUniversalTags, StreamCallback } from '/web/store/data/messages'
 
 type MinCharacter = Pick<
@@ -90,7 +91,14 @@ export async function generateField(opts: {
 
   const prompt = replaceUniversalTags(template)
 
-  msgsApi.inferenceStream({ prompt, overrides: { stopSequences: ['\n', '###', '<|'] } }, tick)
+  const { user } = userStore.getState()
+
+  const settings = getUserPreset(user?.chargenPreset || user?.defaultPreset)
+
+  msgsApi.inferenceStream(
+    { prompt, overrides: { stopSequences: ['\n', '###', '<|'] }, settings },
+    tick
+  )
 }
 
 function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string) {

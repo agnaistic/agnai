@@ -166,6 +166,7 @@ export const SubscriptionModel: Component = () => {
       allowGuestUsage: 'boolean',
       tokenizer: 'string?',
       guidanceCapable: 'boolean?',
+      jsonSchemaCapable: 'boolean?',
     } as const
 
     const presetData = getPresetFormData(ref)
@@ -294,6 +295,12 @@ export const SubscriptionModel: Component = () => {
                         value={editing()?.subServiceUrl}
                         required
                         parentClass="mb-2"
+                      />
+
+                      <Toggle
+                        fieldName="jsonSchemaCapable"
+                        label="JSON Schema Capable"
+                        value={editing()?.jsonSchemaCapable}
                       />
 
                       <Toggle

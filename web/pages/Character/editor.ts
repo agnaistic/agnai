@@ -501,6 +501,9 @@ async function generateAvatar(description: string) {
     return toastStore.error(`Image generation settings missing`)
   }
 
+  // const image = await imageApi.generateImageAsync(description)
+  // return image
+
   return new Promise<File>((resolve, reject) => {
     characterStore.generateAvatar(user, description, (err, image) => {
       if (image) return resolve(image)

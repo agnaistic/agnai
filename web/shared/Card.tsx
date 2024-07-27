@@ -2,7 +2,7 @@ import { Component, JSX, Show, createMemo } from 'solid-js'
 import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
-import { getAsCssVar, getSettingColor } from './colors'
+import { getAsCssVar, getRgbaFromVar, getSettingColor } from './colors'
 
 type Size = 'sm' | 'md' | 'lg'
 
@@ -176,6 +176,8 @@ export const Pill: Component<{
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
   corners?: { l?: boolean; r?: boolean }
+  class?: string
+  opacity?: number
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
 
@@ -191,8 +193,10 @@ export const Pill: Component<{
       text = 800
     }
 
+    const rgba = getRgbaFromVar(`--${type}-${base + mod}`, props.opacity ?? 1)
+
     return {
-      'background-color': `var(--${type}-${base + mod})`,
+      'background-color': rgba.background || '',
       'border-color': `var(--${type}-${base})`,
       color: `var(--text-${text})`,
     }
@@ -200,17 +204,19 @@ export const Pill: Component<{
 
   return (
     <span
-      class={`flex items-center border-[1px] px-2 py-1 text-sm`}
+      class={`flex items-center border-[1px] px-2 py-1 ${props.class || ''}`}
       style={bg()}
       onClick={props.onClick}
       classList={{
+        'px-2': !props.class?.includes('px-'),
         'border-[1px]': !props.small,
         'border-0': props.small,
         'cursor-pointer': !!props.onClick,
-        'py-1': !props.small,
-        'py-[2px]': props.small,
+        'py-1': !props.class?.includes('py-') && !props.small,
+        'py-[2px]': !props.class?.includes('py-') && props.small,
         'rounded-l-md': props.corners?.l !== false,
         'rounded-r-md': props.corners?.r !== false,
+        'text-sm': !props.class?.includes('text'),
       }}
       role={props.ariaRole}
       aria-label={props.ariaLabel}

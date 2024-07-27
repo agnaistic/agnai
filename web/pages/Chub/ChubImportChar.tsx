@@ -1,10 +1,11 @@
 import { Check, X } from 'lucide-solid'
-import { Component, Show, createEffect, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
+import { Pill } from '/web/shared/Card'
 
 const ChubImportCharModal: Component<{
   show: boolean
@@ -83,6 +84,17 @@ const ChubImportCharModal: Component<{
               value={char()?.name}
               onChange={(e) => setChar({ ...char(), name: e.currentTarget.value })}
             />
+
+            <div class="my-1 flex flex-wrap justify-center gap-2">
+              <For each={props.char?.tags || []}>
+                {(item) => (
+                  <Pill small type="hl">
+                    {item}
+                  </Pill>
+                )}
+              </For>
+            </div>
+
             <TextInput
               isMultiline
               fieldName="greeting"

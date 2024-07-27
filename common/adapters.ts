@@ -62,6 +62,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   tabby: 'kobold',
   mistral: 'kobold',
   ollama: 'kobold',
+  vllm: 'kobold',
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -77,6 +78,7 @@ export const THIRDPARTY_FORMATS = [
   'tabby',
   'mistral',
   'ollama',
+  'vllm',
 ] as const
 
 export const AI_ADAPTERS = [

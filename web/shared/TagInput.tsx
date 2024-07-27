@@ -2,8 +2,10 @@ import { Component, For, JSX, createEffect, createSignal, Show } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { AutoComplete, AutoCompleteOption } from '/web/shared/AutoComplete'
 
+type AvailableTag = string | { label: string; value: string }
+
 interface TagInputProps {
-  availableTags: string[]
+  availableTags: AvailableTag[]
   value?: string[]
   fieldName: string
   label?: string
@@ -14,6 +16,19 @@ interface TagInputProps {
 
   /** Will only allow 'availableTags' to be used */
   strict?: boolean
+}
+
+function isMatch(input: string, tag: AvailableTag) {
+  if (typeof tag === 'string') return tag.toLowerCase().startsWith(input.toLowerCase())
+  return tag.value.toLowerCase().startsWith(input.toLowerCase())
+}
+
+function toOption(tag: AvailableTag) {
+  return typeof tag === 'string' ? { label: tag, value: tag } : tag
+}
+
+function toValue(tag: AvailableTag) {
+  return typeof tag === 'string' ? tag : tag.value
 }
 
 const TagInput: Component<TagInputProps> = (props) => {
@@ -28,8 +43,8 @@ const TagInput: Component<TagInputProps> = (props) => {
   function updateSuggestions(value: string) {
     setSuggestions(
       props.availableTags
-        .filter((tag) => tag.startsWith(value) && !tags().includes(tag))
-        .map((tag) => ({ label: tag, value: tag }))
+        .filter((tag) => isMatch(value, tag) && !tags().includes(toValue(tag)))
+        .map(toOption)
     )
   }
 

@@ -65,6 +65,23 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
     const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l)
 
     for (const msg of messages) {
+      if (format === 'vllm') {
+        const event = parseVLLM(incomplete + msg)
+        if (!event) continue
+
+        const choice = event.choices?.[0]
+        if (!choice) {
+          continue
+        }
+
+        const token = choice.delta?.content || choice.text
+        if (!token) continue
+
+        const data = JSON.stringify({ token })
+        emitter.push({ data })
+        continue
+      }
+
       if (format === 'ollama') {
         const event = parseOllama(incomplete + msg, emitter)
 
@@ -126,6 +143,16 @@ function getAphroditeToken(data: any) {
   const token = choice.text
 
   return { token, index: choice.index }
+}
+
+function parseVLLM(msg: string) {
+  if (msg.startsWith('data')) {
+    msg = msg.slice(6)
+  }
+  try {
+    const json = JSON.parse(msg.trim())
+    return json
+  } catch (ex) {}
 }
 
 function parseAphrodite(msg: string, emitter: EventGenerator<ServerSentEvent>) {

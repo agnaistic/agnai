@@ -1,7 +1,20 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
-import { clamp } from '/common/util'
+import { clamp, neat } from '/common/util'
 import { toJsonSchema } from '/common/prompt'
+
+const chat_template = neat`
+{%- if messages[0]['role'] == 'system' -%}
+    {%- set system_message = messages[0]['content'] -%}
+    {%- set messages = messages[1:] -%}
+{%- else -%}
+    {% set system_message = '' -%}
+{%- endif -%}
+
+{{ bos_token + system_message }}
+{%- for message in messages -%}
+    {{ message['content'] + '\n' }}
+{%- endfor -%}`
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen } = opts
@@ -79,6 +92,56 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
       body.dynatemp_range = gen.dynatemp_range
       body.temp_exponent = gen.dynatemp_exponent
+    }
+
+    return body
+  }
+
+  if (format === 'vllm') {
+    const body: any = {
+      n: 1,
+      model: gen.thirdPartyModel,
+      stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
+      temperature: gen.temp ?? 0.5,
+      max_tokens: gen.maxTokens ?? 200,
+
+      top_p: gen.topP ?? 1,
+      min_p: gen.minP,
+      top_k: gen.topK! < 1 ? -1 : gen.topK,
+      stop: getStoppingStrings(opts, stops),
+      ignore_eos: gen.banEosToken,
+
+      repetition_penalty: gen.repetitionPenalty,
+      presence_penalty: gen.presencePenalty ?? 0,
+      frequency_penalty: gen.frequencyPenalty ?? 0,
+    }
+
+    if (opts.jsonSchema) {
+      body.guided_json = json_schema
+      body.guided_decoding_backend = 'outlines'
+    }
+
+    if (gen.topK && gen.topK < 1) {
+      body.top_k = -1
+    }
+
+    if (gen.topP === 0) {
+      body.top_p = -1
+    }
+
+    if (opts.imageData) {
+      body.chat_template = chat_template
+      body.messages = [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: opts.imageData } },
+          ],
+        },
+      ]
+    } else {
+      body.prompt = prompt
     }
 
     return body

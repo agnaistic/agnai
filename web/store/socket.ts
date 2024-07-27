@@ -76,11 +76,12 @@ function onMessage(msg: MessageEvent<any>) {
       } else if (payload.type !== 'image-generated') {
         console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
       } else {
+        const image = payload.image || ''
         console.log(
           `[${new Date().toLocaleTimeString()}]`,
           JSON.stringify({
             ...payload,
-            image: (payload.image || '').slice(0, 60) + '...',
+            image: image.startsWith('http') ? image : `${image.slice(0, 60)}'...'`,
           })
         )
       }
