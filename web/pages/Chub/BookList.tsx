@@ -22,6 +22,7 @@ const BookList: Component<{
         <For each={state.books}>
           {(book) => (
             <ChubItem
+              entity={book}
               name={book.name}
               fullPath={book.fullPath}
               avatar={`https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp`}
