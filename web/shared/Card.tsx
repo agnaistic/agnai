@@ -126,6 +126,7 @@ export const TitleCard: Component<{
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
   contentClass?: string
+  bg?: string
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
 
@@ -134,8 +135,12 @@ export const TitleCard: Component<{
     const base = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? 800 : 100
     const mod = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? -200 : 200
 
+    const bgColor = props.bg
+      ? (getRgbaFromVar(props.bg, 1)?.background as string)
+      : `var(--${type}-${base})`
+
     return {
-      'background-color': `var(--${type}-${base})`,
+      'background-color': bgColor,
       border: `1px solid var(--${type}-${base + mod})`,
       'border-radius': '0.375rem',
     }

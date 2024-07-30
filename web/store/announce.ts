@@ -84,4 +84,10 @@ subscribe('announcement', { announcement: 'any' }, (body) => {
 
   const next = list.concat(body.announcement)
   announceStore.setState({ list: next })
+
+  if (body.announcement.location === 'notification') {
+    toastStore.info(`New announcement! Check your notifications.`)
+  } else {
+    toastStore.info(`New announcement! Check the home page.`)
+  }
 })
