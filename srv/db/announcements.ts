@@ -32,6 +32,10 @@ export async function updateAnnouncement(id: string, update: Partial<AppSchema.A
 
 export async function createAnnouncement(create: OmitId<AppSchema.Announcement, Dates>) {
   const id = v4()
+  if (create.showAt <= new Date().toISOString()) {
+    create.showAt = new Date(Date.now() - 30000).toISOString()
+  }
+
   const insert = {
     _id: id,
     kind: 'announcement',

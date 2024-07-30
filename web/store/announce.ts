@@ -1,5 +1,6 @@
 import { api } from './api'
 import { createStore } from './create'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AppSchema } from '/common/types'
 
@@ -76,4 +77,11 @@ export const announceStore = createStore<AnnounceState>(
       }
     },
   }
+})
+
+subscribe('announcement', { announcement: 'any' }, (body) => {
+  const { list } = announceStore.getState()
+
+  const next = list.concat(body.announcement)
+  announceStore.setState({ list: next })
 })

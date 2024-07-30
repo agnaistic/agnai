@@ -1,7 +1,7 @@
 import * as uuid from 'uuid'
 import pino from 'pino'
 import type { NextFunction, Response } from 'express'
-import { errors } from './api/wrap'
+import { StatusError, errors } from './api/wrap'
 import { verifyApiKey } from './db/oauth'
 import { verifyJwt } from './db/user'
 import { config } from './config'
@@ -49,8 +49,19 @@ function parentLogger(name: string) {
   return pino(opts) as any as AppLog
 }
 
+const VALID_ID = /^[a-z0-9-]+$/g
+
+const ID_KEYS = ['id', 'charId', 'inviteId', 'userId']
+
 export function logMiddleware() {
   const middleware = async (req: any, res: Response, next: NextFunction) => {
+    for (const prop in ID_KEYS) {
+      const value = req.params[prop]
+      if (value && !VALID_ID.test(value)) {
+        return next(new StatusError('Bad request: Invalid ID', 400))
+      }
+    }
+
     const requestId = uuid.v4()
     const log = logger.child({ requestId, url: req.url, method: req.method })
 

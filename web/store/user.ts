@@ -356,12 +356,15 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updatePartialConfig(_, config: ConfigUpdate) {
+    async updatePartialConfig(_, config: ConfigUpdate, quiet?: boolean) {
       const res = await usersApi.updatePartialConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
-        toastStore.success(`Updated settings`)
+
+        if (!quiet) {
+          toastStore.success(`Updated settings`)
+        }
         return { user: res.result }
       }
     },

@@ -97,8 +97,10 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
   const tempCharacters = chat.tempCharacters || {}
   const prev = body._id ? tempCharacters[body._id] : null
 
+  const id = body._id && tempCharacters[body._id] ? body._id : `temp-${v4().slice(0, 8)}`
+
   const upserted: AppSchema.Character = {
-    _id: body._id || `temp-${v4().slice(0, 8)}`,
+    _id: id,
     kind: 'character',
     createdAt: now(),
     updatedAt: now(),
