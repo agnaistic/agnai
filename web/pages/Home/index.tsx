@@ -82,7 +82,9 @@ const HomePage: Component = () => {
         <RecentChats />
 
         <Show when={announce.list.length > 0}>
-          <Announcements list={announce.list} />
+          <Announcements
+            list={announce.list.filter((ann) => ann.location !== 'notification').slice(0, 4)}
+          />
         </Show>
 
         <div class="home-cards">

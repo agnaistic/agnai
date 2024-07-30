@@ -302,7 +302,7 @@ export function clamp(toClamp: number, max: number, min?: number) {
 }
 
 export function now() {
-  return new Date().toISOString()
+  return new Date(Date.now() - 60000).toISOString()
 }
 
 export function parseStops(stops?: string[]) {

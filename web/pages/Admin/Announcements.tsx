@@ -12,7 +12,7 @@ import {
 import PageHeader from '/web/shared/PageHeader'
 import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
 import Button from '/web/shared/Button'
-import TextInput from '/web/shared/TextInput'
+import TextInput, { ButtonInput } from '/web/shared/TextInput'
 import { useNavigate, useParams } from '@solidjs/router'
 import { announceStore, toastStore } from '/web/store'
 import { elapsedSince, now } from '/common/util'
@@ -81,10 +81,15 @@ const AnnoucementList: Component = (props) => {
                 }}
                 onClick={() => nav(`/admin/announcements/${item._id}`)}
               >
-                <div class="font-bold">{item.title}</div>
+                <div class="font-bold">
+                  {item.title}{' '}
+                  <span class="text-500 text-xs font-light italic">
+                    {item.location === 'notification' ? 'notify' : 'home'}
+                  </span>
+                </div>
                 <div class="flex gap-1">
-                  <Pill>Created: {new Date(item.showAt).toLocaleString()}</Pill>
-                  <Pill>{elapsedSince(new Date(item.showAt))} ago</Pill>
+                  <Pill inverse>Created: {new Date(item.showAt).toLocaleString()}</Pill>
+                  <Pill inverse>{elapsedSince(new Date(item.showAt))} ago</Pill>
                   {Label(item)}
                 </div>
               </div>
@@ -115,11 +120,16 @@ function Label(item: AppSchema.Announcement) {
   if (item.deletedAt) return <Pill type="rose">Deleted</Pill>
   if (item.hide) return <Pill type="coolgray">Hidden</Pill>
   if (date.valueOf() >= Date.now()) return <Pill type="premium">Pending</Pill>
-  return <Pill type="green">Active</Pill>
+  return (
+    <Pill inverse type="green">
+      Active
+    </Pill>
+  )
 }
 
 const Announcement: Component<{}> = (props) => {
   let ref: HTMLFormElement
+  let showAtRef: HTMLInputElement
 
   const nav = useNavigate()
   const params = useParams()
@@ -206,13 +216,35 @@ const Announcement: Component<{}> = (props) => {
           onInput={(ev) => setContent(ev.currentTarget.value)}
         />
         <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
-        <TextInput
+        <ButtonInput
+          ref={(r) => (showAtRef = r)}
+          fieldName="showAt"
+          type="datetime-local"
+          label="Display At"
+          value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
+          onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
+        >
+          <Button
+            size="sm"
+            class="mr-20 text-xs"
+            schema="clear"
+            onClick={() => {
+              const time = toLocalTime(now())
+              setShowAt(new Date(time))
+              showAtRef.value = time
+            }}
+          >
+            Now
+          </Button>
+        </ButtonInput>
+
+        {/* <TextInput
           type="datetime-local"
           label="Display At"
           fieldName="showAt"
           value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
           onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
-        />
+        /> */}
 
         <div class="flex justify-end gap-2">
           <Button onClick={onSave}>

@@ -35,6 +35,7 @@ import {
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
   UserState,
+  announceStore,
   audioStore,
   characterStore,
   inviteStore,
@@ -325,9 +326,15 @@ const NavIcons: Component<{
 }> = (props) => {
   const invites = inviteStore()
   const toasts = toastStore()
+  const announce = announceStore()
 
   const count = createMemo(() => {
-    return toasts.unseen + invites.invites.length
+    const threshold = new Date(props.user.user?.announcement || 0).toISOString()
+    const unseen = announce.list.filter(
+      (l) => l.location === 'notification' && l.showAt > threshold
+    )
+
+    return unseen.length + toasts.unseen + invites.invites.length
   })
 
   return (

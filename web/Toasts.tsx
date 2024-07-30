@@ -24,24 +24,50 @@ const Notifications: Component = () => {
   const user = userStore()
   const state = toastStore()
 
-  const [bookmark] = createSignal(new Date(user.user?.announcement || 0))
+  const bookmark = createMemo(() => new Date(user.user?.announcement || Date.now()))
+  const [read, setRead] = createSignal('')
 
   onMount(() => {
     announceStore.getAll()
   })
 
+  createEffect(
+    on(
+      () => state.modal,
+      (open) => {
+        if (!open) {
+          const readTime = read()
+          if (!readTime) return
+          setRead('')
+          userStore.updatePartialConfig({ announcement: readTime }, true)
+          return
+        }
+        announceStore.getAll()
+        setRead(new Date().toISOString())
+        return open
+      }
+    )
+  )
+
   const [tab, setTab] = createSignal(1)
 
-  const unseen = createMemo(() => {
+  const all = createMemo(() => {
     return announce.list
-      .slice(0, 5)
-      .filter((ann) => ann.location === 'notification' && ann.updatedAt > bookmark().toISOString())
+      .filter((ann) => ann.location === 'notification')
+      .slice(0, 8)
+      .sort((l, r) => r.showAt.localeCompare(l.showAt))
+  })
+
+  const unseen = createMemo(() => {
+    return all().filter(
+      (ann) => ann.location === 'notification' && ann.showAt > bookmark().toISOString()
+    )
   })
 
   const seen = createMemo(() => {
-    return announce.list
-      .slice(0, 5)
-      .filter((ann) => ann.location === 'notification' && ann.updatedAt <= bookmark().toISOString())
+    return all().filter(
+      (ann) => ann.location === 'notification' && ann.showAt <= bookmark().toISOString()
+    )
   })
 
   createEffect(
@@ -51,7 +77,7 @@ const Notifications: Component = () => {
         if (id !== 1) return
         if (unseen().length === 0) return
 
-        userStore.updatePartialConfig({ announcement: new Date().toISOString() })
+        userStore.updatePartialConfig({ announcement: new Date().toISOString() }, true)
       }
     )
   )

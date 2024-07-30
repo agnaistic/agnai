@@ -3,6 +3,7 @@ import { store } from '../db'
 import { handle } from './wrap'
 import { assertValid } from '/common/valid'
 import { isAdmin } from './auth'
+import { sendAll } from './ws'
 
 const valid = {
   title: 'string',
@@ -36,6 +37,11 @@ const updateAnnouncement = handle(async (req) => {
 const createAnnouncement = handle(async (req) => {
   assertValid(valid, req.body)
   const next = await store.announce.createAnnouncement(req.body)
+
+  if (next.showAt <= new Date().toISOString() && !next.hide) {
+    sendAll({ type: 'announcement', announcement: next })
+  }
+
   return next
 })
 
