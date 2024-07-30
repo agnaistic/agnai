@@ -188,6 +188,7 @@ const Update: Component<{ announcement: AppSchema.Announcement; seen?: boolean }
         </div>
       }
       type={props.seen ? 'bg' : 'hl'}
+      bg={props.seen ? 'bg-700' : undefined}
       contentClass="bg-800"
     >
       <div class="markdown" innerHTML={markup()}></div>
