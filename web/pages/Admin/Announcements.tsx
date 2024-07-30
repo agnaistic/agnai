@@ -229,7 +229,7 @@ const Announcement: Component<{}> = (props) => {
             class="mr-20 text-xs"
             schema="clear"
             onClick={() => {
-              const time = toLocalTime(now())
+              const time = toLocalTime(new Date(Date.now() - 60000).toISOString())
               setShowAt(new Date(time))
               showAtRef.value = time
             }}
@@ -237,14 +237,6 @@ const Announcement: Component<{}> = (props) => {
             Now
           </Button>
         </ButtonInput>
-
-        {/* <TextInput
-          type="datetime-local"
-          label="Display At"
-          fieldName="showAt"
-          value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
-          onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
-        /> */}
 
         <div class="flex justify-end gap-2">
           <Button onClick={onSave}>
