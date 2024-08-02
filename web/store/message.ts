@@ -579,7 +579,7 @@ export const msgStore = createStore<MsgState>(
     async *confirmSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
       const replacement = msg?.retries?.[position - 1]
-      if (!replacement || !msg?.msg) {
+      if (!replacement || msg?.msg === undefined) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
 

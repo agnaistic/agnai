@@ -105,6 +105,7 @@ export interface GenSettings {
   banEosToken?: boolean
   tokenHealing?: boolean
 
+  disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]
   trimStop?: boolean
