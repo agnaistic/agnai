@@ -156,8 +156,8 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     body
   )
 
-  if (!body.service && !userId) {
-    throw errors.BadRequest
+  if (!body.service && !body.settings && !userId) {
+    throw new StatusError('No preset provided', 400)
   }
 
   if (userId) {
@@ -166,18 +166,20 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
 
     body.user = user
 
-    if (body.presetId) {
-      const preset = await store.presets.getUserPreset(body.presetId)
-      if (!preset) {
-        throw new StatusError(`Preset not found - ${body.presetId}`, 400)
-      }
+    if (!body.settings) {
+      if (body.presetId) {
+        const preset = await store.presets.getUserPreset(body.presetId)
+        if (!preset) {
+          throw new StatusError(`Preset not found - ${body.presetId}`, 400)
+        }
 
-      body.settings = preset
-    } else if (!body.service) {
-      if (!user.defaultPreset) throw errors.BadRequest
-      const preset = await store.presets.getUserPreset(user.defaultPreset)
-      body.service = preset?.service!
-      body.settings = preset
+        body.settings = preset
+      } else if (!body.service) {
+        if (!user.defaultPreset) throw errors.BadRequest
+        const preset = await store.presets.getUserPreset(user.defaultPreset)
+        body.service = preset?.service!
+        body.settings = preset
+      }
     }
   }
 
