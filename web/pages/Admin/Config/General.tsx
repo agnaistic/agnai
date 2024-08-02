@@ -57,7 +57,12 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
       <Card bg="bg-500">
         <TextInput
           fieldName="googleClientId"
-          label="Google Client ID"
+          label={
+            <div class="flex gap-4">
+              <div>Google Client ID</div>
+              <Toggle fieldName="googleEnabled" value={state.config?.googleEnabled} />
+            </div>
+          }
           helperText="Used for Sign In"
           value={state.config?.googleClientId}
         />

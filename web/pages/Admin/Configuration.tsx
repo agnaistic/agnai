@@ -69,6 +69,7 @@ const ServerConfiguration: Component = () => {
       maxGuidanceTokens: 'number',
       maxGuidanceVariables: 'number',
       googleClientId: 'string',
+      googleEnabled: 'boolean',
       modPresetId: 'string',
       modPrompt: 'string',
       modFieldPrompt: 'string',

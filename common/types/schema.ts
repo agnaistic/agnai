@@ -98,6 +98,7 @@ export namespace AppSchema {
     imagesModels: ImageModel[]
 
     googleClientId: string
+    googleEnabled: boolean
 
     ttsHost: string
     ttsApiKey: string
