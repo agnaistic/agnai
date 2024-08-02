@@ -5,10 +5,6 @@ import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
-import GenerationSettings, {
-  getPresetFormData,
-  getRegisteredSettings,
-} from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -20,6 +16,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
+import PresetSettings, { getPresetFormData, getRegisteredSettings } from '/web/shared/Preset'
 
 const tokenizers = [
   { label: 'None', value: '' },
@@ -344,7 +341,7 @@ export const SubscriptionModel: Component = () => {
                     helperText="Optional. For use with custom models."
                   />
 
-                  <GenerationSettings
+                  <PresetSettings
                     inherit={editing()}
                     disabled={params.id === 'default'}
                     onService={setService}

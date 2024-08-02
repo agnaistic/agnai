@@ -3,7 +3,6 @@ import { Component, createEffect, createMemo, createSignal, For, JSX, Show } fro
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
-import GenerationSettings, { getPresetFormData, PresetTab } from '../GenerationSettings'
 import { toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { AutoPreset, getPresetOptions } from '../adapter'
@@ -13,6 +12,8 @@ import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import { adapterSettings } from '../util'
+import PresetSettings, { getPresetFormData } from '/web/shared/Preset'
+import { PresetTab } from '../Preset/types'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -156,7 +157,7 @@ export const ModeGenSettings: Component<{
         <For each={presets()}>
           {(preset) => (
             <Show when={selected() === preset._id!}>
-              <GenerationSettings hideTabs={props.hideTabs} inherit={preset} onSave={onSave} />
+              <PresetSettings hideTabs={props.hideTabs} inherit={preset} onSave={onSave} />
             </Show>
           )}
         </For>

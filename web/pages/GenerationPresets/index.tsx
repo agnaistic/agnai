@@ -5,7 +5,6 @@ import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
-import GenerationSettings, { getPresetFormData } from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -14,6 +13,7 @@ import { presetStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
 import { Page } from '/web/Layout'
+import PresetSettings, { getPresetFormData } from '/web/shared/Preset'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -185,7 +185,7 @@ export const GenerationPresetsPage: Component = () => {
                   required
                   parentClass="mb-2"
                 />
-                <GenerationSettings
+                <PresetSettings
                   inherit={editing()}
                   disabled={params.id === 'default'}
                   onSave={() => {}}
