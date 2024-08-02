@@ -13,7 +13,7 @@ import { presetStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
 import { Page } from '/web/Layout'
-import PresetSettings, { getPresetFormData } from '/web/shared/Preset'
+import PresetSettings, { getPresetFormData } from '/web/shared/PresetSettings'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')

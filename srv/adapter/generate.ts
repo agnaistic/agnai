@@ -287,6 +287,21 @@ export async function createChatStream(
 
   const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
 
+  /**
+   * Only use a JSON schema if:
+   * - Service allows it
+   * - User preset has it enabled
+   * - User preset has specified a schema
+   */
+  let jsonSchema =
+    subscription?.preset?.jsonSchemaCapable && opts.settings?.json?.enabled
+      ? opts.settings.json.schema
+      : undefined
+
+  if (jsonSchema && Object.keys(jsonSchema).length === 0) {
+    jsonSchema = undefined
+  }
+
   const subContextLimit = subscription?.preset?.maxContextLength
   opts.settings = opts.settings || {}
 
@@ -398,7 +413,7 @@ export async function createChatStream(
     impersonate: opts.impersonate,
     lastMessage: opts.lastMessage,
     imageData: opts.imageData,
-    jsonSchema: opts.jsonSchema,
+    jsonSchema: jsonSchema || opts.jsonSchema,
     subscription,
     encoder,
   })

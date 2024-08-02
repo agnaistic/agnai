@@ -429,7 +429,7 @@ const ChatDetail: Component = () => {
       >
         <section
           data-messages
-          class={`mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto`}
+          class={`flex w-full flex-col-reverse gap-4 overflow-y-auto`}
           ref={sticky.monitor}
         >
           <div id="chat-messages" class="flex w-full flex-col gap-2">

@@ -106,14 +106,14 @@ export const ModeDetail: Component<{
               </Show>
               <section
                 data-messages
-                class="mx-auto flex w-full flex-col-reverse overflow-y-auto"
+                class="flex w-full flex-col-reverse overflow-y-auto"
                 classList={{
                   // Chat Width
                   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
                   'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
                   // Chat Margin
                   'xs:mr-auto mx-auto': props.showPane,
-                  'mx-auto': !props.showPane,
+                  // 'mx-auto': !props.showPane,
                 }}
               >
                 {props.children}

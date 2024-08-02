@@ -26,6 +26,8 @@ import { SliderSettings } from './Sliders'
 import { ToggleSettings } from './Toggles'
 import { presetValidator } from '/common/presets'
 import { AppSchema } from '/common/types'
+import { JsonProps } from '/common/prompt'
+import { tryParse } from '/common/util'
 
 export { PresetSettings as default }
 
@@ -223,6 +225,7 @@ export function getPresetFormData(ref: any) {
   const {
     promptOrderFormat,
     promptOrder: order,
+    jsonSchema: rawJsonSchema,
     ...data
   } = getStrictForm(ref, {
     ...presetValidator,
@@ -231,6 +234,9 @@ export function getPresetFormData(ref: any) {
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
     modelFormat: 'string?',
+    jsonSchema: 'string',
+    jsonSchemaTemplate: 'string',
+    jsonSchemaEnabled: 'boolean',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
@@ -268,7 +274,13 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  return { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat }
+  const jsonSchema: JsonProps = tryParse(rawJsonSchema)
+  const json: AppSchema.GenSettings['json'] = jsonSchema
+    ? { schema: jsonSchema, template: data.jsonSchemaTemplate, enabled: data.jsonSchemaEnabled }
+    : undefined
+
+  const preset = { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat, json }
+  return preset
 }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {

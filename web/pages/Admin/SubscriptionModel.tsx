@@ -16,7 +16,10 @@ import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
-import PresetSettings, { getPresetFormData, getRegisteredSettings } from '/web/shared/Preset'
+import PresetSettings, {
+  getPresetFormData,
+  getRegisteredSettings,
+} from '/web/shared/PresetSettings'
 
 const tokenizers = [
   { label: 'None', value: '' },

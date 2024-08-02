@@ -141,6 +141,7 @@ export interface GenSettings {
   json?: {
     schema: JsonProps
     template: string
+    enabled: boolean
   }
 
   frequencyPenalty?: number

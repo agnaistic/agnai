@@ -8,7 +8,13 @@ export const FormLabel: Component<{
   helperMarkdown?: string
   class?: string
 }> = (props) => (
-  <Show when={props.label !== undefined}>
+  <Show
+    when={
+      props.label !== undefined ||
+      props.helperText !== undefined ||
+      props.helperMarkdown !== undefined
+    }
+  >
     <label for={props.fieldName || ''}>
       <div class={props.helperText || props.helperMarkdown ? '' : '' + ' ' + (props.class || '')}>
         {props.label}

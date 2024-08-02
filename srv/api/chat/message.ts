@@ -243,6 +243,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
+
   const { stream, adapter, ...metadata } = await createChatStream(
     { ...body, chat, replyAs, impersonate, requestId, entities },
     log

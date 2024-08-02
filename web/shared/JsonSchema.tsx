@@ -34,7 +34,7 @@ export const JsonSchema: Component<{
     props.update(schema)
   })
 
-  const addField = () => setState('fields', state.fields.concat([['', { type: 'bool' }]]))
+  const addField = () => setState('fields', state.fields.concat([['', { type: 'string' }]]))
 
   forms.useSub((fieldName, value) => {
     const [index, ...prop] = fieldName.split('.')
