@@ -73,6 +73,7 @@ import { Page } from '/web/Layout'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { charsApi } from '/web/store/data/chars'
 import Tooltip from '/web/shared/Tooltip'
+import { CharacterSchema } from './CharacterSchema'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -1018,6 +1019,10 @@ const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
   return (
     <>
       <Card class="flex flex-col gap-2">
+        <CharacterSchema
+          inherit={props.editor.state.json}
+          update={(next) => props.editor.update('json', next)}
+        />
         <TextInput
           isMultiline
           fieldName="systemPrompt"

@@ -352,7 +352,7 @@ const NavIcons: Component<{
           <HelpCircle aria-hidden="true" />
         </Item>
 
-        <Item href="/settings" ariaLabel="Open settings page">
+        <Item onClick={() => settingStore.modal(true)} ariaLabel="Open settings page">
           <Settings aria-hidden="true" />
         </Item>
 

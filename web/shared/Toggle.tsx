@@ -9,6 +9,7 @@ export const Toggle: Component<{
   fieldName: string
   value?: boolean
   label?: string | JSX.Element
+  ref?: (ref: HTMLInputElement) => void
   helperText?: string | JSX.Element
   helperMarkdown?: string
   class?: string
@@ -59,7 +60,10 @@ export const Toggle: Component<{
       </Show>
       <label class={`toggle ${props.disabled ? 'toggle-disabled' : ''}`}>
         <input
-          ref={ref!}
+          ref={(r) => {
+            ref = r
+            props.ref?.(r)
+          }}
           type="checkbox"
           class="toggle-checkbox form-field w-0"
           id={props.fieldName}

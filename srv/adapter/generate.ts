@@ -10,7 +10,13 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import { assemblePrompt, getAdapter, buildPromptParts, resolveScenario } from '../../common/prompt'
+import {
+  assemblePrompt,
+  getAdapter,
+  buildPromptParts,
+  resolveScenario,
+  JsonProps,
+} from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -292,14 +298,17 @@ export async function createChatStream(
    * - Service allows it
    * - User preset has it enabled
    * - User preset has specified a schema
+   * - There is both a history and response template
    */
-  let jsonSchema =
-    subscription?.preset?.jsonSchemaCapable && opts.settings?.json?.enabled
-      ? opts.settings.json.schema
-      : undefined
+  let jsonSchema: JsonProps | undefined
+  const isUsableSchema =
+    opts.char?.json?.enabled &&
+    opts.char.json.history &&
+    opts.char.json.response &&
+    Object.keys(opts.char.json.schema || {}).length > 0
 
-  if (jsonSchema && Object.keys(jsonSchema).length === 0) {
-    jsonSchema = undefined
+  if (subscription?.preset?.jsonSchemaCapable && isUsableSchema) {
+    jsonSchema = opts.char.json?.schema
   }
 
   const subContextLimit = subscription?.preset?.maxContextLength
@@ -418,7 +427,15 @@ export async function createChatStream(
     encoder,
   })
 
-  return { stream, adapter, settings: gen, user: opts.user, size, length: prompt.length }
+  return {
+    stream,
+    adapter,
+    settings: gen,
+    user: opts.user,
+    size,
+    length: prompt.length,
+    json: !!jsonSchema || !!opts.jsonSchema,
+  }
 }
 
 export async function getResponseEntities(

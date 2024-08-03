@@ -410,6 +410,11 @@ export namespace AppSchema {
     state?: string
     values?: Record<string, string | number | boolean>
     parent?: string
+    json?: {
+      response: string
+      history: string
+      values: any
+    }
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'

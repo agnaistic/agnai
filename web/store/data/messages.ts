@@ -63,6 +63,7 @@ export const msgsApi = {
   getInferencePreset,
   replaceUniversalTags,
   subscribe: inferenceSubscribe,
+  getActivePreset: getAuthGenSettings,
 }
 
 type InferenceOpts = {
@@ -930,8 +931,12 @@ function getAuthedPromptEntities() {
 
 function getAuthGenSettings(
   chat: AppSchema.Chat,
-  user: AppSchema.User
+  user?: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
+  if (!user) {
+    user = userStore.getState().user!
+  }
+
   const { presets, templates } = getStore('presets').getState()
   const preset = deepClone(getChatPreset(chat, user, presets))
 
@@ -1021,7 +1026,7 @@ function messageToLine(opts: {
       opts.impersonate?.name ||
       opts.sender.handle ||
       'You'
-    return `${entity}: ${msg.msg}`
+    return `${entity}: ${msg.json?.history || msg.msg}`
   }
 }
 
@@ -1074,12 +1079,16 @@ subscribe(
   }
 )
 
-subscribe('message-partial', { requestId: 'string', partial: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
-  if (!cb) return
+subscribe(
+  'message-partial',
+  { requestId: 'string', partial: 'string', json: 'boolean?' },
+  (body) => {
+    const cb = inferenceCallbacks.get(body.requestId)
+    if (!cb) return
 
-  cb(body.partial, 'partial')
-})
+    cb(body.partial, 'partial')
+  }
+)
 
 /**
  * Completions

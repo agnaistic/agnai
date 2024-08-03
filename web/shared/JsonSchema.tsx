@@ -88,6 +88,12 @@ const SchemaField: Component<{ index: number; name: string; def: JsonType; valid
             fieldName={`${props.index}.type`}
             value={props.def.type}
           />
+          <TextInput
+            fieldName={`${props.index}.name`}
+            placeholder="Name. E.g. brief_summary"
+            value={props.name}
+            parentClass="w-1/2"
+          />
           <Show when={type() === 'string'}>
             <TextInput
               type="number"
@@ -96,12 +102,6 @@ const SchemaField: Component<{ index: number; name: string; def: JsonType; valid
               value={(props.def as any).maxLength}
             />
           </Show>
-          <TextInput
-            fieldName={`${props.index}.name`}
-            placeholder="Name. E.g. brief_summary"
-            value={props.name}
-            parentClass="w-1/2"
-          />
           <Show when={props.validate && type() === 'enum'}>
             <TextInput
               fieldName={`${props.index}.valid`}

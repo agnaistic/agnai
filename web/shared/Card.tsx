@@ -209,7 +209,7 @@ export const Pill: Component<{
 
   return (
     <span
-      class={`flex items-center border-[1px] px-2 py-1 ${props.class || ''}`}
+      class={`flex w-fit items-center border-[1px] px-2 py-1 ${props.class || ''}`}
       style={bg()}
       onClick={props.onClick}
       classList={{
@@ -219,8 +219,8 @@ export const Pill: Component<{
         'cursor-pointer': !!props.onClick,
         'py-1': !props.class?.includes('py-') && !props.small,
         'py-[2px]': !props.class?.includes('py-') && props.small,
-        'rounded-l-md': props.corners?.l !== false,
-        'rounded-r-md': props.corners?.r !== false,
+        'rounded-l-md': !props.class?.includes('rounded-') && props.corners?.l !== false,
+        'rounded-r-md': !props.class?.includes('rounded-') && props.corners?.r !== false,
         'text-sm': !props.class?.includes('text'),
       }}
       role={props.ariaRole}

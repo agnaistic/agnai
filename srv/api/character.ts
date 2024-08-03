@@ -37,6 +37,7 @@ const characterForm = {
   voice: 'string?',
   voiceDisabled: 'string?',
   tags: 'string?',
+  json: 'any?',
 
   imageSettings: 'string?',
 
@@ -107,6 +108,7 @@ const createCharacter = handle(async (req) => {
   }
 
   const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+  const json = body.json ? JSON.parse(body.json) : undefined
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -132,6 +134,7 @@ const createCharacter = handle(async (req) => {
     characterVersion: body.characterVersion,
     insert: insert,
     imageSettings,
+    json,
   })
 
   const filename = await entityUpload(
@@ -354,6 +357,7 @@ const editFullCharacter = handle(async (req) => {
     : undefined
 
   const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+  const json = body.json ? JSON.parse(body.json) : undefined
 
   const update: CharacterUpdate = {
     name: body.name,
@@ -374,6 +378,7 @@ const editFullCharacter = handle(async (req) => {
     voiceDisabled: body.voiceDisabled === 'true',
     imageSettings,
     insert,
+    json,
   }
 
   if (body.persona) {

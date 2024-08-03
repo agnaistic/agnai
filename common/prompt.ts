@@ -737,7 +737,8 @@ function fillPlaceholders(opts: {
   user: string
 }): string {
   const prefix = opts.msg.system ? 'System' : opts.author
-  const msg = opts.msg.msg.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
+  const text = opts.msg.json?.history || opts.msg.msg
+  const msg = text.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
 }

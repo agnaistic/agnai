@@ -17,7 +17,7 @@ import { ImageSettings } from './Image/ImageSettings'
 import { VoiceSettings } from './Voice/VoiceSettings'
 import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
-import Modal from '/web/shared/Modal'
+import { RootModal } from '/web/shared/Modal'
 import { THIRDPARTY_FORMATS } from '/common/adapters'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
 import { Page } from '/web/Layout'
@@ -46,7 +46,7 @@ export const SettingsModal = () => {
   const state = settingStore()
   const [footer, setFooter] = createSignal<any>()
   return (
-    <Modal
+    <RootModal
       show={state.showSettings}
       close={() => settingStore.modal(false)}
       fixedHeight
@@ -61,7 +61,7 @@ export const SettingsModal = () => {
       }
     >
       <Settings footer={setFooter} />
-    </Modal>
+    </RootModal>
   )
 }
 

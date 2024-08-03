@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select, { Option } from '../Select'
@@ -21,11 +21,6 @@ import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { PresetProps } from './types'
-import Button from '../Button'
-import { RootModal } from '../Modal'
-import { JsonSchema } from '../JsonSchema'
-import { JsonProps } from '/common/prompt'
-import { FormLabel } from '../FormLabel'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -129,7 +124,6 @@ export const GeneralSettings: Component<
 
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <PresetSchema inherit={props.inherit} />
       <Select
         fieldName="modelFormat"
         label="Model Prompt Format"
@@ -401,6 +395,12 @@ export const GeneralSettings: Component<
         />
         <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
         <Toggle
+          fieldName="disableNameStops"
+          label="Disable Name Stops"
+          helperText="Disable automatic character names stopping strings"
+          value={props.inherit?.disableNameStops}
+        />
+        <Toggle
           fieldName="trimStop"
           label="Trim Stop Sequences"
           helperText="Trim Stop Sequences from the AI's response. Does not work with Streaming responses."
@@ -412,86 +412,6 @@ export const GeneralSettings: Component<
         />
         <PhraseBias inherit={props.inherit} service={props.service} format={props.format} />
       </Card>
-    </div>
-  )
-}
-
-const PresetSchema: Component<PresetProps> = (props) => {
-  let schemaRef: HTMLInputElement
-  let templateRef: HTMLInputElement
-
-  const [show, setShow] = createSignal(false)
-  const [schema, setSchema] = createSignal<JsonProps>(props.inherit?.json?.schema || {})
-  const [template, setTemplate] = createSignal(props.inherit?.json?.template || '')
-  const [candidate, setCandidate] = createSignal<JsonProps>({})
-
-  createEffect(
-    on(
-      () => props.inherit,
-      (next) => {
-        if (next?.json) {
-          setSchema(next.json.schema)
-          setTemplate(next.json.template)
-
-          schemaRef.value = JSON.stringify(next.json.schema)
-          templateRef.value = next.json.template
-        }
-      }
-    )
-  )
-
-  const close = (save?: boolean) => {
-    if (save) {
-      schemaRef.value = JSON.stringify(candidate())
-      templateRef.value = template()
-    }
-
-    setShow(false)
-    setSchema(candidate())
-  }
-
-  return (
-    <div class="w-full justify-center">
-      <input type="hidden" id="jsonSchema" name="jsonSchema" ref={(r) => (schemaRef = r)} />
-      <input
-        type="hidden"
-        id="jsonSchemaTemplate"
-        name="jsonSchemaTemplate"
-        ref={(r) => (templateRef = r)}
-      />
-
-      <FormLabel
-        label="Generate multiple values values in your response"
-        helperText="Will only be used if your AI service supports JSON schemas"
-      />
-      <div class="flex gap-2">
-        <Button onClick={() => setShow(true)}>Json Schema</Button>
-        <Toggle fieldName="jsonSchemaEnabled" value={props.inherit?.json?.enabled} />
-      </div>
-
-      <RootModal
-        show={show()}
-        close={() => setShow(false)}
-        footer={
-          <>
-            <Button schema="secondary" onClick={() => close(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => close(true)}>Save</Button>
-          </>
-        }
-      >
-        <div class="flex flex-col gap-2 text-sm">
-          <TextInput
-            isMultiline
-            fieldName="jsonSchemaTemplate"
-            value={props.inherit?.json?.template}
-            onInputText={(ev) => setTemplate(ev)}
-            placeholder="Response Template"
-          />
-          <JsonSchema inherit={schema()} update={(ev) => setCandidate(ev)} />
-        </div>
-      </RootModal>
     </div>
   )
 }

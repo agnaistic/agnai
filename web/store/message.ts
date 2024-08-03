@@ -853,14 +853,18 @@ async function playVoiceFromBrowser(
   audio.play(voice.rate)
 }
 
-subscribe('message-partial', { partial: 'string', chatId: 'string', kind: 'string?' }, (body) => {
-  const { activeChatId } = msgStore.getState()
-  if (body.chatId !== activeChatId) return
+subscribe(
+  'message-partial',
+  { partial: 'string', chatId: 'string', kind: 'string?', json: 'any?' },
+  (body) => {
+    const { activeChatId } = msgStore.getState()
+    if (body.chatId !== activeChatId) return
 
-  if (body.kind !== 'chat-query') {
-    msgStore.setState({ partial: body.partial })
+    if (body.kind !== 'chat-query') {
+      msgStore.setState({ partial: body.partial })
+    }
   }
-})
+)
 
 subscribe(
   'message-retry',
@@ -876,6 +880,7 @@ subscribe(
     retries: ['string?'],
     updatedAt: 'string?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
+    json: 'any?',
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
@@ -912,6 +917,7 @@ subscribe(
       extras: body.extras || prev?.extras,
       retries: body.retries,
       updatedAt: body.updatedAt || new Date().toISOString(),
+      json: body.json,
     }
 
     if (retrying?._id === body.messageId) {
@@ -944,6 +950,7 @@ subscribe(
     generate: 'boolean?',
     requestId: 'string?',
     retry: 'boolean?',
+    json: 'any?',
   } as const,
   onMessageReceived
 )
@@ -956,6 +963,7 @@ subscribe(
     generate: 'boolean?',
     requestId: 'string?',
     retry: 'boolean?',
+    json: 'any?',
   } as const,
   onMessageReceived
 )
@@ -966,6 +974,7 @@ async function onMessageReceived(body: {
   generate?: boolean
   requestId?: string
   retry?: boolean
+  json?: any
 }) {
   const { msgs, activeChatId, graph } = msgStore.getState()
   if (activeChatId !== body.chatId) return

@@ -8,6 +8,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { getScenarioEventType } from '/common/scenario'
+import { HydratedJson, jsonHydrator, parsePartialJson } from '/common/util'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -256,6 +257,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
+  const hydrator = entities.char.json ? jsonHydrator(entities.char.json) : undefined
+  let hydration: HydratedJson | undefined
+  let jsonPartial: any
+
   try {
     for await (const gen of stream) {
       if (typeof gen === 'string') {
@@ -274,11 +279,17 @@ export const generateMessageV2 = handle(async (req, res) => {
 
       if ('partial' in gen) {
         const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+        if (metadata.json && hydrator) {
+          jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+          hydration = hydrator(jsonPartial || {})
+        }
+
         sendMany(members, {
           requestId: body.requestId,
           type: 'message-partial',
           kind: body.kind,
-          partial: `${prefix}${gen.partial}`,
+          partial: hydration ? JSON.stringify(hydration.response) : `${prefix}${gen.partial}`,
+          json: hydration,
           adapter,
           chatId,
         })
@@ -334,9 +345,14 @@ export const generateMessageV2 = handle(async (req, res) => {
     return
   }
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   const parent = getNewMessageParent(body, userMsg)
   const updatedAt = new Date().toISOString()
+
+  if (hydration?.response) {
+    responseText = hydration.response
+  }
+
   let treeLeafId = ''
 
   switch (body.kind) {
@@ -373,6 +389,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         retries,
         event: undefined,
         parent,
+        json: hydration,
       })
 
       sendMany(members, {
@@ -382,6 +399,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         adapter,
         generate: true,
+        json: hydration,
       })
       treeLeafId = requestId
       break
@@ -400,6 +418,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           state: 'retried',
           retries: nextRetries,
+          json: hydration ? hydration : (null as any),
         })
         treeLeafId = body.replacing._id
         sendMany(members, {
@@ -413,6 +432,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           generate: true,
           meta,
           updatedAt: next?.updatedAt,
+          json: hydration,
         })
       } else {
         const msg = await store.msgs.createChatMessage({
@@ -426,6 +446,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           retries,
           event: undefined,
           parent,
+          json: hydration,
         })
         treeLeafId = requestId
         sendMany(members, {
@@ -435,6 +456,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           adapter,
           generate: true,
+          json: hydration,
         })
       }
       break
