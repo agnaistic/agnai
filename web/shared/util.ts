@@ -823,6 +823,7 @@ export const adapterSettings: {
     'aphrodite',
     'tabby',
     'mistral',
+    'openrouter',
   ],
   tempLast: ['agnaistic', 'tabby', 'exllamav2'],
   dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite', 'ollama'],
@@ -838,7 +839,7 @@ export const adapterSettings: {
   epsilonCutoff: ['aphrodite'],
   etaCutoff: ['aphrodite'],
 
-  prefill: ['claude'],
+  prefill: ['claude', 'openrouter'],
 
   topP: [
     'horde',
@@ -853,6 +854,7 @@ export const adapterSettings: {
     'aphrodite',
     'tabby',
     'mistral',
+    'openrouter',
   ],
   repetitionPenalty: [
     'horde',
@@ -864,12 +866,23 @@ export const adapterSettings: {
     'aphrodite',
     'tabby',
     'ollama',
+    'openrouter',
   ],
   repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'tabby', 'ollama'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
   tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  minP: ['llamacpp', 'kobold', 'koboldcpp', 'exllamav2', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
-  topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
+  minP: [
+    'llamacpp',
+    'kobold',
+    'koboldcpp',
+    'exllamav2',
+    'ooba',
+    'agnaistic',
+    'aphrodite',
+    'tabby',
+    'openrouter',
+  ],
+  topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby', 'openrouter'],
   topK: [
     'horde',
     'novel',
@@ -880,6 +893,7 @@ export const adapterSettings: {
     'exllamav2',
     'aphrodite',
     'tabby',
+    'openrouter',
   ],
   typicalP: [
     'horde',
@@ -910,8 +924,26 @@ export const adapterSettings: {
   novelModel: ['novel'],
   mistralModel: ['mistral'],
   oaiModel: ['openai', 'openai-chat'],
-  frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat', 'aphrodite', 'tabby'],
-  presencePenalty: ['openai', 'kobold', 'novel', 'openai-chat', 'aphrodite', 'tabby', 'ollama'],
+  frequencyPenalty: [
+    'openai',
+    'kobold',
+    'novel',
+    'agnaistic',
+    'openai-chat',
+    'aphrodite',
+    'tabby',
+    'openrouter',
+  ],
+  presencePenalty: [
+    'openai',
+    'kobold',
+    'novel',
+    'openai-chat',
+    'aphrodite',
+    'tabby',
+    'ollama',
+    'openrouter',
+  ],
   streamResponse: [
     'openai',
     'kobold',
@@ -924,6 +956,7 @@ export const adapterSettings: {
     'tabby',
     'mistral',
     'ollama',
+    'openrouter',
   ],
   openRouterModel: ['openrouter'],
   stopSequences: [
@@ -938,6 +971,7 @@ export const adapterSettings: {
     'aphrodite',
     'tabby',
     'ollama',
+    'openrouter',
   ],
   trimStop: ['koboldcpp'],
 
