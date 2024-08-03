@@ -46,7 +46,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
-  yield { prompt: payload.messages }
+  yield { prompt: payload.messages || payload.prompt }
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
