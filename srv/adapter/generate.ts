@@ -15,7 +15,7 @@ import {
   getAdapter,
   buildPromptParts,
   resolveScenario,
-  JsonProps,
+  JsonField,
 } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
@@ -300,7 +300,7 @@ export async function createChatStream(
    * - User preset has specified a schema
    * - There is both a history and response template
    */
-  let jsonSchema: JsonProps | undefined
+  let jsonSchema: JsonField[] | undefined
   const isUsableSchema =
     opts.char?.json?.enabled &&
     opts.char.json.history &&

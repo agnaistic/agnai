@@ -62,6 +62,7 @@ const characterPost = {
   alternateGreetings: ['string?'],
   extensions: 'any?',
   insert: 'any?',
+  json: 'any?',
 } as const
 
 const newCharacterValidator = {
@@ -262,23 +263,23 @@ const publishCharacter = handle(async ({ userId, body, log }, res) => {
 
   let acceptable = true
   for (const [key, value] of Object.entries(output)) {
-    const def = config.modSchema[key]
+    const def = config.modSchema.find((s) => s.name === key)
     if (!def) continue
-    if (!def.valid) continue
+    if (!def.type.valid) continue
 
-    switch (def.type) {
+    switch (def.type.type) {
       case 'integer':
       case 'string':
         continue
 
       case 'bool': {
-        const expected = def.valid === 'true'
+        const expected = def.type.valid === 'true'
         if (value !== expected) acceptable = false
         continue
       }
 
       case 'enum': {
-        const values = def.valid.split(',').map((v) => v.trim())
+        const values = def.type.valid.split(',').map((v) => v.trim())
         const valid = values.includes((value || '') as string)
         if (!valid) acceptable = false
         continue

@@ -443,7 +443,7 @@ export function parsePartialJson(value: string) {
   }
 }
 
-const SAFE_NAME = /[_\-/]+/g
+const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
 
 export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: any) {
   const map = new Map<string, string>()
@@ -468,8 +468,8 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
   let response = def.response
   let history = def.history
 
-  const resVars = response.match(/{{[a-zA-Z0-9 _-]+}}/g)
-  const histVars = history.match(/{{[a-zA-Z0-9 _-]+}}/g)
+  const resVars = response.match(JSON_NAME_RE())
+  const histVars = history.match(JSON_NAME_RE())
 
   if (resVars) {
     for (const holder of resVars) {
@@ -500,10 +500,12 @@ export type HydratedJson = {
   history: string
 }
 
+export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+}}/g
+
 export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
   const map = new Map<string, string>()
-  const resVars = def.response.match(/{{[a-zA-Z0-9 _-]+}}/g)
-  const histVars = def.history.match(/{{[a-zA-Z0-9 _-]+}}/g)
+  const resVars = def.response.match(JSON_NAME_RE())
+  const histVars = def.history.match(JSON_NAME_RE())
 
   for (const key in def.schema) {
     map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)

@@ -45,7 +45,7 @@ export async function getAppConfig(user?: AppSchema.User) {
     configuration.ttsApiKey = ''
     configuration.modFieldPrompt = ''
     configuration.modPrompt = ''
-    configuration.modSchema = {}
+    configuration.modSchema = []
   }
 
   if (!appConfig) {

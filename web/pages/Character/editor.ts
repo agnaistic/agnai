@@ -79,6 +79,7 @@ const newCharGuard = {
   creator: 'string',
   characterVersion: 'string',
   voiceDisabled: 'boolean?',
+  jsonSchemaEnabled: 'boolean',
   ...baseImageValid,
 } as const
 
@@ -492,7 +493,10 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
       summariseChat: body.summariseChat,
       summaryPrompt: body.summaryPrompt,
     },
-    json: state.json,
+    json: {
+      ...state.json,
+      enabled: body.jsonSchemaEnabled,
+    } as CharacterJsonSchema,
   }
 
   return payload

@@ -52,14 +52,20 @@ export const SolidCard: Component<{
   bg?: string
   hover?: string | boolean
   border?: boolean
+  borderColor?: string
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
 
   const bg = createMemo((): JSX.CSSProperties => {
+    const borderColor = props.borderColor ? getAsCssVar(props.borderColor) : undefined
     if (props.bg) {
       return {
         'background-color': getAsCssVar(props.bg),
-        border: props.border ? '1px solid var(--bg-600)' : 0,
+        border: borderColor
+          ? `1px solid ${borderColor}`
+          : props.border
+          ? '1px solid var(--bg-600)'
+          : 0,
       }
     }
 
@@ -69,7 +75,7 @@ export const SolidCard: Component<{
 
     return {
       'background-color': `var(--${type}-${base})`,
-      border: `1px solid var(--${type}-${base + mod})`,
+      border: borderColor ? `1px solid ${borderColor}` : `1px solid var(--${type}-${base + mod})`,
     }
   })
 

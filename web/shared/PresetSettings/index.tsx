@@ -64,7 +64,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
 
     return list.filter((tab) => !props.hideTabs!.includes(tab))
   })
-  const [tab, setTab] = createSignal(+(search.tab ?? '0'))
+  const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
 
   const onServiceChange = (opt: Option<string>) => {
     setService(opt.value as any)
@@ -134,7 +134,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
         <Tabs
           select={(ev) => {
             setTab(ev)
-            setSearch({ tab: ev })
+            setSearch({ preset_tab: ev })
           }}
           selected={tab}
           tabs={tabs()}

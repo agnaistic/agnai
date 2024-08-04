@@ -6,8 +6,8 @@ import {
   buildPromptParts,
   resolveScenario,
   InferenceState,
-  JsonProps,
   TickHandler,
+  JsonField,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -71,7 +71,7 @@ type InferenceOpts = {
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
-  jsonSchema?: JsonProps
+  jsonSchema?: JsonField[]
 
   /** Base64 image */
   image?: string
@@ -304,7 +304,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string; schema?: JsonProps }
+  | { kind: 'chat-query'; text: string; schema?: JsonField[] }
 
 export async function generateResponse(
   opts: GenerateOpts,

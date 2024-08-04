@@ -4,6 +4,7 @@ import './toggle.css'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { isValidServiceSetting } from './util'
 import { Option } from './Select'
+import { forms } from '../emitter'
 
 export const Toggle: Component<{
   fieldName: string
@@ -28,6 +29,7 @@ export const Toggle: Component<{
     const checked = !!ev.currentTarget.checked
     ref.checked = checked
     props.onChange?.(checked)
+    forms.emit(props.fieldName, checked)
   }
 
   const hide = createMemo(() => {

@@ -53,7 +53,7 @@ export const ModeDetail: Component<{
 
       <Show when={!props.loading}>
         <section
-          class="mode pl-2 pr-2 sm:pl-3"
+          class="mode pl-2 pr-2 sm:pl-2"
           style={bgStyles()}
           classList={{
             'sm:pr-0': props.showPane,

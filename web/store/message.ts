@@ -26,7 +26,7 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
-import { JsonProps, TickHandler } from '/common/prompt'
+import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 
 const SOFT_PAGE_SIZE = 20
@@ -500,7 +500,7 @@ export const msgStore = createStore<MsgState>(
     async *chatJson(
       { waiting, activeChatId },
       message: string,
-      schema: JsonProps,
+      schema: JsonField[],
       onTick: TickHandler
     ) {
       if (waiting) return

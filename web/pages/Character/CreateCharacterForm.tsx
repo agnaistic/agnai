@@ -51,7 +51,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
-import Modal from '/web/shared/Modal'
+import Modal, { RootModal } from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { Toggle, ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
@@ -756,7 +756,7 @@ export const CreateCharacterForm: Component<{
       <AvatarModal url={imgUrl()} close={() => setImageUrl('')} />
 
       <Show when={openPreset()}>
-        <Modal
+        <RootModal
           title="Update Preset"
           show
           close={() => setOpenPreset(false)}
@@ -772,7 +772,7 @@ export const CreateCharacterForm: Component<{
             hideTabs={['Memory', 'Prompt']}
             footer={setPresetFooter}
           />
-        </Modal>
+        </RootModal>
       </Show>
     </Page>
   )
@@ -1024,6 +1024,7 @@ const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
     <>
       <Card class="flex flex-col gap-2">
         <CharacterSchema
+          characterId={props.editor.state.editId}
           inherit={props.editor.state.json}
           update={(next) => props.editor.update('json', next)}
         />

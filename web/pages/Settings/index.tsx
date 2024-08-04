@@ -54,7 +54,7 @@ export const SettingsModal = () => {
       footer={
         <>
           <Button schema="secondary" onClick={() => settingStore.modal(false)}>
-            Cancel
+            Close
           </Button>
           {footer()}
         </>

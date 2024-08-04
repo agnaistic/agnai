@@ -1,5 +1,5 @@
 import { PersonaFormat } from '../adapters'
-import { JsonProps } from '../prompt'
+import { JsonField } from '../prompt'
 import { BaseImageSettings, ImageSettings } from './image-schema'
 import { MemoryBook } from './memory'
 import { FullSprite } from './sprite'
@@ -73,7 +73,7 @@ export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {
 }
 
 export interface CharacterJsonSchema {
-  schema: JsonProps
+  schema: JsonField[]
   response: string
   history: string
   enabled: boolean
