@@ -38,7 +38,7 @@ import {
   chatStore,
   userStore,
 } from '../../store'
-import { useNavigate } from '@solidjs/router'
+import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Select, { Option } from '../../shared/Select'
@@ -99,6 +99,7 @@ export const CreateCharacterForm: Component<{
   onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
   let personaRef: any
+  const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
   const user = userStore()
 
@@ -304,7 +305,7 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], 0)
+  const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
 
   let spriteRef: any
 
@@ -386,7 +387,14 @@ export const CreateCharacterForm: Component<{
               </Show>
             </div>
 
-            <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
+            <Tabs
+              select={(id) => {
+                tabs.select(id)
+                setSearch({ char_tab: id })
+              }}
+              selected={tabs.selected}
+              tabs={tabs.tabs}
+            />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Persona' }}>
               <Button

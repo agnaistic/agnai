@@ -233,7 +233,7 @@ export const HelpModal: Component<{
   return (
     <>
       <div onClick={() => setShow(true)}>{props.cta}</div>
-      <Modal
+      <RootModal
         title={props.title || ''}
         maxWidth="half"
         show={show()}
@@ -248,7 +248,7 @@ export const HelpModal: Component<{
         <Show when={!!props.markdown}>
           <div class="rendered-markdown text-sm" innerHTML={markdown.makeHtml(props.markdown!)} />
         </Show>
-      </Modal>
+      </RootModal>
     </>
   )
 }

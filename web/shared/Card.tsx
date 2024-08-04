@@ -209,16 +209,17 @@ export const Pill: Component<{
     return {
       'background-color': rgba.background || '',
       'border-color': `var(--${type}-${base})`,
-      color: `var(--text-${text})`,
+      color: (props.class || '').includes('text-') ? undefined : `var(--text-${text})`,
     }
   })
 
   return (
     <span
-      class={`flex w-fit items-center border-[1px] px-2 py-1 ${props.class || ''}`}
+      class={`flex items-center border-[1px] px-2 py-1 ${props.class || ''}`}
       style={bg()}
       onClick={props.onClick}
       classList={{
+        'w-fit': !props.class?.includes('w-'),
         'px-2': !props.class?.includes('px-'),
         'border-[1px]': !props.small,
         'border-0': props.small,

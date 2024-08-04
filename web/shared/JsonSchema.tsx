@@ -1,18 +1,18 @@
 import { createStore } from 'solid-js/store'
 import { JsonField, JsonType } from '/common/prompt'
 import { Component, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { SolidCard } from './Card'
+import { Pill, SolidCard } from './Card'
 import Select from './Select'
 import TextInput from './TextInput'
 import { forms } from '../emitter'
-import { Plus, X } from 'lucide-solid'
+import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash } from 'lucide-solid'
 import Button from './Button'
 import { useFormField } from './hooks'
-import { Toggle } from './Toggle'
 
 export const JsonSchema: Component<{
   inherit?: JsonField[]
   update: (schema: JsonField[]) => void
+  onNameChange?: (from: string, to: string) => void
   validate?: boolean
 }> = (props) => {
   const [state, setState] = createStore({
@@ -47,16 +47,36 @@ export const JsonSchema: Component<{
     setState('fields', next)
   }
 
+  const moveUp = (index: number) => {
+    const [t, b] = state.fields.slice(index - 1, index + 1)
+    const next = state.fields.slice()
+    next[index - 1] = b
+    next[index] = t
+    setState({ fields: next })
+  }
+
+  const moveDown = (index: number) => {
+    const [t, b] = state.fields.slice(index, index + 2)
+    const next = state.fields.slice()
+    next[index] = b
+    next[index + 1] = t
+    setState({ fields: next })
+  }
+
   forms.useSub((fieldName, value) => {
     const [index, ...prop] = fieldName.split('.')
     const match = state.fields[+index]
     if (!match) return
 
     const field = prop.join('.')
+    console.log(fieldName, value)
     const next = state.fields.map<JsonField>((f, i) => {
       if (i !== +index) return f
 
-      if (field === 'name') return { name: value, disabled: f.disabled, type: f.type }
+      if (field === 'name') {
+        props.onNameChange?.(f.name, value)
+        return { name: value, disabled: f.disabled, type: f.type }
+      }
       if (field === 'disabled') return { name: f.name, disabled: !value, type: f.type }
 
       return {
@@ -81,6 +101,9 @@ export const JsonSchema: Component<{
               def={item().type}
               validate={props.validate}
               remove={() => removeField(i)}
+              last={i === state.fields.length - 1}
+              moveUp={moveUp}
+              moveDown={moveDown}
             />
           )}
         </Index>
@@ -100,11 +123,15 @@ const SchemaField: Component<{
   def: JsonType
   validate?: boolean
   remove: () => void
+  last: boolean
+  moveUp: (i: number) => void
+  moveDown: (i: number) => void
 }> = (props) => {
+  let enabledRef: HTMLInputElement
   const type = useFormField(`${props.index}.type`, props.def.type || 'bool')
 
   const [enabled, setEnabled] = createSignal(!props.disabled)
-  const border = createMemo(() => (enabled() ? 'bg-200' : 'red-800'))
+  const border = createMemo(() => (enabled() ? 'bg-500' : 'red-800'))
 
   createEffect(() => {
     const disabled = props.disabled
@@ -112,30 +139,98 @@ const SchemaField: Component<{
   })
 
   return (
-    <SolidCard borderColor={border()}>
-      <div class="flex flex-col gap-2">
-        <div class="flex justify-between">
-          <div class="flex w-full gap-2">
-            <Select
-              items={[
-                { label: 'Boolean', value: 'bool' },
-                { label: 'String', value: 'string' },
-                { label: 'Number', value: 'integer' },
-              ]}
-              fieldName={`${props.index}.type`}
-              value={props.def.type}
-            />
-            <TextInput
-              fieldName={`${props.index}.name`}
-              placeholder="Name. E.g. brief_summary"
-              value={props.name}
-              parentClass="w-1/2"
-            />
+    <div class="flex flex-col">
+      <div class="flex w-full gap-1">
+        <Pill small class="text-800 flex w-full gap-1 rounded-b-none rounded-t-md sm:w-1/2">
+          <Select
+            class="text-800 text-xs"
+            items={[
+              { label: 'Boolean', value: 'bool' },
+              { label: 'String', value: 'string' },
+              { label: 'Number', value: 'integer' },
+            ]}
+            fieldName={`${props.index}.type`}
+            value={props.def.type}
+          />
+          <TextInput
+            fieldName={`${props.index}.name`}
+            placeholder="Name. E.g. brief_summary"
+            value={props.name}
+            class="h-8"
+            parentClass="w-full"
+          />
+        </Pill>
+        <Button
+          schema="clear"
+          disabled={props.index === 0}
+          onClick={() => props.moveUp(props.index)}
+        >
+          <ArrowUp size={12} />
+        </Button>
+
+        <Button schema="clear" disabled={props.last} onClick={() => props.moveDown(props.index)}>
+          <ArrowDown size={12} />
+        </Button>
+      </div>
+      <SolidCard borderColor={border()} class="rounded-tl-none ">
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between gap-2">
+            <div class="w-full">
+              <TextInput
+                fieldName={`${props.index}.title`}
+                placeholder="(Optional) Title. E.g. Brief Chat Summary"
+                value={props.def.title}
+                parentClass="w-full"
+              />
+              <TextInput
+                fieldName={`${props.index}.description`}
+                value={props.def.description}
+                placeholder="(Optional) Description"
+                parentClass="w-1/2 hidden"
+              />
+            </div>
+
+            <div class="flex gap-2">
+              <input
+                ref={(r) => (enabledRef = r)}
+                id={`${props.index}.disabled`}
+                name={`${props.index}.disabled`}
+                type="hidden"
+                checked={props.disabled}
+                onChange={(ev) => forms.emit(`${props.index}.disabled`, !ev.currentTarget.checked)}
+              />
+              <Button
+                size="md"
+                schema={enabled() ? 'success' : 'hollow'}
+                onClick={() => {
+                  const next = !enabled()
+                  enabledRef.checked = next
+                  setEnabled(next)
+                  forms.emit(`${props.index}.disabled`, next)
+                }}
+              >
+                <Show when={enabled()}>
+                  <Eye size={16} />
+                </Show>
+                <Show when={!enabled()}>
+                  <EyeOff size={16} />
+                </Show>
+              </Button>
+              <Button size="md" schema="error" onClick={props.remove}>
+                <Trash size={16} />
+              </Button>
+            </div>
+          </div>
+
+          <div
+            class="flex w-full gap-2"
+            classList={{ hidden: !props.def.valid && type() !== 'string' }}
+          >
             <Show when={type() === 'string'}>
               <TextInput
                 type="number"
                 fieldName={`${props.index}.maxLength`}
-                placeholder="Max Length"
+                placeholder="Max String Length"
                 value={(props.def as any).maxLength}
               />
             </Show>
@@ -159,33 +254,8 @@ const SchemaField: Component<{
               />
             </Show>
           </div>
-          <div class="flex gap-2">
-            <Toggle
-              fieldName={`${props.index}.disabled`}
-              onChange={(ev) => setEnabled(ev)}
-              value={!props.disabled}
-            />
-            <Button size="sm" schema="error" onClick={props.remove}>
-              <X />
-            </Button>
-          </div>
         </div>
-
-        <div class="flex gap-2">
-          <TextInput
-            fieldName={`${props.index}.title`}
-            placeholder="(Optional) Title. E.g. Brief Chat Summary"
-            value={props.def.title}
-            parentClass="w-1/2"
-          />
-          <TextInput
-            fieldName={`${props.index}.description`}
-            value={props.def.description}
-            placeholder="(Optional) Description"
-            parentClass="w-1/2"
-          />
-        </div>
-      </div>
-    </SolidCard>
+      </SolidCard>
+    </div>
   )
 }
