@@ -6,7 +6,7 @@ import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
 import { Toggle } from '/web/shared/Toggle'
 import { CharacterJsonSchema } from '/common/types/library'
-import { Card, TitleCard } from '/web/shared/Card'
+import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
@@ -165,6 +165,11 @@ export const CharacterSchema: Component<{
         }
       >
         <div class="flex flex-col gap-2 text-sm">
+          <div class="flex w-full justify-center">
+            <Pill type="premium">
+              This feature is in beta. Please raise bugs on Discord or GitHub.
+            </Pill>
+          </div>
           <Card class="relative">
             <Show when={auto() === 'response'}>
               <AutoComplete
