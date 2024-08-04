@@ -11,7 +11,7 @@ import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
 import { PresetInfo, getClientPreset } from '../shared/adapter'
 import { getRgbaFromVar } from '../shared/colors'
-import { msgStore } from './message'
+import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 
 export type ContextState = {
@@ -50,6 +50,8 @@ export type ContextState = {
   promptHistory: any
   chatTree: ChatTree
   info?: PresetInfo
+  waiting?: MsgState['waiting']
+  status?: MsgState['hordeStatus']
 }
 
 const initial: ContextState = {
@@ -151,6 +153,8 @@ export function ContextProvider(props: { children: any }) {
       promptHistory: chats.promptHistory,
       info,
       chatTree: msgs.graph.tree,
+      waiting: msgs.waiting,
+      status: msgs.hordeStatus,
     }
 
     setState(next)

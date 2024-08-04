@@ -59,6 +59,7 @@ import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
+import { Spinner } from '/web/shared/Loading'
 
 type MessageProps = {
   msg: SplitMessage
@@ -420,9 +421,22 @@ const Message: Component<MessageProps> = (props) => {
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
-                  <div class="flex h-8 w-12 items-center justify-center">
-                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                  </div>
+                  <Show
+                    when={ctx.waiting?.image}
+                    fallback={
+                      <div class="flex h-8 w-12 items-center justify-center">
+                        <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                      </div>
+                    }
+                  >
+                    <Spinner />{' '}
+                    <span
+                      class="text-500 text-xs italic"
+                      classList={{ hidden: !ctx.status?.wait_time }}
+                    >
+                      {ctx.status?.wait_time || '0'}s
+                    </span>
+                  </Show>
                 </Match>
                 <Match when={edit() && props.msg.json}>
                   <JsonEdit msg={props.msg} update={(next) => setJsonValues(next)} />

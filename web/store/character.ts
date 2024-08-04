@@ -10,11 +10,13 @@ import { getAssetUrl, storage, toMap } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
 import { getUserId } from './api'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
+import { HordeCheck } from '/common/horde-gen'
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
 type CharacterState = {
   loading?: boolean
+  hordeStatus?: HordeCheck
   impersonating?: AppSchema.Character
   characters: {
     loaded: number
@@ -389,16 +391,19 @@ export const characterStore = createStore<CharacterState>(
             : await createAppearancePrompt(user, { persona })
 
         prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')
-        yield { generate: { image: null, loading: true, blob: null } }
+        yield { generate: { image: null, loading: true, blob: null }, hordeStatus: undefined }
         imageCallback = onDone
-        const res = await imageApi.generateImageWithPrompt(
+        const res = await imageApi.generateImageWithPrompt({
           prompt,
-          'avatar',
-          async ({ image, file, data }) => {
+          source: 'avatar',
+          onTick: (status) => {
+            set({ hordeStatus: status })
+          },
+          onDone: async ({ image, file, data }) => {
             onDone?.(null, file)
             set({ generate: { image: data, loading: false, blob: file } })
-          }
-        )
+          },
+        })
         if (res.error) {
           onDone?.(res.error)
           yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
@@ -460,3 +465,7 @@ function replace(
   const next = map[id] || {}
   return { ...map, [id]: { ...next, ...char } }
 }
+
+subscribe('horde-status', { status: 'any' }, (body) => {
+  characterStore.setState({ hordeStatus: body.status })
+})

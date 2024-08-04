@@ -27,6 +27,7 @@ import {
 } from '/common/chat'
 import { embedApi } from './embeddings'
 import { JsonProps, TickHandler } from '/common/prompt'
+import { HordeCheck } from '/common/horde-gen'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -48,6 +49,7 @@ type SendModes =
 export type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
 
 export type MsgState = {
+  hordeStatus?: HordeCheck
   activeChatId: string
   activeCharId: string
   messageHistory: ChatMessageExt[]
@@ -60,6 +62,7 @@ export type MsgState = {
     userId?: string
     characterId: string
     messageId?: string
+    image?: boolean
   }
   nextLoading: boolean
   imagesSaved: boolean
@@ -686,7 +689,10 @@ export const msgStore = createStore<MsgState>(
       if (waiting) return
 
       const onDone = (image: string) => handleImage(activeChatId, image)
-      yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
+      yield {
+        hordeStatus: undefined,
+        waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId, image: true },
+      }
 
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
       const res = await imageApi.generateImage({
@@ -1285,3 +1291,10 @@ subscribe(
     onCharacterMessageReceived(msg)
   }
 )
+
+subscribe('horde-status', { status: 'any' }, (body) => {
+  const waiting = msgStore.getState().waiting
+
+  if (!waiting?.image) return
+  msgStore.setState({ hordeStatus: body.status })
+})

@@ -231,7 +231,6 @@ export function getPresetFormData(ref: any) {
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
     modelFormat: 'string?',
-    jsonSchema: 'string',
     disableNameStops: 'boolean',
   })
 

@@ -108,6 +108,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       top_p: gen.topP ?? 1,
       min_p: gen.minP,
       top_k: gen.topK! < 1 ? -1 : gen.topK,
+
       stop: getStoppingStrings(opts, stops),
       ignore_eos: gen.banEosToken,
 
@@ -161,6 +162,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
         top_k: gen.topK,
         top_p: gen.topP,
         tfs_z: gen.tailFreeSampling,
+        min_p: gen.minP,
         typical_p: gen.typicalP,
         repeat_last_n: gen.repetitionPenaltyRange,
         temperature: gen.temp,
@@ -173,7 +175,6 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
         stop: getStoppingStrings(opts, stops),
 
         // ignore_eos: false,
-        // min_p: gen.min_p,
         dynatemp_range: gen.dynatemp_range,
         dynatemp_exponent: gen.dynatemp_exponent,
       },

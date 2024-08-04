@@ -127,6 +127,7 @@ export const CreateCharacterForm: Component<{
     const edit = s.editing
 
     return {
+      status: s.hordeStatus,
       avatar: s.generate,
       creating: s.creating,
       edit: forceNew() ? undefined : edit,
@@ -502,8 +503,11 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                     <Match when={state.avatar.loading}>
-                      <div class="flex w-[80px] items-center justify-center">
+                      <div class="flex w-[80px] flex-col items-center justify-center">
                         <Loading />
+                        <Show when={state.status && state.status.wait_time > 0}>
+                          <span class="text-500 text-xs italic">{state.status?.wait_time}s</span>
+                        </Show>
                       </div>
                     </Match>
                   </Switch>

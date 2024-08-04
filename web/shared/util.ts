@@ -907,9 +907,9 @@ export const adapterSettings: {
     'ollama',
   ],
 
-  mirostatToggle: ['aphrodite', 'tabby'],
-  mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby'],
-  mirostatTau: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby'],
+  mirostatToggle: ['aphrodite', 'tabby', 'ollama'],
+  mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby', 'ollama'],
+  mirostatTau: ['novel', 'ooba', 'agnaistic', 'llamacpp', 'aphrodite', 'tabby', 'ollama'],
   cfgScale: ['novel', 'ooba', 'tabby'],
   cfgOppose: ['novel', 'ooba', 'tabby'],
   phraseRepPenalty: ['novel'],

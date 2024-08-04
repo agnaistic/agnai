@@ -68,11 +68,13 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
   return res
 }
 
-export async function generateImageWithPrompt(
-  prompt: string,
-  source: string,
+export async function generateImageWithPrompt(opts: {
+  prompt: string
+  source: string
   onDone: (result: { image: string; file: File; data?: string }) => void
-) {
+  onTick?: (status: horde.HordeCheck) => void
+}) {
+  const { prompt, source, onDone } = opts
   const user = getStore('user').getState().user
 
   if (!user) {
@@ -84,7 +86,10 @@ export async function generateImageWithPrompt(
       const { text: image } = await horde.generateImage(
         user,
         prompt,
-        user.images?.negative || horde.defaults.image.negative
+        user.images?.negative || horde.defaults.image.negative,
+        (status) => {
+          opts.onTick?.(status)
+        }
       )
 
       const file = await dataURLtoFile(image)
@@ -111,7 +116,7 @@ type ImageResult = { image: string; file: File; data?: string; error?: string }
 
 export async function generateImageAsync(
   prompt: string,
-  opts: { noAffix?: boolean } = {}
+  opts: { noAffix?: boolean; onTick?: (status: horde.HordeCheck) => void } = {}
 ): Promise<ImageResult> {
   const user = getStore('user').getState().user
   const source = `image-${v4()}`
@@ -122,7 +127,14 @@ export async function generateImageAsync(
 
   if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
     try {
-      const { text: image } = await horde.generateImage(user, prompt, user.images?.negative || '')
+      const { text: image } = await horde.generateImage(
+        user,
+        prompt,
+        user.images?.negative || '',
+        (status) => {
+          opts.onTick?.(status)
+        }
+      )
 
       const file = await dataURLtoFile(image)
       const data = await getImageData(file)

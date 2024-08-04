@@ -26,7 +26,7 @@ type Fetcher = <T = any>(
   opts: FetchOpts
 ) => Promise<{ statusCode?: number; statusMessage?: string; body: T }>
 
-type HordeCheck = {
+export type HordeCheck = {
   generations: any[]
   done: boolean
   faulted: boolean
@@ -38,6 +38,8 @@ type HordeCheck = {
   kudos: number
   wait_time: number
   message?: string
+  processing: number
+  shared: boolean
 }
 
 let TIMEOUT_SECS = Infinity
@@ -86,12 +88,14 @@ type GenerateOpts = {
   payload: any
   timeoutSecs?: number
   key: string
+  onTick?: (status: HordeCheck) => void
 }
 
 export async function generateImage(
   user: AppSchema.User,
   prompt: string,
   negative: string,
+  onTick: (status: HordeCheck) => void,
   log: AppLog = logger
 ) {
   const base = user.images
@@ -121,7 +125,12 @@ export async function generateImage(
   log?.debug({ ...payload, prompt: null }, 'Horde payload')
   log?.debug(`Prompt:\n${payload.prompt}`)
 
-  const image = await generate({ type: 'image', payload, key: user.hordeKey || HORDE_GUEST_KEY })
+  const image = await generate({
+    type: 'image',
+    payload,
+    key: user.hordeKey || HORDE_GUEST_KEY,
+    onTick,
+  })
   return image
 }
 
@@ -206,7 +215,7 @@ async function generate(opts: GenerateOpts) {
       ? `${baseUrl}/generate/text/status/${init.body.id}`
       : `${baseUrl}/generate/status/${init.body.id}`
 
-  const result = await poll(url, opts.key, opts.type === 'text' ? 2.5 : 6.5)
+  const result = await poll(url, opts.key, opts.type === 'text' ? 2.5 : 6.5, opts.onTick)
 
   if (!result.generations || !result.generations.length) {
     const error: any = new Error(`Horde request failed: No generation received`)
@@ -218,7 +227,12 @@ async function generate(opts: GenerateOpts) {
   return { text, result }
 }
 
-async function poll(url: string, key: string | undefined, interval = 6.5) {
+async function poll(
+  url: string,
+  key: string | undefined,
+  interval: number,
+  onTick?: (status: HordeCheck) => void
+) {
   const started = Date.now()
   const threshold = TIMEOUT_SECS * 1000
 
@@ -235,6 +249,10 @@ async function poll(url: string, key: string | undefined, interval = 6.5) {
       )
       error.body = res.body
       throw error
+    }
+
+    if (!res.body.generations?.length) {
+      onTick?.(res.body)
     }
 
     if (res.body.faulted) {
