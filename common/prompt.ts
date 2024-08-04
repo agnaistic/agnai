@@ -1025,7 +1025,8 @@ export const schema = {
 } satisfies Record<string, (...args: any[]) => JsonType>
 
 export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
-  if (!Array.isArray(body && !body.length)) return
+  if (!Array.isArray(body) || !body.length) return
+  if (body.every((field) => field.disabled)) return
 
   const schema: JsonSchema = {
     title: 'Response',
