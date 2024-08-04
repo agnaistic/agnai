@@ -278,6 +278,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 
           sendOne(userId, { type: 'notification', level: 'warn', message })
           break
+        case 'message_start':
         case 'ping':
           break
 

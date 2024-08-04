@@ -42,9 +42,9 @@ export const CharacterSchema: Component<{
       () => props.inherit,
       (next) => {
         if (next) {
-          setSchema(next.schema)
-          setHistory(next.history)
-          setResponse(next.response)
+          setSchema(next.schema || [])
+          setHistory(next.history || '')
+          setResponse(next.response || '')
         }
       }
     )

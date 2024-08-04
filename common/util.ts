@@ -504,8 +504,8 @@ export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+
 
 export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
   const map = new Map<string, string>()
-  const resVars = def.response.match(JSON_NAME_RE())
-  const histVars = def.history.match(JSON_NAME_RE())
+  const resVars = (def.response || '').match(JSON_NAME_RE())
+  const histVars = (def.history || '').match(JSON_NAME_RE())
 
   for (const key in def.schema) {
     map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
