@@ -288,7 +288,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           requestId: body.requestId,
           type: 'message-partial',
           kind: body.kind,
-          partial: hydration ? JSON.stringify(hydration.response) : `${prefix}${gen.partial}`,
+          partial: hydration ? hydration.response : `${prefix}${gen.partial}`,
           json: hydration,
           adapter,
           chatId,
@@ -553,6 +553,10 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let error = false
   let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
+  const hydrator = body.char.json ? jsonHydrator(body.char.json) : undefined
+  let hydration: HydratedJson | undefined
+  let jsonPartial: any
+
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
@@ -569,7 +573,19 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     }
 
     if ('partial' in gen) {
-      sendGuest(guest, { type: 'message-partial', partial: gen.partial, adapter, chatId })
+      if (entities.json && hydrator) {
+        jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+        hydration = hydrator(jsonPartial || {})
+      }
+      sendGuest(guest, {
+        type: 'message-partial',
+        kind: body.kind,
+        partial: hydration ? hydration.response : gen.partial,
+        adapter,
+        chatId,
+        json: hydration,
+      })
+
       continue
     }
 
@@ -597,7 +613,10 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   if (error) return
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  if (hydration?.response) {
+    responseText = hydration.response
+  }
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
@@ -615,6 +634,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     event: undefined,
     retries,
     parent,
+    json: hydration,
   })
 
   switch (body.kind) {
@@ -639,6 +659,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
         continue: body.kind === 'continue',
         generate: true,
         meta,
+        json: hydration,
       })
       return
   }
@@ -656,6 +677,7 @@ function newMessage(
     event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
     parent?: string
+    json?: HydratedJson
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {

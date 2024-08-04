@@ -362,7 +362,12 @@ export const chatStore = createStore<ChatState>('chat', {
           map: toMap(res.result.characters),
           list: res.result.characters,
         }
-        return { allChats: res.result.chats.sort(sortDesc), allChars }
+        return {
+          allChats: res.result.chats.sort(sortDesc),
+          allChars,
+          loaded: true,
+          allLoading: false,
+        }
       }
     },
     getBotChats: async (_, characterId: string) => {
