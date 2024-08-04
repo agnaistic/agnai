@@ -465,8 +465,8 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
     }
   }
 
-  let response = def.response
-  let history = def.history
+  let response = def.response || ''
+  let history = def.history || ''
 
   const resVars = response.match(JSON_NAME_RE())
   const histVars = history.match(JSON_NAME_RE())
@@ -525,8 +525,8 @@ export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
       }
     }
 
-    let response = def.response
-    let history = def.history
+    let response = def.response || ''
+    let history = def.history || ''
 
     if (resVars) {
       for (const holder of resVars) {

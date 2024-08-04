@@ -1024,7 +1024,9 @@ export const schema = {
   }),
 } satisfies Record<string, (...args: any[]) => JsonType>
 
-export function toJsonSchema(body: JsonField[]): JsonSchema {
+export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
+  if (!Array.isArray(body && !body.length)) return
+
   const schema: JsonSchema = {
     title: 'Response',
     type: 'object',
@@ -1034,8 +1036,19 @@ export function toJsonSchema(body: JsonField[]): JsonSchema {
 
   const props: JsonSchema['properties'] = {}
 
+  if (!!body && !Array.isArray(body)) {
+    body = Object.entries(body).map(([key, value]) => ({
+      name: key,
+      disabled: false,
+      type: value,
+    })) as any
+  }
+
+  let added = 0
   for (const { name, disabled, type } of body) {
     if (disabled) continue
+
+    added++
     props[name] = { ...type }
     delete props[name].valid
 
@@ -1049,6 +1062,8 @@ export function toJsonSchema(body: JsonField[]): JsonSchema {
   }
 
   schema.properties = props
+
+  if (added === 0) return
   return schema
 }
 
