@@ -1,4 +1,13 @@
-import { Component, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
+import {
+  Component,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { NewCharacter, characterStore, chatStore, settingStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
@@ -65,6 +74,14 @@ const CharacterList: Component = () => {
 
       loading: s.allLoading,
       loaded: s.loaded,
+    }
+  })
+
+  onMount(() => {
+    const state = chatStore.getState()
+
+    if (!state.loaded && !state.allLoading) {
+      chatStore.getAllChats()
     }
   })
 

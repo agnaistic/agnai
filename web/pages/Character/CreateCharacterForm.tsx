@@ -51,7 +51,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
-import Modal from '/web/shared/Modal'
+import Modal, { RootModal } from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { Toggle, ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
@@ -73,6 +73,7 @@ import { Page } from '/web/Layout'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { charsApi } from '/web/store/data/chars'
 import Tooltip from '/web/shared/Tooltip'
+import { CharacterSchema } from './CharacterSchema'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -126,6 +127,7 @@ export const CreateCharacterForm: Component<{
     const edit = s.editing
 
     return {
+      status: s.hordeStatus,
       avatar: s.generate,
       creating: s.creating,
       edit: forceNew() ? undefined : edit,
@@ -501,8 +503,11 @@ export const CreateCharacterForm: Component<{
                       </div>
                     </Match>
                     <Match when={state.avatar.loading}>
-                      <div class="flex w-[80px] items-center justify-center">
+                      <div class="flex w-[80px] flex-col items-center justify-center">
                         <Loading />
+                        <Show when={state.status && state.status.wait_time > 0}>
+                          <span class="text-500 text-xs italic">{state.status?.wait_time}s</span>
+                        </Show>
                       </div>
                     </Match>
                   </Switch>
@@ -751,7 +756,7 @@ export const CreateCharacterForm: Component<{
       <AvatarModal url={imgUrl()} close={() => setImageUrl('')} />
 
       <Show when={openPreset()}>
-        <Modal
+        <RootModal
           title="Update Preset"
           show
           close={() => setOpenPreset(false)}
@@ -767,7 +772,7 @@ export const CreateCharacterForm: Component<{
             hideTabs={['Memory', 'Prompt']}
             footer={setPresetFooter}
           />
-        </Modal>
+        </RootModal>
       </Show>
     </Page>
   )
@@ -1018,6 +1023,11 @@ const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
   return (
     <>
       <Card class="flex flex-col gap-2">
+        <CharacterSchema
+          characterId={props.editor.state.editId}
+          inherit={props.editor.state.json}
+          update={(next) => props.editor.update('json', next)}
+        />
         <TextInput
           isMultiline
           fieldName="systemPrompt"

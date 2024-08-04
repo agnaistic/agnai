@@ -6,9 +6,9 @@ import { adminStore } from '/web/store'
 import { JsonSchema } from '/web/shared/JsonSchema'
 import { neat } from '/common/util'
 import Select from '/web/shared/Select'
-import { JsonProps } from '/common/prompt'
+import { JsonField } from '/common/prompt'
 
-export const CharLibrary: Component<{ setSchema: Setter<JsonProps> }> = (props) => {
+export const CharLibrary: Component<{ setSchema: Setter<JsonField[]> }> = (props) => {
   const presets = usePresetOptions()
   const state = adminStore()
 

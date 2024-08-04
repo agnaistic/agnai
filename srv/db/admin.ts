@@ -38,12 +38,13 @@ export async function getServerConfiguration() {
     maxGuidanceTokens: 1000,
     maxGuidanceVariables: 15,
     googleClientId: '',
+    googleEnabled: false,
     charlibPublish: 'off',
     charlibGuidelines: '',
     modFieldPrompt: '',
     modPresetId: '',
     modPrompt: '',
-    modSchema: {},
+    modSchema: [],
   }
 
   await db('configuration').insertOne(next)

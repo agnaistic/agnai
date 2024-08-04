@@ -64,7 +64,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
 
     return list.filter((tab) => !props.hideTabs!.includes(tab))
   })
-  const [tab, setTab] = createSignal(+(search.tab ?? '0'))
+  const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
 
   const onServiceChange = (opt: Option<string>) => {
     setService(opt.value as any)
@@ -134,7 +134,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
         <Tabs
           select={(ev) => {
             setTab(ev)
-            setSearch({ tab: ev })
+            setSearch({ preset_tab: ev })
           }}
           selected={tab}
           tabs={tabs()}
@@ -231,6 +231,7 @@ export function getPresetFormData(ref: any) {
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
     modelFormat: 'string?',
+    disableNameStops: 'boolean',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
@@ -268,7 +269,8 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  return { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat }
+  const preset = { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat }
+  return preset
 }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {

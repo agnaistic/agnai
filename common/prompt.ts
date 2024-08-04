@@ -737,7 +737,8 @@ function fillPlaceholders(opts: {
   user: string
 }): string {
   const prefix = opts.msg.system ? 'System' : opts.author
-  const msg = opts.msg.msg.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
+  const text = opts.msg.json?.history || opts.msg.msg
+  const msg = text.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
 }
@@ -985,13 +986,17 @@ export type JsonType = { title?: string; description?: string; valid?: string } 
   | { type: 'bool' }
 )
 
-export type JsonProps = Record<string, JsonType>
-
 export type JsonSchema = {
   title: string
   type: 'object'
-  properties: JsonProps
+  properties: Record<string, JsonType>
   required: string[]
+}
+
+export interface JsonField {
+  name: string
+  disabled: boolean
+  type: JsonType
 }
 
 export const schema = {
@@ -1019,7 +1024,7 @@ export const schema = {
   }),
 } satisfies Record<string, (...args: any[]) => JsonType>
 
-export function toJsonSchema(body: JsonProps): JsonSchema {
+export function toJsonSchema(body: JsonField[]): JsonSchema {
   const schema: JsonSchema = {
     title: 'Response',
     type: 'object',
@@ -1029,39 +1034,25 @@ export function toJsonSchema(body: JsonProps): JsonSchema {
 
   const props: JsonSchema['properties'] = {}
 
-  for (let [key, def] of Object.entries(body)) {
-    key = key.replace(/_/g, ' ')
-    props[key] = { ...def }
+  for (const { name, disabled, type } of body) {
+    if (disabled) continue
+    props[name] = { ...type }
+    delete props[name].valid
 
-    delete props[key].valid
-    if (def.type === 'bool') {
-      props[key].type = 'enum'
+    if (type.type === 'bool') {
+      props[name].type = 'enum'
 
       // @ts-ignore
       props[key].enum = ['true', 'false', 'yes', 'no']
     }
+    schema.required.push(name)
   }
 
   schema.properties = props
-  schema.required = Object.keys(props)
   return schema
 }
 
-type ToJsonPrimitive<T extends JsonType> = T['type'] extends 'string'
-  ? string
-  : T['type'] extends 'integer'
-  ? number
-  : T['type'] extends 'bool'
-  ? boolean
-  : string[]
-
-type JsonValid<T extends JsonProps> = { [key in keyof T]: ToJsonPrimitive<T[key]> }
-
-export function fromJsonResponse<T extends JsonProps>(
-  schema: T,
-  response: any,
-  output: any = {}
-): JsonValid<T> {
+export function fromJsonResponse(schema: JsonField[], response: any, output: any = {}): any {
   const json: Record<string, any> = tryJsonParseResponse(response)
 
   for (let [key, value] of Object.entries(json)) {
@@ -1071,16 +1062,16 @@ export function fromJsonResponse<T extends JsonProps>(
       key = underscored
     }
 
-    const def = schema[key]
+    const def = schema.find((s) => s.name === key)
     if (!def) continue
 
     output[key] = value
-    if (def.type === 'bool') {
+    if (def.type.type === 'bool') {
       output[key] = value.trim() === 'true' || value.trim() === 'yes'
     }
   }
 
-  return output as JsonValid<T>
+  return output
 }
 
 export function tryJsonParseResponse(res: string) {
@@ -1105,11 +1096,11 @@ export function tryJsonParseResponse(res: string) {
   return {}
 }
 
-export function onJsonTickHandler<T extends JsonProps>(
-  schema: T,
-  handler: (res: Partial<JsonValid<T>>, state: InferenceState) => void
+export function onJsonTickHandler(
+  schema: JsonField[],
+  handler: (res: any, state: InferenceState) => void
 ) {
-  let curr: Partial<JsonValid<T>> = {}
+  let curr: any = {}
   const parser: TickHandler = (res, state) => {
     if (state === 'done') {
       const body = fromJsonResponse(schema, tryJsonParseResponse(res))

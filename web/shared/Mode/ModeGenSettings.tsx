@@ -12,8 +12,8 @@ import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import { adapterSettings } from '../util'
-import PresetSettings, { getPresetFormData } from '/web/shared/Preset'
-import { PresetTab } from '../Preset/types'
+import PresetSettings, { getPresetFormData } from '/web/shared/PresetSettings'
+import { PresetTab } from '../PresetSettings/types'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void

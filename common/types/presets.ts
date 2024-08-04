@@ -1,6 +1,5 @@
 import { AIAdapter, OpenRouterModel, ThirdPartyFormat } from '../adapters'
 import { ModelFormat } from '../presets/templates'
-import { JsonProps } from '../prompt'
 import { BaseImageSettings } from './image-schema'
 
 export interface SubscriptionTier {
@@ -105,6 +104,7 @@ export interface GenSettings {
   banEosToken?: boolean
   tokenHealing?: boolean
 
+  disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]
   trimStop?: boolean
@@ -136,11 +136,6 @@ export interface GenSettings {
   prefill?: string
   ignoreCharacterUjb?: boolean
   antiBond?: boolean
-
-  json?: {
-    schema: JsonProps
-    template: string
-  }
 
   frequencyPenalty?: number
   presencePenalty?: number

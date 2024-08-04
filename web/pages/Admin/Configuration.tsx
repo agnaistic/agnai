@@ -24,7 +24,7 @@ const ServerConfiguration: Component = () => {
   const tab = useTabs(['General', 'Images', 'Voice', 'Characters'])
 
   const [slots, setSlots] = createSignal(state.config?.slots || '{}')
-  const [modschema, setModschema] = createSignal(state.config?.modSchema || {})
+  const [modschema, setModschema] = createSignal(state.config?.modSchema || [])
 
   if (!user.user?.admin) {
     nav('/')
@@ -69,6 +69,7 @@ const ServerConfiguration: Component = () => {
       maxGuidanceTokens: 'number',
       maxGuidanceVariables: 'number',
       googleClientId: 'string',
+      googleEnabled: 'boolean',
       modPresetId: 'string',
       modPrompt: 'string',
       modFieldPrompt: 'string',

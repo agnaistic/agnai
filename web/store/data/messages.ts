@@ -6,8 +6,8 @@ import {
   buildPromptParts,
   resolveScenario,
   InferenceState,
-  JsonProps,
   TickHandler,
+  JsonField,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -63,6 +63,7 @@ export const msgsApi = {
   getInferencePreset,
   replaceUniversalTags,
   subscribe: inferenceSubscribe,
+  getActivePreset: getAuthGenSettings,
 }
 
 type InferenceOpts = {
@@ -70,7 +71,7 @@ type InferenceOpts = {
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
-  jsonSchema?: JsonProps
+  jsonSchema?: JsonField[]
 
   /** Base64 image */
   image?: string
@@ -303,7 +304,7 @@ export type GenerateOpts =
    */
   | { kind: 'self' }
   | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string; schema?: JsonProps }
+  | { kind: 'chat-query'; text: string; schema?: JsonField[] }
 
 export async function generateResponse(
   opts: GenerateOpts,
@@ -930,8 +931,12 @@ function getAuthedPromptEntities() {
 
 function getAuthGenSettings(
   chat: AppSchema.Chat,
-  user: AppSchema.User
+  user?: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
+  if (!user) {
+    user = userStore.getState().user!
+  }
+
   const { presets, templates } = getStore('presets').getState()
   const preset = deepClone(getChatPreset(chat, user, presets))
 
@@ -1021,7 +1026,7 @@ function messageToLine(opts: {
       opts.impersonate?.name ||
       opts.sender.handle ||
       'You'
-    return `${entity}: ${msg.msg}`
+    return `${entity}: ${msg.json?.history || msg.msg}`
   }
 }
 
@@ -1074,12 +1079,16 @@ subscribe(
   }
 )
 
-subscribe('message-partial', { requestId: 'string', partial: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
-  if (!cb) return
+subscribe(
+  'message-partial',
+  { requestId: 'string', partial: 'string', json: 'boolean?' },
+  (body) => {
+    const cb = inferenceCallbacks.get(body.requestId)
+    if (!cb) return
 
-  cb(body.partial, 'partial')
-})
+    cb(body.partial, 'partial')
+  }
+)
 
 /**
  * Completions

@@ -56,6 +56,7 @@ const squelched = new Set([
   'guidance-partial',
   'ping',
   'inference-partial',
+  'horde-check',
 ])
 
 function onMessage(msg: MessageEvent<any>) {

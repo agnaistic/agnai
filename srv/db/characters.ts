@@ -30,6 +30,7 @@ export type CharacterUpdate = Partial<
     | 'visualType'
     | 'voiceDisabled'
     | 'imageSettings'
+    | 'json'
   >
 >
 
@@ -61,6 +62,7 @@ export async function createCharacter(
     | 'visualType'
     | 'voiceDisabled'
     | 'imageSettings'
+    | 'json'
   >
 ) {
   const newChar: AppSchema.Character = {

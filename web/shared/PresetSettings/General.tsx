@@ -395,6 +395,12 @@ export const GeneralSettings: Component<
         />
         <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
         <Toggle
+          fieldName="disableNameStops"
+          label="Disable Name Stops"
+          helperText="Disable automatic character names stopping strings"
+          value={props.inherit?.disableNameStops}
+        />
+        <Toggle
           fieldName="trimStop"
           label="Trim Stop Sequences"
           helperText="Trim Stop Sequences from the AI's response. Does not work with Streaming responses."

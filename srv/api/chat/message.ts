@@ -8,6 +8,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { getScenarioEventType } from '/common/scenario'
+import { HydratedJson, jsonHydrator, parsePartialJson } from '/common/util'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -243,6 +244,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
+
   const { stream, adapter, ...metadata } = await createChatStream(
     { ...body, chat, replyAs, impersonate, requestId, entities },
     log
@@ -254,6 +256,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   let retries: string[] = []
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
+
+  const hydrator = entities.char.json ? jsonHydrator(entities.char.json) : undefined
+  let hydration: HydratedJson | undefined
+  let jsonPartial: any
 
   try {
     for await (const gen of stream) {
@@ -273,11 +279,17 @@ export const generateMessageV2 = handle(async (req, res) => {
 
       if ('partial' in gen) {
         const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+        if (metadata.json && hydrator) {
+          jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+          hydration = hydrator(jsonPartial || {})
+        }
+
         sendMany(members, {
           requestId: body.requestId,
           type: 'message-partial',
           kind: body.kind,
-          partial: `${prefix}${gen.partial}`,
+          partial: hydration ? hydration.response : `${prefix}${gen.partial}`,
+          json: hydration,
           adapter,
           chatId,
         })
@@ -333,9 +345,14 @@ export const generateMessageV2 = handle(async (req, res) => {
     return
   }
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   const parent = getNewMessageParent(body, userMsg)
   const updatedAt = new Date().toISOString()
+
+  if (hydration?.response) {
+    responseText = hydration.response
+  }
+
   let treeLeafId = ''
 
   switch (body.kind) {
@@ -372,6 +389,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         retries,
         event: undefined,
         parent,
+        json: hydration,
       })
 
       sendMany(members, {
@@ -381,6 +399,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         adapter,
         generate: true,
+        json: hydration,
       })
       treeLeafId = requestId
       break
@@ -399,6 +418,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           state: 'retried',
           retries: nextRetries,
+          json: hydration ? hydration : (null as any),
         })
         treeLeafId = body.replacing._id
         sendMany(members, {
@@ -412,6 +432,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           generate: true,
           meta,
           updatedAt: next?.updatedAt,
+          json: hydration,
         })
       } else {
         const msg = await store.msgs.createChatMessage({
@@ -425,6 +446,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           retries,
           event: undefined,
           parent,
+          json: hydration,
         })
         treeLeafId = requestId
         sendMany(members, {
@@ -434,6 +456,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           adapter,
           generate: true,
+          json: hydration,
         })
       }
       break
@@ -530,6 +553,10 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let error = false
   let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
+  const hydrator = body.char.json ? jsonHydrator(body.char.json) : undefined
+  let hydration: HydratedJson | undefined
+  let jsonPartial: any
+
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
@@ -546,7 +573,19 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     }
 
     if ('partial' in gen) {
-      sendGuest(guest, { type: 'message-partial', partial: gen.partial, adapter, chatId })
+      if (entities.json && hydrator) {
+        jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+        hydration = hydrator(jsonPartial || {})
+      }
+      sendGuest(guest, {
+        type: 'message-partial',
+        kind: body.kind,
+        partial: hydration ? hydration.response : gen.partial,
+        adapter,
+        chatId,
+        json: hydration,
+      })
+
       continue
     }
 
@@ -574,7 +613,10 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   if (error) return
 
-  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  if (hydration?.response) {
+    responseText = hydration.response
+  }
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
@@ -592,6 +634,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     event: undefined,
     retries,
     parent,
+    json: hydration,
   })
 
   switch (body.kind) {
@@ -616,6 +659,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
         continue: body.kind === 'continue',
         generate: true,
         meta,
+        json: hydration,
       })
       return
   }
@@ -633,6 +677,7 @@ function newMessage(
     event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
     parent?: string
+    json?: HydratedJson
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {

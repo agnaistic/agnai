@@ -37,6 +37,7 @@ const characterForm = {
   voice: 'string?',
   voiceDisabled: 'string?',
   tags: 'string?',
+  json: 'any?',
 
   imageSettings: 'string?',
 
@@ -61,6 +62,7 @@ const characterPost = {
   alternateGreetings: ['string?'],
   extensions: 'any?',
   insert: 'any?',
+  json: 'any?',
 } as const
 
 const newCharacterValidator = {
@@ -107,6 +109,7 @@ const createCharacter = handle(async (req) => {
   }
 
   const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+  const json = body.json ? JSON.parse(body.json) : undefined
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -132,6 +135,7 @@ const createCharacter = handle(async (req) => {
     characterVersion: body.characterVersion,
     insert: insert,
     imageSettings,
+    json,
   })
 
   const filename = await entityUpload(
@@ -259,23 +263,23 @@ const publishCharacter = handle(async ({ userId, body, log }, res) => {
 
   let acceptable = true
   for (const [key, value] of Object.entries(output)) {
-    const def = config.modSchema[key]
+    const def = config.modSchema.find((s) => s.name === key)
     if (!def) continue
-    if (!def.valid) continue
+    if (!def.type.valid) continue
 
-    switch (def.type) {
+    switch (def.type.type) {
       case 'integer':
       case 'string':
         continue
 
       case 'bool': {
-        const expected = def.valid === 'true'
+        const expected = def.type.valid === 'true'
         if (value !== expected) acceptable = false
         continue
       }
 
       case 'enum': {
-        const values = def.valid.split(',').map((v) => v.trim())
+        const values = def.type.valid.split(',').map((v) => v.trim())
         const valid = values.includes((value || '') as string)
         if (!valid) acceptable = false
         continue
@@ -354,6 +358,7 @@ const editFullCharacter = handle(async (req) => {
     : undefined
 
   const imageSettings = body.imageSettings ? JSON.parse(body.imageSettings) : undefined
+  const json = body.json ? JSON.parse(body.json) : undefined
 
   const update: CharacterUpdate = {
     name: body.name,
@@ -374,6 +379,7 @@ const editFullCharacter = handle(async (req) => {
     voiceDisabled: body.voiceDisabled === 'true',
     imageSettings,
     insert,
+    json,
   }
 
   if (body.persona) {

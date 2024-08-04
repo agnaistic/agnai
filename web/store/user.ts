@@ -10,7 +10,7 @@ import { usersApi } from './data/user'
 import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { UI } from '/common/types'
-import { defaultUIsettings } from '/common/types/ui'
+import { UISettings, defaultUIsettings } from '/common/types/ui'
 import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { getUserSubscriptionTier } from '/common/util'
@@ -586,6 +586,13 @@ export const userStore = createStore<UserState>(
       await updateTheme(update)
 
       const keys = Object.keys(defaultUIsettings.msgOptsInline) as UI.MessageOption[]
+
+      for (const key in defaultUIsettings) {
+        if (key in update === false) {
+          const prop = key as keyof UISettings
+          update[prop] = defaultUIsettings[prop] as never // ...?
+        }
+      }
 
       for (const key of keys) {
         if (!update.msgOptsInline[key]) {

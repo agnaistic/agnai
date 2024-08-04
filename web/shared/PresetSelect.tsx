@@ -2,9 +2,8 @@ import { JSX, Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
 import { uniqBy } from '../../common/util'
-import { useRootModal } from './hooks'
 import Button from './Button'
-import Modal from './Modal'
+import { RootModal } from './Modal'
 import { FormLabel } from './FormLabel'
 import { exportPreset, presetStore, settingStore, userStore } from '../store'
 import { isUsableService } from './util'
@@ -68,10 +67,33 @@ export const PresetSelect: Component<{
     exportPreset(preset)
   }
 
-  useRootModal({
-    id: 'presetSelect',
-    element: (
-      <Modal
+  return (
+    <>
+      <div class="flex flex-col gap-2 py-3 text-sm">
+        <Show
+          when={props.label && props.helperText}
+          fallback={<div class="text-lg">{props.label || ''}</div>}
+        >
+          <FormLabel label={props.label} helperText={props.helperText} />
+        </Show>
+
+        <Show when={props.fieldName}>
+          <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
+        </Show>
+
+        <div class="flex w-full gap-2">
+          <Button onClick={() => setShowSelectModal(true)} class="w-fit">
+            Selected: <strong>{selectedLabel()}</strong>
+          </Button>
+
+          <Button onClick={downloadPreset} disabled={!props.selected}>
+            <DownloadIcon size={20} />
+          </Button>
+        </div>
+
+        {props.warning ?? <></>}
+      </div>
+      <RootModal
         show={showSelectModal()}
         close={() => setShowSelectModal(false)}
         title="Choose a preset"
@@ -99,35 +121,8 @@ export const PresetSelect: Component<{
             />
           </div>
         </div>
-      </Modal>
-    ),
-  })
-
-  return (
-    <div class="flex flex-col gap-2 py-3 text-sm">
-      <Show
-        when={props.label && props.helperText}
-        fallback={<div class="text-lg">{props.label || ''}</div>}
-      >
-        <FormLabel label={props.label} helperText={props.helperText} />
-      </Show>
-
-      <Show when={props.fieldName}>
-        <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
-      </Show>
-
-      <div class="flex w-full gap-2">
-        <Button onClick={() => setShowSelectModal(true)} class="w-fit">
-          Selected: <strong>{selectedLabel()}</strong>
-        </Button>
-
-        <Button onClick={downloadPreset} disabled={!props.selected}>
-          <DownloadIcon size={20} />
-        </Button>
-      </div>
-
-      {props.warning ?? <></>}
-    </div>
+      </RootModal>
+    </>
   )
 }
 

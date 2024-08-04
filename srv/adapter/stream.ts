@@ -29,7 +29,10 @@ function incompleteJson(data: string) {
  * Operates on Needle events, not NodeJS ReadableStream events.
  * https://github.com/tomas/needle#events
  **/
-export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdPartyFormat) {
+export function requestStream(
+  stream: NodeJS.ReadableStream,
+  format?: ThirdPartyFormat | 'openrouter'
+) {
   const emitter = eventGenerator<ServerSentEvent>()
 
   stream.on('header', (statusCode, headers) => {
@@ -37,6 +40,16 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
     if (statusCode > 201) {
       emitter.push({ error: `SSE request failed with status code ${statusCode}` })
       emitter.done()
+    } else if (format === 'openrouter') {
+      if (
+        contentType.startsWith('application/json') ||
+        contentType.startsWith('text/event-stream')
+      ) {
+        return
+      }
+      emitter.push({
+        error: `SSE request received unexpected content-type ${headers['content-type']}`,
+      })
     } else if (format === 'ollama') {
       if (contentType.startsWith('application/x-ndjson')) return
 
@@ -62,7 +75,7 @@ export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdParty
     const data = incomplete + chunk.toString()
     incomplete = ''
 
-    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l)
+    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
     for (const msg of messages) {
       if (format === 'vllm') {

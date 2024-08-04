@@ -427,3 +427,129 @@ export function tryParse(value?: any) {
     return obj
   } catch (ex) {}
 }
+
+export function parsePartialJson(value: string) {
+  {
+    const obj = tryParse(value.trim())
+    if (obj) return obj
+  }
+  {
+    const obj = tryParse(value.trim() + '}')
+    if (obj) return obj
+  }
+  {
+    const obj = tryParse(value.trim() + '"}')
+    if (obj) return obj
+  }
+}
+
+const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
+
+export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: any) {
+  const map = new Map<string, string>()
+
+  for (const key in def.schema) {
+    map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
+  }
+
+  const output: any = {}
+
+  for (const [key, value] of Object.entries(json)) {
+    const safe = key.replace(SAFE_NAME, ' ')
+    const alias = map.get(safe)
+
+    if (alias) {
+      output[alias] = value
+    } else {
+      output[key] = value
+    }
+  }
+
+  let response = def.response
+  let history = def.history
+
+  const resVars = response.match(JSON_NAME_RE())
+  const histVars = history.match(JSON_NAME_RE())
+
+  if (resVars) {
+    for (const holder of resVars) {
+      const trimmed = holder.slice(2, -2)
+      const safe = trimmed.replace(SAFE_NAME, ' ')
+      const value = output[safe] ?? output[trimmed]
+
+      response = response.split(holder).join(value ?? '')
+    }
+  }
+
+  if (histVars) {
+    for (const holder of histVars) {
+      const trimmed = holder.slice(2, -2)
+      const safe = trimmed.replace(SAFE_NAME, ' ')
+      const value = output[safe] ?? output[trimmed]
+
+      history = history.split(holder).join(value ?? '')
+    }
+  }
+
+  return { values: output, response, history }
+}
+
+export type HydratedJson = {
+  values: any
+  response: string
+  history: string
+}
+
+export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+}}/g
+
+export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
+  const map = new Map<string, string>()
+  const resVars = def.response.match(JSON_NAME_RE())
+  const histVars = def.history.match(JSON_NAME_RE())
+
+  for (const key in def.schema) {
+    map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
+  }
+
+  const hydrate = (json: any) => {
+    const output: any = {}
+
+    for (const [key, value] of Object.entries(json)) {
+      const safe = key.replace(SAFE_NAME, ' ')
+      const alias = map.get(safe)
+
+      if (alias) {
+        output[alias] = value
+      } else {
+        output[key] = value
+      }
+    }
+
+    let response = def.response
+    let history = def.history
+
+    if (resVars) {
+      for (const holder of resVars) {
+        const trimmed = holder.slice(2, -2)
+        const safe = trimmed.replace(SAFE_NAME, ' ')
+        const value = output[safe] ?? output[trimmed]
+
+        response = response.split(holder).join(value ?? '')
+      }
+    }
+
+    if (histVars) {
+      for (const holder of histVars) {
+        const trimmed = holder.slice(2, -2)
+        const safe = trimmed.replace(SAFE_NAME, ' ')
+        const value = output[safe] ?? output[trimmed]
+
+        history = history.split(holder).join(value ?? '')
+      }
+    }
+
+    return { values: output, response, history }
+  }
+
+  return hydrate
+}

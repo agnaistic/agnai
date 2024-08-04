@@ -26,7 +26,8 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
-import { JsonProps, TickHandler } from '/common/prompt'
+import { JsonField, TickHandler } from '/common/prompt'
+import { HordeCheck } from '/common/horde-gen'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -48,6 +49,7 @@ type SendModes =
 export type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
 
 export type MsgState = {
+  hordeStatus?: HordeCheck
   activeChatId: string
   activeCharId: string
   messageHistory: ChatMessageExt[]
@@ -60,6 +62,7 @@ export type MsgState = {
     userId?: string
     characterId: string
     messageId?: string
+    image?: boolean
   }
   nextLoading: boolean
   imagesSaved: boolean
@@ -497,7 +500,7 @@ export const msgStore = createStore<MsgState>(
     async *chatJson(
       { waiting, activeChatId },
       message: string,
-      schema: JsonProps,
+      schema: JsonField[],
       onTick: TickHandler
     ) {
       if (waiting) return
@@ -579,7 +582,7 @@ export const msgStore = createStore<MsgState>(
     async *confirmSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
       const replacement = msg?.retries?.[position - 1]
-      if (!replacement || !msg?.msg) {
+      if (!replacement || msg?.msg === undefined) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
 
@@ -686,7 +689,10 @@ export const msgStore = createStore<MsgState>(
       if (waiting) return
 
       const onDone = (image: string) => handleImage(activeChatId, image)
-      yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
+      yield {
+        hordeStatus: undefined,
+        waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId, image: true },
+      }
 
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
       const res = await imageApi.generateImage({
@@ -853,14 +859,18 @@ async function playVoiceFromBrowser(
   audio.play(voice.rate)
 }
 
-subscribe('message-partial', { partial: 'string', chatId: 'string', kind: 'string?' }, (body) => {
-  const { activeChatId } = msgStore.getState()
-  if (body.chatId !== activeChatId) return
+subscribe(
+  'message-partial',
+  { partial: 'string', chatId: 'string', kind: 'string?', json: 'any?' },
+  (body) => {
+    const { activeChatId } = msgStore.getState()
+    if (body.chatId !== activeChatId) return
 
-  if (body.kind !== 'chat-query') {
-    msgStore.setState({ partial: body.partial })
+    if (body.kind !== 'chat-query') {
+      msgStore.setState({ partial: body.partial })
+    }
   }
-})
+)
 
 subscribe(
   'message-retry',
@@ -876,6 +886,7 @@ subscribe(
     retries: ['string?'],
     updatedAt: 'string?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
+    json: 'any?',
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
@@ -912,6 +923,7 @@ subscribe(
       extras: body.extras || prev?.extras,
       retries: body.retries,
       updatedAt: body.updatedAt || new Date().toISOString(),
+      json: body.json,
     }
 
     if (retrying?._id === body.messageId) {
@@ -944,6 +956,7 @@ subscribe(
     generate: 'boolean?',
     requestId: 'string?',
     retry: 'boolean?',
+    json: 'any?',
   } as const,
   onMessageReceived
 )
@@ -956,6 +969,7 @@ subscribe(
     generate: 'boolean?',
     requestId: 'string?',
     retry: 'boolean?',
+    json: 'any?',
   } as const,
   onMessageReceived
 )
@@ -966,6 +980,7 @@ async function onMessageReceived(body: {
   generate?: boolean
   requestId?: string
   retry?: boolean
+  json?: any
 }) {
   const { msgs, activeChatId, graph } = msgStore.getState()
   if (activeChatId !== body.chatId) return
@@ -1276,3 +1291,10 @@ subscribe(
     onCharacterMessageReceived(msg)
   }
 )
+
+subscribe('horde-status', { status: 'any' }, (body) => {
+  const waiting = msgStore.getState().waiting
+
+  if (!waiting?.image) return
+  msgStore.setState({ hordeStatus: body.status })
+})

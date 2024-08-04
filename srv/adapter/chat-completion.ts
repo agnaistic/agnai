@@ -2,7 +2,7 @@ import needle from 'needle'
 import { getTokenCounter } from '../tokenize'
 import { requestStream } from './stream'
 import { AdapterProps } from './type'
-import { OPENAI_MODELS } from '/common/adapters'
+import { OPENAI_MODELS, ThirdPartyFormat } from '/common/adapters'
 import { defaultPresets } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import {
@@ -47,7 +47,8 @@ type CompletionGenerator = (
   headers: Record<string, string | string[] | number>,
   body: any,
   service: string,
-  log: AppLog
+  log: AppLog,
+  format?: ThirdPartyFormat | 'openrouter'
 ) => AsyncGenerator<
   { error: string } | { error?: undefined; token: string } | Completion,
   Completion | undefined
@@ -72,7 +73,8 @@ export const streamCompletion: CompletionGenerator = async function* (
   headers,
   body,
   service,
-  log
+  log,
+  format
 ) {
   const resp = needle.post(url, JSON.stringify(body), {
     parse: false,
@@ -87,7 +89,7 @@ export const streamCompletion: CompletionGenerator = async function* (
   let current: any = {}
 
   try {
-    const events = requestStream(resp)
+    const events = requestStream(resp, format)
     let prev = ''
     for await (const event of events) {
       if (event.error) {

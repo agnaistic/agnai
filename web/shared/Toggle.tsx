@@ -4,11 +4,13 @@ import './toggle.css'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { isValidServiceSetting } from './util'
 import { Option } from './Select'
+import { forms } from '../emitter'
 
 export const Toggle: Component<{
   fieldName: string
   value?: boolean
   label?: string | JSX.Element
+  ref?: (ref: HTMLInputElement) => void
   helperText?: string | JSX.Element
   helperMarkdown?: string
   class?: string
@@ -27,6 +29,7 @@ export const Toggle: Component<{
     const checked = !!ev.currentTarget.checked
     ref.checked = checked
     props.onChange?.(checked)
+    forms.emit(props.fieldName, checked)
   }
 
   const hide = createMemo(() => {
@@ -59,7 +62,10 @@ export const Toggle: Component<{
       </Show>
       <label class={`toggle ${props.disabled ? 'toggle-disabled' : ''}`}>
         <input
-          ref={ref!}
+          ref={(r) => {
+            ref = r
+            props.ref?.(r)
+          }}
           type="checkbox"
           class="toggle-checkbox form-field w-0"
           id={props.fieldName}

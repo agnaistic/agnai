@@ -53,7 +53,7 @@ export const ModeDetail: Component<{
 
       <Show when={!props.loading}>
         <section
-          class="mode pl-2 pr-2 sm:pl-3"
+          class="mode pl-2 pr-2 sm:pl-2"
           style={bgStyles()}
           classList={{
             'sm:pr-0': props.showPane,
@@ -106,14 +106,14 @@ export const ModeDetail: Component<{
               </Show>
               <section
                 data-messages
-                class="mx-auto flex w-full flex-col-reverse overflow-y-auto"
+                class="flex w-full flex-col-reverse overflow-y-auto"
                 classList={{
                   // Chat Width
                   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
                   'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
                   // Chat Margin
                   'xs:mr-auto mx-auto': props.showPane,
-                  'mx-auto': !props.showPane,
+                  // 'mx-auto': !props.showPane,
                 }}
               >
                 {props.children}

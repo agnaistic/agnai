@@ -12,7 +12,6 @@ import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
 import { getStrictForm } from '/web/shared/util'
 import { toastStore } from '/web/store'
-import { Page } from '/web/Layout'
 
 export { PromptTemplates as default }
 
@@ -41,7 +40,7 @@ const PromptTemplates: Component = () => {
   }
 
   return (
-    <Page>
+    <>
       <PageHeader title="Prompt Templates" />
 
       <div class="flex w-full flex-col gap-4">
@@ -107,7 +106,7 @@ const PromptTemplates: Component = () => {
         </div>
       </div>
       <TemplateModal show={show()} close={close} initial={initial()} edit={edit()} />
-    </Page>
+    </>
   )
 }
 

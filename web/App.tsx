@@ -22,7 +22,7 @@ import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
-import Settings from './pages/Settings'
+import Settings, { SettingsModal } from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { useCharacterBg, usePaneManager } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
@@ -200,6 +200,7 @@ const Layout: Component<{ children?: any }> = (props) => {
       <ProfileModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
+      <SettingsModal />
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
         classList={{ hidden: !cfg.overlay }}

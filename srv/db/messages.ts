@@ -24,6 +24,7 @@ export type NewMessage = {
   event: AppSchema.ScenarioEventType | undefined
   retries?: string[]
   parent?: string
+  json?: AppSchema.ChatMessage['json']
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
@@ -45,6 +46,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     meta: creating.meta,
     event: creating.event,
     parent: creating.parent,
+    json: creating.json,
   }
 
   if (creating.imagePrompt) {
@@ -98,7 +100,7 @@ export async function editChatMessage(
   update: Partial<
     Pick<
       AppSchema.ChatMessage,
-      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries' | 'parent'
+      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries' | 'parent' | 'json'
     >
   >
 ) {
@@ -115,7 +117,7 @@ export async function editMessage(
   update: Partial<
     Pick<
       AppSchema.ChatMessage,
-      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries' | 'parent'
+      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries' | 'parent' | 'json'
     >
   >
 ) {

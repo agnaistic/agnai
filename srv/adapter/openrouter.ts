@@ -6,6 +6,7 @@ import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { AppLog } from '../logger'
 import { OpenRouterModel } from '/common/adapters'
+import { getStoppingStrings } from './prompt'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -22,13 +23,22 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     }
     return
   }
-  const handle = opts.impersonate?.name || opts.sender.handle || 'You'
+
   const payload: any = {
     prompt: opts.prompt,
+    stream: opts.gen.streamResponse,
     // 256 is the OpenRouter default. We will use this.
     temperature: opts.gen.temp,
     max_tokens: opts.gen.maxTokens ?? 256,
-    stop: [`${handle}:`],
+    stop: getStoppingStrings(opts),
+    top_p: opts.gen.topP,
+    top_k: opts.gen.topK,
+    top_a: opts.gen.topA,
+    min_p: opts.gen.minP,
+
+    frequency_penalty: opts.gen.frequencyPenalty,
+    presence_penalty: opts.gen.presencePenalty,
+    repetition_penalty: opts.gen.repetitionPenalty,
   }
 
   if (opts.gen.openRouterModel?.id) {
@@ -36,17 +46,16 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
-  yield { prompt: payload.messages }
+  yield { prompt: payload.messages || payload.prompt }
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
     'HTTP-Referer': 'https://agnai.chat',
   }
 
-  const res =
-    false ?? opts.gen.streamResponse
-      ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log)
-      : getCompletion(payload, headers)
+  const res = opts.gen.streamResponse
+    ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log, 'openrouter')
+    : getCompletion(payload, headers)
 
   let accum = ''
   let response: any
@@ -67,6 +76,9 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
     if ('token' in gen.value) {
       accum += gen.value.token
+      yield {
+        partial: sanitiseAndTrim(accum, opts.prompt, opts.replyAs, opts.characters, opts.members),
+      }
     }
   }
 

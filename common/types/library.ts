@@ -1,4 +1,5 @@
 import { PersonaFormat } from '../adapters'
+import { JsonField } from '../prompt'
 import { BaseImageSettings, ImageSettings } from './image-schema'
 import { MemoryBook } from './memory'
 import { FullSprite } from './sprite'
@@ -45,6 +46,8 @@ export interface Character extends BaseCharacter {
 
   image?: ImageSettings
 
+  json?: CharacterJsonSchema
+
   folder?: string
   // v2 stuff
   alternateGreetings?: string[]
@@ -67,4 +70,11 @@ export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {
   reactions: Record<string, number>
   chats: number
   messages: number
+}
+
+export interface CharacterJsonSchema {
+  schema: JsonField[]
+  response: string
+  history: string
+  enabled: boolean
 }

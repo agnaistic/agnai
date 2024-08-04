@@ -89,6 +89,12 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const [avatar, setAvatar] = createSignal<File | undefined>()
   const google = useGoogleReady()
 
+  const canuseGoogle = createMemo(
+    () =>
+      !!settings.config.serverConfig?.googleClientId &&
+      (settings.config.serverConfig?.googleEnabled || settings.flags.google)
+  )
+
   const onAvatar = (files: FileInputResult[]) => {
     const [file] = files
     if (!file) return setAvatar()
@@ -112,7 +118,9 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
     if (!api) return
 
-    if (settings.config.serverConfig?.googleClientId) {
+    const enabled = settings.config.serverConfig?.googleEnabled || settings.flags.google
+
+    if (settings.config.serverConfig?.googleClientId && enabled) {
       api.initialize({
         client_id: settings.config.serverConfig?.googleClientId,
         callback: (result: any) => {
@@ -176,7 +184,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </TitleCard>
 
-          <Show when={state.user?._id !== 'anon' && settings.config.serverConfig?.googleClientId}>
+          <Show when={state.user?._id !== 'anon' && canuseGoogle()}>
             <div class="flex justify-center">
               <TitleCard class="flex w-fit flex-col items-center justify-center gap-1" type="hl">
                 <Show when={!state.user?.google?.sub}>

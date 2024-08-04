@@ -48,16 +48,18 @@ import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
-import { trimSentence } from '/common/util'
+import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
-import { Card } from '/web/shared/Card'
+import { Card, Pill } from '/web/shared/Card'
 import { FeatureFlags } from '/web/store/flags'
 import { DropMenu } from '/web/shared/DropMenu'
 import { ChatTree } from '/common/chat'
 import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
+import { createStore } from 'solid-js/store'
+import { Spinner } from '/web/shared/Loading'
 
 type MessageProps = {
   msg: SplitMessage
@@ -105,6 +107,7 @@ const Message: Component<MessageProps> = (props) => {
   const isUser = !!props.msg.userId
   const [img, setImg] = createSignal('h-full')
   const opts = createSignal(false)
+  const [jsonValues, setJsonValues] = createSignal(props.msg.json?.values || {})
 
   const showOpt = createSignal(false)
 
@@ -124,7 +127,17 @@ const Message: Component<MessageProps> = (props) => {
   })
 
   const saveEdit = () => {
+    if (props.msg.json) {
+      const json = jsonValues()
+      const update = getJsonUpdate(ctx.char?.json!, json)
+
+      msgStore.editMessageProp(props.msg._id, update)
+      setEdit(false)
+      return
+    }
+
     if (!editRef) return
+
     msgStore.editMessage(props.msg._id, editRef.innerText)
     setEdit(false)
   }
@@ -408,9 +421,25 @@ const Message: Component<MessageProps> = (props) => {
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
-                  <div class="flex h-8 w-12 items-center justify-center">
-                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                  </div>
+                  <Show
+                    when={ctx.waiting?.image}
+                    fallback={
+                      <div class="flex h-8 w-12 items-center justify-center">
+                        <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                      </div>
+                    }
+                  >
+                    <Spinner />{' '}
+                    <span
+                      class="text-500 text-xs italic"
+                      classList={{ hidden: !ctx.status?.wait_time }}
+                    >
+                      {ctx.status?.wait_time || '0'}s
+                    </span>
+                  </Show>
+                </Match>
+                <Match when={edit() && props.msg.json}>
+                  <JsonEdit msg={props.msg} update={(next) => setJsonValues(next)} />
                 </Match>
                 <Match when={edit()}>
                   <div
@@ -442,6 +471,38 @@ export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: s
 
 function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
   return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))
+}
+
+const JsonEdit: Component<{ msg: SplitMessage; update: (next: any) => void }> = (props) => {
+  const entries = createMemo(() => Object.keys(props.msg.json?.values || {}))
+  const [editing, setEditing] = createStore<Record<string, string>>(props.msg.json?.values || {})
+
+  onMount(() => {
+    props.update(props.msg.json?.values || {})
+  })
+
+  return (
+    <div class="flex flex-col gap-2">
+      <For each={entries()}>
+        {(key) => (
+          <div class="flex flex-col">
+            <Pill type="bg" small opacity={0.5} class="rounded-b-none rounded-t-md">
+              {key}
+            </Pill>
+            <div
+              ref={(r) => (r.innerText = editing[key])}
+              class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1"
+              contentEditable={true}
+              onKeyUp={(ev: any) => {
+                setEditing(key, ev.target.innerText)
+                props.update(editing)
+              }}
+            ></div>
+          </div>
+        )}
+      </For>
+    </div>
+  )
 }
 
 const MessageOptions: Component<{
@@ -877,5 +938,14 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
     type: 'message',
     message: renderMessage(ctx, message, !!props.msg.userId, props.msg.adapter),
     class: 'not-streaming',
+  }
+}
+
+function getJsonUpdate(def: NonNullable<AppSchema.Character['json']>, json: any) {
+  const hydration = hydrateTemplate(def, json)
+
+  return {
+    json: hydration,
+    msg: hydration.response,
   }
 }

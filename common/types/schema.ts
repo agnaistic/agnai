@@ -15,7 +15,7 @@ import type { UISettings } from './ui'
 import * as Saga from './saga'
 import * as Library from './library'
 import * as Preset from './presets'
-import type { JsonProps } from '../prompt'
+import type { JsonField } from '../prompt'
 
 export type AllDoc =
   | AppSchema.Announcement
@@ -98,6 +98,7 @@ export namespace AppSchema {
     imagesModels: ImageModel[]
 
     googleClientId: string
+    googleEnabled: boolean
 
     ttsHost: string
     ttsApiKey: string
@@ -109,7 +110,7 @@ export namespace AppSchema {
     modPresetId: string
     modPrompt: string
     modFieldPrompt: string
-    modSchema: JsonProps
+    modSchema: JsonField[]
 
     charlibPublish: 'off' | 'users' | 'subscribers' | 'moderators' | 'admins'
     charlibGuidelines: string
@@ -409,6 +410,11 @@ export namespace AppSchema {
     state?: string
     values?: Record<string, string | number | boolean>
     parent?: string
+    json?: {
+      response: string
+      history: string
+      values: any
+    }
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'
