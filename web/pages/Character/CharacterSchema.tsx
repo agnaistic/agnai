@@ -1,16 +1,45 @@
-import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, Setter, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Button from '/web/shared/Button'
-import { RootModal } from '/web/shared/Modal'
+import { HelpModal, RootModal } from '/web/shared/Modal'
 import { JsonSchema } from '/web/shared/JsonSchema'
 import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
 import { Toggle } from '/web/shared/Toggle'
 import { CharacterJsonSchema } from '/common/types/library'
 import { Card, Pill, TitleCard } from '/web/shared/Card'
-import { JSON_NAME_RE } from '/common/util'
+import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
 import { characterStore } from '/web/store'
+import { CircleHelp } from 'lucide-solid'
+
+const helpMarkdown = neat`
+You can return many values using JSON schemas and control the structure of your response.
+For example you could define the following fields:
+- **response**: string
+- **character health percentage**: number
+
+You can then reference these fields in your **response** and **history** templates:
+
+Response Template
+\`\`\`
+{{response}}
+\`HP: {{character health percentage}}%\`
+\`\`\`
+
+History Template
+\`\`\`
+{{response}}
+(User's health: {{character health percentage}}%)
+\`\`\`
+
+**Tips**:
+- Use instructive fields names. This tells the AI how to generate that field.
+- If a field is disabled, it won't be included in the generation.
+- Order may be important. For example, if you have a multi-character schema you may name the fields like this:
+-- **Steve's message to Linda**
+-- **Linda's response to Steve**
+`
 
 export const CharacterSchema: Component<{
   characterId?: string
@@ -80,7 +109,17 @@ export const CharacterSchema: Component<{
     }
   })
 
-  const onAutoComplete = (opt: { label: string }) => {
+  const onFieldNameChange = (from: string, to: string) => {
+    const res = response().split(`{{${from}}}`).join(`{{${to}}}`)
+    const his = hist().split(`{{${from}}}`).join(`{{${to}}}`)
+
+    histRef.value = his
+    respRef.value = res
+    setResponse(res)
+    setHistory(his)
+  }
+
+  const onAutoComplete = (setter: Setter<string>) => (opt: { label: string }) => {
     const ref = auto() === 'history' ? histRef : auto() === 'response' ? respRef : undefined
 
     if (ref) {
@@ -102,6 +141,7 @@ export const CharacterSchema: Component<{
 
       const next = `${before}${opt.label}${after}`
       ref.value = next
+      setter(next)
       ref.focus()
       ref.setSelectionRange(
         before.length + opt.label.length,
@@ -130,6 +170,8 @@ export const CharacterSchema: Component<{
       }
     }
 
+    setHistErr('')
+    setResErr('')
     setShow(false)
   }
 
@@ -165,10 +207,20 @@ export const CharacterSchema: Component<{
         }
       >
         <div class="flex flex-col gap-2 text-sm">
-          <div class="flex w-full justify-center">
+          <div class="flex w-full justify-center gap-2">
             <Pill type="premium">
               This feature is in beta. Please raise bugs on Discord or GitHub.
             </Pill>
+
+            <HelpModal
+              title="Information"
+              cta={
+                <Button size="sm">
+                  <CircleHelp size={24} />
+                </Button>
+              }
+              markdown={helpMarkdown}
+            />
           </div>
           <Card class="relative">
             <Show when={auto() === 'response'}>
@@ -176,7 +228,7 @@ export const CharacterSchema: Component<{
                 options={vars()}
                 close={() => setAuto('')}
                 dir="down"
-                onSelect={onAutoComplete}
+                onSelect={onAutoComplete(setResponse)}
               />
             </Show>
             <TextInput
@@ -213,7 +265,7 @@ export const CharacterSchema: Component<{
                 options={vars()}
                 close={() => setAuto('')}
                 dir="down"
-                onSelect={onAutoComplete}
+                onSelect={onAutoComplete(setHistory)}
               />
             </Show>
             <TextInput
@@ -246,7 +298,11 @@ export const CharacterSchema: Component<{
             />
           </Card>
 
-          <JsonSchema inherit={schema()} update={(ev) => setCandidate(ev)} />
+          <JsonSchema
+            inherit={schema()}
+            update={(ev) => setCandidate(ev)}
+            onNameChange={onFieldNameChange}
+          />
         </div>
       </RootModal>
     </div>

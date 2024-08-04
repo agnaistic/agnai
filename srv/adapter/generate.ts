@@ -305,7 +305,8 @@ export async function createChatStream(
     opts.char?.json?.enabled &&
     opts.char.json?.history &&
     opts.char.json?.response &&
-    opts.char.json?.schema?.length
+    opts.char.json?.schema?.length &&
+    opts.char.json.schema.some((s) => !s.disabled)
 
   if (subscription?.preset?.jsonSchemaCapable && isUsableSchema) {
     jsonSchema = opts.char.json?.schema

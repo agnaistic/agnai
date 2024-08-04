@@ -257,7 +257,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
-  const hydrator = entities.char.json ? jsonHydrator(entities.char.json) : undefined
+  const hydrator = entities.char.json?.enabled ? jsonHydrator(entities.char.json) : undefined
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 
@@ -553,7 +553,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let error = false
   let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
-  const hydrator = body.char.json ? jsonHydrator(body.char.json) : undefined
+  const hydrator = body.char.json?.enabled ? jsonHydrator(body.char.json) : undefined
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 
