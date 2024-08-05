@@ -164,6 +164,7 @@ export async function generateText(
     top_k: preset.topK ?? defaultPresets.horde.topK,
     top_p: preset.topP ?? defaultPresets.horde.topP,
     typical: preset.typicalP ?? defaultPresets.horde.typicalP,
+    min_p: preset.minP,
     max_context_length: Math.min(
       preset.maxContextLength ?? defaultPresets.horde.maxContextLength,
       2048
@@ -173,6 +174,9 @@ export async function generateText(
     rep_pen_slope: preset.repetitionPenaltySlope,
     tfs: preset.tailFreeSampling ?? defaultPresets.horde.tailFreeSampling,
     temperature: Math.min(preset.temp ?? defaultPresets.horde.temp, 5),
+    smoothing_factor: preset.smoothingFactor,
+    dynatemp_range: preset.dynatemp_range,
+    dynatemp_exponent: preset.dynatemp_exponent,
   }
 
   if (preset.order) {

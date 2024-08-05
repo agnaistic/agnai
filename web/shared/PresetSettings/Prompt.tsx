@@ -71,7 +71,7 @@ export const PromptSettings: Component<
             fieldName="gaslight"
             value={promptTemplate()}
             placeholder={defaultTemplate}
-            disabled={props.disabled || !!props.inherit?.promptTemplateId}
+            disabled={props.disabled}
             showHelp
             inherit={props.inherit}
             hide={useAdvanced() === 'basic'}

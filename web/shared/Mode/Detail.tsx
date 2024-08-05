@@ -2,7 +2,6 @@ import './mode.scss'
 import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { settingStore, userStore } from '/web/store'
-import { getHeaderBg } from '/web/pages/Chat/helpers'
 import { useCharacterBg, usePane, useRef, useResizeObserver } from '../hooks'
 import Slot from '../Slot'
 
@@ -39,8 +38,6 @@ export const ModeDetail: Component<{
   const slots = useResizeObserver()
 
   const [slot, onSlot] = useRef()
-
-  const header = createMemo(() => getHeaderBg(user.ui.mode))
   const bgStyles = useCharacterBg('page')
 
   return (
@@ -61,13 +58,8 @@ export const ModeDetail: Component<{
           }}
         >
           <header class="flex flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
-            <div
-              class="hidden items-center justify-between rounded-md sm:flex"
-              classList={{ 'sm:flex': !!props.header }}
-              style={header()}
-            >
-              {props.header}
-            </div>
+            {props.header}
+
             <div
               ref={(ref) => {
                 onSlot(ref)

@@ -110,8 +110,9 @@ export function useCharacterBg(src: 'layout' | 'page') {
   const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const bg = createMemo(() => {
+    if (src === 'page') return {}
     if (cfg.anonymize) return {}
-    if (src === 'layout' && isChat()) return {}
+    // if (src === 'layout' && isChat()) return {}
 
     const mobile = isMobile()
 

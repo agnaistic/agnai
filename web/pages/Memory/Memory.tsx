@@ -12,6 +12,7 @@ import { SolidCard } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
 import { embedApi } from '/web/store/embeddings'
 import { EditEmbedModal } from '/web/shared/EditEmbedModal'
+import { Page } from '/web/Layout'
 
 export const EmbedsTab: Component = (props) => {
   const state = memoryStore()
@@ -73,7 +74,7 @@ export const BooksTab: Component = (props) => {
   })
 
   return (
-    <>
+    <Page>
       <PageHeader
         title="Memory - Books"
         subtitle={
@@ -141,7 +142,7 @@ export const BooksTab: Component = (props) => {
         close={() => setDeleting()}
         show={!!deleting()}
       />
-    </>
+    </Page>
   )
 }
 

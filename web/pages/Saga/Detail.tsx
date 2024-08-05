@@ -44,6 +44,7 @@ import { Saga } from '/common/types'
 import { getRgbaFromVar } from '/web/shared/colors'
 import { trimSentence } from '/common/util'
 import { sticky } from '/web/shared/util'
+import { getHeaderBg } from '../Chat/helpers'
 
 export const SagaDetail: Component = (props) => {
   const user = userStore()
@@ -223,20 +224,24 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 }
 
 const Header: Component<{ template: Saga.Template; session: Saga.Session }> = (props) => {
+  const user = userStore()
+  const header = createMemo(() => getHeaderBg(user.ui.mode))
   const [_, setParams] = useSearchParams()
   return (
-    <div class="flex w-full justify-between rounded-md p-1">
-      <div class="flex items-center font-bold">{props.template.name || 'Untitled Template'}</div>
-      <div class="flex gap-2">
-        <Button onClick={() => setParams({ pane: 'prompt' })}>
-          <Cog />
-        </Button>
-        <Button onClick={() => setParams({ pane: 'preset' })}>
-          <Sliders />
-        </Button>
-        <Button onClick={() => sagaStore.setState({ showModal: 'help' })}>
-          <HelpCircle />
-        </Button>
+    <div class="hidden items-center justify-between rounded-md sm:flex" style={header()}>
+      <div class="flex w-full justify-between rounded-md p-1">
+        <div class="flex items-center font-bold">{props.template.name || 'Untitled Template'}</div>
+        <div class="flex gap-2">
+          <Button onClick={() => setParams({ pane: 'prompt' })}>
+            <Cog />
+          </Button>
+          <Button onClick={() => setParams({ pane: 'preset' })}>
+            <Sliders />
+          </Button>
+          <Button onClick={() => sagaStore.setState({ showModal: 'help' })}>
+            <HelpCircle />
+          </Button>
+        </div>
       </div>
     </div>
   )

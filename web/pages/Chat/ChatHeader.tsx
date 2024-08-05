@@ -51,7 +51,8 @@ export const ChatHeader: Component<{
 
   return (
     <>
-      <header
+      <div
+        data-chat-header
         class={`hidden h-9 w-full items-center justify-between rounded-md sm:flex`}
         style={headerBg()}
       >
@@ -109,7 +110,7 @@ export const ChatHeader: Component<{
             </div>
           </Show>
         </div>
-      </header>
+      </div>
     </>
   )
 }

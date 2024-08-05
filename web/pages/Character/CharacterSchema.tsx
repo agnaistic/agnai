@@ -256,6 +256,7 @@ export const CharacterSchema: Component<{
               value={props.inherit?.response}
               onInputText={(ev) => setResponse(ev)}
               placeholder="Response Template"
+              class="font-mono text-xs"
             />
           </Card>
 
@@ -269,6 +270,7 @@ export const CharacterSchema: Component<{
               />
             </Show>
             <TextInput
+              class="font-mono text-xs"
               ref={(r) => (histRef = r)}
               label="History Template"
               onKeyDown={(ev) => {

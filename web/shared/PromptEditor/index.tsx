@@ -8,6 +8,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onMount,
 } from 'solid-js'
 import { FormLabel } from '../FormLabel'
@@ -31,6 +32,7 @@ import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { formatHolders } from '/common/prompt-order'
 import { Toggle } from '/web/shared/Toggle'
+import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 
 type Placeholder = {
   required: boolean
@@ -71,13 +73,14 @@ const v2placeholders = {
   lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
 } satisfies Record<string, Placeholder>
 
-const helpers: { [key in InterpAll]?: JSX.Element | string } = {
+const helpers: { [key in InterpAll | string]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your impersonated character's name. Your profile name if you aren't impersonating a character`,
   scenario: `Your main character's scenario`,
   personality: `The personality of the replying character`,
   example_dialogue: `The example dialogue of the replying character`,
 
+  'json.variable name': 'A value from your JSON schema. E.g. `{{json.name of my value}}`',
   system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
   ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
 
@@ -163,6 +166,7 @@ const PromptEditor: Component<
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const presets = presetStore()
   const [input, setInput] = createSignal<string>(props.value || '')
+  const [autoOpen, setAutoOpen] = createSignal(false)
 
   const [templateId, setTemplateId] = createSignal('')
   const [template, setTemplate] = createSignal('')
@@ -181,8 +185,22 @@ const PromptEditor: Component<
     setTemplate(ref.value)
   }
 
+  const onTemplateKeyDown = (ev: AutoEvent) => {
+    onPromptKey(ev, () => setAutoOpen(true))
+  }
+
+  createEffect(
+    on(
+      () => props.inherit?.promptTemplateId,
+      () => {
+        setTemplateId(props.inherit?.promptTemplateId || '')
+      }
+    )
+  )
+
   const templateName = createMemo(() => {
-    const id = templateId()
+    const nextId = templateId()
+    const id = nextId
     if (!id) return ''
     if (isDefaultTemplate(id)) {
       return id
@@ -204,18 +222,6 @@ const PromptEditor: Component<
     setRendered(parsed)
     setPreview(!preview())
   }
-
-  // createEffect(async () => {
-  //   const opts = await getExampleOpts(props.inherit)
-  //   const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
-  //   let { parsed } = await parseTemplate(template, opts)
-
-  //   if (props.inherit?.modelFormat) {
-  //     parsed = replaceTags(parsed, props.inherit.modelFormat)
-  //   }
-
-  //   setRendered(parsed)
-  // })
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
@@ -286,7 +292,7 @@ const PromptEditor: Component<
   onMount(resize)
 
   return (
-    <div class={`w-full flex-col gap-2 ${hide()}`}>
+    <div class={`relative w-full flex-col gap-2 ${hide()}`}>
       <Show when={props.showHelp}>
         <FormLabel
           label={
@@ -351,15 +357,22 @@ const PromptEditor: Component<
         <TextInput fieldName="promptTemplateId" value={templateId()} parentClass="hidden" />
       </Show>
 
+      <PromptSuggestions
+        onComplete={(opt) => onPromptAutoComplete(ref, opt)}
+        open={autoOpen()}
+        close={() => setAutoOpen(false)}
+        jsonValues={{ example: '', 'example with spaces': '', response: '' }}
+      />
       <textarea
         id={props.fieldName}
         name={props.fieldName}
-        class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl px-4 py-2 text-sm"
+        class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl px-4 py-2 font-mono text-xs"
         classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}
         disabled={props.disabled || !!templateId()}
         placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
+        onKeyDown={onTemplateKeyDown}
       />
 
       <div class="flex flex-wrap gap-2" classList={{ hidden: !!templateId() }}>
@@ -618,5 +631,6 @@ async function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
     chat,
     lines,
     parts,
+    jsonValues: {},
   }
 }
