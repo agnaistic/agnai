@@ -59,6 +59,7 @@ type Holder =
   | 'system_prompt'
   | 'random'
   | 'roll'
+  | 'json'
 
 type RepeatableHolder = Extract<
   Holder,
@@ -110,6 +111,8 @@ export type TemplateOpts = {
   repeatable?: boolean
   inserts?: Map<number, string>
   lowpriority?: Array<{ id: string; content: string }>
+
+  json?: Record<string, any>
 }
 
 /**
@@ -537,6 +540,9 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
     case 'ujb':
       return opts.parts?.ujb || ''
+
+    case 'json':
+      return opts.json?.[node.values] || ''
 
     case 'post': {
       return opts.parts?.post?.join('\n') || ''

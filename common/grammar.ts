@@ -103,6 +103,8 @@ ChatEmbedRef = OP prop:ChatEmbedProperty CL {return { kind: 'chat-embed-prop', p
 BotRef = OP prop:BotProperty CL {return { kind: 'bot-prop', prop } }
 HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } }
 
+JsonSchemaValue "json-schema-value" = ("json."i / "var."i) prop:Word { return { kind: 'json', values: prop } }
+
 ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { return prop.toLowerCase() }
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
 HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
@@ -151,4 +153,5 @@ Interp "interp"
   / ChatEmbed
   / Random
   / Roll
+  / JsonSchemaValue
 `
