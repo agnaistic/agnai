@@ -516,6 +516,11 @@ function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unkno
 function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
+  if (node.value.startsWith('json.')) {
+    const name = node.value.slice(5)
+    return opts.jsonValues?.[name] || ''
+  }
+
   switch (node.value) {
     case 'char':
       return ((opts.replyAs || opts.char).name || '').trim()
