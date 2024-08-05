@@ -72,6 +72,7 @@ const genValidator = {
   userEmbeds: 'any?',
   imageData: 'string?',
   jsonSchema: 'any?',
+  jsonValues: 'any?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {

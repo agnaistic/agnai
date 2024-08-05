@@ -176,6 +176,7 @@ async function getParseOpts(
     parts,
     sender: profile,
     lastMessage: '',
+    jsonValues: {},
     ...overrides,
   }
 

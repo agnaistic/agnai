@@ -112,7 +112,7 @@ export type TemplateOpts = {
   inserts?: Map<number, string>
   lowpriority?: Array<{ id: string; content: string }>
 
-  json?: Record<string, any>
+  jsonValues: Record<string, any> | undefined
 }
 
 /**
@@ -542,7 +542,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.parts?.ujb || ''
 
     case 'json':
-      return opts.json?.[node.values] || ''
+      return opts.jsonValues?.[node.values] || ''
 
     case 'post': {
       return opts.parts?.post?.join('\n') || ''

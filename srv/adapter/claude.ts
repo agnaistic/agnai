@@ -326,6 +326,7 @@ async function createClaudePrompt(opts: AdapterProps) {
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
       encoder: enc,
+      jsonValues: opts.jsonValues,
     }
   )
   const gaslight = processLine('system', rawGaslight)
@@ -335,6 +336,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     parts,
     encoder: enc,
     characters: opts.characters || {},
+    jsonValues: opts.jsonValues,
   })
 
   const ujb = parsed ? processLine('system', parsed) : ''

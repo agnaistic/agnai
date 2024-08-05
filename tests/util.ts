@@ -110,6 +110,7 @@ export async function build(
       chatEmbeds: [],
       userEmbeds: [],
       resolvedScenario: opts.resolvedScenario ?? overChar.scenario,
+      jsonValues: {},
     },
     getTokenCounter('main', undefined)
   )
@@ -181,6 +182,7 @@ async function getParseOpts(
     user: overrides.user || user,
     sender: profile,
     lastMessage: '',
+    jsonValues: {},
     ...overrides,
   }
 
