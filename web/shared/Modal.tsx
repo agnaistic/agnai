@@ -44,75 +44,77 @@ const Modal: Component<Props> = (props) => {
   const autofocus = (ref: HTMLFormElement) => setTimeout(() => ref.focus())
 
   return (
-    <Show when={props.show}>
-      <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center  px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
-        <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
-          <div class="absolute inset-0 bg-black" />
-        </div>
-        <div class="modal-body">
-          <form
-            ref={autofocus}
-            onSubmit={props.onSubmit || defaultSubmit}
-            class={`modal-height bg-900 z-50 my-auto w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
-            classList={{ 'h-full': props.maxHeight, 'opacity-80': props.transparent }}
-            role="dialog"
-            aria-modal="true"
-            aria-label={props.ariaLabel}
-            aria-description={props.ariaDescription}
-            tabindex="-1"
-          >
-            <Switch>
-              <Match when={props.tabs}>
-                <div class="flex h-[56px] flex-row justify-between text-lg">
-                  <Tabs
-                    selected={props.tabs?.selected!}
-                    select={props.tabs?.select!}
-                    tabs={props.tabs?.tabs!}
-                  />
-                  <Show when={props.dismissable !== false}>
-                    <div
-                      onClick={props.close}
-                      class="cursor-pointer p-4"
-                      role="button"
-                      aria-label="Close dialog window"
-                    >
-                      <X aria-hidden="true" />
-                    </div>
-                  </Show>
-                </div>
-              </Match>
-
-              <Match when>
-                <div class="flex flex-row justify-between p-4 text-lg font-bold">
-                  <div>{props.title}</div>
-                  <Show when={props.dismissable !== false}>
-                    <div
-                      onClick={props.close}
-                      class="cursor-pointer"
-                      role="button"
-                      aria-label="Close window"
-                    >
-                      <X aria-hidden="true" />
-                    </div>
-                  </Show>
-                </div>
-              </Match>
-            </Switch>
-
-            {/* 132px is the height of the title + footer*/}
-            <div
-              class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}
-              classList={{ 'h-full': props.maxHeight }}
+    <Portal>
+      <Show when={props.show}>
+        <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center  px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+          <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
+            <div class="absolute inset-0 bg-black" />
+          </div>
+          <div class="modal-body">
+            <form
+              ref={autofocus}
+              onSubmit={props.onSubmit || defaultSubmit}
+              class={`modal-height bg-900 z-50 my-auto w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
+              classList={{ 'h-full': props.maxHeight, 'opacity-80': props.transparent }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={props.ariaLabel}
+              aria-description={props.ariaDescription}
+              tabindex="-1"
             >
-              {props.children}
-            </div>
-            <Show when={props.footer}>
-              <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
-            </Show>
-          </form>
+              <Switch>
+                <Match when={props.tabs}>
+                  <div class="flex h-[56px] flex-row justify-between text-lg">
+                    <Tabs
+                      selected={props.tabs?.selected!}
+                      select={props.tabs?.select!}
+                      tabs={props.tabs?.tabs!}
+                    />
+                    <Show when={props.dismissable !== false}>
+                      <div
+                        onClick={props.close}
+                        class="cursor-pointer p-4"
+                        role="button"
+                        aria-label="Close dialog window"
+                      >
+                        <X aria-hidden="true" />
+                      </div>
+                    </Show>
+                  </div>
+                </Match>
+
+                <Match when>
+                  <div class="flex flex-row justify-between p-4 text-lg font-bold">
+                    <div>{props.title}</div>
+                    <Show when={props.dismissable !== false}>
+                      <div
+                        onClick={props.close}
+                        class="cursor-pointer"
+                        role="button"
+                        aria-label="Close window"
+                      >
+                        <X aria-hidden="true" />
+                      </div>
+                    </Show>
+                  </div>
+                </Match>
+              </Switch>
+
+              {/* 132px is the height of the title + footer*/}
+              <div
+                class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}
+                classList={{ 'h-full': props.maxHeight }}
+              >
+                {props.children}
+              </div>
+              <Show when={props.footer}>
+                <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
+              </Show>
+            </form>
+          </div>
         </div>
-      </div>
-    </Show>
+      </Show>
+    </Portal>
   )
 }
 
@@ -254,9 +256,5 @@ export const HelpModal: Component<{
 }
 
 export const RootModal: Component<Props> = (props) => {
-  return (
-    <Portal>
-      <Modal {...props} />
-    </Portal>
-  )
+  return <Modal {...props} />
 }

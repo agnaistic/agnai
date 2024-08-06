@@ -135,7 +135,6 @@ const Navigation: Component = () => {
             <div
               class="icon-button flex w-2/12 justify-start"
               onClick={() => {
-                console.log('d', dismissable())
                 if (!dismissable()) return
                 settingStore.menu()
               }}

@@ -55,15 +55,18 @@ export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
   platform: Accessor<'sm' | 'lg' | 'xl'>
+  pane: Accessor<boolean>
 } {
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
   const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
+  const [pane, setPane] = createSignal(canUsePane())
 
   const handler = () => {
     setWidth(window.innerWidth)
     setHeight(window.innerHeight)
     setPlatform(getPlatform())
+    setPane(canUsePane())
   }
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export function useWindowSize(): {
     handler()
   })
 
-  return { width, height, platform }
+  return { width, height, platform, pane }
 }
 
 export type ImageCache = ReturnType<typeof useImageCache>
@@ -368,7 +371,12 @@ export const usePaneManager = () => {
     setShowing(next)
     setPane(search.pane)
   })
-  return { showing, update: (pane?: string) => setSearch({ pane }), pane }
+
+  const update = (pane?: string) => {
+    setSearch({ pane })
+  }
+
+  return { showing, update, pane }
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {

@@ -84,6 +84,7 @@ export async function restartChat(chatId: string) {
       chat,
       sender: profile!,
       impersonate: impersonating,
+      jsonValues: {},
     })
     await localApi.saveMessages(chatId, [
       {
@@ -156,6 +157,7 @@ export async function createChat(characterId: string, props: NewChat) {
       char: char!,
       sender: profile!,
       impersonate: impersonating,
+      jsonValues: {},
     })
     msg.msg = parsed
   }
