@@ -160,7 +160,6 @@ export function getAssetPrefix() {
 export function isBase64(file: string) {
   if (file.startsWith('/') || file.startsWith('http')) return false
   if (file.startsWith('data:')) return true
-  
 
   return file.length > 500
 }
