@@ -36,8 +36,6 @@ import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
-import { useSubNav } from '/web/subnav'
-import { ChatNav } from './ChatNav'
 
 export { ChatDetail as default }
 

@@ -147,7 +147,7 @@ const Navigation: Component = () => {
         aria-label="Main"
       >
         <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
-          <div class="hidden w-full items-center justify-center sm:flex">
+          <div class="hidden w-full items-center justify-between sm:flex">
             <div
               class="icon-button flex w-2/12 justify-start"
               onClick={() => settingStore.fullscreen()}
@@ -158,7 +158,7 @@ const Navigation: Component = () => {
             <Show when={nav.header && subnav()}>{nav.header}</Show>
             <Show when={!nav.header || !subnav()}>
               <A
-                class="w-8/12 max-w-[66.666667%]"
+                class="w-8/12 max-w-[calc(100%-64px)]"
                 href="/"
                 role="link"
                 aria-label="Agnaistic main page"
@@ -191,6 +191,9 @@ const Navigation: Component = () => {
 
           <Switch>
             <Match when={subnav() && !!nav.body}>
+              <Show when={nav.title}>
+                <div class="text-500 flex w-full justify-center text-xs">{nav.title}</div>
+              </Show>
               {nav.body}
               <Slots />
             </Match>

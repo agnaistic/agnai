@@ -4,13 +4,16 @@ import { v4 } from 'uuid'
 
 type NavState = {
   pageId: string
+  state: 'main' | 'sub' | 'closed'
+
+  title: JSX.Element | string | null
   header: JSX.Element | null
   body: JSX.Element | null
-  state: 'main' | 'sub' | 'closed'
 }
 
 const initial: NavState = {
   pageId: '',
+  title: null,
   header: null,
   body: null,
   state: 'main',
@@ -24,6 +27,7 @@ export const navStore = createStore(
 })
 
 type NavOpts = {
+  title?: JSX.Element | string
   header?: JSX.Element
   body?: JSX.Element
 }
@@ -33,6 +37,7 @@ export function useSubNav(opts: NavOpts) {
   onMount(() => {
     navStore.setState({
       pageId: id,
+      title: opts.title,
       header: opts.header,
       body: opts.body,
     })
@@ -44,6 +49,7 @@ export function useSubNav(opts: NavOpts) {
 
     navStore.setState({
       pageId: '',
+      title: null,
       header: null,
       body: null,
     })
