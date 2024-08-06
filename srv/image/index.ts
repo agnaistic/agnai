@@ -142,7 +142,6 @@ export async function generateImage(
       if (!output) {
         output = `data:image/png;base64,${image.content.toString('base64')}`
       }
-      
     } else if (!opts.ephemeral && config.storage.saveImages) {
       const name = `${v4()}.${image.ext}`
 
