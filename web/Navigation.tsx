@@ -3,11 +3,13 @@ import {
   Activity,
   Bell,
   Book,
+  ChevronLeft,
   ChevronRight,
   HeartHandshake,
   HelpCircle,
   LogIn,
   MailQuestion,
+  Menu,
   MessageCircle,
   Moon,
   Plus,
@@ -29,6 +31,7 @@ import {
   createSignal,
   JSX,
   Match,
+  on,
   Show,
   Switch,
 } from 'solid-js'
@@ -50,6 +53,7 @@ import { soundEmitter } from './shared/Audio/playable-events'
 import Tooltip from './shared/Tooltip'
 import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
 import { Badge } from './shared/Card'
+import { navStore } from './subnav'
 
 const MobileNavHeader = () => {
   return (
@@ -68,10 +72,28 @@ const MobileNavHeader = () => {
 const Navigation: Component = () => {
   let parent: any
   let content: any
+
   const state = settingStore()
   const user = userStore()
   const size = useWindowSize()
   const pane = usePaneManager()
+  const nav = navStore()
+
+  const [subnav, setSubnav] = createSignal(false)
+
+  createEffect(
+    on(
+      () => !!nav.body,
+      () => {
+        if (!nav.body) {
+          setSubnav(false)
+          return
+        }
+
+        setSubnav(true)
+      }
+    )
+  )
 
   const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
@@ -110,6 +132,14 @@ const Navigation: Component = () => {
 
   return (
     <>
+      <Show when={state.fullscreen}>
+        <div
+          class="icon-button absolute left-2 top-3"
+          onClick={() => settingStore.fullscreen(false)}
+        >
+          <Menu />
+        </div>
+      </Show>
       <div
         ref={parent}
         class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2 ${hide()} ${fullscreen()}`}
@@ -118,22 +148,59 @@ const Navigation: Component = () => {
       >
         <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
           <div class="hidden w-full items-center justify-center sm:flex">
-            <A href="/" role="link" aria-label="Agnaistic main page">
-              <div
-                class="h-8 w-fit items-center justify-center rounded-lg font-bold"
-                aria-hidden="true"
+            <div
+              class="icon-button flex w-2/12 justify-start"
+              onClick={() => settingStore.fullscreen()}
+            >
+              <Menu />
+            </div>
+
+            <Show when={nav.header && subnav()}>{nav.header}</Show>
+            <Show when={!nav.header || !subnav()}>
+              <A
+                class="w-8/12 max-w-[66.666667%]"
+                href="/"
+                role="link"
+                aria-label="Agnaistic main page"
               >
-                Agn<span class="text-[var(--hl-500)]">ai</span>
-                {suffix()}
-              </div>
-            </A>
+                <div
+                  class="flex h-8 w-full items-center justify-center rounded-lg font-bold"
+                  aria-hidden="true"
+                >
+                  Agn<span class="text-[var(--hl-500)]">ai</span>
+                  {suffix()}
+                </div>
+              </A>
+            </Show>
+
+            <div class="flex w-2/12 justify-end">
+              <Show when={nav.body && subnav()}>
+                <div class="icon-button" onClick={() => setSubnav(false)}>
+                  <ChevronLeft />
+                </div>
+              </Show>
+              <Show when={nav.body && !subnav()}>
+                <div class="icon-button" onClick={() => setSubnav(true)}>
+                  <ChevronRight />
+                </div>
+              </Show>
+            </div>
           </div>
 
           <MobileNavHeader />
 
-          <Show when={user.loggedIn} fallback={<GuestNavigation />}>
-            <UserNavigation />
-          </Show>
+          <Switch>
+            <Match when={subnav() && !!nav.body}>
+              {nav.body}
+              <Slots />
+            </Match>
+            <Match when={user.loggedIn}>
+              <UserNavigation />
+            </Match>
+            <Match when>
+              <GuestNavigation />
+            </Match>
+          </Switch>
         </div>
 
         <div
@@ -426,13 +493,16 @@ const Item: Component<{
   href?: string
   ariaLabel?: string
   children: string | JSX.Element
+  class?: string
   onClick?: () => void
 }> = (props) => {
   return (
     <>
       <Show when={!props.href}>
         <div
-          class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
+          class={`flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
+            props.class || ''
+          }`}
           onClick={onItemClick(props.onClick)}
           tabindex={0}
           role="button"
@@ -444,7 +514,9 @@ const Item: Component<{
       <Show when={props.href}>
         <A
           href={props.href!}
-          class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
+          class={`flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
+            props.class || ''
+          }`}
           onClick={onItemClick(props.onClick)}
           role="button"
           aria-label={props.ariaLabel}
@@ -581,7 +653,7 @@ const ChatLink = () => {
   )
 }
 
-const UserProfile = () => {
+export const UserProfile = () => {
   const chars = characterStore()
   const user = userStore()
   const menu = settingStore()

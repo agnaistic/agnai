@@ -29,6 +29,7 @@ export type ChatModal =
   | 'delete'
   | 'none'
   | 'graph'
+  | 'restart'
 
 const ChatOptions: Component<{
   adapterLabel: string

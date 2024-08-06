@@ -169,7 +169,10 @@ export const settingStore = createStore<SettingState>(
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }
     },
-    fullscreen(_, next: boolean) {
+    fullscreen(prev, next?: boolean) {
+      if (next === undefined) {
+        return { fullscreen: !prev.fullscreen }
+      }
       return { fullscreen: next }
     },
     async *getConfig({ cfg }) {
