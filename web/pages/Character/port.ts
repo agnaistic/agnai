@@ -28,6 +28,7 @@ export async function importCharacterFile(file: FileInputResult) {
     const ext = file.file.name.split('.').slice(-1)[0]
     if (IMAGE_FORMATS[ext]) {
       const char = await processImage(file)
+      console.log(char)
       return { char, image: file.file }
     }
 
@@ -69,10 +70,11 @@ export function jsonToCharacter(json: any): NewCharacter {
   }
 
   if (format === 'tavern') {
+    const ext = json.extensions || {}
     return {
       name: json.name,
       greeting: json.first_mes,
-      appearance: json.extensions?.agnai?.appearance,
+      appearance: ext?.appearance,
       persona: {
         kind: 'text',
         attributes: {
@@ -124,6 +126,7 @@ export function jsonToCharacter(json: any): NewCharacter {
     description: json.data.creator_notes,
     voice: json.data.extensions.agnai?.voice,
     insert: json.data.extensions.depth_prompt,
+    json: json.data.extensions.agnai?.json,
   }
 }
 

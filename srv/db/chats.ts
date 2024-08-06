@@ -99,6 +99,7 @@ export async function create(
       char,
       impersonate: impersonating,
       sender: profile,
+      jsonValues: {},
     })
     const msg: AppSchema.ChatMessage = {
       kind: 'chat-message',
@@ -266,6 +267,7 @@ export async function restartChat(
     chat,
     sender: profile,
     impersonate,
+    jsonValues: {},
   })
 
   await db('chat-message').insertOne({

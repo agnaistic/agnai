@@ -59,6 +59,7 @@ type Holder =
   | 'system_prompt'
   | 'random'
   | 'roll'
+  | 'json'
 
 type RepeatableHolder = Extract<
   Holder,
@@ -110,6 +111,8 @@ export type TemplateOpts = {
   repeatable?: boolean
   inserts?: Map<number, string>
   lowpriority?: Array<{ id: string; content: string }>
+
+  jsonValues: Record<string, any> | undefined
 }
 
 /**
@@ -513,6 +516,11 @@ function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unkno
 function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
+  if (node.value.startsWith('json.')) {
+    const name = node.value.slice(5)
+    return opts.jsonValues?.[name] || ''
+  }
+
   switch (node.value) {
     case 'char':
       return ((opts.replyAs || opts.char).name || '').trim()
@@ -537,6 +545,9 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
     case 'ujb':
       return opts.parts?.ujb || ''
+
+    case 'json':
+      return opts.jsonValues?.[node.values] || ''
 
     case 'post': {
       return opts.parts?.post?.join('\n') || ''

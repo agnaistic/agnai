@@ -111,6 +111,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     lines: body.lines,
     impersonate: body.impersonating,
     sender: body.profile,
+    jsonValues: {},
   })
 
   const { values } = await guidanceAsync({

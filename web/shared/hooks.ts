@@ -11,7 +11,7 @@ import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { forms } from '../emitter'
 
-function getPlatform() {
+export function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
 }
 
@@ -55,15 +55,18 @@ export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
   platform: Accessor<'sm' | 'lg' | 'xl'>
+  pane: Accessor<boolean>
 } {
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
   const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
+  const [pane, setPane] = createSignal(canUsePane())
 
   const handler = () => {
     setWidth(window.innerWidth)
     setHeight(window.innerHeight)
     setPlatform(getPlatform())
+    setPane(canUsePane())
   }
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export function useWindowSize(): {
     handler()
   })
 
-  return { width, height, platform }
+  return { width, height, platform, pane }
 }
 
 export type ImageCache = ReturnType<typeof useImageCache>
@@ -96,13 +99,18 @@ export function useRef<T = HTMLElement>() {
   return [ref, onRef] as const
 }
 
-export function useCharacterBg(src: 'layout' | 'page') {
+export function isChatPage() {
   const location = useLocation()
-  const isMobile = useMobileDetect()
-
   const isChat = createMemo(() => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
+
+  return isChat
+}
+
+export function useCharacterBg(src: 'layout' | 'page') {
+  const isMobile = useMobileDetect()
+  const isChat = isChatPage()
 
   const state = userStore()
   const cfg = settingStore()
@@ -110,8 +118,9 @@ export function useCharacterBg(src: 'layout' | 'page') {
   const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const bg = createMemo(() => {
+    if (src === 'page') return {}
     if (cfg.anonymize) return {}
-    if (src === 'layout' && isChat()) return {}
+    // if (src === 'layout' && isChat()) return {}
 
     const mobile = isMobile()
 
@@ -123,7 +132,7 @@ export function useCharacterBg(src: 'layout' | 'page') {
 
     const isBg = state.ui.viewMode?.startsWith('background')
     const char = chars.chars.map[chat.active?.char?._id!]
-    if (!isChat() || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
+    if (!isChat || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
       return {
         ...base,
         'background-image': `url(${state.background})`,
@@ -256,9 +265,15 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
   }
 }
 
+const PANE_BREAKPOINT = 960
+
+export function canUsePane() {
+  return window.innerWidth >= PANE_BREAKPOINT
+}
+
 export function usePane() {
   const windowSize = useWindowSize()
-  const isSmallScreen = createMemo(() => windowSize.width() < 960)
+  const isSmallScreen = createMemo(() => windowSize.width() < PANE_BREAKPOINT)
   const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
   return paneDisplay
 }
@@ -356,7 +371,12 @@ export const usePaneManager = () => {
     setShowing(next)
     setPane(search.pane)
   })
-  return { showing, update: (pane?: string) => setSearch({ pane }), pane }
+
+  const update = (pane?: string) => {
+    setSearch({ pane })
+  }
+
+  return { showing, update, pane }
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
@@ -424,6 +444,10 @@ export function useResizeObserver() {
   })
 
   return { size, load, loaded, platform }
+}
+
+export function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 }
 
 export function useMobileDetect() {

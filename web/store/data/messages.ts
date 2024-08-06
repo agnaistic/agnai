@@ -377,6 +377,7 @@ export async function generateResponse(
     jsonSchema,
     chatEmbeds,
     userEmbeds,
+    jsonValues: props.json,
   }
 
   if (
@@ -413,7 +414,7 @@ export function inferenceSubscribe<T = any>(requestId: string, handler: TickHand
 async function getActiveTemplateParts() {
   const { active } = chatStore.getState()
 
-  const { parts, entities } = await getActivePromptOptions({ kind: 'summary' })
+  const { parts, entities, props } = await getActivePromptOptions({ kind: 'summary' })
   const toLine = messageToLine({
     chars: entities.characters,
     members: entities.members,
@@ -429,6 +430,7 @@ async function getActiveTemplateParts() {
     lines: entities.messages.filter((msg) => msg.adapter !== 'image' && !msg.event).map(toLine),
     parts,
     sender: entities.profile,
+    jsonValues: props.json,
   }
 
   return opts
@@ -468,6 +470,7 @@ async function getActivePromptOptions(
     messages: entities.messages,
     lastMessage: entities.lastMessage?.date || '',
     resolvedScenario,
+    jsonValues: props.json,
   }
 
   const lines = await getLinesForPrompt(promptOpts, encoder)
@@ -524,6 +527,7 @@ async function createActiveChatPrompt(
       chatEmbeds,
       userEmbeds,
       resolvedScenario,
+      jsonValues: props.json,
     },
     encoder
   )
@@ -608,6 +612,7 @@ export type GenerateProps = {
   continue?: string
   impersonate?: AppSchema.Character
   parent?: AppSchema.ChatMessage
+  json: Record<string, any>
 }
 
 async function getGenerateProps(
@@ -615,6 +620,11 @@ async function getGenerateProps(
   active: NonNullable<ChatState['active']>
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()
+
+  const json = entities.messages.reduce<Record<string, any>>(
+    (prev, curr) => Object.assign(prev, curr.json?.values || {}),
+    {}
+  )
 
   const temporary = getServiceTempConfig(entities.settings.service)
   if (!entities.settings.temporary) {
@@ -637,6 +647,7 @@ async function getGenerateProps(
     messages: entities.messages.slice(),
     impersonate: entities.impersonating,
     parent: getMessageParent(opts.kind, entities.messages),
+    json,
   }
 
   if ('text' in opts) {
@@ -649,6 +660,7 @@ async function getGenerateProps(
       impersonate: props.impersonate,
       repeatable: true,
       lastMessage: entities.lastMessage?.date,
+      jsonValues: props.json,
     })
     opts.text = parsed.parsed
   }
@@ -772,6 +784,10 @@ async function createMessage(
     impersonate: impersonating,
     replyAs: props.char,
     lastMessage: props.lastMessage?.date,
+    jsonValues: props.messages.reduce(
+      (prev, curr) => Object.assign(prev, curr.json?.values || {}),
+      {}
+    ),
   })
 
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {

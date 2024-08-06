@@ -60,10 +60,16 @@
   }
 }
 
-.drawer--hide {
+.drawer--pane-open {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
   @apply left-[-100vw] sm:left-0 sm:opacity-100;
+}
+
+.drawer--hide {
+  animation-fill-mode: forwards;
+  animation: hideDrawer 0s ease 800ms;
+  @apply left-[-100vw];
 }
 
 .drawer__content {
@@ -73,7 +79,7 @@
   min-width: 302px;
   max-width: 302px;
   height: calc(100% - 16px);
-  transition: 250ms ease;
+  transition: 800ms ease;
 }
 
 .drawer > * > a.active {

@@ -78,8 +78,11 @@ export type InferenceRequest = {
   temp?: number
   stop?: string[]
   reguidance?: string[]
-  jsonSchema?: any
+
   imageData?: string
+
+  jsonSchema?: any
+  jsonValues?: Record<string, any>
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -230,6 +233,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     lists: opts.lists,
     jsonSchema: opts.jsonSchema,
     imageData: opts.imageData,
+    jsonValues: opts.jsonValues,
   })
 
   return { stream, service: settings.service || '' }
@@ -426,6 +430,7 @@ export async function createChatStream(
     jsonSchema: jsonSchema || opts.jsonSchema,
     subscription,
     encoder,
+    jsonValues: opts.jsonValues,
   })
 
   return {

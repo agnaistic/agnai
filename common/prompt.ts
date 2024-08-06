@@ -75,6 +75,7 @@ export type PromptOpts = {
   userEmbeds: Memory.UserEmbed[]
   resolvedScenario: string
   modelFormat?: ModelFormat
+  jsonValues: Record<string, any> | undefined
 }
 
 export type BuildPromptOpts = {
@@ -250,6 +251,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     lastMessage: opts.lastMessage,
     characters: opts.characters,
     encoder,
+    jsonValues: opts.jsonValues,
   })
 
   return { lines: lines.reverse(), parts, template: prompt }
@@ -280,6 +282,7 @@ export async function assemblePrompt(
     characters: opts.characters,
     lastMessage: opts.lastMessage,
     encoder,
+    jsonValues: opts.jsonValues,
   })
 
   if (opts.settings?.modelFormat) {
@@ -319,6 +322,7 @@ type InjectOpts = {
   parts: PromptParts
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
+  jsonValues: Record<string, any> | undefined
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: TokenCounter
 }

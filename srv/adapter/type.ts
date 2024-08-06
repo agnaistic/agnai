@@ -36,6 +36,7 @@ export type GenerateRequestV2 = {
   impersonate?: AppSchema.Character
 
   jsonSchema?: JsonField[]
+  jsonValues?: Record<string, any>
 
   /** Base64 */
   imageData?: string
@@ -77,8 +78,10 @@ export type AdapterProps = {
   requestId: string
   encoder?: TokenCounter
 
-  imageData?: string
   jsonSchema?: any
+  jsonValues: Record<string, any> | undefined
+
+  imageData?: string
   guidance?: boolean
   placeholders?: Record<string, string>
   lists?: Record<string, string[]>

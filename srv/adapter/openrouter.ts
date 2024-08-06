@@ -7,6 +7,7 @@ import { sanitiseAndTrim } from '../api/chat/common'
 import { AppLog } from '../logger'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
+import { createClaudeChatCompletion } from './claude'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -40,13 +41,20 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     presence_penalty: opts.gen.presencePenalty,
     repetition_penalty: opts.gen.repetitionPenalty,
   }
-
   if (opts.gen.openRouterModel?.id) {
     payload.model = opts.gen.openRouterModel.id
   }
 
+  const useChat = opts.gen.openRouterModel?.id.startsWith('anthropic')
+  if (useChat) {
+    const { messages, system } = await createClaudeChatCompletion(opts)
+    payload.messages = messages
+    payload.system = system
+    delete payload.prompt
+  }
+
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
-  yield { prompt: payload.messages || payload.prompt }
+  yield { prompt: payload.messages ? JSON.stringify(payload.messages, null, 2) : payload.prompt }
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,

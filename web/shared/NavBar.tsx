@@ -1,16 +1,14 @@
 import { Menu, MoreHorizontal } from 'lucide-solid'
 import { Component, Show, createMemo } from 'solid-js'
-import { A, useLocation } from '@solidjs/router'
+import { A } from '@solidjs/router'
 import { ChatRightPane, chatStore, settingStore } from '../store'
 import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
 import { getClientPreset } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
-import { usePaneManager } from './hooks'
+import { isChatPage, usePaneManager } from './hooks'
 
 const NavBar: Component = () => {
-  const cfg = settingStore()
-  const location = useLocation()
   const pane = usePaneManager()
   const chats = chatStore((s) => ({
     chat: s.active?.chat,
@@ -19,9 +17,7 @@ const NavBar: Component = () => {
     opts: s.opts,
   }))
 
-  const isChat = createMemo(() => {
-    return location.pathname.startsWith('/chat/')
-  })
+  const isChat = isChatPage()
 
   const setModal = (modal: ChatModal) => {
     chatStore.option({ options: false, modal })
@@ -55,13 +51,13 @@ const NavBar: Component = () => {
   })
 
   return (
-    <Show when={!cfg.fullscreen}>
+    <Show when={!isChat()}>
       <div
         data-header=""
         class={`bg-900 sm:none flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden`}
       >
         <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
-          <div class={`w-8 sm:hidden`} onClick={settingStore.menu}>
+          <div class={`w-8 sm:hidden`} onClick={() => settingStore.menu()}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div class="ellipsis flex w-full flex-col">

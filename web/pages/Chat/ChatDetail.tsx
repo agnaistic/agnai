@@ -539,12 +539,12 @@ const ChatDetail: Component = () => {
             <div>This will fork your conversation from the greeting message.</div>
           </TitleCard>
         }
-        show={chats.opts.confirm}
+        show={chats.opts.modal === 'restart'}
         confirm={() => {
           msgStore.fork('root')
-          chatStore.option({ confirm: false })
+          chatStore.option({ modal: 'none' })
         }}
-        close={() => chatStore.option({ confirm: false })}
+        close={() => chatStore.option({ modal: 'none' })}
       />
     </>
   )

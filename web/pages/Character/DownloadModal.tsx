@@ -1,4 +1,13 @@
-import { Component, Match, Switch, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  Match,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import { AppSchema } from '/common/types/schema'
 import Select from '/web/shared/Select'
 import Modal from '/web/shared/Modal'
@@ -67,6 +76,18 @@ export const DownloadModal: Component<{
       { value: 'ooba', label: 'Textgen' },
     ])
   })
+
+  createEffect(
+    on(
+      () => char(),
+      (char) => {
+        if (!char) return
+        if (char.avatar) {
+          setFileType('png')
+        }
+      }
+    )
+  )
 
   return (
     <Modal

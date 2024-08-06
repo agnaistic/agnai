@@ -201,6 +201,7 @@ export async function toChatCompletionPayload(
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
       encoder: encoder(),
+      jsonValues: opts.jsonValues,
     }
   )
 
@@ -230,6 +231,7 @@ export async function toChatCompletionPayload(
         lastMessage: opts.lastMessage,
         characters: opts.characters || {},
         encoder: encode,
+        jsonValues: opts.jsonValues,
       })
     ).parsed
     tokens += await encode(post.content)
@@ -372,6 +374,7 @@ async function getPostInstruction(
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
       encoder: encoder(),
+      jsonValues: opts.jsonValues,
     })
   ).parsed
 

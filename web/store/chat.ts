@@ -555,6 +555,7 @@ export const chatStore = createStore<ChatState>('chat', {
           chatEmbeds: [],
           userEmbeds: [],
           resolvedScenario,
+          jsonValues: msgs.reduce((prev, curr) => Object.assign(prev, curr.json?.values || {}), {}),
         },
         encoder
       )
