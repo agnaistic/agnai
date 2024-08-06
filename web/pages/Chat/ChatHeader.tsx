@@ -20,7 +20,6 @@ import {
   RotateCcw,
   ChevronLeft,
 } from 'lucide-solid'
-import { CharacterAvatar } from '/web/shared/AvatarIcon'
 
 type NavProps = {
   ctx: ContextState

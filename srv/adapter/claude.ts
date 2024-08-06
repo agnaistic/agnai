@@ -70,42 +70,9 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     payload.max_tokens = gen.maxTokens
-    const messages = await toChatCompletionPayload(opts, gen.maxTokens!)
-
-    // Claude doesn't have a system role, so we extract the first message to put it in the system
-    // field (https://docs.anthropic.com/claude/docs/system-prompts)
-    if (messages[0].role === 'system') {
-      payload.system = messages[0].content
-
-      // Claude requires starting with a user message, and messages cannot be empty.
-      messages[0].content = '...'
-    }
-    // Any system messages will go through the user instead.
-    for (const message of messages) {
-      if (message.role === 'system') {
-        message.role = 'user'
-      }
-    }
-
-    let last: CompletionItem
-
-    // We need to ensure each role alternates so we will naively merge consecutive messages :/
-    payload.messages = messages.reduce((msgs, msg) => {
-      if (!last) {
-        last = msg
-        msgs.push(msg)
-        return msgs
-      }
-
-      if (last.role !== msg.role) {
-        last = msg
-        msgs.push(msg)
-        return msgs
-      }
-
-      last.content += '\n\n' + msg.content
-      return msgs
-    }, [] as CompletionItem[])
+    const { messages, system } = await createClaudeChatCompletion(opts)
+    payload.system = system
+    payload.messages = messages
   } else {
     payload.max_tokens_to_sample = gen.maxTokens
     payload.prompt = await createClaudePrompt(opts)
@@ -294,6 +261,49 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
   }
 
   return { ...meta, completion: tokens.join('') }
+}
+
+export async function createClaudeChatCompletion(opts: AdapterProps) {
+  const result = {
+    system: '',
+    messages: await toChatCompletionPayload(opts, opts.gen.maxTokens!),
+  }
+  // Claude doesn't have a system role, so we extract the first message to put it in the system
+  // field (https://docs.anthropic.com/claude/docs/system-prompts)
+  if (result.messages[0].role === 'system') {
+    result.system = result.messages[0].content
+
+    // Claude requires starting with a user message, and messages cannot be empty.
+    result.messages[0].content = '...'
+  }
+  // Any system messages will go through the user instead.
+  for (const message of result.messages) {
+    if (message.role === 'system') {
+      message.role = 'user'
+    }
+  }
+
+  let last: CompletionItem
+
+  // We need to ensure each role alternates so we will naively merge consecutive messages :/
+  result.messages = result.messages.reduce((msgs, msg) => {
+    if (!last) {
+      last = msg
+      msgs.push(msg)
+      return msgs
+    }
+
+    if (last.role !== msg.role) {
+      last = msg
+      msgs.push(msg)
+      return msgs
+    }
+
+    last.content += '\n\n' + msg.content
+    return msgs
+  }, [] as CompletionItem[])
+
+  return result
 }
 
 /**

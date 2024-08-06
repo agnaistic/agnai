@@ -1,6 +1,7 @@
 import { AIAdapter, OpenRouterModel, ThirdPartyFormat } from '../adapters'
 import { ModelFormat } from '../presets/templates'
 import { BaseImageSettings } from './image-schema'
+import { ResponseSchema } from './library'
 
 export interface SubscriptionTier {
   kind: 'subscription-tier'
@@ -166,6 +167,9 @@ export interface GenSettings {
   src?: string
 
   imageSettings?: BaseImageSettings
+
+  json?: ResponseSchema
+  useCharacterSchema?: boolean
 
   temporary?: Record<string, any>
   registered?: { [key in AIAdapter]?: Record<string, any> }

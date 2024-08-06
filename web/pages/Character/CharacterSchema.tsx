@@ -5,7 +5,7 @@ import { JsonSchema } from '/web/shared/JsonSchema'
 import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
 import { Toggle } from '/web/shared/Toggle'
-import { CharacterJsonSchema } from '/common/types/library'
+import { ResponseSchema } from '/common/types/library'
 import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
@@ -43,8 +43,8 @@ History Template
 
 export const CharacterSchema: Component<{
   characterId?: string
-  inherit?: CharacterJsonSchema
-  update: (next: CharacterJsonSchema) => void
+  inherit?: ResponseSchema
+  update: (next: ResponseSchema) => void
 }> = (props) => {
   let enabledRef: HTMLInputElement
   let respRef: HTMLTextAreaElement

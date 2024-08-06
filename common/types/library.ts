@@ -46,7 +46,7 @@ export interface Character extends BaseCharacter {
 
   image?: ImageSettings
 
-  json?: CharacterJsonSchema
+  json?: ResponseSchema
 
   folder?: string
   // v2 stuff
@@ -72,7 +72,7 @@ export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {
   messages: number
 }
 
-export interface CharacterJsonSchema {
+export interface ResponseSchema {
   schema: JsonField[]
   response: string
   history: string

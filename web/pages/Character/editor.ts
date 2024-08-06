@@ -22,7 +22,7 @@ import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
 import { forms } from '/web/emitter'
-import { CharacterJsonSchema } from '/common/types/library'
+import { ResponseSchema } from '/common/types/library'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -60,7 +60,7 @@ type EditState = {
   persona: AppSchema.Persona
 
   imageSettings?: BaseImageSettings
-  json?: CharacterJsonSchema
+  json?: ResponseSchema
 }
 
 const newCharGuard = {
@@ -496,7 +496,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     json: {
       ...state.json,
       enabled: body.jsonSchemaEnabled,
-    } as CharacterJsonSchema,
+    } as ResponseSchema,
   }
 
   return payload
