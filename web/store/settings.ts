@@ -11,6 +11,7 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
+import { canUsePane, isMobile } from '../shared/hooks'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -22,7 +23,6 @@ export type SettingState = {
 
   showMenu: boolean
   showImpersonate: boolean
-  fullscreen: boolean
   config: AppSchema.AppConfig
   models: HordeModel[]
   workers: HordeWorker[]
@@ -58,9 +58,8 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showMenu: false,
+  showMenu: !isMobile(),
   showImpersonate: false,
-  fullscreen: false,
   models: [],
   workers: [],
   imageWorkers: [],
@@ -160,20 +159,15 @@ export const settingStore = createStore<SettingState>(
     toggleOverlay({ overlay }, next?: boolean) {
       return { overlay: next === undefined ? !overlay : next }
     },
-    menu({ showMenu }) {
-      return { showMenu: !showMenu, overlay: !showMenu }
+    menu({ showMenu }, next?: boolean) {
+      return { showMenu: next ?? !showMenu, overlay: next ?? !showMenu }
     },
     closeMenu: () => {
+      if (canUsePane()) return
       return { showMenu: false, overlay: false }
     },
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }
-    },
-    fullscreen(prev, next?: boolean) {
-      if (next === undefined) {
-        return { fullscreen: !prev.fullscreen }
-      }
-      return { fullscreen: next }
     },
     async *getConfig({ cfg }) {
       if (cfg.loading) return

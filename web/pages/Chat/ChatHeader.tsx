@@ -19,6 +19,7 @@ import {
   Trash,
   RotateCcw,
   ChevronLeft,
+  ExternalLink,
 } from 'lucide-solid'
 
 type NavProps = {
@@ -54,6 +55,7 @@ export const ChatHeader: Component<{
   })
 
   useSubNav({
+    title: 'Chat Options',
     header: (
       <ChatCharacter ctx={props.ctx} togglePane={togglePane} setModal={setModal} adapterLabel="" />
     ),
@@ -132,9 +134,10 @@ const ChatNav: Component<NavProps> = (props) => {
 }
 const ChatCharacter: Component<NavProps> = (props) => {
   return (
-    <Nav.Item onClick={() => props.togglePane('character')} class="max-w-[80%]">
+    <Nav.Item onClick={() => props.togglePane('character')} class="max-w-[80%] gap-2">
       {/* <CharacterAvatar char={props.ctx.char!} format={{ corners: 'circle', size: 'xs' }} /> */}
-      <span class="ellipsis">{props.ctx.char?.name}</span>
+      <span class="ellipsis bold text-sm">{props.ctx.char?.name}</span>
+      <ExternalLink size={12} color="var(--bg-700)" class="min-h-[12px] min-w-[12px]" />
     </Nav.Item>
   )
 }

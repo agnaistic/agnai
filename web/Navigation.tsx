@@ -22,7 +22,6 @@ import {
   Volume2,
   VolumeX,
   Wand2,
-  X,
 } from 'lucide-solid'
 import {
   Component,
@@ -47,27 +46,20 @@ import {
   userStore,
 } from './store'
 import Slot from './shared/Slot'
-import { useEffect, usePaneManager, useRef, useResizeObserver, useWindowSize } from './shared/hooks'
+import {
+  isChatPage,
+  useEffect,
+  usePaneManager,
+  useRef,
+  useResizeObserver,
+  useWindowSize,
+} from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import { soundEmitter } from './shared/Audio/playable-events'
 import Tooltip from './shared/Tooltip'
 import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
 import { Badge } from './shared/Card'
 import { navStore } from './subnav'
-
-const MobileNavHeader = () => {
-  return (
-    <div class="flex min-h-[2rem] justify-between sm:hidden">
-      <div class="w-8"></div>
-      <div></div>
-      <div class="w-8">
-        <div class="icon-button">
-          <X onClick={settingStore.menu} />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 const Navigation: Component = () => {
   let parent: any
@@ -80,6 +72,7 @@ const Navigation: Component = () => {
   const nav = navStore()
 
   const [subnav, setSubnav] = createSignal(false)
+  const isChat = isChatPage()
 
   createEffect(
     on(
@@ -97,12 +90,6 @@ const Navigation: Component = () => {
 
   const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
-  createEffect(() => {
-    if (!state.overlay && state.showMenu) {
-      settingStore.menu()
-    }
-  })
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (!parent || !content) return
@@ -114,43 +101,44 @@ const Navigation: Component = () => {
     return () => clearInterval(interval)
   })
 
-  const hide = createMemo(() => {
-    if (pane.showing() && !state.showMenu) return 'drawer--hide'
-    if (state.showMenu) return ''
-    return 'drawer--hide'
-  })
+  const dismissable = createMemo(() => {
+    if (size.platform() !== 'xl') return true
+    if (!isChat()) return false
 
-  const fullscreen = createMemo(() => {
-    if (state.fullscreen) return 'hidden'
-
-    if (pane.showing() && size.width() <= 1200) {
-      return 'hidden'
-    }
-
-    return ''
+    return true
   })
 
   return (
     <>
-      <Show when={state.fullscreen}>
+      <Show when={!state.showMenu && dismissable()}>
         <div
-          class="icon-button absolute left-2 top-3"
-          onClick={() => settingStore.fullscreen(false)}
+          class="icon-button absolute left-2 top-4 z-50"
+          onClick={() => settingStore.menu(true)}
+          classList={{ hidden: size.platform() !== 'xl' && !isChat() }}
         >
           <Menu />
         </div>
       </Show>
       <div
         ref={parent}
-        class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2 ${hide()} ${fullscreen()}`}
+        class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2`}
+        classList={{
+          flex: !state.showMenu,
+          'drawer--hide': dismissable() && !state.showMenu,
+          'drawer--pane-open': pane.showing(),
+        }}
         role="navigation"
         aria-label="Main"
       >
         <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
-          <div class="hidden w-full items-center justify-between sm:flex">
+          <div class="flex w-full items-center justify-between">
             <div
               class="icon-button flex w-2/12 justify-start"
-              onClick={() => settingStore.fullscreen()}
+              onClick={() => {
+                console.log('d', dismissable())
+                if (!dismissable()) return
+                settingStore.menu()
+              }}
             >
               <Menu />
             </div>
@@ -187,7 +175,12 @@ const Navigation: Component = () => {
             </div>
           </div>
 
-          <MobileNavHeader />
+          {/* <MobileNavHeader
+            useSubnav={!!nav.body}
+            subnav={subnav()}
+            setSubnav={setSubnav}
+            header={nav.header}
+          /> */}
 
           <Switch>
             <Match when={subnav() && !!nav.body}>
@@ -506,6 +499,7 @@ const Item: Component<{
           class={`flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
             props.class || ''
           }`}
+          classList={{ 'gap-4': !props.class?.includes('gap-') }}
           onClick={onItemClick(props.onClick)}
           tabindex={0}
           role="button"

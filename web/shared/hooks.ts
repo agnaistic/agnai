@@ -11,7 +11,7 @@ import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { forms } from '../emitter'
 
-function getPlatform() {
+export function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
 }
 
@@ -96,13 +96,18 @@ export function useRef<T = HTMLElement>() {
   return [ref, onRef] as const
 }
 
-export function useCharacterBg(src: 'layout' | 'page') {
+export function isChatPage() {
   const location = useLocation()
-  const isMobile = useMobileDetect()
-
   const isChat = createMemo(() => {
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
+
+  return isChat
+}
+
+export function useCharacterBg(src: 'layout' | 'page') {
+  const isMobile = useMobileDetect()
+  const isChat = isChatPage()
 
   const state = userStore()
   const cfg = settingStore()
@@ -124,7 +129,7 @@ export function useCharacterBg(src: 'layout' | 'page') {
 
     const isBg = state.ui.viewMode?.startsWith('background')
     const char = chars.chars.map[chat.active?.char?._id!]
-    if (!isChat() || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
+    if (!isChat || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
       return {
         ...base,
         'background-image': `url(${state.background})`,
@@ -257,9 +262,15 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
   }
 }
 
+const PANE_BREAKPOINT = 960
+
+export function canUsePane() {
+  return window.innerWidth >= PANE_BREAKPOINT
+}
+
 export function usePane() {
   const windowSize = useWindowSize()
-  const isSmallScreen = createMemo(() => windowSize.width() < 960)
+  const isSmallScreen = createMemo(() => windowSize.width() < PANE_BREAKPOINT)
   const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
   return paneDisplay
 }
@@ -425,6 +436,10 @@ export function useResizeObserver() {
   })
 
   return { size, load, loaded, platform }
+}
+
+export function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 }
 
 export function useMobileDetect() {
