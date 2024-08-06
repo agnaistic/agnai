@@ -157,9 +157,20 @@ export function getAssetPrefix() {
   return assetPrefix
 }
 
+export function isBase64(file: string) {
+  if (file.startsWith('/') || file.startsWith('http')) return false
+  if (file.startsWith('data:')) return true
+  
+
+  return file.length > 500
+}
+
 export function getAssetUrl(filename: string) {
   if (filename.startsWith('http:') || filename.startsWith('https:') || filename.startsWith('data:'))
     return filename
+
+  // Likely base64
+  if (filename.length > 500) return filename
 
   const isFile =
     filename.startsWith('/assets') ||

@@ -26,11 +26,7 @@ export const Convertible: Component<ConvertibleProps> = (props) => {
   return (
     <Switch>
       <Match when={paneOrPopup() === 'pane'}>
-        <div
-          data-pane
-          class="convertible-pane w-full min-w-[448px] max-w-[650px] overflow-y-auto"
-          style={rightPaneBgStyles()}
-        >
+        <div data-pane class="convertible-pane w-full overflow-y-auto" style={rightPaneBgStyles()}>
           <div style={{ 'grid-area': 'title' }} class="flex justify-between py-2 pl-2">
             <div>{props.title}</div>
             <div class="sticky top-0 float-right" onClick={props.close}>

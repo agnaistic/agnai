@@ -131,6 +131,11 @@ export async function generateImage(
     key: user.hordeKey || HORDE_GUEST_KEY,
     onTick,
   })
+
+  if (!image.text.startsWith('data:') && typeof window !== 'undefined') {
+    image.text = `data:image/image;base64,${image.text}`
+  }
+
   return image
 }
 

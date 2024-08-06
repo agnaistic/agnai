@@ -676,3 +676,9 @@ const Slots: Component = (props) => {
     </div>
   )
 }
+
+export const Nav = {
+  Item,
+  MultiItem,
+  SubItem,
+}
