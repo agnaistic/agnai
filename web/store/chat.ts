@@ -7,7 +7,7 @@ import { clearDraft } from '../shared/hooks'
 import { storage, toMap } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
-import { AllChat, chatsApi } from './data/chats'
+import { AllChat as ChatData, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
@@ -15,7 +15,7 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { replace } from '/common/util'
 
-export { AllChat }
+export type AllChat = ChatData
 
 export type ChatState = {
   lastChatId: string | null
