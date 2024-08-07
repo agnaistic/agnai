@@ -3,10 +3,11 @@ import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, AI_ADAPTERS, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import type { Option } from './Select'
-import { createEffect, onCleanup } from 'solid-js'
+import { createEffect, JSX, onCleanup } from 'solid-js'
 import { UserState, settingStore, userStore } from '../store'
-import { AppSchema } from '/common/types'
+import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
+import { getRootRgb } from './colors'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -37,6 +38,15 @@ export function downloadJson(content: string | object, filename: string = 'agnai
   anchor.download = `${filename}.json`
   anchor.click()
   URL.revokeObjectURL(anchor.href)
+}
+
+export function getHeaderBg(mode: UI.UISettings['mode']) {
+  mode
+  const rgb = getRootRgb('bg-900')
+  const styles: JSX.CSSProperties = {
+    background: rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)` : 'bg-900',
+  }
+  return styles
 }
 
 export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {

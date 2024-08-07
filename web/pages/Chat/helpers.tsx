@@ -1,9 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-solid'
-import { Component, JSX, Show } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import Button from '/web/shared/Button'
 import { chatStore, msgStore } from '/web/store'
 import { AppSchema, UI } from '/common/types'
-import { getRootRgb } from '/web/shared/colors'
 
 export const SwipeMessage: Component<{
   chatId: string
@@ -74,15 +73,6 @@ export function getChatWidth(
     default:
       return 'w-full max-w-full'
   }
-}
-
-export function getHeaderBg(mode: UI.UISettings['mode']) {
-  mode
-  const rgb = getRootRgb('bg-900')
-  const styles: JSX.CSSProperties = {
-    background: rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)` : 'bg-900',
-  }
-  return styles
 }
 
 export function emptyMsg(opts: {

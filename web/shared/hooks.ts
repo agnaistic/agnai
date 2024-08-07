@@ -1,6 +1,5 @@
 import { Accessor, JSX, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { characterStore, chatStore, presetStore, settingStore, userStore } from '../store'
 import { RootModal, rootModalStore } from '../store/root-modal'
 import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
@@ -10,6 +9,7 @@ import { getAssetUrl } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { forms } from '../emitter'
+import { getStore } from '../store/create'
 
 export function getPlatform() {
   return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
@@ -27,8 +27,8 @@ export function useFormField(field: string, init?: string) {
 }
 
 export function usePresetOptions() {
-  const presets = presetStore((s) => s.presets)
-  const user = userStore()
+  const presets = getStore('presets')((s) => s.presets)
+  const user = getStore('user')()
 
   const options = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -112,10 +112,10 @@ export function useCharacterBg(src: 'layout' | 'page') {
   const isMobile = useMobileDetect()
   const isChat = isChatPage()
 
-  const state = userStore()
-  const cfg = settingStore()
-  const chat = chatStore((s) => ({ active: s.active }))
-  const chars = characterStore((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
+  const state = getStore('user')()
+  const cfg = getStore('settings')()
+  const chat = getStore('chat')((s) => ({ active: s.active }))
+  const chars = getStore('character')((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const bg = createMemo(() => {
     if (src === 'page') return {}
@@ -380,7 +380,7 @@ export const usePaneManager = () => {
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
-  const user = userStore()
+  const user = getStore('user')()
 
   const bgStyle = createMemo(() => {
     // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
