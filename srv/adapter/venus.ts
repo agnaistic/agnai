@@ -48,14 +48,12 @@ export const handleVenus: ModelAdapter = async function* (opts) {
 
   const iter = streamCompletion(opts.user._id, url, headers, body, 'Venus', opts.log, 'openai')
   let accumulated = ''
-  let response: Completion<Inference> | undefined
 
   while (true) {
     let generated = await iter.next()
 
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     if (generated.done) {
-      response = generated.value
       break
     }
 
