@@ -12,11 +12,11 @@ const baseUrl = `https://api.openai.com`
 
 type Role = 'user' | 'assistant' | 'system'
 
-type CompletionItem = { role: Role; content: string; name?: string }
+export type CompletionItem = { role: Role; content: string; name?: string }
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
-type Inference = { message: { content: string; role: Role } }
+export type Inference = { message: { content: string; role: Role } }
 
-type Completion<T = Inference> = {
+export type Completion<T = Inference> = {
   id: string
   created: number
   model: string

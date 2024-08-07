@@ -24,6 +24,7 @@ import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { parseStops } from '/common/util'
 import { getTextgenCompletion } from './dispatch'
+import { handleVenus } from './venus'
 
 export async function getSubscriptionPreset(
   user: AppSchema.User,
@@ -376,6 +377,7 @@ export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   mancer: handleMancer,
   petals: handlePetals,
   agnaistic: handleAgnaistic,
+  venus: handleVenus,
 }
 
 export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
@@ -392,6 +394,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
     case 'petals':
     case 'mancer':
     case 'novel':
+    case 'venus':
       return handlers[settings.service]
   }
 
