@@ -141,7 +141,7 @@ const Navigation: Component = () => {
                 settingStore.menu()
               }}
             >
-              <Menu classList={{ hidden: !isChat() }} />
+              <Menu classList={{ hidden: !dismissable() }} />
             </div>
 
             <Show when={nav.header && subnav()}>{nav.header}</Show>
