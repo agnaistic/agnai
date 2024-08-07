@@ -256,5 +256,9 @@ export const HelpModal: Component<{
 }
 
 export const RootModal: Component<Props> = (props) => {
-  return <Modal {...props} />
+  return (
+    <Portal>
+      <Modal {...props} />
+    </Portal>
+  )
 }
