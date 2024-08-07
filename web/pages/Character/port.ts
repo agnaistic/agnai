@@ -28,7 +28,6 @@ export async function importCharacterFile(file: FileInputResult) {
     const ext = file.file.name.split('.').slice(-1)[0]
     if (IMAGE_FORMATS[ext]) {
       const char = await processImage(file)
-      console.log(char)
       return { char, image: file.file }
     }
 

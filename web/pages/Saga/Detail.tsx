@@ -43,8 +43,7 @@ import { toastStore, userStore } from '/web/store'
 import { Saga } from '/common/types'
 import { getRgbaFromVar } from '/web/shared/colors'
 import { trimSentence } from '/common/util'
-import { sticky } from '/web/shared/util'
-import { getHeaderBg } from '../Chat/helpers'
+import { getHeaderBg, sticky } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
   const user = userStore()
