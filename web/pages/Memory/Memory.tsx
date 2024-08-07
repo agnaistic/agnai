@@ -25,7 +25,7 @@ type STEntry = {
   disable: boolean
   displayIndex: 1
   enabled: boolean
-  excludeRecursion: number
+  excludeRecursion: boolean
   extensions: {
     addMemo: boolean
     characterFilter?: any
@@ -59,7 +59,7 @@ type STEntry = {
   useProbability: boolean
 }
 
-type STLorebook = {
+type STVenusBook = {
   description: string
   entries: Record<string, STEntry>
   extensions: any
@@ -68,6 +68,46 @@ type STLorebook = {
   recursive_scanning: boolean
   scan_depth: number
   token_budget: number
+}
+
+type STExportedBook = {
+  entries: Record<
+    string,
+    {
+      uid: number
+      key: string[]
+      keysecondary: string[]
+      comment: string
+      content: string
+      constant: boolean
+      selective: boolean
+      selectiveLogic: any
+      addMenu: boolean
+      order: number
+      position: any
+      disable: boolean
+      excludeRecursion: boolean
+      probability: number
+      useProbability: boolean
+      depth: number
+      group: string
+      scanDepth?: number
+      caseSensitive?: boolean
+      matchWholeWorlds?: boolean
+      automationId?: string
+      role?: string
+      displayIndex: number
+      preventRecursion: boolean
+      groupOverride: boolean
+      groupWeight: number
+      vectorized: boolean
+      delayUntilRecursion: boolean
+      useGroupScoring?: boolean
+      sticky: number
+      cooldown: number
+      delay: number
+    }
+  >
 }
 
 export const EmbedsTab: Component = (props) => {
@@ -217,9 +257,10 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
   const updateJson = async (files: FileInputResult[]) => {
     if (!files.length) return setJson()
     try {
-      const content = await getFileAsString(files[0])
+      const file = files[0]
+      const content = await getFileAsString(file)
       const json = JSON.parse(content)
-      const book = validateBookJson(json)
+      const book = validateBookJson(file.file.name, json)
       setJson(book || json)
       toastStore.success('Character file accepted')
     } catch (ex: any) {
@@ -262,9 +303,13 @@ function encodeBook(book: AppSchema.MemoryBook) {
   return encodeURIComponent(JSON.stringify(body, null, 2))
 }
 
-function validateBookJson(json: any): AppSchema.MemoryBook | void {
-  if (isSTLorebook(json)) {
-    return convertFromST(json)
+function validateBookJson(filename: string, json: any): AppSchema.MemoryBook | void {
+  if (isSTFormat(json)) {
+    return convertFromSTVenus(json)
+  }
+
+  if (isSTExported(json)) {
+    return convertFromSTExported(filename, json)
   }
 
   const book = json as AppSchema.MemoryBook
@@ -321,11 +366,11 @@ function toNumber(value: any) {
   return num
 }
 
-function isSTLorebook(json: any): json is STLorebook {
+function isSTFormat(json: any): json is STVenusBook {
   return 'is_creation' in json && 'recursive_scanning' in json
 }
 
-function convertFromST(json: STLorebook): AppSchema.MemoryBook {
+function convertFromSTVenus(json: STVenusBook): AppSchema.MemoryBook {
   const base: AppSchema.MemoryBook = {
     _id: '',
     name: json.name,
@@ -363,5 +408,52 @@ function convertFromST(json: STLorebook): AppSchema.MemoryBook {
     }))
 
   base.entries = entries
+  return base
+}
+
+function isSTExported(json: any): json is STExportedBook {
+  const keys = Object.keys(json || {})
+  return keys.length === 1 && keys[0] === 'entries'
+}
+
+function convertFromSTExported(filename: string, json: STExportedBook): AppSchema.MemoryBook {
+  const base: AppSchema.MemoryBook = {
+    _id: '',
+    name: filename.replace('.json', ''),
+    kind: 'memory',
+    userId: '',
+    description: '',
+    extensions: {},
+    entries: [],
+    recursiveScanning: false,
+    scanDepth: 50,
+    tokenBudget: 500,
+  }
+
+  const entries = Object.values(json.entries)
+    .sort((l, r) => l.uid - r.uid)
+    .map<AppSchema.MemoryEntry>((entry, i) => ({
+      priority: 0,
+      weight: 0,
+      comment: '',
+      constant: entry.constant,
+      id: i,
+      name: entry.comment,
+      keywords: entry.key,
+      entry: entry.content,
+      enabled: !entry.disable,
+
+      // V2
+      position: entry.position,
+      excludeRecursion: entry.preventRecursion,
+      probability: entry.probability,
+      useProbability: entry.useProbability,
+      secondaryKeys: entry.keysecondary,
+      selective: entry.selective,
+      selectiveLogic: entry.selectiveLogic,
+    }))
+
+  base.entries = entries
+
   return base
 }

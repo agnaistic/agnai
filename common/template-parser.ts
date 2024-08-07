@@ -26,7 +26,12 @@ const HISTORY_MARKER = '__history__marker__'
 
 type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
 
-type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
+type PlaceHolder = {
+  kind: 'placeholder'
+  value: Holder
+  values?: any
+  pipes?: string[]
+} & HolderDefinition
 type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
 type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
 type InsertNode = { kind: 'history-insert'; values: number; children: PNode[] }
@@ -39,6 +44,8 @@ type CNode =
   | { kind: 'chat-embed-prop'; prop: ChatEmbedProp }
   | { kind: 'history-if'; prop: HistoryProp; children: CNode[] }
   | { kind: 'bot-if'; prop: BotsProp; children: CNode[] }
+
+type HolderDefinition = { value: 'roll'; amt?: number; keep?: number } | { value: Holder }
 
 type Holder =
   | 'char'
@@ -58,8 +65,8 @@ type Holder =
   | 'impersonating'
   | 'system_prompt'
   | 'random'
-  | 'roll'
   | 'json'
+  | 'roll'
 
 type RepeatableHolder = Extract<
   Holder,

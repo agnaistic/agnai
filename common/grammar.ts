@@ -126,7 +126,10 @@ ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = ("random"i) ":"? WS words:DelimitedWords { return { kind: "random", values: words } }
-Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
+SimpleRoll "simple-roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
+Roll "roll" = ("roll"i / "dice"i) ":"? WS amt:[0-9]+ "d" max:[0-9]|0..10| keep:RollKeep? adjust:RollAdjust? { return { kind: 'roll', values: +max.join('') || 20, amt: +(amt.join('') || '1'), keep, adjust } }
+RollAdjust "roll-adjust" = dir:('+' / '-') amt:[0-9]+ { return +(amt.join('')) * (dir === '-' ? -1 : 1) }
+RollKeep "roll-keep" = dir:('L'i / 'H'i) amt:[0-9]+ { return +(amt.join('')) * (dir.toLowerCase() === 'l' ? -1 : 1) }
 
 // Iterable entities
 ChatEmbed "chat-embed" = ("chat_embed"i / "ltm"i / "long_memory"i / "longterm_memory"i / "long_term_memory"i) { return "chat_embed" }
@@ -153,5 +156,6 @@ Interp "interp"
   / ChatEmbed
   / Random
   / Roll
+  / SimpleRoll
   / JsonSchemaValue
 `
