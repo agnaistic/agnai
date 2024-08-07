@@ -114,7 +114,9 @@ const Navigation: Component = () => {
         <div
           class="icon-button absolute left-2 top-4 z-50"
           onClick={() => settingStore.menu(true)}
-          classList={{ hidden: size.platform() !== 'xl' && !isChat() }}
+          classList={{
+            hidden: !isChat(),
+          }}
         >
           <Menu />
         </div>
@@ -139,7 +141,7 @@ const Navigation: Component = () => {
                 settingStore.menu()
               }}
             >
-              <Menu />
+              <Menu classList={{ hidden: !dismissable() }} />
             </div>
 
             <Show when={nav.header && subnav()}>{nav.header}</Show>

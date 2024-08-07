@@ -42,8 +42,14 @@ export interface MemoryEntry {
   // currently unsupported V2 fields which are here so that we don't destroy them
   id?: number
   comment?: string
-  selective?: boolean
   secondaryKeys?: Array<string>
   constant?: boolean
   position?: 'before_char' | 'after_char'
+
+  // V2 props
+  probability?: number
+  useProbability?: boolean
+  selective?: boolean
+  selectiveLogic?: number
+  excludeRecursion?: number
 }

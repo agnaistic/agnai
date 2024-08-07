@@ -14,6 +14,62 @@ import { embedApi } from '/web/store/embeddings'
 import { EditEmbedModal } from '/web/shared/EditEmbedModal'
 import { Page } from '/web/Layout'
 
+type STEntry = {
+  addMenu: boolean
+  case_sensitive: boolean
+  characterFilter?: any
+  comment: string
+  constant: boolean
+  content: string
+  depth: number
+  disable: boolean
+  displayIndex: 1
+  enabled: boolean
+  excludeRecursion: number
+  extensions: {
+    addMemo: boolean
+    characterFilter?: any
+    depth: number
+    displayIndex: number
+    excludeRecursion: number
+    probability: number
+    selectiveLogic: number
+    useProbability: number
+    weight: number
+  }
+  id: number
+  uid: number
+  name: string
+  order: number
+  keys: string[]
+
+  insertion_order: number
+
+  key: string[]
+  keysecondary: string[]
+  position: any
+  priority: number
+
+  /** 1-100 */
+  probability: number
+
+  secondary_keys: string[]
+  selective: boolean
+  selectiveLogic: number
+  useProbability: boolean
+}
+
+type STLorebook = {
+  description: string
+  entries: Record<string, STEntry>
+  extensions: any
+  is_creation: boolean
+  name: string
+  recursive_scanning: boolean
+  scan_depth: number
+  token_budget: number
+}
+
 export const EmbedsTab: Component = (props) => {
   const state = memoryStore()
   const [editing, setEditing] = createSignal<string>()
@@ -163,8 +219,8 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
     try {
       const content = await getFileAsString(files[0])
       const json = JSON.parse(content)
-      validateBookJson(json)
-      setJson(json)
+      const book = validateBookJson(json)
+      setJson(book || json)
       toastStore.success('Character file accepted')
     } catch (ex: any) {
       toastStore.warn(`Invalid memory book JSON. ${ex.message}`)
@@ -206,7 +262,11 @@ function encodeBook(book: AppSchema.MemoryBook) {
   return encodeURIComponent(JSON.stringify(body, null, 2))
 }
 
-function validateBookJson(json: any) {
+function validateBookJson(json: any): AppSchema.MemoryBook | void {
+  if (isSTLorebook(json)) {
+    return convertFromST(json)
+  }
+
   const book = json as AppSchema.MemoryBook
 
   const entries: AppSchema.MemoryEntry[] = []
@@ -259,4 +319,49 @@ function toNumber(value: any) {
 
   if (isNaN(num)) return 0
   return num
+}
+
+function isSTLorebook(json: any): json is STLorebook {
+  return 'is_creation' in json && 'recursive_scanning' in json
+}
+
+function convertFromST(json: STLorebook): AppSchema.MemoryBook {
+  const base: AppSchema.MemoryBook = {
+    _id: '',
+    name: json.name,
+    kind: 'memory',
+    userId: '',
+    description: json.description,
+    extensions: { ...json, entries: {} },
+    entries: [],
+    recursiveScanning: json.recursive_scanning ?? false,
+    scanDepth: json.scan_depth ?? 50,
+    tokenBudget: json.token_budget ?? 500,
+  }
+
+  const entries = Object.values(json.entries)
+    .sort((l, r) => l.id - r.id)
+    .map<AppSchema.MemoryEntry>((entry, i) => ({
+      priority: entry.priority,
+      weight: entry.extensions.weight,
+      comment: entry.comment,
+      constant: entry.constant,
+      id: i,
+      name: entry.name,
+      keywords: entry.keys,
+      entry: entry.content,
+      enabled: entry.enabled,
+
+      // V2
+      position: entry.position,
+      excludeRecursion: entry.excludeRecursion,
+      probability: entry.probability,
+      useProbability: entry.useProbability,
+      secondaryKeys: entry.secondary_keys,
+      selective: entry.selective,
+      selectiveLogic: entry.selectiveLogic,
+    }))
+
+  base.entries = entries
+  return base
 }
