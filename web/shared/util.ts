@@ -4,10 +4,11 @@ import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, AI_ADAPTERS, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, JSX, onCleanup } from 'solid-js'
-import { UserState, settingStore, userStore } from '../store'
+import type { UserState } from '../store'
 import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
 import { getRootRgb } from './colors'
+import { getStore } from '../store/create'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -520,7 +521,7 @@ export function serviceHasSetting(
 
 export function getAISettingServices(prop?: keyof PresetAISettings) {
   if (!prop) return
-  const cfg = settingStore((s) => s.config)
+  const cfg = getStore('settings')((s) => s.config)
   const base = adapterSettings[prop]
   const names: Array<AIAdapter | ThirdPartyFormat> = []
   for (const reg of cfg.registered) {
@@ -643,8 +644,8 @@ export function asyncFrame() {
 }
 
 export function getUsableServices() {
-  const { user } = userStore.getState()
-  const { config } = settingStore.getState()
+  const { user } = getStore('user').getState()
+  const { config } = getStore('settings').getState()
 
   const services: AIAdapter[] = []
 
