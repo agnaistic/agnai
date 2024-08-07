@@ -27,7 +27,7 @@ Expression = content:Parent* {
 
 Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
 
-ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
+ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / DiceRoll) CL {
 	return { kind: 'placeholder', value: i }
 }
 
@@ -126,10 +126,17 @@ ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = ("random"i) ":"? WS words:DelimitedWords { return { kind: "random", values: words } }
-SimpleRoll "simple-roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
-Roll "roll" = ("roll"i / "dice"i) ":"? WS amt:[0-9]+ "d" max:[0-9]|0..10| keep:RollKeep? adjust:RollAdjust? { return { kind: 'roll', values: +max.join('') || 20, amt: +(amt.join('') || '1'), keep, adjust } }
+
+DiceRoll "rolls" = ("roll"i / "dice"i) WS ":"? WS head:RollExpr tails:TailRoll*  { return { kind: 'roll', ...head, extra: tails } }
+
+RollPrefix = res:((amt:RollAmount "d" max:RollSides { return { amt, values: max } }) / v2:("d"? max:RollSides { return { values: max } })) { return res }
+RollExpr "roll-expr" = pre:RollPrefix keep:RollKeep? adjust:RollAdjust? { return { ...pre, keep, adjust } }
+RollSides "roll-sides" = sides:[0-9]|1..10| { return +sides.join('') }
+RollAmount "roll-amount" = h:[1-9] t:[0-9]|0..1| { const val = h + t.join(''); return +val }
 RollAdjust "roll-adjust" = dir:('+' / '-') amt:[0-9]+ { return +(amt.join('')) * (dir === '-' ? -1 : 1) }
 RollKeep "roll-keep" = dir:('L'i / 'H'i) amt:[0-9]+ { return +(amt.join('')) * (dir.toLowerCase() === 'l' ? -1 : 1) }
+
+TailRoll = WS '+' WS roll:RollExpr WS { return roll }
 
 // Iterable entities
 ChatEmbed "chat-embed" = ("chat_embed"i / "ltm"i / "long_memory"i / "longterm_memory"i / "long_term_memory"i) { return "chat_embed" }
@@ -155,7 +162,6 @@ Interp "interp"
   / IdleDuration
   / ChatEmbed
   / Random
-  / Roll
-  / SimpleRoll
+  / DiceRoll
   / JsonSchemaValue
 `
