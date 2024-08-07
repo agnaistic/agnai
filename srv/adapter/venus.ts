@@ -4,7 +4,6 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
 import { streamCompletion } from './chat-completion'
-import { Completion, Inference } from './openai'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',
