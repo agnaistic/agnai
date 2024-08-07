@@ -110,7 +110,7 @@ export function mapPresetsToAdapter(presets: Partial<AppSchema.GenSettings>, ada
   const map = serviceGenMap[adapter]
   const body: any = {}
 
-  for (const [keyStr, value] of Object.entries(map)) {
+  for (const [keyStr, value] of Object.entries(map || {})) {
     const key = keyStr as keyof GenMap
     if (!value) continue
 
@@ -133,7 +133,7 @@ export function getGenSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
   const presetValues = getPresetValues(chat)
 
   const body: any = {}
-  for (const [keyStr, value] of Object.entries(map)) {
+  for (const [keyStr, value] of Object.entries(map || {})) {
     const key = keyStr as keyof GenMap
     if (!value) continue
 
@@ -161,7 +161,7 @@ function getPresetValues(chat: AppSchema.Chat): Partial<AppSchema.GenSettings> {
   return defaultPresets.basic
 }
 
-export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
+export const serviceGenMap: { [key in ChatAdapter]?: GenMap } = {
   kobold: {
     maxTokens: 'max_length',
     repetitionPenalty: 'rep_pen',
@@ -434,5 +434,8 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
 
     case 'mancer':
       return deepClone(defaultPresets.mancer)
+
+    case 'venus':
+      return deepClone(defaultPresets.venus)
   }
 }

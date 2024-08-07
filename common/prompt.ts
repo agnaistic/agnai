@@ -916,6 +916,9 @@ export function getContextLimit(
 
     case 'mancer':
       return Math.min(configuredMax, 8000) - genAmount
+
+    case 'venus':
+      return Math.min(configuredMax, 7800) - genAmount
   }
 }
 

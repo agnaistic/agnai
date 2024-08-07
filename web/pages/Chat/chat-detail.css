@@ -1,7 +1,7 @@
 .chat-detail {
   display: grid;
-  height: calc(100vh - 48px);
-  height: calc(100dvh - 48px);
+  height: calc(100vh);
+  height: calc(100dvh);
   max-height: 100vh;
   max-height: 100dvh;
   width: 100%;
@@ -11,8 +11,8 @@
 
 .avatar-chat-detail {
   display: grid;
-  height: calc(100vh - 48px);
-  height: calc(100dvh - 48px);
+  height: calc(100vh);
+  height: calc(100dvh);
   max-height: 100vh;
   max-height: 100dvh;
   width: 100%;

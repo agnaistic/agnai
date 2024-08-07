@@ -41,11 +41,12 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     presence_penalty: opts.gen.presencePenalty,
     repetition_penalty: opts.gen.repetitionPenalty,
   }
+
   if (opts.gen.openRouterModel?.id) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  const useChat = opts.gen.openRouterModel?.id.startsWith('anthropic')
+  const useChat = (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
   if (useChat) {
     const { messages, system } = await createClaudeChatCompletion(opts)
     payload.messages = messages

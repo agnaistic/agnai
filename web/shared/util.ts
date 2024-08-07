@@ -710,6 +710,10 @@ export function isUsableService(
     case 'petals': {
       return true
     }
+
+    case 'venus': {
+      return !!user?.adapterConfig?.venus?.apiKeySet
+    }
   }
 
   return false
