@@ -63,6 +63,7 @@ const characterPost = {
   extensions: 'any?',
   insert: 'any?',
   json: 'any?',
+  folder: 'string?',
 } as const
 
 const newCharacterValidator = {
