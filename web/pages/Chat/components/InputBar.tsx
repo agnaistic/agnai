@@ -237,7 +237,7 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-end justify-center rounded-md bg-[var(--bg-800)]">
+    <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
       <Show when={props.showOocToggle}>
         <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
           <Show when={!props.ooc}>
@@ -260,7 +260,7 @@ const InputBar: Component<{
           <AvatarIcon
             avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
             format={{ corners: 'circle', size: 'sm' }}
-            class="mr-2"
+            class="ml-1 mr-2"
           />
         </a>
       </div>
@@ -283,7 +283,7 @@ const InputBar: Component<{
         placeholder={placeholder()}
         parentClass="flex w-full"
         classList={{ 'blur-md': dragging() }}
-        class="input-bar rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+        class="input-bar max-h-[120px] min-h-[80px] rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === '@') {
             setComplete(true)
@@ -312,11 +312,7 @@ const InputBar: Component<{
           },
         }}
       />
-      <Button
-        schema="clear"
-        onClick={onButtonClick}
-        class="h-full rounded-l-none bg-[var(--bg-800)] px-2 py-2"
-      >
+      <Button schema="clear" onClick={onButtonClick} class="h-full bg-[var(--bg-800)] px-2 py-2">
         <MoreHorizontal class="icon-button" />
       </Button>
 

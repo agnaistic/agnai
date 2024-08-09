@@ -6,7 +6,7 @@ import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { requestStream } from './stream'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 

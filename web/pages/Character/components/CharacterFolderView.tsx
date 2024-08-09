@@ -1,8 +1,8 @@
-import { Component, For, Show, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { CardProps, SortDirection, ViewProps } from './types'
 import { AppSchema } from '/common/types'
 import { slugify } from '/common/util'
-import { createStore } from 'solid-js/store'
+
 import {
   Copy,
   Download,
@@ -19,6 +19,11 @@ import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { A, useNavigate } from '@solidjs/router'
 import Button from '/web/shared/Button'
 import { DropMenu } from '/web/shared/DropMenu'
+import { RootModal } from '/web/shared/Modal'
+import TextInput from '/web/shared/TextInput'
+import { on } from 'solid-js'
+import { characterStore } from '/web/store'
+import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -31,23 +36,31 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
  * - Move characters between folders (potentially using dragging in addition to basic modal)
  */
 
-const randomFolders = ['/', '/foo', '/foo/bar/', '/foo/qux', '/test']
-
-function random() {
-  const ele = Math.floor(Math.random() * randomFolders.length)
-  return randomFolders[ele]
-}
-
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; sort: SortDirection }
 > = (props) => {
+  const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
+  const [folder, setFolder] = createSignal('/')
+
   const sort = (l: AppSchema.Character, r: AppSchema.Character) => {
     return l.name.localeCompare(r.name) * (props.sort === 'asc' ? 1 : -1)
   }
+  const folderChars = createMemo(() => {
+    const name = normalize(folder())
+    const chars = props.characters.filter((ch) => name === normalize(ch.folder || '')).sort(sort)
+    return chars
+  })
+
+  const pager = usePagination({
+    name: 'character-list',
+    items: folderChars,
+    pageSize: 50,
+  })
+
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
     for (const char of props.characters) {
-      let folder = char.folder || random()
+      let folder = char.folder || '/'
       if (!folder.startsWith('/')) {
         folder = '/' + folder
       }
@@ -73,26 +86,39 @@ export const CharacterFolderView: Component<
     return tree
   })
 
-  const [states, setStates] = createStore<Record<string, boolean>>({ '/': true })
-
-  const toggle = (id: string) => {
-    const prev = states[id] ?? false
-    console.log(id, '-->', !prev)
-    setStates(id, !prev)
-  }
-
   return (
-    <div class="flex flex-col">
-      <FolderContents
-        folder={folders()['/']}
-        tree={folders()}
-        states={states}
-        toggleState={toggle}
-        toggleFavorite={props.toggleFavorite}
-        setEdit={props.setEdit}
-        setDelete={props.setDelete}
-        setDownload={props.setDownload}
-      />
+    <div class="flex w-full gap-2 rounded-md border-[1px] border-[var(--bg-700)]">
+      <div class="min-w-[200px] max-w-[200px]">
+        <FolderContents
+          folder={folders()['/']}
+          tree={folders()}
+          current={normalize(folder())}
+          toggleFavorite={props.toggleFavorite}
+          setEdit={props.setEdit}
+          setDelete={props.setDelete}
+          setDownload={props.setDownload}
+          setFolder={setChangeFolder}
+          select={setFolder}
+        />
+      </div>
+      <div class="w-min overflow-x-hidden">
+        <ManualPaginate pager={pager} />
+        <For each={folderChars()}>
+          {(char) => (
+            <Character
+              edit={() => props.setEdit(char)}
+              char={char}
+              toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+              delete={() => props.setDelete(char)}
+              download={() => props.setDelete(char)}
+              folder={() => setChangeFolder(char)}
+            />
+          )}
+        </For>
+        <ManualPaginate pager={pager} />
+      </div>
+
+      <ChangeFolder close={() => setChangeFolder()} char={changeFolder()} />
     </div>
   )
 }
@@ -100,12 +126,13 @@ export const CharacterFolderView: Component<
 const FolderContents: Component<{
   folder: Folder
   tree: FolderTree
-  states: Record<string, boolean>
-  toggleState: (path: string) => void
+  current: string
+  select: (folder: string) => void
   setDelete: (char: AppSchema.Character) => void
   setDownload: (char: AppSchema.Character) => void
   toggleFavorite: (id: string, state: boolean) => void
   setEdit: (char: AppSchema.Character) => void
+  setFolder: (char: AppSchema.Character) => void
 }> = (props) => {
   const children = createMemo(() => {
     const folders = getChildFolders(props.tree, props.folder.path, 'asc')
@@ -113,75 +140,59 @@ const FolderContents: Component<{
   })
 
   return (
-    <div class="rounded-md border-[1px] border-[var(--bg-700)] px-1">
+    <div class="px-1">
       <div
         class="my-1 flex cursor-pointer items-center"
-        onClick={() => props.toggleState(props.folder.path)}
+        onClick={() => props.select(props.folder.path)}
       >
-        <Show when={!props.states[props.folder.path]}>
+        <Show when={props.current !== normalize(props.folder.path)}>
           <FolderClosed size={16} />
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
-        <Show when={props.states[props.folder.path]}>
+        <Show when={props.current === normalize(props.folder.path)}>
           <FolderOpen size={16} />
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
       </div>
 
-      <Show when={props.states[props.folder.path]}>
-        <div class="flex flex-col gap-1">
-          <For each={children()}>
-            {(child) => (
-              <div
-                style={{
-                  'margin-left': `${props.folder.depth * 6}px`,
-                  'margin-right': `${props.folder.depth * 6}px`,
-                }}
-              >
-                <FolderContents
-                  folder={child}
-                  tree={props.tree}
-                  states={props.states}
-                  setDelete={props.setDelete}
-                  setDownload={props.setDownload}
-                  setEdit={props.setEdit}
-                  toggleFavorite={props.toggleFavorite}
-                  toggleState={props.toggleState}
-                />
-              </div>
-            )}
-          </For>
-        </div>
-        <div class="my-1 flex flex-col gap-1">
-          <For each={props.folder.list}>
-            {(char) => (
-              <Character
-                edit={() => props.setEdit(char)}
-                char={char}
-                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-                delete={() => props.setDelete(char)}
-                download={() => props.setDelete(char)}
+      <div class="flex flex-col gap-1">
+        <For each={children()}>
+          {(child) => (
+            <div
+              style={{
+                'margin-left': `${props.folder.depth * 6}px`,
+                'margin-right': `${props.folder.depth * 6}px`,
+              }}
+            >
+              <FolderContents
+                select={props.select}
+                current={props.current}
+                folder={child}
+                setFolder={props.setFolder}
+                tree={props.tree}
+                setDelete={props.setDelete}
+                setDownload={props.setDownload}
+                setEdit={props.setEdit}
+                toggleFavorite={props.toggleFavorite}
               />
-            )}
-          </For>
-        </div>
-      </Show>
+            </div>
+          )}
+        </For>
+      </div>
     </div>
   )
 }
 
-const Character: Component<CardProps> = (props) => {
+const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <div class="flex h-8 w-full items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+    <div class="flex h-8 items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
       <A
-        class="ellipsis flex h-3/4 grow cursor-pointer items-center gap-2"
+        class="ellipsis flex h-3/4  cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
         <CharacterAvatar format={{ size: 'xs', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex max-w-full gap-1 overflow-hidden">
-          <span class="ellipsis  font-bold" style={{ 'min-width': 'fit-content' }}>
-            {props.char.name}
-          </span>
+        <div class="flex gap-1 overflow-hidden">
+          <span class="ellipsis  font-bold">{props.char.name}</span>
           <span class="ellipsis">{props.char.description}</span>
         </div>
       </A>
@@ -192,6 +203,7 @@ const Character: Component<CardProps> = (props) => {
           download={props.download}
           edit={props.edit}
           toggleFavorite={props.toggleFavorite}
+          folder={props.folder}
         />
       </div>
     </div>
@@ -204,6 +216,7 @@ const CharacterListOptions: Component<{
   delete: () => void
   download: () => void
   toggleFavorite: (value: boolean) => void
+  folder: () => void
 }> = (props) => {
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
@@ -220,9 +233,9 @@ const CharacterListOptions: Component<{
         <Show when={!props.char.favorite}>
           <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
         </Show>
-        <A href={`/chats/create/${props.char._id}`}>
+        <a onClick={props.folder}>
           <FolderCog class="icon-button" />
-        </A>
+        </a>
         <a onClick={props.download}>
           <Download class="icon-button" />
         </a>
@@ -246,13 +259,16 @@ const CharacterListOptions: Component<{
         vert="down"
       >
         <div class="flex flex-col gap-2 p-2 font-bold">
-          <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
+          <Button onClick={() => props.toggleFavorite(!props.char.favorite)} alignLeft size="sm">
             <Show when={props.char.favorite}>
               <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
             </Show>
             <Show when={!props.char.favorite}>
               <Star /> Favorite
             </Show>
+          </Button>
+          <Button onClick={props.folder} alignLeft size="sm">
+            <FolderCog /> Folder
           </Button>
           <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
             <MessageCircle /> Chat
@@ -303,4 +319,78 @@ function getChildFolders(tree: FolderTree, path: string, sort: SortDirection) {
   children.sort((l, r) => l.path.localeCompare(r.path) * (sort === 'asc' ? 1 : -1))
 
   return children
+}
+
+const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
+  let ref: HTMLInputElement
+
+  createEffect(
+    on(
+      () => props.char,
+      () => {
+        if (!props.char) return
+
+        ref.value = props.char.folder || '/'
+        ref.focus()
+      }
+    )
+  )
+
+  const save = () => {
+    let folder = ref.value
+    if (!folder.startsWith('/')) {
+      folder = '/' + folder
+    }
+
+    if (folder.endsWith('/')) {
+      folder = folder.slice(0, -1)
+    }
+
+    characterStore.editPartialCharacter(props.char?._id!, { folder: ref.value }, () =>
+      props.close()
+    )
+  }
+
+  return (
+    <RootModal
+      show={!!props.char}
+      close={props.close}
+      footer={
+        <>
+          <Button onClick={props.close}>Cancel</Button>
+          <Button onClick={save}>Save</Button>
+        </>
+      }
+    >
+      <div class="flex flex-col gap-2">
+        <TextInput
+          fieldName="original-folder"
+          disabled
+          label="Current Folder"
+          value={props.char?.folder || '/'}
+        />
+
+        <TextInput
+          fieldName="next-folder"
+          ref={(r) => (ref = r)}
+          label="New Folder"
+          value={props.char?.folder || '/'}
+        />
+      </div>
+    </RootModal>
+  )
+}
+
+function normalize(folder: string) {
+  if (!folder) return '/'
+
+  if (folder.endsWith('/')) {
+    folder = folder.slice(0, -1)
+  }
+
+  if (!folder.startsWith('/')) {
+    folder = '/' + folder
+  }
+
+  return folder
 }

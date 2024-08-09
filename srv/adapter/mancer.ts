@@ -15,7 +15,8 @@ let modelCache: MancerModel[]
 export type MancerModel = {
   id: string
   name: string
-  perToken: number
+  perTokenOutput: number
+  perTokenPrompt: number
   paidOnly: boolean
   context: number
   online: boolean
@@ -176,7 +177,9 @@ export async function getMancerModels() {
         const url = `https://neuro.mancer.tech/webui/${model.id}/api`
         mancerOptions[model.name] = url
         modelOptions.push({
-          label: `${model.paidOnly ? '(Paid) ' : ''} ${model.name} (${model.perToken}cr/token)`,
+          label: `${model.paidOnly ? '(Paid) ' : ''} ${model.name} (${
+            model.perTokenOutput
+          }cr/out + ${model.perTokenPrompt}/prompt)`,
           value: url,
         })
       }

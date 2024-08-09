@@ -1,5 +1,5 @@
 import { createProvider, migrate } from 'evtstore/provider/mongo'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 import { getDb } from '../db/client'
 import { Provider, createDomainV2 } from 'evtstore'
 import { billingAgg } from './billing/agg'

@@ -26,7 +26,11 @@ const HISTORY_MARKER = '__history__marker__'
 
 type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
 
-type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
+type PlaceHolder = {
+  kind: 'placeholder'
+  values?: any
+  pipes?: string[]
+} & HolderDefinition
 type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
 type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
 type InsertNode = { kind: 'history-insert'; values: number; children: PNode[] }
@@ -39,6 +43,18 @@ type CNode =
   | { kind: 'chat-embed-prop'; prop: ChatEmbedProp }
   | { kind: 'history-if'; prop: HistoryProp; children: CNode[] }
   | { kind: 'bot-if'; prop: BotsProp; children: CNode[] }
+
+type DiceExpr = { values: string; amt?: number; adjust?: number; keep?: number }
+
+type HolderDefinition =
+  | {
+      value: 'roll'
+      amt?: number
+      keep?: number
+      adjust?: number
+      extra?: Array<DiceExpr>
+    }
+  | { value: Holder }
 
 type Holder =
   | 'char'
@@ -58,7 +74,6 @@ type Holder =
   | 'impersonating'
   | 'system_prompt'
   | 'random'
-  | 'roll'
   | 'json'
 
 type RepeatableHolder = Extract<
@@ -66,7 +81,7 @@ type RepeatableHolder = Extract<
   'char' | 'user' | 'chat_age' | 'roll' | 'random' | 'idle_duration'
 >
 
-const repeatableHolders = new Set<RepeatableHolder>([
+const repeatableHolders = new Set<RepeatableHolder | 'roll'>([
   'char',
   'user',
   'chat_age',
@@ -591,9 +606,10 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
     }
 
     case 'roll': {
-      const max = +node.values
-      const rand = Math.ceil(Math.random() * max)
-      return rand.toString()
+      const head = handleDice(node as DiceExpr)
+      const tails = node.extra?.reduce((p, c) => p + handleDice(c), 0) ?? 0
+
+      return (head + tails).toString()
     }
   }
 }
@@ -609,4 +625,30 @@ function lastMessage(value: string) {
 function isEnclosingNode(node: any): node is ConditionNode | IteratorNode {
   if (!node || typeof node === 'string') return false
   return node.kind === 'if'
+}
+
+function handleDice(node: DiceExpr) {
+  // N diced die
+  const max = +node.values
+
+  // Number of die to roll
+  const amt = node.amt ?? 1
+
+  // Adjustment to make to the final value of the dice roll
+  const adjust = node.adjust ?? 0
+
+  // Defined as H[0-9]+ or L[0-9]+
+  // H: Keep highest N rolls
+  // L: Keep the lowest N rolls
+  const keep = node.keep ?? amt
+
+  // Sorted descending
+  const rolls = Array.from({ length: amt }, () => Math.ceil(Math.random() * max)).sort(
+    (l, r) => r - l
+  )
+
+  const usable = keep === 0 ? rolls.slice() : keep > 0 ? rolls.slice(0, keep) : rolls.slice(keep)
+
+  const rand = usable.reduce((p, c) => p + c, 0) + adjust
+  return rand
 }

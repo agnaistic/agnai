@@ -51,5 +51,5 @@ export interface MemoryEntry {
   useProbability?: boolean
   selective?: boolean
   selectiveLogic?: number
-  excludeRecursion?: number
+  excludeRecursion?: boolean
 }

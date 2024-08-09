@@ -31,6 +31,7 @@ export type CharacterUpdate = Partial<
     | 'voiceDisabled'
     | 'imageSettings'
     | 'json'
+    | 'folder'
   >
 >
 
@@ -117,6 +118,7 @@ export async function getCharacters(userId: string) {
       updatedAt: 1,
       voice: 1,
       voiceDisabled: 1,
+      folder: 1,
     })
     .toArray()
 
@@ -145,6 +147,7 @@ export async function getCharacterList(charIds: string[], userId?: string) {
     visualType: 1,
     sprite: 1,
     voiceDisabled: 1,
+    folder: 1,
   }
   if (userId) {
     const list = await db('character')

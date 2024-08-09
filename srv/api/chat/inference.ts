@@ -204,11 +204,11 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
 })
 
 export const inferenceModels = wrap(async (req) => {
-  if (!req.fullUser?.defaultPreset) {
+  if (!req.authed?.defaultPreset) {
     throw new StatusError(`No default preset configured - Check your Agnai user settings`, 400)
   }
 
-  const preset = await store.presets.getUserPreset(req.fullUser?.defaultPreset!)
+  const preset = await store.presets.getUserPreset(req.authed?.defaultPreset!)
   if (!preset) {
     throw new StatusError(`Default preset not found - Check your Agnai user settings`, 400)
   }
@@ -248,7 +248,7 @@ export const inferenceApi = wrap(async (req, res) => {
   const { body } = req
   assertValid(validInferenceApi, body, true)
 
-  let presetId = req.fullUser?.defaultPreset
+  let presetId = req.authed?.defaultPreset
   if (!presetId) {
     throw new StatusError('Missing "model" or "presetId" parameter', 400)
   }
@@ -302,7 +302,7 @@ export const inferenceApi = wrap(async (req, res) => {
 
   const request: InferenceRequest = {
     prompt: body.prompt,
-    user: req.fullUser!,
+    user: req.authed!,
     log: req.log,
     settings,
     placeholders: body.placeholders,
@@ -376,8 +376,6 @@ export const inferenceApi = wrap(async (req, res) => {
 
 export const inference = wrap(async ({ socketId, userId, body, log, get }, res) => {
   assertValid({ ...validInference, requestId: 'string' }, body)
-
-  res.json({ success: true, generating: true, message: 'Generating response' })
 
   if (userId) {
     const user = await store.users.getUser(userId)

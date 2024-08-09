@@ -1,7 +1,7 @@
 import Stripe from 'stripe'
 import { config } from '/srv/config'
 import { AppSchema } from '/common/types'
-import { logger } from '/srv/logger'
+import { logger } from '../../middleware'
 import { store } from '/srv/db'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'

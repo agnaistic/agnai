@@ -1,6 +1,6 @@
 import type { JsonField, PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { Memory, TokenCounter } from '/common/types'
 
 export type GenerateRequestV2 = {

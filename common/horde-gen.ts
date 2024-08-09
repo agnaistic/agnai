@@ -2,7 +2,7 @@ import { AppSchema } from './types/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
 import { toArray } from './util'
-import type { AppLog } from '/srv/logger'
+import type { AppLog } from '../srv/middleware'
 
 const HORDE_GUEST_KEY = '0000000000'
 const baseUrl = 'https://aihorde.net/api/v2'

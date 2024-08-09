@@ -22,6 +22,7 @@ export const Toggle: Component<{
   aiSetting?: keyof PresetAISettings
   classList?: Record<string, boolean>
   recommended?: boolean
+  vertLabel?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -37,14 +38,22 @@ export const Toggle: Component<{
     return isValid ? '' : ' hidden'
   })
 
-  const justify = createMemo(() => (props.reverse ? 'sm:justify-start' : 'sm:justify-between'))
+  const justify = createMemo(() =>
+    props.vertLabel ? 'justify-center' : props.reverse ? 'sm:justify-start' : 'sm:justify-between'
+  )
 
   return (
     <div
-      class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center ${justify()}`}
-      classList={props.classList}
+      class={`sm: flex flex-col gap-2 ${hide()} ${justify()}`}
+      classList={{
+        'sm:flex-row': !props.vertLabel,
+        'sm:items-center': !props.vertLabel,
+        'gap-1': props.vertLabel && !props.class?.includes('gap-'),
+        'gap-2': !props.vertLabel && !props.class?.includes('gap-'),
+        ...props.classList,
+      }}
     >
-      <Show when={props.label && !props.reverse}>
+      <Show when={props.label || !props.reverse || props.helperMarkdown || props.helperText}>
         <FormLabel
           label={
             <span>

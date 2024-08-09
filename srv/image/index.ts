@@ -1,5 +1,5 @@
 import { ImageAdapterResponse, ImageGenerateRequest } from './types'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { handleNovelImage } from './novel'
 import { store } from '../db'
 import { config } from '../config'
@@ -159,6 +159,7 @@ export async function generateImage(
           imagePrompt: opts.prompt,
           append: opts.append,
           meta: { negative },
+          parentId: opts.parentId,
         })
 
         if (msg) return
@@ -201,6 +202,7 @@ async function createImageMessage(opts: {
   imagePrompt: string
   append?: boolean
   meta?: any
+  parentId: string | undefined
 }) {
   const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
   if (!chat) return
@@ -247,6 +249,7 @@ async function createImageMessage(opts: {
       imagePrompt: opts.imagePrompt,
       event: undefined,
       meta: opts.meta,
+      parent: opts.parentId,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

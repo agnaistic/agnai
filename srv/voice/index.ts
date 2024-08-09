@@ -7,7 +7,7 @@ import {
   VoiceModelsListRequest,
   VoicesListRequest,
 } from './types'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { store } from '../db'
 import { v4 } from 'uuid'
 import { saveFile } from '../api/upload'

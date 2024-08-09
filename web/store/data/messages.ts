@@ -85,8 +85,7 @@ export async function basicInference(opts: InferenceOpts) {
   const { user } = userStore.getState()
 
   if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
+    return localApi.error(`Could not get user settings. Refresh and try again.`)
   }
 
   const preset = getInferencePreset(settings)
@@ -678,9 +677,6 @@ async function getGenerateProps(
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
         const replacing = entities.messages[index]
 
-        const replaceParent = entities.messages[index - 1]
-        props.parent = replaceParent
-
         // Retrying an impersonated message - We'll use the "auto-reply as" or the "main character"
         if (replacing?.userId) {
           props.replyAs = getBot(active.replyAs || active.char._id)
@@ -689,6 +685,8 @@ async function getGenerateProps(
           props.replyAs = getBot(replacing.characterId || active.char._id)
           props.replacing = replacing
           props.messages = entities.messages.slice(0, index)
+          const replaceParent = entities.messages[index - 1]
+          props.parent = replaceParent
         }
       } else if (!lastMsg && secondLastMsg.characterId) {
         // Case: Replacing the first message (i.e. the greeting)

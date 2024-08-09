@@ -14,7 +14,7 @@ import {
   insertsDeeperThanConvoHistory,
 } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
 import { CLAUDE_CHAT_MODELS } from '/common/adapters'
 import { CompletionItem, toChatCompletionPayload } from './chat-completion'

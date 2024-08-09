@@ -1,7 +1,7 @@
 import { Validator } from '/common/valid'
 import { AppSchema } from '../../common/types/schema'
 import { VoiceSettings, TTSService } from '../../common/types/texttospeech-schema'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 
 export type TextToSpeechHandler = {
   validator: Validator

@@ -3,7 +3,7 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { registerAdapter } from './register'
 import { WebSocket } from 'ws'
 import { eventGenerator } from '/common/util'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 
 type PetalRequest = {
   type: 'generate'

@@ -13,7 +13,7 @@ import {
   MISTRAL_MODELS,
 } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { settingStore } from '../../store'
+import { settingStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { createStore } from 'solid-js/store'
@@ -21,6 +21,7 @@ import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { PresetProps } from './types'
+import { getSuitableSubLevel } from '/common/util'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -55,13 +56,7 @@ export const GeneralSettings: Component<
   }
 > = (props) => {
   const cfg = settingStore()
-
-  const maxCtx = createMemo(() => {
-    if (!props.sub?.preset.maxContextLength) return
-
-    const max = Math.floor(props.sub?.preset.maxContextLength / 1000)
-    return `${max}K`
-  })
+  const user = userStore()
 
   const [replicate, setReplicate] = createStore({
     model: props.inherit?.replicateModelName,
@@ -75,6 +70,26 @@ export const GeneralSettings: Component<
   const [context, setContext] = createSignal(
     props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
   )
+
+  const subMax = createMemo(() => {
+    const level = user.user?.admin ? Infinity : user.sub?.level ?? -1
+    const match = getSuitableSubLevel(props.sub?.preset.levels || [], level)
+    if (match) return match
+
+    return {
+      level,
+      maxTokens: props.sub?.preset.maxTokens,
+      maxContextLength: props.sub?.preset.maxContextLength,
+    }
+  })
+
+  const maxCtx = createMemo(() => {
+    const ctx = subMax()?.maxContextLength
+    if (!ctx) return
+
+    const max = Math.floor(ctx / 1000)
+    return `${max}K`
+  })
 
   const openRouterModels = createMemo(() => {
     if (!cfg.config.openRouter.models) return []
@@ -363,7 +378,7 @@ export const GeneralSettings: Component<
           disabled={props.disabled}
           format={props.format}
           onChange={(val) => setTokens(val)}
-          recommended={props.sub?.preset.maxTokens}
+          recommended={subMax().maxTokens}
           recommendLabel="Max"
         />
         <RangeInput
