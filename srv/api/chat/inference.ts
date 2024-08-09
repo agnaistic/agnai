@@ -377,8 +377,6 @@ export const inferenceApi = wrap(async (req, res) => {
 export const inference = wrap(async ({ socketId, userId, body, log, get }, res) => {
   assertValid({ ...validInference, requestId: 'string' }, body)
 
-  res.json({ success: true, generating: true, message: 'Generating response' })
-
   if (userId) {
     const user = await store.users.getUser(userId)
     if (!user) throw errors.Unauthorized

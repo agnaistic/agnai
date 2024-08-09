@@ -85,8 +85,7 @@ export async function basicInference(opts: InferenceOpts) {
   const { user } = userStore.getState()
 
   if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
+    return localApi.error(`Could not get user settings. Refresh and try again.`)
   }
 
   const preset = getInferencePreset(settings)

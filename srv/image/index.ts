@@ -159,6 +159,7 @@ export async function generateImage(
           imagePrompt: opts.prompt,
           append: opts.append,
           meta: { negative },
+          parentId: opts.parentId,
         })
 
         if (msg) return
@@ -201,6 +202,7 @@ async function createImageMessage(opts: {
   imagePrompt: string
   append?: boolean
   meta?: any
+  parentId: string | undefined
 }) {
   const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
   if (!chat) return
@@ -247,6 +249,7 @@ async function createImageMessage(opts: {
       imagePrompt: opts.imagePrompt,
       event: undefined,
       meta: opts.meta,
+      parent: opts.parentId,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

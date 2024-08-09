@@ -1,15 +1,10 @@
-import { Menu, MoreHorizontal } from 'lucide-solid'
-import { Component, Show, createMemo } from 'solid-js'
+import { Menu } from 'lucide-solid'
+import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import { ChatRightPane, chatStore, settingStore } from '../store'
-import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
-import { DropMenu } from './DropMenu'
-import { getClientPreset } from './adapter'
-import { ADAPTER_LABELS } from '/common/adapters'
-import { isChatPage, usePaneManager } from './hooks'
+import { chatStore, settingStore } from '../store'
+import { isChatPage } from './hooks'
 
 const NavBar: Component = () => {
-  const pane = usePaneManager()
   const chats = chatStore((s) => ({
     chat: s.active?.chat,
     char: s.active?.char,
@@ -19,15 +14,6 @@ const NavBar: Component = () => {
 
   const isChat = isChatPage()
 
-  const setModal = (modal: ChatModal) => {
-    chatStore.option({ options: false, modal })
-  }
-
-  const togglePane = (paneType: ChatRightPane) => {
-    chatStore.option({ options: false })
-    pane.update(paneType)
-  }
-
   const Title = (
     <A href="/">
       <div class="flex w-full justify-center">
@@ -35,20 +21,6 @@ const NavBar: Component = () => {
       </div>
     </A>
   )
-
-  const chatPreset = createMemo(() => getClientPreset(chats.chat))
-
-  const adapterLabel = createMemo(() => {
-    const data = chatPreset()
-    if (!data) return ''
-
-    const { name, adapter, isThirdParty, presetLabel } = data
-
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
-      name || presetLabel
-    }`
-    return label
-  })
 
   return (
     <Show when={!isChat()}>
@@ -70,23 +42,6 @@ const NavBar: Component = () => {
               </span>
             </Show>
           </div>
-          <Show when={isChat()} fallback={<div class="w-8 sm:hidden"></div>}>
-            <div onClick={() => chatStore.option({ options: 'mobile' })}>
-              <MoreHorizontal class="icon-button" />
-              <DropMenu
-                show={chats.opts.options === 'mobile'}
-                close={() => chatStore.option({ options: false })}
-                horz="left"
-                vert="down"
-              >
-                <ChatOptions
-                  setModal={setModal}
-                  togglePane={togglePane}
-                  adapterLabel={adapterLabel()}
-                />
-              </DropMenu>
-            </div>
-          </Show>
         </div>
       </div>
     </Show>

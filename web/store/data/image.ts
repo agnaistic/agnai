@@ -21,6 +21,7 @@ type GenerateOpts = {
   prompt?: string
   append?: boolean
   source: string
+  parent?: string
 
   /** If true, the Image Settings prefix and suffix won't be applied */
   noAffix?: boolean
@@ -46,7 +47,15 @@ export const imageApi = {
 
 export async function generateImage({ chatId, messageId, onDone, ...opts }: GenerateOpts) {
   const entities = await getPromptEntities()
-  const prompt = opts.prompt ? opts.prompt : await createSummarizedImagePrompt(entities)
+  const summary = opts.prompt
+    ? await localApi.result({ response: opts.prompt })
+    : await createSummarizedImagePrompt(entities)
+
+  if (!summary.result) {
+    return summary
+  }
+
+  const prompt = summary.result.response
 
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
@@ -64,6 +73,7 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     source: opts.source,
     chatId,
     characterId,
+    parent: opts.parent,
   })
   return res
 }
@@ -224,7 +234,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   }
 
   const prompt = await createImagePrompt(opts)
-  return prompt
+  return localApi.result({ response: prompt, meta: {} })
 }
 
 async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
@@ -235,16 +245,18 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   }
   opts.lines = (opts.lines || []).reverse()
 
-  const template = getSummaryTemplate(settings.service!)
+  let template = getSummaryTemplate(settings.service!)
+
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
   const parsed = await parseTemplate(template, opts)
   const prompt = parsed.parsed
-  const values = await msgsApi.guidance<{ summary: string }>({
+  const response = await msgsApi.basicInference({
     prompt,
     settings,
   })
-  return values.summary
+
+  return response
 }
 
 function getSummaryTemplate(service: AIAdapter) {
@@ -256,7 +268,6 @@ function getSummaryTemplate(service: AIAdapter) {
       ***
       {{history}}
       { Write a detailed image caption of the current scene with a description of each character's appearance }
-      [summary | tokens=250]
       `
 
     case 'openai':
@@ -264,21 +275,20 @@ function getSummaryTemplate(service: AIAdapter) {
     case 'claude':
     case 'scale':
       return neat`
-              {{personality}}
-              
-              (System note: Start of conversation)
-              {{history}}
-              
-              {{ujb}}
-              (System: Write an image caption of the current scene including the character's appearance)
-              Image caption: [summary]
-              `
+      {{personality}}
+      
+      (System note: Start of conversation)
+      {{history}}
+      
+      {{ujb}}
+      (System: Write an image caption of the current scene including the character's appearance)
+      Image caption:`
 
     case 'ooba':
     case 'kobold':
     case 'agnaistic':
       return neat`
-      Below is an instruction that describes a task. Write a response that completes the request.
+      <system>Below is an instruction that describes a task. Write a response that completes the request.</system>
 
       {{char}}'s Persona: {{personality}}
 
@@ -289,12 +299,9 @@ function getSummaryTemplate(service: AIAdapter) {
       {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
       {{/each}}
 
-      ### Instruction:
-      Write an image caption of the current scene using physical descriptions without names.
+      <user>Write an image caption of the current scene using physical descriptions without names.</user>
 
-      ### Response:
-      Image caption: [summary | tokens=250]
-      `
+      <bot>Image caption:`
   }
 }
 

@@ -7,7 +7,9 @@ import type {
 } from '../adapters'
 import { JsonField } from '../prompt'
 import { SubscriptionModelOption, SubscriptionTier } from './presets'
+import { ThemeColor } from './ui'
 
+export type UserType = 'guests' | 'users' | 'subscribers' | 'moderators' | 'admins'
 export interface AppConfig {
   adapters: AIAdapter[]
   version: string
@@ -122,12 +124,18 @@ export interface Configuration {
 }
 
 export interface ActionCall {
+  _id: string
   kind: 'action-call'
 
   position: 'float-bottom' | 'float-top' | 'fixed-top' | 'fixed-bottom'
   page: 'all' | 'home' | 'top'
+  dismissable: boolean
 
+  targets: Record<UserType, boolean>
+
+  title: string
   content: string
+  theme: ThemeColor
 
   createdAt: string
 }

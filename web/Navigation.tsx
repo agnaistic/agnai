@@ -60,6 +60,7 @@ import Tooltip from './shared/Tooltip'
 import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
 import { Badge } from './shared/Card'
 import { navStore } from './subnav'
+import { getRgbaFromVar } from './shared/colors'
 
 const Navigation: Component = () => {
   let parent: any
@@ -112,7 +113,8 @@ const Navigation: Component = () => {
     <>
       <Show when={!state.showMenu && dismissable()}>
         <div
-          class="icon-button absolute left-2 top-4 z-50"
+          class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2 "
+          style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
           onClick={() => settingStore.menu(true)}
           classList={{
             hidden: !isChat(),

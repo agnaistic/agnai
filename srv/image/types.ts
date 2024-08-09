@@ -13,6 +13,7 @@ export type ImageGenerateRequest = {
   noAffix?: boolean
   characterId?: string
   requestId?: string
+  parentId: string | undefined
 }
 
 export type ImageRequestOpts = {

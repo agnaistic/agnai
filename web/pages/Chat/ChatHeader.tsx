@@ -116,6 +116,9 @@ const ChatNav: Component<NavProps> = (props) => {
       </Show>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
+        <Nav.Item onClick={() => settingStore.modal(true)} ariaLabel="Open settings page">
+          <Settings aria-hidden="true" />
+        </Nav.Item>
         <Nav.Item onClick={() => settingStore.toggleAnonymize()}>
           <VenetianMask />
         </Nav.Item>

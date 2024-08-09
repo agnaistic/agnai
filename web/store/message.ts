@@ -682,7 +682,7 @@ export const msgStore = createStore<MsgState>(
       }
     },
     async *createImage(
-      { msgs, activeChatId, activeCharId, waiting },
+      { msgs, activeChatId, activeCharId, waiting, graph },
       messageId?: string,
       append?: boolean
     ) {
@@ -695,12 +695,15 @@ export const msgStore = createStore<MsgState>(
       }
 
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
+      const parent = messageId ? graph.tree[messageId].msg.parent : msgs.slice(-1)[0]._id
+
       const res = await imageApi.generateImage({
         messageId,
         prompt: prev?.imagePrompt,
         append,
         onDone,
         source: 'summary',
+        parent,
       })
       if (res.error) {
         yield { waiting: undefined }
