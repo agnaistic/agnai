@@ -1,6 +1,16 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { Edit, Plus, Save, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, Match, Show, Switch } from 'solid-js'
+import { Edit, Plus, Save, Trash, X } from 'lucide-solid'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Index,
+  Match,
+  on,
+  Show,
+  Switch,
+} from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -20,6 +30,22 @@ import PresetSettings, {
   getPresetFormData,
   getRegisteredSettings,
 } from '/web/shared/PresetSettings'
+import { FormLabel } from '/web/shared/FormLabel'
+
+const emptyPreset: AppSchema.GenSettings = {
+  ...defaultPresets.basic,
+  ...defaultPresets.agnai,
+  name: '',
+  temp: 0.85,
+  topK: 0,
+  topP: 1,
+  tailFreeSampling: 1,
+  repetitionPenalty: 1,
+  repetitionPenaltyRange: 64,
+  maxContextLength: 4090,
+  maxTokens: 250,
+  streamResponse: true,
+}
 
 const tokenizers = [
   { label: 'None', value: '' },
@@ -49,6 +75,7 @@ export const SubscriptionModel: Component = () => {
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
   const [service, setService] = createSignal<AIAdapter>()
   const [replacing, setReplacing] = createSignal(false)
+  const [levels, setLevels] = createSignal<AppSchema.SubscriptionModelLevel[]>([])
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -69,6 +96,7 @@ export const SubscriptionModel: Component = () => {
 
     if (!inherit?.service || !!svc) return
     setService(inherit.service)
+    setLevels(inherit.levels || [])
   })
 
   createEffect(async () => {
@@ -171,7 +199,7 @@ export const SubscriptionModel: Component = () => {
 
     const presetData = getPresetFormData(ref)
     const subData = getStrictForm(ref, validator)
-    const body = { ...presetData, ...subData }
+    const body = { ...presetData, ...subData, levels: levels() }
 
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
@@ -266,15 +294,19 @@ export const SubscriptionModel: Component = () => {
                       parentClass="mb-2"
                     />
 
-                    <TextInput
-                      type="number"
-                      fieldName="subLevel"
-                      label="Subscription Level"
-                      helperText='Anything above -1 requires a "subscription". All users by default are -1.'
-                      placeholder="0"
-                      value={editing()?.subLevel ?? 0}
-                      required
-                    />
+                    <Card>
+                      <TextInput
+                        type="number"
+                        fieldName="subLevel"
+                        label="Subscription Level"
+                        helperText='Anything above -1 requires a "subscription". All users by default are -1.'
+                        placeholder="0"
+                        value={editing()?.subLevel ?? 0}
+                        required
+                      />
+
+                      <Levels levels={editing()?.levels || []} update={setLevels} />
+                    </Card>
 
                     <Card hide={service() !== 'agnaistic'} class="mt-4">
                       <TextInput
@@ -446,19 +478,95 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
   return null
 }
 
-const emptyPreset: AppSchema.GenSettings = {
-  ...defaultPresets.basic,
-  ...defaultPresets.agnai,
-  name: '',
-  temp: 0.85,
-  topK: 0,
-  topP: 1,
-  tailFreeSampling: 1,
-  repetitionPenalty: 1,
-  repetitionPenaltyRange: 64,
-  maxContextLength: 4090,
-  maxTokens: 250,
-  streamResponse: true,
+const Levels: Component<{
+  levels: AppSchema.SubscriptionModelLevel[]
+  update: (levels: AppSchema.SubscriptionModelLevel[]) => void
+}> = (props) => {
+  const [levels, setLevels] = createSignal(props.levels || [])
+
+  createEffect(
+    on(
+      () => props.levels,
+      (l) => {
+        setLevels(l)
+      }
+    )
+  )
+
+  const change = (index: number, update: Partial<AppSchema.SubscriptionModelLevel>) => {
+    const next = levels().map((l, i) => {
+      if (i !== index) return l
+      return { ...l, ...update }
+    })
+    setLevels(next)
+    props.update(next)
+  }
+
+  const add = () => {
+    const next = levels().concat({
+      level: 0,
+      maxTokens: 400,
+      maxContextLength: 8192,
+    })
+    setLevels(next)
+  }
+
+  const remove = (i: number) => {
+    const next = levels().slice()
+    next.splice(i, 1)
+    setLevels(next)
+  }
+
+  return (
+    <>
+      <div class="flex flex-col gap-2">
+        <FormLabel
+          label={
+            <div class="flex items-center gap-2">
+              Levels{' '}
+              <Button size="sm" onClick={add}>
+                <Plus size={12} />
+              </Button>
+            </div>
+          }
+        />
+      </div>
+
+      <Index each={levels()}>
+        {(level, i) => (
+          <div class="flex gap-2">
+            <TextInput
+              fieldName={`level.threshold.${i}`}
+              type="number"
+              helperText="Sub Level"
+              value={level().level}
+              onInput={(ev) => change(i, { level: +ev.currentTarget.value })}
+            />
+
+            <TextInput
+              fieldName={`level.maxtokens.${i}`}
+              type="number"
+              helperText="Tokens"
+              value={level().maxTokens}
+              onInput={(ev) => change(i, { maxTokens: +ev.currentTarget.value })}
+            />
+
+            <TextInput
+              fieldName={`level.maxcontext.${i}`}
+              type="number"
+              helperText="Context"
+              value={level().maxContextLength}
+              onInput={(ev) => change(i, { maxContextLength: +ev.currentTarget.value })}
+            />
+
+            <Button schema="red" onClick={() => remove(i)}>
+              <Trash size={16} />
+            </Button>
+          </div>
+        )}
+      </Index>
+    </>
+  )
 }
 
 const EditPreset: Component<{

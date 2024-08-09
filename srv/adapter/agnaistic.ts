@@ -36,7 +36,7 @@ export async function getSubscriptionPreset(
   if (gen.service !== 'agnaistic') return
 
   const tier = store.users.getUserSubTier(user)
-  const level = user.admin ? 100 : tier?.level ?? -1
+  const level = user.admin ? 999999 : tier?.level ?? -1
   let error: string | undefined = undefined
   let warning: string | undefined = undefined
 

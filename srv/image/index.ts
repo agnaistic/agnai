@@ -1,5 +1,5 @@
 import { ImageAdapterResponse, ImageGenerateRequest } from './types'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { handleNovelImage } from './novel'
 import { store } from '../db'
 import { config } from '../config'

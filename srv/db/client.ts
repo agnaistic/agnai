@@ -1,6 +1,6 @@
 import { Db, MongoClient } from 'mongodb'
 import { config } from '../config'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 import { AllDoc, Doc } from '../../common/types/schema'
 
 const uri = config.db.uri || `mongodb://${config.db.host}:${config.db.port}`

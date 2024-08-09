@@ -8,7 +8,7 @@ import { createApp } from './app'
 import { config } from './config'
 import { store } from './db'
 import { connect, createIndexes } from './db/client'
-import { logger } from './logger'
+import { logger } from './middleware'
 import { setupDomain } from './domains'
 const pkg = require('../package.json')
 

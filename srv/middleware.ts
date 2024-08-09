@@ -5,6 +5,9 @@ import { StatusError, errors } from './api/wrap'
 import { verifyApiKey } from './db/oauth'
 import { verifyJwt } from './db/user'
 import { config } from './config'
+import { db, isConnected } from './db/client'
+import { getUserSubscriptionTier } from '/common/util'
+import { getCachedTiers } from './db/subscriptions'
 
 const logLevel = getLogLevel()
 
@@ -110,7 +113,19 @@ export function logMiddleware() {
       req.log.setBindings({ guest: true })
     }
 
+    if (req.userId && isConnected()) {
+      const user = await db('user').findOne({ _id: req.userId })
+      if (!user) {
+        return next(errors.Unauthorized)
+      }
+
+      const sub = getUserSubscriptionTier(user, getCachedTiers())
+      req.authed = user
+      req.tier = sub?.tier
+    }
+
     if (canLog) req.log.info('start request')
+
     const start = Date.now()
 
     res.on('finish', () => {

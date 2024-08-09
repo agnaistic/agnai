@@ -15,7 +15,7 @@ import {
 } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { sendOne } from '../api/ws'
 
 type Role = 'user' | 'assistant' | 'system'

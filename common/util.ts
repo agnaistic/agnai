@@ -553,3 +553,18 @@ export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
 
   return hydrate
 }
+
+export function getSuitableSubLevel(levels: AppSchema.SubscriptionModelLevel[], level: number) {
+  let match: AppSchema.SubscriptionModelLevel | undefined
+
+  for (const candidate of levels) {
+    if (candidate.level > level) continue
+
+    if (!match || match.level < candidate.level) {
+      match = candidate
+      continue
+    }
+  }
+
+  return match
+}

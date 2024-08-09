@@ -1,5 +1,6 @@
 import * as core from 'express-serve-static-core'
-import { Logger } from './logger'
+import { Logger } from './middleware'
+import { AppSchema } from '/common/types'
 
 declare global {
   namespace Express {

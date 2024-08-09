@@ -4,7 +4,7 @@ import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { GOOSE_ENGINES } from '/common/adapters'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 
 const baseUrl = 'https://api.goose.ai/v1'
 

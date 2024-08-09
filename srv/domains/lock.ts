@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { getDb } from '../db/client'
 import { createHandler } from './domain'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 
 type Handler = ReturnType<typeof createHandler>
 

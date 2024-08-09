@@ -4,7 +4,7 @@ import { defaultPresets } from '../../common/presets'
 import { OPENAI_CHAT_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { requestFullCompletion, streamCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
 

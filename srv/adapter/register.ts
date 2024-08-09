@@ -1,6 +1,6 @@
 import { AdapterOptions, AIAdapter, RegisteredAdapter } from '../../common/adapters'
 import { config } from '../config'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 import { ModelAdapter } from './type'
 import { AppSchema } from '/common/types'
 

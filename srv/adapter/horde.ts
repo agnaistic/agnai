@@ -3,7 +3,7 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { HORDE_GUEST_KEY, getHordeModels } from '../api/horde'
 import { sendOne } from '../api/ws'
 import { decryptText } from '../db/util'
-import { logger } from '../logger'
+import { logger } from '../middleware'
 import { ModelAdapter } from './type'
 import { toArray } from '/common/util'
 

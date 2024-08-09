@@ -1,7 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import multer from 'multer'
-import { logMiddleware } from './logger'
+import { logMiddleware } from './middleware'
 import api, { keyedRouter } from './api'
 import { errors } from './api/wrap'
 import { resolve } from 'path'

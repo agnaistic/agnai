@@ -144,8 +144,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     ? body.impersonate
     : await store.characters.getCharacter(userId, impersonateId)
 
-  const user = await store.users.getUser(userId)
-  body.user = user
+  body.user = req.authed
 
   const chat = await store.chats.getChatOnly(chatId)
   if (!chat) throw errors.NotFound
@@ -414,7 +413,6 @@ export const generateMessageV2 = handle(async (req, res) => {
 
         const next = await store.msgs.editMessage(body.replacing._id, {
           msg: responseText,
-          parent,
           adapter,
           meta,
           state: 'retried',

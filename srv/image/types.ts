@@ -1,5 +1,5 @@
 import { AppSchema } from '../../common/types/schema'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 import { BaseImageSettings } from '/common/types/image-schema'
 
 export type ImageGenerateRequest = {

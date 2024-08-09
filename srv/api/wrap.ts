@@ -1,6 +1,6 @@
 import * as express from 'express'
 import { AppSchema } from '../../common/types/schema'
-import { AppLog } from '../logger'
+import { AppLog } from '../middleware'
 
 export function handle(handler: Handler): express.RequestHandler {
   const wrapped = async (req: AppRequest, res: express.Response, next: express.NextFunction) => {
@@ -40,7 +40,8 @@ export type AppRequest = Omit<express.Request, 'log'> & {
   log: AppLog
   socketId: string
   scopes?: string[]
-  fullUser?: AppSchema.User
+  authed?: AppSchema.User
+  tier?: AppSchema.SubscriptionTier
 }
 
 export const errors = {

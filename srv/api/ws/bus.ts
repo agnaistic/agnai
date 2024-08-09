@@ -1,7 +1,7 @@
 import * as os from 'os'
 import * as redis from 'redis'
 import { config } from '../../config'
-import { logger } from '../../logger'
+import { logger } from '../../middleware'
 import { AppSocket } from './types'
 import { PING_INTERVAL_MS } from '/common/util'
 

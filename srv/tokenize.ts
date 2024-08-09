@@ -7,7 +7,7 @@ import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import * as nai from 'nai-js-tokenizer'
-import { logger } from './logger'
+import { logger } from './middleware'
 import { AppSchema, Encoder, TokenCounter, Tokenizer } from '/common/types'
 
 const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))

@@ -7,7 +7,7 @@ import {
 } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
-import { AppLog, logger } from '../logger'
+import { AppLog, logger } from '../middleware'
 import { errors, StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
 import {
@@ -23,7 +23,7 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { deepClone, parseStops, tryParse } from '/common/util'
+import { deepClone, getSuitableSubLevel, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import {
   GuidanceParams,
@@ -316,7 +316,12 @@ export async function createChatStream(
     jsonSchema = opts.char.json?.schema
   }
 
-  const subContextLimit = subscription?.preset?.maxContextLength
+  const fallbackContext = subscription?.preset?.maxContextLength
+  const subbedLevel = subscription
+    ? getSuitableSubLevel(subscription?.preset?.levels || [], subscription.level)?.maxContextLength
+    : undefined
+
+  const subContextLimit = subbedLevel || fallbackContext
   opts.settings = opts.settings || {}
 
   if (subContextLimit) {
