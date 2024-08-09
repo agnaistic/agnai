@@ -279,6 +279,7 @@ export namespace AppSchema {
     extras?: string[]
     characterId?: string
     userId?: string
+    name?: string
 
     adapter?: string
     imagePrompt?: string

@@ -250,6 +250,7 @@ async function createImageMessage(opts: {
       event: undefined,
       meta: opts.meta,
       parent: opts.parentId,
+      name: char.name,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

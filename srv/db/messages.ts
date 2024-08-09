@@ -25,6 +25,7 @@ export type NewMessage = {
   retries?: string[]
   parent?: string
   json?: AppSchema.ChatMessage['json']
+  name: string | undefined
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }

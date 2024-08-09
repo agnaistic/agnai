@@ -111,6 +111,7 @@ export const importChat = handle(async ({ body, userId }) => {
     ooc: msg.ooc ?? false,
     retries: character.alternateGreetings,
     event: undefined,
+    name: character.name,
   }))
 
   await store.msgs.importMessages(userId, messages)
