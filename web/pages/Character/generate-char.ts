@@ -22,7 +22,7 @@ export type GenField =
 const parts: Record<string, (prop: string, trait?: string) => string> = {
   scenario: () => `Detailed description of the scene that the character is in`,
   appearance: () =>
-    `Terse brief physical description of the character's eye color, hair color, height, clothes, body`,
+    `Extremely brief and terse (50 words or fewer) caption of physical description of the character's eye color, hair color, height, clothes, body, and physical location`,
   trait: (_, trait) => `Description of {{name}}'s "${trait}" personality trait`,
   persona: () => `Outline of the personality and typical behavior of {{name}}`,
   greeting: () => `{{name}}'s first opening dialogue and actions in the scene`,
@@ -74,7 +74,7 @@ export async function generateField(opts: {
     .join('\n\n')
   const suffix = `<user>${handler(prop, trait)}</user>\n<bot>`
 
-  const template = neat`
+  const prompt = neat`
   <system>You are a character generator. Write a response that generates information about the following character.</system>
 
   Character's name:
@@ -88,8 +88,6 @@ export async function generateField(opts: {
   ${suffix}`
     .replace(/{{name}}/g, char.name)
     .replace(/\n\n+/g, '\n\n')
-
-  const prompt = replaceUniversalTags(template)
 
   const { user } = userStore.getState()
 
