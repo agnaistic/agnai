@@ -447,9 +447,9 @@ const slotDefs: Record<SlotKind, SlotDef> = {
   },
   leaderboard: {
     platform: 'container',
-    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '' },
-    lg: { size: '728x90', id: 'agn-leaderboard-lg', fuseId: '' },
-    xl: { size: '970x90', id: 'agn-leaderboard-xl', fuseId: '' },
+    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '23194815330' },
+    lg: { size: '728x90', id: 'agn-leaderboard-lg', fuseId: '23194815330' },
+    xl: { size: '970x90', id: 'agn-leaderboard-xl', fuseId: '23194815330' },
     ez: [110, 111],
   },
   menu: {
@@ -587,7 +587,7 @@ const ezReady = new Promise(async (resolve, reject) => {
 
 const fuseReady = new Promise(async (resolve, reject) => {
   do {
-    if (typeof window.fusetag.pageInit !== 'function') {
+    if (typeof window.fusetag.pageInit === 'function') {
       console.log('[fuse] ready')
       return resolve(true)
     }
