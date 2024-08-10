@@ -210,7 +210,7 @@ export function getMessageAuthor(opts: {
       msg.characterId === impersonate?._id
         ? impersonate
         : chars[msg.characterId] || chat.tempCharacters?.[msg.characterId]
-    return char!.name
+    return char?.name || 'Unknown'
   }
 
   if (msg.userId) {
