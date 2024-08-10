@@ -42,11 +42,11 @@ export const SubscriptionPage: Component = (props) => {
   const candidates = createMemo(() => {
     return cfg.tiers
       .filter((t) => {
-        const isPatronOf = cfg.type === 'patreon' && cfg.tier?._id === t._id
+        const isPatronOf = user.sub?.type === 'patreon' && cfg.tier?._id === t._id
         isPatronOf
         // if (isPatronOf) return false
 
-        const usable = t.level === cfg.level ? hasExpired() : true
+        const usable = t.level !== user.sub?.level
         return usable && t.enabled && !t.deletedAt && !!t.productId
       })
       .sort((l, r) => l.level - r.level)
