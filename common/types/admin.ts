@@ -128,7 +128,7 @@ export interface ActionCall {
   kind: 'action-call'
 
   position: 'float-bottom' | 'float-top' | 'fixed-top' | 'fixed-bottom'
-  page: 'all' | 'home' | 'top'
+  page: 'all' | 'home' | 'top' | 'chat'
   dismissable: boolean
 
   targets: Record<UserType, boolean>
