@@ -53,8 +53,14 @@ export const SolidCard: Component<{
   hover?: string | boolean
   border?: boolean
   borderColor?: string
+  title?: string | JSX.Element
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
+
+  const titleBg = createMemo(() => {
+    const color = getRgbaFromVar(`--${props.type || 'hl'}-500`, 1)
+    return color.background
+  })
 
   const bg = createMemo((): JSX.CSSProperties => {
     const borderColor = props.borderColor ? getAsCssVar(props.borderColor) : undefined
@@ -100,6 +106,14 @@ export const SolidCard: Component<{
         hover: hover(),
       })}
     >
+      <Show when={props.title}>
+        <div
+          class="mb-2 flex w-full justify-center rounded-md py-1 font-bold"
+          style={{ background: titleBg() }}
+        >
+          {props.title}
+        </div>
+      </Show>
       {props.children}
     </div>
   )
