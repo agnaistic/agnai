@@ -244,6 +244,7 @@ const CharacterList: Component = () => {
         <ManualPaginate pager={pager} />
       </div>
       <Characters
+        allCharacters={sortedChars()}
         characters={pager.items()}
         loading={state.loading || false}
         loaded={!!state.loaded}
@@ -268,6 +269,7 @@ const CharacterList: Component = () => {
 }
 
 const Characters: Component<{
+  allCharacters: AppSchema.Character[]
   characters: AppSchema.Character[]
   favorites: AppSchema.Character[]
   loading: boolean
@@ -340,7 +342,7 @@ const Characters: Component<{
               setDelete={setDelete}
               setDownload={setDownload}
               sort={props.sortDirection}
-              characters={props.characters}
+              characters={props.allCharacters}
               setEdit={setEditChar}
             />
           </Show>

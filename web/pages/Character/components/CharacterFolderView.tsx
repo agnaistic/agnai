@@ -45,6 +45,7 @@ export const CharacterFolderView: Component<
   const sort = (l: AppSchema.Character, r: AppSchema.Character) => {
     return l.name.localeCompare(r.name) * (props.sort === 'asc' ? 1 : -1)
   }
+
   const folderChars = createMemo(() => {
     const name = normalize(folder())
     const chars = props.characters.filter((ch) => name === normalize(ch.folder || '')).sort(sort)
@@ -102,8 +103,11 @@ export const CharacterFolderView: Component<
         />
       </div>
       <div class="w-min overflow-x-hidden">
-        <ManualPaginate pager={pager} />
-        <For each={folderChars()}>
+        <div class="my-1 flex w-full justify-center">
+          <ManualPaginate size="sm" pager={pager} />
+        </div>
+
+        <For each={pager.items()}>
           {(char) => (
             <Character
               edit={() => props.setEdit(char)}
@@ -115,7 +119,10 @@ export const CharacterFolderView: Component<
             />
           )}
         </For>
-        <ManualPaginate pager={pager} />
+
+        <div class="mb-1 flex w-full justify-center">
+          <ManualPaginate size="sm" pager={pager} />
+        </div>
       </div>
 
       <ChangeFolder close={() => setChangeFolder()} char={changeFolder()} />
@@ -185,15 +192,17 @@ const FolderContents: Component<{
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <div class="flex h-8 items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+    <div class="flex items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
       <A
-        class="ellipsis flex h-3/4  cursor-pointer items-center gap-2"
+        class="ellipsis flex cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
-        <CharacterAvatar format={{ size: 'xs', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex gap-1 overflow-hidden">
-          <span class="ellipsis  font-bold">{props.char.name}</span>
-          <span class="ellipsis">{props.char.description}</span>
+        <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
+        <div class="flex flex-col overflow-hidden">
+          <div class="w-min overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+            {props.char.name}
+          </div>
+          <div class="ellipsis text-600 w-min text-sm">{props.char.description}</div>
         </div>
       </A>
       <div class="mx-2 my-1">
