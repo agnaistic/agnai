@@ -536,6 +536,10 @@ function getUniqueId(kind: SlotKind, config: SettingState['slots'], current?: nu
     return ++slotCounter
   }
 
+  if (config.provider === 'fuse') {
+    return ++slotCounter
+  }
+
   const available = slotDefs[kind]
   const inherit: number[] = Array.isArray(config[kind]?.ez) ? config[kind].ez : []
   const all = inherit.concat(available.ez).filter((v) => !isNaN(v))
