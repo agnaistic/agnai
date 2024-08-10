@@ -1150,3 +1150,11 @@ subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body
   cb(body.warning, 'warning')
   toastStore.warn(`Inference warning: ${body.warning}`)
 })
+
+subscribe('inference-error', { requestId: 'string', error: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
+  if (!cb) return
+
+  cb(body.error, 'error')
+  toastStore.warn(`Inference error: ${body.error}`)
+})
