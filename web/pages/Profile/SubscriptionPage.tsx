@@ -121,7 +121,7 @@ export const SubscriptionPage: Component = (props) => {
 
           <PatreonControls />
 
-          <Show when={cfg.tier && !hasExpired()}>
+          <Show when={user.sub?.level! > 0}>
             <h3 class="font-bold">Current Subscription</h3>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
@@ -130,11 +130,11 @@ export const SubscriptionPage: Component = (props) => {
                 </div>
                 <Pill type="green">
                   Subscribed via{' '}
-                  {cfg.type === 'manual'
+                  {user.sub?.type === 'manual'
                     ? 'Gift'
-                    : cfg.type === 'patreon'
+                    : user.sub?.type === 'patreon'
                     ? 'Patreon'
-                    : cfg.type === 'native'
+                    : user.sub?.type === 'native'
                     ? 'Stripe'
                     : 'None'}
                 </Pill>
@@ -204,7 +204,7 @@ export const SubscriptionPage: Component = (props) => {
                     </Show>
                     <div class="mt-4 flex justify-center">
                       <Switch>
-                        <Match when={!hasExpired() && cfg.tier?._id === each._id}>
+                        <Match when={user.sub?.tier._id === each._id}>
                           <Button schema="success" disabled>
                             Subscribed!
                           </Button>
