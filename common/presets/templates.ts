@@ -54,8 +54,8 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   Mistral: {
     openUser: `[INST] `,
     closeUser: `[/INST]\n`,
-    openBot: '[INST] ',
-    closeBot: ' [/INST]\n',
+    openBot: '',
+    closeBot: ' </s>\n',
     openSystem: '[INST] ',
     closeSystem: ' [/INST]\n',
   },

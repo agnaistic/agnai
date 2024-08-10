@@ -19,14 +19,31 @@ export type GenField =
   | 'example1'
   | 'example2'
 
-const parts: Record<string, (prop: string, trait?: string) => string> = {
-  scenario: () => `Detailed description of the scene that the character is in`,
-  appearance: () =>
-    `Extremely brief and terse (50 words or fewer) caption of physical description of the character's eye color, hair color, height, clothes, body, and physical location`,
-  trait: (_, trait) => `Description of {{name}}'s "${trait}" personality trait`,
-  persona: () => `Outline of the personality and typical behavior of {{name}}`,
-  greeting: () => `{{name}}'s first opening dialogue and actions in the scene`,
-  sampleChat: () => `Example of {{name}}'s dialogue and actions`,
+const parts: Record<
+  string,
+  (prop: string, trait?: string) => { instruction: string; post?: string }
+> = {
+  scenario: () => ({
+    instruction: `Detailed description of the scene that the character is in`,
+    post: ``,
+  }),
+  appearance: () => ({
+    instruction: `Extremely brief and comma-separated (50 words or fewer) list of descriptors of the character's eye color, hair color, height, clothes, body, and physical location`,
+    post: ``,
+  }),
+  trait: (_, trait) => ({
+    instruction: `Provide a description of {{name}}'s "${trait}" personality trait`,
+    post: ``,
+  }),
+  persona: () => ({
+    instruction: `Provide an outline of the personality and typical behavior of {{name}}`,
+    post: ``,
+  }),
+  greeting: () => ({
+    instruction: `Provide {{name}}'s first opening dialogue and actions in the scene`,
+    post: ``,
+  }),
+  sampleChat: () => ({ instruction: `Provide an example of {{name}}'s dialogue and actions` }),
 }
 
 const genFields: Array<keyof AppSchema.Character> = [
@@ -54,6 +71,7 @@ export async function generateField(opts: {
     .map((field) => {
       const handler = parts[field]
       if (!handler) return ''
+      if (field === prop) return ''
 
       switch (field) {
         case 'appearance':
@@ -62,7 +80,8 @@ export async function generateField(opts: {
         case 'sampleChat':
           const value = char[field]
           if (!value) return ''
-          return `<user>${handler(field)}</user>\n<bot>${value}</bot>`
+          const { instruction } = handler(field)
+          return `<user>${instruction}</user>\n<bot>${value}</bot>`
 
         case 'persona':
           return toPersonaInfix(char.persona, trait)
@@ -72,10 +91,13 @@ export async function generateField(opts: {
     })
     .filter((p) => !!p.trim())
     .join('\n\n')
-  const suffix = `<user>${handler(prop, trait)}</user>\n<bot>`
+
+  const { instruction } = handler(prop, trait)
+
+  const suffix = `<user>${instruction}</user>\n<bot>`
 
   const prompt = neat`
-  <system>You are a character generator. Write a response that generates information about the following character.</system>
+  <system>You are a character generator. Provide information and attributes about the following character.</system>
 
   Character's name:
   ${char.name}
@@ -94,7 +116,7 @@ export async function generateField(opts: {
   const settings = getUserPreset(user?.chargenPreset || user?.defaultPreset)
 
   msgsApi.inferenceStream(
-    { prompt, overrides: { stopSequences: ['\n', '###', '<|'] }, settings },
+    { prompt, overrides: { stopSequences: ['[/INST]', '###', '<|', '</s>'] }, settings },
     tick
   )
 }
@@ -104,7 +126,9 @@ function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string)
   if (persona.kind === 'text') {
     const text = persona.attributes?.text?.[0]
     if (!text) return ''
-    return `<user>${handler('persona')}</user>\n<bot>${text}</bot>`
+    const { instruction } = handler('persona')
+    const suffix = `${text}`
+    return `<user>${instruction}</user>\n<bot>${suffix}</bot>`
   }
 
   const prompt = Object.entries(persona.attributes)
@@ -114,7 +138,11 @@ function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string)
       return [key, value]
     })
     .filter(([_, v]) => !!v)
-    .map(([key, value]) => `<user>${handler('persona', key)}</user>\n<bot>${value}</bot>`)
+    .map(([key, value]) => {
+      const { instruction } = handler('persona', key)
+      const suffix = `${value}`
+      return `<user>${instruction}</user>\n<bot>${suffix}</bot>`
+    })
     .join('\n\n')
 
   return prompt

@@ -88,9 +88,9 @@ export async function basicInference(opts: InferenceOpts) {
     return localApi.error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const preset = getInferencePreset(settings)
+  let preset = getInferencePreset(settings)
   if (preset && overrides) {
-    Object.assign(preset, overrides)
+    preset = Object.assign({}, preset, overrides)
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)
@@ -120,10 +120,9 @@ export async function inferenceStream(
     return
   }
 
-  const preset = getInferencePreset(settings)
-
+  let preset = getInferencePreset(settings)
   if (preset && overrides) {
-    Object.assign(preset, overrides)
+    preset = Object.assign({}, preset, overrides)
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)

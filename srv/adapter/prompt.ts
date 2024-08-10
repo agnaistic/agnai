@@ -91,5 +91,5 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
     })
   }
 
-  return Array.from(unique.values())
+  return Array.from(unique.values()).filter((str) => !!str)
 }
