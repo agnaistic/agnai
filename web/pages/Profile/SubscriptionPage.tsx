@@ -220,7 +220,11 @@ export const SubscriptionPage: Component = (props) => {
                         </Match>
 
                         <Match
-                          when={cfg.tier && cfg.level > each.level && each._id === cfg.downgrade}
+                          when={
+                            user.sub?.tier &&
+                            user.sub.level > each.level &&
+                            each._id === cfg.downgrade
+                          }
                         >
                           <Button
                             schema="gray"
@@ -231,7 +235,7 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
-                        <Match when={!hasExpired() && cfg.tier && cfg.level > each.level}>
+                        <Match when={user.sub?.type === 'native' && user.sub.level > each.level}>
                           <Button
                             schema="gray"
                             disabled={canResume() || user.billingLoading}
@@ -241,9 +245,15 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
-                        <Match when={hasExpired() && each._id === cfg.tier?._id}>
+                        <Match when={hasExpired() && each._id === user.sub?.tier._id}>
                           <Button schema="success" onClick={() => onSubscribe(each._id)}>
                             Re-subscribe
+                          </Button>
+                        </Match>
+
+                        <Match when={user.sub?.level! > each.level}>
+                          <Button schema="secondary" disabled onClick={() => onSubscribe(each._id)}>
+                            Subscribe
                           </Button>
                         </Match>
 
