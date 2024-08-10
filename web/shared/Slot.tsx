@@ -16,6 +16,7 @@ import { createDebounce } from './util'
 
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
+window.fusetag = window.fusetag || { que: [] }
 
 let slotCounter = 200
 
@@ -23,18 +24,29 @@ const idLocks = new Set<number>()
 
 declare const google: { ima: any }
 
-export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video' | 'pane_leaderboard'
 export type SlotSize = 'sm' | 'lg' | 'xl'
+export type SlotKind =
+  | 'menu'
+  | 'leaderboard'
+  | 'content'
+  | 'video'
+  | 'pane_leaderboard'
+  | 'header'
+  | 'rail_lhs'
+  | 'rail_rhs'
 
 type SlotId =
+  | 'agn-header'
   | 'agn-menu-sm'
   | 'agn-menu-lg'
+  | 'agn-rail-lhs'
+  | 'agn-rail-rhs'
   | 'agn-leaderboard-sm'
   | 'agn-leaderboard-lg'
   | 'agn-leaderboard-xl'
   | 'agn-video-sm'
 
-type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
+type SlotSpec = { size: string; id: SlotId; fallbacks?: string[]; fuseId: string }
 type SlotDef = {
   calc?: (parent: HTMLElement) => SlotSize | null
   platform: 'page' | 'container'
@@ -47,6 +59,8 @@ type SlotDef = {
 
 const MIN_AGE = 60 * 1000
 const VIDEO_AGE = 125 * 1000
+
+const FuseIds = new Set<string>()
 
 const Slot: Component<{
   slot: SlotKind
@@ -90,6 +104,7 @@ const Slot: Component<{
 
   const id = createMemo(() => {
     if (cfg.provider === 'ez') return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
+    if (cfg.provider === 'fuse') return `fuse-${uniqueId()}`
     return `${props.slot}-${uniqueId()}`
   })
 
@@ -221,6 +236,7 @@ const Slot: Component<{
 
   onCleanup(() => {
     idLocks.delete(uniqueId()!)
+    FuseIds.delete(id())
     log('Cleanup')
 
     if (cfg.provider === 'ez') {
@@ -249,7 +265,7 @@ const Slot: Component<{
       return
     }
 
-    if (!cfg.publisherId) {
+    if (cfg.provider === 'google' && !cfg.publisherId) {
       return log('No publisher id')
     }
 
@@ -284,7 +300,7 @@ const Slot: Component<{
     setUniqueId(num)
 
     if (cfg.provider === 'ez') {
-      invoke(log, num)
+      invokeEz(log, num)
     } else if (cfg.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {
@@ -311,6 +327,12 @@ const Slot: Component<{
             googletag.pubads().refresh([adslot()!])
           }
         })
+      })
+    } else if (cfg.provider === 'fuse') {
+      fuseReady.then(() => {
+        window.fusetag.registerZone(id())
+        FuseIds.add(id())
+        invokeFuse()
       })
     }
 
@@ -360,6 +382,7 @@ const Slot: Component<{
               position: 'relative',
             }}
             data-slot={specs()!.id}
+            data-fuse={specs()!.fuseId}
           >
             <video
               id={`${id()}-player`}
@@ -382,6 +405,7 @@ const Slot: Component<{
             ref={ref}
             id={id()}
             data-slot={specs()!.id}
+            data-fuse={specs()!.fuseId}
             style={{ ...style(), ...specs()!.css }}
           ></div>
         </Match>
@@ -391,6 +415,7 @@ const Slot: Component<{
             ref={ref}
             id={id()}
             data-slot={specs()!.id}
+            data-fuse={specs()!.fuseId}
             style={{ ...style(), ...specs()!.css }}
           ></div>
         </Match>
@@ -409,16 +434,16 @@ const slotDefs: Record<SlotKind, SlotDef> = {
       return def
     },
     video: true,
-    sm: { size: '300x250', id: 'agn-menu-sm' },
-    lg: { size: '300x300', id: 'agn-video-sm' },
-    xl: { size: '300x600', id: 'agn-video-sm' },
+    sm: { size: '300x250', id: 'agn-menu-sm', fuseId: '' },
+    lg: { size: '300x300', id: 'agn-video-sm', fuseId: '' },
+    xl: { size: '300x600', id: 'agn-video-sm', fuseId: '' },
     ez: [],
   },
   leaderboard: {
     platform: 'container',
-    sm: { size: '320x50', id: 'agn-leaderboard-sm' },
-    lg: { size: '728x90', id: 'agn-leaderboard-lg' },
-    xl: { size: '970x90', id: 'agn-leaderboard-xl' },
+    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '' },
+    lg: { size: '728x90', id: 'agn-leaderboard-lg', fuseId: '' },
+    xl: { size: '970x90', id: 'agn-leaderboard-xl', fuseId: '' },
     ez: [110, 111],
   },
   menu: {
@@ -427,21 +452,52 @@ const slotDefs: Record<SlotKind, SlotDef> = {
       return 'sm'
     },
     platform: 'page',
-    sm: { size: '300x250', id: 'agn-menu-sm' },
-    lg: { size: '300x600', id: 'agn-menu-lg' },
+    sm: { size: '300x250', id: 'agn-menu-sm', fuseId: '23195824742' },
+    lg: { size: '300x600', id: 'agn-menu-lg', fuseId: '23195824742' },
     ez: [106],
   },
   content: {
     platform: 'container',
-    sm: { size: '320x50', id: 'agn-leaderboard-sm' },
-    lg: { size: '728x90', id: 'agn-leaderboard-lg' },
-    xl: { size: '970x90', id: 'agn-leaderboard-xl', fallbacks: ['970x66', '960x90', '950x90'] },
+    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '23195816384' },
+    lg: { size: '728x90', id: 'agn-leaderboard-lg', fuseId: '23195816384' },
+    xl: {
+      size: '970x90',
+      id: 'agn-leaderboard-xl',
+      fuseId: '',
+      fallbacks: ['970x66', '960x90', '950x90'],
+    },
     ez: [112, 113, 114],
   },
   pane_leaderboard: {
     platform: 'container',
-    sm: { size: '320x50', id: 'agn-leaderboard-sm' },
+    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '' },
     ez: [108, 109],
+  },
+  header: {
+    platform: 'page',
+    video: false,
+    sm: { size: '320x250', id: 'agn-header', fuseId: '23194815330' },
+    ez: [],
+  },
+  rail_lhs: {
+    calc: (parent) => {
+      if (window.innerHeight > 1010) return 'lg'
+      return 'sm'
+    },
+    platform: 'page',
+    sm: { size: '300x250', id: 'agn-rail-lhs', fuseId: '23194836720' },
+    lg: { size: '300x600', id: 'agn-rail-lhs', fuseId: '23194836720' },
+    ez: [],
+  },
+  rail_rhs: {
+    calc: (parent) => {
+      if (window.innerHeight > 1010) return 'lg'
+      return 'sm'
+    },
+    platform: 'page',
+    sm: { size: '300x250', id: 'agn-rail-rhs', fuseId: '23195816390' },
+    lg: { size: '300x600', id: 'agn-rail-rhs', fuseId: '23195816390' },
+    ez: [],
   },
 }
 
@@ -496,20 +552,38 @@ function getSlotId(id: string) {
   return id
 }
 
-const gtmReady = new Promise(async (resolve) => {
+const STARTED = Date.now()
+
+const gtmReady = new Promise(async (resolve, reject) => {
   do {
     if (typeof googletag.pubads === 'function') {
       return resolve(true)
     }
+
+    if (Date.now() - STARTED > 10000) return reject()
     await wait(0.05)
   } while (true)
 })
 
-const ezReady = new Promise(async (resolve) => {
+const ezReady = new Promise(async (resolve, reject) => {
   do {
     if (typeof window.ezstandalone.enable !== 'function') {
       return resolve(true)
     }
+    if (Date.now() - STARTED > 10000) return reject()
+    await wait(0.05)
+  } while (true)
+})
+
+const fuseReady = new Promise(async (resolve, reject) => {
+  do {
+    if (typeof window.fusetag.pageInit !== 'function') {
+      console.log('[fuse] ready')
+      return resolve(true)
+    }
+
+    if (Date.now() - STARTED > 10000) return reject()
+
     await wait(0.05)
   } while (true)
 })
@@ -580,7 +654,7 @@ function getSizes(...specs: Array<SlotSpec | undefined>) {
   return sizes
 }
 
-const [invoke] = createDebounce((log: (typeof console)['log'], self: number) => {
+const [invokeEz] = createDebounce((log: (typeof console)['log'], self: number) => {
   ezReady.then(() => {
     ezstandalone.cmd.push(() => {
       const current = ezstandalone.getSelectedPlaceholders()
@@ -602,6 +676,16 @@ const [invoke] = createDebounce((log: (typeof console)['log'], self: number) => 
         log('[ez]', `dispatched #${add.join(', ')} (more)`)
         ezstandalone.displayMore(...add)
       }
+    })
+  })
+}, 1000)
+
+const [invokeFuse] = createDebounce(() => {
+  fuseReady.then(() => {
+    const ids = Array.from(FuseIds.values())
+    console.log(`[fuse] init ${ids}`)
+    window.fusetag.que.push(() => {
+      window.fusetag.pageInit({ blockingFuseIds: ids })
     })
   })
 }, 1000)

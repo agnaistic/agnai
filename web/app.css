@@ -10,6 +10,10 @@
   @apply h-max rounded-lg py-4;
 }
 
+#fuse-privacy-tool {
+  font-size: 0.5rem;
+}
+
 /* hack while we figure out why text boxes aren't the correct size */
 .text-input-min-h-override {
   min-height: 120px !important;

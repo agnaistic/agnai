@@ -2,7 +2,7 @@ import { AppSchema } from '/common/types'
 import { neat } from '/common/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { toastStore, userStore } from '/web/store'
-import { msgsApi, replaceUniversalTags, StreamCallback } from '/web/store/data/messages'
+import { msgsApi, StreamCallback } from '/web/store/data/messages'
 
 type MinCharacter = Pick<
   AppSchema.Character,

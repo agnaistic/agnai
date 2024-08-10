@@ -45,7 +45,7 @@ export type SettingState = {
   showSettings: boolean
 
   slotsLoaded: boolean
-  slots: { publisherId: string; provider?: 'google' | 'ez' } & Record<string, any>
+  slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
   overlay: boolean
 }
 
@@ -338,6 +338,8 @@ async function loadSlotConfig(serverSlots?: string) {
   const slots: any = { publisherId: '' }
   const server = serverSlots ? tryParse(serverSlots) || {} : {}
 
+  const useDev = location.host !== 'agnai.chat'
+
   try {
     const content = await fetch('/slots.txt', { cache: 'no-cache' }).then((res) => res.text())
     const config = tryParse(content) || {}
@@ -347,7 +349,8 @@ async function loadSlotConfig(serverSlots?: string) {
       slots[key] = value
     }
 
-    const inject = server.inject || config.inject
+    const devInject = useDev ? server?.dev_inject : undefined
+    const inject = devInject || server.inject || config.inject
 
     if (inject) {
       await wait(0.2)

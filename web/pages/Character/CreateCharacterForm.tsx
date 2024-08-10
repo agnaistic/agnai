@@ -20,7 +20,6 @@ import {
   Trash,
   ArrowRight,
   WandSparkles,
-  RotateCcw,
   SlidersVertical,
   Dices,
   BookPlus,
@@ -46,7 +45,7 @@ import TagInput from '../../shared/TagInput'
 import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { AppSchema } from '../../../common/types/schema'
-import Loading, { Spinner } from '/web/shared/Loading'
+import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
