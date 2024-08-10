@@ -72,11 +72,11 @@ const Slot: Component<{
   const cfg = settingStore((s) => {
     const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
     const config = {
-      provider: parsed.provider || s.slots.provider,
+      provider: s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,
-      slots: Object.assign(s.slots, parsed) as SettingState['slots'],
+      slots: Object.assign({}, s.slots) as SettingState['slots'],
       flags: s.flags,
-      ready: s.slotsLoaded && s.initLoading === false,
+      ready: !!s.slots.provider && s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
     }
     return config
@@ -109,12 +109,18 @@ const Slot: Component<{
   })
 
   const log = (...args: any[]) => {
-    if (!cfg.publisherId) return
+    if (cfg.provider === 'google' && !cfg.publisherId) {
+      return
+    }
     if (!cfg.flags.reporting) return
     let slotid = actualId()
     const now = new Date()
     const ts = `${now.toTimeString().slice(0, 8)}.${now.toISOString().slice(-4, -1)}`
-    console.log.apply(null, [`${ts} [${uniqueId()}]`, ...args, `| ${slotid}`])
+    console.log.apply(null, [
+      `${ts} [${cfg.provider || 'none'}|${uniqueId() || 'no id'}]`,
+      ...args,
+      `| ${slotid}`,
+    ])
   }
 
   const resize = useResizeObserver()
