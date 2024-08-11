@@ -91,13 +91,13 @@ export const CharacterFolderView: Component<
   })
 
   return (
-    <div class="flex w-full flex-col gap-2 rounded-md border-[1px] border-[var(--bg-700)]">
+    <div class="flex w-full flex-col gap-2 rounded-md">
       <div class="my-1 flex w-full justify-center">
         <ManualPaginate size="sm" pager={pager} />
       </div>
 
-      <div class="flex w-full gap-1">
-        <div class="flex min-w-[200px] max-w-[200px] gap-1 px-1">
+      <div class="flex w-full">
+        <div class="flex min-w-[200px] max-w-[200px] gap-1">
           <FolderContents
             folder={folders()['/']}
             tree={folders()}
@@ -111,7 +111,7 @@ export const CharacterFolderView: Component<
           />
         </div>
 
-        <div class="mr-2 w-min overflow-x-hidden">
+        <div class="w-min overflow-x-hidden">
           <For each={faveChars()}>
             {(char) => (
               <Character
@@ -176,11 +176,11 @@ const FolderContents: Component<{
         onClick={() => props.select(props.folder.path)}
       >
         <Show when={props.current !== normalize(props.folder.path)}>
-          <FolderClosed size={16} />
+          <div class="mr-1">○</div>
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
         <Show when={props.current === normalize(props.folder.path)}>
-          <FolderOpen size={16} />
+          <div class="mr-1">•</div>
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
       </div>
@@ -215,7 +215,7 @@ const FolderContents: Component<{
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] px-1 hover:border-[var(--bg-600)]">
+    <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
       <div class="cursor-grab">
         <Menu color="var(--bg-500)" />
       </div>

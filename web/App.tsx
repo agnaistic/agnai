@@ -154,7 +154,11 @@ const Layout: Component<{ children?: any }> = (props) => {
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
-          <main class="w-full overflow-y-auto" data-background style={bgStyles()}>
+          <main
+            class="w-full overflow-y-auto"
+            data-background
+            style={{ ...bgStyles(), 'scrollbar-gutter': 'stable both-edges' }}
+          >
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
               classList={{
