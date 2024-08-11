@@ -389,6 +389,15 @@ export async function generateResponse(
     request.imageData = entities.imageData
   }
 
+  if (window.flags.debug) {
+    toastStore.info(
+      `[${request.kind}] parent:${request.parent?.slice(0, 4) || '----'} | repl:${
+        props.replacing?._id.slice(0, 4) || '----'
+      }`,
+      300
+    )
+  }
+
   const res = await api.post<{ requestId: string; messageId?: string }>(
     `/chat/${entities.chat._id}/generate`,
     request

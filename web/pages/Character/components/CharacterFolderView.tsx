@@ -81,7 +81,6 @@ export const CharacterFolderView: Component<
       let curr = folder
       do {
         const parent = getFolderParent(curr)
-        console.log(folder, parent)
         if (!parent) break
         curr = parent
         if (!tree[parent]) {
