@@ -10,6 +10,7 @@ import { config } from './config'
 import { createServer } from './server'
 import pipeline from './api/pipeline'
 import { getDb } from './db/client'
+import { isConnected } from './api/ws/bus'
 
 export function createApp() {
   const upload = multer({
@@ -42,16 +43,31 @@ export function createApp() {
   app.use('/v1', keyedRouter)
   app.use('/api', api)
 
-  if (config.db.host || config.db.uri) {
-    app.get('/healthcheck', (_, res) => {
-      try {
-        getDb()
-        res.status(200).json({ message: 'okay', status: true })
-      } catch (ex) {
-        res.status(503).json({ message: 'Database not ready', status: false })
+  app.get('/healthcheck', (_, res) => {
+    const dbHost = config.db.host || config.db.uri
+    if (!config.redis.host && !dbHost) {
+      return res.status(200).json({ message: 'ok', status: true, db: false, redis: false })
+    }
+
+    let db = !config.db.host
+
+    try {
+      if (dbHost) getDb()
+      db = true
+
+      if (!!config.redis.host && !isConnected()) {
+        throw new Error('Redis not ready')
       }
-    })
-  }
+
+      res
+        .status(200)
+        .json({ message: 'ok', status: true, db: !!dbHost, redis: !!config.redis.host })
+    } catch (ex) {
+      res
+        .status(503)
+        .json({ message: 'Database(s) not ready', status: false, db, redis: !isConnected() })
+    }
+  })
 
   if (config.pipelineProxy) {
     app.use('/pipeline', pipeline)
