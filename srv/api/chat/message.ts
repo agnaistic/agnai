@@ -421,6 +421,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           state: 'retried',
           retries: nextRetries,
+          parent: body.parent,
           json: hydration ? hydration : (null as any),
         })
         treeLeafId = body.replacing._id

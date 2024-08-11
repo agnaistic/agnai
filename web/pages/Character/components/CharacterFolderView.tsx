@@ -7,9 +7,7 @@ import {
   Copy,
   Download,
   Edit,
-  FolderClosed,
   FolderCog,
-  FolderOpen,
   Menu,
   MessageCircle,
   MoreHorizontal,
@@ -64,7 +62,7 @@ export const CharacterFolderView: Component<
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
     for (const char of props.characters) {
-      let folder = char.folder || '/'
+      let folder = char.folder || ''
       if (!folder.startsWith('/')) {
         folder = '/' + folder
       }
@@ -79,6 +77,17 @@ export const CharacterFolderView: Component<
       if (!tree[folder]) {
         tree[folder] = { path: folder, depth, list: [] }
       }
+
+      let curr = folder
+      do {
+        const parent = getFolderParent(curr)
+        console.log(folder, parent)
+        if (!parent) break
+        curr = parent
+        if (!tree[parent]) {
+          tree[parent] = { path: parent, depth: parent.match(/\//g)?.length ?? 0, list: [] }
+        }
+      } while (true)
 
       tree[folder].list.push(char)
     }
@@ -172,8 +181,13 @@ const FolderContents: Component<{
   return (
     <div class="">
       <div
-        class="my-1 flex cursor-pointer items-center"
-        onClick={() => props.select(props.folder.path)}
+        class="my-1 flex items-center"
+        classList={{
+          'text-500': props.folder.list.length === 0,
+          'cursor-pointer': props.folder.list.length > 0,
+          'cursor-not-allowed': props.folder.list.length === 0,
+        }}
+        onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
       >
         <Show when={props.current !== normalize(props.folder.path)}>
           <div class="mr-1">○</div>
@@ -185,7 +199,7 @@ const FolderContents: Component<{
         </Show>
       </div>
 
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-1 font-mono text-sm font-bold">
         <For each={children()}>
           {(child) => (
             <div
@@ -416,7 +430,7 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
   )
 }
 
-function normalize(folder: string) {
+function normalize(folder?: string) {
   if (!folder) return '/'
 
   if (folder.endsWith('/')) {
@@ -428,4 +442,24 @@ function normalize(folder: string) {
   }
 
   return folder
+}
+
+/**
+ * Cases:
+ * - /
+ * - /foo/
+ * - /foo/bar/
+ * - /far/bar/baz/
+ */
+function getFolderParent(folder: string) {
+  if (folder === '/') return
+
+  if (folder.endsWith('/')) {
+    folder = folder.slice(0, -1)
+  }
+
+  const index = folder.lastIndexOf('/')
+  if (index <= 0) return
+
+  return folder.slice(0, index + 1)
 }
