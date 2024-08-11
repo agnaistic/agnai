@@ -24,6 +24,8 @@ import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import Divider from '/web/shared/Divider'
+import Draggable from '/web/shared/Draggable'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -32,23 +34,24 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 /**
  * Work in progress
  * @todo
- * - Assign folders to characters
  * - Move characters between folders (potentially using dragging in addition to basic modal)
  */
 
 export const CharacterFolderView: Component<
-  ViewProps & { characters: AppSchema.Character[]; sort: SortDirection }
+  ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
   const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
   const [folder, setFolder] = createSignal('/')
 
-  const sort = (l: AppSchema.Character, r: AppSchema.Character) => {
-    return l.name.localeCompare(r.name) * (props.sort === 'asc' ? 1 : -1)
-  }
+  const faveChars = createMemo(() => {
+    const name = normalize(folder())
+    const faves = props.favorites.filter((ch) => name === normalize(ch.folder || ''))
+    return faves
+  })
 
   const folderChars = createMemo(() => {
     const name = normalize(folder())
-    const chars = props.characters.filter((ch) => name === normalize(ch.folder || '')).sort(sort)
+    const chars = props.characters.filter((ch) => name === normalize(ch.folder || ''))
     return chars
   })
 
@@ -81,48 +84,68 @@ export const CharacterFolderView: Component<
     }
 
     for (const folder in tree) {
-      tree[folder].list.sort(sort)
+      tree[folder].list
     }
 
     return tree
   })
 
   return (
-    <div class="flex w-full gap-2 rounded-md border-[1px] border-[var(--bg-700)]">
-      <div class="min-w-[200px] max-w-[200px]">
-        <FolderContents
-          folder={folders()['/']}
-          tree={folders()}
-          current={normalize(folder())}
-          toggleFavorite={props.toggleFavorite}
-          setEdit={props.setEdit}
-          setDelete={props.setDelete}
-          setDownload={props.setDownload}
-          setFolder={setChangeFolder}
-          select={setFolder}
-        />
+    <div class="flex w-full flex-col gap-2 rounded-md border-[1px] border-[var(--bg-700)]">
+      <div class="my-1 flex w-full justify-center">
+        <ManualPaginate size="sm" pager={pager} />
       </div>
-      <div class="w-min overflow-x-hidden">
-        <div class="my-1 flex w-full justify-center">
-          <ManualPaginate size="sm" pager={pager} />
+
+      <div class="flex w-full gap-1">
+        <div class="flex w-full min-w-[200px] max-w-[200px] gap-1 px-1">
+          <FolderContents
+            folder={folders()['/']}
+            tree={folders()}
+            current={normalize(folder())}
+            toggleFavorite={props.toggleFavorite}
+            setEdit={props.setEdit}
+            setDelete={props.setDelete}
+            setDownload={props.setDownload}
+            setFolder={setChangeFolder}
+            select={setFolder}
+          />
         </div>
 
-        <For each={pager.items()}>
-          {(char) => (
-            <Character
-              edit={() => props.setEdit(char)}
-              char={char}
-              toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-              delete={() => props.setDelete(char)}
-              download={() => props.setDelete(char)}
-              folder={() => setChangeFolder(char)}
-            />
-          )}
-        </For>
+        <div class="w-min overflow-x-hidden">
+          <For each={faveChars()}>
+            {(char) => (
+              <Character
+                edit={() => props.setEdit(char)}
+                char={char}
+                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                delete={() => props.setDelete(char)}
+                download={() => props.setDelete(char)}
+                folder={() => setChangeFolder(char)}
+              />
+            )}
+          </For>
 
-        <div class="mb-1 flex w-full justify-center">
-          <ManualPaginate size="sm" pager={pager} />
+          <Show when={faveChars().length && pager.items().length}>
+            <Divider />
+          </Show>
+
+          <For each={pager.items()}>
+            {(char) => (
+              <Character
+                edit={() => props.setEdit(char)}
+                char={char}
+                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                delete={() => props.setDelete(char)}
+                download={() => props.setDelete(char)}
+                folder={() => setChangeFolder(char)}
+              />
+            )}
+          </For>
         </div>
+      </div>
+
+      <div class="mb-1 flex w-full justify-center">
+        <ManualPaginate size="sm" pager={pager} />
       </div>
 
       <ChangeFolder close={() => setChangeFolder()} char={changeFolder()} />
@@ -147,7 +170,7 @@ const FolderContents: Component<{
   })
 
   return (
-    <div class="px-1">
+    <div class="">
       <div
         class="my-1 flex cursor-pointer items-center"
         onClick={() => props.select(props.folder.path)}
@@ -192,30 +215,36 @@ const FolderContents: Component<{
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <div class="flex items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-      <A
-        class="ellipsis flex cursor-pointer items-center gap-2"
-        href={`/character/${props.char._id}/chats`}
-      >
-        <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex flex-col overflow-hidden">
-          <div class="w-min overflow-hidden text-ellipsis whitespace-nowrap font-bold">
-            {props.char.name}
+    <Draggable onChange={() => {}} onDone={() => {}}>
+      <div class="flex items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+        <A
+          class="ellipsis flex cursor-pointer items-center gap-2"
+          href={`/character/${props.char._id}/chats`}
+        >
+          <CharacterAvatar
+            format={{ size: 'sm', corners: 'circle' }}
+            char={props.char}
+            zoom={1.75}
+          />
+          <div class="flex flex-col overflow-hidden">
+            <div class="w-min overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+              {props.char.name}
+            </div>
+            <div class="ellipsis text-600 w-min text-sm">{props.char.description}</div>
           </div>
-          <div class="ellipsis text-600 w-min text-sm">{props.char.description}</div>
+        </A>
+        <div class="mx-2 my-1">
+          <CharacterListOptions
+            char={props.char}
+            delete={props.delete}
+            download={props.download}
+            edit={props.edit}
+            toggleFavorite={props.toggleFavorite}
+            folder={props.folder}
+          />
         </div>
-      </A>
-      <div class="mx-2 my-1">
-        <CharacterListOptions
-          char={props.char}
-          delete={props.delete}
-          download={props.download}
-          edit={props.edit}
-          toggleFavorite={props.toggleFavorite}
-          folder={props.folder}
-        />
       </div>
-    </div>
+    </Draggable>
   )
 }
 

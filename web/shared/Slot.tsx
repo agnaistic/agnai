@@ -217,7 +217,9 @@ const Slot: Component<{
       if (evt.slot.getSlotElementId() !== id()) return
     }
 
-    gtmReady.then(() => {
+    gtmReady.then((status) => {
+      if (!status) return
+
       googletag.cmd.push(() => {
         googletag.pubads().addEventListener('impressionViewable', onView)
         googletag.pubads().addEventListener('slotVisibilityChanged', onVisChange)
@@ -230,7 +232,8 @@ const Slot: Component<{
     return () => {
       clearInterval(refresher)
 
-      gtmReady.then(() => {
+      gtmReady.then((status) => {
+        if (!status) return
         googletag.pubads().removeEventListener('impressionViewable', onView)
         googletag.pubads().removeEventListener('slotVisibilityChanged', onVisChange)
         googletag.pubads().removeEventListener('slotOnload', onLoaded)
@@ -308,7 +311,9 @@ const Slot: Component<{
     if (cfg.provider === 'ez') {
       invokeEz(log, num)
     } else if (cfg.provider === 'google') {
-      gtmReady.then(() => {
+      gtmReady.then((status) => {
+        if (!status) return
+
         googletag.cmd.push(function () {
           const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
           setSlotId(slotId)
@@ -335,7 +340,9 @@ const Slot: Component<{
         })
       })
     } else if (cfg.provider === 'fuse') {
-      fuseReady.then(() => {
+      fuseReady.then((status) => {
+        if (!status) return
+
         window.fusetag.registerZone(id())
         FuseIds.add(id())
         invokeFuse()

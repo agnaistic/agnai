@@ -336,13 +336,13 @@ const Characters: Component<{
 
           <Show when={props.type === 'folders'}>
             <CharacterFolderView
+              characters={props.allCharacters}
+              favorites={props.favorites}
               groups={groups()}
               showGrouping={showGrouping()}
               toggleFavorite={toggleFavorite}
               setDelete={setDelete}
               setDownload={setDownload}
-              sort={props.sortDirection}
-              characters={props.allCharacters}
               setEdit={setEditChar}
             />
           </Show>
