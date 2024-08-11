@@ -10,6 +10,7 @@ import {
   FolderClosed,
   FolderCog,
   FolderOpen,
+  Menu,
   MessageCircle,
   MoreHorizontal,
   Star,
@@ -25,7 +26,6 @@ import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
-import Draggable from '/web/shared/Draggable'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -34,7 +34,7 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 /**
  * Work in progress
  * @todo
- * - Move characters between folders (potentially using dragging in addition to basic modal)
+ * - dragging rows to folders
  */
 
 export const CharacterFolderView: Component<
@@ -97,7 +97,7 @@ export const CharacterFolderView: Component<
       </div>
 
       <div class="flex w-full gap-1">
-        <div class="flex w-full min-w-[200px] max-w-[200px] gap-1 px-1">
+        <div class="flex min-w-[200px] max-w-[200px] gap-1 px-1">
           <FolderContents
             folder={folders()['/']}
             tree={folders()}
@@ -111,7 +111,7 @@ export const CharacterFolderView: Component<
           />
         </div>
 
-        <div class="w-min overflow-x-hidden">
+        <div class="mr-2 w-min overflow-x-hidden">
           <For each={faveChars()}>
             {(char) => (
               <Character
@@ -215,36 +215,33 @@ const FolderContents: Component<{
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <Draggable onChange={() => {}} onDone={() => {}}>
-      <div class="flex items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-        <A
-          class="ellipsis flex cursor-pointer items-center gap-2"
-          href={`/character/${props.char._id}/chats`}
-        >
-          <CharacterAvatar
-            format={{ size: 'sm', corners: 'circle' }}
-            char={props.char}
-            zoom={1.75}
-          />
-          <div class="flex flex-col overflow-hidden">
-            <div class="w-min overflow-hidden text-ellipsis whitespace-nowrap font-bold">
-              {props.char.name}
-            </div>
-            <div class="ellipsis text-600 w-min text-sm">{props.char.description}</div>
-          </div>
-        </A>
-        <div class="mx-2 my-1">
-          <CharacterListOptions
-            char={props.char}
-            delete={props.delete}
-            download={props.download}
-            edit={props.edit}
-            toggleFavorite={props.toggleFavorite}
-            folder={props.folder}
-          />
-        </div>
+    <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] px-1 hover:border-[var(--bg-600)]">
+      <div class="cursor-grab">
+        <Menu color="var(--bg-500)" />
       </div>
-    </Draggable>
+
+      <A
+        class="ellipsis flex w-full cursor-pointer items-center gap-2"
+        href={`/character/${props.char._id}/chats`}
+      >
+        <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
+        <div class="flex w-min flex-col overflow-hidden">
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+            {props.char.name}
+          </div>
+          <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
+        </div>
+      </A>
+
+      <CharacterListOptions
+        char={props.char}
+        delete={props.delete}
+        download={props.download}
+        edit={props.edit}
+        toggleFavorite={props.toggleFavorite}
+        folder={props.folder}
+      />
+    </div>
   )
 }
 
