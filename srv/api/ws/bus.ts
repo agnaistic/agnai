@@ -26,7 +26,7 @@ setInterval(() => {
   }
 }, PING_INTERVAL_MS)
 
-let connected = false
+let CONNECTED = false
 
 type LiveCount = {
   count: number
@@ -60,7 +60,7 @@ export function getAllCount() {
 }
 
 export function getLiveCounts() {
-  if (!connected)
+  if (!CONNECTED)
     return {
       entries: [
         {
@@ -87,7 +87,7 @@ export function getLiveCounts() {
 }
 
 export function isConnected() {
-  return connected
+  return CONNECTED
 }
 
 export async function initMessageBus() {
@@ -130,7 +130,7 @@ export async function initMessageBus() {
       } catch (ex) {}
     })
 
-    connected = true
+    CONNECTED = true
   } catch (ex) {
     setInterval(() => {
       nonBusMaxCount = Math.max(getAllCount().count, nonBusMaxCount)
@@ -205,7 +205,7 @@ function handleBus(msg: BusMessage) {
 }
 
 export async function broadcast(payload: BusMessage) {
-  if (connected) {
+  if (CONNECTED) {
     await clients.pub.publish(MESSAGE_EVENT, JSON.stringify(payload))
     return
   }

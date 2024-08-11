@@ -117,6 +117,7 @@ export const createMessage = handle(async (req) => {
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
       parent: body.parent,
+      name: impersonate?.name,
     })
 
     await store.chats.update(chatId, { treeLeafId: userMsg._id })
@@ -186,6 +187,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       ooc: body.kind === 'ooc',
       event: undefined,
       parent: body.parent,
+      name: impersonate?.name,
     })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
@@ -198,6 +200,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       ooc: false,
       event: getScenarioEventType(body.kind),
       parent: body.parent,
+      name: replyAs?.name,
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
@@ -390,6 +393,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         event: undefined,
         parent,
         json: hydration,
+        name: replyAs.name,
       })
 
       sendMany(members, {
@@ -417,6 +421,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           meta,
           state: 'retried',
           retries: nextRetries,
+          parent: body.parent,
           json: hydration ? hydration : (null as any),
         })
         treeLeafId = body.replacing._id
@@ -446,6 +451,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           event: undefined,
           parent,
           json: hydration,
+          name: replyAs.name,
         })
         treeLeafId = requestId
         sendMany(members, {

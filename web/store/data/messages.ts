@@ -88,9 +88,9 @@ export async function basicInference(opts: InferenceOpts) {
     return localApi.error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const preset = getInferencePreset(settings)
+  let preset = getInferencePreset(settings)
   if (preset && overrides) {
-    Object.assign(preset, overrides)
+    preset = Object.assign({}, preset, overrides)
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)
@@ -120,10 +120,9 @@ export async function inferenceStream(
     return
   }
 
-  const preset = getInferencePreset(settings)
-
+  let preset = getInferencePreset(settings)
   if (preset && overrides) {
-    Object.assign(preset, overrides)
+    preset = Object.assign({}, preset, overrides)
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)
@@ -388,6 +387,15 @@ export async function generateResponse(
     opts.kind === 'chat-query'
   ) {
     request.imageData = entities.imageData
+  }
+
+  if (window.flags.debug) {
+    toastStore.info(
+      `[${request.kind}] parent:${request.parent?.slice(0, 4) || '----'} | repl:${
+        props.replacing?._id.slice(0, 4) || '----'
+      }`,
+      300
+    )
   }
 
   const res = await api.post<{ requestId: string; messageId?: string }>(
@@ -1149,4 +1157,12 @@ subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body
 
   cb(body.warning, 'warning')
   toastStore.warn(`Inference warning: ${body.warning}`)
+})
+
+subscribe('inference-error', { requestId: 'string', error: 'string' }, (body) => {
+  const cb = inferenceCallbacks.get(body.requestId)
+  if (!cb) return
+
+  cb(body.error, 'error')
+  toastStore.warn(`Inference error: ${body.error}`)
 })

@@ -71,7 +71,7 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
 
       <RangeInput
         fieldName="imageSteps"
-        min={20}
+        min={5}
         max={128}
         step={1}
         value={
@@ -100,8 +100,8 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
       <RangeInput
         fieldName="imageWidth"
         min={256}
-        max={1024}
-        step={64}
+        max={1280}
+        step={128}
         value={
           (props.inherit ? props.cfg?.width : state.user?.images?.width) ??
           agnaiModel()?.init.width ??
@@ -114,8 +114,8 @@ export const ImageSettings: Component<{ cfg?: BaseImageSettings; inherit?: boole
       <RangeInput
         fieldName="imageHeight"
         min={256}
-        max={1024}
-        step={64}
+        max={1280}
+        step={128}
         value={
           (props.inherit ? props.cfg?.height : state.user?.images?.height) ??
           agnaiModel()?.init.height ??

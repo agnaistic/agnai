@@ -140,6 +140,7 @@ const PrivacyPolicyPage: Component = () => {
   return (
     <Page>
       <PageHeader title={<>Agnaistic Privacy Policy</>} />
+      <div data-fuse-privacy-tool></div>
       <div class="markdown flex flex-col gap-4" innerHTML={markdown.makeHtml(text)}></div>
     </Page>
   )

@@ -42,11 +42,11 @@ export const SubscriptionPage: Component = (props) => {
   const candidates = createMemo(() => {
     return cfg.tiers
       .filter((t) => {
-        const isPatronOf = cfg.type === 'patreon' && cfg.tier?._id === t._id
+        const isPatronOf = user.sub?.type === 'patreon' && cfg.tier?._id === t._id
         isPatronOf
         // if (isPatronOf) return false
 
-        const usable = t.level === cfg.level ? hasExpired() : true
+        const usable = t.level !== user.sub?.level
         return usable && t.enabled && !t.deletedAt && !!t.productId
       })
       .sort((l, r) => l.level - r.level)
@@ -121,7 +121,7 @@ export const SubscriptionPage: Component = (props) => {
 
           <PatreonControls />
 
-          <Show when={cfg.tier && !hasExpired()}>
+          <Show when={user.sub?.level! > 0}>
             <h3 class="font-bold">Current Subscription</h3>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
@@ -130,11 +130,11 @@ export const SubscriptionPage: Component = (props) => {
                 </div>
                 <Pill type="green">
                   Subscribed via{' '}
-                  {cfg.type === 'manual'
+                  {user.sub?.type === 'manual'
                     ? 'Gift'
-                    : cfg.type === 'patreon'
+                    : user.sub?.type === 'patreon'
                     ? 'Patreon'
-                    : cfg.type === 'native'
+                    : user.sub?.type === 'native'
                     ? 'Stripe'
                     : 'None'}
                 </Pill>
@@ -204,7 +204,7 @@ export const SubscriptionPage: Component = (props) => {
                     </Show>
                     <div class="mt-4 flex justify-center">
                       <Switch>
-                        <Match when={!hasExpired() && cfg.tier?._id === each._id}>
+                        <Match when={user.sub?.tier._id === each._id}>
                           <Button schema="success" disabled>
                             Subscribed!
                           </Button>
@@ -220,7 +220,11 @@ export const SubscriptionPage: Component = (props) => {
                         </Match>
 
                         <Match
-                          when={cfg.tier && cfg.level > each.level && each._id === cfg.downgrade}
+                          when={
+                            user.sub?.tier &&
+                            user.sub.level > each.level &&
+                            each._id === cfg.downgrade
+                          }
                         >
                           <Button
                             schema="gray"
@@ -231,7 +235,7 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
-                        <Match when={!hasExpired() && cfg.tier && cfg.level > each.level}>
+                        <Match when={user.sub?.type === 'native' && user.sub.level > each.level}>
                           <Button
                             schema="gray"
                             disabled={canResume() || user.billingLoading}
@@ -241,9 +245,15 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
-                        <Match when={hasExpired() && each._id === cfg.tier?._id}>
+                        <Match when={hasExpired() && each._id === user.sub?.tier._id}>
                           <Button schema="success" onClick={() => onSubscribe(each._id)}>
                             Re-subscribe
+                          </Button>
+                        </Match>
+
+                        <Match when={user.sub?.level! > each.level}>
+                          <Button schema="secondary" disabled onClick={() => onSubscribe(each._id)}>
+                            Subscribe
                           </Button>
                         </Match>
 

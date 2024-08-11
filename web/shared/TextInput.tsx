@@ -207,7 +207,7 @@ const TextInput: Component<Props> = (props) => {
             aria-placeholder={placeholder()}
             value={value()}
             class={
-              'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
+              'form-field focusable-field text-900 min-h-[40px] w-full rounded-md px-4 ' +
               (props.class || '')
             }
             style={{ transition: 'height 0.2s ease-in-out', height: height() }}
@@ -232,9 +232,10 @@ const TextInput: Component<Props> = (props) => {
             placeholder={placeholder()}
             aria-placeholder={placeholder()}
             value={value()}
-            class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
+            class={'form-field focusable-field rounded-md px-4 ' + (props.class || '')}
             classList={{
               'w-full': !props.class?.includes('w-'),
+              'py-2': !props.class?.includes('p-') && !props.class?.includes('py-'),
               ...props.classList,
             }}
             onkeyup={(ev) => {

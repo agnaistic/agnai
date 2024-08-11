@@ -396,17 +396,16 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
   return { response: inference.generated, meta: inference.meta }
 })
 
-export const inferenceStream = wrap(async ({ socketId, userId, body, log }, res) => {
+export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req }, res) => {
   assertValid({ ...validInference, requestId: 'string' }, body)
 
   if (userId) {
-    const user = await store.users.getUser(userId)
-    if (!user) throw errors.Unauthorized
-    body.user = user
+    if (!req.authed) throw errors.Unauthorized
+    body.user = req.authed
   }
 
   const { stream, service } = await createInferenceStream({
-    user: body.user,
+    user: body.user!,
     log,
     prompt: body.prompt,
     settings: body.settings,
@@ -469,8 +468,7 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log }, res)
 
   await releaseLock(sendId)
 
-  if (!response) return
-  send(sendId, { type: 'inference', requestId, response: response })
+  send(sendId, { type: 'inference', requestId, response })
 })
 
 async function assertSettings(body: any, userId: string) {

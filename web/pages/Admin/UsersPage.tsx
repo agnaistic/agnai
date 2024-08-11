@@ -311,7 +311,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <pre class="text-xs">{JSON.stringify(session(), null, 2)}</pre>
+                  <pre class="max-w-[800px] text-xs">{JSON.stringify(session(), null, 2)}</pre>
                 </td>
               </tr>
             </Show>

@@ -20,7 +20,6 @@ import {
   Trash,
   ArrowRight,
   WandSparkles,
-  RotateCcw,
   SlidersVertical,
   Dices,
   BookPlus,
@@ -507,18 +506,18 @@ export const CreateCharacterForm: Component<{
                             avatarUrl={editor.avatar() || image()}
                           />
                         </div>
-                        <ReelControl editor={editor} />
                       </div>
                     </Match>
                     <Match when={state.avatar.loading}>
                       <div class="flex w-[80px] flex-col items-center justify-center">
-                        <Loading />
+                        <Loading type="windmill" />
                         <Show when={state.status && state.status.wait_time > 0}>
                           <span class="text-500 text-xs italic">{state.status?.wait_time}s</span>
                         </Show>
                       </div>
                     </Match>
                   </Switch>
+                  <ReelControl editor={editor} loading={state.avatar.loading} />
                 </div>
                 <div class="flex w-full flex-col gap-2">
                   <ToggleButtons
@@ -1110,7 +1109,7 @@ const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
   )
 }
 
-const ReelControl: Component<{ editor: CharEditor }> = (props) => {
+const ReelControl: Component<{ editor: CharEditor; loading: boolean }> = (props) => {
   const createAvatar = async () => {
     const base64 = await props.editor.createAvatar()
     if (!base64) return
@@ -1125,7 +1124,7 @@ const ReelControl: Component<{ editor: CharEditor }> = (props) => {
       <div class="flex w-fit gap-2">
         <Button
           size="sm"
-          disabled={props.editor.imageCache.state.images.length <= 1}
+          disabled={props.editor.imageCache.state.images.length <= 1 || props.loading}
           onClick={props.editor.imageCache.prev}
         >
           <ArrowLeft size={size} />
@@ -1133,7 +1132,7 @@ const ReelControl: Component<{ editor: CharEditor }> = (props) => {
 
         <Button
           size="sm"
-          disabled={props.editor.imageCache.state.imageId === ''}
+          disabled={props.editor.imageCache.state.imageId === '' || props.loading}
           onClick={() => props.editor.imageCache.removeImage(props.editor.imageCache.state.imageId)}
         >
           <Trash size={size} />
@@ -1141,17 +1140,17 @@ const ReelControl: Component<{ editor: CharEditor }> = (props) => {
 
         <Button
           size="sm"
-          disabled={props.editor.imageCache.state.images.length <= 1}
+          disabled={props.editor.imageCache.state.images.length <= 1 || props.loading}
           onClick={props.editor.imageCache.next}
         >
           <ArrowRight size={size} />
         </Button>
       </div>
       <div class="flex w-fit gap-2">
-        <Button size="sm">
+        {/* <Button size="sm" >
           <RotateCcw size={size} />
-        </Button>
-        <Button size="sm" onClick={createAvatar}>
+        </Button> */}
+        <Button size="sm" onClick={createAvatar} disabled={props.loading}>
           <WandSparkles size={size} />
         </Button>
       </div>

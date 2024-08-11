@@ -9,6 +9,7 @@ import TextInput from './TextInput'
 export const ManualPaginate: Component<{
   pager: Pager
   sticky?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }> = (props) => {
   const onPageSize = (ev: FormEvent) => {
     const value = +ev.currentTarget.value
@@ -17,6 +18,8 @@ export const ManualPaginate: Component<{
 
     props.pager.setPageSize(value)
   }
+
+  const btnSize = createMemo(() => 'sm' as const)
 
   const disabled = createMemo(() => props.pager.pages() === 1)
 
@@ -34,20 +37,28 @@ export const ManualPaginate: Component<{
     >
       <Show when={props.pager.pages() > props.pager.pagerSize()}>
         <Button
+          size={btnSize()}
           schema="secondary"
           class="px-2"
           onClick={() => props.pager.setPage(1)}
           disabled={disabled()}
         >
-          <ChevronFirst size={24} />
+          <ChevronFirst size={20} />
         </Button>
       </Show>
-      <Button schema="secondary" class="px-2" onClick={props.pager.prev} disabled={disabled()}>
-        <ChevronLeft size={24} />
+      <Button
+        size={btnSize()}
+        schema="secondary"
+        class="px-2"
+        onClick={props.pager.prev}
+        disabled={disabled()}
+      >
+        <ChevronLeft size={20} />
       </Button>
       <Index each={props.pager.ids()}>
         {(id) => (
           <Button
+            size={btnSize()}
             disabled={disabled()}
             schema="none"
             classList={{
@@ -61,11 +72,18 @@ export const ManualPaginate: Component<{
           </Button>
         )}
       </Index>
-      <Button schema="secondary" class="px-2" onClick={props.pager.next} disabled={disabled()}>
-        <ChevronRight size={24} />
+      <Button
+        size={btnSize()}
+        schema="secondary"
+        class="px-2"
+        onClick={props.pager.next}
+        disabled={disabled()}
+      >
+        <ChevronRight size={20} />
       </Button>
       <Show when={props.pager.pages() > 5}>
         <Button
+          size={btnSize()}
           disabled={disabled()}
           schema="secondary"
           class="px-2"
@@ -79,7 +97,7 @@ export const ManualPaginate: Component<{
         fieldName="paginationSize"
         value={props.pager.pageSize()}
         onInput={onPageSize}
-        class="w-20"
+        class="w-20 py-[2px]"
       />
     </div>
   )

@@ -7,9 +7,8 @@ import {
   Copy,
   Download,
   Edit,
-  FolderClosed,
   FolderCog,
-  FolderOpen,
+  Menu,
   MessageCircle,
   MoreHorizontal,
   Star,
@@ -24,6 +23,7 @@ import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
+import Divider from '/web/shared/Divider'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -32,22 +32,24 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 /**
  * Work in progress
  * @todo
- * - Assign folders to characters
- * - Move characters between folders (potentially using dragging in addition to basic modal)
+ * - dragging rows to folders
  */
 
 export const CharacterFolderView: Component<
-  ViewProps & { characters: AppSchema.Character[]; sort: SortDirection }
+  ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
   const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
   const [folder, setFolder] = createSignal('/')
 
-  const sort = (l: AppSchema.Character, r: AppSchema.Character) => {
-    return l.name.localeCompare(r.name) * (props.sort === 'asc' ? 1 : -1)
-  }
+  const faveChars = createMemo(() => {
+    const name = normalize(folder())
+    const faves = props.favorites.filter((ch) => name === normalize(ch.folder || ''))
+    return faves
+  })
+
   const folderChars = createMemo(() => {
     const name = normalize(folder())
-    const chars = props.characters.filter((ch) => name === normalize(ch.folder || '')).sort(sort)
+    const chars = props.characters.filter((ch) => name === normalize(ch.folder || ''))
     return chars
   })
 
@@ -60,7 +62,7 @@ export const CharacterFolderView: Component<
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
     for (const char of props.characters) {
-      let folder = char.folder || '/'
+      let folder = char.folder || ''
       if (!folder.startsWith('/')) {
         folder = '/' + folder
       }
@@ -76,46 +78,82 @@ export const CharacterFolderView: Component<
         tree[folder] = { path: folder, depth, list: [] }
       }
 
+      let curr = folder
+      do {
+        const parent = getFolderParent(curr)
+        if (!parent) break
+        curr = parent
+        if (!tree[parent]) {
+          tree[parent] = { path: parent, depth: parent.match(/\//g)?.length ?? 0, list: [] }
+        }
+      } while (true)
+
       tree[folder].list.push(char)
     }
 
     for (const folder in tree) {
-      tree[folder].list.sort(sort)
+      tree[folder].list
     }
 
     return tree
   })
 
   return (
-    <div class="flex w-full gap-2 rounded-md border-[1px] border-[var(--bg-700)]">
-      <div class="min-w-[200px] max-w-[200px]">
-        <FolderContents
-          folder={folders()['/']}
-          tree={folders()}
-          current={normalize(folder())}
-          toggleFavorite={props.toggleFavorite}
-          setEdit={props.setEdit}
-          setDelete={props.setDelete}
-          setDownload={props.setDownload}
-          setFolder={setChangeFolder}
-          select={setFolder}
-        />
+    <div class="flex w-full flex-col gap-2 rounded-md">
+      <div class="my-1 flex w-full justify-center">
+        <ManualPaginate size="sm" pager={pager} />
       </div>
-      <div class="w-min overflow-x-hidden">
-        <ManualPaginate pager={pager} />
-        <For each={folderChars()}>
-          {(char) => (
-            <Character
-              edit={() => props.setEdit(char)}
-              char={char}
-              toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-              delete={() => props.setDelete(char)}
-              download={() => props.setDelete(char)}
-              folder={() => setChangeFolder(char)}
-            />
-          )}
-        </For>
-        <ManualPaginate pager={pager} />
+
+      <div class="flex w-full">
+        <div class="flex min-w-[200px] max-w-[200px] gap-1">
+          <FolderContents
+            folder={folders()['/']}
+            tree={folders()}
+            current={normalize(folder())}
+            toggleFavorite={props.toggleFavorite}
+            setEdit={props.setEdit}
+            setDelete={props.setDelete}
+            setDownload={props.setDownload}
+            setFolder={setChangeFolder}
+            select={setFolder}
+          />
+        </div>
+
+        <div class="w-min overflow-x-hidden">
+          <For each={faveChars()}>
+            {(char) => (
+              <Character
+                edit={() => props.setEdit(char)}
+                char={char}
+                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                delete={() => props.setDelete(char)}
+                download={() => props.setDelete(char)}
+                folder={() => setChangeFolder(char)}
+              />
+            )}
+          </For>
+
+          <Show when={faveChars().length && pager.items().length}>
+            <Divider />
+          </Show>
+
+          <For each={pager.items()}>
+            {(char) => (
+              <Character
+                edit={() => props.setEdit(char)}
+                char={char}
+                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                delete={() => props.setDelete(char)}
+                download={() => props.setDelete(char)}
+                folder={() => setChangeFolder(char)}
+              />
+            )}
+          </For>
+        </div>
+      </div>
+
+      <div class="mb-1 flex w-full justify-center">
+        <ManualPaginate size="sm" pager={pager} />
       </div>
 
       <ChangeFolder close={() => setChangeFolder()} char={changeFolder()} />
@@ -140,22 +178,27 @@ const FolderContents: Component<{
   })
 
   return (
-    <div class="px-1">
+    <div class="">
       <div
-        class="my-1 flex cursor-pointer items-center"
-        onClick={() => props.select(props.folder.path)}
+        class="my-1 flex items-center"
+        classList={{
+          'text-500': props.folder.list.length === 0,
+          'cursor-pointer': props.folder.list.length > 0,
+          'cursor-not-allowed': props.folder.list.length === 0,
+        }}
+        onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
       >
         <Show when={props.current !== normalize(props.folder.path)}>
-          <FolderClosed size={16} />
+          <div class="mr-1">○</div>
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
         <Show when={props.current === normalize(props.folder.path)}>
-          <FolderOpen size={16} />
+          <div class="mr-1">•</div>
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
       </div>
 
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-1 font-mono text-sm font-bold">
         <For each={children()}>
           {(child) => (
             <div
@@ -185,27 +228,32 @@ const FolderContents: Component<{
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   return (
-    <div class="flex h-8 items-center justify-between rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+    <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+      <div class="cursor-grab">
+        <Menu color="var(--bg-500)" />
+      </div>
+
       <A
-        class="ellipsis flex h-3/4  cursor-pointer items-center gap-2"
+        class="ellipsis flex w-full cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
-        <CharacterAvatar format={{ size: 'xs', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex gap-1 overflow-hidden">
-          <span class="ellipsis  font-bold">{props.char.name}</span>
-          <span class="ellipsis">{props.char.description}</span>
+        <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
+        <div class="flex w-min flex-col overflow-hidden">
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+            {props.char.name}
+          </div>
+          <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
         </div>
       </A>
-      <div class="mx-2 my-1">
-        <CharacterListOptions
-          char={props.char}
-          delete={props.delete}
-          download={props.download}
-          edit={props.edit}
-          toggleFavorite={props.toggleFavorite}
-          folder={props.folder}
-        />
-      </div>
+
+      <CharacterListOptions
+        char={props.char}
+        delete={props.delete}
+        download={props.download}
+        edit={props.edit}
+        toggleFavorite={props.toggleFavorite}
+        folder={props.folder}
+      />
     </div>
   )
 }
@@ -381,7 +429,7 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
   )
 }
 
-function normalize(folder: string) {
+function normalize(folder?: string) {
   if (!folder) return '/'
 
   if (folder.endsWith('/')) {
@@ -393,4 +441,24 @@ function normalize(folder: string) {
   }
 
   return folder
+}
+
+/**
+ * Cases:
+ * - /
+ * - /foo/
+ * - /foo/bar/
+ * - /far/bar/baz/
+ */
+function getFolderParent(folder: string) {
+  if (folder === '/') return
+
+  if (folder.endsWith('/')) {
+    folder = folder.slice(0, -1)
+  }
+
+  const index = folder.lastIndexOf('/')
+  if (index <= 0) return
+
+  return folder.slice(0, index + 1)
 }

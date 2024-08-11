@@ -48,11 +48,10 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
     <SolidCard
       border
       class={`flex w-full flex-col justify-between gap-1 sm:w-1/2 ${props.class || ''}`}
+      title={props.tier.name}
+      size="sm"
     >
       <div>
-        <div class="flex justify-center text-lg font-bold text-[var(--hl-500)]">
-          {props.tier.name}
-        </div>
         <div class="markdown text-sm" innerHTML={markdown.makeHtml(props.tier.description)} />
       </div>
       <div>

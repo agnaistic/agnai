@@ -117,16 +117,28 @@ const ParticipantsList: Component<{
   edit: (charId: string) => void
 }> = (props) => {
   const self = userStore()
-  const chars = characterStore((s) => s.characters)
+  const chars = characterStore()
   const state = chatStore()
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
-  const charMembers = createMemo<AppSchema.Character[]>(() =>
-    getActiveBots(state.active?.chat!, chars.map, state.active?.chat.tempCharacters || {}).sort(
-      (left, right) => left.name.localeCompare(right.name)
+  const charMembers = createMemo<AppSchema.Character[]>(() => {
+    const active = getActiveBots(
+      state.active?.chat!,
+      chars.characters.map,
+      state.active?.chat.tempCharacters || {}
     )
-  )
+
+    const needsImpersonate =
+      chars.impersonating && active.every((a) => a._id !== chars.impersonating?._id)
+    if (needsImpersonate) {
+      active.unshift(chars.impersonating!)
+    }
+
+    active.sort((left, right) => left.name.localeCompare(right.name))
+
+    return active
+  })
 
   const temps = createMemo(() => {
     const chat = state.active?.chat
