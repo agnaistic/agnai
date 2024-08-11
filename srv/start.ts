@@ -24,11 +24,11 @@ export async function start() {
   })
 
   process.on('uncaughtException', (ex) => {
-    logger.error({ msg: ex?.message, err: ex }, 'Unhandled exception')
+    logger.error({ msg: ex?.message, err: ex, stack: ex.stack }, 'Unhandled exception')
   })
 
   process.on('unhandledRejection', (ex: any) => {
-    logger.error({ msg: ex?.message, err: ex }, 'Unhandled rejection')
+    logger.error({ msg: ex?.message, err: ex, stack: ex.stack }, 'Unhandled rejection')
   })
 
   prepareTokenizers()
