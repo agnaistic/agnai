@@ -38,10 +38,7 @@ export async function connect(verbose = false) {
     connected = true
     return database
   } catch (ex) {
-    if (verbose) {
-      logger.warn({ err: ex }, `Could not connect to database: Running in anonymous-only mode`)
-    }
-
+    logger.error({ err: ex }, `Could not connect to database: Running in anonymous-only mode`)
     setTimeout(() => connect(config.db.verbose), 5000)
   }
 }
