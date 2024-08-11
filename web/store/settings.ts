@@ -358,7 +358,9 @@ async function loadSlotConfig(serverSlots?: string) {
     if (server.provider && inject) {
       await wait(0.2)
       const node = document.createRange().createContextualFragment(inject)
-      document.head.append(node)
+      try {
+        document.head.append(node)
+      } catch (ex) {}
     }
   } catch (ex: any) {
     console.log(ex.message)
