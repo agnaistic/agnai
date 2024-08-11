@@ -570,7 +570,7 @@ const gtmReady = new Promise(async (resolve, reject) => {
       return resolve(true)
     }
 
-    if (Date.now() - STARTED > 10000) return reject()
+    if (Date.now() - STARTED > 10000) return resolve(false)
     await wait(0.05)
   } while (true)
 })
@@ -580,7 +580,7 @@ const ezReady = new Promise(async (resolve, reject) => {
     if (typeof window.ezstandalone.enable !== 'function') {
       return resolve(true)
     }
-    if (Date.now() - STARTED > 10000) return reject()
+    if (Date.now() - STARTED > 10000) return resolve(false)
     await wait(0.05)
   } while (true)
 })
@@ -592,7 +592,7 @@ const fuseReady = new Promise(async (resolve, reject) => {
       return resolve(true)
     }
 
-    if (Date.now() - STARTED > 10000) return reject()
+    if (Date.now() - STARTED > 10000) return resolve(false)
 
     await wait(0.05)
   } while (true)
@@ -665,7 +665,9 @@ function getSizes(...specs: Array<SlotSpec | undefined>) {
 }
 
 const [invokeEz] = createDebounce((log: (typeof console)['log'], self: number) => {
-  ezReady.then(() => {
+  ezReady.then((status) => {
+    if (!status) return
+
     ezstandalone.cmd.push(() => {
       const current = ezstandalone.getSelectedPlaceholders()
       const adding = new Set<number>([self])
@@ -691,7 +693,8 @@ const [invokeEz] = createDebounce((log: (typeof console)['log'], self: number) =
 }, 1000)
 
 const [invokeFuse] = createDebounce(() => {
-  fuseReady.then(() => {
+  fuseReady.then((status) => {
+    if (!status) return
     const ids = Array.from(FuseIds.values())
     console.log(`[fuse] init ${ids}`)
     window.fusetag.que.push(() => {
