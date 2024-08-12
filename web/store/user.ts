@@ -21,6 +21,7 @@ import {
   hexToRgb,
   setRootVariable,
 } from '../shared/colors'
+import { UserType } from '/common/types/admin'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -40,6 +41,7 @@ export type UserState = {
   loading: boolean
   error?: string
   loggedIn: boolean
+  userType: UserType | undefined
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
@@ -83,7 +85,7 @@ export const userStore = createStore<UserState>(
   })
 
   events.on(EVENTS.init, (init) => {
-    userStore.setState({ user: init.user, profile: init.profile })
+    userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
 
     if (init.user?.patreonUserId) {
       userStore.syncPatreonAccount(true)
@@ -201,6 +203,7 @@ export const userStore = createStore<UserState>(
               user: res.result.user,
               profile: res.result.profile,
               jwt: res.result.token,
+              userType: getUserType(res.result.user),
             }
             setAuth(res.result.token)
             success?.()
@@ -471,6 +474,7 @@ export const userStore = createStore<UserState>(
         user: res.result.user,
         profile: res.result.profile,
         jwt: res.result.token,
+        userType: getUserType(res.result.user),
       }
 
       if (res.result.user.ui) {
@@ -751,6 +755,7 @@ function init(): UserState {
 
   if (!existing) {
     return {
+      userType: undefined,
       loading: false,
       jwt: '',
       loggedIn: false,
@@ -767,6 +772,7 @@ function init(): UserState {
   }
 
   return {
+    userType: undefined,
     loggedIn: true,
     loading: false,
     jwt: existing,
@@ -928,4 +934,13 @@ async function checkout(sessionUrl: string) {
       clearInterval(interval)
     }
   }, 3000)
+}
+
+function getUserType(user: AppSchema.User): UserType {
+  if (user.admin) return 'admins'
+  if (user.role === 'admin') return 'admins'
+  if (user.role === 'moderator') return 'moderators'
+  if (user.sub?.level && user.sub.level > 0) return 'subscribers'
+  if (user._id === 'anon') return 'guests'
+  return 'users'
 }

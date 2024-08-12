@@ -9,7 +9,7 @@ import { JsonField } from '../prompt'
 import { SubscriptionModelOption, SubscriptionTier } from './presets'
 import { ThemeColor } from './ui'
 
-export type UserType = 'guests' | 'users' | 'subscribers' | 'moderators' | 'admins'
+export type UserType = 'guests' | 'all' | 'users' | 'subscribers' | 'moderators' | 'admins'
 export interface AppConfig {
   adapters: AIAdapter[]
   version: string
@@ -56,7 +56,9 @@ export interface Announcement {
   title: string
   content: string
 
-  location?: 'notification' | 'home'
+  location?: 'notification' | 'home' | 'cta'
+
+  cta?: ActionCall
 
   /** Date ISO string */
   showAt: string
@@ -124,9 +126,6 @@ export interface Configuration {
 }
 
 export interface ActionCall {
-  _id: string
-  kind: 'action-call'
-
   position: 'float-bottom' | 'float-top' | 'fixed-top' | 'fixed-bottom'
   page: 'all' | 'home' | 'top' | 'chat'
   dismissable: boolean
@@ -136,6 +135,4 @@ export interface ActionCall {
   title: string
   content: string
   theme: ThemeColor
-
-  createdAt: string
 }

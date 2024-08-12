@@ -341,6 +341,17 @@ const editPartCharacter = handle(async ({ body, params, userId }) => {
   return char
 })
 
+export const bulkUpdate = handle(async (req) => {
+  assertValid(
+    { characterIds: ['string'], folder: 'string?', addTag: 'string?', removeTag: 'string?' },
+    req.body
+  )
+
+  const modified = await store.characters.bulkUpdate(req.userId, req.body.characterIds, req.body)
+
+  return { success: true, modified }
+})
+
 const editFullCharacter = handle(async (req) => {
   const id = req.params.id
   const body = handleForm(req, characterForm)
@@ -504,6 +515,7 @@ router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)
 router.post('/:id/favorite', editCharacterFavorite)
 router.delete('/:id/avatar', removeAvatar)
+router.post('/bulk-update', bulkUpdate)
 
 export default router
 

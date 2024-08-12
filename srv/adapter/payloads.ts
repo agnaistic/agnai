@@ -41,6 +41,10 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
+  if (!gen.temp) {
+    gen.temp = 0.75
+  }
+
   // Agnaistic
   if (service !== 'kobold') {
     const body: any = {
@@ -88,6 +92,10 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     }
 
     if (gen.dynatemp_range) {
+      if (gen.dynatemp_range >= gen.temp) {
+        gen.dynatemp_range = gen.temp - 0.1
+      }
+
       body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
       body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
       body.dynatemp_range = gen.dynatemp_range
