@@ -1,16 +1,19 @@
 .modal-height {
-  max-height: 80vh;
-  max-height: 80dvh;
+  max-height: var(--window-height);
+  /* max-height: 80vh; */
+  /* max-height: 80dvh; */
 }
 
 .modal-height-fixed {
-  min-height: calc(80vh - 132px);
-  min-height: calc(80dvh - 132px);
+  min-height: calc(var(--window-height) - 132px);
+  /* min-height: calc(80vh - 132px);
+  min-height: calc(80dvh - 132px); */
 }
 
 .modal-content {
-  max-height: calc(80vh - 132px);
-  max-height: calc(80dvh - 132px);
+  max-height: calc(var(--window-height) - 132px);
+  /* max-height: calc(80vh - 132px);
+  max-height: calc(80dvh - 132px); */
 }
 
 @media (min-width: 1024px) {
@@ -32,6 +35,7 @@
 
 .modal-body {
   @apply flex items-center;
-  height: 100vh;
-  height: 100dvh;
+  height: var(--window-height);
+  /* height: 100vh;
+  height: 100dvh; */
 }
