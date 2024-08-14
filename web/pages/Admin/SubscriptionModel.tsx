@@ -238,7 +238,7 @@ export const SubscriptionModel: Component = () => {
       <PageHeader
         title={
           <A class="link" href="/admin/subscriptions">
-            Subscription
+            Subscription Model
           </A>
         }
       />

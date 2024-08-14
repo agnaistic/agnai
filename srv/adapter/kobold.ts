@@ -416,7 +416,18 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       return
     }
 
-    const match = models.find((m) => m.name === payload.model)
+    const paylow: string = (payload.model || '').toLowerCase()
+    const match = models.find((m) => {
+      const low = m.name.toLowerCase()
+      if (low === paylow) return true
+      if (low.includes(':')) {
+        const [name] = m.name.split(':')
+        if (name === paylow) return true
+        if (name.startsWith(paylow)) return true
+      }
+
+      return low.startsWith(paylow)
+    })
     if (!match) {
       payload.model = models[0].name
       return

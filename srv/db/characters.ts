@@ -2,6 +2,7 @@ import { v4 } from 'uuid'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
+import { UpdateFilter } from 'mongodb'
 
 export type CharacterUpdate = Partial<
   Pick<
@@ -86,6 +87,33 @@ export async function updateCharacter(id: string, userId: string, char: Characte
   }
   await db('character').updateOne({ _id: id, userId }, { $set: edit })
   return getCharacter(userId, id)
+}
+
+export async function bulkUpdate(
+  userId: string,
+  charIds: string[],
+  update: { folder?: string; addTag?: string; removeTag?: string }
+) {
+  const set: UpdateFilter<AppSchema.Character> = {}
+
+  if (update.folder) {
+    set.folder = update.folder
+  }
+
+  if (update.addTag) {
+    set.$push = { tags: update.addTag }
+  }
+
+  if (update.removeTag) {
+    set.$pull = { tags: update.removeTag }
+  }
+
+  const result = await db('character').updateMany(
+    { where: { userId, _id: { $in: charIds } } },
+    { $set: set }
+  )
+
+  return result.matchedCount
 }
 
 export async function partialUpdateCharacter(id: string, userId: string, char: CharacterUpdate) {

@@ -53,6 +53,7 @@ export namespace AppSchema {
   export type SubscriptionType = 'native' | 'patreon' | 'manual'
 
   export type Announcement = Admin.Announcement
+  export type ActionCall = Admin.ActionCall
   export type AppConfig = Admin.AppConfig
   export type Configuration = Admin.Configuration
   export type ImageModel = Admin.ImageModel
