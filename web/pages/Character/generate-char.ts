@@ -28,7 +28,7 @@ const parts: Record<
     post: ``,
   }),
   appearance: () => ({
-    instruction: `Extremely brief and comma-separated (50 words or fewer) list of descriptors of the character's eye color, hair color, height, clothes, body, and physical location`,
+    instruction: `Extremely brief and comma-separated (50 words or fewer) list of descriptors of the character's gender, eye color, hair color, height, clothes, body, physical location and surroundings`,
     post: ``,
   }),
   trait: (_, trait) => ({

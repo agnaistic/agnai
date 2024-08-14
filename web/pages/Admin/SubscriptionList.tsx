@@ -47,13 +47,13 @@ const SubscriptionList: Component = () => {
         <A href="/admin/tiers/new">
           <Button>
             <Plus />
-            Subscription Tier
+            Tier
           </Button>
         </A>
         <A href="/admin/subscriptions/new">
           <Button>
             <Plus />
-            Subscription Preset
+            Model
           </Button>
         </A>
       </div>

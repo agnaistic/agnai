@@ -67,7 +67,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
-  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const useThirdPartyPassword =
+    base.changed && isThirdParty && (gen.thirdPartyKey || user.thirdPartyPassword)
+
   const apiKey = useThirdPartyPassword
     ? gen.thirdPartyKey || user.thirdPartyPassword
     : !isThirdParty

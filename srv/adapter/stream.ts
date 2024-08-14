@@ -244,7 +244,7 @@ export async function websocketStream(opts: { url: string; body: any }, timeoutM
       return
     }
 
-    emitter.push({ error: err.message })
+    emitter.push({ error: err.message || 'failed to connect to inference server' })
     emitter.done()
   })
 
