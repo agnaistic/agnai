@@ -52,9 +52,13 @@
   /* top: 48px; */
   left: 0;
   transition: opacity 250ms ease;
-  transition: left 400ms ease;
-  @apply bg-[var(--bg-800)] sm:relative sm:top-0 sm:clear-none;
+  transition: 400ms ease;
+  @apply bg-[var(--bg-800)] sm:top-0 sm:clear-none;
   @apply z-20 sm:z-0;
+}
+
+#main-content {
+  transition: margin-left 400ms ease;
 }
 
 @media (min-width: 1024px) {
@@ -67,13 +71,13 @@
 .drawer--pane-open {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
-  @apply left-[-100vw] sm:left-0 sm:opacity-100;
+  @apply left-[-302px] sm:left-0 sm:left-0;
 }
 
 .drawer--hide {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
-  @apply left-[-100vw];
+  @apply left-[-302px] sm:w-0;
 }
 
 .drawer__content {

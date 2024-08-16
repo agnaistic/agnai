@@ -485,7 +485,7 @@ export async function getResponseEntities(
       genSettings.gaslight = templates[genSettings.promptTemplateId]
     } else {
       const template = await store.presets.getTemplate(genSettings.promptTemplateId)
-      if (template?.userId == chat.userId) {
+      if (template?.userId === chat.userId) {
         genSettings.gaslight = template.template
       }
     }

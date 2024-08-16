@@ -13,6 +13,8 @@ import { tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 import { canUsePane, isMobile } from '../shared/hooks'
 
+let INJECT_DONE = false
+
 export type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean

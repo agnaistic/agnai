@@ -155,7 +155,12 @@ const Layout: Component<{ children?: any }> = (props) => {
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
           <main
+            id="main-content"
             class="w-full overflow-y-auto"
+            classList={{
+              'sm:ml-[302px]': cfg.showMenu,
+              'sm:ml-0': !cfg.showMenu,
+            }}
             data-background
             style={{ ...bgStyles(), 'scrollbar-gutter': 'stable both-edges' }}
           >

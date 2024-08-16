@@ -9,7 +9,7 @@ export const claudePresets = {
     topP: 1,
     topK: 0,
     claudeModel: CLAUDE_MODELS.ClaudeV1,
-    streamResponse: false,
+    streamResponse: true,
     maxTokens: 500,
     maxContextLength: 7600,
     ignoreCharacterSystemPrompt: false,

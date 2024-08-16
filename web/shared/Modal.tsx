@@ -12,7 +12,7 @@ updatePageVars()
 
 function updatePageVars() {
   setRootVariable('window-width', `${window.innerWidth}px`)
-  setRootVariable(`window-height`, `${window.innerHeight}px`)
+  setRootVariable('window-height', `${window.innerHeight}px`)
 }
 
 interface Props {
@@ -28,9 +28,7 @@ interface Props {
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
   tabs?: TabHook
 
-  /**
-   * If set to false, the close button 'X' will be omitted
-   */
+  /* If set to false, the close button 'X' will be omitted */
   dismissable?: boolean
   ariaLabel?: string
   ariaDescription?: string

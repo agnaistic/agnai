@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws'
 import { EventGenerator, eventGenerator } from '/common/util'
 import { ThirdPartyFormat } from '/common/adapters'
+import { logger } from '../middleware'
 
 export type ServerSentEvent = {
   id?: string
@@ -245,6 +246,7 @@ export async function websocketStream(opts: { url: string; body: any }, timeoutM
     }
 
     emitter.push({ error: err.message || 'failed to connect to inference server' })
+    logger.error({ err }, 'Inference connection error')
     emitter.done()
   })
 
