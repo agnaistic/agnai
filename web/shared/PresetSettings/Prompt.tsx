@@ -95,21 +95,14 @@ export const PromptSettings: Component<
             disabled={props.disabled}
           />
 
-          <TextInput
-            fieldName="ultimeJailbreak"
-            label="Jailbreak (UJB) Prompt"
-            helperText={
-              <>
-                Typically used for Instruct models like Turbo, GPT-4, and Claude. Leave empty to
-                disable.
-              </>
-            }
+          <PromptEditor
+            fieldName="ultimateJailbreak"
+            include={['char', 'user']}
             placeholder="E.g. Keep OOC out of your reply."
-            isMultiline
             value={props.inherit?.ultimeJailbreak ?? ''}
             disabled={props.disabled}
-            class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
           />
+
           <Toggle
             fieldName="prefixNameAppend"
             label="Append name of replying character to very end of the prompt"

@@ -3,7 +3,7 @@ import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, AI_ADAPTERS, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import type { Option } from './Select'
-import { createEffect, JSX, onCleanup } from 'solid-js'
+import { Component, createEffect, JSX, onCleanup } from 'solid-js'
 import type { UserState } from '../store'
 import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
@@ -13,6 +13,10 @@ import { getStore } from '../store/create'
 const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
+
+export type ExtractProps<TComponent> = TComponent extends Component<infer TProps>
+  ? TProps
+  : TComponent
 
 type ChanceArg<T extends keyof Chance.Chance> = Chance.Chance[T] extends (arg: infer U) => any
   ? U
