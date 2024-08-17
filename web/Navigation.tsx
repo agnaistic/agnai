@@ -125,7 +125,7 @@ const Navigation: Component = () => {
       </Show>
       <div
         ref={parent}
-        class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2`}
+        class={`drawer bg-800 flex flex-col gap-2 pt-2`}
         classList={{
           flex: !state.showMenu,
           'drawer--hide': dismissable() && !state.showMenu,
@@ -134,7 +134,10 @@ const Navigation: Component = () => {
         role="navigation"
         aria-label="Main"
       >
-        <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
+        <div
+          ref={content}
+          class="drawer__content sm:text-md text-md flex flex-col gap-0  px-2  sm:gap-1"
+        >
           <div class="flex w-full items-center justify-between">
             <div
               class="icon-button flex w-2/12 justify-start"

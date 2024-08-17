@@ -32,6 +32,7 @@ import {
 } from '/common/guidance/guidance-parser'
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
+import { ResponseSchema } from '/common/types/library'
 
 let version = ''
 
@@ -282,7 +283,7 @@ async function getRequestPreset(opts: InferenceRequest) {
 }
 
 export async function createChatStream(
-  opts: GenerateRequestV2 & { entities?: ResponseEntities },
+  opts: GenerateRequestV2 & { entities?: ResponseEntities; chatSchema?: ResponseSchema },
   log: AppLog,
   guestSocketId?: string
 ) {
@@ -305,15 +306,8 @@ export async function createChatStream(
    * - There is both a history and response template
    */
   let jsonSchema: JsonField[] | undefined
-  const isUsableSchema =
-    opts.char?.json?.enabled &&
-    opts.char.json?.history &&
-    opts.char.json?.response &&
-    opts.char.json?.schema?.length &&
-    opts.char.json.schema.some((s) => !s.disabled)
-
-  if (subscription?.preset?.jsonSchemaCapable && isUsableSchema) {
-    jsonSchema = opts.char.json?.schema
+  if (subscription?.preset?.jsonSchemaCapable && opts.chatSchema) {
+    jsonSchema = opts.chatSchema.schema
   }
 
   const fallbackContext = subscription?.preset?.maxContextLength
@@ -485,7 +479,7 @@ export async function getResponseEntities(
       genSettings.gaslight = templates[genSettings.promptTemplateId]
     } else {
       const template = await store.presets.getTemplate(genSettings.promptTemplateId)
-      if (template?.userId == chat.userId) {
+      if (template?.userId === chat.userId) {
         genSettings.gaslight = template.template
       }
     }

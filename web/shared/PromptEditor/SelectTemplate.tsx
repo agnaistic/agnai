@@ -73,7 +73,7 @@ export const SelectTemplate: Component<{
     if (!props.show) return -1
 
     if (prev !== opts.length) {
-      const id = props.currentTemplateId || state.templates[0]._id
+      const id = props.currentTemplateId || state.templates[0]?._id
       const match = opts.find((o) => o.value === id)
 
       if (!match) return opts.length

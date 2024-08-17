@@ -22,7 +22,7 @@ export const hordePresets = {
     gaslight: '',
     ultimeJailbreak: '',
     oaiModel: OPENAI_MODELS.Turbo,
-    streamResponse: false,
+    streamResponse: true,
     memoryDepth: 50,
     memoryContextLimit: 256,
     memoryReverseWeight: false,

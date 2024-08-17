@@ -223,6 +223,7 @@ export function getPresetFormData(ref: any) {
   const {
     promptOrderFormat,
     promptOrder: order,
+    jsonSchema,
     ...data
   } = getStrictForm(ref, {
     ...presetValidator,
@@ -232,6 +233,9 @@ export function getPresetFormData(ref: any) {
     promptOrder: 'string?',
     modelFormat: 'string?',
     disableNameStops: 'boolean',
+    jsonSchema: 'string?',
+    jsonEnabled: 'boolean',
+    jsonSource: 'string',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
@@ -243,6 +247,8 @@ export function getPresetFormData(ref: any) {
     const actual = cfg.config.openRouter.models.find((or) => or.id === data.openRouterModel)
     data.openRouterModel = actual || undefined
   }
+
+  const json = jsonSchema ? JSON.parse(jsonSchema) : undefined
 
   const promptOrder: AppSchema.GenSettings['promptOrder'] = order
     ? order.split(',').map((o) => {
@@ -269,7 +275,7 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  const preset = { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat }
+  const preset = { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat, json }
   return preset
 }
 

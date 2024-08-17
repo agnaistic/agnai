@@ -247,9 +247,14 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
+  const schema = entities.gen.jsonSource === 'character' ? entities.char.json : entities.gen.json
+  const hydrator = entities.gen.jsonEnabled && schema ? jsonHydrator(schema) : undefined
+
+  let hydration: HydratedJson | undefined
+  let jsonPartial: any
 
   const { stream, adapter, ...metadata } = await createChatStream(
-    { ...body, chat, replyAs, impersonate, requestId, entities },
+    { ...body, chat, replyAs, impersonate, requestId, entities, chatSchema: schema },
     log
   )
 
@@ -259,10 +264,6 @@ export const generateMessageV2 = handle(async (req, res) => {
   let retries: string[] = []
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
-
-  const hydrator = entities.char.json?.enabled ? jsonHydrator(entities.char.json) : undefined
-  let hydration: HydratedJson | undefined
-  let jsonPartial: any
 
   try {
     for await (const gen of stream) {
@@ -545,8 +546,11 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
+  const schema = body.settings.jsonSource === 'character' ? body.char.json : body.settings.json
+  const hydrator = body.settings.jsonEnabled && schema ? jsonHydrator(schema) : undefined
+
   const { stream, adapter, ...entities } = await createChatStream(
-    { ...body, chat, replyAs, requestId },
+    { ...body, chat, replyAs, requestId, chatSchema: schema },
     log,
     guest
   )
@@ -558,7 +562,6 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let error = false
   let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
-  const hydrator = body.char.json?.enabled ? jsonHydrator(body.char.json) : undefined
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 

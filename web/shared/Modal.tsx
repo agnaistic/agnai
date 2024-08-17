@@ -5,6 +5,15 @@ import './modal.css'
 import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
 import { Portal } from 'solid-js/web'
+import { setRootVariable } from './colors'
+
+window.addEventListener('resize', updatePageVars)
+updatePageVars()
+
+function updatePageVars() {
+  setRootVariable('window-width', `${window.innerWidth}px`)
+  setRootVariable('window-height', `${window.innerHeight}px`)
+}
 
 interface Props {
   title?: string | JSX.Element
@@ -19,9 +28,7 @@ interface Props {
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
   tabs?: TabHook
 
-  /**
-   * If set to false, the close button 'X' will be omitted
-   */
+  /* If set to false, the close button 'X' will be omitted */
   dismissable?: boolean
   ariaLabel?: string
   ariaDescription?: string

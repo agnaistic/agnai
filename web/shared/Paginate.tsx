@@ -136,16 +136,19 @@ export function usePagination<T = any>(opts: {
   items: () => T[]
 }): Pager<T> {
   const localName = `agnai-paging-${opts.name}`
+  const isMobile = useDeviceType()
+
   const savedSize = +(storage.localGetItem(localName) ?? `${opts.pageSize}`)
   const [page, setPage] = createSignal(1)
   const [pageSize, setPageSize] = createSignal(savedSize)
-  const isMobile = useDeviceType()
-  const [items, setItems] = createSignal<T[]>(opts.items().slice(0, pageSize()))
+  const safeSize = createMemo(() => (pageSize() <= 0 ? 20 : pageSize()))
+
+  const [items, setItems] = createSignal<T[]>(opts.items().slice(0, safeSize()))
   const [count, setCount] = createSignal(opts.items().length)
 
   const pagerSize = createMemo(() => (isMobile() ? 3 : 5))
 
-  const pages = createMemo(() => Math.ceil(opts.items().length / pageSize()))
+  const pages = createMemo(() => Math.ceil(opts.items().length / safeSize()))
 
   const ids = createMemo(() => {
     return getButtonIds(page(), pages(), isMobile() ? 1 : 2)
@@ -168,8 +171,8 @@ export function usePagination<T = any>(opts: {
     const original = count()
     const itemsChanged = original !== items.length
     const curr = itemsChanged ? 1 : page()
-    const start = (curr - 1) * pageSize()
-    const nextItems = items.slice(start, start + pageSize())
+    const start = (curr - 1) * safeSize()
+    const nextItems = items.slice(start, start + safeSize())
     setItems(nextItems)
     setCount(items.length)
 
@@ -179,7 +182,7 @@ export function usePagination<T = any>(opts: {
   })
 
   createEffect(() => {
-    const size = pageSize()
+    const size = safeSize()
     if (!opts.name) return
     storage.localSetItem(localName, `${size}`)
   })

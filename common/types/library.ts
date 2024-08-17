@@ -76,5 +76,4 @@ export interface ResponseSchema {
   schema: JsonField[]
   response: string
   history: string
-  enabled: boolean
 }

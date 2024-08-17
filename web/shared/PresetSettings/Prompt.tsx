@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal } from 'solid-js'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select from '../Select'
@@ -13,6 +13,8 @@ import { FormLabel } from '../FormLabel'
 import { defaultTemplate } from '/common/mode-templates'
 import { templates } from '/common/presets/templates'
 import { PresetProps } from './types'
+import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
+import { ToggleButton } from '../Button'
 
 export const PromptSettings: Component<
   PresetProps & {
@@ -22,6 +24,7 @@ export const PromptSettings: Component<
     sub?: AppSchema.SubscriptionModelOption
   }
 > = (props) => {
+  let schemaRef: HTMLInputElement
   const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
     typeof props.inherit?.useAdvancedPrompt === 'string'
@@ -30,6 +33,8 @@ export const PromptSettings: Component<
       ? 'no-validation'
       : 'basic'
   )
+
+  const [json, setJson] = createSignal(props.inherit?.jsonEnabled ?? false)
 
   const fallbackTemplate = createMemo(() => {
     if (!props.service) return defaultTemplate
@@ -52,7 +57,47 @@ export const PromptSettings: Component<
   return (
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
-        <Card class="flex flex-col gap-4">
+        <input
+          type="hidden"
+          id="jsonSchema"
+          name="jsonSchema"
+          ref={(r) => (schemaRef = r)}
+          value={props.inherit?.json ? JSON.stringify(props.inherit.json) : ''}
+        />
+        <Card class="flex w-full flex-col gap-4">
+          <CharacterSchema
+            inherit={props.inherit?.json}
+            presetId={props.inherit?._id}
+            update={(schema) => (schemaRef.value = JSON.stringify(schema))}
+          />
+
+          <div class="flex gap-2">
+            <Select
+              fieldName="jsonSource"
+              label={
+                <div class="flex w-full items-center gap-4">
+                  <div>JSON Schema Source</div>
+                  <ToggleButton
+                    fieldName="jsonEnabled"
+                    value={props.inherit?.jsonEnabled}
+                    onChange={(ev) => setJson(ev)}
+                    size="sm"
+                  >
+                    <Show when={json()} fallback="Disabled">
+                      Enabled
+                    </Show>
+                  </ToggleButton>
+                </div>
+              }
+              helperText="Which JSON schema to use (Preset or Character)"
+              items={[
+                { label: 'Preset', value: 'preset' },
+                { label: 'Character', value: 'character' },
+              ]}
+              value={props.inherit?.jsonSource}
+            />
+          </div>
+
           <Select
             fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"
@@ -95,21 +140,14 @@ export const PromptSettings: Component<
             disabled={props.disabled}
           />
 
-          <TextInput
-            fieldName="ultimeJailbreak"
-            label="Jailbreak (UJB) Prompt"
-            helperText={
-              <>
-                Typically used for Instruct models like Turbo, GPT-4, and Claude. Leave empty to
-                disable.
-              </>
-            }
+          <PromptEditor
+            fieldName="ultimateJailbreak"
+            include={['char', 'user']}
             placeholder="E.g. Keep OOC out of your reply."
-            isMultiline
             value={props.inherit?.ultimeJailbreak ?? ''}
             disabled={props.disabled}
-            class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
           />
+
           <Toggle
             fieldName="prefixNameAppend"
             label="Append name of replying character to very end of the prompt"

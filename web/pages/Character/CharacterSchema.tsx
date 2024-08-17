@@ -4,14 +4,16 @@ import { HelpModal, RootModal } from '/web/shared/Modal'
 import { JsonSchema } from '/web/shared/JsonSchema'
 import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
-import { Toggle } from '/web/shared/Toggle'
 import { ResponseSchema } from '/common/types/library'
 import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import { characterStore } from '/web/store'
+import { characterStore, presetStore, toastStore } from '/web/store'
 import { CircleHelp } from 'lucide-solid'
+import { downloadJson, ExtractProps } from '/web/shared/util'
+import FileInput, { getFileAsString } from '/web/shared/FileInput'
+import { assertValid } from '/common/valid'
 
 const helpMarkdown = neat`
 You can return many values using JSON schemas and control the structure of your response.
@@ -43,15 +45,16 @@ History Template
 
 export const CharacterSchema: Component<{
   characterId?: string
+  presetId?: string
   inherit?: ResponseSchema
   update: (next: ResponseSchema) => void
 }> = (props) => {
-  let enabledRef: HTMLInputElement
   let respRef: HTMLTextAreaElement
   let histRef: HTMLTextAreaElement
 
   const [show, setShow] = createSignal(false)
   const [schema, setSchema] = createSignal<JsonField[]>(props.inherit?.schema || [])
+  const [showImport, setShowImport] = createSignal(false)
   const [response, setResponse] = createSignal(props.inherit?.response || '')
   const [hist, setHistory] = createSignal(props.inherit?.history || '')
   const [candidate, setCandidate] = createSignal<JsonField[]>([])
@@ -154,10 +157,22 @@ export const CharacterSchema: Component<{
     setAuto('')
   }
 
+  const importSchema = (schema?: ResponseSchema) => {
+    setShowImport(false)
+    if (!schema) {
+      return
+    }
+
+    setCandidate(schema.schema)
+    setHistory(schema.history)
+    setResponse(schema.response)
+
+    close(true)
+  }
+
   const close = (save?: boolean) => {
     if (save) {
       const update = {
-        enabled: enabledRef.checked,
         history: hist(),
         response: response(),
         schema: candidate(),
@@ -168,6 +183,10 @@ export const CharacterSchema: Component<{
       if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: update })
       }
+
+      if (props.presetId) {
+        presetStore.updatePreset(props.presetId, { json: update })
+      }
     }
 
     setHistErr('')
@@ -175,19 +194,41 @@ export const CharacterSchema: Component<{
     setShow(false)
   }
 
+  const filename = createMemo(() =>
+    props.characterId
+      ? `schema-char-${props.characterId.slice(0, 4)}`
+      : props.presetId
+      ? `schema-preset-${props.presetId.slice(0, 4)}`
+      : 'schema'
+  )
+
   return (
     <div class="w-full justify-center">
       <FormLabel
-        label="JSON Structured Responses"
+        label={
+          <div class="flex justify-between">
+            <div>JSON Structured Responses</div>
+            <div class="flex gap-1">
+              <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
+                Import
+              </Button>
+              <Show when={props.inherit}>
+                <Button
+                  size="pill"
+                  schema="secondary"
+                  onClick={() => downloadJson(props.inherit!, filename())}
+                >
+                  Export
+                </Button>
+              </Show>
+            </div>
+          </div>
+        }
         helperText="Request and structure responses using JSON. Only used if JSON schemas are available"
       />
+
       <div class="flex gap-2">
-        <Button onClick={() => setShow(true)}>Update Json Schema</Button>
-        <Toggle
-          ref={(r) => (enabledRef = r)}
-          fieldName="jsonSchemaEnabled"
-          value={props.inherit?.enabled}
-        />
+        <Button onClick={() => setShow(true)}>Update Schema</Button>
       </div>
 
       <RootModal
@@ -247,7 +288,7 @@ export const CharacterSchema: Component<{
                 <>
                   <div>How the message appears in your chat</div>
                   <Show when={!!resErr()}>
-                    <TitleCard type="premium">
+                    <TitleCard type="rose">
                       Template references undefined placeholders: {resErr()}
                     </TitleCard>
                   </Show>
@@ -285,7 +326,7 @@ export const CharacterSchema: Component<{
                   <>
                     <div>How the message appears in a prompt</div>
                     <Show when={!!histErr()}>
-                      <TitleCard type="premium">
+                      <TitleCard type="rose">
                         Template references undefined placeholders: {histErr()}
                       </TitleCard>
                     </Show>
@@ -307,6 +348,53 @@ export const CharacterSchema: Component<{
           />
         </div>
       </RootModal>
+
+      <ImportModal show={showImport()} close={importSchema} />
     </div>
+  )
+}
+
+const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) => void }> = (
+  props
+) => {
+  const onUpdate: ExtractProps<typeof FileInput>['onUpdate'] = async (files) => {
+    const file = files[0]
+    if (!file) return
+
+    try {
+      const content = await getFileAsString(file)
+      const json = JSON.parse(content)
+
+      assertValid({ response: 'string', history: 'string', schema: ['any'] }, json)
+
+      for (const field of json.schema) {
+        assertValid({ type: { type: 'string' }, name: 'string' }, field)
+      }
+
+      props.close(json)
+    } catch (ex: any) {
+      toastStore.error(`Invalid JSON Schema: ${ex.message}`)
+    }
+  }
+
+  return (
+    <RootModal
+      show={props.show}
+      close={props.close}
+      footer={
+        <>
+          <Button schema="secondary" onClick={() => props.close()}>
+            Close
+          </Button>
+        </>
+      }
+    >
+      <FileInput
+        fieldName="import-schema"
+        accept="text/json,application/json"
+        label="JSON Schema File (.json)"
+        onUpdate={onUpdate}
+      />
+    </RootModal>
   )
 }
