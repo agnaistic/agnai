@@ -12,7 +12,7 @@ export type Option<T extends string = string> = {
 
 const Select: Component<{
   fieldName: string
-  label?: string
+  label?: JSX.Element | string
   helperText?: string | JSX.Element
   helperMarkdown?: string
   items: Option[]
@@ -20,6 +20,7 @@ const Select: Component<{
   class?: string
   disabled?: boolean
   classList?: Record<string, boolean>
+  parentClass?: string
   onChange?: (item: Option) => void
   recommend?: string
   recommendLabel?: string
@@ -51,7 +52,7 @@ const Select: Component<{
   })
 
   return (
-    <div class={`${hide()} max-w-full`} classList={props.classList}>
+    <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
       <FormLabel
         label={
           <span>

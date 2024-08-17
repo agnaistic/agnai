@@ -260,7 +260,15 @@ export const generateMessageV2 = handle(async (req, res) => {
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
-  const hydrator = entities.char.json?.enabled ? jsonHydrator(entities.char.json) : undefined
+  const schema =
+    entities.gen.jsonEnabled && entities.gen.jsonEnabled
+      ? entities.gen.jsonSource === 'character'
+        ? entities.char.json
+        : entities.gen.json
+      : undefined
+
+  const hydrator = schema ? jsonHydrator(schema) : undefined
+
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 

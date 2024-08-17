@@ -4,7 +4,6 @@ import { HelpModal, RootModal } from '/web/shared/Modal'
 import { JsonSchema } from '/web/shared/JsonSchema'
 import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
-import { Toggle } from '/web/shared/Toggle'
 import { ResponseSchema } from '/common/types/library'
 import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
@@ -50,7 +49,6 @@ export const CharacterSchema: Component<{
   inherit?: ResponseSchema
   update: (next: ResponseSchema) => void
 }> = (props) => {
-  let enabledRef: HTMLInputElement
   let respRef: HTMLTextAreaElement
   let histRef: HTMLTextAreaElement
 
@@ -168,7 +166,6 @@ export const CharacterSchema: Component<{
     setCandidate(schema.schema)
     setHistory(schema.history)
     setResponse(schema.response)
-    enabledRef.checked = true
 
     close(true)
   }
@@ -176,7 +173,6 @@ export const CharacterSchema: Component<{
   const close = (save?: boolean) => {
     if (save) {
       const update = {
-        enabled: enabledRef.checked,
         history: hist(),
         response: response(),
         schema: candidate(),
@@ -232,12 +228,7 @@ export const CharacterSchema: Component<{
       />
 
       <div class="flex gap-2">
-        <Button onClick={() => setShow(true)}>Update JSON Schema</Button>
-        <Toggle
-          ref={(r) => (enabledRef = r)}
-          fieldName="jsonSchemaEnabled"
-          value={props.inherit?.enabled}
-        />
+        <Button onClick={() => setShow(true)}>Update Schema</Button>
       </div>
 
       <RootModal
@@ -374,13 +365,10 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
       const content = await getFileAsString(file)
       const json = JSON.parse(content)
 
-      assertValid(
-        { response: 'string', history: 'string', schema: ['any'], enabled: 'boolean' },
-        json
-      )
+      assertValid({ response: 'string', history: 'string', schema: ['any'] }, json)
 
       for (const field of json.schema) {
-        assertValid({ type: ['string', 'integer', 'bool', 'enum'], name: 'string' }, field)
+        assertValid({ type: { type: 'string' }, name: 'string' }, field)
       }
 
       props.close(json)
