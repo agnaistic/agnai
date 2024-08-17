@@ -288,7 +288,7 @@ export const CharacterSchema: Component<{
                 <>
                   <div>How the message appears in your chat</div>
                   <Show when={!!resErr()}>
-                    <TitleCard type="premium">
+                    <TitleCard type="rose">
                       Template references undefined placeholders: {resErr()}
                     </TitleCard>
                   </Show>
@@ -326,7 +326,7 @@ export const CharacterSchema: Component<{
                   <>
                     <div>How the message appears in a prompt</div>
                     <Show when={!!histErr()}>
-                      <TitleCard type="premium">
+                      <TitleCard type="rose">
                         Template references undefined placeholders: {histErr()}
                       </TitleCard>
                     </Show>
