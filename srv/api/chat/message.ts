@@ -247,14 +247,8 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
-  const schema =
-    entities.gen.jsonEnabled && entities.gen.jsonEnabled
-      ? entities.gen.jsonSource === 'character'
-        ? entities.char.json
-        : entities.gen.json
-      : undefined
-
-  const hydrator = schema ? jsonHydrator(schema) : undefined
+  const schema = entities.gen.jsonSource === 'character' ? entities.char.json : entities.gen.json
+  const hydrator = entities.gen.jsonEnabled && schema ? jsonHydrator(schema) : undefined
 
   let hydration: HydratedJson | undefined
   let jsonPartial: any
