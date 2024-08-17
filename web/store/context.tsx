@@ -13,6 +13,7 @@ import { PresetInfo, getClientPreset } from '../shared/adapter'
 import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
+import { presetStore } from './presets'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -53,6 +54,7 @@ export type ContextState = {
   info?: PresetInfo
   waiting?: MsgState['waiting']
   status?: MsgState['hordeStatus']
+  preset?: AppSchema.UserGenPreset
 }
 
 const initial: ContextState = {
@@ -85,6 +87,7 @@ export function ContextProvider(props: { children: any }) {
   const users = userStore()
   const cfg = settingStore()
   const msgs = msgStore()
+  const presets = presetStore()
 
   const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(
@@ -157,6 +160,9 @@ export function ContextProvider(props: { children: any }) {
       chatTree: msgs.graph.tree,
       waiting: msgs.waiting,
       status: msgs.hordeStatus,
+      preset: presets.presets.find(
+        (p) => p._id === (chats.active?.chat.genPreset || users.user?.defaultPreset)
+      ),
     }
 
     setState(next)
