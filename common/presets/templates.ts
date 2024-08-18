@@ -24,7 +24,7 @@ export type FormatTags = {
   closeSystem: string
 }
 
-export type ModelFormat = 'Alpaca' | 'Vicuna' | 'ChatML' | 'Mistral'
+export type ModelFormat = 'Alpaca' | 'Vicuna' | 'ChatML' | 'Mistral' | 'Llama3'
 
 export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   Alpaca: {
@@ -59,6 +59,14 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
     openSystem: '[INST] ',
     closeSystem: ' [/INST]\n',
   },
+  Llama3: {
+    openSystem: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n`,
+    closeSystem: `<|eot_id|>`,
+    openUser: `<|start_header_id|>user<|end_header_id|>\n`,
+    closeUser: `<|eot_id|>`,
+    openBot: `<|start_header_id|>assistant<|end_header_id|>`,
+    closeBot: `<|eot_id|>`,
+  },
 }
 
 export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
@@ -84,11 +92,7 @@ export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
 
 export const templates = {
   Universal: neat`
-{{#if system_prompt}}<system>{{system_prompt}}</system>
-{{/if}}
-Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
+<system>{{#if system_prompt}}{{value}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}</system>
 
 {{char}}'s Persona:
 {{personality}}
@@ -116,11 +120,8 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 
 <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
-{{#if system_prompt}}{{system_prompt}}
+{{#if system_prompt}}{{value}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}
 {{/if}}
-Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
 
 {{char}}'s Persona:
 {{personality}}
@@ -149,11 +150,11 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 ### Response:
   {{post}}`,
   Vicuna: neat`
-{{#if system_prompt}}{{system_prompt}}
+{{#if system_prompt}}{{system_prompt}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}
 {{/if}}
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
-Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
+
 
 {{char}}'s Persona:
 {{personality}}
@@ -208,11 +209,7 @@ Summary: {{scenario}}
 {{/if}}
 {{post}}`,
   Metharme: neat`
-{{#if system_prompt}}{{system_prompt}}{{/if}}
-
-Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
+{{#if system_prompt}}{{system_prompt}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}
 
 {{char}}'s Persona:
 {{personality}}
@@ -232,14 +229,8 @@ Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{
 {{/if}}
 <|model|>{{post}}`,
   ChatML: neat`
-{{#if system_prompt}}<|im_start|>system
-{{system_prompt}}<|im_end|>{{/if}}
-
 <|im_start|>system
-Below is an instruction that describes a task. Write a response that appropriately completes the request.<|im_end|>
-
-<|im_start|>system
-Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.
+{{#if system_prompt}}{{system_prompt}}{{else}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}<|im_end|>
 
 {{char}}'s Persona:
 {{personality}}
