@@ -306,7 +306,11 @@ export async function createChatStream(
    * - There is both a history and response template
    */
   let jsonSchema: JsonField[] | undefined
-  if (subscription?.preset?.jsonSchemaCapable && opts.chatSchema) {
+  if (
+    subscription?.preset?.jsonSchemaCapable &&
+    opts.entities?.gen.jsonEnabled &&
+    opts.chatSchema
+  ) {
     jsonSchema = opts.chatSchema.schema
   }
 
