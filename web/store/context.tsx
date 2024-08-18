@@ -134,6 +134,12 @@ export function ContextProvider(props: { children: any }) {
     return impersonate || handle || 'You'
   })
 
+  const preset = createMemo(() => {
+    const id = chats.active?.chat.genPreset || users.user?.defaultPreset
+    const match = presets.presets.find((p) => p._id === id)
+    return match
+  })
+
   createEffect(() => {
     const info = getClientPreset(chats.active?.chat)
     const next: Partial<ContextState> = {
@@ -160,9 +166,7 @@ export function ContextProvider(props: { children: any }) {
       chatTree: msgs.graph.tree,
       waiting: msgs.waiting,
       status: msgs.hordeStatus,
-      preset: presets.presets.find(
-        (p) => p._id === (chats.active?.chat.genPreset || users.user?.defaultPreset)
-      ),
+      preset: preset(),
     }
 
     setState(next)
