@@ -24,7 +24,7 @@ export type FormatTags = {
   closeSystem: string
 }
 
-export type ModelFormat = 'Alpaca' | 'Vicuna' | 'ChatML' | 'Mistral'
+export type ModelFormat = 'Alpaca' | 'Vicuna' | 'ChatML' | 'Mistral' | 'Llama3'
 
 export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   Alpaca: {
@@ -58,6 +58,14 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
     closeBot: ' </s>\n',
     openSystem: '[INST] ',
     closeSystem: ' [/INST]\n',
+  },
+  Llama3: {
+    openSystem: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n`,
+    closeSystem: `<|eot_id|>`,
+    openUser: `<|start_header_id|>user<|end_header_id|>\n`,
+    closeUser: `<|eot_id|>`,
+    openBot: `<|start_header_id|>assistant<|end_header_id|>`,
+    closeBot: `<|eot_id|>`,
   },
 }
 
