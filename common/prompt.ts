@@ -285,10 +285,6 @@ export async function assemblePrompt(
     jsonValues: opts.jsonValues,
   })
 
-  if (opts.settings?.modelFormat) {
-    parsed = replaceTags(parsed, opts.settings.modelFormat)
-  }
-
   return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
 }
 
@@ -304,7 +300,6 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
       opts.settings.promptOrder
     )
     return template
-    // return ensureValidTemplate(template)
   }
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
@@ -329,6 +324,8 @@ type InjectOpts = {
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
+
+  template = replaceTags(template, opts.settings?.modelFormat || 'Alpaca')
 
   // Basic templates can exclude example dialogue
   const validate =

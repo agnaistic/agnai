@@ -83,7 +83,7 @@ export const PresetSelect: Component<{
 
         <div class="flex w-full gap-2">
           <Button onClick={() => setShowSelectModal(true)} class="w-fit">
-            Selected: <strong>{selectedLabel()}</strong>
+            <strong>{selectedLabel()}</strong>
           </Button>
 
           <Button onClick={downloadPreset} disabled={!props.selected}>

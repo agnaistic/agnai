@@ -31,7 +31,13 @@ type PlaceHolder = {
   values?: any
   pipes?: string[]
 } & HolderDefinition
-type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
+type ConditionNode = {
+  kind: 'if'
+  value: Holder
+  values?: any
+  children: Array<PNode | ElseNode>
+}
+type ElseNode = { kind: 'else'; children: PNode[] }
 type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
 type InsertNode = { kind: 'history-insert'; values: number; children: PNode[] }
 type LowPriorityNode = { kind: 'lowpriority'; children: PNode[] }
@@ -75,6 +81,7 @@ type Holder =
   | 'system_prompt'
   | 'random'
   | 'json'
+  | 'value'
 
 type RepeatableHolder = Extract<
   Holder,
@@ -294,14 +301,14 @@ function renderNodes(nodes: PNode[], opts: TemplateOpts) {
   return output.join('')
 }
 
-function renderNode(node: PNode, opts: TemplateOpts) {
+function renderNode(node: PNode, opts: TemplateOpts, conditionText?: string) {
   if (typeof node === 'string') {
     return node
   }
 
   switch (node.kind) {
     case 'placeholder': {
-      return getPlaceholder(node, opts)
+      return getPlaceholder(node, opts, conditionText)
     }
 
     case 'each':
@@ -415,15 +422,35 @@ function renderProp(node: CNode, opts: TemplateOpts, entity: unknown, i: number)
   }
 }
 
-function renderCondition(node: ConditionNode, children: PNode[], opts: TemplateOpts) {
+function renderCondition(
+  node: ConditionNode,
+  children: ConditionNode['children'],
+  opts: TemplateOpts
+) {
   if (opts.repeatable) return ''
 
+  const elseblock = children
+    .filter((ch) => typeof ch !== 'string' && ch.kind === 'else')
+    .slice(-1)[0] as ElseNode | undefined
+
+  const elseOutput: string[] = []
+  for (const block of elseblock?.children || []) {
+    const result = renderNode(block, opts)
+    if (result) elseOutput.push(result)
+  }
+
   const value = getPlaceholder(node, opts)
-  if (!value) return
+  if (!value) {
+    if (elseOutput.length) {
+      return elseOutput.join('')
+    }
+    return
+  }
 
   const output: string[] = []
   for (const child of children) {
-    const result = renderNode(child, opts)
+    if (typeof child !== 'string' && child.kind === 'else') continue
+    const result = renderNode(child, opts, value)
     if (result) output.push(result)
   }
 
@@ -528,7 +555,11 @@ function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unkno
   return result
 }
 
-function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
+function getPlaceholder(
+  node: PlaceHolder | ConditionNode,
+  opts: TemplateOpts,
+  conditionText?: string
+) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
   if (node.value.startsWith('json.')) {
@@ -537,6 +568,9 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
   }
 
   switch (node.value) {
+    case 'value':
+      return conditionText || ''
+
     case 'char':
       return ((opts.replyAs || opts.char).name || '').trim()
 
