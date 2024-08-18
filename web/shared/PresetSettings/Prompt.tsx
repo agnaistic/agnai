@@ -141,7 +141,7 @@ export const PromptSettings: Component<
           />
 
           <PromptEditor
-            fieldName="ultimateJailbreak"
+            fieldName="ultimeJailbreak"
             include={['char', 'user']}
             placeholder="E.g. Keep OOC out of your reply."
             value={props.inherit?.ultimeJailbreak ?? ''}
