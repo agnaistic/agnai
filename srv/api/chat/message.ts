@@ -254,7 +254,15 @@ export const generateMessageV2 = handle(async (req, res) => {
   let jsonPartial: any
 
   const { stream, adapter, ...metadata } = await createChatStream(
-    { ...body, chat, replyAs, impersonate, requestId, entities, chatSchema: schema },
+    {
+      ...body,
+      chat,
+      replyAs,
+      impersonate,
+      requestId,
+      entities,
+      chatSchema: schema,
+    },
     log
   )
 

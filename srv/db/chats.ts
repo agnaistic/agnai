@@ -188,6 +188,7 @@ export async function getAllChats(userId: string) {
             createdAt: 1,
             updatedAt: 1,
             messageCount: 1,
+            genPreset: 1,
             'character.name': 1,
           },
         },

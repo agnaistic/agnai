@@ -69,7 +69,6 @@ export const JsonSchema: Component<{
     if (!match) return
 
     const field = prop.join('.')
-    console.log(fieldName, value)
     const next = state.fields.map<JsonField>((f, i) => {
       if (i !== +index) return f
 

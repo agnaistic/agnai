@@ -1,5 +1,20 @@
 import { JSX } from 'solid-js'
 
+let sizeTimeout: NodeJS.Timeout
+window.addEventListener('resize', updatePageVars)
+updatePageVars()
+
+function updatePageVars() {
+  if (sizeTimeout) {
+    clearTimeout(sizeTimeout)
+  }
+
+  sizeTimeout = setTimeout(() => {
+    setRootVariable('window-width', `${window.innerWidth}px`)
+    setRootVariable('window-height', `${window.innerHeight}px`)
+  }, 10)
+}
+
 export function getRgbaFromVar(cssVar: string, opacity: number, id?: string): JSX.CSSProperties {
   const hex = getSettingColor(cssVar)
   const rgb = hexToRgb(hex)

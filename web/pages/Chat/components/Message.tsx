@@ -129,9 +129,15 @@ const Message: Component<MessageProps> = (props) => {
   const saveEdit = () => {
     if (props.msg.json) {
       const json = jsonValues()
-      const update = getJsonUpdate(ctx.char?.json!, json)
+      const update = getJsonUpdate(
+        ctx.preset?.jsonSource === 'character' ? ctx.char?.json : ctx.preset?.json,
+        json
+      )
 
-      msgStore.editMessageProp(props.msg._id, update)
+      if (update) {
+        msgStore.editMessageProp(props.msg._id, update)
+      }
+
       setEdit(false)
       return
     }
@@ -941,7 +947,8 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
   }
 }
 
-function getJsonUpdate(def: NonNullable<AppSchema.Character['json']>, json: any) {
+function getJsonUpdate(def: AppSchema.Character['json'], json: any) {
+  if (!def) return
   const hydration = hydrateTemplate(def, json)
 
   return {
