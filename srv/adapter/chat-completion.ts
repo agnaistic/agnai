@@ -187,7 +187,16 @@ export async function toChatCompletionPayload(
     return [{ role: 'system', content: opts.prompt }]
   }
 
-  const { lines, parts, gen, replyAs } = opts
+  const { lines, gen, replyAs } = opts
+
+  const injectOpts = {
+    opts,
+    parts: opts.parts,
+    lastMessage: opts.lastMessage,
+    characters: opts.characters || {},
+    encoder: encoder(),
+    jsonValues: opts.jsonValues,
+  }
 
   const messages: CompletionItem[] = []
   const history: CompletionItem[] = []
@@ -195,14 +204,7 @@ export async function toChatCompletionPayload(
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   const { parsed: gaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, ['history', 'post']),
-    {
-      opts,
-      parts,
-      lastMessage: opts.lastMessage,
-      characters: opts.characters || {},
-      encoder: encoder(),
-      jsonValues: opts.jsonValues,
-    }
+    injectOpts
   )
 
   messages.push({ role: 'system', content: gaslight })
@@ -224,16 +226,7 @@ export async function toChatCompletionPayload(
   posts.reverse()
   for (const post of posts) {
     const encode = encoder()
-    post.content = (
-      await injectPlaceholders(post.content, {
-        opts,
-        parts: opts.parts,
-        lastMessage: opts.lastMessage,
-        characters: opts.characters || {},
-        encoder: encode,
-        jsonValues: opts.jsonValues,
-      })
-    ).parsed
+    post.content = (await injectPlaceholders(post.content, injectOpts)).parsed
     tokens += await encode(post.content)
     history.push(post)
   }
@@ -242,12 +235,12 @@ export async function toChatCompletionPayload(
 
   let i = all.length - 1
   let addedAllInserts = false
-  const addRemainingInserts = () => {
+  const addRemainingInserts = async () => {
     const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
     if (remainingInserts) {
       history.push({
         role: 'system',
-        content: remainingInserts,
+        content: await injectPlaceholders(remainingInserts, injectOpts).then((i) => i.parsed),
       })
     }
   }
@@ -266,10 +259,14 @@ export async function toChatCompletionPayload(
     const isBot = !isUser && !isSystem
 
     const insert = inserts.get(distanceFromBottom)
-    if (insert) history.push({ role: 'system', content: insert })
+    if (insert)
+      history.push({
+        role: 'system',
+        content: await injectPlaceholders(insert, injectOpts).then((p) => p.parsed),
+      })
 
     if (i === examplePos) {
-      addRemainingInserts()
+      await addRemainingInserts()
       addedAllInserts = true
 
       const { additions, consumed } = await splitSampleChat({
@@ -308,7 +305,7 @@ export async function toChatCompletionPayload(
     --i
   }
   if (!addedAllInserts) {
-    addRemainingInserts()
+    await addRemainingInserts()
   }
   return messages.concat(history.reverse())
 }
