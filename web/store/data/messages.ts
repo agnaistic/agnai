@@ -952,11 +952,21 @@ function getAuthedPromptEntities() {
 }
 
 function getAuthGenSettings(
-  chat: AppSchema.Chat,
+  chat?: AppSchema.Chat,
   user?: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
+  if (!chat) {
+    chat = getStore('chat').getState().active?.chat!
+  }
+
   if (!user) {
-    user = userStore.getState().user!
+    user = getStore('user').getState().user!
+  }
+
+  if (!chat || !user) {
+    const msg = `Cannot retrieve active preset ${!chat ? '[chat]' : ''} ${!user ? '[user]' : ''}`
+    toastStore.error(msg)
+    throw new Error(msg)
   }
 
   const { presets, templates } = getStore('presets').getState()

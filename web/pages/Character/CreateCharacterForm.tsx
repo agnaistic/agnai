@@ -1032,7 +1032,6 @@ const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
       <Card class="flex flex-col gap-2">
         <CharacterSchema
           characterId={props.editor.state.editId}
-          inherit={props.editor.state.json}
           update={(next) => props.editor.update('json', next)}
         />
         <TextInput

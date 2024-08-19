@@ -25,7 +25,9 @@ export const PromptSettings: Component<
   }
 > = (props) => {
   let schemaRef: HTMLInputElement
+
   const gaslights = presetStore((s) => ({ list: s.templates }))
+
   const [useAdvanced, setAdvanced] = createSignal(
     typeof props.inherit?.useAdvancedPrompt === 'string'
       ? props.inherit.useAdvancedPrompt
@@ -56,7 +58,7 @@ export const PromptSettings: Component<
 
   return (
     <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
+      <div class="flex flex-col items-center gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <input
           type="hidden"
           id="jsonSchema"
@@ -66,37 +68,29 @@ export const PromptSettings: Component<
         />
         <Card class="flex w-full flex-col gap-4">
           <CharacterSchema
-            inherit={props.inherit?.json}
             presetId={props.inherit?._id}
             update={(schema) => (schemaRef.value = JSON.stringify(schema))}
-          />
-
-          <div class="flex gap-2">
+          >
             <Select
               fieldName="jsonSource"
-              label={
-                <div class="flex w-full items-center gap-4">
-                  <div>JSON Schema Source</div>
-                  <ToggleButton
-                    fieldName="jsonEnabled"
-                    value={props.inherit?.jsonEnabled}
-                    onChange={(ev) => setJson(ev)}
-                    size="sm"
-                  >
-                    <Show when={json()} fallback="Disabled">
-                      Enabled
-                    </Show>
-                  </ToggleButton>
-                </div>
-              }
-              helperText="Which JSON schema to use (Preset or Character)"
               items={[
-                { label: 'Preset', value: 'preset' },
-                { label: 'Character', value: 'character' },
+                { label: 'Source: Preset', value: 'preset' },
+                { label: 'Source: Character', value: 'character' },
               ]}
               value={props.inherit?.jsonSource}
             />
-          </div>
+            <ToggleButton
+              fieldName="jsonEnabled"
+              value={props.inherit?.jsonEnabled}
+              onChange={(ev) => setJson(ev)}
+              // size="sm"
+            >
+              <Show when={json()} fallback="Disabled">
+                Enabled
+              </Show>
+            </ToggleButton>
+          </CharacterSchema>
+          <div class="flex gap-2"></div>
 
           <Select
             fieldName="useAdvancedPrompt"
