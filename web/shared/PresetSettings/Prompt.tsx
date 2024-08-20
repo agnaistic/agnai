@@ -1,9 +1,8 @@
 import { Component, createMemo, createSignal, Show } from 'solid-js'
-import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select from '../Select'
 import { AppSchema } from '../../../common/types/schema'
-import { defaultPresets, getFallbackPreset } from '../../../common/presets'
+import { getFallbackPreset } from '../../../common/presets'
 import { ThirdPartyFormat } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
 import { chatStore, presetStore } from '../../store'
@@ -69,8 +68,8 @@ export const PromptSettings: Component<
   })
 
   return (
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col items-center gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
+    <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Prompt' }}>
+      <div class="flex flex-col items-center gap-2">
         <input
           type="hidden"
           id="jsonSchema"
@@ -202,55 +201,6 @@ export const PromptSettings: Component<
               disabled={props.disabled}
             />
           </div>
-        </Card>
-      </div>
-
-      <div classList={{ hidden: props.tab !== 'Memory' }}>
-        <Card class="flex flex-col gap-2">
-          <RangeInput
-            fieldName="memoryContextLimit"
-            label="Memory: Context Limit"
-            helperText="The maximum context length (in tokens) for the memory prompt."
-            min={1}
-            // No idea what the max should be
-            max={2000}
-            step={1}
-            value={props.inherit?.memoryContextLimit || defaultPresets.basic.memoryContextLimit}
-            disabled={props.disabled}
-          />
-
-          <RangeInput
-            fieldName="memoryChatEmbedLimit"
-            label="Memory: Chat Embedding Context Limit"
-            helperText="If available: The maximum context length (in tokens) for chat history embeddings."
-            min={1}
-            max={10000}
-            step={1}
-            value={props.inherit?.memoryChatEmbedLimit || defaultPresets.basic.memoryContextLimit}
-            disabled={props.disabled}
-          />
-
-          <RangeInput
-            fieldName="memoryUserEmbedLimit"
-            label="Memory: User-specified Embedding Context Limit"
-            helperText="If available: The maximum context length (in tokens) for user-specified embeddings."
-            min={1}
-            max={10000}
-            step={1}
-            value={props.inherit?.memoryUserEmbedLimit || defaultPresets.basic.memoryContextLimit}
-            disabled={props.disabled}
-          />
-
-          <RangeInput
-            fieldName="memoryDepth"
-            label="Memory: Chat History Depth"
-            helperText="How far back in the chat history to look for keywords."
-            min={1}
-            max={100}
-            step={1}
-            value={props.inherit?.memoryDepth || defaultPresets.basic.memoryDepth}
-            disabled={props.disabled}
-          />
         </Card>
       </div>
     </div>

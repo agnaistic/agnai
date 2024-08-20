@@ -90,9 +90,9 @@ const HomePage: Component = () => {
         <div class="home-cards">
           <TitleCard type="bg" title="Guides" class="" center ariaRole="region" ariaLabel="Guides">
             <div class="flex flex-wrap justify-center gap-2">
-              <a>
-                <Pill inverse onClick={() => setSub(Sub.OpenAI)} ariaRole="link">
-                  OpenAI
+              <a href="https://agnai.guide" target="_blank">
+                <Pill type="hl" inverse ariaRole="link" class="cursor-pointer">
+                  Official Guides
                 </Pill>
               </a>
               <A href="/guides/novel">
@@ -132,7 +132,7 @@ const HomePage: Component = () => {
           </div>
           <div class="flex flex-col items-center gap-2 leading-6">
             <p>
-              Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
+              Already have Head to the{' '}
               <A class="link" href="/settings?tab=ai">
                 Settings Page
               </A>{' '}

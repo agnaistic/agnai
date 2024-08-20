@@ -19,7 +19,6 @@ import {
   Trash,
   RotateCcw,
   ChevronLeft,
-  ExternalLink,
   Pencil,
 } from 'lucide-solid'
 
