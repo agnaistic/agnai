@@ -6,7 +6,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { defaultPresets, getFallbackPreset } from '../../../common/presets'
 import { ThirdPartyFormat } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { presetStore } from '../../store'
+import { chatStore, presetStore } from '../../store'
 import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { Card } from '../Card'
 import { FormLabel } from '../FormLabel'
@@ -15,6 +15,7 @@ import { templates } from '/common/presets/templates'
 import { PresetProps } from './types'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
+import { isChatPage } from '../hooks'
 
 export const PromptSettings: Component<
   PresetProps & {
@@ -27,7 +28,10 @@ export const PromptSettings: Component<
   let schemaRef: HTMLInputElement
 
   const gaslights = presetStore((s) => ({ list: s.templates }))
+  const character = chatStore((s) => s.active?.char)
+  const isChat = isChatPage()
 
+  const [jsonSrc, setJsonSrc] = createSignal(props.inherit?.jsonSource || 'preset')
   const [useAdvanced, setAdvanced] = createSignal(
     typeof props.inherit?.useAdvancedPrompt === 'string'
       ? props.inherit.useAdvancedPrompt
@@ -37,6 +41,14 @@ export const PromptSettings: Component<
   )
 
   const [json, setJson] = createSignal(props.inherit?.jsonEnabled ?? false)
+
+  const jsonCharId = createMemo(() => {
+    const src = jsonSrc()
+    if (src !== 'character') return
+    if (!isChat()) return
+
+    return character?._id
+  })
 
   const fallbackTemplate = createMemo(() => {
     if (!props.service) return defaultTemplate
@@ -68,6 +80,7 @@ export const PromptSettings: Component<
         />
         <Card class="flex w-full flex-col gap-4">
           <CharacterSchema
+            characterId={jsonCharId()}
             presetId={props.inherit?._id}
             update={(schema) => (schemaRef.value = JSON.stringify(schema))}
           >
@@ -78,6 +91,7 @@ export const PromptSettings: Component<
                 { label: 'Source: Character', value: 'character' },
               ]}
               value={props.inherit?.jsonSource}
+              onChange={(ev) => setJsonSrc(ev.value as any)}
             />
             <ToggleButton
               fieldName="jsonEnabled"

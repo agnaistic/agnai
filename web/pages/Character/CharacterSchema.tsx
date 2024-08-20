@@ -96,21 +96,24 @@ export const CharacterSchema: Component<{
         let json: ResponseSchema | undefined
         if (props.characterId) {
           json = chatStore.getState().active?.char.json
-        }
-
-        if (props.presetId) {
+        } else if (props.presetId) {
           const preset = msgsApi.getActivePreset()
           json = preset?.json
         }
 
-        if (json) {
+        const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
+        if (json && hasValue) {
           setFields(json.schema || [])
           setHistory(json.history || '')
           setResponse(json.response || '')
+          histRef.value = json.history || ''
+          respRef.value = json.response || ''
         } else {
           setFields(exampleSchema.schema)
           setHistory(exampleSchema.history)
           setResponse(exampleSchema.response)
+          histRef.value = exampleSchema.history
+          respRef.value = exampleSchema.response
         }
       }
     )
@@ -216,9 +219,7 @@ export const CharacterSchema: Component<{
 
       if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: update })
-      }
-
-      if (props.presetId) {
+      } else if (props.presetId) {
         presetStore.updatePreset(props.presetId, { json: update })
       }
     }
@@ -267,6 +268,15 @@ export const CharacterSchema: Component<{
       </div>
 
       <RootModal
+        title={
+          <>
+            Editing{' '}
+            <Show when={props.characterId} fallback="Preset">
+              Character
+            </Show>{' '}
+            Schema
+          </>
+        }
         show={show()}
         maxWidth="half"
         close={() => setShow(false)}
@@ -285,19 +295,20 @@ export const CharacterSchema: Component<{
         <div class="flex flex-col gap-2 text-sm">
           <div class="flex w-full justify-center gap-2">
             <Pill type="premium">
-              This feature is in beta. Please raise bugs on Discord or GitHub.
+              This feature is in beta. Please share issues and feedback on Discord or GitHub.
             </Pill>
 
             <HelpModal
               title="Information"
               cta={
                 <Button size="sm">
-                  <CircleHelp size={24} />
+                  <CircleHelp size={24} /> Guide
                 </Button>
               }
               markdown={helpMarkdown}
             />
           </div>
+
           <Card class="relative">
             <Show when={auto() === 'response'}>
               <AutoComplete

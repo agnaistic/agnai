@@ -92,12 +92,12 @@ export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
 
 export const templates = {
   Universal: neat`
-<system>{{#if system_prompt}}{{value}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}</system>
+<system>{{#if system_prompt}}{{value}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}{{/if}}</system>
 
-{{char}}'s Persona:
+"{{char}}'s" Persona:
 {{personality}}
 
-{{#if memory}}{{char}}'s Memory:
+{{#if memory}}"{{char}}'s" Memory:
 {{memory}}
 {{/if}}
 {{#if user_embed}}Relevant information to the conversation
@@ -109,24 +109,24 @@ export const templates = {
 {{#if chat_embed}}Relevant past conversation history
 {{chat_embed}}
 {{/if}}
-{{#if example_dialogue}}This is how {{char}} should talk:
+{{#if example_dialogue}}This is how "{{char}}" should talk:
 {{example_dialogue}}
 {{/if}}
 
-Then the roleplay chat between {{char}} and {{user}} begins.
+Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 
 {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
 {{/each}}
 
 <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
-{{#if system_prompt}}{{value}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}
+{{#if system_prompt}}{{value}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}
 {{/if}}
 
-{{char}}'s Persona:
+"{{char}}'s" Persona:
 {{personality}}
 
-{{#if memory}}{{char}}'s Memory:
+{{#if memory}}"{{char}}'s" Memory:
 {{memory}}
 {{/if}}
 {{#if user_embed}}Relevant information to the conversation
@@ -137,10 +137,10 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 {{#if chat_embed}}Relevant past conversation history
 {{chat_embed}}
 {{/if}}
-{{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+{{#if example_dialogue}}This is how "{{char}}" should talk: {{example_dialogue}}
 {{/if}}
 
-Then the roleplay chat between {{char}} and {{user}} begins.
+Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 
 {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
 {{/each}}
@@ -150,22 +150,22 @@ Then the roleplay chat between {{char}} and {{user}} begins.
 ### Response:
   {{post}}`,
   Vicuna: neat`
-{{#if system_prompt}}{{system_prompt}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}
+{{#if system_prompt}}{{system_prompt}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}
 {{/if}}
 Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
 
 
-{{char}}'s Persona:
+"{{char}}'s" Persona:
 {{personality}}
 
-{{#if memory}}{{char}}'s Memories:
+{{#if memory}}"{{char}}'s" Memories:
 {{memory}}
 {{/if}}
-{{#if scenario}}This scenario of the conversation:
+{{#if scenario}}The scenario of the conversation:
 {{scenario}}
 {{/if}}
-{{#if example_dialogue}}This is how {{char}} should talk:
+{{#if example_dialogue}}This is how "{{char}}" should talk:
 {{example_dialogue}}
 {{/if}}
 
@@ -209,17 +209,17 @@ Summary: {{scenario}}
 {{/if}}
 {{post}}`,
   Metharme: neat`
-{{#if system_prompt}}{{system_prompt}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}
+{{#if system_prompt}}{{system_prompt}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}{{/if}}
 
 {{char}}'s Persona:
 {{personality}}
-{{#if memory}}{{char}}'s Memory:
+{{#if memory}}"{{char}}'s" Memory:
 {{memory}}
 {{/if}}
-{{#if scenario}}This scenario of the conversation:
+{{#if scenario}}The scenario of the conversation:
 {{scenario}}
 {{/if}}
-{{#if example_dialogue}}This is how {{char}} should talk:
+{{#if example_dialogue}}This is how "{{char}}" should talk:
 {{example_dialogue}}
 {{/if}}
 
@@ -230,16 +230,16 @@ Summary: {{scenario}}
 <|model|>{{post}}`,
   ChatML: neat`
 <|im_start|>system
-{{#if system_prompt}}{{system_prompt}}{{else}}{{else}}Write {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.{{/else}}{{/if}}<|im_end|>
+{{#if system_prompt}}{{system_prompt}}{{else}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}{{/if}}<|im_end|>
 
-{{char}}'s Persona:
+"{{char}}'s" Persona:
 {{personality}}
 
-{{#if memory}}{{char}}'s Memory: {{memory}}
+{{#if memory}}"{{char}}'s" Memory: {{memory}}
 {{/if}}
-{{#if scenario}}This scenario of the conversation: {{scenario}}
+{{#if scenario}}The scenario of the conversation: {{scenario}}
 {{/if}}
-{{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+{{#if example_dialogue}}This is how "{{char}}" should talk: {{example_dialogue}}
 {{/if}}
 Then the roleplay chat begins.<|im_end|>
 
