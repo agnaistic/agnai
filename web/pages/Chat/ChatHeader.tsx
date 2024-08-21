@@ -139,10 +139,12 @@ const ChatMenuTitle: Component<NavProps> = (props) => {
   return (
     <div
       onClick={() => props.togglePane('character')}
-      class="bg-700 hover:bg-600 flex h-8 max-w-[80%] cursor-pointer items-center gap-2 rounded-md px-2 text-2xl font-bold"
+      class="bg-700 hover:bg-600 flex h-8 max-w-[80%] cursor-pointer items-center gap-2 rounded-md px-2 font-bold"
     >
-      <span class="ellipsis bold text-sm">{props.ctx.char?.name}</span>
-      <Pencil size={16} color="var(--bg-500)" class="min-h-[12px] min-w-[12px]" />
+      <Pencil size={20} color="var(--bg-500)" class="min-h-[12px] min-w-[12px]" />
+      <span class="ellipsis bold text-md">
+        {props.ctx.char?.name} with the really long name that should ellipsis
+      </span>
     </div>
   )
 }
