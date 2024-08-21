@@ -14,6 +14,8 @@ import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from 
 import { getUserSubscriptionTier, wait } from '/common/util'
 import { createDebounce } from './util'
 
+const win: any = window
+
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
 window.fusetag = window.fusetag || { que: [] }
@@ -99,7 +101,13 @@ const Slot: Component<{
 
   const tier = createMemo(() => {
     if (!user.user) return
-    return getUserSubscriptionTier(user.user, user.tiers)
+    const subtier = getUserSubscriptionTier(user.user, user.tiers)
+
+    if (subtier?.tier.disableSlots) {
+      win.enableSticky = undefined
+    }
+
+    return subtier
   })
 
   const id = createMemo(() => {
@@ -525,7 +533,6 @@ function toPixels(size: string) {
   return {}
 }
 
-const win: any = window
 win.getSlotById = getSlotById
 
 export function getSlotById(id: string) {
@@ -704,6 +711,8 @@ const [invokeFuse] = createDebounce(() => {
     if (!status) return
     const ids = Array.from(FuseIds.values())
     console.log(`[fuse] init ${ids}`)
+    const win: any = window
+    win.enableSticky = true
     window.fusetag.que.push(() => {
       window.fusetag.pageInit({ blockingFuseIds: ids })
     })
