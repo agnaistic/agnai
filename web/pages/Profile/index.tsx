@@ -184,7 +184,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </TitleCard>
 
-          <Show when={state.user?._id !== 'anon' && canuseGoogle()}>
+          <Show when={state.user?._id !== 'anon' && canuseGoogle() && !admin.impersonating}>
             <div class="flex justify-center">
               <TitleCard class="flex w-fit flex-col items-center justify-center gap-1" type="hl">
                 <Show when={!state.user?.google?.sub}>

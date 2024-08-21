@@ -9,11 +9,12 @@ import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import { characterStore, presetStore, toastStore } from '/web/store'
+import { characterStore, chatStore, presetStore, toastStore } from '/web/store'
 import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
+import { msgsApi } from '/web/store/data/messages'
 
 const helpMarkdown = neat`
 You can return many values using JSON schemas and control the structure of your response.
@@ -43,23 +44,40 @@ History Template
 -- **Linda's response to Steve**
 `
 
+const exampleSchema: ResponseSchema = {
+  history: '{{character response}}',
+  response: '{{character response}}',
+  schema: [{ type: { type: 'string' }, name: 'character response', disabled: false }],
+}
+
 export const CharacterSchema: Component<{
   characterId?: string
   presetId?: string
-  inherit?: ResponseSchema
+  // inherit?: ResponseSchema
+  children?: any
   update: (next: ResponseSchema) => void
 }> = (props) => {
   let respRef: HTMLTextAreaElement
   let histRef: HTMLTextAreaElement
 
   const [show, setShow] = createSignal(false)
-  const [schema, setSchema] = createSignal<JsonField[]>(props.inherit?.schema || [])
+  const [fields, setFields] = createSignal<JsonField[]>([])
   const [showImport, setShowImport] = createSignal(false)
-  const [response, setResponse] = createSignal(props.inherit?.response || '')
-  const [hist, setHistory] = createSignal(props.inherit?.history || '')
+  const [response, setResponse] = createSignal('')
+  const [hist, setHistory] = createSignal('')
   const [candidate, setCandidate] = createSignal<JsonField[]>([])
   const [auto, setAuto] = createSignal('')
   const [hotkey, setHotkey] = createSignal(false)
+
+  const schema = createMemo(() => {
+    const result: ResponseSchema = {
+      response: response(),
+      history: hist(),
+      schema: fields(),
+    }
+
+    return result
+  })
 
   const vars = createMemo(() => {
     const sch = candidate()
@@ -71,12 +89,31 @@ export const CharacterSchema: Component<{
 
   createEffect(
     on(
-      () => props.inherit,
-      (next) => {
-        if (next) {
-          setSchema(next.schema || [])
-          setHistory(next.history || '')
-          setResponse(next.response || '')
+      () => show(),
+      (open) => {
+        if (!open) return
+
+        let json: ResponseSchema | undefined
+        if (props.characterId) {
+          json = chatStore.getState().active?.char.json
+        } else if (props.presetId) {
+          const preset = msgsApi.getActivePreset()
+          json = preset?.json
+        }
+
+        const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
+        if (json && hasValue) {
+          setFields(json.schema || [])
+          setHistory(json.history || '')
+          setResponse(json.response || '')
+          histRef.value = json.history || ''
+          respRef.value = json.response || ''
+        } else {
+          setFields(exampleSchema.schema)
+          setHistory(exampleSchema.history)
+          setResponse(exampleSchema.response)
+          histRef.value = exampleSchema.history
+          respRef.value = exampleSchema.response
         }
       }
     )
@@ -113,8 +150,8 @@ export const CharacterSchema: Component<{
   })
 
   const onFieldNameChange = (from: string, to: string) => {
-    const res = response().split(`{{${from}}}`).join(`{{${to}}}`)
-    const his = hist().split(`{{${from}}}`).join(`{{${to}}}`)
+    const res = respRef.value.split(`{{${from}}}`).join(`{{${to}}}`)
+    const his = histRef.value.split(`{{${from}}}`).join(`{{${to}}}`)
 
     histRef.value = his
     respRef.value = res
@@ -173,18 +210,16 @@ export const CharacterSchema: Component<{
   const close = (save?: boolean) => {
     if (save) {
       const update = {
-        history: hist(),
-        response: response(),
+        history: histRef.value,
+        response: respRef.value,
         schema: candidate(),
       }
       props.update(update)
-      setSchema(candidate())
+      setFields(candidate())
 
       if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: update })
-      }
-
-      if (props.presetId) {
+      } else if (props.presetId) {
         presetStore.updatePreset(props.presetId, { json: update })
       }
     }
@@ -212,11 +247,11 @@ export const CharacterSchema: Component<{
               <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
                 Import
               </Button>
-              <Show when={props.inherit}>
+              <Show when={fields().length > 0}>
                 <Button
                   size="pill"
                   schema="secondary"
-                  onClick={() => downloadJson(props.inherit!, filename())}
+                  onClick={() => downloadJson(schema(), filename())}
                 >
                   Export
                 </Button>
@@ -227,11 +262,21 @@ export const CharacterSchema: Component<{
         helperText="Request and structure responses using JSON. Only used if JSON schemas are available"
       />
 
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
         <Button onClick={() => setShow(true)}>Update Schema</Button>
+        {props.children}
       </div>
 
       <RootModal
+        title={
+          <>
+            Editing{' '}
+            <Show when={props.characterId} fallback="Preset">
+              Character
+            </Show>{' '}
+            Schema
+          </>
+        }
         show={show()}
         maxWidth="half"
         close={() => setShow(false)}
@@ -250,19 +295,20 @@ export const CharacterSchema: Component<{
         <div class="flex flex-col gap-2 text-sm">
           <div class="flex w-full justify-center gap-2">
             <Pill type="premium">
-              This feature is in beta. Please raise bugs on Discord or GitHub.
+              This feature is in beta. Please share issues and feedback on Discord or GitHub.
             </Pill>
 
             <HelpModal
               title="Information"
               cta={
                 <Button size="sm">
-                  <CircleHelp size={24} />
+                  <CircleHelp size={24} /> Guide
                 </Button>
               }
               markdown={helpMarkdown}
             />
           </div>
+
           <Card class="relative">
             <Show when={auto() === 'response'}>
               <AutoComplete
@@ -294,8 +340,8 @@ export const CharacterSchema: Component<{
                   </Show>
                 </>
               }
-              value={props.inherit?.response}
-              onInputText={(ev) => setResponse(ev)}
+              value={response()}
+              // onInputText={(ev) => setResponse(ev)}
               placeholder="Response Template"
               class="font-mono text-xs"
             />
@@ -335,14 +381,14 @@ export const CharacterSchema: Component<{
               }
               isMultiline
               fieldName="jsonSchemaHistory"
-              value={props.inherit?.history}
-              onInputText={(ev) => setHistory(ev)}
+              value={hist()}
+              // onInputText={(ev) => setHistory(ev)}
               placeholder="History Template"
             />
           </Card>
 
           <JsonSchema
-            inherit={schema()}
+            inherit={fields()}
             update={(ev) => setCandidate(ev)}
             onNameChange={onFieldNameChange}
           />

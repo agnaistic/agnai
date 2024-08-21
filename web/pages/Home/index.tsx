@@ -90,9 +90,9 @@ const HomePage: Component = () => {
         <div class="home-cards">
           <TitleCard type="bg" title="Guides" class="" center ariaRole="region" ariaLabel="Guides">
             <div class="flex flex-wrap justify-center gap-2">
-              <a>
-                <Pill inverse onClick={() => setSub(Sub.OpenAI)} ariaRole="link">
-                  OpenAI
+              <a href="https://agnai.guide" target="_blank">
+                <Pill type="hl" inverse ariaRole="link" class="cursor-pointer">
+                  Official Guides
                 </Pill>
               </a>
               <A href="/guides/novel">
@@ -132,11 +132,15 @@ const HomePage: Component = () => {
           </div>
           <div class="flex flex-col items-center gap-2 leading-6">
             <p>
-              Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
-              <A class="link" href="/settings?tab=ai">
-                Settings Page
-              </A>{' '}
-              and configure your AI service.
+              Looking for help with getting started? Check out the{' '}
+              <a class="link" href="https://agnai.guide" target="_blank">
+                Official Guide
+              </a>{' '}
+              or head to the{' '}
+              <a class="link" target="_blank" href="https://discord.agnai.chat">
+                Agnaistic Discord
+              </a>
+              .
             </p>
           </div>
         </Card>

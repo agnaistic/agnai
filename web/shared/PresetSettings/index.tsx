@@ -26,6 +26,7 @@ import { SliderSettings } from './Sliders'
 import { ToggleSettings } from './Toggles'
 import { presetValidator } from '/common/presets'
 import { AppSchema } from '/common/types'
+import { MemorySettings } from './Memory'
 
 export { PresetSettings as default }
 
@@ -158,6 +159,17 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
           tab={tabs()[tab()]}
           sub={sub()}
         />
+
+        <MemorySettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          format={format()}
+          pane={pane.showing()}
+          tab={tabs()[tab()]}
+          sub={sub()}
+        />
+
         <SliderSettings
           disabled={props.disabled}
           inherit={props.inherit}

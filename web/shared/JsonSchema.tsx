@@ -174,7 +174,7 @@ const SchemaField: Component<{
       <SolidCard borderColor={border()} class="rounded-tl-none ">
         <div class="flex flex-col gap-2">
           <div class="flex justify-between gap-2">
-            <div class="w-full">
+            <div class="hidden w-full">
               <TextInput
                 fieldName={`${props.index}.title`}
                 placeholder="(Optional) Title. E.g. Brief Chat Summary"

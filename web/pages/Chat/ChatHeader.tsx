@@ -19,7 +19,7 @@ import {
   Trash,
   RotateCcw,
   ChevronLeft,
-  ExternalLink,
+  Pencil,
 } from 'lucide-solid'
 
 type NavProps = {
@@ -55,9 +55,9 @@ export const ChatHeader: Component<{
   })
 
   useSubNav({
-    title: 'Chat Options',
+    // title: 'Chat Options',
     header: (
-      <ChatCharacter ctx={props.ctx} togglePane={togglePane} setModal={setModal} adapterLabel="" />
+      <ChatMenuTitle ctx={props.ctx} togglePane={togglePane} setModal={setModal} adapterLabel="" />
     ),
     body: (
       <ChatNav
@@ -135,12 +135,14 @@ const ChatNav: Component<NavProps> = (props) => {
     </>
   )
 }
-const ChatCharacter: Component<NavProps> = (props) => {
+const ChatMenuTitle: Component<NavProps> = (props) => {
   return (
-    <Nav.Item onClick={() => props.togglePane('character')} class="max-w-[80%] gap-2">
-      {/* <CharacterAvatar char={props.ctx.char!} format={{ corners: 'circle', size: 'xs' }} /> */}
-      <span class="ellipsis bold text-sm">{props.ctx.char?.name}</span>
-      <ExternalLink size={12} color="var(--bg-700)" class="min-h-[12px] min-w-[12px]" />
-    </Nav.Item>
+    <div
+      onClick={() => props.togglePane('character')}
+      class="bg-700 hover:bg-600 flex h-8 max-w-[80%] cursor-pointer items-center gap-2 rounded-md px-2"
+    >
+      <Pencil size={20} color="var(--bg-500)" class="min-h-[12px] min-w-[12px]" />
+      <span class="ellipsis text-md">{props.ctx.char?.name}</span>
+    </div>
   )
 }
