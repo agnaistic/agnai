@@ -77,6 +77,16 @@ export const JsonSchema: Component<{
         return { name: value, disabled: f.disabled, type: f.type }
       }
       if (field === 'disabled') return { name: f.name, disabled: !value, type: f.type }
+      if (field === 'enum') {
+        return {
+          name: f.name,
+          disabled: f.disabled,
+          type: {
+            ...f.type,
+            enum: (value || '').split(',').map((t: string) => t.trim()),
+          },
+        }
+      }
 
       return {
         name: f.name,
@@ -147,6 +157,7 @@ const SchemaField: Component<{
               { label: 'Boolean', value: 'bool' },
               { label: 'String', value: 'string' },
               { label: 'Number', value: 'integer' },
+              { label: 'Enum', value: 'enum' },
             ]}
             fieldName={`${props.index}.type`}
             value={props.def.type}
@@ -235,7 +246,7 @@ const SchemaField: Component<{
             </Show>
             <Show when={props.validate && type() === 'enum'}>
               <TextInput
-                fieldName={`${props.index}.valid`}
+                fieldName={`${props.index}.enum`}
                 placeholder="(Optional) Allowed values - comma seperated"
                 parentClass="w-1/2"
                 value={props.def.valid}
