@@ -138,7 +138,7 @@ const HomePage: Component = () => {
               </a>{' '}
               or head to the{' '}
               <a class="link" target="_blank" href="https://discord.agnai.chat">
-                Discord
+                Agnaistic Discord
               </a>
               .
             </p>

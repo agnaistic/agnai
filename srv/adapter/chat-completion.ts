@@ -221,12 +221,12 @@ export async function toChatCompletionPayload(
     all.push(...lines)
   }
 
-  // Append 'postamble' and system prompt (ujb)
+  // Append 'postamble' and jailbreak
   const posts = (await getPostInstruction(opts, messages)) ?? []
   posts.reverse()
   for (const post of posts) {
     const encode = encoder()
-    post.content = (await injectPlaceholders(post.content, injectOpts)).parsed
+    post.content = await injectPlaceholders(post.content, injectOpts).then((p) => p.parsed)
     tokens += await encode(post.content)
     history.push(post)
   }

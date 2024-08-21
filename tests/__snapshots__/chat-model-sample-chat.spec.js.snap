@@ -167,6 +167,41 @@ exports[`Chat Completion Example Dialogue:: will interpret everything up to the 
 ]"
 `;
 
+exports[`Chat Completion Example Dialogue:: will parse random within depth prompt 1`] = `
+Array [
+  Object {
+    "content": "Description of Sam: PERSONA
+
+Circumstances and context of the dialogue: SCENARIO
+
+Facts: 
+
+Relevant Information:",
+    "role": "system",
+  },
+  Object {
+    "content": "Sam: hi",
+    "role": "assistant",
+  },
+  Object {
+    "content": "Vader: hihi!",
+    "role": "user",
+  },
+  Object {
+    "content": "Sam: bye",
+    "role": "assistant",
+  },
+  Object {
+    "content": "Vader: byebye!",
+    "role": "user",
+  },
+  Object {
+    "content": "Sam:",
+    "role": "assistant",
+  },
+]
+`;
+
 exports[`Chat Completion Example Dialogue:: will trim result into budget 1`] = `
 "[
   {
