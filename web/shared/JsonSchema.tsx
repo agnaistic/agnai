@@ -83,7 +83,10 @@ export const JsonSchema: Component<{
           disabled: f.disabled,
           type: {
             ...f.type,
-            enum: (value || '').split(',').map((t: string) => t.trim()),
+            enum: (value || '')
+              .split(',')
+              .map((t: string) => t.trim())
+              .filter((v: string) => !!v),
           },
         }
       }
@@ -234,7 +237,7 @@ const SchemaField: Component<{
 
           <div
             class="flex w-full gap-2"
-            classList={{ hidden: !props.def.valid && type() !== 'string' }}
+            classList={{ hidden: !props.def.valid && type() !== 'string' && type() !== 'enum' }}
           >
             <Show when={type() === 'string'}>
               <TextInput
@@ -244,12 +247,12 @@ const SchemaField: Component<{
                 value={(props.def as any).maxLength}
               />
             </Show>
-            <Show when={props.validate && type() === 'enum'}>
+            <Show when={type() === 'enum'}>
               <TextInput
                 fieldName={`${props.index}.enum`}
                 placeholder="(Optional) Allowed values - comma seperated"
                 parentClass="w-1/2"
-                value={props.def.valid}
+                value={(props.def as any).enum?.join(', ')}
               />
             </Show>
             <Show when={props.validate && type() === 'bool'}>
