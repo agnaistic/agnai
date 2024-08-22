@@ -62,7 +62,7 @@ type SlotDef = {
 const MIN_AGE = 60 * 1000
 const VIDEO_AGE = 125 * 1000
 
-const FuseIds = new Set<string>()
+const FuseIds = new Map<string, boolean>()
 
 const Slot: Component<{
   slot: SlotKind
@@ -352,7 +352,7 @@ const Slot: Component<{
         if (!status) return
 
         window.fusetag.registerZone(id())
-        FuseIds.add(id())
+        FuseIds.set(id(), false)
         invokeFuse()
       })
     }
@@ -709,7 +709,12 @@ const [invokeEz] = createDebounce((log: (typeof console)['log'], self: number) =
 const [invokeFuse] = createDebounce(() => {
   fuseReady.then((status) => {
     if (!status) return
-    const ids = Array.from(FuseIds.values())
+    const ids: string[] = []
+    for (const [id, inited] of FuseIds.entries()) {
+      if (inited) continue
+      ids.push(id)
+      FuseIds.set(id, true)
+    }
     console.log(`[fuse] init ${ids}`)
     const win: any = window
     win.enableSticky = true
