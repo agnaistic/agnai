@@ -353,7 +353,7 @@ async function loadSlotConfig(serverSlots?: string) {
     const devProvider = useDev ? server?.dev_provider : undefined
     const inject = devInject || server.inject || config.inject
 
-    server.provider = devProvider || slots.provider
+    server.provider = devProvider || server.provider || slots.provider
 
     if (server.provider && inject) {
       await wait(0.2)
