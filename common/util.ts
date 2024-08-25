@@ -554,10 +554,23 @@ export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
   return hydrate
 }
 
-export function getSuitableSubLevel(levels: AppSchema.SubscriptionModelLevel[], level: number) {
+export function getSubscriptionModelLimits(
+  model:
+    | Pick<AppSchema.SubscriptionModel, 'subLevel' | 'levels' | 'maxContextLength' | 'maxTokens'>
+    | undefined,
+  level: number
+) {
+  if (!model) return
+
+  model.levels.push({
+    level: model.subLevel,
+    maxContextLength: model.maxContextLength!,
+    maxTokens: model.maxTokens,
+  })
+
   let match: AppSchema.SubscriptionModelLevel | undefined
 
-  for (const candidate of levels) {
+  for (const candidate of model.levels) {
     if (candidate.level > level) continue
 
     if (!match || match.level < candidate.level) {

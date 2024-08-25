@@ -21,7 +21,7 @@ import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { PresetProps } from './types'
-import { getSuitableSubLevel } from '/common/util'
+import { getSubscriptionModelLimits } from '/common/util'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -73,7 +73,7 @@ export const GeneralSettings: Component<
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.sub?.level ?? -1
-    const match = getSuitableSubLevel(props.sub?.preset.levels || [], level)
+    const match = getSubscriptionModelLimits(props.sub?.preset, level)
     if (match) return match
 
     return {

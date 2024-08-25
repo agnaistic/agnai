@@ -141,6 +141,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       skipSpecialTokens: sub.skipSpecialTokens,
       tempLast: sub.tempLast,
       levels: sub.levels,
+      subLevel: sub.subLevel,
     },
   }
 }
