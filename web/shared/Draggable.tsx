@@ -15,7 +15,10 @@ document.addEventListener('touchmove', (ev) => {
 const Draggable: Component<{
   onChange: (deltaX: number, deltaY: number) => void
   onDone: (deltaX: number, deltaY: number) => void
+  onTransition?: (dragging: boolean) => void
   children: any
+  class?: string
+  classList?: Record<string, boolean>
 }> = (props) => {
   let ref: any
 
@@ -30,6 +33,7 @@ const Draggable: Component<{
       const deltaX = mousePos.x - x()
       const deltaY = mousePos.y - y()
       props.onDone(deltaX, deltaY)
+      props.onTransition?.(false)
     }
 
     document.addEventListener('mouseup', listener)
@@ -52,18 +56,21 @@ const Draggable: Component<{
   return (
     <div
       draggable
-      class="select-all"
+      class={`select-all ${props.class || ''}`}
+      classList={props.classList}
       onTouchStart={(ev) => {
         mousePos.x = ev.touches[0].clientX
         mousePos.y = ev.touches[0].clientY
         setWatch(true)
         setX(ev.touches[0].clientX)
         setY(ev.touches[0].clientY)
+        props.onTransition?.(true)
       }}
       onMouseDown={(ev) => {
         setWatch(true)
         setX(ev.clientX)
         setY(ev.clientY)
+        props.onTransition?.(true)
       }}
       ref={ref}
     >

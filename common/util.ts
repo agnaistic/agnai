@@ -420,7 +420,7 @@ function getHighestTier(
   return sorted[0] as any
 }
 
-export function tryParse(value?: any) {
+export function tryParse<T = any>(value?: any): T | undefined {
   if (!value) return
   try {
     const obj = JSON.parse(value)
@@ -561,6 +561,10 @@ export function getSubscriptionModelLimits(
   level: number
 ) {
   if (!model) return
+
+  if (!Array.isArray(model.levels)) {
+    model.levels = []
+  }
 
   model.levels.push({
     level: model.subLevel,

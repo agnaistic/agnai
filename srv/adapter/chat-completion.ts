@@ -1,8 +1,5 @@
 import needle from 'needle'
-import { getTokenCounter } from '../tokenize'
-import { requestStream } from './stream'
-import { AdapterProps } from './type'
-import { OPENAI_MODELS, ThirdPartyFormat } from '/common/adapters'
+import { AdapterProps, CompletionGenerator, CompletionItem } from './type'
 import { defaultPresets } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import {
@@ -13,13 +10,8 @@ import {
   injectPlaceholders,
   insertsDeeperThanConvoHistory,
 } from '/common/prompt'
-import { AppSchema } from '/common/types'
+import { AppSchema, TokenCounter } from '/common/types'
 import { escapeRegex } from '/common/util'
-import { AppLog } from '../middleware'
-import { sendOne } from '../api/ws'
-
-type Role = 'user' | 'assistant' | 'system'
-export type CompletionItem = { role: Role; content: string; name?: string }
 
 type SplitSampleChatProps = {
   sampleChat: string
@@ -28,149 +20,13 @@ type SplitSampleChatProps = {
   budget?: number
 }
 
-type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
-type Inference = { message: { content: string; role: Role } }
-type AsyncDelta = { delta: Partial<Inference['message']> }
-
-type Completion<T = Inference> = {
-  id: string
-  created: number
-  model: string
-  object: string
-  choices: CompletionContent<T>
-  error?: { message: string }
-}
-
-type CompletionGenerator = (
-  userId: string,
-  url: string,
-  headers: Record<string, string | string[] | number>,
-  body: any,
-  service: string,
-  log: AppLog,
-  format?: ThirdPartyFormat | 'openrouter'
-) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string } | Completion,
-  Completion | undefined
->
-
 // We only ever use the OpenAI gpt-3 encoder
 // Don't bother passing it around since we know this already
-const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
+// const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
 
 const sampleChatMarkerCompletionItem: CompletionItem = {
   role: 'system',
   content: SAMPLE_CHAT_MARKER.replace('System: ', ''),
-}
-
-/**
- * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
- * once the stream is finished.
- */
-export const streamCompletion: CompletionGenerator = async function* (
-  userId,
-  url,
-  headers,
-  body,
-  service,
-  log,
-  format
-) {
-  const resp = needle.post(url, JSON.stringify(body), {
-    parse: false,
-    headers: {
-      ...headers,
-      Accept: 'text/event-stream',
-    },
-  })
-
-  const tokens = []
-  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
-  let current: any = {}
-
-  try {
-    const events = requestStream(resp, format)
-    let prev = ''
-    for await (const event of events) {
-      if (event.error) {
-        yield { error: event.error }
-        return
-      }
-
-      if (!event.data) {
-        continue
-      }
-
-      if (event.type === 'ping') {
-        continue
-      }
-
-      if (event.data === '[DONE]') {
-        break
-      }
-
-      current = event
-      prev += event.data
-
-      // If we fail to parse we might need to parse with this bad data and the next event's data...
-      // So we'll keep it and try again next iteration
-      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
-      const parsed = tryParse<Completion<AsyncDelta>>(event.data, prev)
-      if (!parsed) continue
-
-      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don't have dangling data
-      prev = ''
-
-      const { choices, ...evt } = parsed
-      if (!choices || !choices[0]) {
-        log.warn({ sse: event }, `[${service}] Received invalid SSE during stream`)
-
-        const message = evt.error?.message
-          ? `${service} interrupted the response: ${evt.error.message}`
-          : `${service} interrupted the response`
-
-        if (!tokens.length) {
-          yield { error: message }
-          return
-        }
-
-        sendOne(userId, { type: 'notification', level: 'warn', message })
-        break
-      }
-
-      const { finish_reason, index, ...choice } = choices[0]
-
-      meta = { ...evt, finish_reason, index }
-
-      if ('text' in choice) {
-        const token = choice.text
-        tokens.push(token)
-        yield { token }
-      } else if ('delta' in choice && choice.delta.content) {
-        const token = choice.delta.content
-        tokens.push(token)
-        yield { token }
-      }
-    }
-  } catch (err: any) {
-    log.error({ err, current }, `${service} streaming request failed`)
-    yield { error: `${service} streaming request failed: ${err.message}` }
-    return
-  }
-
-  return {
-    id: meta.id,
-    created: meta.created,
-    model: meta.model,
-    object: meta.object,
-    choices: [
-      {
-        finish_reason: meta.finish_reason,
-        index: meta.index,
-        text: tokens.join(''),
-      },
-    ],
-  }
 }
 
 /**
@@ -181,6 +37,7 @@ export const streamCompletion: CompletionGenerator = async function* (
  */
 export async function toChatCompletionPayload(
   opts: AdapterProps,
+  counter: TokenCounter,
   maxTokens: number
 ): Promise<CompletionItem[]> {
   if (opts.kind === 'plain') {
@@ -194,7 +51,7 @@ export async function toChatCompletionPayload(
     parts: opts.parts,
     lastMessage: opts.lastMessage,
     characters: opts.characters || {},
-    encoder: encoder(),
+    encoder: counter,
     jsonValues: opts.jsonValues,
   }
 
@@ -214,20 +71,19 @@ export async function toChatCompletionPayload(
   let maxBudget =
     (gen.maxContextLength || defaultPresets.openai.maxContextLength) -
     maxTokens -
-    (await encoder()([...inserts.values()].join(' ')))
-  let tokens = await encoder()(gaslight)
+    (await counter([...inserts.values()].join(' ')))
+  let tokens = await counter(gaslight)
 
   if (lines) {
     all.push(...lines)
   }
 
   // Append 'postamble' and jailbreak
-  const posts = (await getPostInstruction(opts, messages)) ?? []
+  const posts = await getPostInstruction(opts, messages, counter).then((inst) => inst || [])
   posts.reverse()
   for (const post of posts) {
-    const encode = encoder()
     post.content = await injectPlaceholders(post.content, injectOpts).then((p) => p.parsed)
-    tokens += await encode(post.content)
+    tokens += await counter(post.content)
     history.push(post)
   }
 
@@ -269,12 +125,15 @@ export async function toChatCompletionPayload(
       await addRemainingInserts()
       addedAllInserts = true
 
-      const { additions, consumed } = await splitSampleChat({
-        budget: maxBudget - tokens,
-        sampleChat: obj.content,
-        char: replyAs.name,
-        sender: handle,
-      })
+      const { additions, consumed } = await splitSampleChat(
+        {
+          budget: maxBudget - tokens,
+          sampleChat: obj.content,
+          char: replyAs.name,
+          sender: handle,
+        },
+        counter
+      )
 
       if (tokens + consumed > maxBudget) {
         --i
@@ -295,7 +154,7 @@ export async function toChatCompletionPayload(
       obj.role = 'user'
     }
 
-    const length = await encoder()(obj.content)
+    const length = await counter(obj.content)
     if (tokens + length > maxBudget) {
       --i
       break
@@ -310,7 +169,7 @@ export async function toChatCompletionPayload(
   return messages.concat(history.reverse())
 }
 
-export async function splitSampleChat(opts: SplitSampleChatProps) {
+export async function splitSampleChat(opts: SplitSampleChatProps, counter: TokenCounter) {
   const { sampleChat, char, sender, budget } = opts
   const regex = new RegExp(
     `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|System:|<start>)`,
@@ -328,10 +187,10 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
     if (trimmed.toLowerCase().startsWith('<start>')) {
       const afterStart = trimmed.slice(7).trim()
       additions.push(sampleChatMarkerCompletionItem)
-      tokens += await encoder()(sampleChatMarkerCompletionItem.content)
+      tokens += await counter(sampleChatMarkerCompletionItem.content)
       if (afterStart) {
         additions.push({ role: 'system', content: afterStart })
-        tokens += await encoder()(afterStart)
+        tokens += await counter(afterStart)
       }
       continue
     }
@@ -348,7 +207,7 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
     }
 
-    const length = await encoder()(msg.content)
+    const length = await counter(msg.content)
     if (budget && tokens + length > budget) break
 
     additions.push(msg)
@@ -360,7 +219,8 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
 
 async function getPostInstruction(
   opts: AdapterProps,
-  messages: CompletionItem[]
+  messages: CompletionItem[],
+  counter: TokenCounter
 ): Promise<CompletionItem[] | undefined> {
   let prefix = opts.parts.ujb ?? ''
 
@@ -370,7 +230,7 @@ async function getPostInstruction(
       parts: opts.parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: encoder(),
+      encoder: counter,
       jsonValues: opts.jsonValues,
     })
   ).parsed
@@ -445,20 +305,6 @@ function getCharLooks(char: AppSchema.Character) {
 
   if (!visuals.length) return
   return `${char.name}'s appearance: ${visuals.join(', ')}`
-}
-
-function tryParse<T = any>(value: string, prev?: string): T | undefined {
-  try {
-    const parsed = JSON.parse(value)
-    return parsed
-  } catch (ex) {}
-
-  try {
-    const parsed = JSON.parse(prev + value)
-    return parsed
-  } catch (ex) {}
-
-  return
 }
 
 export const requestFullCompletion: CompletionGenerator = async function* (

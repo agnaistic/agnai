@@ -35,6 +35,20 @@ const PageHeader: Component<Props> = (props) => {
 
   return (
     <>
+      <Show when={!props.noslot}>
+        <div ref={onRef} class="mb-2 flex w-full justify-center">
+          <Switch>
+            <Match when={ref!}>
+              <Slot
+                sticky
+                slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'}
+                parent={ref()}
+              />
+            </Match>
+          </Switch>
+        </div>
+      </Show>
+
       <Show when={props.title}>
         <div class={`${mod()}`}>
           <h1 class={'text-900 justify-center text-4xl sm:flex sm:w-full sm:justify-start'}>
@@ -50,20 +64,6 @@ const PageHeader: Component<Props> = (props) => {
       </Show>
       <Show when={!props.noDivider && (!!props.title || !!props.subtitle)}>
         <Divider />
-      </Show>
-
-      <Show when={!props.noslot}>
-        <div ref={onRef} class="mb-2 flex w-full justify-center">
-          <Switch>
-            <Match when={ref!}>
-              <Slot
-                sticky
-                slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'}
-                parent={ref()}
-              />
-            </Match>
-          </Switch>
-        </div>
       </Show>
     </>
   )

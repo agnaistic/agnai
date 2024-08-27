@@ -1,9 +1,9 @@
 import needle from 'needle'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
+import { sanitise, trimResponseV2 } from '/common/requests/util'
 
 const mancerOptions: Record<string, string> = {
   'OpenAssistant ORCA': 'https://neuro.mancer.tech/webui/oa-orca/api',

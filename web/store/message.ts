@@ -6,7 +6,7 @@ import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
 import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
-import { GenerateOpts, msgsApi } from './data/messages'
+import { msgsApi } from './data/messages'
 import { imageApi } from './data/image'
 import { userStore } from './user'
 import { localApi } from './data/storage'
@@ -28,6 +28,7 @@ import {
 import { embedApi } from './embeddings'
 import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
+import { botGen, GenerateOpts } from './data/bot-generate'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -368,8 +369,8 @@ export const msgStore = createStore<MsgState>(
       const textBeforeGenMore = retryLatestGenMoreOutput
         ? msgState.textBeforeGenMore ?? replace.msg
         : replace.msg
-      const res = await msgsApi
-        .generateResponse({
+      const res = await botGen
+        .generate({
           kind: 'continue',
           retry: retryLatestGenMoreOutput,
         })
@@ -394,8 +395,8 @@ export const msgStore = createStore<MsgState>(
       }
       yield { partial: undefined, waiting: { chatId, mode: 'request', characterId } }
 
-      const res = await msgsApi
-        .generateResponse({ kind: 'request', characterId })
+      const res = await botGen
+        .generate({ kind: 'request', characterId })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -448,8 +449,8 @@ export const msgStore = createStore<MsgState>(
         retrying: replace,
       }
 
-      const res = await msgsApi
-        .generateResponse({ kind: 'retry', messageId })
+      const res = await botGen
+        .generate({ kind: 'retry', messageId })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -488,8 +489,8 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const res = await msgsApi
-        .generateResponse({ kind: 'chat-query', text: message }, onTick)
+      const res = await botGen
+        .generate({ kind: 'chat-query', text: message }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -509,8 +510,8 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const res = await msgsApi
-        .generateResponse({ kind: 'chat-query', text: message, schema }, onTick)
+      const res = await botGen
+        .generate({ kind: 'chat-query', text: message, schema }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -539,8 +540,8 @@ export const msgStore = createStore<MsgState>(
       switch (mode) {
         case 'self':
         case 'retry':
-          res = await msgsApi
-            .generateResponse({ kind: mode })
+          res = await botGen
+            .generate({ kind: mode })
             .catch((err) => ({ error: err.message, result: undefined }))
           break
 
@@ -551,8 +552,8 @@ export const msgStore = createStore<MsgState>(
         case 'send-event:hidden':
         case 'send-noreply':
         case 'send-event:ooc':
-          res = await msgsApi
-            .generateResponse({ kind: mode, text: message })
+          res = await botGen
+            .generate({ kind: mode, text: message })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result.generating) {
             yield { partial: undefined, waiting: undefined }

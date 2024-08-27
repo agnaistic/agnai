@@ -885,6 +885,7 @@ export const adapterSettings: {
     'mistral',
     'openrouter',
   ],
+  localRequests: ['openai', 'openai-chat'],
   repetitionPenalty: [
     'horde',
     'novel',

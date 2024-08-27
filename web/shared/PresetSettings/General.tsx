@@ -141,12 +141,22 @@ export const GeneralSettings: Component<
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
       <Select
         fieldName="modelFormat"
-        label="Model Prompt Format"
-        helperMarkdown={`Which model's formatting to use if use "universal tags" in your prompt templates
-            (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
+        label="Prompt Format"
+        helperMarkdown={`Which formatting method to use if using "universal tags" in your prompt template
+            (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={FORMATS}
         value={props.inherit?.modelFormat || 'Alpaca'}
         recommend={props.sub?.preset.modelFormat}
+      />
+
+      <Toggle
+        fieldName="localRequests"
+        label="Use Local Requests"
+        helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
+        service={props.service}
+        format={props.format}
+        aiSetting={'localRequests'}
+        value={props.inherit?.localRequests}
       />
 
       <Show when={props.service === 'horde'}>

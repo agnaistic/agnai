@@ -1,7 +1,40 @@
 import type { JsonField, PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
+import { ThirdPartyFormat } from '/common/adapters'
 import { Memory, TokenCounter } from '/common/types'
+
+export type ChatRole = 'user' | 'assistant' | 'system'
+
+export type Completion<T = Inference> = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletionContent<T>
+  error?: { message: string }
+}
+
+export type CompletionGenerator = (
+  userId: string,
+  url: string,
+  headers: Record<string, string | string[] | number>,
+  body: any,
+  service: string,
+  log: AppLog,
+  format?: ThirdPartyFormat | 'openrouter'
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string } | Completion,
+  Completion | undefined
+>
+
+export type CompletionItem = { role: ChatRole; content: string; name?: string }
+
+export type CompletionContent<T> = Array<
+  { finish_reason: string; index: number } & ({ text: string } | T)
+>
+export type Inference = { message: { content: string; role: ChatRole } }
+export type AsyncDelta = { delta: Partial<Inference['message']> }
 
 export type GenerateRequestV2 = {
   requestId: string

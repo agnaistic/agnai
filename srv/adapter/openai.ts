@@ -1,20 +1,20 @@
-import { sanitiseAndTrim } from '../api/chat/common'
-import { ModelAdapter } from './type'
+import { sanitiseAndTrim } from '/common/requests/util'
+import { ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_CHAT_MODELS } from '../../common/adapters'
+import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
 import { AppLog } from '../middleware'
-import { requestFullCompletion, streamCompletion, toChatCompletionPayload } from './chat-completion'
+import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
+import { streamCompletion } from './stream'
+import { getTokenCounter } from '../tokenize'
 
 const baseUrl = `https://api.openai.com`
 
-type Role = 'user' | 'assistant' | 'system'
-
-export type CompletionItem = { role: Role; content: string; name?: string }
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
-export type Inference = { message: { content: string; role: Role } }
+
+export type Inference = { message: { content: string; role: ChatRole } }
 
 export type Completion<T = Inference> = {
   id: string
@@ -56,7 +56,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : await toChatCompletionPayload(opts, body.max_tokens)
+      : await toChatCompletionPayload(
+          opts,
+          getTokenCounter('openai', OPENAI_MODELS.Turbo),
+          body.max_tokens
+        )
 
     body.messages = messages
     yield { prompt: messages }

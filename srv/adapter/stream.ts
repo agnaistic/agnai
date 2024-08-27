@@ -2,6 +2,8 @@ import { WebSocket } from 'ws'
 import { EventGenerator, eventGenerator } from '/common/util'
 import { ThirdPartyFormat } from '/common/adapters'
 import { logger } from '../middleware'
+import needle from 'needle'
+import { AsyncDelta, Completion, CompletionGenerator } from './type'
 
 export type ServerSentEvent = {
   id?: string
@@ -9,6 +11,115 @@ export type ServerSentEvent = {
   data?: any
   error?: string
   index?: number
+}
+
+/**
+ * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
+ * once the stream is finished.
+ */
+export const streamCompletion: CompletionGenerator = async function* (
+  userId,
+  url,
+  headers,
+  body,
+  service,
+  log,
+  format
+) {
+  const resp = needle.post(url, JSON.stringify(body), {
+    parse: false,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream',
+    },
+  })
+
+  const tokens = []
+  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+  let current: any = {}
+
+  try {
+    const events = requestStream(resp, format)
+    let prev = ''
+    for await (const event of events) {
+      if (event.error) {
+        yield { error: event.error }
+        return
+      }
+
+      if (!event.data) {
+        continue
+      }
+
+      if (event.type === 'ping') {
+        continue
+      }
+
+      if (event.data === '[DONE]') {
+        break
+      }
+
+      current = event
+      prev += event.data
+
+      // If we fail to parse we might need to parse with this bad data and the next event's data...
+      // So we'll keep it and try again next iteration
+      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
+      const parsed = tryParse<Completion<AsyncDelta>>(event.data, prev)
+      if (!parsed) continue
+
+      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don't have dangling data
+      prev = ''
+
+      const { choices, ...evt } = parsed
+      if (!choices || !choices[0]) {
+        log.warn({ sse: event }, `[${service}] Received invalid SSE during stream`)
+
+        const message = evt.error?.message
+          ? `${service} interrupted the response: ${evt.error.message}`
+          : `${service} interrupted the response`
+
+        if (!tokens.length) {
+          yield { error: message }
+          return
+        }
+
+        break
+      }
+
+      const { finish_reason, index, ...choice } = choices[0]
+
+      meta = { ...evt, finish_reason, index }
+
+      if ('text' in choice) {
+        const token = choice.text
+        tokens.push(token)
+        yield { token }
+      } else if ('delta' in choice && choice.delta.content) {
+        const token = choice.delta.content
+        tokens.push(token)
+        yield { token }
+      }
+    }
+  } catch (err: any) {
+    log.error({ err, current }, `${service} streaming request failed`)
+    yield { error: `${service} streaming request failed: ${err.message}` }
+    return
+  }
+
+  return {
+    id: meta.id,
+    created: meta.created,
+    model: meta.model,
+    object: meta.object,
+    choices: [
+      {
+        finish_reason: meta.finish_reason,
+        index: meta.index,
+        text: tokens.join(''),
+      },
+    ],
+  }
 }
 
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
@@ -199,13 +310,20 @@ function parseOllama(msg: string, emitter: EventGenerator<ServerSentEvent>) {
   return event
 }
 
-function tryParse(value: any) {
+function tryParse<T = any>(value: string, prev?: string): T | undefined {
   try {
-    const obj = JSON.parse(value)
-    return obj
-  } catch (ex) {
-    return {}
+    const parsed = JSON.parse(value)
+    return parsed
+  } catch (ex) {}
+
+  if (prev) {
+    try {
+      const parsed = JSON.parse(prev + value)
+      return parsed
+    } catch (ex) {}
   }
+
+  return
 }
 
 function parseEvent(msg: string) {

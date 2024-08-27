@@ -1,7 +1,6 @@
 import needle from 'needle'
-import { sanitiseAndTrim } from '../api/chat/common'
 import { requestStream } from './stream'
-import { ModelAdapter, AdapterProps } from './type'
+import { ModelAdapter, AdapterProps, CompletionItem } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import {
@@ -16,9 +15,10 @@ import {
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
-import { CLAUDE_CHAT_MODELS } from '/common/adapters'
-import { CompletionItem, toChatCompletionPayload } from './chat-completion'
+import { CLAUDE_CHAT_MODELS, OPENAI_MODELS } from '/common/adapters'
+import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
+import { sanitiseAndTrim } from '/common/requests/util'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -266,7 +266,11 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
-    messages: await toChatCompletionPayload(opts, opts.gen.maxTokens!),
+    messages: await toChatCompletionPayload(
+      opts,
+      getTokenCounter('openai', OPENAI_MODELS.Turbo),
+      opts.gen.maxTokens!
+    ),
   }
   // Claude doesn't have a system role, so we extract the first message to put it in the system
   // field (https://docs.anthropic.com/claude/docs/system-prompts)

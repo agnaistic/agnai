@@ -4,6 +4,8 @@ import { splitSampleChat, toChatCompletionPayload } from '/srv/adapter/chat-comp
 import { build, reset, toBotMsg, toChar, toChat, toProfile, toUser } from './util'
 import { neat } from '/common/util'
 import { AdapterProps } from '/srv/adapter/type'
+import { getTokenCounter } from '/srv/tokenize'
+import { OPENAI_MODELS } from '/common/adapters'
 
 describe('Chat Completion Example Dialogue::', () => {
   before(reset)
@@ -103,12 +105,15 @@ describe('Chat Completion Example Dialogue::', () => {
 })
 
 async function testInput(input: string, budget?: number) {
-  const result = await splitSampleChat({
-    sampleChat: input,
-    char: TEST_CHARACTER_NAME,
-    sender: TEST_USER_NAME,
-    budget,
-  })
+  const result = await splitSampleChat(
+    {
+      sampleChat: input,
+      char: TEST_CHARACTER_NAME,
+      sender: TEST_USER_NAME,
+      budget,
+    },
+    getTokenCounter('openai', OPENAI_MODELS.Turbo)
+  )
 
   return JSON.stringify(result.additions, null, 2)
 }
@@ -158,6 +163,10 @@ async function testChat(prompt: string) {
     characters,
   }
 
-  const payload = await toChatCompletionPayload(props, 200)
+  const payload = await toChatCompletionPayload(
+    props,
+    getTokenCounter('openai', OPENAI_MODELS.Turbo),
+    200
+  )
   return payload
 }

@@ -1,10 +1,10 @@
 import * as horde from '../../common/horde-gen'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { HORDE_GUEST_KEY, getHordeModels } from '../api/horde'
 import { sendOne } from '../api/ws'
 import { decryptText } from '../db/util'
 import { logger } from '../middleware'
 import { ModelAdapter } from './type'
+import { sanitise, trimResponseV2 } from '/common/requests/util'
 import { toArray } from '/common/util'
 
 export const handleHorde: ModelAdapter = async function* ({

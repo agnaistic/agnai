@@ -1,8 +1,7 @@
-import { AdapterProps } from './type'
-import { getStoppingStrings } from './prompt'
 import { clamp, neat } from '/common/util'
 import { toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
+import { PayloadOpts } from './types'
 
 const chat_template = neat`
 {%- if messages[0]['role'] == 'system' -%}
@@ -17,8 +16,8 @@ const chat_template = neat`
     {{ message['content'] + '\n' }}
 {%- endfor -%}`
 
-export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen } = opts
+export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
+  const gen = opts.settings!
   const body = getBasePayload(opts, stops)
 
   if (body.dynamic_temperature) {
@@ -34,76 +33,16 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   return body
 }
 
-function getBasePayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen, prompt, subscription } = opts
+function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
+  const gen = opts.settings!
+  const prompt = opts.prompt
 
-  const service = subscription?.preset?.service || gen.service
-  const format = subscription?.preset?.thirdPartyFormat || gen.thirdPartyFormat
+  const format = gen.thirdPartyFormat
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
   if (!gen.temp) {
     gen.temp = 0.75
-  }
-
-  // Agnaistic
-  if (service !== 'kobold') {
-    const body: any = {
-      prompt,
-      context_limit: gen.maxContextLength,
-      max_new_tokens: gen.maxTokens,
-      do_sample: gen.doSample ?? true,
-      temperature: gen.temp,
-      top_p: gen.topP,
-      typical_p: gen.typicalP || 1,
-      repetition_penalty: gen.repetitionPenalty,
-      encoder_repetition_penalty: gen.encoderRepitionPenalty,
-      repetition_penalty_range: gen.repetitionPenaltyRange,
-      frequency_penalty: gen.frequencyPenalty,
-      presence_penalty: gen.presencePenalty,
-      top_k: gen.topK,
-      min_p: gen.minP,
-      top_a: gen.topA,
-      min_length: 0,
-      no_repeat_ngram_size: 0,
-      num_beams: gen.numBeams || 1,
-      penalty_alpha: gen.penaltyAlpha,
-      length_penalty: 1,
-      early_stopping: gen.earlyStopping || false,
-      seed: -1,
-      add_bos_token: gen.addBosToken || false,
-      truncation_length: gen.maxContextLength || 2048,
-      ban_eos_token: gen.banEosToken || false,
-      skip_special_tokens: gen.skipSpecialTokens ?? true,
-      stopping_strings: getStoppingStrings(opts, stops),
-      dynamic_temperature: gen.dynatemp_range ? true : false,
-      smoothing_factor: gen.smoothingFactor,
-      token_healing: gen.tokenHealing,
-      temp_last: gen.tempLast,
-      tfs: gen.tailFreeSampling,
-      mirostat_mode: gen.mirostatTau ? 2 : 0,
-      mirostat_tau: gen.mirostatTau,
-      mirostat_eta: gen.mirostatLR,
-      guidance: opts.guidance,
-      placeholders: opts.placeholders,
-      lists: opts.lists,
-      previous: opts.previous,
-      json_schema,
-      imageData: opts.imageData,
-    }
-
-    if (gen.dynatemp_range) {
-      if (gen.dynatemp_range >= gen.temp) {
-        gen.dynatemp_range = gen.temp - 0.1
-      }
-
-      body.min_temp = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
-      body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
-      body.dynatemp_range = gen.dynatemp_range
-      body.temp_exponent = gen.dynatemp_exponent
-    }
-
-    return body
   }
 
   if (format === 'vllm') {
@@ -235,7 +174,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       cfg_scale: gen.cfgScale,
       negative_prompt: gen.cfgOppose,
       stop: getStoppingStrings(opts, stops),
-      max_tokens: opts.gen.maxTokens,
+      max_tokens: gen.maxTokens,
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
       stream: gen.streamResponse,
@@ -300,7 +239,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       mirostat_eta: gen.mirostatLR,
       typical_p: gen.typicalP,
       tfs_z: gen.tailFreeSampling,
-      max_tokens: opts.gen.maxTokens,
+      max_tokens: gen.maxTokens,
       skip_special_tokens: gen.skipSpecialTokens,
       smoothing_factor: gen.smoothingFactor,
       smoothing_curve: gen.smoothingCurve,
@@ -406,7 +345,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (format === 'openai') {
+  if (format === 'openai' || format === 'openai-chat') {
     const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
     const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
@@ -425,4 +364,45 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
     return body
   }
+}
+
+function getStoppingStrings(opts: PayloadOpts, extras: string[] = []) {
+  const seen = new Set<string>(extras)
+  const unique = new Set<string>(extras)
+
+  if (!opts.settings?.disableNameStops) {
+    const chars = Object.values(opts.characters || {})
+    if (opts.impersonate) {
+      chars.push(opts.impersonate)
+    }
+
+    for (const char of chars) {
+      if (seen.has(char.name)) continue
+      if (char.name === opts.replyAs.name) continue
+      unique.add(`\n${char.name}:`)
+      seen.add(char.name)
+    }
+
+    for (const member of opts.members) {
+      if (seen.has(member.handle)) continue
+      if (member.handle === opts.replyAs.name) continue
+      unique.add(`\n${member.handle}:`)
+      seen.add(member.handle)
+    }
+  }
+
+  if (opts.settings?.stopSequences && !Array.isArray(opts.settings.stopSequences)) {
+    const values = Object.values(opts.settings.stopSequences) as string[]
+    opts.settings.stopSequences = values
+    for (const stop of values) {
+      seen.add(stop)
+      unique.add(stop)
+    }
+  } else if (opts.settings?.stopSequences) {
+    opts.settings.stopSequences.forEach((seq) => {
+      unique.add(seq)
+    })
+  }
+
+  return Array.from(unique.values()).filter((str) => !!str)
 }

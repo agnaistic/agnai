@@ -33,6 +33,27 @@ export function publish<T extends { type: string }>(payload: T) {
   socket.send(JSON.stringify(payload))
 }
 
+export function localEmit<T extends { type: string }>(payload: T) {
+  const handlers = listeners.get(payload.type) || []
+  const onceHandlers = onceListeners.get(payload.type) || []
+
+  for (const handler of handlers) {
+    if (!isValid(handler.validator, payload)) continue
+    handler.fn(payload)
+  }
+
+  for (const handler of onceHandlers) {
+    if (!isValid(handler.validator, payload)) continue
+    if (!handler.predicate(payload)) continue
+
+    handler.fn(payload)
+    const i = onceHandlers.findIndex((h) => h === handler)
+    onceHandlers.splice(i, 1)
+  }
+
+  onceListeners.set(payload.type, onceHandlers)
+}
+
 export function subscribe<T extends string, U extends Validator>(
   type: string,
   validator: U,

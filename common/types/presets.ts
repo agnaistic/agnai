@@ -101,6 +101,7 @@ export interface GenSettings {
   penaltyAlpha?: number
   numBeams?: number
 
+  localRequests?: boolean
   addBosToken?: boolean
   banEosToken?: boolean
   tokenHealing?: boolean

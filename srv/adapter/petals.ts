@@ -1,5 +1,5 @@
 import { AdapterProps, ModelAdapter } from './type'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
 import { WebSocket } from 'ws'
 import { eventGenerator } from '/common/util'

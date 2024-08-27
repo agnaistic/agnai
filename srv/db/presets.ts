@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
-import { encryptText, now } from './util'
+import { decryptText, encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
 
 export async function createTemplate(
@@ -82,7 +82,11 @@ export async function deleteUserPreset(presetId: string) {
 export async function getUserPresets(userId: string) {
   const presets = await db('gen-setting').find({ userId }).toArray()
   return presets.map((pre) => {
-    pre.thirdPartyKey = ''
+    if (pre.localRequests && pre.thirdPartyKey) {
+      pre.thirdPartyKey = decryptText(pre.thirdPartyKey)
+    } else {
+      pre.thirdPartyKey = ''
+    }
     return pre
   })
 }
