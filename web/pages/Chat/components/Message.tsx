@@ -212,7 +212,6 @@ const Message: Component<MessageProps> = (props) => {
                     openable
                     bot
                     zoom={1.75}
-                    anonymize={ctx.anonymize}
                   />
                 </Match>
 
