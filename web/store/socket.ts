@@ -96,7 +96,13 @@ function onMessage(msg: MessageEvent<any>) {
 
     if (!squelched.has(payload.type)) {
       if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
-        console.log(`Prompt\n${payload.prompt}`)
+        console.log(
+          `Prompt\n${
+            typeof payload.prompt === 'string'
+              ? payload.prompt
+              : JSON.stringify(payload.prompt, null, 2)
+          }`
+        )
       } else if (payload.type !== 'image-generated') {
         console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
       } else {

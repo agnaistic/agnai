@@ -146,11 +146,14 @@ export function requestStream(
   format?: ThirdPartyFormat | 'openrouter'
 ) {
   const emitter = eventGenerator<ServerSentEvent>()
+  let failed = false
+  let code = 0
 
   stream.on('header', (statusCode, headers) => {
     const contentType = headers['content-type'] || ''
     if (statusCode > 201) {
-      emitter.push({ error: `SSE request failed with status code ${statusCode}` })
+      code = statusCode
+      failed = true
       emitter.done()
     } else if (format === 'openrouter') {
       if (
@@ -178,12 +181,26 @@ export function requestStream(
   })
 
   stream.on('done', () => {
+    if (!emitter.isDone() && failed) {
+      emitter.push({ error: `SSE request failed with status code ${code}` })
+    }
     emitter.done()
   })
 
   let incomplete = ''
 
   stream.on('data', (chunk: Buffer) => {
+    if (failed && !emitter.isDone()) {
+      const result = tryParse(chunk.toString())
+      const error = result?.error?.message || result?.message
+      if (error) {
+        emitter.push({ error: `SSE request failed: ${error}` })
+        emitter.done()
+      }
+
+      return
+    }
+
     const data = incomplete + chunk.toString()
     incomplete = ''
 

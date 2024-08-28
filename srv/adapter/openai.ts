@@ -33,8 +33,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
-
-  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+  const oaiModel = isThirdParty ? gen.thirdPartyModel || '' : gen.oaiModel || ''
 
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
@@ -50,8 +49,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
-  const useChat =
-    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
+  const useChat = isThirdParty
+    ? gen.thirdPartyFormat === 'openai-chat'
+    : !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion

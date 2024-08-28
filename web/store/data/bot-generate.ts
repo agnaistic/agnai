@@ -554,6 +554,11 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, userId: str
   if (!settings.localRequests) return false
   if (settings.service !== 'kobold') return false
 
+  const format = settings.thirdPartyFormat
+  if (format !== 'openai' && format !== 'openai-chat') {
+    return false
+  }
+
   if (settings.localRequests && settings.userId !== userId) {
     throw new Error(
       `Multiplayer not available for this chat: Chat is configured for local requests`

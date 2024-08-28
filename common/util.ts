@@ -251,6 +251,7 @@ export type EventGenerator<T> = {
   stream: AsyncGenerator<T, T>
   push: (value: T) => void
   done: () => void
+  isDone: () => boolean
 }
 
 export function eventGenerator<T = any>(): EventGenerator<T> {
@@ -284,6 +285,7 @@ export function eventGenerator<T = any>(): EventGenerator<T> {
       if (done) return
       signal = true
     },
+    isDone: () => done,
   }
 }
 
