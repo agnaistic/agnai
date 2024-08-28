@@ -119,7 +119,6 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
   })
 
   const loadTemplate = () => {
-    console.log(templateRef.value, templateId())
     sagaStore.loadTemplate(templateId())
   }
 

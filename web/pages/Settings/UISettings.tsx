@@ -67,7 +67,6 @@ const UISettings: Component = () => {
       }
     }
 
-    console.log('updating', next)
     userStore.saveUI({ msgOptsInline: next })
   }
 
