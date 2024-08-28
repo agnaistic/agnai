@@ -63,13 +63,18 @@ export async function createUserPreset(userId: string, settings: AppSchema.GenSe
     ...settings,
   }
 
+  const originalKey = preset.thirdPartyKey!
   if (preset.thirdPartyKey) {
     preset.thirdPartyKey = encryptText(preset.thirdPartyKey)
   }
 
   await db('gen-setting').insertOne(preset)
 
-  preset.thirdPartyKey = ''
+  if (preset.localRequests && originalKey) {
+    preset.thirdPartyKey = originalKey
+  } else {
+    preset.thirdPartyKey = ''
+  }
 
   return preset
 }
@@ -104,6 +109,7 @@ export async function updateUserPreset(
     }
   }
 
+  const originalKey = update.thirdPartyKey!
   if (update.thirdPartyKey) {
     update.thirdPartyKey = encryptText(update.thirdPartyKey)
   } else {
@@ -115,7 +121,11 @@ export async function updateUserPreset(
   const updated = await db('gen-setting').findOne({ _id: presetId })
 
   if (updated) {
-    updated.thirdPartyKey = ''
+    if (updated.localRequests && updated.thirdPartyKey) {
+      updated.thirdPartyKey = originalKey
+    } else {
+      updated.thirdPartyKey = ''
+    }
   }
 
   return updated
@@ -128,12 +138,10 @@ export async function updateUserPreset(
  * @param presetId
  * @returns
  */
-export async function getUserPreset(presetId: string) {
+export async function getUserPreset(presetId: string, userId?: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
-  return preset
-}
-
-export function safePreset(preset: AppSchema.UserGenPreset) {
-  preset.thirdPartyKey = ''
+  if (preset?.localRequests && preset.thirdPartyKey && userId === preset.userId) {
+    preset.thirdPartyKey = decryptText(preset.thirdPartyKey)
+  }
   return preset
 }

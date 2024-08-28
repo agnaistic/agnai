@@ -20,13 +20,12 @@ export const getUserPresets = handle(async ({ userId }) => {
 })
 
 export const getUserPreset = handle(async ({ userId, params }) => {
-  const preset = await store.presets.getUserPreset(params.id)
+  const preset = await store.presets.getUserPreset(params.id, userId)
 
   if (!preset || preset.userId !== userId) {
     throw new StatusError('Preset not found', 404)
   }
 
-  store.presets.safePreset(preset)
   return preset
 })
 
