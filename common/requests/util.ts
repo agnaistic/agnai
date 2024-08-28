@@ -19,7 +19,7 @@ export function setEmitter(emit: (payload: { type: string }) => void) {
   emitter = emit
 }
 
-export function emit(payload: { type: string }) {
+export function emit<T extends { type: string }>(payload: T) {
   emitter(payload)
 }
 

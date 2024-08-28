@@ -1,8 +1,8 @@
 import { handleOAI } from './openai'
 import { getLocalPayload } from './payloads'
 import { PayloadOpts } from './types'
+import { emit } from './util'
 import { GenerateRequestV2 } from '/srv/adapter/type'
-import { localEmit } from '/web/store/socket'
 
 export async function handleLocalRequest(body: GenerateRequestV2, prompt: string) {
   if (body.settings?.service !== 'kobold') {
@@ -22,7 +22,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
       const prefix = body.kind === 'continue' ? `${body.continuing?.msg || ''} ` : ''
       const partial = `${prefix}${gen.partial}`
       response = partial
-      localEmit({
+      emit({
         requestId: body.requestId,
         type: 'message-partial',
         kind: body.kind,
@@ -35,7 +35,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
 
     if ('error' in gen) {
       const message = typeof gen.error === 'string' ? gen.error : gen.error.message
-      localEmit({
+      emit({
         type: 'message-error',
         requestId: body.requestId,
         error: gen.error,

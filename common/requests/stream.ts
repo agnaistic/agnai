@@ -1,8 +1,5 @@
 import { ThirdPartyFormat } from '../adapters'
 import { eventGenerator } from '../util'
-import iconv from 'iconv-lite'
-
-iconv.enableStreamingAPI(require('stream'))
 
 export type ServerSentEvent = {
   id?: string
