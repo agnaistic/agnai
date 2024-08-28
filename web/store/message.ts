@@ -60,6 +60,7 @@ export type MsgState = {
   waiting?: {
     chatId: string
     mode?: GenerateOpts['kind']
+    input?: string
     userId?: string
     characterId: string
     messageId?: string
@@ -536,6 +537,7 @@ export const msgStore = createStore<MsgState>(
       let res: { result?: any; error?: string }
 
       yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
+      let input = ''
 
       switch (mode) {
         case 'self':
@@ -558,6 +560,11 @@ export const msgStore = createStore<MsgState>(
           if ('result' in res && !res.result.generating) {
             yield { partial: undefined, waiting: undefined }
           }
+
+          input = res.result?.input
+          if (input) {
+            yield { waiting: { chatId, mode, characterId: activeCharId, input } }
+          }
           break
 
         default:
@@ -576,7 +583,13 @@ export const msgStore = createStore<MsgState>(
       if (res.result?.messageId) {
         yield {
           partial: '',
-          waiting: { chatId, mode, characterId: activeCharId, messageId: res.result.messageId },
+          waiting: {
+            chatId,
+            mode,
+            characterId: activeCharId,
+            messageId: res.result.messageId,
+            input,
+          },
         }
       }
     },

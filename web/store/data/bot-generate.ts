@@ -134,12 +134,10 @@ export async function generateResponse(
   }
 
   if (useLocalRequest(entities.settings, entities.user._id)) {
-    const res = await handleLocalRequest(request, prompt.template.parsed)
-    if (res.result) {
-      request.response = res.result.response
-    } else {
-      return res
-    }
+    localRequest(request, prompt.template.parsed)
+
+    const input = opts.kind === 'send' ? opts.text : undefined
+    return localApi.result({ generating: true, input, requestId: request.requestId })
   }
 
   const res = await api.post<{ requestId: string; messageId?: string }>(
@@ -152,6 +150,18 @@ export async function generateResponse(
   }
 
   return res
+}
+
+async function localRequest(request: GenerateRequestV2, prompt: string) {
+  const res = await handleLocalRequest(request, prompt)
+  if (res.result) {
+    request.response = res.result.response
+  }
+
+  await api.post<{ requestId: string; messageId?: string }>(
+    `/chat/${request.chat._id}/generate`,
+    request
+  )
 }
 
 async function getActivePromptOptions(
