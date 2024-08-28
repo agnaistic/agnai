@@ -17,3 +17,8 @@ export async function tokenize(text: string) {
 export async function getEncoder() {
   return (text: string) => embedApi.encode(text).then((res: number[]) => res.length)
 }
+
+export async function countTokens(text: string) {
+  const tokens = await encode(text)
+  return tokens.length
+}

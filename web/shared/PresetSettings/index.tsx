@@ -248,6 +248,7 @@ export function getPresetFormData(ref: any) {
     jsonSchema: 'string?',
     jsonEnabled: 'boolean',
     jsonSource: 'string',
+    localRequests: 'boolean',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)

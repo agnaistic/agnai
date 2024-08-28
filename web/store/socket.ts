@@ -1,5 +1,6 @@
 import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
+import { setEmitter } from '/common/requests/util'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
@@ -15,6 +16,7 @@ type ClientSocket = WebSocket & { pingTimeout: any }
 let socket: ClientSocket
 
 createSocket()
+setEmitter(localEmit)
 
 function createSocket() {
   const socketUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://')
@@ -31,6 +33,27 @@ export function publish<T extends { type: string }>(payload: T) {
   if (!isAuthed) return
 
   socket.send(JSON.stringify(payload))
+}
+
+export function localEmit<T extends { type: string }>(payload: T) {
+  const handlers = listeners.get(payload.type) || []
+  const onceHandlers = onceListeners.get(payload.type) || []
+
+  for (const handler of handlers) {
+    if (!isValid(handler.validator, payload)) continue
+    handler.fn(payload)
+  }
+
+  for (const handler of onceHandlers) {
+    if (!isValid(handler.validator, payload)) continue
+    if (!handler.predicate(payload)) continue
+
+    handler.fn(payload)
+    const i = onceHandlers.findIndex((h) => h === handler)
+    onceHandlers.splice(i, 1)
+  }
+
+  onceListeners.set(payload.type, onceHandlers)
 }
 
 export function subscribe<T extends string, U extends Validator>(
@@ -73,7 +96,13 @@ function onMessage(msg: MessageEvent<any>) {
 
     if (!squelched.has(payload.type)) {
       if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
-        console.log(`Prompt\n${payload.prompt}`)
+        console.log(
+          `Prompt\n${
+            typeof payload.prompt === 'string'
+              ? payload.prompt
+              : JSON.stringify(payload.prompt, null, 2)
+          }`
+        )
       } else if (payload.type !== 'image-generated') {
         console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
       } else {

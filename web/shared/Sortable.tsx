@@ -49,7 +49,6 @@ const Sortable: Component<{
       return prev
     }, new Map<number, number>())
 
-    console.log(ev.join(','))
     const next = items()
       .slice()
       .sort((left, right) => order.get(left.id)! - order.get(right.id)!)

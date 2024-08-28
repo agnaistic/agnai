@@ -37,7 +37,7 @@ export interface SubscriptionModelOption {
   preset: GenSettings &
     Pick<
       SubscriptionModel,
-      'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service' | 'levels'
+      'allowGuestUsage' | 'isDefaultSub' | 'tokenizer' | '_id' | 'service' | 'levels' | 'subLevel'
     > & {
       kind: 'submodel'
     }
@@ -101,6 +101,7 @@ export interface GenSettings {
   penaltyAlpha?: number
   numBeams?: number
 
+  localRequests?: boolean
   addBosToken?: boolean
   banEosToken?: boolean
   tokenHealing?: boolean

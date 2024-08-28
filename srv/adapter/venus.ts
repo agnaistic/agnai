@@ -1,9 +1,9 @@
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
-import { streamCompletion } from './chat-completion'
+import { streamCompletion } from './stream'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',

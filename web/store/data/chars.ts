@@ -6,9 +6,9 @@ import { loadItem, localApi } from './storage'
 import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
 import { getImageData } from './image'
 import { replace } from '/common/util'
-import { msgsApi } from './messages'
 import { TickHandler } from '/common/prompt'
 import { rootModalStore } from '../root-modal'
+import { genApi } from './inference'
 
 export const charsApi = {
   getCharacterDetail,
@@ -47,7 +47,7 @@ async function publishCharacter(
 ) {
   const requestId = v4()
 
-  msgsApi.subscribe(requestId, (body, state, output) => {
+  genApi.subscribe(requestId, (body, state, output) => {
     onTick(body, state, output)
     const info = Object.entries(output).reduce((prev, [key, value]) => {
       prev.push(`\`${key}\`\n${value}`)

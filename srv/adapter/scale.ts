@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
+import { sanitise, trimResponseV2 } from '/common/requests/util'
 import { ModelAdapter } from './type'
 
 export const handleScale: ModelAdapter = async function* ({

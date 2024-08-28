@@ -23,6 +23,18 @@
       },
       "isBackground": true,
       "label": "build server"
+    },
+    {
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["tsc", "-p", "tsconfig.json", "--noEmit"],
+      "problemMatcher": "$tsc-watch",
+      "label": "tsc: watch no-emit",
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
     }
   ]
 }

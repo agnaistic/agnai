@@ -56,6 +56,9 @@ dependencies:
   gpt-3-encoder:
     specifier: ^1.1.4
     version: 1.1.4
+  iconv-lite:
+    specifier: 0.6.3
+    version: 0.6.3
   jsonwebtoken:
     specifier: ^9.0.0
     version: 9.0.0
@@ -2392,6 +2395,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/cache@2.12.0(@parcel/core@2.12.0):
@@ -2423,6 +2427,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/config-default@2.12.0(@parcel/core@2.12.0)(postcss@8.4.21):
@@ -2566,6 +2571,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/node-resolver-core@3.3.0(@parcel/core@2.12.0):
@@ -2596,6 +2602,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/optimizer-htmlnano@2.12.0(@parcel/core@2.12.0)(postcss@8.4.21):
@@ -2609,6 +2616,7 @@ packages:
       svgo: 2.8.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
       - cssnano
       - postcss
       - purgecss
@@ -2630,6 +2638,8 @@ packages:
       '@parcel/rust': 2.12.0
       '@parcel/utils': 2.12.0
       '@parcel/workers': 2.12.0(@parcel/core@2.12.0)
+    transitivePeerDependencies:
+      - '@swc/helpers'
     dev: true
 
   /@parcel/optimizer-svgo@2.12.0(@parcel/core@2.12.0):
@@ -2642,6 +2652,7 @@ packages:
       svgo: 2.8.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/optimizer-swc@2.12.0(@parcel/core@2.12.0):
@@ -2691,6 +2702,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/packager-html@2.12.0(@parcel/core@2.12.0):
@@ -2704,6 +2716,7 @@ packages:
       posthtml: 0.16.6
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/packager-js@2.12.0(@parcel/core@2.12.0):
@@ -2720,6 +2733,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/packager-raw@2.12.0(@parcel/core@2.12.0):
@@ -2729,6 +2743,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/packager-svg@2.12.0(@parcel/core@2.12.0):
@@ -2741,6 +2756,7 @@ packages:
       posthtml: 0.16.6
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/packager-wasm@2.12.0(@parcel/core@2.12.0):
@@ -2750,6 +2766,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/plugin@2.12.0(@parcel/core@2.12.0):
@@ -2759,6 +2776,7 @@ packages:
       '@parcel/types': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/profiler@2.12.0:
@@ -2781,6 +2799,7 @@ packages:
       term-size: 2.2.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/reporter-dev-server@2.12.0(@parcel/core@2.12.0):
@@ -2791,6 +2810,7 @@ packages:
       '@parcel/utils': 2.12.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/reporter-tracer@2.12.0(@parcel/core@2.12.0):
@@ -2803,6 +2823,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/resolver-default@2.12.0(@parcel/core@2.12.0):
@@ -2813,6 +2834,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/resolver-glob@2.12.0(@parcel/core@2.12.0):
@@ -2826,6 +2848,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/runtime-browser-hmr@2.12.0(@parcel/core@2.12.0):
@@ -2836,6 +2859,7 @@ packages:
       '@parcel/utils': 2.12.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/runtime-js@2.12.0(@parcel/core@2.12.0):
@@ -2848,6 +2872,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/runtime-react-refresh@2.12.0(@parcel/core@2.12.0):
@@ -2860,6 +2885,7 @@ packages:
       react-refresh: 0.9.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/runtime-service-worker@2.12.0(@parcel/core@2.12.0):
@@ -2871,6 +2897,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/rust@2.12.0:
@@ -2899,6 +2926,7 @@ packages:
       semver: 7.5.4
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-css@2.12.0(@parcel/core@2.12.0):
@@ -2914,6 +2942,7 @@ packages:
       nullthrows: 1.1.1
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-html@2.12.0(@parcel/core@2.12.0):
@@ -2931,6 +2960,7 @@ packages:
       srcset: 4.0.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-image@2.12.0(@parcel/core@2.12.0):
@@ -2944,6 +2974,8 @@ packages:
       '@parcel/utils': 2.12.0
       '@parcel/workers': 2.12.0(@parcel/core@2.12.0)
       nullthrows: 1.1.1
+    transitivePeerDependencies:
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-inline-string@2.12.0(@parcel/core@2.12.0):
@@ -2953,6 +2985,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-js@2.12.0(@parcel/core@2.12.0):
@@ -2983,6 +3016,7 @@ packages:
       json5: 2.2.3
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-postcss@2.12.0(@parcel/core@2.12.0):
@@ -2999,6 +3033,7 @@ packages:
       semver: 7.5.4
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-posthtml@2.12.0(@parcel/core@2.12.0):
@@ -3014,6 +3049,7 @@ packages:
       semver: 7.5.4
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-raw@2.12.0(@parcel/core@2.12.0):
@@ -3023,6 +3059,7 @@ packages:
       '@parcel/plugin': 2.12.0(@parcel/core@2.12.0)
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-react-refresh-wrap@2.12.0(@parcel/core@2.12.0):
@@ -3034,6 +3071,7 @@ packages:
       react-refresh: 0.9.0
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-sass@2.12.0(@parcel/core@2.12.0):
@@ -3045,6 +3083,7 @@ packages:
       sass: 1.63.6
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/transformer-svg@2.12.0(@parcel/core@2.12.0):
@@ -3061,6 +3100,7 @@ packages:
       semver: 7.5.4
     transitivePeerDependencies:
       - '@parcel/core'
+      - '@swc/helpers'
     dev: true
 
   /@parcel/types@2.12.0(@parcel/core@2.12.0):
@@ -3116,8 +3156,6 @@ packages:
       '@parcel/types': 2.12.0(@parcel/core@2.12.0)
       '@parcel/utils': 2.12.0
       nullthrows: 1.1.1
-    transitivePeerDependencies:
-      - '@swc/helpers'
     dev: true
 
   /@redis/bloom@1.2.0(@redis/client@1.5.6):
@@ -5562,14 +5600,14 @@ packages:
     dev: false
 
   /iconv-lite@0.4.24:
-    resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
+    resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==, tarball: https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz}
     engines: {node: '>=0.10.0'}
     dependencies:
       safer-buffer: 2.1.2
     dev: false
 
   /iconv-lite@0.6.3:
-    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
+    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==, tarball: https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz}
     engines: {node: '>=0.10.0'}
     dependencies:
       safer-buffer: 2.1.2
@@ -7346,7 +7384,7 @@ packages:
     dev: false
 
   /safer-buffer@2.1.2:
-    resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
+    resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==, tarball: https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz}
 
   /saslprep@1.0.3:
     resolution: {integrity: sha512-/MY/PEMbk2SuY5sScONwhUDsV2p77Znkb/q3nSVstq/yQzYJOH/Azh29p9oJLsl3LnQwSvZDKagDGBsBwSooag==, tarball: https://registry.npmjs.org/saslprep/-/saslprep-1.0.3.tgz}

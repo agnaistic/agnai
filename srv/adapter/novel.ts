@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'

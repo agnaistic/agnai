@@ -251,6 +251,7 @@ export type EventGenerator<T> = {
   stream: AsyncGenerator<T, T>
   push: (value: T) => void
   done: () => void
+  isDone: () => boolean
 }
 
 export function eventGenerator<T = any>(): EventGenerator<T> {
@@ -284,6 +285,7 @@ export function eventGenerator<T = any>(): EventGenerator<T> {
       if (done) return
       signal = true
     },
+    isDone: () => done,
   }
 }
 
@@ -420,7 +422,7 @@ function getHighestTier(
   return sorted[0] as any
 }
 
-export function tryParse(value?: any) {
+export function tryParse<T = any>(value?: any): T | undefined {
   if (!value) return
   try {
     const obj = JSON.parse(value)
@@ -554,10 +556,27 @@ export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
   return hydrate
 }
 
-export function getSuitableSubLevel(levels: AppSchema.SubscriptionModelLevel[], level: number) {
+export function getSubscriptionModelLimits(
+  model:
+    | Pick<AppSchema.SubscriptionModel, 'subLevel' | 'levels' | 'maxContextLength' | 'maxTokens'>
+    | undefined,
+  level: number
+) {
+  if (!model) return
+
+  if (!Array.isArray(model.levels)) {
+    model.levels = []
+  }
+
+  model.levels.push({
+    level: model.subLevel,
+    maxContextLength: model.maxContextLength!,
+    maxTokens: model.maxTokens,
+  })
+
   let match: AppSchema.SubscriptionModelLevel | undefined
 
-  for (const candidate of levels) {
+  for (const candidate of model.levels) {
     if (candidate.level > level) continue
 
     if (!match || match.level < candidate.level) {

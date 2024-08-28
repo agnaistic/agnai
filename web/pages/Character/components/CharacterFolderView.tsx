@@ -8,7 +8,7 @@ import {
   Download,
   Edit,
   FolderCog,
-  Menu,
+  GripHorizontal,
   MessageCircle,
   MoreHorizontal,
   Star,
@@ -24,6 +24,7 @@ import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
+import Draggable from '/web/shared/Draggable'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -227,11 +228,19 @@ const FolderContents: Component<{
 }
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
+  const [_dragging, setDragging] = createSignal(false)
+
   return (
     <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-      <div class="cursor-grab">
-        <Menu color="var(--bg-500)" />
-      </div>
+      <Draggable
+        class="cursor-grab"
+        onTransition={setDragging}
+        classList={{}}
+        onChange={() => {}}
+        onDone={() => {}}
+      >
+        <GripHorizontal color="var(--bg-500)" />
+      </Draggable>
 
       <A
         class="ellipsis flex w-full cursor-pointer items-center gap-2"

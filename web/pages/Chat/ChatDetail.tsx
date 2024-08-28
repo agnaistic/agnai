@@ -4,6 +4,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  For,
   Index,
   onCleanup,
   onMount,
@@ -36,6 +37,7 @@ import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
+import { AppSchema } from '/common/types'
 
 export { ChatDetail as default }
 
@@ -205,14 +207,33 @@ const ChatDetail: Component = () => {
     const char = charId ? ctx.allBots[charId] : undefined
 
     const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
-    return emptyMsg({
-      id: 'partial',
-      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
-      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
-      message: msgs.partial || '',
-      adapter: 'partial',
-      handle: handle || 'You',
-    })
+
+    const waitingMsgs: AppSchema.ChatMessage[] = []
+
+    if (msgs.waiting.input) {
+      waitingMsgs.push(
+        emptyMsg({
+          id: 'partial-input',
+          charId: ctx.impersonate?._id,
+          userId: user.user?._id,
+          message: msgs.waiting.input || '',
+          handle: ctx.impersonate?.name || profile?.handle || 'You',
+        })
+      )
+    }
+
+    waitingMsgs.push(
+      emptyMsg({
+        id: 'partial-response',
+        charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
+        userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+        message: msgs.partial || '',
+        adapter: 'partial',
+        handle: handle || 'You',
+      })
+    )
+
+    return waitingMsgs
   })
 
   const clearModal = () => {
@@ -485,14 +506,18 @@ const ChatDetail: Component = () => {
                 </>
               )}
             </Index>
-            <Show when={waitingMsg()}>
-              <Message
-                msg={waitingMsg()!}
-                onRemove={() => {}}
-                editing={chats.opts.editing}
-                sendMessage={sendMessage}
-                isPaneOpen={pane.showing()}
-              />
+            <Show when={waitingMsg()?.length}>
+              <For each={waitingMsg()}>
+                {(msg) => (
+                  <Message
+                    msg={msg}
+                    onRemove={() => {}}
+                    editing={false}
+                    sendMessage={sendMessage}
+                    isPaneOpen={pane.showing()}
+                  />
+                )}
+              </For>
             </Show>
           </div>
         </section>

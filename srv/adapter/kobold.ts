@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../middleware'
-import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
+import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, ModelAdapter } from './type'
 import { requestStream } from './stream'
 import { llamaStream } from './dispatch'
@@ -9,8 +9,9 @@ import { getStoppingStrings } from './prompt'
 import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
-import * as oai from './chat-completion'
+import * as oai from './stream'
 import { toSamplerOrder } from '/common/sampler-order'
+import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 
 /**
  * Sampler order

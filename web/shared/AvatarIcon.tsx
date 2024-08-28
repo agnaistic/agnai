@@ -130,7 +130,7 @@ const AvatarIcon: Component<Props> = (props) => {
   return (
     <>
       <Switch>
-        <Match when={avatar()}>
+        <Match when={avatar() && !props.anonymize}>
           <div
             class={`avatar-icon shrink-0 overflow-hidden ${props.class || ''}`}
             classList={{

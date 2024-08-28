@@ -21,7 +21,7 @@ import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { PresetProps } from './types'
-import { getSuitableSubLevel } from '/common/util'
+import { getSubscriptionModelLimits } from '/common/util'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -73,7 +73,7 @@ export const GeneralSettings: Component<
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.sub?.level ?? -1
-    const match = getSuitableSubLevel(props.sub?.preset.levels || [], level)
+    const match = getSubscriptionModelLimits(props.sub?.preset, level)
     if (match) return match
 
     return {
@@ -141,12 +141,22 @@ export const GeneralSettings: Component<
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
       <Select
         fieldName="modelFormat"
-        label="Model Prompt Format"
-        helperMarkdown={`Which model's formatting to use if use "universal tags" in your prompt templates
-            (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
+        label="Prompt Format"
+        helperMarkdown={`Which formatting method to use if using "universal tags" in your prompt template
+            (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={FORMATS}
         value={props.inherit?.modelFormat || 'Alpaca'}
         recommend={props.sub?.preset.modelFormat}
+      />
+
+      <Toggle
+        fieldName="localRequests"
+        label="Use Local Requests"
+        helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
+        service={props.service}
+        format={props.format}
+        aiSetting={'localRequests'}
+        value={props.inherit?.localRequests}
       />
 
       <Show when={props.service === 'horde'}>

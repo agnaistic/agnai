@@ -23,7 +23,7 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { deepClone, getSuitableSubLevel, parseStops, tryParse } from '/common/util'
+import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import {
   GuidanceParams,
@@ -315,11 +315,11 @@ export async function createChatStream(
   }
 
   const fallbackContext = subscription?.preset?.maxContextLength
-  const subbedLevel = subscription
-    ? getSuitableSubLevel(subscription?.preset?.levels || [], subscription.level)?.maxContextLength
+  const modelContext = subscription
+    ? getSubscriptionModelLimits(subscription?.preset, subscription.level)?.maxContextLength
     : undefined
 
-  const subContextLimit = subbedLevel || fallbackContext
+  const subContextLimit = modelContext || fallbackContext
   opts.settings = opts.settings || {}
 
   if (subContextLimit) {

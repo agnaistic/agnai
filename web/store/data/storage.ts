@@ -242,7 +242,6 @@ async function migrateLegacyItems() {
 
     await saveItem(key, old)
     localStorage.removeItem(key)
-    console.log('Migrated', key)
   }
 
   for (const key in localStorage) {
@@ -253,7 +252,6 @@ async function migrateLegacyItems() {
 
     await storage.setItem(key, data)
     localStorage.removeItem(key)
-    console.log('Migrated', key)
   }
 }
 

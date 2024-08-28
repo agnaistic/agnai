@@ -24,6 +24,7 @@ const sendValidator = {
   text: 'string',
   impersonate: 'any?',
   parent: 'string?',
+  bot: 'boolean?',
 } as const
 
 const genValidator = {
@@ -73,6 +74,7 @@ const genValidator = {
   imageData: 'string?',
   jsonSchema: 'any?',
   jsonValues: 'any?',
+  response: 'string?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {
@@ -95,7 +97,7 @@ export const createMessage = handle(async (req) => {
   if (!userId) {
     const guest = req.socketId
     const newMsg = newMessage(v4(), chatId, body.text, {
-      userId: impersonate ? undefined : 'anon',
+      userId: body.bot || impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
@@ -113,7 +115,7 @@ export const createMessage = handle(async (req) => {
       chatId,
       message: body.text,
       characterId: impersonate?._id,
-      senderId: userId,
+      senderId: body.bot ? undefined : userId,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: getScenarioEventType(body.kind),
       parent: body.parent,
@@ -253,108 +255,118 @@ export const generateMessageV2 = handle(async (req, res) => {
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 
-  const { stream, adapter, ...metadata } = await createChatStream(
-    {
-      ...body,
-      chat,
-      replyAs,
-      impersonate,
-      requestId,
-      entities,
-      chatSchema: schema,
-    },
-    log
-  )
-
-  log.setBindings({ adapter })
-
-  let generated = ''
+  let generated = body.response || ''
   let retries: string[] = []
   let error = false
-  let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
+  let adapter = 'local'
+  let meta = {}
 
-  try {
-    for await (const gen of stream) {
-      if (typeof gen === 'string') {
-        generated = gen
-        continue
-      }
+  if (body.response === undefined) {
+    const { stream, ...metadata } = await createChatStream(
+      {
+        ...body,
+        chat,
+        replyAs,
+        impersonate,
+        requestId,
+        entities,
+        chatSchema: schema,
+      },
+      log
+    )
 
-      if ('tokens' in gen) {
-        generated = gen.tokens as string
-      }
+    adapter = metadata.adapter
 
-      if ('gens' in gen) {
-        retries = gen.gens
-        break
-      }
+    meta = {
+      ctx: metadata.settings.maxContextLength,
+      char: metadata.size,
+      len: metadata.length,
+    }
+    log.setBindings({ adapter })
 
-      if ('partial' in gen) {
-        const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
-        if (metadata.json && hydrator) {
-          jsonPartial = parsePartialJson(gen.partial) || jsonPartial
-          hydration = hydrator(jsonPartial || {})
+    try {
+      for await (const gen of stream) {
+        if (typeof gen === 'string') {
+          generated = gen
+          continue
         }
 
+        if ('tokens' in gen) {
+          generated = gen.tokens as string
+        }
+
+        if ('gens' in gen) {
+          retries = gen.gens
+          break
+        }
+
+        if ('partial' in gen) {
+          const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+          if (metadata.json && hydrator) {
+            jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+            hydration = hydrator(jsonPartial || {})
+          }
+
+          sendMany(members, {
+            requestId: body.requestId,
+            type: 'message-partial',
+            kind: body.kind,
+            partial: hydration ? hydration.response : `${prefix}${gen.partial}`,
+            json: hydration,
+            adapter,
+            chatId,
+          })
+          continue
+        }
+
+        if ('meta' in gen) {
+          Object.assign(meta, gen.meta)
+          continue
+        }
+
+        if ('prompt' in gen) {
+          sendOne(userId, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
+          continue
+        }
+
+        if ('error' in gen) {
+          error = true
+          sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
+          continue
+        }
+
+        if ('warning' in gen) {
+          sendOne(userId, { type: 'message-warning', requestId, warning: gen.warning })
+        }
+      }
+    } catch (ex: any) {
+      error = true
+
+      if (ex instanceof StatusError) {
+        log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
         sendMany(members, {
-          requestId: body.requestId,
-          type: 'message-partial',
-          kind: body.kind,
-          partial: hydration ? hydration.response : `${prefix}${gen.partial}`,
-          json: hydration,
+          type: 'message-error',
+          requestId,
+          error: `[${ex.status}] Message failed: ${ex?.message || ex}`,
           adapter,
           chatId,
         })
-        continue
-      }
-
-      if ('meta' in gen) {
-        Object.assign(meta, gen.meta)
-        continue
-      }
-
-      if ('prompt' in gen) {
-        sendOne(userId, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
-        continue
-      }
-
-      if ('error' in gen) {
-        error = true
-        sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
-        continue
-      }
-
-      if ('warning' in gen) {
-        sendOne(userId, { type: 'message-warning', requestId, warning: gen.warning })
+      } else {
+        log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
+        sendMany(members, {
+          type: 'message-error',
+          requestId,
+          error: `Unhandled exception: ${ex?.message || ex}`,
+          adapter,
+          chatId,
+        })
       }
     }
-  } catch (ex: any) {
-    error = true
 
-    if (ex instanceof StatusError) {
-      log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
-      sendMany(members, {
-        type: 'message-error',
-        requestId,
-        error: `[${ex.status}] Message failed: ${ex?.message || ex}`,
-        adapter,
-        chatId,
-      })
-    } else {
-      log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
-      sendMany(members, {
-        type: 'message-error',
-        requestId,
-        error: `Unhandled exception: ${ex?.message || ex}`,
-        adapter,
-        chatId,
-      })
+    await releaseLock(chatId)
+    if (error) {
+      return
     }
-  }
-
-  await releaseLock(chatId)
-  if (error) {
-    return
   }
 
   let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
@@ -556,78 +568,82 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const schema = body.settings.jsonSource === 'character' ? body.char.json : body.settings.json
   const hydrator = body.settings.jsonEnabled && schema ? jsonHydrator(schema) : undefined
-
-  const { stream, adapter, ...entities } = await createChatStream(
-    { ...body, chat, replyAs, requestId, chatSchema: schema },
-    log,
-    guest
-  )
-
-  log.setBindings({ adapter })
-
-  let generated = ''
+  let generated = body.response || ''
   let retries: string[] = []
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
-
+  let adapter = 'local'
+  let meta = {}
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 
-  for await (const gen of stream) {
-    if (typeof gen === 'string') {
-      generated = gen
-      continue
-    }
+  if (body.response === undefined) {
+    const { stream, ...entities } = await createChatStream(
+      { ...body, chat, replyAs, requestId, chatSchema: schema },
+      log,
+      guest
+    )
 
-    if ('tokens' in gen) {
-      generated = gen.tokens as string
-    }
+    log.setBindings({ adapter })
 
-    if ('gens' in gen) {
-      retries = gen.gens
-      break
-    }
+    adapter = entities.adapter
+    meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
-    if ('partial' in gen) {
-      if (entities.json && hydrator) {
-        jsonPartial = parsePartialJson(gen.partial) || jsonPartial
-        hydration = hydrator(jsonPartial || {})
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        generated = gen
+        continue
       }
-      sendGuest(guest, {
-        type: 'message-partial',
-        kind: body.kind,
-        partial: hydration ? hydration.response : gen.partial,
-        adapter,
-        chatId,
-        json: hydration,
-      })
 
-      continue
+      if ('tokens' in gen) {
+        generated = gen.tokens as string
+      }
+
+      if ('gens' in gen) {
+        retries = gen.gens
+        break
+      }
+
+      if ('partial' in gen) {
+        if (entities.json && hydrator) {
+          jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+          hydration = hydrator(jsonPartial || {})
+        }
+        sendGuest(guest, {
+          type: 'message-partial',
+          kind: body.kind,
+          partial: hydration ? hydration.response : gen.partial,
+          adapter,
+          chatId,
+          json: hydration,
+        })
+
+        continue
+      }
+
+      if ('meta' in gen) {
+        Object.assign(meta, gen.meta)
+        continue
+      }
+
+      if ('prompt' in gen) {
+        sendGuest(guest, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
+        continue
+      }
+
+      if ('error' in gen) {
+        error = true
+        sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
+        break
+      }
+
+      if ('warning' in gen) {
+        sendGuest(guest, { type: 'message-warning', requestId, warning: gen.warning })
+        continue
+      }
     }
 
-    if ('meta' in gen) {
-      Object.assign(meta, gen.meta)
-      continue
-    }
-
-    if ('prompt' in gen) {
-      sendGuest(guest, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
-      continue
-    }
-
-    if ('error' in gen) {
-      error = true
-      sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
-      break
-    }
-
-    if ('warning' in gen) {
-      sendGuest(guest, { type: 'message-warning', requestId, warning: gen.warning })
-      continue
-    }
+    if (error) return
   }
-
-  if (error) return
 
   let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   if (hydration?.response) {

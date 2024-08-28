@@ -1,3 +1,8 @@
+declare module 'iconv-lite' {
+  const mod: any
+  export default mod
+}
+
 declare module '*.svg' {
   const mod: string
   export default mod

@@ -2,7 +2,7 @@ import * as horde from '../../../common/horde-gen'
 import { createImagePrompt, getMaxImageContext } from '../../../common/image-prompt'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
-import { PromptEntities, getPromptEntities, msgsApi } from './messages'
+import { msgsApi } from './messages'
 import { AIAdapter } from '/common/adapters'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
@@ -13,6 +13,8 @@ import { subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
+import { getPromptEntities, PromptEntities } from './common'
+import { genApi } from './inference'
 
 type GenerateOpts = {
   chatId?: string
@@ -251,7 +253,7 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
 
   const parsed = await parseTemplate(template, opts)
   const prompt = parsed.parsed
-  const response = await msgsApi.basicInference({
+  const response = await genApi.basicInference({
     prompt,
     settings,
   })

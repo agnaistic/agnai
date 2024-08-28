@@ -1,5 +1,6 @@
 import { createStore } from './create'
 import { subscribe } from './socket'
+import { setNotifier } from '/common/requests/util'
 
 export type Toast = {
   id: number
@@ -84,6 +85,8 @@ export const toastStore = createStore<ToastState>('toasts', {
     admin: addToast('admin'),
   }
 })
+
+setNotifier(toastStore)
 
 subscribe('notification', { level: 'string?', message: 'string', ttl: 'number?' }, (body) => {
   switch (body.level) {

@@ -1,218 +1,26 @@
-import { v4 } from 'uuid'
-import {
-  createPromptParts,
-  getChatPreset,
-  getLinesForPrompt,
-  buildPromptParts,
-  resolveScenario,
-  InferenceState,
-  TickHandler,
-  JsonField,
-} from '../../../common/prompt'
-import { getEncoder } from '../../../common/tokenize'
-import { GenerateRequestV2 } from '../../../srv/adapter/type'
+import { InferenceState } from '../../../common/prompt'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
-import { ChatState, chatStore } from '../chat'
-import { getStore } from '../create'
-import { userStore } from '../user'
-import { loadItem, localApi } from './storage'
+import { chatStore } from '../chat'
+import { localApi } from './storage'
 import { toastStore } from '../toasts'
-import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
-import { UserEmbed } from '/common/types/memory'
-import { TemplateOpts, parseTemplate } from '/common/template-parser'
-import { deepClone, exclude, replace } from '/common/util'
+import { TemplateOpts } from '/common/template-parser'
+import { exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
-import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
-import { msgStore } from '../message'
-import { embedApi } from '../embeddings'
-import { ModelFormat, replaceTags } from '/common/presets/templates'
-import { settingStore } from '../settings'
 import { subscribe } from '../socket'
-
-export type PromptEntities = {
-  chat: AppSchema.Chat
-  char: AppSchema.Character
-  user: AppSchema.User
-  profile: AppSchema.Profile
-  book?: AppSchema.MemoryBook
-  messages: AppSchema.ChatMessage[]
-  settings: Partial<AppSchema.GenSettings>
-  members: AppSchema.Profile[]
-  chatBots: AppSchema.Character[]
-  autoReplyAs?: string
-  characters: Record<string, AppSchema.Character>
-  impersonating?: AppSchema.Character
-  lastMessage?: { msg: string; date: string; id: string; parent?: string }
-  scenarios?: AppSchema.ScenarioBook[]
-  imageData?: string
-}
+import { genApi } from './inference'
+import { botGen } from './bot-generate'
 
 export const msgsApi = {
   swapMessage,
   editMessage,
   editMessageProps,
   getMessages,
-  getPromptEntities,
-  generateResponse,
   deleteMessages,
-  basicInference,
-  inferenceStream,
-  guidance,
   getActiveTemplateParts,
-  getInferencePreset,
-  replaceUniversalTags,
-  subscribe: inferenceSubscribe,
-  getActivePreset: getAuthGenSettings,
-}
-
-type InferenceOpts = {
-  prompt: string
-  settings?: Partial<AppSchema.GenSettings>
-  overrides?: Partial<AppSchema.GenSettings>
-  maxTokens?: number
-  jsonSchema?: JsonField[]
-
-  /** Base64 image */
-  image?: string
 }
 
 export type StreamCallback = (res: string, state: InferenceState) => any
-
-export async function basicInference(opts: InferenceOpts) {
-  let { overrides, settings, prompt, image } = opts
-  const requestId = v4()
-  const { user } = userStore.getState()
-
-  if (!user) {
-    return localApi.error(`Could not get user settings. Refresh and try again.`)
-  }
-
-  let preset = getInferencePreset(settings)
-  if (preset && overrides) {
-    preset = Object.assign({}, preset, overrides)
-  }
-
-  prompt = replaceUniversalTags(prompt, preset.modelFormat)
-
-  const res = await api.method<{ response: string; meta: any }>('post', `/chat/inference`, {
-    requestId,
-    user,
-    prompt,
-    imageData: image,
-    jsonSchema: opts.jsonSchema,
-    settings: { ...preset, stream: false },
-  })
-
-  return res
-}
-
-export async function inferenceStream(
-  opts: InferenceOpts,
-  onTick: (msg: string, state: InferenceState) => any
-) {
-  let { overrides, settings, prompt } = opts
-  const requestId = v4()
-  const { user } = userStore.getState()
-
-  if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
-  }
-
-  let preset = getInferencePreset(settings)
-  if (preset && overrides) {
-    preset = Object.assign({}, preset, overrides)
-  }
-
-  prompt = replaceUniversalTags(prompt, preset.modelFormat)
-
-  inferenceCallbacks.set(requestId, onTick)
-
-  const res = await api.method<{ requestId: string; generating: boolean }>(
-    'post',
-    `/chat/inference-stream`,
-    {
-      requestId,
-      user,
-      prompt,
-      imageData: opts.image,
-      jsonSchema: opts.jsonSchema,
-      settings: { ...preset, stream: true },
-    }
-  )
-
-  if (res.error) {
-    onTick(res.error, 'error')
-  }
-
-  if (!res.result?.generating) {
-    inferenceCallbacks.delete(requestId)
-  }
-}
-
-export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
-  if (!format) {
-    const preset = getInferencePreset()
-    format = preset.modelFormat || 'Alpaca'
-  }
-
-  return replaceTags(prompt, format)
-}
-
-export function getInferencePreset(
-  settings?: Partial<AppSchema.GenSettings>
-): Partial<AppSchema.GenSettings> {
-  if (settings) return settings
-  const { user } = userStore.getState()
-  if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return {}
-  }
-
-  const preset = getUserPreset(user?.defaultPreset)
-  const fallback = settingStore.getState().config.subs.find((s) => s.preset.isDefaultSub)
-
-  return preset || fallback?.preset || {}
-}
-
-export async function guidance<T = any>(
-  opts: InferenceOpts & {
-    requestId?: string
-    presetId?: string
-    previous?: any
-    lists?: Record<string, string[]>
-    placeholders?: Record<string, string | string[]>
-    rerun?: string[]
-  }
-): Promise<T> {
-  const { prompt, maxTokens, settings, previous, lists, rerun, placeholders } = opts
-  const requestId = opts.requestId || v4()
-  const { user } = userStore.getState()
-
-  if (!user) {
-    throw new Error(`Could not get user settings. Refresh and try again.`)
-  }
-
-  const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
-    requestId,
-    user,
-    presetId: opts.presetId,
-    settings: opts.presetId ? undefined : getInferencePreset(settings),
-    prompt,
-    maxTokens,
-    previous,
-    lists,
-    placeholders,
-    reguidance: rerun,
-  })
-
-  if (res.error) {
-    throw new Error(res.error)
-  }
-
-  return res.result!.values
-}
 
 export async function swapMessage(msg: AppSchema.ChatMessage, text: string, retries: string[]) {
   return swapMessageProps(msg, { msg: text, retries })
@@ -262,166 +70,10 @@ export async function getMessages(chatId: string, before: string) {
   return res
 }
 
-type EventKind =
-  | 'send-event:world'
-  | 'send-event:character'
-  | 'send-event:hidden'
-  | 'send-event:ooc'
-
-function isEventOpts(opts: GenerateOpts): opts is { kind: EventKind; text: string } {
-  return (
-    opts.kind.startsWith('send-event:') &&
-    ['world', 'character', 'hidden', 'ooc'].includes(opts.kind.split(':')[1])
-  )
-}
-
-export type GenerateOpts =
-  /**
-   * A user sending a new message
-   */
-  | { kind: 'send'; text: string }
-  | { kind: EventKind; text: string }
-  | { kind: 'send-noreply'; text: string }
-  | { kind: 'ooc'; text: string }
-  /**
-   * A user request a message from a character
-   */
-  | { kind: 'request'; characterId: string }
-  /**
-   * Either:
-   * - The last message in the chat is a user message so we are going to generate a new response
-   * - The last message in the chat is a bot message so we are going to re-generate a response and update the 'replacingId' chat message
-   */
-  | { kind: 'retry'; messageId?: string }
-  /**
-   * The last message in the chat is a bot message and we want to generate more text for this message.
-   */
-  | { kind: 'continue'; retry?: boolean }
-  /**
-   * Generate a message on behalf of the user
-   */
-  | { kind: 'self' }
-  | { kind: 'summary' }
-  | { kind: 'chat-query'; text: string; schema?: JsonField[] }
-
-export async function generateResponse(
-  opts: GenerateOpts,
-  onTick?: (msg: string, state: InferenceState) => any
-) {
-  const { active } = chatStore.getState()
-
-  if (!active) {
-    return localApi.error('No active chat. Try refreshing.')
-  }
-
-  if (
-    opts.kind === 'ooc' ||
-    opts.kind === 'send-noreply' ||
-    opts.kind === 'send-event:ooc' ||
-    // allow events to be sent without a reply in multi-bot chats
-    (isEventOpts(opts) && !active.replyAs)
-  ) {
-    return createMessage(active.chat._id, opts)
-  }
-
-  const activePrompt = await createActiveChatPrompt(opts).catch((err) => ({ err }))
-  if ('err' in activePrompt) {
-    console.error(activePrompt.err)
-    return localApi.error(activePrompt.err.message || activePrompt.err)
-  }
-
-  const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
-
-  // const embedWarnings: string[] = []
-  // if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0)
-  //   embedWarnings.push('chat history')
-  // if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('document')
-
-  // if (embedWarnings.length) {
-  //   toastStore.warn(
-  //     `Embedding from ${embedWarnings.join(
-  //       ' and '
-  //     )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
-  //   )
-  // }
-
-  const jsonSchema = opts.kind === 'chat-query' ? opts.schema : undefined
-  const request: GenerateRequestV2 = {
-    requestId: v4(),
-    kind: opts.kind,
-    chat: entities.chat,
-    user: entities.user,
-    char: removeAvatar(entities.char),
-    sender: removeAvatar(entities.profile),
-    members: entities.members.map(removeAvatar),
-    parts: prompt.parts,
-    text:
-      opts.kind === 'chat-query' ||
-      opts.kind === 'send' ||
-      opts.kind === 'send-event:world' ||
-      opts.kind === 'send-event:character' ||
-      opts.kind === 'send-event:hidden'
-        ? opts.text
-        : undefined,
-    lines: prompt.lines,
-    settings: entities.settings,
-    replacing: props.replacing,
-    continuing: props.continuing,
-    replyAs: removeAvatar(props.replyAs),
-    impersonate: removeAvatar(props.impersonate),
-    characters: removeAvatars(entities.characters),
-    parent: props.parent?._id,
-    lastMessage: entities.lastMessage?.date,
-    jsonSchema,
-    chatEmbeds,
-    userEmbeds,
-    jsonValues: props.json,
-  }
-
-  if (
-    opts.kind === 'send' ||
-    opts.kind === 'request' ||
-    opts.kind === 'continue' ||
-    opts.kind === 'retry' ||
-    opts.kind === 'self' ||
-    opts.kind === 'chat-query'
-  ) {
-    request.imageData = entities.imageData
-  }
-
-  if (window.flags.debug) {
-    toastStore.info(
-      `[${request.kind}] parent:${request.parent?.slice(0, 4) || '----'} | repl:${
-        props.replacing?._id.slice(0, 4) || '----'
-      }`,
-      300
-    )
-  }
-
-  const res = await api.post<{ requestId: string; messageId?: string }>(
-    `/chat/${entities.chat._id}/generate`,
-    request
-  )
-
-  if (res.result && onTick) {
-    inferenceCallbacks.set(request.requestId, onTick)
-  }
-
-  return res
-}
-
-export function inferenceSubscribe<T = any>(requestId: string, handler: TickHandler<T>) {
-  inferenceCallbacks.set(requestId, handler)
-
-  setTimeout(() => {
-    inferenceCallbacks.delete(requestId)
-  }, 60000 * 5)
-}
-
 async function getActiveTemplateParts() {
   const { active } = chatStore.getState()
 
-  const { parts, entities, props } = await getActivePromptOptions({ kind: 'summary' })
+  const { parts, entities, props } = await botGen.getActivePromptOptions({ kind: 'summary' })
   const toLine = messageToLine({
     chars: entities.characters,
     members: entities.members,
@@ -441,367 +93,6 @@ async function getActiveTemplateParts() {
   }
 
   return opts
-}
-
-async function getActivePromptOptions(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
-) {
-  const { active } = chatStore.getState()
-
-  if (!active) {
-    throw new Error('No active chat. Try refreshing')
-  }
-
-  const props = await getGenerateProps(opts, active)
-  const entities = props.entities
-
-  const resolvedScenario = resolveScenario(entities.chat, entities.char, entities.scenarios || [])
-
-  const encoder = await getEncoder()
-
-  const promptOpts = {
-    kind: opts.kind,
-    char: entities.char,
-    characters: entities.characters,
-    chat: entities.chat,
-    sender: entities.profile,
-    members: entities.members,
-    replyAs: props.replyAs,
-    user: entities.user,
-    userEmbeds: [],
-    book: entities.book,
-    continue: props.continue,
-    impersonate: entities.impersonating,
-    chatEmbeds: [],
-    settings: entities.settings,
-    messages: entities.messages,
-    lastMessage: entities.lastMessage?.date || '',
-    resolvedScenario,
-    jsonValues: props.json,
-  }
-
-  const lines = await getLinesForPrompt(promptOpts, encoder)
-  const parts = await buildPromptParts(promptOpts, lines, encoder)
-
-  return { lines, parts, entities, props }
-}
-
-async function createActiveChatPrompt(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' | 'send-event:ooc' }>
-) {
-  const { active } = chatStore.getState()
-  const { ui } = userStore.getState()
-
-  if (!active) {
-    throw new Error('No active chat. Try refreshing')
-  }
-
-  const props = await getGenerateProps(opts, active)
-  const entities = props.entities
-
-  const resolvedScenario = resolveScenario(entities.chat, entities.char, entities.scenarios || [])
-
-  const chatEmbeds: UserEmbed<{ name: string }>[] = []
-  const userEmbeds: UserEmbed[] = []
-
-  const text =
-    opts.kind === 'send' ||
-    opts.kind === 'send-event:world' ||
-    opts.kind === 'send-event:character' ||
-    opts.kind === 'send-event:hidden'
-      ? opts.text
-      : entities.lastMessage?.msg
-
-  const encoder = await getEncoder()
-  const prompt = await createPromptParts(
-    {
-      kind: opts.kind,
-      char: entities.char,
-      sender: entities.profile,
-      chat: entities.chat,
-      user: entities.user,
-      members: entities.members.concat([entities.profile]),
-      continue: props?.continue,
-      book: entities.book,
-      retry: props?.retry,
-      settings: entities.settings,
-      messages: props.messages,
-      replyAs: props.replyAs,
-      characters: entities.characters,
-      impersonate: props.impersonate,
-      lastMessage: entities.lastMessage?.date || '',
-      trimSentences: ui.trimSentences,
-      chatEmbeds,
-      userEmbeds,
-      resolvedScenario,
-      jsonValues: props.json,
-    },
-    encoder
-  )
-
-  if (entities.settings.modelFormat) {
-    prompt.template.parsed = replaceTags(prompt.template.parsed, entities.settings.modelFormat)
-  }
-
-  const embedLines = (prompt.template.history || prompt.lines).slice()
-
-  const { users, chats } = await getRetrievalBreakpoint(text, entities, props.messages, embedLines)
-
-  if (chats?.messages.length) {
-    for (const chat of chats.messages) {
-      const name =
-        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
-        entities.members.find((m) => m._id === chat.entityId)?.handle ||
-        'You'
-
-      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
-    }
-  }
-
-  if (users?.messages.length) {
-    for (const chat of users.messages) {
-      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
-    }
-  }
-
-  if (opts.kind === 'chat-query') {
-    prompt.lines.push(`Chat Query: ${opts.text}`)
-  }
-
-  return { prompt, props, entities, chatEmbeds, userEmbeds }
-}
-
-async function getRetrievalBreakpoint(
-  text: string | undefined,
-  { settings, chat }: PromptEntities,
-  messages: AppSchema.ChatMessage[],
-  lines: string[]
-) {
-  if (!text) return { users: undefined, chats: undefined }
-
-  const encoder = await getEncoder()
-  let removed = 0
-  let count = 0
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[lines.length - 1 - i]
-    const size = await encoder(line)
-    removed += size
-    count++
-
-    if (removed > settings.maxContextLength!) break
-  }
-
-  const users = text && chat.userEmbedId ? await embedApi.query(chat.userEmbedId, text) : undefined
-
-  const bp = messages[messages.length - count - 1]
-  if (!bp) return { users, chats: undefined }
-
-  const chats = settings.memoryChatEmbedLimit
-    ? await embedApi.queryChat(
-        chat._id,
-        text,
-        bp.createdAt,
-        messages.map((m) => m._id)
-      )
-    : undefined
-  return { users, chats }
-}
-
-export type GenerateProps = {
-  retry?: AppSchema.ChatMessage
-  continuing?: AppSchema.ChatMessage
-  replacing?: AppSchema.ChatMessage
-  lastMessage?: AppSchema.ChatMessage
-  entities: GenerateEntities
-  replyAs: AppSchema.Character
-  messages: AppSchema.ChatMessage[]
-  continue?: string
-  impersonate?: AppSchema.Character
-  parent?: AppSchema.ChatMessage
-  json: Record<string, any>
-}
-
-async function getGenerateProps(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' } | { kind: 'send-noreply' }>,
-  active: NonNullable<ChatState['active']>
-): Promise<GenerateProps> {
-  const entities = await getPromptEntities()
-
-  const json = entities.messages.reduce<Record<string, any>>(
-    (prev, curr) => Object.assign(prev, curr.json?.values || {}),
-    {}
-  )
-
-  const temporary = getServiceTempConfig(entities.settings.service)
-  if (!entities.settings.temporary) {
-    entities.settings.temporary = {}
-  }
-
-  for (const temp of temporary) {
-    entities.settings.temporary[temp.field] = temp.value
-  }
-
-  const [secondLastMsg, lastMsg] = entities.messages.slice(-2)
-  const lastCharMsg = entities.messages.reduceRight<AppSchema.ChatMessage | void>((prev, curr) => {
-    if (prev) return prev
-    if (curr.characterId) return curr
-  }, undefined)
-
-  const props: GenerateProps = {
-    entities,
-    replyAs: entities.char,
-    messages: entities.messages.slice(),
-    impersonate: entities.impersonating,
-    parent: getMessageParent(opts.kind, entities.messages),
-    json,
-  }
-
-  if ('text' in opts) {
-    const parsed = await parseTemplate(opts.text, {
-      char: active.char,
-      characters: entities.characters,
-      chat: active.chat,
-      replyAs: props.replyAs,
-      sender: entities.profile,
-      impersonate: props.impersonate,
-      repeatable: true,
-      lastMessage: entities.lastMessage?.date,
-      jsonValues: props.json,
-    })
-    opts.text = parsed.parsed
-  }
-
-  const getBot = (id: string) => {
-    if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
-    return entities.chatBots.find((ch) => ch._id === id)!
-  }
-
-  switch (opts.kind) {
-    case 'retry': {
-      props.impersonate = entities.impersonating
-      if (opts.messageId) {
-        // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
-        const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
-        const replacing = entities.messages[index]
-
-        // Retrying an impersonated message - We'll use the "auto-reply as" or the "main character"
-        if (replacing?.userId) {
-          props.replyAs = getBot(active.replyAs || active.char._id)
-          props.messages = entities.messages
-        } else {
-          props.replyAs = getBot(replacing.characterId || active.char._id)
-          props.replacing = replacing
-          props.messages = entities.messages.slice(0, index)
-          const replaceParent = entities.messages[index - 1]
-          props.parent = replaceParent
-        }
-      } else if (!lastMsg && secondLastMsg.characterId) {
-        // Case: Replacing the first message (i.e. the greeting)
-        props.replyAs = getBot(active.replyAs || active.char._id)
-        props.replacing = secondLastMsg
-      } else if (lastMsg?.characterId && !lastMsg.userId) {
-        // Case: When the user clicked on their own message. Probably after deleting a bot response
-        props.retry = secondLastMsg
-        props.replacing = lastMsg
-        props.replyAs = getBot(lastMsg.characterId)
-        props.messages = entities.messages.slice(0, -1)
-      } else {
-        // Case: Clicked on a bot response to regenerate
-        props.retry = lastMsg
-        props.replyAs = getBot(active.replyAs || active.char._id)
-      }
-
-      break
-    }
-
-    case 'continue': {
-      if (!lastCharMsg?.characterId) throw new Error(`Cannot continue user message`)
-      props.continuing = lastMsg
-      props.replyAs = getBot(lastCharMsg?.characterId)
-      props.continue = lastCharMsg.msg
-      if (opts.retry) {
-        const msgState = msgStore.getState()
-        props.continuing = { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg }
-        props.continue = msgState.textBeforeGenMore ?? lastMsg.msg
-        props.messages = [
-          ...props.messages.slice(0, props.messages.length - 1),
-          { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg },
-        ]
-      }
-      break
-    }
-
-    case 'send':
-    case 'send-event:world':
-    case 'send-event:character':
-    case 'send-event:hidden': {
-      // If the chat is a single-user chat, it is always in 'auto-reply' mode
-      // Ensure the autoReplyAs parameter is set for single-bot chats
-      const isMulti = getActiveBots(entities.chat, entities.characters).length > 1
-      if (!isMulti) entities.autoReplyAs = entities.char._id
-
-      if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
-      props.impersonate = entities.impersonating
-      props.replyAs = getBot(entities.autoReplyAs)
-      props.messages.push(
-        emptyMsg(entities.chat, {
-          msg: opts.text,
-          userId: entities.user._id,
-          characterId: entities.impersonating?._id,
-        })
-      )
-      break
-    }
-
-    case 'summary': {
-      break
-    }
-
-    case 'request': {
-      props.replyAs = getBot(opts.characterId)
-    }
-  }
-
-  if (!props.replyAs) throw new Error(`Could not find character to reply as`)
-
-  // Remove avatar from generate requests
-  entities.char = { ...entities.char, avatar: undefined }
-  props.replyAs = { ...props.replyAs, avatar: undefined }
-
-  return props
-}
-
-/**
- * Create a user message that does not generate a bot response
- */
-async function createMessage(
-  chatId: string,
-  opts: { kind: 'ooc' | 'send-noreply' | EventKind; text: string }
-) {
-  const props = await getPromptEntities()
-  const { impersonating } = getStore('character').getState()
-  const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
-
-  const text = await parseTemplate(opts.text, {
-    char: props.char,
-    chat: props.chat,
-    sender: props.profile,
-    impersonate: impersonating,
-    replyAs: props.char,
-    lastMessage: props.lastMessage?.date,
-    jsonValues: props.messages.reduce(
-      (prev, curr) => Object.assign(prev, curr.json?.values || {}),
-      {}
-    ),
-  })
-
-  return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
-    text: text.parsed,
-    kind: opts.kind,
-    impersonate,
-    parent: getMessageParent(opts.kind, props.messages)?._id,
-  })
 }
 
 export async function deleteMessages(
@@ -843,208 +134,6 @@ export async function deleteMessages(
   return localApi.result({ success: true })
 }
 
-type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
-
-export async function getPromptEntities(): Promise<PromptEntities> {
-  if (isLoggedIn()) {
-    const entities = getAuthedPromptEntities()
-    if (!entities) throw new Error(`Could not collate data for prompting`)
-    return {
-      ...entities,
-      messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-      lastMessage: getLastUserMessage(entities.messages),
-    }
-  }
-
-  const entities = await getGuestEntities()
-  if (!entities) throw new Error(`Could not collate data for prompting`)
-  return {
-    ...entities,
-    messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-    lastMessage: getLastUserMessage(entities.messages),
-  }
-}
-
-async function getGuestEntities() {
-  const { active } = getStore('chat').getState()
-  if (!active) return
-  const { msgs, messageHistory, attachments } = getStore('messages').getState()
-
-  const chat = active.chat
-  const char = active.char
-
-  if (!chat || !char) return
-
-  const book = chat?.memoryId
-    ? await loadItem('memory').then((res) => res.find((mem) => mem._id === chat.memoryId))
-    : undefined
-
-  const allScenarios = await loadItem('scenario')
-  const profile = await loadItem('profile')
-  const user = await loadItem('config')
-  const settings = await getGuestPreset(user, chat)
-  const scenarios = allScenarios?.filter(
-    (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
-  )
-
-  const { impersonating, chatChars } = getStore('character').getState()
-
-  const characters = getBotsForChat(chat, char, chatChars.map)
-
-  return {
-    chat,
-    char,
-    user,
-    profile,
-    book,
-    messages: messageHistory.concat(msgs),
-    settings,
-    members: [profile] as AppSchema.Profile[],
-    chatBots: chatChars.list,
-    autoReplyAs: active.replyAs,
-    characters,
-    impersonating,
-    scenarios,
-    imageData: attachments[chat._id]?.image,
-  }
-}
-
-function getAuthedPromptEntities() {
-  const { active, chatProfiles: members } = getStore('chat').getState()
-  if (!active) return
-
-  const { profile, user } = getStore('user').getState()
-  if (!profile || !user) return
-
-  const chat = active.chat
-  const char = active.char
-
-  const book = getStore('memory')
-    .getState()
-    .books.list.find((book) => book._id === chat.memoryId)
-
-  const { msgs, messageHistory, attachments } = getStore('messages').getState()
-  const settings = getAuthGenSettings(chat, user)!
-  const scenarios = getStore('scenario')
-    .getState()
-    .scenarios.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
-
-  const { impersonating, chatChars } = getStore('character').getState()
-
-  const characters = getBotsForChat(chat, char, chatChars.map)
-
-  return {
-    chat,
-    char,
-    user,
-    profile,
-    book,
-    messages: messageHistory.concat(msgs),
-    settings,
-    members,
-    chatBots: chatChars.list,
-    autoReplyAs: active.replyAs,
-    characters,
-    impersonating,
-    scenarios,
-    imageData: attachments[chat._id]?.image,
-  }
-}
-
-function getAuthGenSettings(
-  chat?: AppSchema.Chat,
-  user?: AppSchema.User
-): Partial<AppSchema.GenSettings> | undefined {
-  if (!chat) {
-    chat = getStore('chat').getState().active?.chat!
-  }
-
-  if (!user) {
-    user = getStore('user').getState().user!
-  }
-
-  if (!chat || !user) {
-    const msg = `Cannot retrieve active preset ${!chat ? '[chat]' : ''} ${!user ? '[user]' : ''}`
-    toastStore.error(msg)
-    throw new Error(msg)
-  }
-
-  const { presets, templates } = getStore('presets').getState()
-  const preset = deepClone(getChatPreset(chat, user, presets))
-
-  if (preset.promptTemplateId) {
-    const template = templates.find((t) => t._id === preset.promptTemplateId)
-    preset.gaslight = template?.template || preset.gaslight
-  }
-
-  applySubscriptionAdjustment(preset)
-
-  return preset
-}
-
-function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
-  if (preset.service !== 'agnaistic') return preset
-
-  const subs = settingStore.getState().config.subs
-  const match = subs.find((sub) => sub._id === preset.registered?.agnaistic?.subscriptionId)
-  if (!match) return preset
-
-  return {
-    ...preset,
-    maxContextLength: Math.min(preset.maxContextLength!, match.preset.maxContextLength!),
-    maxTokens: Math.min(preset.maxTokens!, match.preset.maxTokens!),
-  }
-}
-
-async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
-  // The server does not store presets for users
-  // Override the `genSettings` property with the locally stored preset data if found
-  const presets = await loadItem('presets')
-  return getChatPreset(chat, user, presets)
-}
-
-function emptyMsg(
-  chat: AppSchema.Chat,
-  props: Partial<AppSchema.ChatMessage>
-): AppSchema.ChatMessage {
-  return {
-    _id: '',
-    kind: 'chat-message',
-    chatId: chat._id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    msg: '',
-    retries: [],
-    ...props,
-  }
-}
-
-function removeAvatar<T extends AppSchema.Character | AppSchema.Profile | undefined>(char?: T): T {
-  if (!char) return undefined as T
-  return { ...char, avatar: undefined }
-}
-
-function removeAvatars(chars: Record<string, AppSchema.Character>) {
-  const next: Record<string, AppSchema.Character> = {}
-
-  for (const id in chars) {
-    next[id] = { ...chars[id], avatar: undefined }
-  }
-
-  return next
-}
-
-/**
- *
- */
-function getLastUserMessage(messages: AppSchema.ChatMessage[]) {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i]
-    if (!msg.userId) continue
-    return { msg: msg.msg, date: msg.createdAt, id: msg._id, parent: msg.parent }
-  }
-}
-
 function messageToLine(opts: {
   chars: Record<string, AppSchema.Character>
   sender: AppSchema.Profile
@@ -1062,41 +151,6 @@ function messageToLine(opts: {
   }
 }
 
-function getMessageParent(
-  kind: GenerateOpts['kind'],
-  messages: AppSchema.ChatMessage[]
-): AppSchema.ChatMessage | undefined {
-  const i = messages.length
-
-  switch (kind) {
-    case 'retry': {
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const msg = messages[i]
-        if (!msg.userId) continue
-        return msg
-      }
-    }
-
-    case 'send-noreply':
-    case 'send-event:ooc':
-    case 'send-event:character':
-    case 'send-event:hidden':
-    case 'send-event:world':
-    case 'send':
-    case 'request':
-    case 'self':
-    case 'ooc': {
-      return messages[i - 1]
-    }
-
-    case 'continue': {
-      return
-    }
-  }
-}
-
-const inferenceCallbacks = new Map<string, TickHandler>()
-
 /**
  * Partials
  */
@@ -1104,7 +158,7 @@ subscribe(
   'inference-partial',
   { partial: 'string', requestId: 'string', output: 'any?' },
   (body) => {
-    const cb = inferenceCallbacks.get(body.requestId)
+    const cb = genApi.callbacks.get(body.requestId)
     if (!cb) return
 
     cb(body.partial, 'partial', body.output)
@@ -1115,7 +169,7 @@ subscribe(
   'message-partial',
   { requestId: 'string', partial: 'string', json: 'boolean?' },
   (body) => {
-    const cb = inferenceCallbacks.get(body.requestId)
+    const cb = genApi.callbacks.get(body.requestId)
     if (!cb) return
 
     cb(body.partial, 'partial')
@@ -1126,43 +180,43 @@ subscribe(
  * Completions
  */
 subscribe('inference', { requestId: 'string', response: 'string', output: 'any?' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.response, 'done', body.output)
-  inferenceCallbacks.delete(body.requestId)
+  genApi.callbacks.delete(body.requestId)
 })
 
 subscribe('message-created', { requestId: 'string', msg: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.msg, 'done')
-  inferenceCallbacks.delete(body.requestId)
+  genApi.callbacks.delete(body.requestId)
 })
 
 subscribe('chat-query', { requestId: 'string', response: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.response, 'done')
-  inferenceCallbacks.delete(body.requestId)
+  genApi.callbacks.delete(body.requestId)
 })
 
 /**
  * Errors
  */
 subscribe('message-error', { requestId: 'string', error: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.error, 'error')
-  inferenceCallbacks.delete(body.requestId)
+  genApi.callbacks.delete(body.requestId)
   toastStore.error(`Inference failed: ${body.error}`)
 })
 
 subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.warning, 'warning')
@@ -1170,7 +224,7 @@ subscribe('inference-warning', { requestId: 'string', warning: 'string' }, (body
 })
 
 subscribe('inference-error', { requestId: 'string', error: 'string' }, (body) => {
-  const cb = inferenceCallbacks.get(body.requestId)
+  const cb = genApi.callbacks.get(body.requestId)
   if (!cb) return
 
   cb(body.error, 'error')

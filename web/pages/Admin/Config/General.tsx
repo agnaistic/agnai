@@ -1,5 +1,5 @@
 import { Accessor, Component, Setter, createEffect, on } from 'solid-js'
-import { Card } from '/web/shared/Card'
+import { Card, Pill } from '/web/shared/Card'
 import Select from '/web/shared/Select'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
@@ -8,12 +8,16 @@ import { adminStore } from '/web/store'
 export const General: Component<{ slots: Accessor<string>; setSlots: Setter<string> }> = (
   props
 ) => {
+  let slotsRef: HTMLInputElement
+
   const state = adminStore()
 
-  const formatSlots = (ev: FormEvent) => {
+  const formatSlots = () => {
     try {
-      const obj = JSON.parse(ev.currentTarget.value || '{}')
-      props.setSlots(JSON.stringify(obj, null, 2))
+      const obj = JSON.parse(slotsRef?.value || '{}')
+      const formatted = JSON.stringify(obj, null, 2)
+      props.setSlots(formatted)
+      slotsRef.value = formatted
     } catch (ex) {}
   }
 
@@ -69,10 +73,17 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
 
         <TextInput
           fieldName="slots"
-          label="Slots Configuration"
+          ref={(r) => (slotsRef = r)}
+          label={
+            <div class="flex items-center gap-2">
+              Slots Configuration{' '}
+              <Pill small onClick={formatSlots}>
+                Format
+              </Pill>
+            </div>
+          }
           helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
           value={props.slots()}
-          onInput={formatSlots}
           isMultiline
         />
       </Card>

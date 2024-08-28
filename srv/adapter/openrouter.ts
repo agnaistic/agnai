@@ -1,13 +1,13 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { streamCompletion } from './chat-completion'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
-import { sanitiseAndTrim } from '../api/chat/common'
+import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
+import { streamCompletion } from './stream'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`

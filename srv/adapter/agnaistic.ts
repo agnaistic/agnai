@@ -1,4 +1,3 @@
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { sendOne } from '../api/ws'
 import { config } from '../config'
 import { store } from '../db'
@@ -25,6 +24,7 @@ import { AppSchema } from '/common/types'
 import { parseStops } from '/common/util'
 import { getTextgenCompletion } from './dispatch'
 import { handleVenus } from './venus'
+import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 
 export async function getSubscriptionPreset(
   user: AppSchema.User,

@@ -1,7 +1,7 @@
 import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { setAssetPrefix } from '../shared/util'
+import { setAssetPrefix, storage } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
 import { usersApi } from './data/user'
@@ -54,7 +54,7 @@ const HORDE_URL = `https://aihorde.net/api/v2`
 const FLAG_KEY = 'agnai-flags'
 
 const initState: SettingState = {
-  anonymize: false,
+  anonymize: JSON.parse(storage.localGetItem('agnai-anonymize') || 'false'),
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
@@ -212,6 +212,7 @@ export const settingStore = createStore<SettingState>(
     },
 
     toggleAnonymize({ anonymize }) {
+      storage.localSetItem('agnai-anonymize', JSON.stringify(!anonymize))
       return { anonymize: !anonymize }
     },
     showImage(
@@ -353,7 +354,7 @@ async function loadSlotConfig(serverSlots?: string) {
     const devProvider = useDev ? server?.dev_provider : undefined
     const inject = devInject || server.inject || config.inject
 
-    server.provider = devProvider || slots.provider
+    server.provider = devProvider || server.provider || slots.provider
 
     if (server.provider && inject) {
       await wait(0.2)
