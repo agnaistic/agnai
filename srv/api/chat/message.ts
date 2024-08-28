@@ -568,78 +568,82 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const schema = body.settings.jsonSource === 'character' ? body.char.json : body.settings.json
   const hydrator = body.settings.jsonEnabled && schema ? jsonHydrator(schema) : undefined
-
-  const { stream, adapter, ...entities } = await createChatStream(
-    { ...body, chat, replyAs, requestId, chatSchema: schema },
-    log,
-    guest
-  )
-
-  log.setBindings({ adapter })
-
-  let generated = ''
+  let generated = body.response || ''
   let retries: string[] = []
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
-
+  let adapter = 'local'
+  let meta = {}
   let hydration: HydratedJson | undefined
   let jsonPartial: any
 
-  for await (const gen of stream) {
-    if (typeof gen === 'string') {
-      generated = gen
-      continue
-    }
+  if (body.response === undefined) {
+    const { stream, ...entities } = await createChatStream(
+      { ...body, chat, replyAs, requestId, chatSchema: schema },
+      log,
+      guest
+    )
 
-    if ('tokens' in gen) {
-      generated = gen.tokens as string
-    }
+    log.setBindings({ adapter })
 
-    if ('gens' in gen) {
-      retries = gen.gens
-      break
-    }
+    adapter = entities.adapter
+    meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
-    if ('partial' in gen) {
-      if (entities.json && hydrator) {
-        jsonPartial = parsePartialJson(gen.partial) || jsonPartial
-        hydration = hydrator(jsonPartial || {})
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        generated = gen
+        continue
       }
-      sendGuest(guest, {
-        type: 'message-partial',
-        kind: body.kind,
-        partial: hydration ? hydration.response : gen.partial,
-        adapter,
-        chatId,
-        json: hydration,
-      })
 
-      continue
+      if ('tokens' in gen) {
+        generated = gen.tokens as string
+      }
+
+      if ('gens' in gen) {
+        retries = gen.gens
+        break
+      }
+
+      if ('partial' in gen) {
+        if (entities.json && hydrator) {
+          jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+          hydration = hydrator(jsonPartial || {})
+        }
+        sendGuest(guest, {
+          type: 'message-partial',
+          kind: body.kind,
+          partial: hydration ? hydration.response : gen.partial,
+          adapter,
+          chatId,
+          json: hydration,
+        })
+
+        continue
+      }
+
+      if ('meta' in gen) {
+        Object.assign(meta, gen.meta)
+        continue
+      }
+
+      if ('prompt' in gen) {
+        sendGuest(guest, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
+        continue
+      }
+
+      if ('error' in gen) {
+        error = true
+        sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
+        break
+      }
+
+      if ('warning' in gen) {
+        sendGuest(guest, { type: 'message-warning', requestId, warning: gen.warning })
+        continue
+      }
     }
 
-    if ('meta' in gen) {
-      Object.assign(meta, gen.meta)
-      continue
-    }
-
-    if ('prompt' in gen) {
-      sendGuest(guest, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
-      continue
-    }
-
-    if ('error' in gen) {
-      error = true
-      sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
-      break
-    }
-
-    if ('warning' in gen) {
-      sendGuest(guest, { type: 'message-warning', requestId, warning: gen.warning })
-      continue
-    }
+    if (error) return
   }
-
-  if (error) return
 
   let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   if (hydration?.response) {
