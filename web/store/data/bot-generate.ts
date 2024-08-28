@@ -504,8 +504,6 @@ async function createMessage(
   opts: {
     kind: 'ooc' | 'send-noreply' | EventKind
     text: string
-    char?: AppSchema.Character
-    bot?: boolean
   }
 ) {
   const props = await getPromptEntities()
@@ -516,7 +514,7 @@ async function createMessage(
     char: props.char,
     chat: props.chat,
     sender: props.profile,
-    impersonate: opts.char || impersonating,
+    impersonate: impersonating,
     replyAs: props.char,
     lastMessage: props.lastMessage?.date,
     jsonValues: props.messages.reduce(
@@ -528,9 +526,8 @@ async function createMessage(
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
     text: text.parsed,
     kind: opts.kind,
-    impersonate: opts.char || impersonate,
+    impersonate: impersonate,
     parent: getMessageParent(opts.kind, props.messages)?._id,
-    bot: opts.bot,
   })
 }
 
