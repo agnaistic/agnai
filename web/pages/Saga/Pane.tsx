@@ -83,8 +83,6 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
 
 export const SagaPane: Component<{ close: () => void }> = (props) => {
   const [search, setSearch] = useSearchParams()
-
-  let templateRef: HTMLSelectElement
   const tabs = ['Template', 'Session']
 
   const state = sagaStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
@@ -293,7 +291,6 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
                   items={items()}
                   value={templateId()}
                   onChange={(ev) => setTemplateId(ev.value)}
-                  ref={(ref) => (templateRef = ref)}
                 />
                 <Button onClick={loadTemplate}>Load</Button>
               </div>
