@@ -108,6 +108,8 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
       yield { error: `request failed: Received empty response. Try again.` }
       return
     }
+
+    yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
   } catch (ex: any) {
     yield { error: `request failed: ${ex.message}` }
     return
