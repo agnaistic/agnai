@@ -1,5 +1,6 @@
 import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
+import { setEmitter } from '/common/requests/util'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
@@ -15,6 +16,7 @@ type ClientSocket = WebSocket & { pingTimeout: any }
 let socket: ClientSocket
 
 createSocket()
+setEmitter(localEmit)
 
 function createSocket() {
   const socketUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://')

@@ -1,5 +1,36 @@
 import { AppSchema } from '../types'
 
+type Notifier = {
+  info: (msg: string) => void
+  warn: (msg: string) => void
+  error: (msg: string) => void
+  success: (msg: string) => void
+}
+
+let notifier: Notifier = {
+  info(_msg) {},
+  warn(_msg) {},
+  error(_msg) {},
+  success(_msg) {},
+}
+let emitter = (_payload: { type: string }) => {}
+
+export function setEmitter(emit: (payload: { type: string }) => void) {
+  emitter = emit
+}
+
+export function emit(payload: { type: string }) {
+  emitter(payload)
+}
+
+export function setNotifier(notify: Notifier) {
+  notifier = notify
+}
+
+export function notify() {
+  return notifier
+}
+
 export function sanitiseAndTrim(
   text: string,
   prompt: string,

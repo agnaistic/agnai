@@ -3,9 +3,7 @@ import { ThirdPartyFormat } from '../adapters'
 import { requestStream } from './stream'
 import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
-import { toastStore } from '/web/store'
-import { localEmit } from '/web/store/socket'
-import { sanitiseAndTrim } from './util'
+import { notify, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 
 type Role = 'user' | 'assistant' | 'system'
@@ -161,12 +159,12 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
       const parsed = tryParse<Completion<AsyncDelta>>(event.data, prev)
       if (!parsed) continue
 
-      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don't have dangling data
+      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don'ttoastStoredangling data
       prev = ''
 
       const { choices, ...evt } = parsed
       if (!choices || !choices[0]) {
-        toastStore.warn(`[local] Received invalid SSE during stream`)
+        notify().warn(`[local] Received invalid SSE during stream`)
 
         const message = evt.error?.message
           ? `local interrupted the response: ${evt.error.message}`
@@ -177,7 +175,6 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
           return
         }
 
-        localEmit({ type: 'notification', level: 'warn', message })
         break
       }
 
@@ -196,7 +193,7 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
       }
     }
   } catch (err: any) {
-    toastStore.error(`local streaming request failed`)
+    notify().error(`local streaming request failed`)
     yield { error: `local streaming request failed: ${err.message}` }
     return
   }

@@ -2,7 +2,6 @@ import { handleOAI } from './openai'
 import { getLocalPayload } from './payloads'
 import { PayloadOpts } from './types'
 import { GenerateRequestV2 } from '/srv/adapter/type'
-import { localApi } from '/web/store/data/storage'
 import { localEmit } from '/web/store/socket'
 
 export async function handleLocalRequest(body: GenerateRequestV2, prompt: string) {
@@ -43,7 +42,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
         adapter: 'local',
         chatId: body.chat._id,
       })
-      return localApi.error(message)
+      return { error: message }
     }
 
     if ('warning' in gen) {
@@ -51,7 +50,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
     }
   }
 
-  return localApi.result({ response, requestId: body.requestId })
+  return { response, requestId: body.requestId }
 }
 
 function startRequest(request: GenerateRequestV2, prompt: string) {
