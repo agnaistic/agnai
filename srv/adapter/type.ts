@@ -82,6 +82,13 @@ export type GenerateRequestV2 = {
 
   chatEmbeds?: Array<Memory.UserEmbed<{ name: string }>>
   userEmbeds?: Memory.UserEmbed[]
+
+  /**
+   * For 'local requests'
+   * If the response is generated on the client, we pass the generated response here
+   * then pass the whole payload to the same endpoint, but skip the generation to re-use the same message creation logic
+   */
+  response?: string
 }
 
 export type GenerateOptions = {

@@ -131,7 +131,12 @@ export async function generateResponse(
   }
 
   if (useLocalRequest(entities.settings, entities.user._id)) {
-    return runLocalRequest(request, prompt.template.parsed)
+    const res = await handleLocalRequest(request, prompt.template.parsed)
+    if (res.result) {
+      request.response = res.result.response
+    } else {
+      return res
+    }
   }
 
   const res = await api.post<{ requestId: string; messageId?: string }>(
@@ -143,19 +148,6 @@ export async function generateResponse(
     genApi.callbacks.set(request.requestId, onTick)
   }
 
-  return res
-}
-
-async function runLocalRequest(req: GenerateRequestV2, prompt: string) {
-  const res = await handleLocalRequest(req, prompt)
-
-  if (res?.result) {
-    await createMessage(
-      req.chat._id,
-      { kind: 'send-noreply', text: res.result.response },
-      req.replyAs
-    )
-  }
   return res
 }
 
@@ -506,8 +498,12 @@ async function getGenerateProps(
  */
 async function createMessage(
   chatId: string,
-  opts: { kind: 'ooc' | 'send-noreply' | EventKind; text: string },
-  character?: AppSchema.Character
+  opts: {
+    kind: 'ooc' | 'send-noreply' | EventKind
+    text: string
+    char?: AppSchema.Character
+    bot?: boolean
+  }
 ) {
   const props = await getPromptEntities()
   const { impersonating } = getStore('character').getState()
@@ -517,7 +513,7 @@ async function createMessage(
     char: props.char,
     chat: props.chat,
     sender: props.profile,
-    impersonate: character || impersonating,
+    impersonate: opts.char || impersonating,
     replyAs: props.char,
     lastMessage: props.lastMessage?.date,
     jsonValues: props.messages.reduce(
@@ -529,8 +525,9 @@ async function createMessage(
   return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
     text: text.parsed,
     kind: opts.kind,
-    impersonate: character || impersonate,
+    impersonate: opts.char || impersonate,
     parent: getMessageParent(opts.kind, props.messages)?._id,
+    bot: opts.bot,
   })
 }
 

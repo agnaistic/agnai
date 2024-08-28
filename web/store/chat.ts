@@ -8,7 +8,7 @@ import { storage, toMap } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat as ChatData, chatsApi } from './data/chats'
-import { msgsApi } from './data/messages'
+import { getPromptEntities } from './data/common'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
@@ -530,7 +530,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!active) return
 
       const { msgs } = msgStore.getState()
-      const entities = await msgsApi.getPromptEntities()
+      const entities = await getPromptEntities()
 
       const encoder = await getEncoder()
       const replyAs = active.replyAs?.startsWith('temp-')

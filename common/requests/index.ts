@@ -21,11 +21,13 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
 
     if ('partial' in gen) {
       const prefix = body.kind === 'continue' ? `${body.continuing?.msg || ''} ` : ''
+      const partial = `${prefix}${gen.partial}`
+      response = partial
       localEmit({
         requestId: body.requestId,
         type: 'message-partial',
         kind: body.kind,
-        partial: `${prefix}${gen.partial}`,
+        partial,
         adapter: 'local',
         chatId: body.chat._id,
       })

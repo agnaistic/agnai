@@ -14,7 +14,7 @@ import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
-import { msgsApi } from '/web/store/data/messages'
+import { getActivePreset } from '/web/store/data/common'
 
 const helpMarkdown = neat`
 You can return many values using JSON schemas and control the structure of your response.
@@ -97,7 +97,7 @@ export const CharacterSchema: Component<{
         if (props.characterId) {
           json = chatStore.getState().active?.char.json
         } else if (props.presetId) {
-          const preset = msgsApi.getActivePreset()
+          const preset = getActivePreset()
           json = preset?.json
         }
 
