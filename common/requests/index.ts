@@ -42,7 +42,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
         adapter: 'local',
         chatId: body.chat._id,
       })
-      return { error: message }
+      return { error: message, result: undefined }
     }
 
     if ('warning' in gen) {
@@ -50,7 +50,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
     }
   }
 
-  return { response, requestId: body.requestId }
+  return { result: { response, requestId: body.requestId }, error: undefined }
 }
 
 function startRequest(request: GenerateRequestV2, prompt: string) {
