@@ -149,15 +149,17 @@ export const GeneralSettings: Component<
         recommend={props.sub?.preset.modelFormat}
       />
 
-      <Toggle
-        fieldName="localRequests"
-        label="Use Local Requests"
-        helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
-        service={props.service}
-        format={props.format}
-        aiSetting={'localRequests'}
-        value={props.inherit?.localRequests}
-      />
+      <Card hide={!serviceHasSetting(props.service, props.format, 'localRequests')}>
+        <Toggle
+          fieldName="localRequests"
+          label="Use Local Requests"
+          helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
+          service={props.service}
+          format={props.format}
+          aiSetting={'localRequests'}
+          value={props.inherit?.localRequests}
+        />
+      </Card>
 
       <Show when={props.service === 'horde'}>
         <Card>
@@ -182,7 +184,7 @@ export const GeneralSettings: Component<
           fieldName="thirdPartyKey"
           label="Third Party Password"
           helperText="Never enter your official OpenAI, Claude, Mistral keys here."
-          value={''}
+          value={props.inherit?.thirdPartyKey}
           disabled={props.disabled}
           service={props.service}
           type="password"

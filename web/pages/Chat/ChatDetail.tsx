@@ -228,7 +228,7 @@ const ChatDetail: Component = () => {
         charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
         userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
         message: msgs.partial || '',
-        adapter: 'partial',
+        adapter: 'partial-response',
         handle: handle || 'You',
       })
     )
@@ -515,6 +515,7 @@ const ChatDetail: Component = () => {
                     editing={false}
                     sendMessage={sendMessage}
                     isPaneOpen={pane.showing()}
+                    partial={msg._id === 'partial-response' ? msg.msg : ''}
                   />
                 )}
               </For>
