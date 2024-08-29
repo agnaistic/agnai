@@ -398,7 +398,7 @@ const Message: Component<MessageProps> = (props) => {
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
-                  <Show when={props.msg.adapter === 'partial' && props.last}>
+                  <Show when={props.msg.adapter === 'partial-response' && props.last}>
                     <span class="flex h-8 w-12 items-center justify-center">
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
@@ -886,7 +886,7 @@ const Meta: Component<{
 
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
-  if (msg._id === 'partial') return false
+  if (msg._id === 'partial-response') return false
   return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
 }
 
@@ -903,7 +903,7 @@ function toImageDeleteButton(msgId: string, position: number) {
 
 function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
   const isRetry = props.retrying?._id === props.msg._id
-  const isPartial = props.msg._id === 'partial'
+  const isPartial = props.msg._id === 'partial-response'
 
   if (isRetry || isPartial) {
     if (props.partial) {
