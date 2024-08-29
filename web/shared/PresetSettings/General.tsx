@@ -13,7 +13,7 @@ import {
   MISTRAL_MODELS,
 } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { settingStore, userStore } from '../../store'
+import { presetStore, settingStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { createStore } from 'solid-js/store'
@@ -22,6 +22,7 @@ import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { PresetProps } from './types'
 import { getSubscriptionModelLimits } from '/common/util'
+import Button from '../Button'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -182,7 +183,19 @@ export const GeneralSettings: Component<
 
         <TextInput
           fieldName="thirdPartyKey"
-          label="Third Party Password"
+          label={
+            <div class="mt-1 flex gap-4">
+              <div>Third Party Password</div>
+              <Show when={props.inherit?._id}>
+                <Button
+                  size="pill"
+                  onClick={() => presetStore.deleteUserPresetKey(props.inherit?._id!)}
+                >
+                  Remove Key
+                </Button>
+              </Show>
+            </div>
+          }
           helperText="Never enter your official OpenAI, Claude, Mistral keys here."
           value={props.inherit?.thirdPartyKey}
           disabled={props.disabled}

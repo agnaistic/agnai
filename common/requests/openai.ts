@@ -59,9 +59,29 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
     gen.thirdPartyFormat === 'openai-chat' ? `${suffix}chat/completions` : `${suffix}completions`
   const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
 
-  const iter = gen.streamResponse
-    ? streamCompletion(fullUrl, headers, payload, gen.thirdPartyFormat!)
-    : requestFullCompletion(fullUrl, headers, payload)
+  if (!gen.streamResponse) {
+    const result = await requestFullCompletion(fullUrl, headers, payload)
+    if ('error' in result) {
+      yield result
+      return
+    }
+
+    const text = getCompletionContent(result)
+    if (text instanceof Error) {
+      yield { error: `request returned an error: ${text.message}` }
+      return
+    }
+
+    if (!text?.length) {
+      yield { error: `request failed: Received empty response. Try again.` }
+      return
+    }
+
+    yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
+    return
+  }
+
+  const iter = streamCompletion(fullUrl, headers, payload, gen.thirdPartyFormat!)
 
   let accumulated = ''
   let response: Completion<Inference> | undefined
@@ -213,26 +233,31 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
   }
 }
 
-export const requestFullCompletion: LocalGenerator = async function* (url, headers, body) {
-  const resp = await needle('post', url, JSON.stringify(body), {
-    json: true,
-    headers,
-  }).catch((err) => ({ error: err }))
+export async function requestFullCompletion(url: string, headers: any, body: any) {
+  try {
+    const resp = await needle('post', url, JSON.stringify(body), {
+      json: true,
+      response_timeout: 0,
+      read_timeout: 0,
+      open_timeout: 90000,
+      headers,
+    }).catch((err) => ({ error: err }))
 
-  if ('error' in resp) {
-    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return
+    if ('error' in resp) {
+      return { error: `Local request failed: ${resp.error?.message || resp.error}` }
+    }
+
+    if (resp.statusCode && resp.statusCode >= 400) {
+      const msg =
+        resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
+      return { error: `Local request failed (${resp.statusCode}): ${msg}` }
+    }
+
+    return resp.body
+  } catch (ex: any) {
+    return { error: ex?.message || ex }
   }
-
-  if (resp.statusCode && resp.statusCode >= 400) {
-    const msg =
-      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
-
-    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
-    return
-  }
-
-  return resp.body
 }
 
 function tryParse<T = any>(value: string, prev?: string): T | undefined {

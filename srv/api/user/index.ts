@@ -23,6 +23,7 @@ import {
   updateTemplate,
   deleteTemplate,
   getPromptTemplates,
+  deleteUserPresetKey,
 } from './presets'
 import { hordeStats, novelLogin, openRouterModels, updateService } from './services'
 import {
@@ -66,6 +67,7 @@ router.get('/init', loggedIn, getInitialLoad)
 router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)
 router.get('/templates', loggedIn, getPromptTemplates)
+router.delete('/presets/:id/key', loggedIn, deleteUserPresetKey)
 router.get('/config', loggedIn, getConfig)
 router.post('/config/service/:service', loggedIn, updateService)
 router.post('/config/reveal-key', loggedIn, revealApiKey)
