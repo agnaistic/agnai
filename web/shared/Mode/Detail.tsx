@@ -41,6 +41,13 @@ export const ModeDetail: Component<{
   const [slot, onSlot] = useRef()
   const bgStyles = useCharacterBg('page')
 
+  const usingSlot = createMemo(() => {
+    if (!cfg.config.tier?.disableSlots) return false
+    if (slots.size().w === 0) return false
+
+    return !!slot()
+  })
+
   return (
     <>
       <Show when={props.loading}>
@@ -58,29 +65,31 @@ export const ModeDetail: Component<{
             'sm:pr-3': !props.showPane,
           }}
         >
-          <header class="flex flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
-            {props.header}
+          <Show when={!!props.header || usingSlot()}>
+            <header class="flex flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
+              {props.header}
 
-            <div
-              ref={(ref) => {
-                onSlot(ref)
-                slots.load(ref)
-              }}
-              class="sticky top-0 flex h-fit w-full justify-center "
-              classList={{ hidden: cfg.config.tier?.disableSlots }}
-            >
-              <Switch>
-                <Match when={slots.size().w === 0}>{null}</Match>
-                <Match when={slot()}>
-                  <Slot sticky="always" slot="leaderboard" parent={slot()} />
-                </Match>
-              </Switch>
-            </div>
-          </header>
+              <div
+                ref={(ref) => {
+                  onSlot(ref)
+                  slots.load(ref)
+                }}
+                class="sticky top-0 flex h-fit w-full justify-center "
+                classList={{ hidden: cfg.config.tier?.disableSlots }}
+              >
+                <Switch>
+                  <Match when={slots.size().w === 0}>{null}</Match>
+                  <Match when={slot()}>
+                    <Slot sticky="always" slot="leaderboard" parent={slot()} />
+                  </Match>
+                </Switch>
+              </div>
+            </header>
+          </Show>
 
           <section
             style={{ 'grid-area': 'content' }}
-            class="content my-2 flex w-full flex-row gap-1 overflow-y-auto"
+            class="content mb-2 flex w-full flex-row gap-1 overflow-y-auto"
             classList={{
               'justify-center': !props.showPane || mode() === 'popup',
               'justify-end gap-1 justify-self-center flex-row flex':

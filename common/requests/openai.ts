@@ -35,16 +35,15 @@ type LocalGenerator = (
 export async function* handleOAI(opts: PayloadOpts, payload: any) {
   const gen = opts.settings!
   const options = { ...opts, gen }
-  if (opts.settings?.thirdPartyFormat === 'openai-chat') {
-    const messages = await toChatCompletionPayload(
-      options as any,
-      countTokens,
-      opts.settings.maxTokens!
-    )
-    payload.messages = messages
-  } else {
-    payload.prompt = opts.prompt
-  }
+
+  const messages = await toChatCompletionPayload(
+    options as any,
+    countTokens,
+    opts.settings?.maxTokens!
+  )
+
+  payload.messages = messages
+  payload.prompt = opts.prompt
 
   const headers: any = {
     'Content-Type': 'application/json',
