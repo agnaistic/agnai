@@ -47,7 +47,6 @@ const ChatDetail: Component = () => {
   let container: HTMLDivElement
 
   const params = useParams()
-  const [, setSearch] = useSearchParams()
   const pane = usePaneManager()
 
   const nav = useNavigate()
