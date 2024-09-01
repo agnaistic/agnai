@@ -131,3 +131,11 @@ export const getPromptTemplates = handle(async ({ userId }) => {
   const templates = await store.presets.getUserTemplates(userId)
   return { templates }
 })
+
+export const deleteUserPresetKey = handle(async ({ userId, params }) => {
+  const preset = await store.presets.deleteUserPresetKey(userId, params.id)
+  if (!preset) {
+    throw new StatusError('Preset not found', 404)
+  }
+  return preset
+})

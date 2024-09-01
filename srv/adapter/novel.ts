@@ -11,6 +11,8 @@ import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
+const NOVEL_TEXT_URL = `https://text.novelai.net`
+
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
 const streamUrl = (model: string) => `${getBaseUrl(model)}/ai/generate-stream`
 
@@ -305,6 +307,10 @@ function processNovelAIPrompt(prompt: string) {
 }
 
 function getBaseUrl(model: string) {
+  if (model === NOVEL_MODELS.kayra_v1) {
+    return NOVEL_TEXT_URL
+  }
+
   if (!model.includes('/')) return NOVEL_BASEURL
   const url = model.split('/').slice(0, -1).join('/')
   if (url.toLowerCase().startsWith('http')) return url

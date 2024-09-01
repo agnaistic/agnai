@@ -134,7 +134,9 @@ export async function generateResponse(
   }
 
   if (useLocalRequest(entities.settings, entities.user._id)) {
-    localRequest(request, prompt.template.parsed)
+    localRequest(request, prompt.template.parsed).then(() => {
+      console.log('[done]')
+    })
 
     const input = opts.kind === 'send' ? opts.text : undefined
     return localApi.result({ generating: true, input, requestId: request.requestId })

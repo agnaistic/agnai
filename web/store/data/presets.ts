@@ -17,6 +17,7 @@ export const presetApi = {
   getTemplates,
   updateTemplate,
   deleteTemplate,
+  deleteUserPresetKey,
 }
 
 export async function getPresets() {
@@ -71,6 +72,18 @@ export async function deletePreset(presetId: string) {
 
   const presets = await loadItem('presets')
   const next = presets.filter((pre) => pre._id !== presetId)
+  await localApi.savePresets(next)
+  return localApi.result({ success: true })
+}
+
+export async function deleteUserPresetKey(presetId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/user/presets/${presetId}/key`)
+    return res
+  }
+
+  const presets = await loadItem('presets')
+  const next = presets.map((pre) => (pre._id === presetId ? { ...pre, thirdPartyKey: '' } : pre))
   await localApi.savePresets(next)
   return localApi.result({ success: true })
 }

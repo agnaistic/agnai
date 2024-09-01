@@ -61,7 +61,7 @@
   transition: margin-left 400ms ease;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .drawer {
     height: 100vh;
     height: 100dvh;

@@ -7,10 +7,12 @@ import { getStore } from '../store/create'
 
 export const CallToAction: Component<{
   targets?: UserType | UserType[]
-  title: string
-  content: string | JSX.Element
+  title?: string
+  content?: string | JSX.Element
   theme: ThemeColor | 'hl' | 'bg'
-  dismissable: boolean
+  dismissable?: boolean
+  children?: JSX.Element
+  width?: 'full' | 'fit'
 }> = (props) => {
   const [open, setOpen] = createSignal(true)
   const user = getStore('user')()
@@ -31,9 +33,15 @@ export const CallToAction: Component<{
 
   return (
     <Show when={canShow() && open()}>
-      <div class="w-full px-2">
+      <div class="flex w-full justify-center px-2">
         <div
-          class="relative flex w-full flex-col items-center justify-center rounded-md"
+          class="relative flex flex-col items-center justify-center rounded-md py-1 pl-2"
+          classList={{
+            'w-full': props.width === 'full' || !props.width,
+            'w-fit': props.width === 'fit',
+            'pr-8': props.dismissable,
+            'pr-2': !props.dismissable,
+          }}
           style={{ background: bg().background, border: border() }}
         >
           <Show when={props.dismissable}>
@@ -44,7 +52,7 @@ export const CallToAction: Component<{
           <Show when={props.title}>
             <div class="text-lg font-bold">{props.title}</div>
           </Show>
-          <div class="text-md">{props.content}</div>
+          <div class="text-md">{props.content || props.children}</div>
         </div>
       </div>
     </Show>

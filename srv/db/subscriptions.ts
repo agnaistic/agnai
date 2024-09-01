@@ -106,7 +106,6 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       streamResponse: sub.streamResponse,
       name: sub.name,
       isDefaultSub: sub.isDefaultSub,
-      tokenizer: sub.tokenizer,
       maxContextLength: sub.maxContextLength,
       maxTokens: sub.maxTokens,
       frequencyPenalty: sub.frequencyPenalty,

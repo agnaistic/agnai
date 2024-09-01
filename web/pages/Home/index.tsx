@@ -83,7 +83,7 @@ const HomePage: Component = () => {
 
         <Show when={announce.list.length > 0}>
           <Announcements
-            list={announce.list.filter((ann) => ann.location !== 'notification').slice(0, 4)}
+            list={announce.list.filter((ann) => ann.location !== 'notification').slice(0, 1)}
           />
         </Show>
 
@@ -121,6 +121,16 @@ const HomePage: Component = () => {
             </div>
           </TitleCard>
         </div>
+
+        <div ref={onRef} class="my-1 flex w-full justify-center">
+          <Slot slot="content" parent={ref()} />
+        </div>
+
+        <Show when={announce.list.length > 1}>
+          <Announcements
+            list={announce.list.filter((ann) => ann.location !== 'notification').slice(1, 4)}
+          />
+        </Show>
 
         <Show when={announce.list.length === 0}>
           <Features />
@@ -306,17 +316,9 @@ const BorderCard: Component<{ children: any; href: string; ariaLabel?: string }>
 }
 
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
-  const [ref, onRef] = useRef()
   return (
     <>
       <section class="flex flex-col gap-4" aria-labelledby="homeAnnouncements">
-        <div
-          id="homeAnnouncements"
-          class="flex items-end font-bold leading-[14px]"
-          aria-hidden="true"
-        >
-          Announcements
-        </div>
         <For each={props.list}>
           {(item, i) => (
             <div class="rounded-md border-[1px] border-[var(--hl-700)]">
@@ -333,9 +335,6 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
             </div>
           )}
         </For>
-        <div ref={onRef} class="my-1 w-full">
-          <Slot slot="content" parent={ref()} />
-        </div>
       </section>
     </>
   )

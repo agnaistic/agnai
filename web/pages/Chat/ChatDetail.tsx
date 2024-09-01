@@ -430,8 +430,8 @@ const ChatDetail: Component = () => {
 
   return (
     <>
+      <ChatHeader ctx={ctx} isOwner={isOwner()} />
       <ModeDetail
-        header={<ChatHeader ctx={ctx} isOwner={isOwner()} />}
         footer={
           <ChatFooter
             ctx={ctx}

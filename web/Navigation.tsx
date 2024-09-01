@@ -1,4 +1,4 @@
-import { A, useLocation } from '@solidjs/router'
+import { A, useLocation, useSearchParams } from '@solidjs/router'
 import {
   Activity,
   Bell,
@@ -61,6 +61,7 @@ import { DiscordDarkIcon, DiscordLightIcon } from './icons/DiscordIcon'
 import { Badge } from './shared/Card'
 import { navStore } from './subnav'
 import { getRgbaFromVar } from './shared/colors'
+import { CallToAction } from './shared/CallToAction'
 
 const Navigation: Component = () => {
   let parent: any
@@ -89,6 +90,15 @@ const Navigation: Component = () => {
     )
   )
 
+  createEffect(() => {
+    if (isChat()) return
+    const platform = size.platform()
+
+    if (platform === 'xl' && !state.showMenu) {
+      settingStore.menu(true)
+    }
+  })
+
   const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
   useEffect(() => {
@@ -116,9 +126,7 @@ const Navigation: Component = () => {
           class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2 "
           style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
           onClick={() => settingStore.menu(true)}
-          classList={{
-            hidden: !isChat(),
-          }}
+          classList={{ hidden: !isChat() }}
         >
           <Menu />
         </div>
@@ -136,7 +144,7 @@ const Navigation: Component = () => {
       >
         <div
           ref={content}
-          class="drawer__content sm:text-md text-md flex flex-col gap-0  px-2  sm:gap-1"
+          class="drawer__content sm:text-md text-md flex flex-col gap-0 px-2 sm:gap-1"
         >
           <div class="flex w-full items-center justify-between">
             <div
@@ -181,13 +189,6 @@ const Navigation: Component = () => {
             </div>
           </div>
 
-          {/* <MobileNavHeader
-            useSubnav={!!nav.body}
-            subnav={subnav()}
-            setSubnav={setSubnav}
-            header={nav.header}
-          /> */}
-
           <Switch>
             <Match when={subnav() && !!nav.body}>
               <Show when={nav.title}>
@@ -207,11 +208,14 @@ const Navigation: Component = () => {
 
         <div
           class="absolute bottom-0 flex w-full flex-col items-center justify-between px-4"
-          classList={{
-            'h-8': state.config.policies,
-            'h-4': !state.config.policies,
-          }}
+          classList={
+            {
+              // 'h-8': state.config.policies,
+              // 'h-4': !state.config.policies,
+            }
+          }
         >
+          <SubCTA patreon={state.config.patreon} />
           <Show when={state.config.policies}>
             <div class="text-500 flex w-full justify-center gap-4 text-xs">
               <div>
@@ -756,4 +760,23 @@ export const Nav = {
   Item,
   MultiItem,
   SubItem,
+}
+
+export const SubCTA: Component<{ patreon: boolean | undefined }> = (props) => {
+  const [, setSearch] = useSearchParams()
+
+  const openSubPage = () => {
+    setSearch({ profile_tab: 'subscription' })
+    userStore.modal(true)
+  }
+
+  return (
+    <Show when={props.patreon}>
+      <CallToAction theme="hl" targets={['guests', 'users']} width="fit">
+        <div class="flex cursor-pointer justify-center text-center text-sm" onClick={openSubPage}>
+          Subscribe for higher quality chats and no ads
+        </div>
+      </CallToAction>
+    </Show>
+  )
 }

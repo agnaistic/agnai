@@ -64,6 +64,17 @@ export const presetStore = createStore<PresetState>(
         onSuccess?.()
       }
     },
+    async *deleteUserPresetKey({ presets }, presetId: string, onSuccess?: () => void) {
+      yield { saving: true }
+      const res = await presetApi.deleteUserPresetKey(presetId)
+      yield { saving: false }
+      if (res.error) toastStore.error(`Failed to remove preset key: ${res.error}`)
+      if (res.result) {
+        toastStore.success('Successfully removed key')
+        yield { presets: presets.map((p) => (p._id === presetId ? res.result! : p)) }
+        onSuccess?.()
+      }
+    },
     async *updateRegisterPresetProp(
       { presets },
       presetId: string,

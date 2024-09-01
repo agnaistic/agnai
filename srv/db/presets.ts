@@ -96,6 +96,12 @@ export async function getUserPresets(userId: string) {
   })
 }
 
+export async function deleteUserPresetKey(userId: string, presetId: string) {
+  await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: { thirdPartyKey: '' } })
+  const preset = await getUserPreset(presetId, userId)
+  return preset
+}
+
 export async function updateUserPreset(
   userId: string,
   presetId: string,

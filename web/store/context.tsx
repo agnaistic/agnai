@@ -3,7 +3,7 @@ import { createStore } from 'solid-js/store'
 import { characterStore } from './character'
 import { settingStore } from './settings'
 import { chatStore } from './chat'
-import { AppSchema } from '/common/types'
+import { AppSchema, UI } from '/common/types'
 import { userStore } from './user'
 import { toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
@@ -44,6 +44,7 @@ export type ContextState = {
   chat?: AppSchema.Chat
   replyAs?: string
   trimSentences: boolean
+  config: AppSchema.AppConfig
   bg: {
     bot: JSX.CSSProperties
     user: JSX.CSSProperties
@@ -55,6 +56,7 @@ export type ContextState = {
   waiting?: MsgState['waiting']
   status?: MsgState['hordeStatus']
   preset?: AppSchema.UserGenPreset
+  ui: UI.UISettings
 }
 
 const initial: ContextState = {
@@ -75,6 +77,8 @@ const initial: ContextState = {
   },
   promptHistory: {},
   chatTree: {},
+  ui: {} as any,
+  config: {} as any,
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -146,6 +150,7 @@ export function ContextProvider(props: { children: any }) {
       bg: visuals(),
       flags: cfg.flags,
       anonymize: cfg.anonymize,
+      config: cfg.config,
       tempMap: chats.active?.chat.tempCharacters || {},
 
       allBots: allBots(),
@@ -167,6 +172,7 @@ export function ContextProvider(props: { children: any }) {
       waiting: msgs.waiting,
       status: msgs.hordeStatus,
       preset: preset(),
+      ui: users.ui,
     }
 
     setState(next)

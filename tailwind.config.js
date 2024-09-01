@@ -5,7 +5,7 @@ module.exports = {
     extend: {
       screens: {
         xs: '768px',
-        sm: '1024px',
+        sm: '1280px',
       },
       colors: {
         background: '#090b10',
