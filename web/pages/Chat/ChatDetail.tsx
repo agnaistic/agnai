@@ -10,7 +10,7 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
