@@ -79,6 +79,7 @@ const ServerConfiguration: Component = () => {
 
     adminStore.updateServerConfig({
       ...body,
+      actionCalls: [],
       slots: slots(),
       imagesModels: models[0](),
       enabledAdapters: [],
