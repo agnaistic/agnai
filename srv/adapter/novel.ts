@@ -11,7 +11,7 @@ import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
-const NOVEL_TEXT_URL = `https://text.novelai.net`
+const NOVEL_TEXT_URL = `https://api.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.
 
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
 const streamUrl = (model: string) => `${getBaseUrl(model)}/ai/generate-stream`
