@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Pencil,
 } from 'lucide-solid'
+import WizardIcon from '/web/icons/WizardIcon'
 
 type NavProps = {
   ctx: ContextState
@@ -79,6 +80,10 @@ const ChatNav: Component<NavProps> = (props) => {
 
   return (
     <>
+      <Nav.Item href={`/character/list`}>
+        <WizardIcon /> Characters
+      </Nav.Item>
+
       <Nav.Item href={`/character/${props.ctx.char?._id}/chats`}>
         <ChevronLeft /> Chats
       </Nav.Item>

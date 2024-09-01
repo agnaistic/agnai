@@ -158,6 +158,15 @@ const Message: Component<MessageProps> = (props) => {
     editRef?.focus()
   }
 
+  const alt = createMemo(() => {
+    const percent = `${ctx.ui.chatAlternating ?? 0}%`
+    return {
+      width: `calc(100% - ${ctx.ui.chatAlternating ?? 0}%)`,
+      'margin-right': ctx.user?._id === props.msg.userId ? percent : undefined,
+      'margin-left': ctx.user?._id !== props.msg.userId ? percent : undefined,
+    }
+  })
+
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
@@ -166,12 +175,12 @@ const Message: Component<MessageProps> = (props) => {
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
       data-last={props.last?.toString()}
       data-lastsplit="true"
+      style={true ? {} : alt()}
       classList={{
         'first-in-ctx-window': user.ui.contextWindowLine && props.firstInserted,
         'bg-chat-bot': !props.msg.ooc && !props.msg.userId,
         'bg-chat-user': !props.msg.ooc && !!props.msg.userId,
         'bg-chat-ooc': !!props.msg.ooc,
-        unblur: showOpt[0](),
       }}
     >
       <div class={`flex w-full`} classList={{ 'opacity-50': !!props.msg.ooc }}>

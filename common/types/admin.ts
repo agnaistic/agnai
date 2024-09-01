@@ -123,11 +123,13 @@ export interface Configuration {
 
   charlibPublish: 'off' | 'users' | 'subscribers' | 'moderators' | 'admins'
   charlibGuidelines: string
+
+  actionCalls: ActionCall[]
 }
 
 export interface ActionCall {
-  position: 'float-bottom' | 'float-top' | 'fixed-top' | 'fixed-bottom'
-  page: 'all' | 'home' | 'top' | 'chat'
+  position: 'float-bottom' | 'float-top' | 'fixed-top' | 'fixed-bottom' | 'top' | 'bottom'
+  page: 'all' | 'home' | 'chat'
   dismissable: boolean
 
   targets: Record<UserType, boolean>

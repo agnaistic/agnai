@@ -12,7 +12,7 @@ import { forms } from '../emitter'
 import { getStore } from '../store/create'
 
 export function getPlatform() {
-  return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+  return window.innerWidth >= 1280 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
 }
 
 export function useFormField(field: string, init?: string) {
@@ -71,7 +71,6 @@ export function useWindowSize(): {
 
   useEffect(() => {
     window.addEventListener('resize', handler)
-
     return () => window.removeEventListener('resize', handler)
   })
 

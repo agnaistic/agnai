@@ -7,6 +7,8 @@ import { TierCard } from './TierCard'
 import { ConfirmModal } from '/web/shared/Modal'
 import { PatreonControls } from '../Settings/PatreonOauth'
 import { getUserSubscriptionTier } from '/common/util'
+import { isLoggedIn } from '/web/store/api'
+import { useNavigate } from '@solidjs/router'
 
 export const SubscriptionPage: Component = (props) => {
   const settings = settingStore((s) => s.config)
@@ -23,6 +25,7 @@ export const SubscriptionPage: Component = (props) => {
     }
   })
 
+  const nav = useNavigate()
   const [showUnsub, setUnsub] = createSignal(false)
   const [showUpgrade, setUpgrade] = createSignal<AppSchema.SubscriptionTier>()
   const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
@@ -204,6 +207,11 @@ export const SubscriptionPage: Component = (props) => {
                     </Show>
                     <div class="mt-4 flex justify-center">
                       <Switch>
+                        <Match when={!isLoggedIn()}>
+                          <Button schema="success" onClick={() => nav('/login')}>
+                            Login to Subcribe
+                          </Button>
+                        </Match>
                         <Match when={user.sub?.tier._id === each._id}>
                           <Button schema="success" disabled>
                             Subscribed!

@@ -41,13 +41,6 @@ export const ModeDetail: Component<{
   const [slot, onSlot] = useRef()
   const bgStyles = useCharacterBg('page')
 
-  const usingSlot = createMemo(() => {
-    if (!cfg.config.tier?.disableSlots) return false
-    if (slots.size().w === 0) return false
-
-    return !!slot()
-  })
-
   return (
     <>
       <Show when={props.loading}>
@@ -65,8 +58,8 @@ export const ModeDetail: Component<{
             'sm:pr-3': !props.showPane,
           }}
         >
-          <Show when={!!props.header || usingSlot()}>
-            <header class="flex flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
+          <Show when={!!props.header || !cfg.config.tier?.disableSlots}>
+            <header class="flex w-full flex-col gap-2 pt-2" style={{ 'grid-area': 'header' }}>
               {props.header}
 
               <div
@@ -74,11 +67,10 @@ export const ModeDetail: Component<{
                   onSlot(ref)
                   slots.load(ref)
                 }}
-                class="sticky top-0 flex h-fit w-full justify-center "
+                class="sticky top-0 flex h-fit w-full justify-center"
                 classList={{ hidden: cfg.config.tier?.disableSlots }}
               >
                 <Switch>
-                  <Match when={slots.size().w === 0}>{null}</Match>
                   <Match when={slot()}>
                     <Slot sticky="always" slot="leaderboard" parent={slot()} />
                   </Match>

@@ -45,6 +45,7 @@ export async function getServerConfiguration() {
     modPresetId: '',
     modPrompt: '',
     modSchema: [],
+    actionCalls: [],
   }
 
   await db('configuration').insertOne(next)

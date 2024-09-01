@@ -19,8 +19,7 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore, settingStore, toastStore, userStore } from '../../store'
 import { TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
-import { useNavigate } from '@solidjs/router'
-import { isLoggedIn } from '/web/store/api'
+import { useNavigate, useSearchParams } from '@solidjs/router'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
 import { Page } from '/web/Layout'
@@ -30,6 +29,19 @@ export const ProfileModal: Component = () => {
   const state = userStore()
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
   const tabs = useTabs(['Profile', 'Subscription'], 0)
+  const [search, setSearch] = useSearchParams()
+
+  createEffect(() => {
+    const name = search.profile_tab || ''
+    if (!name) return
+
+    const index = tabs.tabs.findIndex((t) => t.toLowerCase() === name.toLowerCase())
+    if (index > -1) {
+      tabs.select(index)
+    }
+
+    setSearch({ profile_tab: undefined })
+  })
 
   const [footer, setFooter] = createSignal<any>()
 
@@ -38,7 +50,7 @@ export const ProfileModal: Component = () => {
   })
 
   const displayTabs = createMemo(() => {
-    if (!config.tiers.length || !isLoggedIn()) return false
+    if (!config.tiers.length) return false
     return true
   })
 

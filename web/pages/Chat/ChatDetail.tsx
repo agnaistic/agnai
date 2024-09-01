@@ -10,7 +10,7 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import { useNavigate, useParams } from '@solidjs/router'
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
@@ -47,6 +47,7 @@ const ChatDetail: Component = () => {
   let container: HTMLDivElement
 
   const params = useParams()
+  const [, setSearch] = useSearchParams()
   const pane = usePaneManager()
 
   const nav = useNavigate()

@@ -123,6 +123,7 @@ const App: Component = () => {
 const Layout: Component<{ children?: any }> = (props) => {
   const state = userStore()
   const cfg = settingStore()
+
   const location = useLocation()
   const pane = usePaneManager()
 
