@@ -181,6 +181,7 @@ const Message: Component<MessageProps> = (props) => {
         'bg-chat-bot': !props.msg.ooc && !props.msg.userId,
         'bg-chat-user': !props.msg.ooc && !!props.msg.userId,
         'bg-chat-ooc': !!props.msg.ooc,
+        unblur: showOpt[0](),
       }}
     >
       <div class={`flex w-full`} classList={{ 'opacity-50': !!props.msg.ooc }}>

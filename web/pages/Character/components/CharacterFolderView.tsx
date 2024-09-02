@@ -2,6 +2,7 @@ import { Component, For, Show, createEffect, createMemo, createSignal } from 'so
 import { CardProps, SortDirection, ViewProps } from './types'
 import { AppSchema } from '/common/types'
 import { slugify } from '/common/util'
+import { useDragDropContext, createDraggable, createDroppable } from '@thisbeyond/solid-dnd'
 
 import {
   Copy,
@@ -24,23 +25,21 @@ import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
-import Draggable from '/web/shared/Draggable'
 
 type FolderTree = { [folder: string]: Folder }
 
 type Folder = { path: string; depth: number; list: AppSchema.Character[] }
-
-/**
- * Work in progress
- * @todo
- * - dragging rows to folders
- */
 
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
   const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
   const [folder, setFolder] = createSignal('/')
+  const [, { onDragEnd }] = useDragDropContext()!
+
+  onDragEnd(({ draggable, droppable }) => {
+    console.log(draggable, droppable)
+  })
 
   const faveChars = createMemo(() => {
     const name = normalize(folder())
@@ -120,7 +119,7 @@ export const CharacterFolderView: Component<
           />
         </div>
 
-        <div class="w-min overflow-x-hidden">
+        <div class="flex w-full flex-col gap-1">
           <For each={faveChars()}>
             {(char) => (
               <Character
@@ -178,6 +177,8 @@ const FolderContents: Component<{
     return folders
   })
 
+  const drop = createDroppable(props.folder.path)
+
   return (
     <div class="">
       <div
@@ -188,6 +189,7 @@ const FolderContents: Component<{
           'cursor-not-allowed': props.folder.list.length === 0,
         }}
         onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
+        ref={(ref) => drop(ref)}
       >
         <Show when={props.current !== normalize(props.folder.path)}>
           <div class="mr-1">○</div>
@@ -228,30 +230,23 @@ const FolderContents: Component<{
 }
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
-  const [_dragging, setDragging] = createSignal(false)
-
+  const drag = createDraggable(props.char._id)
   return (
     <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-      <Draggable
-        class="cursor-grab"
-        onTransition={setDragging}
-        classList={{}}
-        onChange={() => {}}
-        onDone={() => {}}
-      >
+      <div ref={(ref) => drag(ref)}>
         <GripHorizontal color="var(--bg-500)" />
-      </Draggable>
+      </div>
 
       <A
         class="ellipsis flex w-full cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
         <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex w-min flex-col overflow-hidden">
-          <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
-            {props.char.name}
-          </div>
-          <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
+        <div class="flex w-full flex-col overflow-hidden">
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap">{props.char.name}</div>
+          <Show when={!!props.char.description}>
+            <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
+          </Show>
         </div>
       </A>
 

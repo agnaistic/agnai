@@ -75,6 +75,8 @@ export interface UserGenPreset extends GenSettings {
 
 export interface GenSettings {
   name: string
+  description?: string
+
   service?: AIAdapter
 
   temp: number

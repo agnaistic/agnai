@@ -155,6 +155,7 @@ const Layout: Component<{ children?: any }> = (props) => {
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
+
           <main
             id="main-content"
             class="w-full overflow-y-auto"

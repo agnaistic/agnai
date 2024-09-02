@@ -31,6 +31,7 @@ import Modal from '/web/shared/Modal'
 import { CreateCharacterForm } from './CreateCharacterForm'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
+import { DragDropProvider, DragDropSensors } from '@thisbeyond/solid-dnd'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -302,64 +303,69 @@ const Characters: Component<{
   const [download, setDownload] = createSignal<AppSchema.Character>()
   return (
     <>
-      <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
-        <Match when={props.loading}>
-          <div class="flex justify-center">
-            <Loading />
-          </div>
-        </Match>
-        <Match when={props.characters.length === 0 && props.favorites.length === 0 && props.loaded}>
-          <NoCharacters />
-        </Match>
-        <Match when={props.loaded}>
-          <Show when={!props.type || props.type === 'list'}>
-            <CharacterListView
-              groups={groups()}
-              showGrouping={showGrouping()}
-              toggleFavorite={toggleFavorite}
-              setDownload={setDownload}
-              setDelete={setDelete}
-              setEdit={setEditChar}
-            />
-          </Show>
+      <DragDropProvider>
+        <DragDropSensors />
+        <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
+          <Match when={props.loading}>
+            <div class="flex justify-center">
+              <Loading />
+            </div>
+          </Match>
+          <Match
+            when={props.characters.length === 0 && props.favorites.length === 0 && props.loaded}
+          >
+            <NoCharacters />
+          </Match>
+          <Match when={props.loaded}>
+            <Show when={!props.type || props.type === 'list'}>
+              <CharacterListView
+                groups={groups()}
+                showGrouping={showGrouping()}
+                toggleFavorite={toggleFavorite}
+                setDownload={setDownload}
+                setDelete={setDelete}
+                setEdit={setEditChar}
+              />
+            </Show>
 
-          <Show when={props.type === 'cards'}>
-            <CharacterCardView
-              groups={groups()}
-              showGrouping={showGrouping()}
-              toggleFavorite={toggleFavorite}
-              setDelete={setDelete}
-              setDownload={setDownload}
-              setEdit={setEditChar}
-            />
-          </Show>
+            <Show when={props.type === 'cards'}>
+              <CharacterCardView
+                groups={groups()}
+                showGrouping={showGrouping()}
+                toggleFavorite={toggleFavorite}
+                setDelete={setDelete}
+                setDownload={setDownload}
+                setEdit={setEditChar}
+              />
+            </Show>
 
-          <Show when={props.type === 'folders'}>
-            <CharacterFolderView
-              characters={props.allCharacters}
-              favorites={props.favorites}
-              groups={groups()}
-              showGrouping={showGrouping()}
-              toggleFavorite={toggleFavorite}
-              setDelete={setDelete}
-              setDownload={setDownload}
-              setEdit={setEditChar}
-            />
-          </Show>
-        </Match>
-      </Switch>
+            <Show when={props.type === 'folders'}>
+              <CharacterFolderView
+                characters={props.allCharacters}
+                favorites={props.favorites}
+                groups={groups()}
+                showGrouping={showGrouping()}
+                toggleFavorite={toggleFavorite}
+                setDelete={setDelete}
+                setDownload={setDownload}
+                setEdit={setEditChar}
+              />
+            </Show>
+          </Match>
+        </Switch>
 
-      <Show when={download()}>
-        <DownloadModal show close={() => setDownload()} charId={download()!._id} />
-      </Show>
-      <Show when={editChar()}>
-        <EditCharacter char={editChar()} close={() => setEditChar()} />
-      </Show>
-      <DeleteCharacterModal
-        char={showDelete()}
-        show={!!showDelete()}
-        close={() => setDelete(undefined)}
-      />
+        <Show when={download()}>
+          <DownloadModal show close={() => setDownload()} charId={download()!._id} />
+        </Show>
+        <Show when={editChar()}>
+          <EditCharacter char={editChar()} close={() => setEditChar()} />
+        </Show>
+        <DeleteCharacterModal
+          char={showDelete()}
+          show={!!showDelete()}
+          close={() => setDelete(undefined)}
+        />
+      </DragDropProvider>
     </>
   )
 }
