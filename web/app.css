@@ -7,7 +7,7 @@
 
 .app .content-background {
   background-color: rgba(var(--rgb-bg-900), 0.9);
-  @apply h-max rounded-lg py-4;
+  @apply h-max rounded-lg pb-4;
 }
 
 #fuse-privacy-tool {

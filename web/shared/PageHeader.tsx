@@ -1,13 +1,4 @@
-import {
-  Component,
-  JSX,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-} from 'solid-js'
+import { Component, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import Divider from './Divider'
 import Slot from './Slot'
 import { useRef } from './hooks'
@@ -37,15 +28,9 @@ const PageHeader: Component<Props> = (props) => {
     <>
       <Show when={!props.noslot}>
         <div ref={onRef} class="mb-2 flex w-full justify-center">
-          <Switch>
-            <Match when={ref!}>
-              <Slot
-                sticky
-                slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'}
-                parent={ref()}
-              />
-            </Match>
-          </Switch>
+          <Show when={!!ref}>
+            <Slot sticky slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'} parent={ref()} />
+          </Show>
         </div>
       </Show>
 

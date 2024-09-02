@@ -32,6 +32,7 @@ import { CreateCharacterForm } from './CreateCharacterForm'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
 import { DragDropProvider, DragDropSensors } from '@thisbeyond/solid-dnd'
+import { isMobile } from '/web/shared/hooks'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -135,9 +136,11 @@ const CharacterList: Component = () => {
     characterStore.createCharacter(char, dequeue)
   }
 
+  const mobile = isMobile()
+
   const getNextView = (): ViewType => {
     const curr = view()
-    if (cfg.flags.folders) {
+    if (!mobile) {
       return curr === 'list' ? 'cards' : curr === 'cards' ? 'folders' : 'list'
     }
 
@@ -187,7 +190,7 @@ const CharacterList: Component = () => {
         }
       />
 
-      <div class="mb-2 flex justify-between">
+      <div class="ma mb-2 flex justify-between">
         <div class="flex flex-wrap">
           <div class="m-1 ml-0 mr-1">
             <TextInput

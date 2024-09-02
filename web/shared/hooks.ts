@@ -415,7 +415,7 @@ export function useRootModal(modal: RootModal) {
  * Use: Call `load(ref)` during `onMount(...)` to ensure the reference element is ready.
  */
 export function useResizeObserver() {
-  const [size, setSize] = createSignal({ w: 0, h: 0 })
+  const [size, setSize] = createSignal({ w: 0, h: 0, x: 0, y: 0 })
   const [loaded, setLoaded] = createSignal(false)
   const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>()
 
@@ -423,7 +423,8 @@ export function useResizeObserver() {
     new ResizeObserver((cb) => {
       const ele = cb[0]
       if (!ele) return
-      setSize({ w: ele.target.clientWidth, h: ele.target.clientHeight })
+      const rect = ele.target.getBoundingClientRect()
+      setSize({ w: ele.target.clientWidth, h: ele.target.clientHeight, x: rect.x, y: rect.y })
       setPlatform(getWidthPlatform(ele.target.clientWidth))
     })
   )
@@ -434,7 +435,8 @@ export function useResizeObserver() {
 
     setLoaded(true)
     obs().observe(ref)
-    setSize({ w: ref.clientWidth, h: ref.clientHeight })
+    const rect = ref.getBoundingClientRect()
+    setSize({ w: ref.clientWidth, h: ref.clientHeight, x: rect.x, y: rect.y })
     setPlatform(getWidthPlatform(ref.clientWidth || 0))
   }
 
