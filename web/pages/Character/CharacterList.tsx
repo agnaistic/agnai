@@ -8,7 +8,7 @@ import {
   createSignal,
   onMount,
 } from 'solid-js'
-import { NewCharacter, characterStore, chatStore, settingStore, userStore } from '../../store'
+import { NewCharacter, characterStore, chatStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
@@ -62,7 +62,6 @@ const CharacterList: Component = () => {
 
   const chats = chatStore((s) => s.allChats)
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
-  const cfg = settingStore()
   const user = userStore()
 
   const state = chatStore((s) => {
