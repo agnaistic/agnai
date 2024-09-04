@@ -80,6 +80,8 @@ const squelched = new Set([
   'ping',
   'inference-partial',
   'horde-check',
+  'message-created',
+  'message-try',
 ])
 
 function onMessage(msg: MessageEvent<any>) {

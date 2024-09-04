@@ -11,6 +11,8 @@ import { ADAPTER_LABELS } from '/common/adapters'
 import { forms } from '../emitter'
 import { getStore } from '../store/create'
 
+const PANE_BREAKPOINT = 1280
+
 export function getPlatform() {
   return window.innerWidth >= 1280 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
 }
@@ -263,8 +265,6 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
     removeImage,
   }
 }
-
-const PANE_BREAKPOINT = 960
 
 export function canUsePane() {
   return window.innerWidth >= PANE_BREAKPOINT
