@@ -3,7 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { setAssetPrefix, storage } from '../shared/util'
 import { api } from './api'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
@@ -400,6 +400,14 @@ subscribe('submodel-updated', { model: 'any' }, (body) => {
     )
     return { ...reg, settings }
   })
+
+  if (!exists) {
+    const { sub, user } = getStore('user').getState()
+    const isEligible = incoming.level <= (sub?.level ?? -1) || !!user?.admin
+    if (isEligible) {
+      toastStore.success(`A new model has been added: "${incoming.name}"`, 30)
+    }
+  }
 
   settingStore.setState({ config: { ...config, subs: next, registered } })
 })
