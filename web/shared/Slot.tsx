@@ -473,7 +473,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
       return 'sm'
     },
     platform: 'page',
-    sm: { size: '300x250', id: 'agn-menu-sm', fuseId: '23195824742' }, // 23199579880
+    sm: { size: '300x250', id: 'agn-menu-sm', fuseId: '23199579880' }, // 23199579880
     lg: { size: '300x600', id: 'agn-menu-lg', fuseId: '23195824742' },
     ez: [106],
   },
