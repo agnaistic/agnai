@@ -27,7 +27,7 @@ export function encryptText(text: string) {
   return [encrypted + cipher.final('hex'), Buffer.from(iv).toString('hex')].join('|')
 }
 
-export function decryptText(text: string) {
+export function decryptText(text: string, noError?: boolean) {
   const [encrypted, iv] = text.split('|')
   if (!iv) throw new Error('IV not found')
 
@@ -40,6 +40,8 @@ export function decryptText(text: string) {
     const decipher = crypto.createDecipheriv(ALGO, KEY_LB, Buffer.from(iv, 'hex'))
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
   } catch (ex) {}
+
+  if (noError) return ''
   throw new Error(`Could not read API key: Try re-entering your service API key.`)
 }
 

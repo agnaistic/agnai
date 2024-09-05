@@ -100,7 +100,7 @@ export const CharacterFolderView: Component<
 
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
-    for (const char of props.characters) {
+    for (const char of props.characters.concat(props.favorites)) {
       let folder = char.folder || ''
       if (!folder.startsWith('/')) {
         folder = '/' + folder
