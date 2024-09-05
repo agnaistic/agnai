@@ -77,7 +77,7 @@
 .drawer--hide {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
-  @apply left-[-302px] sm:w-0;
+  @apply left-[-480px] sm:w-0;
 }
 
 .drawer__content {
