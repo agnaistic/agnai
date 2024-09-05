@@ -148,7 +148,7 @@ const Navigation: Component = () => {
         >
           <div class="flex w-full items-center justify-between">
             <div
-              class="icon-button flex w-2/12 justify-start"
+              class="icon-button flex w-2/12 justify-start p-1"
               onClick={() => {
                 if (!dismissable()) return
                 settingStore.menu()
