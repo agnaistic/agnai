@@ -324,7 +324,7 @@ const Character: Component<CardProps & { folder: () => void }> = (props) => {
         class="ellipsis flex w-full cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
-        <CharacterAvatar format={{ size: 'sm', corners: 'md' }} char={props.char} zoom={1.75} />
+        <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
         <div class="flex w-full flex-col overflow-hidden">
           <div class="overflow-hidden text-ellipsis whitespace-nowrap">{props.char.name}</div>
           <Show when={!!props.char.description}>
