@@ -469,7 +469,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
   },
   menu: {
     calc: (parent) => {
-      if (window.innerHeight > 1010) return 'lg'
+      if (window.innerHeight >= 1280) return 'lg'
       return 'sm'
     },
     platform: 'page',
