@@ -13,8 +13,8 @@ export type CustomOption = {
 export const CustomSelect: Component<{
   buttonLabel: string | JSX.Element
   modalTitle?: string
-  label?: string
-  helperText?: string
+  label?: string | JSX.Element
+  helperText?: string | JSX.Element
   fieldName?: string
   options: CustomOption[]
   selected: any | undefined
@@ -45,7 +45,6 @@ export const CustomSelect: Component<{
 
   return (
     <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
-      <div>{props.selected}</div>
       <Show when={props.fieldName}>
         <input
           ref={ref!}

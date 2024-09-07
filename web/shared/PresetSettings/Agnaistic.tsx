@@ -70,6 +70,7 @@ export const AgnaisticSettings: Component<{
         buttonLabel={label()}
         modalTitle="Select a Model"
         label="Model"
+        helperText={<span class="text-500">Available: {opts().length}</span>}
         options={opts()}
         onSelect={props.onSave}
         value={props.inherit?.registered?.agnaistic?.subscriptionId}
