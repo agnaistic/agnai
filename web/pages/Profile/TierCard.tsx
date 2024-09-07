@@ -63,6 +63,8 @@ export const TierCard: Component<{
     >
       <div>
         <div class="markdown text-sm" innerHTML={markdown.makeHtml(props.tier.description)} />
+      </div>
+      <div>
         <Show when={models().length > 0}>
           <HelpModal
             title={`Models on ${props.tier.name}`}
@@ -71,8 +73,6 @@ export const TierCard: Component<{
             <div class="markdown text-sm" innerHTML={markdown.makeHtml(`${models()}`)} />
           </HelpModal>
         </Show>
-      </div>
-      <div>
         <div class="text-md flex flex-col items-center font-bold">
           {stripeCost()}
           <Show when={props.tier.cost > 0 && !!props.tier.patreon?.cost}>
