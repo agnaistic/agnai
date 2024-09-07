@@ -21,20 +21,12 @@ export const AgnaisticSettings: Component<{
 
   const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
 
-  createEffect(
-    on(
-      () => props.inherit?.registered?.agnaistic?.subscriptionId,
-      (id) => setSelected(id)
-    )
-  )
-
   const opts = createMemo(() => {
     const tierLevel = state.user?.admin ? Infinity : state.userLevel
     const level = state.user?.admin ? Infinity : tierLevel
 
     return settings.config.subs
-      .filter((sub) => sub.level <= level)
-      .filter((sub) => (level === -1 ? !!sub.preset.allowGuestUsage : true))
+      .filter((sub) => (!!sub.preset.allowGuestUsage ? true : sub.level <= level))
       .map((sub) => {
         const limit = getSubscriptionModelLimits(sub.preset, level)
 
@@ -49,8 +41,25 @@ export const AgnaisticSettings: Component<{
       .sort((l, r) => r.level - l.level)
   })
 
+  createEffect(
+    on(
+      () => props.inherit?.registered?.agnaistic?.subscriptionId,
+      (id) => {
+        setSelected(id)
+      }
+    )
+  )
+
   const label = createMemo(() => {
-    const opt = opts().find((v) => v.value === selected())
+    const id = selected()
+    console.log('label id', id, opts().length)
+    const opt = opts().find((v) => {
+      console.log(id, '===', v.value, id === v.value)
+      return v.value === id
+    })
+    if (!opt) {
+      return <div>None</div>
+    }
     return <ModelLabel sub={opt?.sub!} limit={opt?.limit} nodesc />
   })
 
@@ -66,13 +75,6 @@ export const AgnaisticSettings: Component<{
         fieldName="registered.agnaistic.subscriptionId"
         selected={selected()}
       />
-      {/* <Select
-        label="Model"
-        items={opts()}
-        fieldName="registered.agnaistic.subscriptionId"
-        onChange={props.onSave}
-        value={props.inherit?.registered?.agnaistic?.subscriptionId}
-      /> */}
     </Show>
   )
 }

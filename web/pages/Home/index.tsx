@@ -38,7 +38,6 @@ const HomePage: Component = () => {
   }))
 
   const announcements = createMemo(() => {
-    console.log('ann', user.userLevel)
     return announce.list.filter((ann) => {
       if (ann.location && ann.location !== 'home') return false
       const level = ann.userLevel ?? -1

@@ -1,4 +1,4 @@
-import { Component, createSignal, onMount } from 'solid-js'
+import { Component, createMemo, createSignal, For, onMount } from 'solid-js'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import PageHeader from '../../shared/PageHeader'
@@ -29,6 +29,10 @@ const MetricsPage: Component = () => {
     })
   }
 
+  const shas = createMemo(() => {
+    return Object.entries(state.metrics?.shas || {}).map(([sha, count]) => ({ sha, count }))
+  })
+
   return (
     <Page>
       <PageHeader title="Metrics" />
@@ -43,11 +47,17 @@ const MetricsPage: Component = () => {
           helperText={state.metrics?.connected || '...'}
         />
 
-        <FormLabel
-          fieldName="active"
-          label="Versioned Users"
-          helperText={state.metrics?.versioned || '...'}
-        />
+        <div class="flex flex-col gap-1">
+          <div class="font-bold">Versions</div>
+
+          <For each={shas()}>
+            {(each) => (
+              <div class="flex gap-1 text-sm">
+                {each.sha}: {each.count}
+              </div>
+            )}
+          </For>
+        </div>
 
         <FormLabel
           fieldName="active"

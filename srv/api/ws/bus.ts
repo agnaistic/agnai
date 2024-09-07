@@ -30,6 +30,7 @@ let CONNECTED = false
 
 type LiveCount = {
   count: number
+  shas: Record<string, number>
   versioned: number
   hostname: string
   date: Date
@@ -50,13 +51,17 @@ let nonBusMaxCount = 0
 
 export function getAllCount() {
   let versioned = 0
+  const shas: Record<string, number> = {}
   for (const cli of allSockets.values()) {
+    const sha = cli.sha || 'none'
+    if (!shas[sha]) shas[sha] = 0
+    shas[sha]++
     if (cli.appVersion > 0) {
       versioned++
     }
   }
 
-  return { count: allSockets.size, versioned }
+  return { count: allSockets.size, versioned, shas }
 }
 
 export function getLiveCounts() {

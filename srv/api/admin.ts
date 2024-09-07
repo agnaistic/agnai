@@ -61,6 +61,13 @@ const getMetrics = handle(async () => {
 
   const connected = counts.map((count) => count.count).reduce((prev, curr) => prev + curr, 0)
   const versioned = counts.map((count) => count.versioned).reduce((prev, curr) => prev + curr, 0)
+  const shas = counts.reduce((prev, curr) => {
+    for (const [sha, count] of Object.entries(curr.shas)) {
+      if (!prev[sha]) prev[sha] = 0
+      prev[sha] += count
+    }
+    return prev
+  }, {} as Record<string, number>)
 
   const threshold = Date.now() - 30000
   return {
@@ -68,6 +75,7 @@ const getMetrics = handle(async () => {
     connected,
     versioned,
     maxLiveCount,
+    shas,
     each: counts.filter((c) => c.date.valueOf() >= threshold),
   }
 })
