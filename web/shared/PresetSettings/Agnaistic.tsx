@@ -52,11 +52,12 @@ export const AgnaisticSettings: Component<{
 
   const label = createMemo(() => {
     const id = selected()
-    console.log('label id', id, opts().length)
-    const opt = opts().find((v) => {
-      console.log(id, '===', v.value, id === v.value)
-      return v.value === id
-    })
+    let opt = opts().find((v) => v.value === id)
+
+    if (!opt) {
+      opt = opts().find((v) => v.sub.preset.isDefaultSub)
+    }
+
     if (!opt) {
       return <div>None</div>
     }
