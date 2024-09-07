@@ -30,6 +30,7 @@ type AdminState = {
     versioned: number
     maxLiveCount: number
     each: Array<{ count: number; date: string; hostname: string; max: number }>
+    shas: Record<string, number>
   }
   products: Stripe.Product[]
   prices: Stripe.Price[]

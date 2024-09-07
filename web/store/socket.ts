@@ -141,7 +141,11 @@ function onMessage(msg: MessageEvent<any>) {
 
 function onConnected() {
   RETRY_TIME = 0
-  publish({ type: 'version', version: 1 })
+  let sha = window.agnai_version
+  if (sha === '{{unknown}}') {
+    sha = 'local'
+  }
+  publish({ type: 'version', version: 1, sha })
   const token = getAuth()
   if (!token) return
   publish({ type: 'login', token })

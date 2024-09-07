@@ -7,5 +7,6 @@ export type AppSocket = WebSocket & {
   userId: string
   token?: string
   appVersion: number
+  sha: string
   dispatch: (data: any) => void
 }

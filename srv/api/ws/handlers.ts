@@ -7,7 +7,7 @@ import { verifyJwt } from '/srv/db/user'
 export type WebMessage =
   | { type: 'login'; token: string }
   | { type: 'logout' }
-  | { type: 'version'; version: number }
+  | { type: 'version'; version: number; sha?: string }
   | { type: 'ping' }
   | { type: 'pong' }
   | { type: 'message-ready'; messageId: string; updatedAt?: string }
@@ -58,6 +58,7 @@ export const handlers: Handlers = {
   version: (client, data) => {
     if (isNaN(data.version)) return
     client.appVersion = data.version
+    client.sha = data.sha || 'none'
   },
   pong: (client) => {
     client.misses = 0
