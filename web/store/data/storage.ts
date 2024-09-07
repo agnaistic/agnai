@@ -191,6 +191,11 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
         name: 'My Preset',
         kind: 'gen-setting',
         userId: 'anon',
+        registered: {
+          agnaistic: {
+            subscriptionId: model._id,
+          },
+        },
       }
       presets.push(preset)
 
