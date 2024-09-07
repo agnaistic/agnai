@@ -7,7 +7,7 @@
 
 .app .content-background {
   background-color: rgba(var(--rgb-bg-900), 0.9);
-  @apply h-max rounded-lg py-4;
+  @apply h-max rounded-lg pb-4;
 }
 
 #fuse-privacy-tool {
@@ -77,7 +77,7 @@
 .drawer--hide {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
-  @apply left-[-302px] sm:w-0;
+  @apply left-[-480px] sm:w-0;
 }
 
 .drawer__content {

@@ -165,6 +165,7 @@ const Announcement: Component<{}> = (props) => {
       hide: 'boolean',
       showAt: 'string',
       location: ['home', 'notification'],
+      userLevel: 'number',
     })
 
     const showAt = new Date(body.showAt)
@@ -207,6 +208,17 @@ const Announcement: Component<{}> = (props) => {
           helperText="Appear on the homepage or notifications list"
           value={state.item?.location || 'home'}
         />
+
+        <TextInput
+          type="number"
+          fieldName="userLevel"
+          label="User Level (Threshold)"
+          helperMarkdown={
+            'Announce to users with a tier level or greater `All Users = -1` `Subscribed = 0`'
+          }
+          value={state.item?.userLevel || -1}
+        />
+
         <TextInput
           fieldName="content"
           label="Content"

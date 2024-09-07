@@ -186,7 +186,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
   const payload: any = {
     temperature: gen.temp,
     max_length: gen.maxTokens,
-    min_length: 1,
+    min_length: gen.maxTokens! - 10,
     top_k: gen.topK,
     top_p: gen.topP,
     top_a: gen.topA,

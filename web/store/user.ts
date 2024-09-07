@@ -42,6 +42,7 @@ export type UserState = {
   error?: string
   loggedIn: boolean
   userType: UserType | undefined
+  userLevel: number
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
@@ -87,12 +88,8 @@ export const userStore = createStore<UserState>(
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
 
-    if (init.user?.patreonUserId) {
-      userStore.syncPatreonAccount(true)
-    }
-
-    if (init.user.billing) {
-      userStore.validateSubscription(true)
+    if (init.user?.patreonUserId || init.user?.billing || init.user?.manualSub) {
+      userStore.retrieveSubscription(true)
     }
 
     if (init.user?._id !== 'anon') {
@@ -244,7 +241,7 @@ export const userStore = createStore<UserState>(
       if (res.result && state === 'success') {
         onSuccess?.()
         return {
-          user: { ...user!, sub: res.result },
+          user: { ...user!, sub: res.result, userLevel: res.result?.level ?? 0 },
         }
       }
 
@@ -298,6 +295,27 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async *retrieveSubscription({ billingLoading, tiers, sub: previous }, quiet?: boolean) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/retrieve')
+      yield { billingLoading: false }
+
+      if (res.result) {
+        const next = getUserSubscriptionTier(res.result.user, tiers, previous)
+        yield { user: res.result.user, sub: next, userLevel: res.result.user.sub.level ?? 0 }
+      }
+
+      if (quiet) return
+      if (res.result) {
+        toastStore.success('You are currently subscribed')
+      }
+
+      if (res.error) {
+        toastStore.error(res.error)
+      }
+    },
+
     async *validateSubscription({ billingLoading, tiers, sub: previous }, quiet?: boolean) {
       if (billingLoading) return
       yield { billingLoading: true }
@@ -306,7 +324,7 @@ export const userStore = createStore<UserState>(
 
       if (res.result) {
         const next = getUserSubscriptionTier(res.result, tiers, previous)
-        yield { user: res.result, sub: next }
+        yield { user: res.result, sub: next, userLevel: next?.level ?? 0 }
       }
 
       if (quiet) return
@@ -756,6 +774,7 @@ function init(): UserState {
   if (!existing) {
     return {
       userType: undefined,
+      userLevel: -1,
       loading: false,
       jwt: '',
       loggedIn: false,
@@ -773,6 +792,7 @@ function init(): UserState {
 
   return {
     userType: undefined,
+    userLevel: 0,
     loggedIn: true,
     loading: false,
     jwt: existing,

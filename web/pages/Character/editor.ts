@@ -197,8 +197,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
 
     {
-      const level = user.sub?.level ?? -1
-      const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= level)
+      const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= user.userLevel)
 
       for (const sub of subs) {
         opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })

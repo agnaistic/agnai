@@ -161,5 +161,3 @@ export const MiniSelect: Component<{
 }
 
 export default Select
-
-4

@@ -53,6 +53,7 @@ export const PresetSelect: Component<{
       ? `${opt.label} (Default)`
       : `${opt.label} ${opt.custom ? '' : '(Built-in)'}`
   })
+
   const [showSelectModal, setShowSelectModal] = createSignal(false)
   const selectIdAndCloseModal = (id: string) => {
     props.setPresetId?.(id)

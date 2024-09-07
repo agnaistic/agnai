@@ -99,7 +99,7 @@ const Navigation: Component = () => {
     }
   })
 
-  const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
+  const suffix = createMemo(() => (user.userLevel > 0 ? '+' : ''))
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -148,7 +148,7 @@ const Navigation: Component = () => {
         >
           <div class="flex w-full items-center justify-between">
             <div
-              class="icon-button flex w-2/12 justify-start"
+              class="icon-button flex w-2/12 justify-start p-1"
               onClick={() => {
                 if (!dismissable()) return
                 settingStore.menu()
@@ -501,9 +501,10 @@ const Item: Component<{
   children: string | JSX.Element
   class?: string
   onClick?: () => void
+  tooltip?: string
 }> = (props) => {
   return (
-    <>
+    <Tooltip position="top" tip={props.tooltip}>
       <Show when={!props.href}>
         <div
           class={`flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
@@ -531,7 +532,7 @@ const Item: Component<{
           {props.children}
         </A>
       </Show>
-    </>
+    </Tooltip>
   )
 }
 

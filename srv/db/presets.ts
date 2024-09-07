@@ -88,7 +88,7 @@ export async function getUserPresets(userId: string) {
   const presets = await db('gen-setting').find({ userId }).toArray()
   return presets.map((pre) => {
     if (pre.localRequests && pre.thirdPartyKey) {
-      pre.thirdPartyKey = decryptText(pre.thirdPartyKey)
+      pre.thirdPartyKey = decryptText(pre.thirdPartyKey, true)
     } else {
       pre.thirdPartyKey = ''
     }
@@ -115,7 +115,6 @@ export async function updateUserPreset(
     }
   }
 
-  const originalKey = update.thirdPartyKey!
   if (update.thirdPartyKey) {
     update.thirdPartyKey = encryptText(update.thirdPartyKey)
   } else {
@@ -128,7 +127,7 @@ export async function updateUserPreset(
 
   if (updated) {
     if (updated.localRequests && updated.thirdPartyKey) {
-      updated.thirdPartyKey = originalKey
+      updated.thirdPartyKey = decryptText(updated.thirdPartyKey, true)
     } else {
       updated.thirdPartyKey = ''
     }

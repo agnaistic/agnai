@@ -2,7 +2,13 @@ import { Router } from 'express'
 import { isAdmin, loggedIn } from '../auth'
 import { finishCheckout, assignSubscription, startCheckout, viewSession } from './checkout'
 import { cancelSubscription } from './cancel'
-import { adminGift, modifySubscription, subscriptionStatus, verifySubscription } from './modify'
+import {
+  adminGift,
+  modifySubscription,
+  retrieveSubscription,
+  subscriptionStatus,
+  verifySubscription,
+} from './modify'
 import { resumeSubscription } from './resume'
 
 const router = Router()
@@ -17,6 +23,7 @@ router.get('/status', subscriptionStatus)
 router.post('/admin-manual', isAdmin, assignSubscription)
 router.post('/admin-gift', isAdmin, adminGift)
 router.post('/session', isAdmin, viewSession)
+router.post('/retrieve', retrieveSubscription)
 
 export { router as default }
 export { stripe } from './stripe'

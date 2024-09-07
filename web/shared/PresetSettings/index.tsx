@@ -16,7 +16,7 @@ import { ServiceOption } from '../../pages/Settings/components/RegisteredSetting
 import { getServiceTempConfig } from '../adapter'
 import Tabs from '../Tabs'
 import { useSearchParams } from '@solidjs/router'
-import { AgnaisticSettings } from '../../pages/Settings/Agnaistic'
+import { AgnaisticSettings } from './Agnaistic'
 import { usePaneManager } from '../hooks'
 import { PresetProps, PresetTab } from './types'
 import { GeneralSettings } from './General'

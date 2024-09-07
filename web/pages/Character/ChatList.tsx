@@ -160,7 +160,7 @@ const CharacterChats: Component = () => {
   )
 
   return (
-    <Page class="flex flex-col gap-2">
+    <Page class="">
       <PageHeader
         title={
           <div class="flex w-full justify-between">
@@ -172,46 +172,44 @@ const CharacterChats: Component = () => {
         }
       />
 
-      <div class="mb-2 flex justify-between">
-        <div class="flex flex-wrap gap-1">
-          <div>
-            <TextInput
-              fieldName="search"
-              placeholder="Search..."
-              onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
-            />
-          </div>
+      <div class="flex flex-wrap gap-1">
+        <div>
+          <TextInput
+            fieldName="search"
+            placeholder="Search..."
+            onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+          />
+        </div>
 
-          <CharacterSelect
-            class="w-48"
-            fieldName="char"
-            items={chars.list}
-            emptyLabel="All Characters"
-            value={charId()}
-            onChange={(char) => setCharId(char?._id)}
+        <CharacterSelect
+          class="w-48"
+          fieldName="char"
+          items={chars.list}
+          emptyLabel="All Characters"
+          value={charId()}
+          onChange={(char) => setCharId(char?._id)}
+        />
+
+        <div class="flex flex-wrap gap-1">
+          <Select
+            class="bg-[var(--bg-600)]"
+            fieldName="sortBy"
+            items={sortOptions().filter((opt) => (charId() ? opt.kind === 'chat' : true))}
+            value={sortField()}
+            onChange={(next) => setSortField(next.value as SortType)}
           />
 
-          <div class="flex flex-wrap gap-1">
-            <Select
-              class="bg-[var(--bg-600)]"
-              fieldName="sortBy"
-              items={sortOptions().filter((opt) => (charId() ? opt.kind === 'chat' : true))}
-              value={sortField()}
-              onChange={(next) => setSortField(next.value as SortType)}
-            />
-
-            <div>
-              <Button
-                schema="secondary"
-                class="rounded-xl"
-                onClick={() => {
-                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                  setSortDirection(next as SortDirection)
-                }}
-              >
-                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
-              </Button>
-            </div>
+          <div>
+            <Button
+              schema="secondary"
+              class="rounded-xl"
+              onClick={() => {
+                const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                setSortDirection(next as SortDirection)
+              }}
+            >
+              {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+            </Button>
           </div>
         </div>
       </div>

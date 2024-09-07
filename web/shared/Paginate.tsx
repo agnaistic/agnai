@@ -89,7 +89,7 @@ export const ManualPaginate: Component<{
           class="px-2"
           onClick={() => props.pager.setPage(props.pager.pages())}
         >
-          <ChevronLast size={24} />
+          <ChevronLast size={20} />
         </Button>
       </Show>
       <TextInput

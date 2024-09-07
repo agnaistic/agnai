@@ -28,7 +28,7 @@ const NavBar: Component = () => {
         data-header=""
         class={`bg-900 sm:none flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden`}
       >
-        <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
+        <div class="flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
           <div class={`w-8 sm:hidden`} onClick={() => settingStore.menu()}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>

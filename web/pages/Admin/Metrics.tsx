@@ -20,8 +20,11 @@ const MetricsPage: Component = () => {
   onMount(() => adminStore.getMetrics())
 
   const sendAll = () => {
-    const { message } = getStrictForm(refForm, { message: 'string' })
-    adminStore.sendAll(message, () => {
+    const { message, userLevel } = getStrictForm(refForm, {
+      message: 'string',
+      userLevel: 'number',
+    })
+    adminStore.sendAll(message, userLevel, () => {
       refMsg().value = ''
     })
   }
@@ -61,9 +64,10 @@ const MetricsPage: Component = () => {
         <FormLabel fieldName="services" label="Services" helperText={state.metrics?.each.length} />
 
         <Card>
-          <form ref={refForm}>
+          <form ref={refForm} class="flex flex-col gap-1">
             <FormLabel label="Message All Users" />
             <TextInput ref={setRefMsg} fieldName="message" isMultiline />
+            <TextInput type="number" fieldName="userLevel" value={-1} />
             <Button onClick={() => setConfirm(true)}>Send</Button>
           </form>
         </Card>

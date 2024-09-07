@@ -55,7 +55,7 @@ const CreateChatForm: Component<{
   const nav = useNavigate()
   const scenarios = scenarioStore((s) => s.scenarios)
   const cfg = settingStore()
-  const user = userStore((s) => ({ ...s.user, sub: s.sub }))
+  const user = userStore((s) => ({ ...s.user, sub: s.sub, userLevel: s.userLevel }))
   const state = characterStore((s) => ({
     char: s.editing,
     chars: (s.characters?.list || []).filter((c) => !isLoggedIn() || c.userId === user._id),
@@ -123,7 +123,7 @@ const CreateChatForm: Component<{
     const id = presetId()
 
     if (!id) {
-      const userLevel = user.sub?.level ?? -1
+      const userLevel = user.userLevel
       const eligible = cfg.config.subs.some((sub) => userLevel >= sub.level)
 
       if (eligible) {

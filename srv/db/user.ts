@@ -498,5 +498,13 @@ export function toSafeUser(user: AppSchema.User) {
     }
   }
 
+  const sub = getUserSubscriptionTier(user, getCachedTiers())
+  if (sub) {
+    user.sub = {
+      ...sub,
+      tierId: sub.tier?._id,
+    }
+  }
+
   return user
 }

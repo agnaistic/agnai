@@ -1,13 +1,18 @@
-import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
-import { CardProps, SortDirection, ViewProps } from './types'
+import { Component, For, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { CardProps, ListCharacter, SortDirection, ViewProps } from './types'
 import { AppSchema } from '/common/types'
 import { slugify } from '/common/util'
+import {
+  useDragDropContext,
+  createDraggable,
+  createDroppable,
+  DragOverlay,
+} from '@thisbeyond/solid-dnd'
 
 import {
   Copy,
   Download,
   Edit,
-  FolderCog,
   GripHorizontal,
   MessageCircle,
   MoreHorizontal,
@@ -15,32 +20,65 @@ import {
   Trash,
 } from 'lucide-solid'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
-import { A, useNavigate } from '@solidjs/router'
+import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import Button from '/web/shared/Button'
 import { DropMenu } from '/web/shared/DropMenu'
-import { RootModal } from '/web/shared/Modal'
+import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
 import { characterStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
-import Draggable from '/web/shared/Draggable'
+import { useResizeObserver } from '/web/shared/hooks'
 
 type FolderTree = { [folder: string]: Folder }
 
 type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 
-/**
- * Work in progress
- * @todo
- * - dragging rows to folders
- */
-
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
+  const [search, setSearch] = useSearchParams()
+  const [, { onDragStart, onDragEnd }] = useDragDropContext()!
+  const size = useResizeObserver()
+
   const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
-  const [folder, setFolder] = createSignal('/')
+  const [folder, setFolder] = createSignal(search.folder || '/')
+  const [dragging, setDragging] = createSignal<ListCharacter>()
+  const newDrop = createDroppable('new-folder')
+
+  const selectFolder = (folder: string) => {
+    setSearch({ folder })
+    setFolder(folder)
+  }
+
+  onDragStart(({ draggable }) => {
+    setDragging(draggable.data as any)
+  })
+
+  onDragEnd(({ draggable, droppable }) => {
+    const char = dragging()
+    setDragging()
+
+    if (!droppable) return
+    if (droppable.id === 'new-folder') {
+      setChangeFolder(char)
+      return
+    }
+
+    if (!char) return
+    characterStore.editPartialCharacter(char._id, { folder: droppable.id as string })
+  })
+
+  const wrapStyle = createMemo(() => {
+    const rect = size.size()
+    if (!rect.x || !rect.y) return
+    const css: JSX.CSSProperties = {
+      'max-height': `${document.body.clientHeight - rect.y - 48}px`,
+    }
+
+    return css
+  })
 
   const faveChars = createMemo(() => {
     const name = normalize(folder())
@@ -62,7 +100,7 @@ export const CharacterFolderView: Component<
 
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
-    for (const char of props.characters) {
+    for (const char of props.characters.concat(props.favorites)) {
       let folder = char.folder || ''
       if (!folder.startsWith('/')) {
         folder = '/' + folder
@@ -100,13 +138,35 @@ export const CharacterFolderView: Component<
   })
 
   return (
-    <div class="flex w-full flex-col gap-2 rounded-md">
+    <div class="flex h-full max-h-full w-full flex-col gap-2 rounded-md">
       <div class="my-1 flex w-full justify-center">
         <ManualPaginate size="sm" pager={pager} />
       </div>
 
-      <div class="flex w-full">
-        <div class="flex min-w-[200px] max-w-[200px] gap-1">
+      <div class="flex w-full" ref={(ref) => size.load(ref)} style={wrapStyle()}>
+        <div class="flex min-w-[200px] max-w-[200px] flex-col gap-1 overflow-y-auto">
+          <HelpModal title="Instructions" cta={<Button size="pill">Folders Guide</Button>}>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-0.5">
+                - Drag the <GripHorizontal size={16} /> icon to move a character
+              </div>
+              <div>
+                - Drag a character to <b>NEW FOLDER</b> to create a new folder
+              </div>
+              <div>- Drag a character onto a folder to move the character</div>
+            </div>
+          </HelpModal>
+          <div
+            ref={(ref) => newDrop(ref)}
+            class="text-300 decoration-dotted"
+            classList={{
+              'text-900': !!dragging() && !newDrop.isActiveDroppable,
+              'text-[var(--hl-500)]': newDrop.isActiveDroppable,
+              underline: newDrop.isActiveDroppable,
+            }}
+          >
+            + New Folder
+          </div>
           <FolderContents
             folder={folders()['/']}
             tree={folders()}
@@ -115,12 +175,12 @@ export const CharacterFolderView: Component<
             setEdit={props.setEdit}
             setDelete={props.setDelete}
             setDownload={props.setDownload}
-            setFolder={setChangeFolder}
-            select={setFolder}
+            setFolder={folders}
+            select={selectFolder}
           />
         </div>
 
-        <div class="w-min overflow-x-hidden">
+        <div class="flex w-full flex-col gap-1 overflow-y-scroll">
           <For each={faveChars()}>
             {(char) => (
               <Character
@@ -158,6 +218,19 @@ export const CharacterFolderView: Component<
       </div>
 
       <ChangeFolder close={() => setChangeFolder()} char={changeFolder()} />
+
+      <Show when={dragging()}>
+        <DragOverlay>
+          <div class="flex gap-2 rounded-md border-[1px] border-solid border-[var(--bg-500)] p-0.5">
+            <CharacterAvatar
+              format={{ size: 'sm', corners: 'circle' }}
+              char={dragging()!}
+              zoom={1.75}
+            />
+            {dragging()?.name}
+          </div>
+        </DragOverlay>
+      </Show>
     </div>
   )
 }
@@ -178,16 +251,21 @@ const FolderContents: Component<{
     return folders
   })
 
+  const drop = createDroppable(props.folder.path)
+
   return (
-    <div class="">
+    <div class="w-full" classList={{}}>
       <div
-        class="my-1 flex items-center"
+        class="my-1 flex w-full items-center decoration-dotted"
         classList={{
           'text-500': props.folder.list.length === 0,
           'cursor-pointer': props.folder.list.length > 0,
           'cursor-not-allowed': props.folder.list.length === 0,
+          'text-[var(--hl-500)]': drop.isActiveDroppable,
+          underline: drop.isActiveDroppable,
         }}
         onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
+        ref={(ref) => drop(ref)}
       >
         <Show when={props.current !== normalize(props.folder.path)}>
           <div class="mr-1">○</div>
@@ -195,7 +273,14 @@ const FolderContents: Component<{
         </Show>
         <Show when={props.current === normalize(props.folder.path)}>
           <div class="mr-1">•</div>
-          <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
+          <div
+            class="text-[var(--hl-300)]"
+            style={{
+              'text-shadow': '0 0 10px var(--hl-400)',
+            }}
+          >
+            {props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}
+          </div>
         </Show>
       </div>
 
@@ -228,30 +313,23 @@ const FolderContents: Component<{
 }
 
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
-  const [_dragging, setDragging] = createSignal(false)
-
+  const drag = createDraggable(props.char._id, props.char)
   return (
-    <div class="flex w-full select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
-      <Draggable
-        class="cursor-grab"
-        onTransition={setDragging}
-        classList={{}}
-        onChange={() => {}}
-        onDone={() => {}}
-      >
+    <div class="flex w-[calc(100%-200px)] select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+      <div ref={(ref) => drag(ref)} class="cursor-grab" style={{ 'touch-action': 'none' }}>
         <GripHorizontal color="var(--bg-500)" />
-      </Draggable>
+      </div>
 
       <A
         class="ellipsis flex w-full cursor-pointer items-center gap-2"
         href={`/character/${props.char._id}/chats`}
       >
         <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
-        <div class="flex w-min flex-col overflow-hidden">
-          <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
-            {props.char.name}
-          </div>
-          <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
+        <div class="flex w-full flex-col overflow-hidden">
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap">{props.char.name}</div>
+          <Show when={!!props.char.description}>
+            <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
+          </Show>
         </div>
       </A>
 
@@ -261,7 +339,6 @@ const Character: Component<CardProps & { folder: () => void }> = (props) => {
         download={props.download}
         edit={props.edit}
         toggleFavorite={props.toggleFavorite}
-        folder={props.folder}
       />
     </div>
   )
@@ -273,7 +350,6 @@ const CharacterListOptions: Component<{
   delete: () => void
   download: () => void
   toggleFavorite: (value: boolean) => void
-  folder: () => void
 }> = (props) => {
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
@@ -290,9 +366,7 @@ const CharacterListOptions: Component<{
         <Show when={!props.char.favorite}>
           <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
         </Show>
-        <a onClick={props.folder}>
-          <FolderCog class="icon-button" />
-        </a>
+
         <a onClick={props.download}>
           <Download class="icon-button" />
         </a>
@@ -323,9 +397,6 @@ const CharacterListOptions: Component<{
             <Show when={!props.char.favorite}>
               <Star /> Favorite
             </Show>
-          </Button>
-          <Button onClick={props.folder} alignLeft size="sm">
-            <FolderCog /> Folder
           </Button>
           <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
             <MessageCircle /> Chat
@@ -410,6 +481,7 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
 
   return (
     <RootModal
+      title={`Change Folder: ${props.char?.name}`}
       show={!!props.char}
       close={props.close}
       footer={

@@ -105,6 +105,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       mirostatToggle: sub.mirostatToggle,
       streamResponse: sub.streamResponse,
       name: sub.name,
+      description: sub.description,
       isDefaultSub: sub.isDefaultSub,
       maxContextLength: sub.maxContextLength,
       maxTokens: sub.maxTokens,

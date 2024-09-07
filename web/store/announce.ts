@@ -1,5 +1,5 @@
 import { api } from './api'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AppSchema } from '/common/types'
@@ -7,26 +7,46 @@ import { AppSchema } from '/common/types'
 type AnnounceState = {
   list: AppSchema.Announcement[]
   admin: AppSchema.Announcement[]
+  filtered: AppSchema.Announcement[]
   loading: boolean
   updated: Date
+  userLevel: number
 }
 
 const initState: AnnounceState = {
   list: [],
+  filtered: [],
   admin: [],
   loading: false,
   updated: new Date(),
+  userLevel: -1,
 }
 
 export const announceStore = createStore<AnnounceState>(
   'announce',
   initState
-)(() => {
+)((get, set) => {
+  getStore('user').subscribe((userState) => {
+    const level = userState.user?.admin ? Infinity : userState.userLevel
+    const list = get().list
+    set({
+      userLevel: level,
+      filtered: list.filter((l) => (l.userLevel !== undefined ? level >= l.userLevel : true)),
+    })
+  })
+
   return {
-    async getAll() {
+    async getAll({ userLevel }) {
       const res = await api.get('/announce')
       if (res.result) {
-        return { list: res.result.announcements, updated: new Date() }
+        const list: AppSchema.Announcement[] = res.result.announcements
+        return {
+          list,
+          filtered: list.filter((l) =>
+            l.userLevel !== undefined ? userLevel >= l.userLevel : true
+          ),
+          updated: new Date(),
+        }
       }
     },
     async getAllAdmin() {
@@ -81,9 +101,17 @@ export const announceStore = createStore<AnnounceState>(
 
 subscribe('announcement', { announcement: 'any' }, (body) => {
   const { list } = announceStore.getState()
+  const { userLevel } = getStore('user').getState()
 
-  const next = list.concat(body.announcement)
+  const next = list
+    .filter((l) => l._id !== body.announcement._id)
+    .concat(body.announcement)
+    .sort(sortByShowAt)
   announceStore.setState({ list: next })
+
+  const level: number = body.announcement.userLevel ?? -1
+
+  if (level > userLevel) return
 
   if (body.announcement.location === 'notification') {
     toastStore.info(`New announcement! Check your notifications.`)
@@ -91,3 +119,17 @@ subscribe('announcement', { announcement: 'any' }, (body) => {
     toastStore.info(`New announcement! Check the home page.`)
   }
 })
+
+subscribe('announcement-updated', { announcement: 'any' }, (body) => {
+  const { list } = announceStore.getState()
+
+  const next = list
+    .filter((l) => l._id !== body.announcement._id)
+    .concat(body.announcement)
+    .sort(sortByShowAt)
+  announceStore.setState({ list: next })
+})
+
+function sortByShowAt(l: AppSchema.Announcement, r: AppSchema.Announcement) {
+  return r.showAt.localeCompare(l.showAt)
+}

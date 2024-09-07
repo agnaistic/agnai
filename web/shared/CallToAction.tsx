@@ -3,7 +3,7 @@ import { ThemeColor } from '/common/types/ui'
 import { getRgbaFromVar, getRootRgb } from './colors'
 import { X } from 'lucide-solid'
 import { UserType } from '/common/types/admin'
-import { getStore } from '../store/create'
+import { userStore } from '../store'
 
 export const CallToAction: Component<{
   targets?: UserType | UserType[]
@@ -15,7 +15,7 @@ export const CallToAction: Component<{
   width?: 'full' | 'fit'
 }> = (props) => {
   const [open, setOpen] = createSignal(true)
-  const user = getStore('user')()
+  const user = userStore()
 
   const canShow = createMemo(() => {
     if (!props.targets || props.targets === 'all') return true

@@ -199,7 +199,7 @@ const SamplerOrder: Component<{
     setLoaded(true)
     setOrder(next)
     setValue(next)
-    setDisabled(props.inherit?.disabledSamplers || [])
+    setDisabled(ensureArray(props.inherit?.disabledSamplers || []))
     resort()
   })
 
@@ -286,7 +286,7 @@ const SamplerOrder: Component<{
       </Card>
 
       <TextInput fieldName="order" parentClass="hidden" value={value()} />
-      <TextInput fieldName="disabledSamplers" parentClass="hidden" value={disabled().join(',')} />
+      <TextInput fieldName="disabledSamplers" parentClass="hidden" value={disabled()?.join(',')} />
     </div>
   )
 }

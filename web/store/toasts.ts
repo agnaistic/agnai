@@ -1,4 +1,4 @@
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { subscribe } from './socket'
 import { setNotifier } from '/common/requests/util'
 
@@ -55,6 +55,8 @@ export const toastStore = createStore<ToastState>('toasts', {
     }
   }
 
+  const adminToast = addToast('admin')
+
   return {
     modal({ history }, state: boolean) {
       if (state) {
@@ -82,7 +84,18 @@ export const toastStore = createStore<ToastState>('toasts', {
     warn: addToast('warn'),
     success: addToast('success'),
     error: addToast('error'),
-    admin: addToast('admin'),
+    admin: (_, message: string, level?: number) => {
+      if (level === undefined) {
+        adminToast(_, message)
+        return
+      }
+      const user = getStore('user').getState()
+      const userLevel = user.user?.admin ? Infinity : user.userLevel
+
+      if (userLevel >= level) {
+        return adminToast(_, message)
+      }
+    },
   }
 })
 
@@ -118,6 +131,6 @@ function getLevel(type: Toast['type']) {
   }
 }
 
-subscribe('admin-notification', { message: 'string' }, (body) => {
-  toastStore.admin(body.message)
+subscribe('admin-notification', { message: 'string', level: 'number?' }, (body) => {
+  toastStore.admin(body.message, body.level)
 })

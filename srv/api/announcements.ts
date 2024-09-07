@@ -31,6 +31,11 @@ const updateAnnouncement = handle(async (req) => {
   assertValid(valid, req.body, true)
 
   const next = await store.announce.updateAnnouncement(id, req.body)
+
+  if (next.showAt <= new Date().toISOString() && !next.hide) {
+    sendAll({ type: 'announcement-updated', announcement: next })
+  }
+
   return next
 })
 

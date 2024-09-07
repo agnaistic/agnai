@@ -103,8 +103,8 @@ export const adminStore = createStore<AdminState>('admin', {
         return { metrics: res.result }
       }
     },
-    async sendAll(_, message: string, onSuccess?: Function) {
-      const res = await api.post(`/admin/notify`, { message })
+    async sendAll(_, message: string, level: number, onSuccess?: Function) {
+      const res = await api.post(`/admin/notify`, { message, level })
 
       if (!res.error) {
         onSuccess?.()
