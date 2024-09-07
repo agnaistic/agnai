@@ -176,16 +176,18 @@ const Navigation: Component = () => {
             </Show>
 
             <div class="flex w-2/12 justify-end">
-              <Show when={nav.body && subnav()}>
-                <div class="icon-button" onClick={() => setSubnav(false)}>
-                  <ChevronLeft />
-                </div>
-              </Show>
-              <Show when={nav.body && !subnav()}>
-                <div class="icon-button" onClick={() => setSubnav(true)}>
-                  <ChevronRight />
-                </div>
-              </Show>
+              <Switch>
+                <Match when={nav.body && subnav()}>
+                  <div class="icon-button" onClick={() => setSubnav(false)}>
+                    <ChevronLeft />
+                  </div>
+                </Match>
+                <Match when={nav.body && !subnav()}>
+                  <div class="icon-button" onClick={() => setSubnav(true)}>
+                    <ChevronRight />
+                  </div>
+                </Match>
+              </Switch>
             </div>
           </div>
 
