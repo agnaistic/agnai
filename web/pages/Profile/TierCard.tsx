@@ -2,15 +2,25 @@ import { Component, Show, createMemo } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { SolidCard } from '/web/shared/Card'
 import { markdown } from '/web/shared/markdown'
+import { settingStore } from '/web/store'
+import { HelpModal } from '/web/shared/Modal'
 
-type TierPreview = OmitId<
-  AppSchema.SubscriptionTier,
-  Dates | 'enabled' | 'priceId' | 'productId' | 'level'
->
+type TierPreview = OmitId<AppSchema.SubscriptionTier, Dates | 'enabled' | 'priceId' | 'productId'>
 
-export const TierCard: Component<{ tier: TierPreview; children?: any; class?: string }> = (
-  props
-) => {
+export const TierCard: Component<{
+  tier: TierPreview
+  children?: any
+  class?: string
+}> = (props) => {
+  const settings = settingStore()
+
+  const models = createMemo(() => {
+    return settings.config.subs
+      .filter((s) => props.tier.level >= s.level)
+      .map((m) => `- ${m.name}`)
+      .join('\n')
+  })
+
   const stripeCost = createMemo(() => {
     const prices: any[] = []
     if (props.tier.cost > 0) {
@@ -47,12 +57,20 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
   return (
     <SolidCard
       border
-      class={`flex w-full flex-col justify-between gap-1 sm:w-1/2 ${props.class || ''}`}
+      class={`flex w-full flex-col justify-between gap-0.5 sm:w-1/2 ${props.class || ''}`}
       title={props.tier.name}
       size="sm"
     >
       <div>
         <div class="markdown text-sm" innerHTML={markdown.makeHtml(props.tier.description)} />
+        <Show when={models().length > 0}>
+          <HelpModal
+            title={`Models on ${props.tier.name}`}
+            cta={<div class="link flex justify-center text-sm">Models</div>}
+          >
+            <div class="markdown text-sm" innerHTML={markdown.makeHtml(`${models()}`)} />
+          </HelpModal>
+        </Show>
       </div>
       <div>
         <div class="text-md flex flex-col items-center font-bold">
