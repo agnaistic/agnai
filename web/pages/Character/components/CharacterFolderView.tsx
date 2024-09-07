@@ -427,7 +427,7 @@ function toFolderSlug(name: string) {
   if (!name.endsWith('/')) {
     name += '/'
   }
-  return name.split('/').map(slugify).join('/')
+  return name.split('/').map(slugify).join('/').toLowerCase()
 }
 
 function getChildFolders(tree: FolderTree, path: string, sort: SortDirection) {
@@ -521,7 +521,7 @@ function normalize(folder?: string) {
     folder = '/' + folder
   }
 
-  return folder
+  return folder.toLowerCase()
 }
 
 /**
