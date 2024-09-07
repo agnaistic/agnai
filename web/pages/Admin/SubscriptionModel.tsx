@@ -446,7 +446,7 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
   const state = presetStore((s) => ({ subs: s.subs }))
   const replacements = createMemo(() =>
     state.subs
-      .filter((sub) => sub._id !== params.id)
+      .filter((sub) => sub._id !== params.id && !sub.subDisabled)
       .map((sub) => ({ label: `[${sub.subLevel}] ${sub.name}`, value: sub._id }))
   )
 
