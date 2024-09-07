@@ -23,6 +23,7 @@ let qwen2Encoder: Tokenizer
 let llama3Encoder: Tokenizer
 let krake: Encoder
 let euterpe: Encoder
+let gemma: Encoder
 
 const davinciEncoder = encoding_for_model('text-davinci-003')
 const turboEncoder = encoding_for_model('gpt-3.5-turbo')
@@ -59,6 +60,7 @@ export type EncoderType =
   | 'yi'
   | 'cohere'
   | 'qwen2'
+  | 'gemma'
 
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
@@ -116,6 +118,9 @@ export function getEncoderByName(type: EncoderType) {
 
     case 'qwen2':
       return qwen2
+
+    case 'gemma':
+      return gemma
   }
 }
 
@@ -189,6 +194,7 @@ export async function prepareTokenizers() {
     novelModern = createEncoder('novelai_v2.model')
     llama = createEncoder('llama.model')
     yi = createEncoder('yi.model')
+    gemma = createEncoder('gemma.model')
 
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
     {

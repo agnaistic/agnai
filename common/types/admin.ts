@@ -58,6 +58,9 @@ export interface Announcement {
 
   location?: 'notification' | 'home' | 'cta'
 
+  userType?: UserType
+  userLevel?: number
+
   cta?: ActionCall
 
   /** Date ISO string */

@@ -473,7 +473,11 @@ const slotDefs: Record<SlotKind, SlotDef> = {
       return 'sm'
     },
     platform: 'page',
-    sm: { size: '300x250', id: 'agn-menu-sm', fuseId: '23199579880' }, // 23199579880
+    sm: {
+      size: '300x250',
+      id: 'agn-menu-sm',
+      fuseId: location.host === 'agnai.chat' ? '23199579880' : '23199579880',
+    }, //
     lg: { size: '300x600', id: 'agn-menu-lg', fuseId: '23195824742' },
     ez: [106],
   },
@@ -502,7 +506,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
   },
   rail_lhs: {
     calc: (parent) => {
-      if (window.innerHeight > 1010) return 'lg'
+      if (window.innerHeight >= 1280) return 'lg'
       return 'sm'
     },
     platform: 'page',
@@ -512,7 +516,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
   },
   rail_rhs: {
     calc: (parent) => {
-      if (window.innerHeight > 1010) return 'lg'
+      if (window.innerHeight > 1280) return 'lg'
       return 'sm'
     },
     platform: 'page',

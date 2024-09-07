@@ -6,6 +6,7 @@ import { subsCmd } from '../../domains/subs/cmd'
 import { domain } from '/srv/domains'
 import { getSafeUserConfig } from '../user/settings'
 import { getCachedTiers } from '/srv/db/subscriptions'
+import { patreon } from '../user/patreon'
 
 export const modifySubscription = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string' }, body)
@@ -81,6 +82,29 @@ export const verifySubscription = handle(async ({ userId }) => {
 
   const next = await getSafeUserConfig(userId)
   return next
+})
+
+export const retrieveSubscription = handle(async ({ userId }) => {
+  const user = await store.users.getUser(userId)
+
+  const errors: string[] = []
+
+  if (user?.billing?.subscriptionId) {
+    const result = await resyncSubscription(user).catch((err: Error) => ({ err }))
+    if (typeof result === 'object' && 'err' in result && result.err?.message) {
+      errors.push(result.err.message)
+    }
+  }
+
+  if (user?.patreonUserId) {
+    const result = await patreon.revalidatePatron(user).catch((err: Error) => ({ err }))
+    if (result !== null && 'err' in result && result.err?.message) {
+      errors.push(result.err.message)
+    }
+  }
+
+  const next = await getSafeUserConfig(userId)
+  return { user: next, errors }
 })
 
 export const subscriptionStatus = handle(async ({ userId, params, user }) => {

@@ -1,8 +1,9 @@
 import { Component, For, JSX, Show, createMemo, createSignal } from 'solid-js'
 import { FormLabel } from './FormLabel'
-import TextInput from './TextInput'
 import Button from './Button'
 import { RootModal } from './Modal'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { isValidServiceSetting } from './util'
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -10,52 +11,65 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
+  buttonLabel: string | JSX.Element
+  modalTitle?: string
   label?: string
   helperText?: string
   fieldName?: string
   options: CustomOption[]
-  selected?: any
+  selected: any | undefined
   onSelect: (opt: CustomOption) => void
+  hide?: boolean
+  service?: AIAdapter
+  format?: ThirdPartyFormat
+  aiSetting?: keyof PresetAISettings
+  parentClass?: string
+  classList?: Record<string, boolean>
+  value: any
 }> = (props) => {
+  let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
 
-  const selectedLabel = createMemo(() => {
-    const opt = props.options.find((o) => o.value === props.selected)
-    return opt === undefined ? 'None' : opt.label
+  const hide = createMemo(() => {
+    if (props.hide) return ' hidden'
+    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
+    return isValid ? '' : ' hidden'
   })
 
+  const onSelect = (opt: CustomOption) => {
+    if (ref) {
+      ref.value = opt.value
+    }
+    props.onSelect(opt)
+  }
+
   return (
-    <>
-      <div class="flex flex-col gap-2 py-3 text-sm">
-        <Show
-          when={props.label && props.helperText}
-          fallback={<div class="text-lg">{props.label || ''}</div>}
-        >
-          <FormLabel label={props.label} helperText={props.helperText} />
-        </Show>
+    <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
+      <div>{props.selected}</div>
+      <Show when={props.fieldName}>
+        <input
+          ref={ref!}
+          type="hidden"
+          id={props.fieldName}
+          name={props.fieldName}
+          value={props.value}
+        />
+      </Show>
+      <div class="flex flex-col py-3 text-sm">
+        <FormLabel label={props.label} helperText={props.helperText} />
 
-        <Show when={props.fieldName}>
-          <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
-        </Show>
-
-        <div class="flex w-full gap-2">
-          <Button onClick={() => setOpen(true)} class="w-fit">
-            <strong>{selectedLabel()}</strong>
-          </Button>
-        </div>
+        <Button alignLeft onClick={() => setOpen(true)} class="w-fit">
+          {props.buttonLabel}
+        </Button>
       </div>
-      <RootModal show={open()} close={() => setOpen(false)} title="Choose a preset">
+      <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-2 pr-3">
-            <OptionList
-              options={props.options}
-              onSelect={props.onSelect}
-              selected={props.selected}
-            />
+            <OptionList options={props.options} onSelect={onSelect} selected={props.selected} />
           </div>
         </div>
       </RootModal>
-    </>
+    </div>
   )
 }
 

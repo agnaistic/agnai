@@ -121,19 +121,23 @@ const ChatNav: Component<NavProps> = (props) => {
       </Show>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
-        <Nav.Item onClick={() => settingStore.modal(true)} ariaLabel="Open settings page">
+        <Nav.Item
+          onClick={() => settingStore.modal(true)}
+          ariaLabel="Open settings page"
+          tooltip="Settings"
+        >
           <Settings aria-hidden="true" />
         </Nav.Item>
-        <Nav.Item onClick={() => settingStore.toggleAnonymize()}>
+        <Nav.Item onClick={() => settingStore.toggleAnonymize()} tooltip="Anonymize">
           <VenetianMask />
         </Nav.Item>
-        <Nav.Item onClick={() => props.setModal('export')}>
+        <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Character">
           <Download />
         </Nav.Item>
-        <Nav.Item onClick={() => props.setModal('restart')}>
+        <Nav.Item onClick={() => props.setModal('restart')} tooltip="Restart Chat">
           <RotateCcw />
         </Nav.Item>
-        <Nav.Item onClick={() => props.setModal('delete')}>
+        <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash />
         </Nav.Item>
       </div>

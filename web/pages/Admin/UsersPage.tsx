@@ -240,7 +240,8 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               <th>Subscription Level</th>
               <td>
                 Native:{state.info?.sub?.level ?? '-1'} / Patreon:
-                {state.info?.patreon?.sub?.level ?? '-1'}
+                {state.info?.patreon?.sub?.level ?? '-1'} / Manual:
+                {state.info?.manualSub?.level ?? '-1'}
               </td>
             </tr>
 

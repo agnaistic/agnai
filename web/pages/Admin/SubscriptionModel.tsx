@@ -59,6 +59,7 @@ const tokenizers = [
   { label: 'Yi', value: 'yi' },
   { label: 'Cohere', value: 'cohere' },
   { label: 'Qwen2', value: 'qwen2' },
+  { label: 'Gemma', value: 'gemma' },
 ]
 
 export const SubscriptionModel: Component = () => {
@@ -184,6 +185,7 @@ export const SubscriptionModel: Component = () => {
     if (state.saving) return
     const validator = {
       service: ['', ...AI_ADAPTERS],
+      description: 'string',
       subLevel: 'number',
       subModel: 'string',
       subServiceUrl: 'string',
@@ -274,9 +276,19 @@ export const SubscriptionModel: Component = () => {
                     <TextInput
                       fieldName="name"
                       label="Name"
-                      helperText="A name or short description of your preset"
-                      placeholder="E.g. Premium+++++"
+                      helperText="Name of the model"
+                      placeholder="E.g. Mythomax"
                       value={editing()?.name}
+                      required
+                      parentClass="mb-2"
+                    />
+
+                    <TextInput
+                      fieldName="description"
+                      label="Description"
+                      helperText="A short description of your model"
+                      placeholder="E.g. LLama 3.1 8B fine-tune"
+                      value={editing()?.description}
                       required
                       parentClass="mb-2"
                     />

@@ -186,10 +186,9 @@ function handleBus(msg: BusMessage) {
       }
 
       case 'all': {
-        for (const [, sockets] of userSockets.entries()) {
-          for (const socket of sockets) {
-            socket.send(JSON.stringify(msg.data))
-          }
+        for (const [, socket] of allSockets.entries()) {
+          if (!socket) continue
+          socket.send(JSON.stringify(msg.data))
         }
         return
       }

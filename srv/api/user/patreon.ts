@@ -100,8 +100,8 @@ async function identity(token: string) {
   return { tier, sub, user, member }
 }
 
-async function revalidatePatron(userId: string) {
-  const user = await store.users.getUser(userId)
+async function revalidatePatron(userId: string | AppSchema.User) {
+  const user = typeof userId === 'string' ? await store.users.getUser(userId) : userId
   if (!user?.patreon) {
     throw new StatusError(`Patreon account is not linked`, 400)
   }
@@ -117,15 +117,15 @@ async function revalidatePatron(userId: string) {
       ...token,
       expires: new Date(Date.now() + token.expires_in * 1000).toISOString(),
     }
-    await store.users.updateUser(userId, { patreon: next })
+    await store.users.updateUser(user._id, { patreon: next })
     user.patreon = next
   }
 
   const patron = await identity(user.patreon.access_token)
 
   const existing = await store.users.findByPatreonUserId(patron.user.id)
-  if (existing && existing._id !== userId) {
-    sendOne(userId, {
+  if (existing && existing._id !== user._id) {
+    sendOne(user._id, {
       type: 'notification',
       level: 'warn',
       message:
@@ -133,10 +133,10 @@ async function revalidatePatron(userId: string) {
       ttl: 20,
     })
 
-    await store.users.unlinkPatreonAccount(existing._id, `attributing to user ${userId}`)
+    await store.users.unlinkPatreonAccount(existing._id, `attributing to user ${user._id}`)
   }
 
-  const next = await store.users.updateUser(userId, {
+  const next = await store.users.updateUser(user._id, {
     patreon: {
       ...user.patreon,
       user: patron.user,
@@ -152,7 +152,7 @@ async function revalidatePatron(userId: string) {
         ? { type: 'patreon', level: patron.sub.level, tierId: patron.sub._id }
         : user.sub,
   })
-  await command.patron.link(patron.user.id, { userId })
+  await command.patron.link(patron.user.id, { userId: user._id })
   return next
 }
 

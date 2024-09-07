@@ -383,6 +383,20 @@ export function toEntityMap<T extends { _id: string }>(list: T[]): Record<string
   return map
 }
 
+export function uniqueBy<T>(list: T[], key: keyof T) {
+  const set = new Set<any>()
+  const next: T[] = []
+
+  for (const item of list) {
+    if (!set.has(item[key])) {
+      next.push(item)
+      set.add(item[key])
+    }
+  }
+
+  return next
+}
+
 /**
  * Disabled form fields cannot be accessed using `form.get` or `form.entries`.
  * To circumvent this, we will enable all fields then disable them once we've accessed the fields

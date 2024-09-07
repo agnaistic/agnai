@@ -402,8 +402,8 @@ subscribe('submodel-updated', { model: 'any' }, (body) => {
   })
 
   if (!exists) {
-    const { sub, user } = getStore('user').getState()
-    const isEligible = incoming.level <= (sub?.level ?? -1) || !!user?.admin
+    const { user, userLevel } = getStore('user').getState()
+    const isEligible = incoming.level <= userLevel || !!user?.admin
     if (isEligible) {
       toastStore.success(`A new model has been added: "${incoming.name}"`, 30)
     }

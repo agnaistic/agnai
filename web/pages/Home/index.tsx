@@ -1,7 +1,7 @@
 import './home.scss'
-import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
-import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
-import { announceStore, chatStore, settingStore } from '../../store'
+import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
+import { getAssetUrl, setComponentPageTitle, uniqueBy } from '../../shared/util'
+import { announceStore, chatStore, settingStore, userStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
 import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
@@ -29,13 +29,22 @@ const HomePage: Component = () => {
 
   const closeSub = () => setSub(Sub.None)
 
+  const user = userStore()
+  const announce = announceStore()
   const cfg = settingStore((cfg) => ({
     adapters: adaptersToOptions(cfg.config.adapters),
     guest: cfg.guestAccessAllowed,
     config: cfg.config,
   }))
 
-  const announce = announceStore()
+  const announcements = createMemo(() => {
+    console.log('ann', user.userLevel)
+    return announce.list.filter((ann) => {
+      if (ann.location && ann.location !== 'home') return false
+      const level = ann.userLevel ?? -1
+      return user.userLevel >= level
+    })
+  })
 
   onMount(() => {
     announceStore.getAll()
@@ -81,10 +90,8 @@ const HomePage: Component = () => {
 
         <RecentChats />
 
-        <Show when={announce.list.length > 0}>
-          <Announcements
-            list={announce.list.filter((ann) => ann.location !== 'notification').slice(0, 1)}
-          />
+        <Show when={announcements().length > 0}>
+          <Announcements list={announcements().slice(0, 1)} />
         </Show>
 
         <div class="home-cards">
@@ -126,13 +133,11 @@ const HomePage: Component = () => {
           <Slot slot="content" parent={ref()} />
         </div>
 
-        <Show when={announce.list.length > 1}>
-          <Announcements
-            list={announce.list.filter((ann) => ann.location !== 'notification').slice(1, 4)}
-          />
+        <Show when={announcements().length > 1}>
+          <Announcements list={announcements().slice(1, 4)} />
         </Show>
 
-        <Show when={announce.list.length === 0}>
+        <Show when={announcements().length === 0}>
           <Features />
         </Show>
 
@@ -173,9 +178,10 @@ export default HomePage
 
 const RecentChats: Component = (props) => {
   const nav = useNavigate()
+
   const state = chatStore((s) => ({
     chars: s.allChars.list,
-    last: s.allChats
+    last: uniqueBy(s.allChats, 'characterId')
       .slice()
       .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
       .slice(0, 4)

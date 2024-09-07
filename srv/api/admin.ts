@@ -49,8 +49,8 @@ const getUserInfo = handle(async ({ params }) => {
 })
 
 const notifyAll = handle(async ({ body }) => {
-  assertValid({ message: 'string' }, body)
-  sendAll({ type: 'admin-notification', message: body.message })
+  assertValid({ message: 'string', level: 'number?' }, body)
+  sendAll({ type: 'admin-notification', message: body.message, level: body.level })
 
   return { success: true }
 })

@@ -74,8 +74,6 @@ export function isEligible() {
   const cfg = getStore('settings').getState()
   const user = getStore('user').getState()
 
-  const userLevel = user.sub?.level ?? -1
-  const eligible = cfg.config.subs.some((sub) => userLevel >= sub.level)
-
+  const eligible = cfg.config.subs.some((sub) => user.userLevel >= sub.level)
   return eligible
 }

@@ -73,7 +73,7 @@ export const GeneralSettings: Component<
   )
 
   const subMax = createMemo(() => {
-    const level = user.user?.admin ? Infinity : user.sub?.level ?? -1
+    const level = user.user?.admin ? Infinity : user.userLevel
     const match = getSubscriptionModelLimits(props.sub?.preset, level)
     if (match) return match
 
@@ -382,7 +382,7 @@ export const GeneralSettings: Component<
           <RangeInput
             fieldName="swipesPerGeneration"
             label="Swipes Per Generation"
-            helperText="Number of responses (in swipes) that aphrodite should generate."
+            helperText="Number of responses (in swipes) that should generate."
             min={1}
             max={10}
             step={1}
