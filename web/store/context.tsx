@@ -141,7 +141,11 @@ export function ContextProvider(props: { children: any }) {
 
   const preset = createMemo(() => {
     if (!chats.active?.chat || !users.user) return
-    const match = getChatPreset(chats.active.chat, users.user, presets.presets)
+    const match = getChatPreset(
+      chats.active.chat,
+      users.user,
+      presets.presets
+    ) as AppSchema.UserGenPreset
     return match
   })
 
