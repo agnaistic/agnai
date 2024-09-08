@@ -80,13 +80,15 @@ const ChatNav: Component<NavProps> = (props) => {
 
   return (
     <>
-      <Nav.Item href={`/character/list`}>
-        <WizardIcon /> Characters
-      </Nav.Item>
+      <Nav.DoubleItem>
+        <Nav.Item href={`/character/list`}>
+          <ChevronLeft /> Characters
+        </Nav.Item>
 
-      <Nav.Item href={`/character/${props.ctx.char?._id}/chats`}>
-        <ChevronLeft /> Chats
-      </Nav.Item>
+        <Nav.Item href={`/character/${props.ctx.char?._id}/chats`}>
+          <ChevronLeft /> Chats
+        </Nav.Item>
+      </Nav.DoubleItem>
 
       <UserProfile />
 
@@ -124,7 +126,7 @@ const ChatNav: Component<NavProps> = (props) => {
         <Nav.Item
           onClick={() => settingStore.modal(true)}
           ariaLabel="Open settings page"
-          tooltip="Settings"
+          tooltip="Site Settings"
         >
           <Settings aria-hidden="true" />
         </Nav.Item>

@@ -728,6 +728,14 @@ const MultiItem: Component<{ children: any }> = (props) => {
   )
 }
 
+const DoubleItem: Component<{ children: any }> = (props) => {
+  return (
+    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 1fr' }}>
+      {props.children}
+    </div>
+  )
+}
+
 const EndItem: Component<{ children: any }> = (props) => {
   return <div class="flex items-center">{props.children}</div>
 }
@@ -763,6 +771,7 @@ export const Nav = {
   Item,
   MultiItem,
   SubItem,
+  DoubleItem,
 }
 
 export const SubCTA: Component<{ patreon: boolean | undefined }> = (props) => {
