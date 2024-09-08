@@ -119,7 +119,7 @@ const ChatNav: Component<NavProps> = (props) => {
       </Show>
 
       <Nav.Item onClick={() => props.togglePane('ui')}>
-        <Palette size={size} /> UI {props.ctx.preset?.service || '???'}
+        <Palette size={size} /> UI
       </Nav.Item>
 
       <Show when={isOwner()}>
