@@ -8,6 +8,7 @@ import { userStore } from '../store'
 export const CallToAction: Component<{
   targets?: UserType | UserType[]
   title?: string
+  class?: string
   content?: string | JSX.Element
   theme: ThemeColor | 'hl' | 'bg'
   dismissable?: boolean
@@ -33,7 +34,7 @@ export const CallToAction: Component<{
 
   return (
     <Show when={canShow() && open()}>
-      <div class="flex w-full justify-center px-2">
+      <div class={`flex w-full justify-center px-2 ${props.class || ''}`}>
         <div
           class="relative flex flex-col items-center justify-center rounded-md py-1 pl-2"
           classList={{

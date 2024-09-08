@@ -102,10 +102,12 @@ export const ModeGenSettings: Component<{
         return
       }
 
-      presetStore.updatePreset(presetId, update as any, () => {
-        if (pane() === 'popup') {
-          props.close?.()
-        }
+      presetStore.updatePreset(presetId, update as any, {
+        onSuccess: () => {
+          if (pane() === 'popup') {
+            props.close?.()
+          }
+        },
       })
     }
   }

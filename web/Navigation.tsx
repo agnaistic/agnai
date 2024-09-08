@@ -18,7 +18,6 @@ import {
   Sliders,
   Speaker,
   Sun,
-  VenetianMask,
   Volume2,
   VolumeX,
   Wand2,
@@ -62,6 +61,7 @@ import { Badge } from './shared/Card'
 import { navStore } from './subnav'
 import { getRgbaFromVar } from './shared/colors'
 import { CallToAction } from './shared/CallToAction'
+import Button from './shared/Button'
 
 const Navigation: Component = () => {
   let parent: any
@@ -144,7 +144,7 @@ const Navigation: Component = () => {
       >
         <div
           ref={content}
-          class="drawer__content sm:text-md text-md flex flex-col gap-0 px-2 sm:gap-1"
+          class="drawer__content sm:text-md text-md flex flex-col gap-1 px-2 sm:gap-1"
         >
           <div class="flex w-full items-center justify-between">
             <div
@@ -217,7 +217,7 @@ const Navigation: Component = () => {
             }
           }
         >
-          <SubCTA patreon={state.config.patreon} />
+          <SubCTA />
           <Show when={state.config.policies}>
             <div class="text-500 flex w-full justify-center gap-4 text-xs">
               <div>
@@ -509,10 +509,13 @@ const Item: Component<{
     <Tooltip position="top" tip={props.tooltip}>
       <Show when={!props.href}>
         <div
-          class={`flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
+          class={`flex cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
             props.class || ''
           }`}
-          classList={{ 'gap-4': !props.class?.includes('gap-') }}
+          classList={{
+            'gap-4': !props.class?.includes('gap-'),
+            'min-h-[2.25rem]': !props.class?.includes('h-'),
+          }}
           onClick={onItemClick(props.onClick)}
           tabindex={0}
           role="button"
@@ -524,9 +527,12 @@ const Item: Component<{
       <Show when={props.href}>
         <A
           href={props.href!}
-          class={`flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem] ${
+          class={`flex items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
             props.class || ''
           }`}
+          classList={{
+            'min-h-[2.25rem]': !props.class?.includes('h-'),
+          }}
           onClick={onItemClick(props.onClick)}
           role="button"
           aria-label={props.ariaLabel}
@@ -673,7 +679,7 @@ export const UserProfile = () => {
       <div
         class="grid w-full items-center justify-between gap-2"
         style={{
-          'grid-template-columns': '1fr 30px',
+          'grid-template-columns': '1fr max-content',
         }}
       >
         <Item
@@ -702,18 +708,19 @@ export const UserProfile = () => {
           <span aria-hidden="true">{chars.impersonating?.name || user.profile?.handle}</span>
         </Item>
         <div class="flex items-center">
-          <a
-            href="#"
-            role="button"
+          <Button
+            class="text-600 text-xs"
+            schema="secondary"
+            size="sm"
             aria-label="Open impersonation menu"
-            class="icon-button"
             onClick={() => {
               settingStore.toggleImpersonate(true)
               if (menu.showMenu) settingStore.closeMenu()
             }}
           >
-            <VenetianMask aria-hidden="true" />
-          </a>
+            Persona
+            {/* <VenetianMask aria-hidden="true" /> */}
+          </Button>
         </div>
       </div>
     </>
@@ -774,19 +781,27 @@ export const Nav = {
   DoubleItem,
 }
 
-export const SubCTA: Component<{ patreon: boolean | undefined }> = (props) => {
+export const SubCTA: Component<{
+  width?: 'fit' | 'full'
+  children?: any
+  onClick?: () => void
+}> = (props) => {
+  const settings = settingStore()
   const [, setSearch] = useSearchParams()
 
   const openSubPage = () => {
     setSearch({ profile_tab: 'subscription' })
     userStore.modal(true)
+    props.onClick?.()
   }
 
   return (
-    <Show when={props.patreon}>
-      <CallToAction theme="hl" targets={['guests', 'users']} width="fit">
+    <Show when={settings.config.patreon}>
+      <CallToAction theme="hl" targets={['guests', 'users']} width={props.width || 'fit'}>
         <div class="flex cursor-pointer justify-center text-center text-sm" onClick={openSubPage}>
-          Subscribe for higher quality chats and no ads
+          <Show when={props.children} fallback={<>Subscribe for higher quality chats and no ads</>}>
+            {props.children}
+          </Show>
         </div>
       </CallToAction>
     </Show>

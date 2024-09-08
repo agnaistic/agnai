@@ -33,6 +33,37 @@ export async function random<T extends keyof Chance.Chance>(kind: T, opts: Chanc
   return ''
 }
 
+export type ComponentEmitter<T extends string> = {
+  emit: { [key in T]: () => void }
+  on: ComponentSubscriber<T>
+}
+
+export type ComponentSubscriber<T> = (event: T, callback: () => any) => void
+
+export function createEmitter<T extends string>(...events: T[]) {
+  const emit: any = {}
+  const listeners: Array<{ event: T; callback: () => void }> = []
+
+  const on = (event: T, callback: () => void) => {
+    listeners.push({ event, callback })
+  }
+
+  for (const event of events) {
+    emit[event] = () => {
+      for (const cb of listeners) {
+        if (cb.event === event) cb.callback()
+      }
+    }
+  }
+
+  const emitter: ComponentEmitter<T> = {
+    emit,
+    on,
+  }
+
+  return emitter
+}
+
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {
   const output = encodeURIComponent(
     typeof content === 'string' ? content : JSON.stringify(content, null, 2)

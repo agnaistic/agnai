@@ -1,9 +1,9 @@
-import { Component, For, JSX, Show, createMemo, createSignal } from 'solid-js'
+import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { FormLabel } from './FormLabel'
-import Button from './Button'
+import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
-import { isValidServiceSetting } from './util'
+import { ComponentSubscriber, isValidServiceSetting } from './util'
 import { forms } from '../emitter'
 
 export type CustomOption = {
@@ -12,8 +12,10 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
+  schema?: ButtonSchema
+  size?: 'sm' | 'md' | 'lg' | 'pill'
   buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
-  modalTitle?: string
+  modalTitle?: string | JSX.Element
   label?: string | JSX.Element
   helperText?: string | JSX.Element
   fieldName?: string
@@ -27,6 +29,7 @@ export const CustomSelect: Component<{
   parentClass?: string
   classList?: Record<string, boolean>
   value: any
+  emitter?: ComponentSubscriber<'close'>
 }> = (props) => {
   let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
@@ -35,6 +38,12 @@ export const CustomSelect: Component<{
     if (props.hide) return ' hidden'
     const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
     return isValid ? '' : ' hidden'
+  })
+
+  onMount(() => {
+    if (props.emitter) {
+      props.emitter('close', () => setOpen(false))
+    }
   })
 
   const onSelect = (opt: CustomOption) => {
@@ -70,10 +79,16 @@ export const CustomSelect: Component<{
           value={props.value}
         />
       </Show>
-      <div class="flex flex-col py-3 text-sm">
+      <div class="flex flex-col text-sm">
         <FormLabel label={props.label} helperText={props.helperText} />
 
-        <Button alignLeft onClick={() => setOpen(true)} class="w-fit">
+        <Button
+          schema={props.schema}
+          size={props.size}
+          alignLeft
+          onClick={() => setOpen(true)}
+          class="w-fit"
+        >
           {buttonLabel()}
         </Button>
       </div>

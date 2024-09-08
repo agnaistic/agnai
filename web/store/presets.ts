@@ -52,16 +52,16 @@ export const presetStore = createStore<PresetState>(
       { presets },
       presetId: string,
       preset: Partial<PresetUpdate>,
-      onSuccess?: () => void
+      opts?: { onSuccess?: () => void; quiet?: boolean }
     ) {
       yield { saving: true }
       const res = await presetApi.editPreset(presetId, preset)
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to update preset: ${res.error}`)
       if (res.result) {
-        toastStore.success('Successfully updated preset')
+        if (!opts?.quiet) toastStore.success('Successfully updated preset')
         yield { presets: presets.map((p) => (p._id === presetId ? res.result! : p)) }
-        onSuccess?.()
+        opts?.onSuccess?.()
       }
     },
     async *deleteUserPresetKey({ presets }, presetId: string, onSuccess?: () => void) {
