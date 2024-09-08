@@ -78,6 +78,8 @@ const ChatNav: Component<NavProps> = (props) => {
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
 
+  const canModel = createMemo(() => props.ctx.info?.adapter === 'agnaistic')
+
   const size = 20
 
   return (
@@ -126,7 +128,7 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Show>
 
-      <Show when={props.ctx.info?.adapter === 'agnaistic'}>
+      <Show when={canModel()}>
         <div class="flex w-full justify-center">
           <AgnaisticModel inherit={props.ctx.preset} />
         </div>
