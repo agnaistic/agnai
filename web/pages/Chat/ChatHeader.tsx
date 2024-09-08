@@ -126,7 +126,7 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Show>
 
-      <Show when={props.ctx.preset?.service === 'agnaistic'}>
+      <Show when={props.ctx.info?.adapter === 'agnaistic'}>
         <div class="flex w-full justify-center">
           <AgnaisticModel inherit={props.ctx.preset} />
         </div>

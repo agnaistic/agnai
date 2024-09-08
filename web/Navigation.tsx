@@ -119,6 +119,17 @@ const Navigation: Component = () => {
     return true
   })
 
+  const sha = createMemo(() => {
+    const apiSha = state.config.version.startsWith('development')
+      ? 'dev'
+      : state.config.version.slice(0, 4)
+    const webSha = window.agnai_version.startsWith('{{')
+      ? ''
+      : `/ ${window.agnai_version.slice(0, 4)}`
+
+    return `${apiSha} ${webSha}`
+  })
+
   return (
     <>
       <Show when={!state.showMenu && dismissable()}>
@@ -229,7 +240,7 @@ const Navigation: Component = () => {
             </div>
           </Show>
           <div class="text-500 mb-1 text-[0.6rem] italic" role="contentinfo" aria-label="Version">
-            {state.config.version}
+            {sha()}
           </div>
         </div>
       </div>
