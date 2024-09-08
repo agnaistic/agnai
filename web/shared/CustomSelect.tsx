@@ -4,6 +4,7 @@ import Button from './Button'
 import { RootModal } from './Modal'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import { isValidServiceSetting } from './util'
+import { forms } from '../emitter'
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -11,7 +12,7 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
-  buttonLabel: string | JSX.Element
+  buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
   modalTitle?: string
   label?: string | JSX.Element
   helperText?: string | JSX.Element
@@ -37,11 +38,26 @@ export const CustomSelect: Component<{
   })
 
   const onSelect = (opt: CustomOption) => {
+    if (props.fieldName) {
+      forms.emit(props.fieldName, opt.value)
+    }
+
     if (ref) {
       ref.value = opt.value
     }
     props.onSelect(opt)
+    setOpen(false)
   }
+
+  const buttonLabel = createMemo(() => {
+    const opt = props.selected
+
+    if (typeof props.buttonLabel !== 'function') {
+      return props.buttonLabel
+    }
+
+    return props.buttonLabel(opt)
+  })
 
   return (
     <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
@@ -58,7 +74,7 @@ export const CustomSelect: Component<{
         <FormLabel label={props.label} helperText={props.helperText} />
 
         <Button alignLeft onClick={() => setOpen(true)} class="w-fit">
-          {props.buttonLabel}
+          {buttonLabel()}
         </Button>
       </div>
       <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>

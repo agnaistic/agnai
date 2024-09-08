@@ -5,6 +5,7 @@ import { AppSchema } from '/common/types'
 import { CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import { SubscriptionModelLevel, SubscriptionModelOption } from '/common/types/presets'
+import { forms } from '/web/emitter'
 
 export const AgnaisticSettings: Component<{
   service: AIAdapter
@@ -39,6 +40,11 @@ export const AgnaisticSettings: Component<{
         }
       })
       .sort((l, r) => r.level - l.level)
+  })
+
+  forms.useSub((field, value) => {
+    if (field !== 'registered.agnaistic.subscriptionId') return
+    setSelected(value)
   })
 
   createEffect(
