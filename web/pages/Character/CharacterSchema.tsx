@@ -5,7 +5,7 @@ import { JsonSchema } from '/web/shared/JsonSchema'
 import TextInput from '/web/shared/TextInput'
 import { FormLabel } from '/web/shared/FormLabel'
 import { ResponseSchema } from '/common/types/library'
-import { Card, Pill, TitleCard } from '/web/shared/Card'
+import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
@@ -14,9 +14,14 @@ import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
-import { getActivePreset } from '/web/store/data/common'
+import { useActivePreset } from '/web/store/data/common'
+import { forms } from '/web/emitter'
+import { useAppContext } from '/web/store/context'
 
 const helpMarkdown = neat`
+
+**IMPORTANT**: \`{{response}}\` is a _default_ schema value. It is **ALWAYS** generated!
+
 You can return many values using JSON schemas and control the structure of your response.
 For example you could define the following fields:
 - **response**: string
@@ -45,9 +50,9 @@ History Template
 `
 
 const exampleSchema: ResponseSchema = {
-  history: '{{character response}}',
-  response: '{{character response}}',
-  schema: [{ type: { type: 'string' }, name: 'character response', disabled: false }],
+  history: '{{response}}',
+  response: '{{response}}',
+  schema: [],
 }
 
 export const CharacterSchema: Component<{
@@ -57,6 +62,8 @@ export const CharacterSchema: Component<{
   children?: any
   update: (next: ResponseSchema) => void
 }> = (props) => {
+  const [ctx] = useAppContext()
+
   let respRef: HTMLTextAreaElement
   let histRef: HTMLTextAreaElement
 
@@ -69,16 +76,6 @@ export const CharacterSchema: Component<{
   const [auto, setAuto] = createSignal('')
   const [hotkey, setHotkey] = createSignal(false)
 
-  const schema = createMemo(() => {
-    const result: ResponseSchema = {
-      response: response(),
-      history: hist(),
-      schema: fields(),
-    }
-
-    return result
-  })
-
   const vars = createMemo(() => {
     const sch = candidate()
     return sch.map((s) => ({ label: s.name, value: s.name }))
@@ -87,34 +84,57 @@ export const CharacterSchema: Component<{
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
 
+  forms.useSub((field, value) => {
+    if (field === 'jsonSchemaResponse') {
+      setResponse(value)
+    }
+
+    if (field === 'jsonSchemaHistory') {
+      setHistory(value)
+    }
+  })
+
+  const activePreset = useActivePreset()
+
+  const inherited = createMemo(() => {
+    let json: ResponseSchema | undefined
+    if (props.characterId) {
+      const char = ctx.activeMap[props.characterId]
+      json = char ? char.json : chatStore.getState().active?.char.json
+    } else if (props.presetId) {
+      json = activePreset()?.json
+    }
+
+    return json
+  })
+
+  const onRefMounted = () => {
+    if (!show()) return
+    if (!histRef || !respRef) return
+
+    const json = inherited()
+
+    const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
+    if (json && hasValue) {
+      setFields(json.schema || [])
+      setHistory(json.history || '')
+      setResponse(json.response || '')
+      histRef.value = json.history || ''
+      respRef.value = json.response || ''
+    } else {
+      setFields(exampleSchema.schema)
+      setHistory(exampleSchema.history)
+      setResponse(exampleSchema.response)
+      histRef.value = exampleSchema.history
+      respRef.value = exampleSchema.response
+    }
+  }
+
   createEffect(
     on(
       () => show(),
       (open) => {
         if (!open) return
-
-        let json: ResponseSchema | undefined
-        if (props.characterId) {
-          json = chatStore.getState().active?.char.json
-        } else if (props.presetId) {
-          const preset = getActivePreset()
-          json = preset?.json
-        }
-
-        const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
-        if (json && hasValue) {
-          setFields(json.schema || [])
-          setHistory(json.history || '')
-          setResponse(json.response || '')
-          histRef.value = json.history || ''
-          respRef.value = json.response || ''
-        } else {
-          setFields(exampleSchema.schema)
-          setHistory(exampleSchema.history)
-          setResponse(exampleSchema.response)
-          histRef.value = exampleSchema.history
-          respRef.value = exampleSchema.response
-        }
       }
     )
   )
@@ -130,7 +150,7 @@ export const CharacterSchema: Component<{
       const bad: string[] = []
       for (const res of resVars) {
         const name = res.slice(2, -2)
-        if (!names.has(name)) {
+        if (!names.has(name) && name !== 'response') {
           bad.push(name)
         }
       }
@@ -141,7 +161,7 @@ export const CharacterSchema: Component<{
       const bad: string[] = []
       for (const res of histVars) {
         const name = res.slice(2, -2)
-        if (!names.has(name)) {
+        if (!names.has(name) && name !== 'response') {
           bad.push(name)
         }
       }
@@ -207,8 +227,8 @@ export const CharacterSchema: Component<{
     close(true)
   }
 
-  const close = (save?: boolean) => {
-    if (save) {
+  const close = (save?: boolean | ResponseSchema) => {
+    if (typeof save === 'boolean' && save) {
       const update = {
         history: histRef.value,
         response: respRef.value,
@@ -217,10 +237,30 @@ export const CharacterSchema: Component<{
       props.update(update)
       setFields(candidate())
 
-      if (props.characterId) {
+      if (ctx.chat?._id && props.characterId && props.characterId.startsWith('temp-')) {
+        const char = ctx.activeMap[props.characterId]
+        if (!char) {
+          toastStore.error(`Could not update temp character: Could not find character data`)
+        } else {
+          chatStore.upsertTempCharacter(ctx.chat._id, { ...char, json: update }, () =>
+            toastStore.success('Temp character JSON schema updated')
+          )
+        }
+      } else if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: update })
       } else if (props.presetId) {
         presetStore.updatePreset(props.presetId, { json: update })
+      }
+    }
+
+    if (save && typeof save !== 'boolean') {
+      props.update(save)
+      setFields(save.schema)
+
+      if (props.characterId) {
+        characterStore.editPartialCharacter(props.characterId, { json: save })
+      } else if (props.presetId) {
+        presetStore.updatePreset(props.presetId, { json: save })
       }
     }
 
@@ -247,11 +287,11 @@ export const CharacterSchema: Component<{
               <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
                 Import
               </Button>
-              <Show when={fields().length > 0}>
+              <Show when={inherited()?.schema.length}>
                 <Button
                   size="pill"
                   schema="secondary"
-                  onClick={() => downloadJson(schema(), filename())}
+                  onClick={() => downloadJson(inherited()!, filename())}
                 >
                   Export
                 </Button>
@@ -267,133 +307,149 @@ export const CharacterSchema: Component<{
         {props.children}
       </div>
 
-      <RootModal
-        title={
-          <>
-            Editing{' '}
-            <Show when={props.characterId} fallback="Preset">
-              Character
-            </Show>{' '}
-            Schema
-          </>
-        }
-        show={show()}
-        maxWidth="half"
-        close={() => setShow(false)}
-        footer={
-          <>
-            <Button schema="secondary" onClick={() => close(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => close(true)}>
-              <Show when={props.characterId}>Save</Show>
-              <Show when={!props.characterId}>Accept</Show>
-            </Button>
-          </>
-        }
-      >
-        <div class="flex flex-col gap-2 text-sm">
-          <div class="flex w-full justify-center gap-2">
-            <Pill type="premium">
-              This feature is in beta. Please share issues and feedback on Discord or GitHub.
-            </Pill>
+      <Show when={show()}>
+        <RootModal
+          title={
+            <>
+              Editing{' '}
+              <Show when={props.characterId} fallback="Preset">
+                Character
+              </Show>{' '}
+              Schema
+            </>
+          }
+          show={show()}
+          maxWidth="half"
+          close={() => setShow(false)}
+          footer={
+            <>
+              <Button schema="secondary" onClick={() => close(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => close(true)}>
+                <Show when={props.characterId}>Save</Show>
+                <Show when={!props.characterId}>Accept</Show>
+              </Button>
+            </>
+          }
+        >
+          <div class="flex flex-col gap-2 text-sm">
+            <div class="flex w-full justify-center gap-2">
+              <Pill type="premium">
+                This feature is in beta. Please share issues and feedback on Discord or GitHub.
+              </Pill>
 
-            <HelpModal
-              title="Information"
-              cta={
-                <Button size="sm">
-                  <CircleHelp size={24} /> Guide
-                </Button>
-              }
-              markdown={helpMarkdown}
-            />
-          </div>
-
-          <Card class="relative">
-            <Show when={auto() === 'response'}>
-              <AutoComplete
-                options={vars()}
-                close={() => setAuto('')}
-                dir="down"
-                onSelect={onAutoComplete(setResponse)}
-              />
-            </Show>
-            <TextInput
-              isMultiline
-              ref={(r) => (respRef = r)}
-              fieldName="jsonSchemaResponse"
-              label="Response Template"
-              onKeyDown={(ev) => {
-                if (ev.key === '{') setAuto('response')
-                if (ev.ctrlKey && ev.code === 'Space') {
-                  setHotkey(true)
-                  setAuto('response')
+              <HelpModal
+                title="Information"
+                cta={
+                  <Button size="sm">
+                    <CircleHelp size={24} /> Guide
+                  </Button>
                 }
-              }}
-              helperText={
-                <>
-                  <div>How the message appears in your chat</div>
-                  <Show when={!!resErr()}>
-                    <TitleCard type="rose">
-                      Template references undefined placeholders: {resErr()}
-                    </TitleCard>
-                  </Show>
-                </>
-              }
-              value={response()}
-              // onInputText={(ev) => setResponse(ev)}
-              placeholder="Response Template"
-              class="font-mono text-xs"
-            />
-          </Card>
-
-          <Card class="relative">
-            <Show when={auto() === 'history'}>
-              <AutoComplete
-                options={vars()}
-                close={() => setAuto('')}
-                dir="down"
-                onSelect={onAutoComplete(setHistory)}
+                markdown={helpMarkdown}
               />
-            </Show>
-            <TextInput
-              class="font-mono text-xs"
-              ref={(r) => (histRef = r)}
-              label="History Template"
-              onKeyDown={(ev) => {
-                if (ev.key === '{') setAuto('history')
-                if (ev.ctrlKey && ev.code === 'Space') {
-                  setHotkey(true)
-                  setAuto('history')
-                }
-              }}
-              helperText={
-                <>
+            </div>
+
+            <Card class="relative">
+              <Show when={auto() === 'response'}>
+                <AutoComplete
+                  options={vars()}
+                  close={() => setAuto('')}
+                  dir="down"
+                  onSelect={onAutoComplete(setResponse)}
+                />
+              </Show>
+              <TextInput
+                isMultiline
+                ref={(r) => {
+                  respRef = r
+                  onRefMounted()
+                }}
+                fieldName="jsonSchemaResponse"
+                label="Response Template"
+                onKeyDown={(ev) => {
+                  if (ev.key === '{') setAuto('response')
+                  if (ev.ctrlKey && ev.code === 'Space') {
+                    setHotkey(true)
+                    setAuto('response')
+                  }
+                }}
+                helperText={
                   <>
-                    <div>How the message appears in a prompt</div>
-                    <Show when={!!histErr()}>
+                    <div>How the message appears in your chat</div>
+                    <Show when={!!resErr()}>
                       <TitleCard type="rose">
-                        Template references undefined placeholders: {histErr()}
+                        Template references undefined placeholders: {resErr()}
                       </TitleCard>
                     </Show>
                   </>
-                </>
-              }
-              isMultiline
-              fieldName="jsonSchemaHistory"
-              value={hist()}
-              // onInputText={(ev) => setHistory(ev)}
-              placeholder="History Template"
-            />
-          </Card>
+                }
+                value={response()}
+                // onInputText={(ev) => setResponse(ev)}
+                placeholder="Response Template"
+                class="font-mono text-xs"
+              />
+            </Card>
 
-          <JsonSchema
-            inherit={fields()}
-            update={(ev) => setCandidate(ev)}
-            onNameChange={onFieldNameChange}
-          />
-        </div>
-      </RootModal>
+            <Card class="relative">
+              <Show when={auto() === 'history'}>
+                <AutoComplete
+                  options={vars()}
+                  close={() => setAuto('')}
+                  dir="down"
+                  onSelect={onAutoComplete(setHistory)}
+                />
+              </Show>
+              <TextInput
+                class="font-mono text-xs"
+                fieldName="jsonSchemaHistory"
+                ref={(r) => {
+                  histRef = r
+                  onRefMounted()
+                }}
+                label="History Template"
+                onKeyDown={(ev) => {
+                  if (ev.key === '{') setAuto('history')
+                  if (ev.ctrlKey && ev.code === 'Space') {
+                    setHotkey(true)
+                    setAuto('history')
+                  }
+                }}
+                helperText={
+                  <>
+                    <>
+                      <div>How the message appears in a prompt</div>
+                      <Show when={!!histErr()}>
+                        <TitleCard type="rose">
+                          Template references undefined placeholders: {histErr()}
+                        </TitleCard>
+                      </Show>
+                    </>
+                  </>
+                }
+                isMultiline
+                value={hist()}
+                // onInputText={(ev) => setHistory(ev)}
+                placeholder="History Template"
+              />
+            </Card>
+
+            <Show when={!hist().includes('{{response}}') || !response().includes('{{response}}')}>
+              <SolidCard type="orange">
+                <b>Warning:</b> <code>{'{{response}}'}</code> is not included in your history or
+                response template. The <b>response</b> field is always generated and is highly
+                recommended to be used.
+              </SolidCard>
+            </Show>
+
+            <JsonSchema
+              inherit={fields()}
+              update={(ev) => setCandidate(ev)}
+              onNameChange={onFieldNameChange}
+            />
+          </div>
+        </RootModal>
+      </Show>
 
       <ImportModal show={showImport()} close={importSchema} />
     </div>
@@ -407,19 +463,24 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
     const file = files[0]
     if (!file) return
 
+    let curr: any
     try {
       const content = await getFileAsString(file)
       const json = JSON.parse(content)
 
+      curr = json
       assertValid({ response: 'string', history: 'string', schema: ['any'] }, json)
 
       for (const field of json.schema) {
+        curr = field
         assertValid({ type: { type: 'string' }, name: 'string' }, field)
       }
 
       props.close(json)
     } catch (ex: any) {
       toastStore.error(`Invalid JSON Schema: ${ex.message}`)
+      console.error(ex)
+      console.log('Failed at', JSON.stringify(curr))
     }
   }
 

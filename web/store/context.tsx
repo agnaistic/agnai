@@ -14,6 +14,7 @@ import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { presetStore } from './presets'
+import { getChatPreset } from '/common/prompt'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -128,7 +129,7 @@ export function ContextProvider(props: { children: any }) {
     const curr = chars.chatChars.map
     const temps = chats.active?.chat.tempCharacters || {}
 
-    const active = getActiveBots(chats.active.chat, { ...curr, ...temps, ...chars.characters.map })
+    const active = getActiveBots(chats.active.chat, { ...temps, ...chars.characters.map, ...curr })
     return distinct(active)
   })
 
@@ -139,8 +140,12 @@ export function ContextProvider(props: { children: any }) {
   })
 
   const preset = createMemo(() => {
-    const id = chats.active?.chat.genPreset || users.user?.defaultPreset
-    const match = presets.presets.find((p) => p._id === id)
+    if (!chats.active?.chat || !users.user) return
+    const match = getChatPreset(
+      chats.active.chat,
+      users.user,
+      presets.presets
+    ) as AppSchema.UserGenPreset
     return match
   })
 

@@ -42,6 +42,7 @@ const NavBar: Component = () => {
               </span>
             </Show>
           </div>
+          <div class="w-8 sm:hidden"></div>
         </div>
       </div>
     </Show>

@@ -91,6 +91,8 @@ export interface Configuration {
   /** Not yet implemented */
   policiesEnabled: boolean
 
+  lockSeconds: number
+
   /** Not yet implemented */
   tosUpdated: string
   /** Not yet implemented */

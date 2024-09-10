@@ -1,9 +1,10 @@
-import { Component, For, JSX, Show, createMemo, createSignal } from 'solid-js'
+import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { FormLabel } from './FormLabel'
-import Button from './Button'
+import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
-import { isValidServiceSetting } from './util'
+import { ComponentSubscriber, isValidServiceSetting } from './util'
+import { forms } from '../emitter'
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -11,10 +12,12 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
-  buttonLabel: string | JSX.Element
-  modalTitle?: string
-  label?: string
-  helperText?: string
+  schema?: ButtonSchema
+  size?: 'sm' | 'md' | 'lg' | 'pill'
+  buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
+  modalTitle?: string | JSX.Element
+  label?: string | JSX.Element
+  helperText?: string | JSX.Element
   fieldName?: string
   options: CustomOption[]
   selected: any | undefined
@@ -26,6 +29,7 @@ export const CustomSelect: Component<{
   parentClass?: string
   classList?: Record<string, boolean>
   value: any
+  emitter?: ComponentSubscriber<'close'>
 }> = (props) => {
   let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
@@ -36,16 +40,36 @@ export const CustomSelect: Component<{
     return isValid ? '' : ' hidden'
   })
 
+  onMount(() => {
+    if (props.emitter) {
+      props.emitter('close', () => setOpen(false))
+    }
+  })
+
   const onSelect = (opt: CustomOption) => {
+    if (props.fieldName) {
+      forms.emit(props.fieldName, opt.value)
+    }
+
     if (ref) {
       ref.value = opt.value
     }
     props.onSelect(opt)
+    setOpen(false)
   }
+
+  const buttonLabel = createMemo(() => {
+    const opt = props.selected
+
+    if (typeof props.buttonLabel !== 'function') {
+      return props.buttonLabel
+    }
+
+    return props.buttonLabel(opt)
+  })
 
   return (
     <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
-      <div>{props.selected}</div>
       <Show when={props.fieldName}>
         <input
           ref={ref!}
@@ -55,11 +79,17 @@ export const CustomSelect: Component<{
           value={props.value}
         />
       </Show>
-      <div class="flex flex-col py-3 text-sm">
+      <div class="flex flex-col text-sm">
         <FormLabel label={props.label} helperText={props.helperText} />
 
-        <Button alignLeft onClick={() => setOpen(true)} class="w-fit">
-          {props.buttonLabel}
+        <Button
+          schema={props.schema}
+          size={props.size}
+          alignLeft
+          onClick={() => setOpen(true)}
+          class="w-fit"
+        >
+          {buttonLabel()}
         </Button>
       </div>
       <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>

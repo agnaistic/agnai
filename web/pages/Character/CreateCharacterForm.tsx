@@ -15,7 +15,6 @@ import {
   X,
   Import,
   Download,
-  HelpCircle,
   ArrowLeft,
   Trash,
   ArrowRight,
@@ -50,7 +49,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
-import Modal, { RootModal } from '/web/shared/Modal'
+import Modal, { HelpModal, RootModal } from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { Toggle, ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
@@ -396,44 +395,35 @@ export const CreateCharacterForm: Component<{
             />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Persona' }}>
-              <Button
-                size="sm"
-                class="w-fit"
-                onClick={() => {
-                  rootModalStore.info(
-                    'AI Character Generation',
-                    <>
-                      <p class="inline-flex gap-1">
-                        1. Fill out <Pill small>Name</Pill> and <Pill small>Description</Pill>{' '}
-                        fields
-                      </p>
-                      <p class="inline-flex gap-1">
-                        2. <i>(Optional)</i> Choose or update your preset{' '}
-                        <Pill inverse type="hl" small>
-                          <SlidersVertical size={14} />
-                        </Pill>
-                      </p>
-                      <p class="inline-flex gap-1">
-                        3. Click{' '}
-                        <Pill inverse type="hl" small>
-                          <WandSparkles size={14} />
-                        </Pill>
-                        &nbsp;on the field you'd like to generate.
-                      </p>
+              <HelpModal cta={<Button size="pill">AI Character Generation Guide</Button>}>
+                <div class="flex flex-col gap-1">
+                  <p class="inline-flex gap-1">
+                    1. Fill out <Pill small>Name</Pill> and <Pill small>Description</Pill> fields
+                  </p>
+                  <p class="inline-flex gap-1">
+                    2. <i>Optional:</i> Choose or update your preset{' '}
+                    <Pill inverse type="hl" small>
+                      <SlidersVertical size={14} />
+                    </Pill>
+                  </p>
+                  <p class="inline-flex gap-1">
+                    3. Click{' '}
+                    <Pill inverse type="hl" small>
+                      <WandSparkles size={14} />
+                    </Pill>
+                    &nbsp;on the field you'd like to generate.
+                  </p>
 
-                      <p class="inline-flex gap-1">
-                        4. Adjust the <Pill small>Description</Pill> and click{' '}
-                        <Pill inverse type="hl" small>
-                          <WandSparkles size={14} />
-                        </Pill>
-                        &nbsp;to regenerate.
-                      </p>
-                    </>
-                  )
-                }}
-              >
-                <HelpCircle size={16} /> AI Character Generation
-              </Button>
+                  <p class="inline-flex gap-1">
+                    4. Adjust the <Pill small>Description</Pill> and click{' '}
+                    <Pill inverse type="hl" small>
+                      <WandSparkles size={14} />
+                    </Pill>
+                    &nbsp;to regenerate.
+                  </p>
+                </div>
+              </HelpModal>
+
               <Card>
                 <ButtonInput
                   fieldName="name"
@@ -792,7 +782,11 @@ const Regenerate: Component<{
   allowed: boolean
 }> = (props) => {
   return (
-    <Tooltip tip="Name and description must be filled" disable={props.editor.canGenerate()}>
+    <Tooltip
+      tip="Name and description must be filled"
+      position="right"
+      disable={props.editor.canGenerate()}
+    >
       <Switch>
         <Match when={!props.allowed}>{null}</Match>
 

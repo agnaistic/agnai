@@ -121,7 +121,7 @@ export const JsonSchema: Component<{
         </Index>
         <Button class="w-full" onClick={addField}>
           <Plus />
-          Add
+          Add Field
         </Button>
       </div>
     </>
@@ -250,9 +250,9 @@ const SchemaField: Component<{
             <Show when={type() === 'enum'}>
               <TextInput
                 fieldName={`${props.index}.enum`}
+                initialValue={(props.def as any).enum?.join(', ')}
                 placeholder="(Optional) Allowed values - comma seperated"
                 parentClass="w-1/2"
-                value={(props.def as any).enum?.join(', ')}
               />
             </Show>
             <Show when={props.validate && type() === 'bool'}>

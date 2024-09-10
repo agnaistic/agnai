@@ -102,12 +102,16 @@ const ChatPanes: Component<{}> = (props) => {
       ids.set(bot._id, bot)
     }
 
+    for (const bot of Object.values(chats.chat?.tempCharacters || {})) {
+      ids.set(bot._id, bot)
+    }
+
     const editable = Array.from(ids.values())
     return editable
   })
 
   const charBeingEdited = createMemo(() => {
-    return chars.chatBots.find((ch) => ch._id === editId())
+    return editableCharcters().find((ch) => ch._id === editId())
   })
 
   const changeEditingChar = async (char: AppSchema.Character | undefined) => {
@@ -149,6 +153,8 @@ const ChatPanes: Component<{}> = (props) => {
                 editId={editId()}
                 footer={setPaneFooter}
                 close={closeCharEditor}
+                temp={editId()?.startsWith('temp-')}
+                onSuccess={() => toastStore.success('Temporary character updated')}
               >
                 <Show when={editableCharcters().length > 1}>
                   <CharacterSelect

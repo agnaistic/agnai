@@ -197,6 +197,7 @@ const TiersPage: Component = (props) => {
               apiAccess: false,
               guidanceAccess: false,
               imagesAccess: false,
+              level: Infinity,
             }}
           />
 

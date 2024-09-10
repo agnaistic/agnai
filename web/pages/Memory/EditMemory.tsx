@@ -79,7 +79,7 @@ const EditMemoryForm: Component<{
         <TextInput
           fieldName="name"
           label="Book Name"
-          value={props.book.name}
+          value={props.book?.name || ''}
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
@@ -90,7 +90,7 @@ const EditMemoryForm: Component<{
         <TextInput
           fieldName="description"
           label="Description"
-          value={props.book.description}
+          value={props.book?.description || ''}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
             change({ description: e.currentTarget.value })

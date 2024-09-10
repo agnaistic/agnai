@@ -39,7 +39,7 @@ const ChatMemoryModal: Component<{
     await Promise.resolve()
 
     const match: AppSchema.MemoryBook | undefined =
-      id === 'new'
+      id === 'new' || id === ''
         ? {
             _id: '',
             userId: '',
@@ -56,6 +56,8 @@ const ChatMemoryModal: Component<{
   createEffect(() => {
     if (!props.chat) return
     if (!props.chat.memoryId) return
+
+    console.log(props.chat.memoryId)
 
     if (props.chat.memoryId && !id()) {
       changeBook(props.chat.memoryId)
@@ -79,9 +81,13 @@ const ChatMemoryModal: Component<{
     }
   }
 
-  const useMemoryBook = () => {
+  const useMemoryBook = (nextId?: string) => {
     if (!props.chat?._id) return
-    chatStore.editChat(props.chat._id, { memoryId: id() }, undefined)
+    chatStore.editChat(
+      props.chat._id,
+      { memoryId: nextId === undefined ? id() : nextId },
+      undefined
+    )
   }
 
   const useUserEmbed = () => {
@@ -119,10 +125,10 @@ const ChatMemoryModal: Component<{
           label="Chat Memory Book"
           helperText="The memory book your chat will use"
           items={[{ label: 'None', value: '' }].concat(state.items)}
-          value={id()}
+          value={props.chat?.memoryId}
           onChange={(item) => {
             changeBook(item.value)
-            useMemoryBook()
+            useMemoryBook(item.value)
           }}
         />
         <div>

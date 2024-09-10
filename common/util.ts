@@ -564,11 +564,9 @@ export function getSubscriptionModelLimits(
 ) {
   if (!model) return
 
-  if (!Array.isArray(model.levels)) {
-    model.levels = []
-  }
+  const levels = Array.isArray(model.levels) ? model.levels.slice() : []
 
-  model.levels.push({
+  levels.push({
     level: model.subLevel,
     maxContextLength: model.maxContextLength!,
     maxTokens: model.maxTokens,
@@ -576,7 +574,7 @@ export function getSubscriptionModelLimits(
 
   let match: AppSchema.SubscriptionModelLevel | undefined
 
-  for (const candidate of model.levels) {
+  for (const candidate of levels) {
     if (candidate.level > level) continue
 
     if (!match || match.level < candidate.level) {

@@ -82,8 +82,8 @@ const Modal: Component<Props> = (props) => {
                 </Match>
 
                 <Match when>
-                  <div class="flex flex-row justify-between p-4 text-lg font-bold">
-                    <div>{props.title}</div>
+                  <div class="flex w-full flex-row justify-between p-4 text-lg font-bold">
+                    <div class="w-full">{props.title}</div>
                     <Show when={props.dismissable !== false}>
                       <div
                         onClick={props.close}

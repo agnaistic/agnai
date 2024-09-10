@@ -25,6 +25,8 @@ import { parseStops } from '/common/util'
 import { getTextgenCompletion } from './dispatch'
 import { handleVenus } from './venus'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { obtainLock, releaseLock } from '../api/chat/lock'
+import { getServerConfiguration } from '../db/admin'
 
 export async function getSubscriptionPreset(
   user: AppSchema.User,
@@ -120,13 +122,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  const srv = await getServerConfiguration()
+
   /**
    * Lock per user per model
    */
-  // if (!opts.guidance) {
-  //   const lockId = `${opts.user._id}-${preset.subModel}`
-  //   await obtainLock(lockId, 15)
-  // }
+  const lockId = `${opts.user._id}-${opts.subscription.preset.name}`
+  if (!opts.guidance && +srv.lockSeconds > 0) {
+    await obtainLock(lockId, srv.lockSeconds)
+  }
 
   const useRecommended = !!opts.gen.registered?.agnaistic?.useRecommended
   if (useRecommended) {
@@ -297,7 +301,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
   }
 
-  // await releaseLock(lockId)
+  if (+srv.lockSeconds > 0) {
+    await releaseLock(lockId)
+  }
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, ['END_OF_DIALOG'])

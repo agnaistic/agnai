@@ -56,6 +56,14 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           helperText="Markdown is supported"
           value={state.config?.maintenanceMessage}
         />
+
+        <TextInput
+          fieldName="lockSeconds"
+          type="number"
+          label="Lock Duration (seconds)"
+          helperText="Maximum TTL of user-level lock - Set to zero (0) to disable"
+          value={state.config?.lockSeconds ?? 0}
+        />
       </Card>
 
       <Card bg="bg-500">

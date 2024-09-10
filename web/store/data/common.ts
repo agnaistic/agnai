@@ -1,3 +1,4 @@
+import { createMemo } from 'solid-js'
 import { isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { toastStore } from '../toasts'
@@ -160,6 +161,29 @@ function getAuthedPromptEntities() {
     scenarios,
     imageData: attachments[chat._id]?.image,
   }
+}
+
+export function useActivePreset() {
+  const chat = getStore('chat')()
+  const user = getStore('user')()
+
+  const preset = createMemo(() => {
+    if (!chat.active?.chat || !user.user) return
+    const { presets, templates } = getStore('presets').getState()
+
+    const preset = deepClone(getChatPreset(chat.active.chat, user.user, presets))
+
+    if (preset.promptTemplateId) {
+      const template = templates.find((t) => t._id === preset.promptTemplateId)
+      preset.gaslight = template?.template || preset.gaslight
+    }
+
+    applySubscriptionAdjustment(preset)
+
+    return preset
+  })
+
+  return preset
 }
 
 export function getActivePreset(

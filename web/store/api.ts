@@ -11,16 +11,19 @@ const PROTO = location.protocol
 const HOST = location.hostname.toLowerCase()
 const PORT = location.port
 
-export const baseUrl =
-  PORT === '1234' || PORT === '3001' || HOST === 'localhost' || HOST === '127.0.0.1'
-    ? `${PROTO}//${HOST}:3001`
-    : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
-    ? `${PROTO}//prd-api.agnai.chat`
-    : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-    ? `${PROTO}//prd-api.agnai.chat`
-    : HOST === 'stg.agnai.chat'
-    ? `${PROTO}//stg-api.agnai.chat`
-    : location.origin
+const API_OVERRIDE = localStorage.getItem('api_url')
+
+export const baseUrl = API_OVERRIDE
+  ? `${PROTO}//${API_OVERRIDE}`
+  : PORT === '1234' || PORT === '3001' || HOST === 'localhost' || HOST === '127.0.0.1'
+  ? `${PROTO}//${HOST}:3001`
+  : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
+  ? `${PROTO}//edge-api.agnai.chat`
+  : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
+  ? `${PROTO}//edge-api.agnai.chat`
+  : HOST === 'stg.agnai.chat'
+  ? `${PROTO}//stg-api.agnai.chat`
+  : location.origin
 
 export const api = {
   get,

@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   Pencil,
 } from 'lucide-solid'
-import WizardIcon from '/web/icons/WizardIcon'
+import { AgnaisticModel } from '/web/shared/PresetSettings/Agnaistic'
 
 type NavProps = {
   ctx: ContextState
@@ -78,67 +78,81 @@ const ChatNav: Component<NavProps> = (props) => {
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
 
+  const canModel = createMemo(() => props.ctx.info?.adapter === 'agnaistic')
+
+  const size = 20
+
   return (
     <>
-      <Nav.Item href={`/character/list`}>
-        <WizardIcon /> Characters
-      </Nav.Item>
-
-      <Nav.Item href={`/character/${props.ctx.char?._id}/chats`}>
-        <ChevronLeft /> Chats
-      </Nav.Item>
-
       <UserProfile />
 
-      <Nav.Item onClick={() => props.togglePane('participants')}>
-        <Users /> Participants
-      </Nav.Item>
+      <Nav.DoubleItem>
+        <Nav.Item class="min-h-8" href={`/character/list`}>
+          <ChevronLeft size={16} /> Characters
+        </Nav.Item>
+
+        <Nav.Item class="min-h-8" href={`/character/${props.ctx.char?._id}/chats`}>
+          <ChevronLeft size={16} /> Chats
+        </Nav.Item>
+      </Nav.DoubleItem>
+
+      <Nav.DoubleItem>
+        <Nav.Item onClick={() => props.togglePane('participants')}>
+          <Users size={size} /> Participants
+        </Nav.Item>
+      </Nav.DoubleItem>
 
       <Nav.Item onClick={() => props.togglePane('chat-settings')}>
-        <Settings /> Edit Chat
+        <Settings size={size} /> Edit Chat
       </Nav.Item>
 
       <Nav.Item onClick={() => props.togglePane('preset')}>
-        <Sliders class="min-w-[24px]" width={'24px'} size={24} />
+        <Sliders class="min-w-[24px]" width={'24px'} size={size} />
         <span class="min-w-fit">Preset </span>
         <span class="text-500 ellipsis text-xs italic">{props.adapterLabel}</span>
       </Nav.Item>
 
       <Show when={isOwner()}>
         <Nav.Item onClick={() => props.togglePane('memory')}>
-          <Book /> Memory
+          <Book size={size} /> Memory
         </Nav.Item>
       </Show>
 
       <Nav.Item onClick={() => props.togglePane('ui')}>
-        <Palette /> UI
+        <Palette size={size} /> UI
       </Nav.Item>
 
       <Show when={isOwner()}>
         <Nav.Item onClick={() => props.setModal('graph')}>
-          <Map /> Chat Graph
+          <Map size={size} /> Chat Graph
         </Nav.Item>
+      </Show>
+
+      <Show when={canModel()}>
+        <div class="flex w-full justify-center">
+          <AgnaisticModel inherit={props.ctx.preset} />
+        </div>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Nav.Item
           onClick={() => settingStore.modal(true)}
           ariaLabel="Open settings page"
-          tooltip="Settings"
+          tooltip="Site Settings"
         >
-          <Settings aria-hidden="true" />
+          <Settings size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item onClick={() => settingStore.toggleAnonymize()} tooltip="Anonymize">
-          <VenetianMask />
+          <VenetianMask size={size} />
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Character">
-          <Download />
+          <Download size={size} />
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('restart')} tooltip="Restart Chat">
-          <RotateCcw />
+          <RotateCcw size={size} />
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
-          <Trash />
+          <Trash size={size} />
         </Nav.Item>
       </div>
     </>
@@ -150,7 +164,7 @@ const ChatMenuTitle: Component<NavProps> = (props) => {
       onClick={() => props.togglePane('character')}
       class="bg-700 hover:bg-600 flex h-8 max-w-[80%] cursor-pointer items-center gap-2 rounded-md px-2"
     >
-      <Pencil size={20} color="var(--bg-500)" class="min-h-[12px] min-w-[12px]" />
+      <Pencil size={16} color="var(--bg-500)" class="min-h-[12px] min-w-[12px]" />
       <span class="ellipsis text-md">{props.ctx.char?.name}</span>
     </div>
   )
