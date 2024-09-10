@@ -41,6 +41,7 @@ type Props = {
   input?: JSX.InputHTMLAttributes<HTMLInputElement>
   textarea?: JSX.TextareaHTMLAttributes<HTMLTextAreaElement>
   children?: any
+  initialValue?: number | string
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -205,7 +206,7 @@ const TextInput: Component<Props> = (props) => {
             readOnly={props.readonly}
             placeholder={placeholder()}
             aria-placeholder={placeholder()}
-            value={value()}
+            value={props.initialValue ?? value()}
             class={
               'form-field focusable-field text-900 min-h-[40px] w-full rounded-md px-4 ' +
               (props.class || '')
@@ -231,7 +232,7 @@ const TextInput: Component<Props> = (props) => {
             readOnly={props.readonly}
             placeholder={placeholder()}
             aria-placeholder={placeholder()}
-            value={value()}
+            value={props.initialValue ?? value()}
             class={'form-field focusable-field rounded-md px-4 ' + (props.class || '')}
             classList={{
               'w-full': !props.class?.includes('w-'),

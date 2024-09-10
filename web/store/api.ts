@@ -17,7 +17,7 @@ export const baseUrl =
     : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
     ? `${PROTO}//prd-api.agnai.chat`
     : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-    ? `${PROTO}//prd-api.agnai.chat`
+    ? `${PROTO}//edge-api.agnai.chat`
     : HOST === 'stg.agnai.chat'
     ? `${PROTO}//stg-api.agnai.chat`
     : location.origin

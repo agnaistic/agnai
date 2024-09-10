@@ -15,8 +15,12 @@ import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
 import { getActivePreset } from '/web/store/data/common'
+import { forms } from '/web/emitter'
 
 const helpMarkdown = neat`
+
+**IMPORTANT**: \`{{response}}\` is a _default_ schema value. It is **ALWAYS** generated!
+
 You can return many values using JSON schemas and control the structure of your response.
 For example you could define the following fields:
 - **response**: string
@@ -87,6 +91,16 @@ export const CharacterSchema: Component<{
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
 
+  forms.useSub((field, value) => {
+    if (field === 'jsonSchemaResponse') {
+      setResponse(value)
+    }
+
+    if (field === 'jsonSchemaHistory') {
+      setHistory(value)
+    }
+  })
+
   createEffect(
     on(
       () => show(),
@@ -130,7 +144,7 @@ export const CharacterSchema: Component<{
       const bad: string[] = []
       for (const res of resVars) {
         const name = res.slice(2, -2)
-        if (!names.has(name)) {
+        if (!names.has(name) && name !== 'response') {
           bad.push(name)
         }
       }
@@ -141,7 +155,7 @@ export const CharacterSchema: Component<{
       const bad: string[] = []
       for (const res of histVars) {
         const name = res.slice(2, -2)
-        if (!names.has(name)) {
+        if (!names.has(name) && name !== 'response') {
           bad.push(name)
         }
       }
@@ -358,6 +372,7 @@ export const CharacterSchema: Component<{
             </Show>
             <TextInput
               class="font-mono text-xs"
+              fieldName="jsonSchemaHistory"
               ref={(r) => (histRef = r)}
               label="History Template"
               onKeyDown={(ev) => {
@@ -380,7 +395,6 @@ export const CharacterSchema: Component<{
                 </>
               }
               isMultiline
-              fieldName="jsonSchemaHistory"
               value={hist()}
               // onInputText={(ev) => setHistory(ev)}
               placeholder="History Template"

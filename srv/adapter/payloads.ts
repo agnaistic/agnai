@@ -88,6 +88,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       placeholders: opts.placeholders,
       lists: opts.lists,
       previous: opts.previous,
+      json_schema_v2: json_schema,
       json_schema,
       imageData: opts.imageData,
     }
