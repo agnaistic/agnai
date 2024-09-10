@@ -164,7 +164,6 @@ const SchemaField: Component<{
             ]}
             fieldName={`${props.index}.type`}
             value={props.def.type}
-            disabled={props.locked}
           />
           <TextInput
             fieldName={`${props.index}.name`}
@@ -172,22 +171,17 @@ const SchemaField: Component<{
             value={props.name}
             class="h-8"
             parentClass="w-full"
-            disabled={props.locked}
           />
         </Pill>
         <Button
           schema="clear"
-          disabled={props.index === 0 || props.locked}
+          disabled={props.index === 0}
           onClick={() => props.moveUp(props.index)}
         >
           <ArrowUp size={12} />
         </Button>
 
-        <Button
-          schema="clear"
-          disabled={props.last || props.locked}
-          onClick={() => props.moveDown(props.index)}
-        >
+        <Button schema="clear" disabled={props.last} onClick={() => props.moveDown(props.index)}>
           <ArrowDown size={12} />
         </Button>
       </div>
