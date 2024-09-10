@@ -130,7 +130,9 @@ const Message: Component<MessageProps> = (props) => {
     if (props.msg.json) {
       const json = jsonValues()
       const update = getJsonUpdate(
-        ctx.preset?.jsonSource === 'character' ? ctx.char?.json : ctx.preset?.json,
+        ctx.preset?.jsonSource === 'character'
+          ? ctx.activeMap[props.msg.characterId!]?.json
+          : ctx.preset?.json,
         json
       )
 

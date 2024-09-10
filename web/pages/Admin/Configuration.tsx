@@ -74,6 +74,7 @@ const ServerConfiguration: Component = () => {
       modPrompt: 'string',
       modFieldPrompt: 'string',
       charlibGuidelines: 'string',
+      lockSeconds: 'number',
       charlibPublish: ['off', 'users', 'subscribers', 'moderators', 'admins'],
     })
 

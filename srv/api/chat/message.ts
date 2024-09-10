@@ -157,7 +157,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   // Coalesce for backwards compatibly while new UI rolls out
-  const replyAs = body.replyAs._id.startsWith('temp-')
+  const replyAs: AppSchema.Character = body.replyAs._id.startsWith('temp-')
     ? body.replyAs
     : await store.characters.getCharacter(chat.userId, body.replyAs._id || body.char._id)
 
@@ -249,7 +249,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
-  const schema = entities.gen.jsonSource === 'character' ? entities.char.json : entities.gen.json
+  const schema = entities.gen.jsonSource === 'character' ? replyAs.json : entities.gen.json
   const hydrator = entities.gen.jsonEnabled && schema ? jsonHydrator(schema) : undefined
 
   let hydration: HydratedJson | undefined

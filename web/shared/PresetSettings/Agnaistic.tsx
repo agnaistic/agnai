@@ -178,12 +178,12 @@ const ModelLabel: Component<{
     <div class="flex flex-col items-start">
       <div class="flex items-center justify-between gap-1">
         <div class="font-bold">{props.sub.name}</div>
-        <div class="text-500 text-xs">
+        <div class="text-700 text-xs">
           {Math.floor(context() / 1000)}K, {tokens()} tokens
         </div>
       </div>
       <Show when={props.sub.preset.description && !props.nodesc}>
-        <div class="text-500 text-xs">{props.sub.preset.description}</div>
+        <div class="text-700 text-xs">{props.sub.preset.description}</div>
       </Show>
     </div>
   )

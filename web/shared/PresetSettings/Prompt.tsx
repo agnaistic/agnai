@@ -99,7 +99,7 @@ export const PromptSettings: Component<
               // size="sm"
             >
               <Show when={json()} fallback="Disabled">
-                Enabled
+                <span class="text-900">Enabled</span>
               </Show>
             </ToggleButton>
           </CharacterSchema>
