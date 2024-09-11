@@ -287,7 +287,7 @@ export const CharacterSchema: Component<{
               <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
                 Import
               </Button>
-              <Show when={inherited()?.schema.length}>
+              <Show when={inherited()?.schema?.length}>
                 <Button
                   size="pill"
                   schema="secondary"
