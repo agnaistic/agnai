@@ -78,6 +78,15 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
   const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
   const opts = useModelOptions()
 
+  createEffect(
+    on(
+      () => props.inherit?.registered?.agnaistic?.subscriptionId,
+      (id) => {
+        setSelected(id)
+      }
+    )
+  )
+
   forms.useSub((field, value) => {
     if (field !== 'agnaistic_modelId') return
     setSelected(value)
