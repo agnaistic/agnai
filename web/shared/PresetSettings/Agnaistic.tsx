@@ -79,7 +79,7 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
   const opts = useModelOptions()
 
   forms.useSub((field, value) => {
-    if (field !== 'registered.agnaistic.subscriptionId') return
+    if (field !== 'agnaistic_modelId') return
     setSelected(value)
   })
 
@@ -122,7 +122,7 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
         options={opts()}
         onSelect={onSave}
         value={props.inherit?.registered?.agnaistic?.subscriptionId}
-        fieldName="registered.agnaistic.subscriptionId"
+        fieldName="agnaistic_modelId"
         selected={selected()}
         emitter={emitter.on}
       />
