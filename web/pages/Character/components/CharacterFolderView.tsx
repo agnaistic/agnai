@@ -196,7 +196,7 @@ export const CharacterFolderView: Component<
                 char={char}
                 toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
                 delete={() => props.setDelete(char)}
-                download={() => props.setDelete(char)}
+                download={() => props.setDownload(char)}
                 folder={() => setChangeFolder(char)}
               />
             )}

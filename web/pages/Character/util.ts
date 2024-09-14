@@ -143,11 +143,7 @@ export function toCharacterMap(bots: AppSchema.Character[]) {
   return map
 }
 
-export async function downloadCharCard(
-  input: string | AppSchema.Character,
-  format: string,
-  schema: string
-) {
+export async function downloadCharCard(input: string | AppSchema.Character, format: string) {
   let char: AppSchema.Character
 
   if (typeof input === 'string') {
@@ -161,7 +157,7 @@ export async function downloadCharCard(
     char = input
   }
 
-  const json = charToJson(char, format, schema)
+  const json = charToJson(char, format)
   const image = getAssetUrl(char.avatar!)
   /**
    * Only PNG and APNG files can contain embedded character information
@@ -206,11 +202,10 @@ async function imageToDataURL(image: string) {
   return dataUrl
 }
 
-function charToJson(char: AppSchema.Character, format: string, schema: string) {
+function charToJson(char: AppSchema.Character, format: string) {
   const { _id, ...json } = char
 
   const copy = { ...char }
-  copy.persona.kind = schema as any
 
   if (format === 'native') {
     return JSON.stringify(json, null, 2)
