@@ -85,29 +85,10 @@ export const DownloadModal: Component<{
       close={props.close}
       title="Download Character"
       footer={
-        <Button schema="secondary" onClick={props.close}>
-          <X /> Close
-        </Button>
-      }
-    >
-      <form ref={ref} class="flex flex-col gap-4">
-        <div class="flex flex-row gap-3">
-          <Select
-            label="Output Format"
-            fieldName="app"
-            value={format()}
-            items={outputs()}
-            onChange={(item) => setFormat(item.value)}
-          />
-          <Select
-            label="File type"
-            fieldName="fileType"
-            value={fileType()}
-            items={fileTypeItems()}
-            onChange={(item) => setFileType(item.value as CharacterFileType)}
-          />
-        </div>
-        <div class="flex w-full justify-center">
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Close
+          </Button>
           <Switch>
             <Match when={fileType() === 'json'}>
               <a
@@ -128,6 +109,25 @@ export const DownloadModal: Component<{
               </Button>
             </Match>
           </Switch>
+        </>
+      }
+    >
+      <form ref={ref} class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <Select
+            label="Output Format"
+            fieldName="app"
+            value={format()}
+            items={outputs()}
+            onChange={(item) => setFormat(item.value)}
+          />
+          <Select
+            label="File type"
+            fieldName="fileType"
+            value={fileType()}
+            items={fileTypeItems()}
+            onChange={(item) => setFileType(item.value as CharacterFileType)}
+          />
         </div>
       </form>
     </Modal>

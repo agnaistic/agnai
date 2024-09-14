@@ -306,7 +306,7 @@ const FolderContents: Component<{
 const Character: Component<CardProps & { folder: () => void }> = (props) => {
   const drag = createDraggable(props.char._id, props.char)
   return (
-    <div class="flex w-[calc(100%-200px)] select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
+    <div class="flex w-[calc(100%-24px)] select-none items-center gap-2 rounded-md border-[1px] border-[var(--bg-800)] hover:border-[var(--bg-600)]">
       <div ref={(ref) => drag(ref)} class="cursor-grab" style={{ 'touch-action': 'none' }}>
         <GripHorizontal color="var(--bg-500)" />
       </div>
@@ -317,7 +317,9 @@ const Character: Component<CardProps & { folder: () => void }> = (props) => {
       >
         <CharacterAvatar format={{ size: 'sm', corners: 'circle' }} char={props.char} zoom={1.75} />
         <div class="flex w-full flex-col overflow-hidden">
-          <div class="overflow-hidden text-ellipsis whitespace-nowrap">{props.char.name}</div>
+          <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
+            {props.char.name}
+          </div>
           <Show when={!!props.char.description}>
             <div class="text-600 ellipsis text-sm">{props.char.description}&nbsp;</div>
           </Show>
