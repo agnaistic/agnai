@@ -148,6 +148,10 @@ export const OPENAI_MODELS = {
   GPT4_Omni_Mini: 'gpt-4o-mini',
   GPT4_Omni_0806: 'gpt-4o-2024-08-06',
   GPT4_Omni_Latest: 'chatgpt-4o-latest',
+  O1_Preview: 'o1-preview',
+  O1_Preview_20240912: 'o1-preview-2024-09-12',
+  O1_Mini: 'o1-mini',
+  O1_Mini_20240912: '1-mini-2024-09-12',
 } as const
 
 export const MISTRAL_MODELS = {
@@ -196,6 +200,10 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT4_Omni_Mini]: true,
   [OPENAI_MODELS.GPT4_Omni_0806]: true,
   [OPENAI_MODELS.GPT4_Omni_Latest]: true,
+  [OPENAI_MODELS.O1_Preview]: true,
+  [OPENAI_MODELS.O1_Preview_20240912]: true,
+  [OPENAI_MODELS.O1_Mini]: true,
+  [OPENAI_MODELS.O1_Mini_20240912]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point

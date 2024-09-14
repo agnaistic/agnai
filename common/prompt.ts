@@ -888,7 +888,7 @@ export function getContextLimit(
     }
 
     case 'openai': {
-      const limit = OPENAI_CONTEXTS[model] || 8100
+      const limit = OPENAI_CONTEXTS[model] || 128000
       return Math.min(configuredMax, limit) - genAmount
     }
 
