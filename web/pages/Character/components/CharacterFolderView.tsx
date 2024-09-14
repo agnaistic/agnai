@@ -179,7 +179,7 @@ export const CharacterFolderView: Component<
                 char={char}
                 toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
                 delete={() => props.setDelete(char)}
-                download={() => props.setDelete(char)}
+                download={() => props.setDownload(char)}
                 folder={() => setChangeFolder(char)}
               />
             )}
@@ -508,20 +508,6 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
       </div>
     </RootModal>
   )
-}
-
-function normalize(folder?: string) {
-  if (!folder) return '/'
-
-  if (folder.endsWith('/')) {
-    folder = folder.slice(0, -1)
-  }
-
-  if (!folder.startsWith('/')) {
-    folder = '/' + folder
-  }
-
-  return folder.toLowerCase()
 }
 
 /**
