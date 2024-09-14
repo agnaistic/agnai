@@ -26,10 +26,11 @@ import { DropMenu } from '/web/shared/DropMenu'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
-import { characterStore } from '/web/store'
+import { characterStore, chatStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
+import { forms } from '/web/emitter'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -38,6 +39,7 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
+  const chars = chatStore()
   const [search, setSearch] = useSearchParams()
   const [, { onDragStart, onDragEnd }] = useDragDropContext()!
   const size = useResizeObserver()
@@ -49,7 +51,7 @@ export const CharacterFolderView: Component<
 
   const selectFolder = (folder: string) => {
     setSearch({ folder })
-    setFolder(folder)
+    setFolder(toFolderSlug(folder))
   }
 
   onDragStart(({ draggable }) => {
@@ -81,14 +83,14 @@ export const CharacterFolderView: Component<
   })
 
   const faveChars = createMemo(() => {
-    const name = normalize(folder())
-    const faves = props.favorites.filter((ch) => name === normalize(ch.folder || ''))
+    const name = toFolderSlug(folder())
+    const faves = props.favorites.filter((ch) => name === toFolderSlug(ch.folder || ''))
     return faves
   })
 
   const folderChars = createMemo(() => {
-    const name = normalize(folder())
-    const chars = props.characters.filter((ch) => name === normalize(ch.folder || ''))
+    const name = toFolderSlug(folder())
+    const chars = props.characters.filter((ch) => name === toFolderSlug(ch.folder || ''))
     return chars
   })
 
@@ -100,17 +102,8 @@ export const CharacterFolderView: Component<
 
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
-    for (const char of props.characters.concat(props.favorites)) {
-      let folder = char.folder || ''
-      if (!folder.startsWith('/')) {
-        folder = '/' + folder
-      }
-
-      if (!folder.endsWith('/')) {
-        folder += '/'
-      }
-
-      folder = toFolderSlug(folder)
+    for (const char of chars.allChars.list) {
+      let folder = toFolderSlug(char.folder || '')
       const depth = folder.match(/\//g)?.length ?? 0
 
       if (!tree[folder]) {
@@ -127,11 +120,9 @@ export const CharacterFolderView: Component<
         }
       } while (true)
 
-      tree[folder].list.push(char)
-    }
-
-    for (const folder in tree) {
-      tree[folder].list
+      if (props.characters.some((ch) => ch._id === char._id)) {
+        tree[folder].list.push(char)
+      }
     }
 
     return tree
@@ -170,7 +161,7 @@ export const CharacterFolderView: Component<
           <FolderContents
             folder={folders()['/']}
             tree={folders()}
-            current={normalize(folder())}
+            current={folder()}
             toggleFavorite={props.toggleFavorite}
             setEdit={props.setEdit}
             setDelete={props.setDelete}
@@ -267,11 +258,11 @@ const FolderContents: Component<{
         onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
         ref={(ref) => drop(ref)}
       >
-        <Show when={props.current !== normalize(props.folder.path)}>
+        <Show when={props.current !== toFolderSlug(props.folder.path)}>
           <div class="mr-1">○</div>
           <div>{props.folder.path === '/' ? 'root' : props.folder.path.slice(1, -1)}</div>
         </Show>
-        <Show when={props.current === normalize(props.folder.path)}>
+        <Show when={props.current === toFolderSlug(props.folder.path)}>
           <div class="mr-1">•</div>
           <div
             class="text-[var(--hl-300)]"
@@ -452,12 +443,20 @@ function getChildFolders(tree: FolderTree, path: string, sort: SortDirection) {
 const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
   let ref: HTMLInputElement
 
+  const [actual, setActual] = createSignal('/')
+
+  forms.useSub((field, value) => {
+    if (field !== 'next-folder') return
+    setActual(toFolderSlug(value))
+  })
+
   createEffect(
     on(
       () => props.char,
       () => {
         if (!props.char) return
 
+        setActual(toFolderSlug(props.char.folder || '/'))
         ref.value = props.char.folder || '/'
         ref.focus()
       }
@@ -501,6 +500,7 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
 
         <TextInput
           fieldName="next-folder"
+          helperMarkdown={`Folder names are 'normalized'.\nNoramlized name: ${actual()}`}
           ref={(r) => (ref = r)}
           label="New Folder"
           value={props.char?.folder || '/'}
