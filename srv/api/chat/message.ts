@@ -489,7 +489,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     case 'continue': {
-      await store.msgs.editMessage(body.continuing._id, {
+      const next = await store.msgs.editMessage(body.continuing._id, {
         msg: responseText,
         adapter,
         meta,
@@ -504,6 +504,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         message: responseText,
         adapter,
         generate: true,
+        retries: next?.retries,
         meta,
         updatedAt,
       })

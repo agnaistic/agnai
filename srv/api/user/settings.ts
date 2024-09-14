@@ -378,6 +378,11 @@ export const updateConfig = handle(async ({ userId, body }) => {
   return user
 })
 
+export const removeProfileAvatar = handle(async (req) => {
+  const profile = await store.users.updateProfile(req.userId, { avatar: null as any })
+  return profile
+})
+
 export const updateProfile = handle(async (req) => {
   const form = handleForm(req, { handle: 'string' } as const)
   const filename = await entityUpload(

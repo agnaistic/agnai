@@ -1,7 +1,7 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
 import { clamp, neat } from '/common/util'
-import { toJsonSchema } from '/common/prompt'
+import { JsonSchema, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 
 const chat_template = neat`
@@ -88,7 +88,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       placeholders: opts.placeholders,
       lists: opts.lists,
       previous: opts.previous,
-      json_schema_v2: json_schema,
+      json_schema_v2: ensureSafeSchema(json_schema),
       json_schema,
       imageData: opts.imageData,
     }
@@ -425,5 +425,19 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
     return body
+  }
+}
+
+function ensureSafeSchema(schema: JsonSchema | undefined) {
+  if (!schema) return
+
+  const required = schema.required.filter((r) => r !== 'response')
+  const properties = { ...schema.properties }
+  delete properties.response
+
+  return {
+    ...schema,
+    required,
+    properties,
   }
 }

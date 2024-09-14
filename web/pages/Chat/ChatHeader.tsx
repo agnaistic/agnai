@@ -145,7 +145,7 @@ const ChatNav: Component<NavProps> = (props) => {
         <Nav.Item onClick={() => settingStore.toggleAnonymize()} tooltip="Anonymize">
           <VenetianMask size={size} />
         </Nav.Item>
-        <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Character">
+        <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Chat">
           <Download size={size} />
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('restart')} tooltip="Restart Chat">

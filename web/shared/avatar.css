@@ -27,7 +27,7 @@
 }
 
 .avatar-max3xl {
-  @apply max-w-[3.5rem] overflow-hidden sm:max-w-[6rem];
+  @apply w-14 max-w-[3.5rem] overflow-hidden sm:w-24 sm:max-w-[6rem];
 }
 
 .avatar-xs.avatar-circle {

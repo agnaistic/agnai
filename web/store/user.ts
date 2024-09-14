@@ -143,6 +143,14 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async removeProfileAvatar() {
+      const res = await usersApi.removeProfileAvatar()
+      if (res.error) return toastStore.error(`Could not update profile: ${res.error}`)
+      if (res.result) {
+        return { profile: res.result }
+      }
+    },
+
     async getTiers({ user }) {
       const res = await api.get('/admin/tiers')
       if (res.result) {

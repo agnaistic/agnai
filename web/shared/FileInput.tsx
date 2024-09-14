@@ -27,7 +27,7 @@ const FileInput: Component<{
 
   return (
     <div class={`w-full ${props.parentClass || ''}`}>
-      <FormLabel fieldName={props.fieldName} label={props.label} helperText={props.helperText} />
+      <FormLabel label={props.label} helperText={props.helperText} />
       <input
         ref={(ref) => {
           props.ref?.(ref)

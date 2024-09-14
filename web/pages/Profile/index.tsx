@@ -261,7 +261,16 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
           />
 
           <FileInput
-            label="Profile Image"
+            label={
+              <div class="flex items-center gap-2">
+                <div>Profile Image</div>
+                <Show when={!!state.profile?.avatar}>
+                  <div class="link text-sm" onClick={userStore.removeProfileAvatar}>
+                    Remove Avatar
+                  </div>
+                </Show>
+              </div>
+            }
             fieldName="avatar"
             accept="image/jpeg,image/png"
             helperText={'File size limit of 2MB'}

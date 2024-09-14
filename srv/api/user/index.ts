@@ -44,6 +44,7 @@ import {
   updatePartialConfig,
   revealApiKey,
   generateApiKey,
+  removeProfileAvatar,
 } from './settings'
 import { deleteUserAccount } from './delete-user'
 
@@ -87,6 +88,7 @@ router.post('/ui', loggedIn, updateUI)
 router.post('/config/partial', loggedIn, updatePartialConfig)
 router.post('/config', loggedIn, updateConfig)
 router.post('/profile', loggedIn, updateProfile)
+router.delete('/profile/avatar', loggedIn, removeProfileAvatar)
 router.post('/presets', loggedIn, createUserPreset)
 router.post('/presets/:id', loggedIn, updateUserPreset)
 router.post('/templates', loggedIn, createTemplate)

@@ -24,6 +24,7 @@ export const usersApi = {
   updateConfig,
   updatePartialConfig,
   updateProfile,
+  removeProfileAvatar,
   updateUI,
   updateServiceConfig,
   novelLogin,
@@ -131,6 +132,21 @@ export async function updateProfile(handle: string, file?: File) {
   if (file) form.append('avatar', file)
 
   const res = await api.upload<AppSchema.Profile>('/user/profile', form)
+  return res
+}
+
+async function removeProfileAvatar() {
+  if (!isLoggedIn()) {
+    const prev = await localApi.loadItem('profile')
+    const next: AppSchema.Profile = {
+      ...prev,
+      avatar: undefined,
+    }
+    await localApi.saveProfile(next)
+    return { result: next, error: undefined }
+  }
+
+  const res = await api.method('delete', '/user/profile/avatar')
   return res
 }
 
