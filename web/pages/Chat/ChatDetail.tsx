@@ -255,7 +255,6 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     if (!msgs.inference) return
-    if (!ctx.info) return
 
     // express.classify(opts.preset, msgs.inference.text)
     msgStore.clearLastInference()
