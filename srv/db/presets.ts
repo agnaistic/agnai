@@ -57,10 +57,10 @@ export async function updateGenPreset(chatId: string, preset: string) {
 
 export async function createUserPreset(userId: string, settings: AppSchema.GenSettings) {
   const preset: AppSchema.UserGenPreset = {
-    _id: v4(),
     kind: 'gen-setting',
     userId,
     ...settings,
+    _id: v4(),
   }
 
   const originalKey = preset.thirdPartyKey!

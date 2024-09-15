@@ -33,7 +33,7 @@ export const getBasePresets = handle(async () => {
   return { presets: defaultPresets }
 })
 
-export const createUserPreset = handle(async ({ userId, body }) => {
+export const createUserPreset = handle(async ({ userId, body, authed }) => {
   assertValid(createPreset, body, true)
   const service = body.service as AIAdapter
 
@@ -59,6 +59,10 @@ export const createUserPreset = handle(async ({ userId, body }) => {
   const newPreset = await store.presets.createUserPreset(userId!, preset)
   if (body.chatId) {
     await store.chats.update(body.chatId, { genPreset: newPreset._id })
+  }
+
+  if (authed && !authed.defaultPreset) {
+    await store.users.updateUser(userId, { defaultPreset: newPreset._id })
   }
 
   return newPreset
