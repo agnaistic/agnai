@@ -46,12 +46,8 @@ export const ChatHeader: Component<{
   }
 
   const adapterLabel = createMemo(() => {
-    if (!props.ctx.info) return ''
-
-    const { name, adapter, isThirdParty, presetLabel } = props.ctx.info
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
-      name || presetLabel
-    }`
+    if (!props.ctx.preset) return ''
+    const label = `${ADAPTER_LABELS[props.ctx.preset.service!]} - ${props.ctx.preset.name}`
     return label
   })
 
@@ -78,7 +74,7 @@ const ChatNav: Component<NavProps> = (props) => {
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
 
-  const canModel = createMemo(() => props.ctx.info?.adapter === 'agnaistic')
+  const canModel = createMemo(() => props.ctx.preset?.service === 'agnaistic')
 
   const size = 20
 

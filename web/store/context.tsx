@@ -9,7 +9,6 @@ import { toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
-import { PresetInfo, getClientPreset } from '../shared/adapter'
 import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
@@ -53,7 +52,6 @@ export type ContextState = {
   }
   promptHistory: any
   chatTree: ChatTree
-  info?: PresetInfo
   waiting?: MsgState['waiting']
   status?: MsgState['hordeStatus']
   preset?: AppSchema.UserGenPreset
@@ -146,11 +144,11 @@ export function ContextProvider(props: { children: any }) {
       users.user,
       presets.presets
     ) as AppSchema.UserGenPreset
+    console.log('match', match)
     return match
   })
 
   createEffect(() => {
-    const info = getClientPreset(chats.active?.chat)
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
@@ -172,7 +170,6 @@ export function ContextProvider(props: { children: any }) {
       handle: handle(),
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
-      info,
       chatTree: msgs.graph.tree,
       waiting: msgs.waiting,
       status: msgs.hordeStatus,

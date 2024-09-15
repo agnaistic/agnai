@@ -622,14 +622,8 @@ export const msgStore = createStore<MsgState>(
 
       const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
       const removed = new Set(deleteIds)
-      const nextMsgs = msgs
-        .filter((msg) => !removed.has(msg._id))
-        .map((msg) => {
-          const parent = parents[msg._id]
-          if (!parent) return msg
 
-          return { ...msg, parent }
-        })
+      const nextMsgs = msgs.filter((msg) => !removed.has(msg._id))
 
       const leafId = nextMsgs.slice(-1)[0]?._id || ''
       const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId, parents)
@@ -638,10 +632,7 @@ export const msgStore = createStore<MsgState>(
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
-      return {
-        msgs: nextMsgs,
-        graph: { tree: removeChatTreeNodes(graph.tree, deleteIds), root: graph.root },
-      }
+      updateMsgParents(activeChatId, parents)
     },
     stopSpeech() {
       stopSpeech()
@@ -1143,12 +1134,12 @@ subscribe(
 )
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
-  const { msgs } = msgStore.getState()
+  const { activeChatId } = msgStore.getState()
+
+  if (activeChatId !== body.chatId) return
   toastStore.error(`Failed to generate response: ${body.error}`)
 
-  let nextMsgs = msgs
-
-  msgStore.setState({ partial: undefined, waiting: undefined, msgs: nextMsgs, retrying: undefined })
+  msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
 })
 
 subscribe('message-warning', { warning: 'string' }, (body) => {
@@ -1193,6 +1184,35 @@ const updateMsgSub = (body: any) => {
   })
 }
 
+function updateMsgParents(chatId: string, parents: Record<string, string>) {
+  const { messageHistory, msgs, activeChatId, graph } = msgStore.getState()
+  if (activeChatId !== chatId) return
+
+  let nextHist = messageHistory.slice()
+  let nextMsgs = msgs.slice()
+  let tree = graph.tree
+
+  for (const [nodeId, parentId] of Object.entries(parents)) {
+    if (typeof parentId !== 'string') continue
+    const prev = graph.tree[nodeId]
+    if (!prev) continue
+
+    const next = { ...prev.msg, parent: parentId }
+    nextHist = replace(nodeId, nextHist, { parent: parentId })
+    nextMsgs = replace(nodeId, nextMsgs, { parent: parentId })
+    tree = updateChatTreeNode(tree, next)
+  }
+
+  msgStore.setState({
+    msgs: nextMsgs,
+    messageHistory: nextHist,
+    graph: {
+      tree,
+      root: graph.root,
+    },
+  })
+}
+
 subscribe(
   'message-edited',
   {
@@ -1205,6 +1225,10 @@ subscribe(
   },
   updateMsgSub
 )
+
+subscribe('message-parents', { chatId: 'string', parents: 'any' }, (body) => {
+  updateMsgParents(body.chatId, body.parents)
+})
 
 subscribe(
   'message-swapped',

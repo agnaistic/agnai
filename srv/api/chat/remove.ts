@@ -28,6 +28,8 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
       if (typeof parent !== 'string') continue
       await store.msgs.editChatMessage(msgId, chatId, { parent })
     }
+
+    sendMany(chat.memberIds.concat(chat.userId), { type: 'message-parents', parents: body.parents })
   }
 
   sendMany(chat.memberIds.concat(chat.userId), { type: 'messages-deleted', ids: body.ids })
