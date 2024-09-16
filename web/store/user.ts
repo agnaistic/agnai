@@ -535,6 +535,7 @@ export const userStore = createStore<UserState>(
 
       onSuccess?.()
       publish({ type: 'login', token: res.result.token })
+      events.emit(EVENTS.loggedIn)
     },
     async *logout() {
       clearAuth()

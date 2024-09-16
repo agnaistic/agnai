@@ -179,7 +179,6 @@ const Message: Component<MessageProps> = (props) => {
       data-lastsplit="true"
       style={true ? {} : alt()}
       classList={{
-        'first-in-ctx-window': user.ui.contextWindowLine && props.firstInserted,
         'bg-chat-bot': !props.msg.ooc && !props.msg.userId,
         'bg-chat-user': !props.msg.ooc && !!props.msg.userId,
         'bg-chat-ooc': !!props.msg.ooc,

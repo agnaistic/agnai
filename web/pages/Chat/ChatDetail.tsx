@@ -7,7 +7,6 @@ import {
   For,
   Index,
   onCleanup,
-  onMount,
   Show,
 } from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -113,7 +112,6 @@ const ChatDetail: Component = () => {
   const [removeId, setRemoveId] = createSignal('')
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
-  const [linesAddedCount, setLinesAddedCount] = createSignal<number | undefined>(undefined)
 
   const chatMsgs = createMemo(() => {
     const self = user.profile
@@ -147,19 +145,9 @@ const ChatDetail: Component = () => {
     })
   })
 
-  onMount(() => {
-    chatStore.computePrompt(msgs.msgs[msgs.msgs.length - 1], false)
-    setLinesAddedCount(chats.linesAddedCount)
-  })
-
   onCleanup(() => {
     sticky.clear()
     events.emit('chat-closed')
-  })
-
-  const firstInsertedMsgIndex = createMemo(() => {
-    const linesAdded = linesAddedCount()
-    if (linesAdded) return chatMsgs().length - 1 - linesAdded
   })
 
   createEffect(() => {
@@ -490,7 +478,6 @@ const ChatDetail: Component = () => {
                     voice={
                       msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
                     }
-                    firstInserted={i === firstInsertedMsgIndex()}
                   >
                     {isOwner() && retries()?.list?.length! > 1 && i === indexOfLastRPMessage() && (
                       <SwipeMessage

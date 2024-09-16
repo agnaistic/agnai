@@ -1,11 +1,11 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Copy, Import, Plus, Trash } from 'lucide-solid'
+import { Copy, Download, Import, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { defaultPresets, presetValidator } from '../../../common/presets'
-import { presetStore, settingStore, toastStore } from '../../store'
+import { exportPreset, presetStore, settingStore, toastStore } from '../../store'
 import { getUsableServices, setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
@@ -81,10 +81,18 @@ const PresetList: Component = () => {
               <Button
                 schema="clear"
                 size="sm"
+                onClick={() => exportPreset(preset)}
+                class="icon-button"
+              >
+                <Download size={20} />
+              </Button>
+              <Button
+                schema="clear"
+                size="sm"
                 onClick={() => nav(`/presets/new?preset=${preset._id}`)}
                 class="icon-button"
               >
-                <Copy />
+                <Copy size={20} />
               </Button>
               <Button
                 schema="clear"
@@ -92,7 +100,7 @@ const PresetList: Component = () => {
                 onClick={() => setDeleting(preset._id)}
                 class="icon-button"
               >
-                <Trash />
+                <Trash size={20} />
               </Button>
             </div>
           )}

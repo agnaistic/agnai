@@ -190,7 +190,7 @@ const Attribute: Component<{
   createEffect(on(() => props.attr.key, setKey))
 
   return (
-    <div class="flex w-full flex-col gap-2">
+    <div class="bg-700 flex w-full flex-col gap-2 rounded-md p-1">
       <div class="flex w-full items-center justify-between gap-2">
         <TextInput
           parentClass="w-full"
@@ -202,27 +202,26 @@ const Attribute: Component<{
         />
         <Show when={props.editor}>
           <Button schema="secondary" onClick={() => props.editor?.generateField('persona', key())}>
-            <WandSparkles />
+            <WandSparkles size={20} />
           </Button>
         </Show>
         <Button schema="red" onClick={() => props.remove(props.index)}>
-          <Trash size={24} class="" />
+          <Trash size={20} class="" />
         </Button>
       </div>
-      <div class="">
-        <TextInput
-          ref={(r) => (valueRef = r)}
-          fieldName={`attr-value.${props.index}`}
-          placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
-          value={''}
-          onKeyUp={(ev) => {
-            props.onKey(ev.key, props.index)
-            setValue(ev.currentTarget.value)
-          }}
-          isMultiline
-          disabled={props.disabled}
-        />
-      </div>
+
+      <TextInput
+        ref={(r) => (valueRef = r)}
+        fieldName={`attr-value.${props.index}`}
+        placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
+        value={''}
+        onKeyUp={(ev) => {
+          props.onKey(ev.key, props.index)
+          setValue(ev.currentTarget.value)
+        }}
+        isMultiline
+        disabled={props.disabled}
+      />
     </div>
   )
 }
