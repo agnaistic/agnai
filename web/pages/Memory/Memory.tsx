@@ -262,7 +262,7 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
       const json = JSON.parse(content)
       const book = validateBookJson(file.file.name, json)
       setJson(book || json)
-      toastStore.success('Character file accepted')
+      toastStore.success('Memory book accepted')
     } catch (ex: any) {
       toastStore.warn(`Invalid memory book JSON. ${ex.message}`)
     }
@@ -313,6 +313,8 @@ function validateBookJson(filename: string, json: any): AppSchema.MemoryBook | v
   }
 
   const book = json as AppSchema.MemoryBook
+  json.name = json.name || 'Imported Book'
+  json.kind = 'memory'
 
   const entries: AppSchema.MemoryEntry[] = []
 
@@ -373,7 +375,7 @@ function isSTFormat(json: any): json is STVenusBook {
 function convertFromSTVenus(json: STVenusBook): AppSchema.MemoryBook {
   const base: AppSchema.MemoryBook = {
     _id: '',
-    name: json.name,
+    name: json.name || 'Imported Book',
     kind: 'memory',
     userId: '',
     description: json.description,
@@ -412,14 +414,14 @@ function convertFromSTVenus(json: STVenusBook): AppSchema.MemoryBook {
 }
 
 function isSTExported(json: any): json is STExportedBook {
-  const keys = Object.keys(json || {})
+  const keys = Object.keys(json || {}).filter((key) => key !== 'originalData')
   return keys.length === 1 && keys[0] === 'entries'
 }
 
 function convertFromSTExported(filename: string, json: STExportedBook): AppSchema.MemoryBook {
   const base: AppSchema.MemoryBook = {
     _id: '',
-    name: filename.replace('.json', ''),
+    name: filename.replace('.json', '') || 'Imported Book',
     kind: 'memory',
     userId: '',
     description: '',

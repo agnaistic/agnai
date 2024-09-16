@@ -325,7 +325,7 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
-    async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
+    async *editMessage({ msgs, graph }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)
 
@@ -334,7 +334,11 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to update message: ${res.error}`)
       }
       if (res.result) {
-        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)) }
+        const tree = updateChatTreeNode(graph.tree, { ...prev, msg })
+        yield {
+          msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)),
+          graph: { tree, root: graph.root },
+        }
         onSuccess?.()
       }
     },
@@ -1159,7 +1163,13 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   })
 })
 
-const updateMsgSub = (body: any) => {
+const updateMsgSub = (body: {
+  messageId: string
+  message?: string
+  retries?: string[]
+  actions: any
+  extras?: string[]
+}) => {
   const { msgs, graph } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 

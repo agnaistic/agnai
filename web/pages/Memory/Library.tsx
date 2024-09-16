@@ -28,7 +28,7 @@ const Library: Component = () => {
 
   return (
     <>
-      <div class="my-2 flex flex-wrap justify-center gap-2">
+      <div class="flex flex-wrap justify-center gap-2 py-2">
         <For each={allowed()}>
           {(name, i) => (
             <Button

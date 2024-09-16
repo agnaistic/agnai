@@ -8,8 +8,7 @@ export const defaultChars = {
       kind: 'attributes',
       attributes: {
         species: ['robot'],
-        mind: ['kind', 'compassionate', 'caring', 'tender', 'forgiving', 'enthusiastic'],
-        personality: ['kind', 'compassionate', 'caring', 'tender', 'forgiving', 'enthusiastic'],
+        personality: ['kind, compassionate, caring, tender, forgiving, enthusiastic'],
       },
     },
     sampleChat:
