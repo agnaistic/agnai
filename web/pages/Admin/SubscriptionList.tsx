@@ -148,6 +148,15 @@ const SubscriptionList: Component = () => {
                       {sub.isDefaultSub ? ' default' : ''}
                       {sub.subDisabled ? ' (disabled)' : ''}
                     </span>
+                    <Contexts
+                      levels={[
+                        {
+                          level: sub.subLevel,
+                          maxContextLength: sub.maxContextLength!,
+                          maxTokens: sub.maxTokens!,
+                        },
+                      ]}
+                    />
                     <Contexts levels={sub.levels || []} />
                   </div>
                 </div>
