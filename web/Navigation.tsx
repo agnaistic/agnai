@@ -7,6 +7,7 @@ import {
   ChevronRight,
   HeartHandshake,
   HelpCircle,
+  Info,
   LogIn,
   MailQuestion,
   Menu,
@@ -62,6 +63,7 @@ import { navStore } from './subnav'
 import { getRgbaFromVar } from './shared/colors'
 import { CallToAction } from './shared/CallToAction'
 import Button from './shared/Button'
+import { clearTours } from './tours'
 
 const Navigation: Component = () => {
   let parent: any
@@ -189,7 +191,7 @@ const Navigation: Component = () => {
             <div class="flex w-2/12 justify-end">
               <Switch>
                 <Match when={nav.body && subnav()}>
-                  <div class="icon-button" onClick={() => setSubnav(false)}>
+                  <div class="icon-button tour-main-menu" onClick={() => setSubnav(false)}>
                     <ChevronLeft />
                   </div>
                 </Match>
@@ -349,6 +351,7 @@ const GuestNavigation: Component = () => {
           href="/login"
           ariaLabel="Login to the application"
           onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
+          class="tour-register"
         >
           <LogIn /> Login
         </Item>
@@ -495,6 +498,17 @@ const NavIcons: Component<{
             <DiscordDarkIcon />
           </Show>
         </ExternalLink>
+
+        <Item
+          onClick={() => {
+            clearTours()
+            window.location.href = location.origin
+          }}
+        >
+          <Tooltip tip="Show Welcome Tours" position="top">
+            <Info />
+          </Tooltip>
+        </Item>
       </div>
     </>
   )
@@ -647,6 +661,7 @@ const CharacterLink = () => {
         href="/character/list"
         ariaLabel="Characters"
         onClick={() => soundEmitter.emit('menu-item-clicked', 'characters')}
+        class="tour-character"
       >
         <WizardIcon aria-hidden="true" />
         <span aria-hidden="true"> Characters </span>
@@ -688,7 +703,7 @@ export const UserProfile = () => {
   return (
     <>
       <div
-        class="grid w-full items-center justify-between gap-2"
+        class="tour-user-profile grid w-full items-center justify-between gap-2"
         style={{
           'grid-template-columns': '1fr max-content',
         }}
@@ -746,9 +761,12 @@ const MultiItem: Component<{ children: any }> = (props) => {
   )
 }
 
-const DoubleItem: Component<{ children: any }> = (props) => {
+const DoubleItem: Component<{ children: any; class?: string }> = (props) => {
   return (
-    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 1fr' }}>
+    <div
+      class={`grid w-full gap-2 ${props.class || ''}`}
+      style={{ 'grid-template-columns': '1fr 1fr' }}
+    >
       {props.children}
     </div>
   )

@@ -77,7 +77,7 @@ const EditMemoryForm: Component<{
           helperText={props.book._id === '' ? 'New book' : props.book._id}
         />
         <TextInput
-          fieldName="name"
+          fieldName="bookName"
           label="Book Name"
           value={props.book?.name || ''}
           placeholder="Name for your memory book"
@@ -88,7 +88,7 @@ const EditMemoryForm: Component<{
         />
 
         <TextInput
-          fieldName="description"
+          fieldName="bookDesc"
           label="Description"
           value={props.book?.description || ''}
           placeholder="(Optional) A description for your memory book"

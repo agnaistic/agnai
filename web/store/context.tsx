@@ -144,7 +144,6 @@ export function ContextProvider(props: { children: any }) {
       users.user,
       presets.presets
     ) as AppSchema.UserGenPreset
-    console.log('match', match)
     return match
   })
 

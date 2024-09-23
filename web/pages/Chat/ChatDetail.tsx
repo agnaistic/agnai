@@ -30,13 +30,14 @@ import ChatPanes, { useValidChatPane } from './components/ChatPanes'
 import { useAppContext } from '/web/store/context'
 import { embedApi } from '/web/store/embeddings'
 import { ModeDetail } from '/web/shared/Mode/Detail'
-import { ChatHeader } from './ChatHeader'
+import { ChatMenu } from './ChatMenu'
 import { ChatFooter } from './ChatFooter'
 import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
 import { AppSchema } from '/common/types'
+import { startTour } from '/web/tours'
 
 export { ChatDetail as default }
 
@@ -257,6 +258,13 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
+    if (charName) {
+      settingStore.menu(true)
+      setTimeout(() => {
+        startTour('chat')
+      }, 500)
+    }
+
     events.emit(EVENTS.chatOpened, params.id)
     if (params.id !== chats.chat?._id) {
       chatStore.openChat(params.id)
@@ -417,7 +425,7 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <ChatHeader ctx={ctx} isOwner={isOwner()} />
+      <ChatMenu ctx={ctx} isOwner={isOwner()} />
       <ModeDetail
         footer={
           <ChatFooter
@@ -437,7 +445,7 @@ const ChatDetail: Component = () => {
       >
         <section
           data-messages
-          class={`flex w-full flex-col-reverse gap-4 overflow-y-auto`}
+          class={`chat-messages flex w-full flex-col-reverse gap-4 overflow-y-auto`}
           ref={sticky.monitor}
         >
           <div id="chat-messages" class="flex w-full flex-col gap-2">
@@ -459,6 +467,7 @@ const ChatDetail: Component = () => {
               {(msg, i) => (
                 <>
                   <Message
+                    index={i}
                     msg={msg()}
                     editing={chats.opts.editing}
                     last={i === indexOfLastRPMessage()}
@@ -496,6 +505,7 @@ const ChatDetail: Component = () => {
               <For each={waitingMsg()}>
                 {(msg) => (
                   <Message
+                    index={-1}
                     msg={msg}
                     onRemove={() => {}}
                     editing={false}

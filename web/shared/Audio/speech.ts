@@ -14,10 +14,18 @@ export function isAgnaisticSpeechAllowed() {
 
   if (!tts || tts === 'off') return false
 
-  if (state.user?.admin) return true
-  if (tts === 'subscribers' && (!state.sub?.level || state.sub?.level < 0)) return false
-  if (tts === 'users' && state.user?._id === 'anon') return false
-  return true
+  switch (tts) {
+    case 'admins':
+      return !!state.user?.admin
+
+    case 'subscribers':
+      return state.sub?.level && state.sub.level > 0
+
+    case 'users':
+      return state.user?._id !== 'anon'
+  }
+
+  return false
 }
 
 export function isNativeSpeechSupported() {

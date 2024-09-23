@@ -11,7 +11,7 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
-import { canUsePane, isMobile } from '../shared/hooks'
+import { canUsePane } from '../shared/hooks'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -58,7 +58,7 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showMenu: !isMobile(),
+  showMenu: true,
   showImpersonate: false,
   models: [],
   workers: [],

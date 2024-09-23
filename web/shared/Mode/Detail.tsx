@@ -100,7 +100,7 @@ export const ModeDetail: Component<{
               </Show>
               <section
                 data-messages
-                class="flex w-full flex-col-reverse overflow-y-auto"
+                class="mode-content flex w-full flex-col-reverse overflow-y-auto"
                 classList={{
                   // Chat Width
                   'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
