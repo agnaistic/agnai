@@ -35,6 +35,7 @@ import {
   memoryStore,
   chatStore,
   userStore,
+  settingStore,
 } from '../../store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
@@ -72,7 +73,7 @@ import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { charsApi } from '/web/store/data/chars'
 import Tooltip from '/web/shared/Tooltip'
 import { CharacterSchema } from './CharacterSchema'
-import { startTour } from '/web/tours'
+import { canStartTour, startTour } from '/web/tours'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -171,6 +172,10 @@ export const CreateCharacterForm: Component<{
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
     characterStore.clearCharacter()
+
+    if (canStartTour('char')) {
+      settingStore.closeMenu()
+    }
 
     startTour('char')
 

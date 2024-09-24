@@ -4,6 +4,8 @@ import { AppSchema } from '../../common/types/schema'
 import { StatusError } from '../api/wrap'
 import { now } from './util'
 import { sendAll } from '../api/ws'
+import { setContextLimitStrategy } from '/common/prompt'
+import { getSubscriptionModelLimits, getUserSubscriptionTier } from '/common/util'
 
 const subCache = new Map<string, AppSchema.SubscriptionModel>()
 const tierCache = new Map<string, AppSchema.SubscriptionTier>()
@@ -158,12 +160,33 @@ setInterval(async () => {
 export async function prepSubscriptionCache() {
   try {
     const presets = await getSubscriptions()
-    subCache.clear()
-    for (const preset of presets) {
-      subCache.set(preset._id, preset)
+
+    if (presets.length > 0) {
+      subCache.clear()
+      for (const preset of presets) {
+        subCache.set(preset._id, preset)
+      }
     }
   } catch (ex) {}
 }
+
+setContextLimitStrategy((user, gen) => {
+  if (!gen) return
+  if (gen.service !== 'agnaistic') return
+
+  const sub = getUserSubscriptionTier(user, getCachedTiers())
+  const level = sub?.level ?? -1
+
+  const tierId = gen.registered?.agnaistic?.subscriptionId || ''
+  const tier = subCache.get(tierId)
+
+  if (!tier) return
+
+  const limits = getSubscriptionModelLimits(tier, level)
+  if (!limits) return
+
+  return { context: limits.maxContextLength, tokens: limits.maxTokens }
+})
 
 export async function prepTierCache() {
   try {

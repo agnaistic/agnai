@@ -140,6 +140,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
   if (adapter === 'claude') return claude ?? main
 
   if (adapter === 'novel') {
+    if (model === NOVEL_MODELS['llama-3-erato-v1']) return llama3
     if (model === NOVEL_MODELS.kayra_v1) return novelModern
     if (model === NOVEL_MODELS.clio_v1) return novel
     if (model === NOVEL_MODELS.krake) return krake

@@ -368,7 +368,7 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
     lines,
     ...rest,
     limit: {
-      context: getContextLimit(opts.settings, adapter, model),
+      context: getContextLimit(opts.user, opts.settings, adapter, model),
       encoder,
     },
   })
@@ -610,7 +610,7 @@ export async function getLinesForPrompt(
   maxContext?: number
 ) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
-  maxContext = maxContext || getContextLimit(settings, adapter, model)
+  maxContext = maxContext || getContextLimit(opts.user, settings, adapter, model)
 
   const profiles = new Map<string, AppSchema.Profile>()
   for (const member of members) {
@@ -807,16 +807,16 @@ export function getChatPreset(
  */
 export function getAdapter(
   chat: AppSchema.Chat,
-  config: AppSchema.User,
+  user: AppSchema.User,
   preset: Partial<AppSchema.GenSettings> | undefined
 ) {
   let adapter = preset?.service!
 
-  const thirdPartyFormat = preset?.thirdPartyFormat || config.thirdPartyFormat
+  const thirdPartyFormat = preset?.thirdPartyFormat || user.thirdPartyFormat
   const isThirdParty = thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
 
   if (adapter === 'kobold') {
-    adapter = THIRDPARTY_HANDLERS[config.thirdPartyFormat]
+    adapter = THIRDPARTY_HANDLERS[user.thirdPartyFormat]
   }
 
   let model = ''
@@ -827,7 +827,7 @@ export function getAdapter(
   }
 
   if (adapter === 'novel') {
-    model = config.novelModel
+    model = user.novelModel
   }
 
   if (adapter === 'openai') {
@@ -840,16 +840,26 @@ export function getAdapter(
     } else presetName = 'User Preset'
   } else if (chat.genSettings) {
     presetName = 'Chat Settings'
-  } else if (config.defaultPresets) {
-    const servicePreset = config.defaultPresets[adapter]
+  } else if (user.defaultPresets) {
+    const servicePreset = user.defaultPresets[adapter]
     if (servicePreset) {
       presetName = `Service Preset`
     }
   }
 
-  const contextLimit = getContextLimit(preset, adapter, model)
+  const contextLimit = getContextLimit(user, preset, adapter, model)
 
   return { adapter, model, preset: presetName, contextLimit, isThirdParty }
+}
+
+type LimitStrategy = (
+  user: AppSchema.User,
+  gen: Partial<AppSchema.GenSettings> | undefined
+) => { context: number; tokens: number } | void
+
+let _strategy: LimitStrategy = () => {}
+export function setContextLimitStrategy(strategy: LimitStrategy) {
+  _strategy = strategy
 }
 
 /**
@@ -857,20 +867,23 @@ export function getAdapter(
  */
 
 export function getContextLimit(
+  user: AppSchema.User,
   gen: Partial<AppSchema.GenSettings> | undefined,
   adapter: AIAdapter,
   model: string
 ): number {
+  const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
   const configuredMax =
     gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
-
-  const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
   if (gen?.service === 'kobold' || gen?.service === 'ooba') return configuredMax - genAmount
 
   switch (adapter) {
-    case 'agnaistic':
-      return configuredMax - genAmount
+    case 'agnaistic': {
+      const stratMax = _strategy(user, gen)
+      const max = Math.min(configuredMax, stratMax?.context ?? configuredMax)
+      return max - genAmount
+    }
 
     // Any LLM could be used here so don't max any assumptions
     case 'petals':

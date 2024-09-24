@@ -240,11 +240,16 @@ export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
 }
 
 export const NOVEL_MODELS = {
+  'llama-3-erato-v1': 'erato-v1',
   euterpe: 'euterpe-v2',
   krake: 'krake-v2',
   clio_v1: 'clio-v1',
   kayra_v1: 'kayra-v1',
 } satisfies { [key: string]: string }
+
+export const NOVEL_ALIASES: Record<string, string> = {
+  'erato-v1': 'llama-3-erato-v1',
+}
 
 export const REPLICATE_MODEL_TYPES = {
   'Auto-detect': '',

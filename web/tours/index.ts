@@ -15,15 +15,20 @@ export type TourType = keyof typeof tours
 
 export function startTour(type: TourType, force?: boolean) {
   const tour = tours[type]
+  if (!canStartTour(type, force)) return
+  tour.start()
+}
 
+export function canStartTour(type: TourType, force?: boolean) {
+  const tour = tours[type]
   const isComplete = getStoredValue(`tour-${type}`, false)
   const forceTours = force || getStoredValue(`force-tours`, false)
 
-  if (isLoggedIn() && !forceTours) return
-  if (isComplete && !force) return
-  if (tour.isActive()) return
+  if (isLoggedIn() && !forceTours) return false
+  if (isComplete && !force) return false
+  if (tour.isActive()) return false
 
-  tour.start()
+  return true
 }
 
 export function clearTours() {

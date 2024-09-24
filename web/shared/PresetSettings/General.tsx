@@ -412,7 +412,7 @@ export const GeneralSettings: Component<
           helperText={
             <>
               <p>
-                Maximum context length. If unsure, leave this at 2048. Check your AI service
+                Maximum context length. If unsure, leave this at 0. Check your AI service
                 documentation for more details.
               </p>
             </>
@@ -420,7 +420,7 @@ export const GeneralSettings: Component<
           min={16}
           max={props.service === 'claude' ? 200000 : 32000}
           step={1}
-          value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
+          value={props.inherit?.maxContextLength || 4096}
           disabled={props.disabled}
           onChange={(val) => setContext(val)}
           recommended={maxCtx()}

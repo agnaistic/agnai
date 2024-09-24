@@ -9,9 +9,10 @@ import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
-import { tryParse, wait } from '/common/util'
+import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 import { canUsePane } from '../shared/hooks'
+import { setContextLimitStrategy } from '/common/prompt'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -232,6 +233,24 @@ export const settingStore = createStore<SettingState>(
       return { flags: nextFlags }
     },
   }
+})
+
+setContextLimitStrategy((user, gen) => {
+  const {
+    config: { subs },
+  } = settingStore.getState()
+  const { sub } = getStore('user').getState()
+  if (!gen || gen.service !== 'agnaistic') return
+
+  const tier = subs.find((sub) => sub._id === gen.registered?.agnaistic?.subscriptionId || '')
+  if (!tier) return
+
+  const level = sub?.level ?? -1
+
+  const limits = getSubscriptionModelLimits(tier.preset, level)
+  if (!limits) return
+
+  return { context: limits.maxContextLength, tokens: limits.maxTokens }
 })
 
 let firstConnection = true
