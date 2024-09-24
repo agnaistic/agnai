@@ -16,7 +16,6 @@
     "noUnusedLocals": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "resolveJsonModule": true,
     "paths": {
       "/srv/*": ["./srv/*"],
       "/common/*": ["./common/*"],

@@ -8,12 +8,13 @@ import {
   WorkerResponse,
 } from './types'
 import { docCache } from './cache'
-const llama3Json = require('/srv/sp-models/llama3.json')
+import * as llama3Json from '../../asset/llama3.json'
 
 // @ts-ignore
 env.allowLocalModels = false
 
-let llama3Encoder = mlc.Tokenizer.fromJSON(Buffer.from(JSON.stringify(llama3Json)))
+const llama3 = typeof llama3Json === 'string' ? llama3Json : JSON.stringify(llama3Json)
+let llama3Encoder = mlc.Tokenizer.fromJSON(llama3 as any)
 
 type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }

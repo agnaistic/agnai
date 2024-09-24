@@ -4,7 +4,6 @@ import fs, { readFileSync } from 'fs'
 import { init } from '@dqbd/tiktoken/lite/init'
 import { encoding_for_model } from '@dqbd/tiktoken'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
-import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import * as nai from 'nai-js-tokenizer'
 import { logger } from './middleware'
@@ -30,12 +29,6 @@ const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
 const wasm = getWasm()
 
-const main: Encoder = {
-  encode: (value: string) => gpt.encode(value),
-  decode: (tokens) => gpt.decode(tokens),
-  count: (value: string) => gpt.encode(value).length,
-}
-
 let novel: Encoder
 let novelModern: Encoder
 let llama: Encoder
@@ -47,6 +40,12 @@ let yi: Encoder
 let cohere: Encoder
 let llama3: Encoder
 let qwen2: Encoder
+
+const main: Encoder = {
+  encode: (value: string) => llama3.encode(value),
+  decode: (tokens) => llama3.decode(tokens),
+  count: (value: string) => llama3.encode(value).length,
+}
 
 export type EncoderType =
   | 'novel'
