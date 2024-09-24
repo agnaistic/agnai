@@ -1,4 +1,4 @@
-import { decode, encode } from 'gpt-3-encoder'
+import * as mlc from '@agnai/web-tokenizers'
 import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import {
   EmbedDocument,
@@ -8,9 +8,12 @@ import {
   WorkerResponse,
 } from './types'
 import { docCache } from './cache'
+const llama3Json = require('/srv/sp-models/llama3.json')
 
 // @ts-ignore
 env.allowLocalModels = false
+
+let llama3Encoder = mlc.Tokenizer.fromJSON(Buffer.from(JSON.stringify(llama3Json)))
 
 type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
@@ -32,11 +35,13 @@ const handlers: {
   [key in WorkerRequest['type']]: (msg: Extract<WorkerRequest, { type: key }>) => Promise<void>
 } = {
   encode: async (msg) => {
-    const result = encode(msg.text)
+    const tokenizer = await llama3Encoder
+    const result = Array.from(tokenizer.encode(msg.text))
     post('encoding', { id: msg.id, tokens: result })
   },
   decode: async (msg) => {
-    const result = decode(msg.tokens)
+    const tokenizer = await llama3Encoder
+    const result = tokenizer.decode(Int32Array.from(msg.tokens))
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {

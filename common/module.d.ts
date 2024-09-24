@@ -19,3 +19,8 @@ declare module 'png-chunks-extract' {
 
   export default extract
 }
+
+declare module '*.json' {
+  const mod: any
+  export default mod
+}
