@@ -14,8 +14,7 @@ import { json as llama3Json } from '../../asset/llama3.js'
 env.allowLocalModels = false
 
 const llama3 = typeof llama3Json === 'string' ? llama3Json : JSON.stringify(llama3Json)
-console.log(llama3Json)
-let llama3Encoder = mlc.Tokenizer.fromJSON(llama3 as any)
+let llama3Encoder = mlc.Tokenizer.fromJSON(Buffer.from(llama3 as any))
 
 type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
