@@ -8,7 +8,7 @@ import {
   WorkerResponse,
 } from './types'
 import { docCache } from './cache'
-import * as llama3Json from '../../asset/llama3.json'
+import { json as llama3Json } from '../../asset/llama3.js'
 
 // @ts-ignore
 env.allowLocalModels = false
