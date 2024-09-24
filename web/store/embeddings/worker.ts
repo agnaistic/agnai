@@ -1,4 +1,3 @@
-import * as mlc from '@agnai/web-tokenizers'
 import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import {
   EmbedDocument,
@@ -8,13 +7,12 @@ import {
   WorkerResponse,
 } from './types'
 import { docCache } from './cache'
-import { json as llama3Json } from '../../asset/llama3.js'
+import { getEncoding } from 'js-tiktoken'
 
 // @ts-ignore
 env.allowLocalModels = false
 
-const llama3 = typeof llama3Json === 'string' ? llama3Json : JSON.stringify(llama3Json)
-let llama3Encoder = mlc.Tokenizer.fromJSON(Buffer.from(llama3 as any))
+const encoder = getEncoding('cl100k_base')
 
 type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
@@ -36,13 +34,11 @@ const handlers: {
   [key in WorkerRequest['type']]: (msg: Extract<WorkerRequest, { type: key }>) => Promise<void>
 } = {
   encode: async (msg) => {
-    const tokenizer = await llama3Encoder
-    const result = Array.from(tokenizer.encode(msg.text))
+    const result = encoder.encode(msg.text)
     post('encoding', { id: msg.id, tokens: result })
   },
   decode: async (msg) => {
-    const tokenizer = await llama3Encoder
-    const result = tokenizer.decode(Int32Array.from(msg.tokens))
+    const result = encoder.decode(msg.tokens)
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {

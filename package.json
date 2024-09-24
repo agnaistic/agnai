@@ -93,6 +93,7 @@
     "google-auth-library": "^9.11.0",
     "gpt-3-encoder": "^1.1.4",
     "iconv-lite": "0.6.3",
+    "js-tiktoken": "^1.0.14",
     "jsonwebtoken": "^9.0.0",
     "localtunnel": "^2.0.2",
     "minimist": "^1.2.8",
