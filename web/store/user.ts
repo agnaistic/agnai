@@ -58,6 +58,7 @@ export type UserState = {
   showProfile: boolean
   tiers: AppSchema.SubscriptionTier[]
   billingLoading: boolean
+  subLoading: boolean
   subStatus?: {
     status: 'active' | 'cancelling' | 'cancelled' | 'new'
     tierId: string
@@ -303,11 +304,11 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *retrieveSubscription({ billingLoading, tiers, sub: previous }, quiet?: boolean) {
-      if (billingLoading) return
-      yield { billingLoading: true }
+    async *retrieveSubscription({ subLoading, tiers, sub: previous }, quiet?: boolean) {
+      if (subLoading) return
+      yield { subLoading: true }
       const res = await api.post('/admin/billing/subscribe/retrieve')
-      yield { billingLoading: false }
+      yield { subLoading: false }
 
       if (res.result) {
         const next = getUserSubscriptionTier(res.result.user, tiers, previous)
@@ -324,11 +325,11 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *validateSubscription({ billingLoading, tiers, sub: previous }, quiet?: boolean) {
-      if (billingLoading) return
-      yield { billingLoading: true }
+    async *validateSubscription({ subLoading, tiers, sub: previous }, quiet?: boolean) {
+      if (subLoading) return
+      yield { subLoading: true }
       const res = await api.post('/admin/billing/subscribe/verify')
-      yield { billingLoading: false }
+      yield { subLoading: false }
 
       if (res.result) {
         const next = getUserSubscriptionTier(res.result, tiers, previous)
@@ -796,6 +797,7 @@ function init(): UserState {
       showProfile: false,
       tiers: [],
       billingLoading: false,
+      subLoading: false,
     }
   }
 
@@ -814,6 +816,7 @@ function init(): UserState {
     showProfile: false,
     tiers: [],
     billingLoading: false,
+    subLoading: false,
   }
 }
 

@@ -91,7 +91,9 @@ export const retrieveSubscription = handle(async ({ userId }) => {
 
   if (user?.billing?.subscriptionId) {
     const result = await resyncSubscription(user).catch((err: Error) => ({ err }))
-    if (typeof result === 'object' && 'err' in result && result.err?.message) {
+    if (!result) {
+      errors.push(`Error occurred while retrieving subscription infomation`)
+    } else if (typeof result === 'object' && 'err' in result && result.err?.message) {
       errors.push(result.err.message)
     }
   }

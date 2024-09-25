@@ -145,12 +145,6 @@ async function revalidatePatron(userId: string | AppSchema.User) {
       sub: patron.sub ? { tierId: patron.sub._id, level: patron.sub.level } : undefined,
     },
     patreonUserId: patron.user.id,
-
-    // Handle patron level changes
-    sub:
-      patron.sub && (!user.sub || user.sub.type === 'patreon')
-        ? { type: 'patreon', level: patron.sub.level, tierId: patron.sub._id }
-        : user.sub,
   })
   await command.patron.link(patron.user.id, { userId: user._id })
   return next
