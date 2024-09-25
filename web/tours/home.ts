@@ -44,7 +44,10 @@ homeTour.addSteps([
     )} Agnai allows you to chat with fictional characters using AI.<br />You can chat completely for free with no limits or restrictions. <br />You can subscribe to access for smarter models, image generation, and other features.`,
     buttons: [next],
   },
-  {
+])
+
+if (!isLoggedIn()) {
+  homeTour.addStep({
     id: 'tour-register',
     text: `${title(
       'Guest Mode'
@@ -54,7 +57,10 @@ homeTour.addSteps([
       on: menuSide,
     },
     buttons: [prev, next],
-  },
+  })
+}
+
+homeTour.addSteps([
   {
     id: 'tour-user-profile',
     text: `<p class="font-bold text-hl-500 pb-1">Set up your Profile</p> You can change your handle and avatar.<br />You can use the <code>Persona</code> button to impersonate a character and use their persona.`,
