@@ -42,9 +42,9 @@ let llama3: Encoder
 let qwen2: Encoder
 
 const main: Encoder = {
-  encode: (value: string) => llama3.encode(value),
-  decode: (tokens) => llama3.decode(tokens),
-  count: (value: string) => llama3.encode(value).length,
+  encode: (value: string) => Array.from(turboEncoder.encode(value)),
+  decode: (tokens) => turboEncoder.decode(Uint32Array.from(tokens)).toString(),
+  count: (value: string) => turboEncoder.encode(value).length,
 }
 
 export type EncoderType =
