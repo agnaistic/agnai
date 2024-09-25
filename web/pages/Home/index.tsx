@@ -21,7 +21,7 @@ import WizardIcon from '/web/icons/WizardIcon'
 import Slot from '/web/shared/Slot'
 import { adaptersToOptions } from '/common/adapters'
 import { useRef } from '/web/shared/hooks'
-import { startTour } from '/web/tours'
+import { canStartTour, startTour } from '/web/tours'
 
 const enum Sub {
   None,
@@ -60,6 +60,8 @@ const HomePage: Component = () => {
     announceStore.getAll()
 
     emitter.on('loaded', () => {
+      if (!canStartTour('home')) return
+      settingStore.menu(true)
       startTour('home')
     })
   })

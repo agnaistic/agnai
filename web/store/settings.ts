@@ -59,7 +59,7 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showMenu: true,
+  showMenu: false,
   showImpersonate: false,
   models: [],
   workers: [],
