@@ -114,33 +114,38 @@ export async function resyncSubscription(user: AppSchema.User) {
   billing.lastChecked = new Date().toISOString()
   billing.status = 'active'
   user.sub = { level: expectedTier.level, tierId: expectedTier._id }
-  const result = await store.users.updateUser(user._id, { billing, sub: user.sub })
-  return result
+  await store.users.updateUser(user._id, { billing, sub: user.sub })
+  return expectedTier.level
 }
 
 export async function findValidSubscription(user: AppSchema.User) {
-  const sessionIds = (user.stripeSessions || []).slice().reverse()
   const subs: Stripe.Subscription[] = []
 
   const sessions = user.billing?.customerId
-    ? await stripe.checkout.sessions.list({
-        customer: user.billing?.customerId!,
-        expand: ['subscription', 'subscription.plan'],
-      })
-    : undefined
+    ? await stripe.checkout.sessions
+        .list({
+          customer: user.billing.customerId,
+          expand: ['data.subscription', 'data.subscription.plan'],
+        })
+        .then((res) => res.data)
+        .catch((err) => [])
+    : []
 
-  if (sessions) {
-    for (const session of sessions.data) {
-      sessions
-    }
-  }
+  const sessionIds = (user.stripeSessions || [])
+    .slice()
+    .reverse()
+    .filter((id) => !sessions.some((s) => s.id === id))
 
   for (const sessionId of sessionIds) {
     const session = await stripe.checkout.sessions
       .retrieve(sessionId, { expand: ['subscription', 'subscription.plan'] })
       .catch((err) => ({ err }))
 
-    if ('err' in session) continue
+    if (!session || 'err' in session || !session.subscription) continue
+    sessions.push(session)
+  }
+
+  for (const session of sessions) {
     if (session.payment_status !== 'paid') continue
     if (!session.subscription) continue
 
