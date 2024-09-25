@@ -228,6 +228,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       }
     }
 
+    if (subPreset.service === 'novel') {
+      opts.user.novelApiKey = userKey
+    }
+
     const stream = handler(opts)
     for await (const value of stream) {
       yield value

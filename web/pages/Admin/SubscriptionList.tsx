@@ -8,8 +8,9 @@ import { adminStore, presetStore, userStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import Divider from '/web/shared/Divider'
-import { SolidCard } from '/web/shared/Card'
+import { Pill, SolidCard } from '/web/shared/Card'
 import { Page } from '/web/Layout'
+import { SubscriptionModelLevel } from '/common/types/presets'
 
 const SubscriptionList: Component = () => {
   setComponentPageTitle('Subscriptions')
@@ -135,7 +136,7 @@ const SubscriptionList: Component = () => {
                 }}
               >
                 <div class="ml-4 flex w-full items-center">
-                  <div>
+                  <div class="flex gap-1">
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
                       [Level: {sub.subLevel}] {getServiceName(sub.service)}
                     </span>
@@ -147,6 +148,16 @@ const SubscriptionList: Component = () => {
                       {sub.isDefaultSub ? ' default' : ''}
                       {sub.subDisabled ? ' (disabled)' : ''}
                     </span>
+                    <Contexts
+                      levels={[
+                        {
+                          level: sub.subLevel,
+                          maxContextLength: sub.maxContextLength!,
+                          maxTokens: sub.maxTokens!,
+                        },
+                      ]}
+                    />
+                    <Contexts levels={sub.levels || []} />
                   </div>
                 </div>
               </A>
@@ -181,3 +192,17 @@ const SubscriptionList: Component = () => {
 }
 
 export default SubscriptionList
+
+const Contexts: Component<{ levels: SubscriptionModelLevel[] }> = (props) => {
+  return (
+    <>
+      <For each={props.levels}>
+        {(level) => (
+          <Pill small>
+            {level.level}. {level.maxContextLength} / {level.maxTokens}
+          </Pill>
+        )}
+      </For>
+    </>
+  )
+}

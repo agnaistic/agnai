@@ -230,7 +230,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   if (canUseService && opts.user.images?.summariseChat) {
     console.log('Using', opts.settings?.service, 'to summarise')
 
-    const summary = await getChatSummary(opts.settings)
+    const summary = await getChatSummary(opts.settings, opts.user.images?.summaryPrompt)
     console.log('Image caption: ', summary)
     return summary
   }
@@ -239,7 +239,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   return localApi.result({ response: prompt, meta: {} })
 }
 
-async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
+async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryPrompt?: string) {
   const opts = await msgsApi.getActiveTemplateParts()
   opts.limit = {
     context: 1024,
@@ -247,7 +247,7 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   }
   opts.lines = (opts.lines || []).reverse()
 
-  let template = getSummaryTemplate(settings.service!)
+  let template = getSummaryTemplate(settings.service!, summaryPrompt)
 
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
@@ -261,21 +261,27 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   return response
 }
 
-function getSummaryTemplate(service: AIAdapter) {
+function getSummaryTemplate(service: AIAdapter, summaryPrompt?: string) {
   switch (service) {
-    case 'novel':
+    case 'novel': {
+      const prompt =
+        summaryPrompt ||
+        `Write a detailed image caption of the current scene with a description of each character's appearance`
       return neat`
       {{char}}'s personality: {{personality}}
       [ Style: chat ]
       ***
       {{history}}
-      { Write a detailed image caption of the current scene with a description of each character's appearance }
-      `
+      { ${prompt} }`
+    }
 
     case 'openai':
     case 'openrouter':
     case 'claude':
-    case 'scale':
+    case 'scale': {
+      const prompt =
+        summaryPrompt ||
+        `Write an image caption of the current scene including the character's appearance`
       return neat`
       {{personality}}
       
@@ -283,12 +289,16 @@ function getSummaryTemplate(service: AIAdapter) {
       {{history}}
       
       {{ujb}}
-      (System: Write an image caption of the current scene including the character's appearance)
+      (System: ${prompt})
       Image caption:`
+    }
 
     case 'ooba':
     case 'kobold':
-    case 'agnaistic':
+    case 'agnaistic': {
+      const prompt =
+        summaryPrompt ||
+        `Write an image caption of the current scene using physical descriptions without names.`
       return neat`
       <system>Below is an instruction that describes a task. Write a response that completes the request.</system>
 
@@ -298,12 +308,13 @@ function getSummaryTemplate(service: AIAdapter) {
 
       Then the roleplay chat begins.
   
-      {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
+      {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
       {{/each}}
 
-      <user>Write an image caption of the current scene using physical descriptions without names.</user>
+      <user>${prompt}</user>
 
       <bot>Image caption:`
+    }
   }
 }
 

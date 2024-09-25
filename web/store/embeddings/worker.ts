@@ -1,4 +1,3 @@
-import { decode, encode } from 'gpt-3-encoder'
 import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import {
   EmbedDocument,
@@ -8,9 +7,12 @@ import {
   WorkerResponse,
 } from './types'
 import { docCache } from './cache'
+import { getEncoding } from 'js-tiktoken'
 
 // @ts-ignore
 env.allowLocalModels = false
+
+const encoder = getEncoding('cl100k_base')
 
 type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
@@ -32,11 +34,11 @@ const handlers: {
   [key in WorkerRequest['type']]: (msg: Extract<WorkerRequest, { type: key }>) => Promise<void>
 } = {
   encode: async (msg) => {
-    const result = encode(msg.text)
+    const result = encoder.encode(msg.text)
     post('encoding', { id: msg.id, tokens: result })
   },
   decode: async (msg) => {
-    const result = decode(msg.tokens)
+    const result = encoder.decode(msg.tokens)
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {

@@ -146,3 +146,7 @@
   top: 50%;
   transform: translateY(-50%);
 }
+
+.shepherd-text {
+  color: var(--text-900) !important;
+}

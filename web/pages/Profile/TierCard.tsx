@@ -4,6 +4,7 @@ import { SolidCard } from '/web/shared/Card'
 import { markdown } from '/web/shared/markdown'
 import { settingStore } from '/web/store'
 import { HelpModal } from '/web/shared/Modal'
+import { getSubscriptionModelLimits } from '/common/util'
 
 type TierPreview = OmitId<AppSchema.SubscriptionTier, Dates | 'enabled' | 'priceId' | 'productId'>
 
@@ -17,7 +18,14 @@ export const TierCard: Component<{
   const models = createMemo(() => {
     return settings.config.subs
       .filter((s) => props.tier.level >= s.level)
-      .map((m) => `- ${m.name}`)
+      .sort((l, r) =>
+        r.level > l.level ? 1 : r.level === l.level ? l.name.localeCompare(r.name) : -1
+      )
+      .map((m) => {
+        const level = getSubscriptionModelLimits(m.preset, m.level)
+        const ctx = level ? `${Math.floor(level.maxContextLength / 1000)}k` : ''
+        return `| ${m.name} | ${ctx} |`
+      })
       .join('\n')
   })
 
@@ -70,7 +78,10 @@ export const TierCard: Component<{
             title={`Models on ${props.tier.name}`}
             cta={<div class="link flex justify-center text-sm">Models</div>}
           >
-            <div class="markdown text-sm" innerHTML={markdown.makeHtml(`${models()}`)} />
+            <div
+              class="markdown text-sm"
+              innerHTML={markdown.makeHtml(`| Model | Context |\n| ----- | ------- |\n${models()}`)}
+            />
           </HelpModal>
         </Show>
         <div class="text-md flex flex-col items-center font-bold">

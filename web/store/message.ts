@@ -901,7 +901,7 @@ subscribe(
     json: 'any?',
   },
   async (body) => {
-    const { retrying, msgs, activeChatId } = msgStore.getState()
+    const { retrying, msgs, activeChatId, graph } = msgStore.getState()
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
 
@@ -938,14 +938,30 @@ subscribe(
       json: body.json,
     }
 
+    let tree: ChatTree | undefined
+
     if (retrying?._id === body.messageId) {
-      const next = msgs.map((msg) => (msg._id === body.messageId ? { ...msg, ...nextMsg } : msg))
-      msgStore.setState({ msgs: next })
+      const next = msgs.map((msg) => {
+        if (msg._id === body.messageId) {
+          const replacement = { ...msg, ...nextMsg }
+          tree = updateChatTreeNode(graph.tree, replacement)
+          return replacement
+        }
+
+        return msg
+      })
+      msgStore.setState({ msgs: next, graph: { ...graph, tree: tree || graph.tree } })
     } else {
       if (activeChatId !== body.chatId || !prev) return
-      msgStore.setState({
-        msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, ...nextMsg } : msg)),
+      const next = msgs.map((msg) => {
+        if (msg._id === body.messageId) {
+          const replacement = { ...msg, ...nextMsg }
+          tree = updateChatTreeNode(graph.tree, replacement)
+          return replacement
+        }
+        return msg
       })
+      msgStore.setState({ msgs: next, graph: { ...graph, tree: tree || graph.tree } })
     }
 
     if (active.chat._id !== body.chatId || !prev || !char) return

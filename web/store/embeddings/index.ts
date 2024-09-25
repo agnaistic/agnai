@@ -7,6 +7,7 @@ import { slugify } from '/common/util'
 import { toastStore } from '../toasts'
 import { docCache } from './cache'
 import type { MemoryState } from '../memory'
+import type { Tiktoken } from 'js-tiktoken'
 
 type Callback = () => void
 type QueryResult = Extract<WorkerResponse, { type: 'result' }>
@@ -262,12 +263,23 @@ async function query(chatId: string, text: string): Promise<QueryResult> {
 
 const TOKENIZE_LIMIT = 25
 
+let encoder: Tiktoken
+
+async function getEncoder() {
+  if (encoder) return encoder
+
+  const mod = await import('js-tiktoken').then((mod) => mod.getEncoding)
+  encoder = mod('cl100k_base')
+  return encoder
+}
+
 async function encode(text: string): Promise<number[]> {
   const id = v4()
   return new Promise<number[]>((resolve) => {
     const start = Date.now()
     const timer = setTimeout(async () => {
-      const result = await import('gpt-3-encoder').then((mod) => mod.encode(text))
+      const encoder = await getEncoder()
+      const result = encoder.encode(text)
       resolve(result)
     }, TOKENIZE_LIMIT)
     const resolver = (tokens: number[]) => {
@@ -283,7 +295,8 @@ async function decode(tokens: number[]): Promise<string> {
   const id = v4()
   return new Promise<string>((resolve) => {
     const timer = setTimeout(async () => {
-      const result = await import('gpt-3-encoder').then((mod) => mod.decode(tokens))
+      const encoder = await getEncoder()
+      const result = encoder.decode(tokens)
       resolve(result)
     }, TOKENIZE_LIMIT)
     const resolver = (text: string) => {

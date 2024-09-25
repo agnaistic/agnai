@@ -1,20 +1,11 @@
 import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
-import { ADAPTER_LABELS, adaptersToOptions } from '../../../common/adapters'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import {
-  chatStore,
-  msgStore,
-  presetStore,
-  scenarioStore,
-  settingStore,
-  userStore,
-} from '../../store'
-import { getChatPreset } from '../../../common/prompt'
+import { chatStore, msgStore, presetStore, scenarioStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
@@ -43,7 +34,6 @@ const ChatSettings: Component<{
 }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
   const user = userStore()
-  const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
   const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
   const [kind, setKind] = createSignal(state.chat?.overrides?.kind || state.char?.persona.kind)
@@ -199,47 +189,10 @@ const ChatSettings: Component<{
 
   props.footer(Footer)
 
-  const adapterText = createMemo(() => {
-    if (!state.chat || !user.user) return
-    const preset = getChatPreset(state.chat, user.user, presets)
-    if (!preset.service) return
-    const text = `Currently: ${ADAPTER_LABELS[preset.service]}. Inherited from: ${
-      preset.name || 'Chat'
-    }`
-    return {
-      text,
-      service: preset.service!,
-      preset,
-    }
-  })
-
   return (
     <form ref={ref} onSubmit={onSave} class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
         <Card class="text-xs">{state.chat?._id}</Card>
-      </Show>
-      <Show when={adapterText()}>
-        <Card>
-          <FormLabel label="AI Service" helperText={adapterText()?.text} />
-        </Card>
-      </Show>
-
-      <Show when={!adapterText()}>
-        <Card>
-          <Select
-            class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
-            fieldName="adapter"
-            helperText={`Default is set to: ${
-              ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
-            }`}
-            label="AI Service"
-            value={state.chat?.adapter}
-            items={[
-              { label: 'Default', value: 'default' },
-              ...adaptersToOptions(cfg.config.adapters),
-            ]}
-          />
-        </Card>
       </Show>
 
       <Card>
@@ -265,9 +218,6 @@ const ChatSettings: Component<{
             label="Chat Mode"
             helperText={
               <>
-                <p>
-                  Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo
-                </p>
                 <Show when={state.chat?.mode !== 'companion' && mode() === 'companion'}>
                   <TitleCard type="orange">
                     Warning! Switching to COMPANION mode is irreversible! You will no longer be able

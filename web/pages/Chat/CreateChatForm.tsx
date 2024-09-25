@@ -241,10 +241,10 @@ const CreateChatForm: Component<{
               label="Chat Mode"
               helperText={
                 <div class="flex flex-col gap-2">
-                  <TitleCard>
+                  {/* <TitleCard>
                     <b>ADVENTURE:</b> Adventure mode is currently disabled and will return when
                     Sagas are out of Preview.
-                  </TitleCard>
+                  </TitleCard> */}
                   <TitleCard>
                     <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,
                     Retry Message, Delete Messages, etc.

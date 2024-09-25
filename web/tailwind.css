@@ -67,6 +67,42 @@ body {
   @apply text-[var(--hl-400)];
 }
 
+.text-hl-100 {
+  color: var(--hl-900);
+}
+
+.text-hl-200 {
+  color: var(--hl-800);
+}
+
+.text-hl-300 {
+  color: var(--hl-700);
+}
+
+.text-hl-400 {
+  color: var(--hl-600);
+}
+
+.text-hl-500 {
+  color: var(--hl-500);
+}
+
+.text-hl-600 {
+  color: var(--hl-400);
+}
+
+.text-hl-700 {
+  color: var(--hl-300);
+}
+
+.text-hl-800 {
+  color: var(--hl-200);
+}
+
+.text-hl-900 {
+  color: var(--hl-100);
+}
+
 @layer base {
   /* .bg-100 {
     background: linear-gradient(var(--bg-100), var(--gradient-100));

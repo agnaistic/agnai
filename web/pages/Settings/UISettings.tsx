@@ -401,6 +401,7 @@ const UISettings: Component = () => {
       <Show when={chars.characters.list.length > 0}>
         <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
+            index={-1}
             editing={false}
             msg={toBotMsg(
               chars.characters.list[0],
@@ -416,6 +417,7 @@ const UISettings: Component = () => {
 
           <Show when={state.profile}>
             <Message
+              index={-1}
               editing={false}
               msg={toUserMsg(
                 state.profile!,

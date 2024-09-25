@@ -6,23 +6,23 @@ import { store } from '/srv/db'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
 import { subsCmd } from '/srv/domains/subs/cmd'
-import { StatusError } from '../wrap'
 
 export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
 
 const ONE_HOUR_MS = 60000 * 60
 
 export async function resyncSubscription(user: AppSchema.User) {
-  if (!user.billing) return
-
   const subscription = await findValidSubscription(user)
 
   if (!subscription) {
+    if (!user.billing) return
+
     // Don't throw when already cancelled
     if (user.billing.status === 'cancelled') return
 
     // Remove subscription if the call succeeds, but returns no active subscription
-    if (user.sub) {
+    // Don't clear it if it's occupied by other provider
+    if (user.sub && user.sub.type === 'native') {
       await store.users.updateUser(user._id, { sub: null as any })
     }
 
@@ -57,7 +57,7 @@ export async function resyncSubscription(user: AppSchema.User) {
 
   if (!expectedTier) {
     logger.error(
-      { customerId: user.billing.customerId, plan },
+      { customerId: user.billing?.customerId, plan, userId: user._id },
       'Subscription missing plan information'
     )
     return new Error(
@@ -70,8 +70,19 @@ export async function resyncSubscription(user: AppSchema.User) {
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
 
-  if (user.billing.subscriptionId !== subscription.id) {
-    user.billing.subscriptionId = subscription.id
+  const billing: AppSchema.User['billing'] = user.billing
+    ? user.billing
+    : {
+        lastChecked: new Date().toISOString(),
+        validUntil: new Date(0).toDateString(),
+        customerId: '',
+        lastRenewed: '',
+        status: 'cancelled',
+        subscriptionId: '',
+      }
+
+  if (billing.subscriptionId !== subscription.id) {
+    billing.subscriptionId = subscription.id
   }
 
   /**
@@ -80,61 +91,61 @@ export async function resyncSubscription(user: AppSchema.User) {
    */
   const isDowngrading = user.sub?.tierId === expectedTier._id
   if (isActive(validUntil) && isDowngrading) {
-    user.billing.lastChecked = new Date().toISOString()
-    user.billing.validUntil = validUntil.toISOString()
-    user.billing.lastRenewed = renewedAt.toISOString()
-    user.billing.status = 'active'
-    await store.users.updateUser(user._id, { billing: user.billing })
+    billing.lastChecked = new Date().toISOString()
+    billing.validUntil = validUntil.toISOString()
+    billing.lastRenewed = renewedAt.toISOString()
+    billing.status = 'active'
+    await store.users.updateUser(user._id, { billing })
     return expectedTier.level
   }
 
   if (!isActive(validUntil)) {
-    user.billing.lastChecked = new Date().toISOString()
-    user.billing.validUntil = validUntil.toISOString()
-    user.billing.lastRenewed = renewedAt.toISOString()
-    user.billing.status = 'cancelled'
-    user.billing.cancelling = false
-    await store.users.updateUser(user._id, { billing: user.billing })
+    billing.lastChecked = new Date().toISOString()
+    billing.validUntil = validUntil.toISOString()
+    billing.lastRenewed = renewedAt.toISOString()
+    billing.status = 'cancelled'
+    billing.cancelling = false
+    await store.users.updateUser(user._id, { billing })
     return new Error('Your subscripion has expired')
   }
 
-  user.billing.lastRenewed = renewedAt.toISOString()
-  user.billing.validUntil = validUntil.toISOString()
-  user.billing.lastChecked = new Date().toISOString()
-  user.billing.status = 'active'
+  billing.lastRenewed = renewedAt.toISOString()
+  billing.validUntil = validUntil.toISOString()
+  billing.lastChecked = new Date().toISOString()
+  billing.status = 'active'
   user.sub = { level: expectedTier.level, tierId: expectedTier._id }
-  await store.users.updateUser(user._id, { billing: user.billing, sub: user.sub })
+  await store.users.updateUser(user._id, { billing, sub: user.sub })
   return expectedTier.level
 }
 
 export async function findValidSubscription(user: AppSchema.User) {
-  if (!user.billing) return
-
-  const subscription = await stripe.subscriptions
-    .retrieve(user.billing.subscriptionId, { expand: ['plan'] })
-    .catch((err) => ({ err }))
-
-  if ('err' in subscription) {
-    logger.error({ err: subscription.err }, 'Stripe subscription retrieval failed')
-    throw new StatusError(
-      `Could not retrieve subsciption information - Please try again or contact support`,
-      500
-    )
-  }
-
-  if ('err' in subscription === false && isActive(subscription.current_period_end)) {
-    return subscription
-  }
-
-  const sessionIds = (user.stripeSessions || []).slice().reverse()
   const subs: Stripe.Subscription[] = []
+
+  const sessions = user.billing?.customerId
+    ? await stripe.checkout.sessions
+        .list({
+          customer: user.billing.customerId,
+          expand: ['data.subscription', 'data.subscription.plan'],
+        })
+        .then((res) => res.data)
+        .catch((err) => [])
+    : []
+
+  const sessionIds = (user.stripeSessions || [])
+    .slice()
+    .reverse()
+    .filter((id) => !sessions.some((s) => s.id === id))
 
   for (const sessionId of sessionIds) {
     const session = await stripe.checkout.sessions
       .retrieve(sessionId, { expand: ['subscription', 'subscription.plan'] })
       .catch((err) => ({ err }))
 
-    if ('err' in session) continue
+    if (!session || 'err' in session || !session.subscription) continue
+    sessions.push(session)
+  }
+
+  for (const session of sessions) {
     if (session.payment_status !== 'paid') continue
     if (!session.subscription) continue
 

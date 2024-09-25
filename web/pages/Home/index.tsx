@@ -1,6 +1,13 @@
 import './home.scss'
+
 import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { getAssetUrl, setComponentPageTitle, uniqueBy } from '../../shared/util'
+import {
+  ComponentEmitter,
+  createEmitter,
+  getAssetUrl,
+  setComponentPageTitle,
+  uniqueBy,
+} from '../../shared/util'
 import { announceStore, chatStore, settingStore, userStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
 import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
@@ -14,6 +21,7 @@ import WizardIcon from '/web/icons/WizardIcon'
 import Slot from '/web/shared/Slot'
 import { adaptersToOptions } from '/common/adapters'
 import { useRef } from '/web/shared/hooks'
+import { startTour } from '/web/tours'
 
 const enum Sub {
   None,
@@ -32,6 +40,7 @@ const HomePage: Component = () => {
   const user = userStore()
   const announce = announceStore()
   const cfg = settingStore((cfg) => ({
+    initLoading: cfg.initLoading,
     adapters: adaptersToOptions(cfg.config.adapters),
     guest: cfg.guestAccessAllowed,
     config: cfg.config,
@@ -45,8 +54,14 @@ const HomePage: Component = () => {
     })
   })
 
+  const emitter = createEmitter('loaded')
+
   onMount(() => {
     announceStore.getAll()
+
+    emitter.on('loaded', () => {
+      startTour('home')
+    })
   })
 
   return (
@@ -87,7 +102,7 @@ const HomePage: Component = () => {
           </TitleCard>
         </Show>
 
-        <RecentChats />
+        <RecentChats emitter={emitter} />
 
         <Show when={announcements().length > 0}>
           <Announcements list={announcements().slice(0, 1)} />
@@ -175,17 +190,22 @@ const HomePage: Component = () => {
 
 export default HomePage
 
-const RecentChats: Component = (props) => {
+const RecentChats: Component<{ emitter: ComponentEmitter<'loaded'> }> = (props) => {
   const nav = useNavigate()
 
-  const state = chatStore((s) => ({
-    chars: s.allChars.list,
-    last: uniqueBy(s.allChats, 'characterId')
-      .slice()
-      .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
-      .slice(0, 4)
-      .map((chat) => ({ chat, char: s.allChars.map[chat.characterId] })),
-  }))
+  const state = chatStore((s) => {
+    // We want this to occur after the state has propogated
+    setTimeout(() => props.emitter.emit.loaded(), 200)
+
+    return {
+      chars: s.allChars.list,
+      last: uniqueBy(s.allChats, 'characterId')
+        .slice()
+        .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
+        .slice(0, 4)
+        .map((chat) => ({ chat, char: s.allChars.map[chat.characterId] })),
+    }
+  })
 
   return (
     <section class="flex flex-col" aria-labelledby="homeRecConversations">
@@ -197,13 +217,14 @@ const RecentChats: Component = (props) => {
         classList={{ hidden: state.last.length === 0 }}
       >
         <For each={state.last}>
-          {({ chat, char }) => (
+          {({ chat, char }, index) => (
             <>
               <div
                 role="link"
                 aria-label={`Chat with ${char.name}, ${elapsedSince(chat.updatedAt)} ago ${
                   chat.name
                 }`}
+                classList={{ 'tour-first-chat': index() === 0 }}
                 class="bg-800 hover:bg-700 hidden h-24 w-full cursor-pointer rounded-md border-[1px] border-[var(--bg-700)] transition duration-300 sm:flex"
                 onClick={() => nav(`/chat/${chat._id}`)}
               >
@@ -247,6 +268,7 @@ const RecentChats: Component = (props) => {
                 aria-label={`Chat with ${char.name}, ${elapsedSince(chat.updatedAt)} ago ${
                   chat.name
                 }`}
+                classList={{ 'tour-first-chat-mobile': index() === 0 }}
                 class="bg-800 hover:bg-700 flex w-full cursor-pointer flex-col rounded-md border-[1px] border-[var(--bg-700)] transition duration-300 sm:hidden"
                 onClick={() => nav(`/chat/${chat._id}`)}
               >
