@@ -95,6 +95,14 @@ async function getActiveTemplateParts() {
   return opts
 }
 
+/**
+ *
+ * @param chatId
+ * @param msgIds
+ * @param leafId
+ * @param parents Which nodes need their parent updated. Key=node, Value=parentId
+ * @returns
+ */
 export async function deleteMessages(
   chatId: string,
   msgIds: string[],

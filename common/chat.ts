@@ -43,7 +43,7 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
 }
 
 export function updateChatTreeNode(tree: ChatTree, msg: AppSchema.ChatMessage) {
-  const next: ChatTree = Object.assign({}, tree)
+  const next: ChatTree = { ...tree }
 
   next[msg._id] = {
     msg,
