@@ -6,6 +6,43 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
+export type TemplateOpts = {
+  continue?: boolean
+  parts?: Partial<PromptParts>
+  chat: AppSchema.Chat
+
+  isPart?: boolean
+  isFinal?: boolean
+
+  char: AppSchema.Character
+  replyAs?: AppSchema.Character
+  impersonate?: AppSchema.Character
+  sender: AppSchema.Profile
+
+  lines?: string[]
+  characters?: Record<string, AppSchema.Character>
+  lastMessage?: string
+
+  chatEmbed?: Memory.UserEmbed<{ name: string }>[]
+  userEmbed?: Memory.UserEmbed[]
+
+  /** If present, history will be rendered last */
+  limit?: {
+    context: number
+    encoder: TokenCounter
+    output?: Record<string, { src: string; lines: string[] }>
+  }
+
+  /**
+   * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
+   */
+  repeatable?: boolean
+  inserts?: Map<number, string>
+  lowpriority?: Array<{ id: string; content: string }>
+
+  jsonValues: Record<string, any> | undefined
+}
+
 const parser = loadParser()
 
 function loadParser() {
@@ -62,6 +99,21 @@ type HolderDefinition =
     }
   | { value: Holder }
 
+const SAFE_PART_HOLDERS: { [key in Holder | 'roll']?: boolean } = {
+  char: true,
+  user: true,
+  chat_age: true,
+  value: true,
+  idle_duration: true,
+  random: true,
+  roll: true,
+}
+
+const FINAL_IGNORE_HOLDERS: { [key in Holder | 'roll']?: boolean } = {
+  system_prompt: true,
+  ujb: true,
+}
+
 type Holder =
   | 'char'
   | 'user'
@@ -103,40 +155,6 @@ type ChatEmbedProp = 'i' | 'name' | 'text'
 type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
-export type TemplateOpts = {
-  continue?: boolean
-  parts?: Partial<PromptParts>
-  chat: AppSchema.Chat
-
-  char: AppSchema.Character
-  replyAs?: AppSchema.Character
-  impersonate?: AppSchema.Character
-  sender: AppSchema.Profile
-
-  lines?: string[]
-  characters?: Record<string, AppSchema.Character>
-  lastMessage?: string
-
-  chatEmbed?: Memory.UserEmbed<{ name: string }>[]
-  userEmbed?: Memory.UserEmbed[]
-
-  /** If present, history will be rendered last */
-  limit?: {
-    context: number
-    encoder: TokenCounter
-    output?: Record<string, { src: string; lines: string[] }>
-  }
-
-  /**
-   * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
-   */
-  repeatable?: boolean
-  inserts?: Map<number, string>
-  lowpriority?: Array<{ id: string; content: string }>
-
-  jsonValues: Record<string, any> | undefined
-}
-
 /**
  * This function also returns inserts because Chat and Claude discard the
  * parsed string and use the inserts for their own prompt builders
@@ -158,11 +176,11 @@ export async function parseTemplate(
   const parts = opts.parts || {}
 
   if (parts.systemPrompt) {
-    parts.systemPrompt = render(parts.systemPrompt, opts)
+    parts.systemPrompt = render(parts.systemPrompt, { ...opts, isPart: true })
   }
 
   if (parts.ujb) {
-    parts.ujb = render(parts.ujb, opts)
+    parts.ujb = render(parts.ujb, { ...opts, isPart: true })
   }
 
   const ast = parser.parse(template, {}) as PNode[]
@@ -214,7 +232,10 @@ export async function parseTemplate(
     }
   }
 
-  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+  const result = render(output, { ...opts, isFinal: true })
+    .replace(/\r\n/g, '\n')
+    .replace(/\n\n+/g, '\n\n')
+    .trim()
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
@@ -450,7 +471,7 @@ function renderCondition(
   const output: string[] = []
   for (const child of children) {
     if (typeof child !== 'string' && child.kind === 'else') continue
-    const result = renderNode(child, opts, value)
+    const result = renderNode(child, { ...opts, isPart: true }, value)
     if (result) output.push(result)
   }
 
@@ -565,6 +586,14 @@ function getPlaceholder(
   if (node.value.startsWith('json.')) {
     const name = node.value.slice(5)
     return opts.jsonValues?.[name] || ''
+  }
+
+  if (opts.isPart && !SAFE_PART_HOLDERS[node.value]) {
+    return `{{${node.value}}}`
+  }
+
+  if (opts.isFinal && FINAL_IGNORE_HOLDERS[node.value]) {
+    return `{{${node.value}}}`
   }
 
   switch (node.value) {
