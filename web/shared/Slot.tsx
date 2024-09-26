@@ -100,7 +100,7 @@ const Slot: Component<{
   const [slotId, setSlotId] = createSignal<string>()
   const [actualId, setActualId] = createSignal('...')
 
-  const tier = createMemo(() => {
+  createEffect(() => {
     if (!user.user) return
     const subtier = getUserSubscriptionTier(user.user, user.tiers)
 
@@ -288,7 +288,7 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
-    if (tier()?.tier.disableSlots) {
+    if (user.sub?.tier.disableSlots) {
       props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
@@ -385,15 +385,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match
-          when={
-            !cfg.ready ||
-            !user.user ||
-            !specs() ||
-            tier()?.tier.disableSlots ||
-            user.sub?.tier?.disableSlots
-          }
-        >
+        <Match when={!cfg.ready || !user.user || !specs() || user.sub?.tier?.disableSlots}>
           {null}
         </Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
