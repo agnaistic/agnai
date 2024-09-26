@@ -471,7 +471,7 @@ function renderCondition(
   const output: string[] = []
   for (const child of children) {
     if (typeof child !== 'string' && child.kind === 'else') continue
-    const result = renderNode(child, { ...opts, isPart: true }, value)
+    const result = renderNode(child, { ...opts, isPart: false }, value)
     if (result) output.push(result)
   }
 

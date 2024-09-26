@@ -1216,7 +1216,7 @@ function updateMsgParents(chatId: string, parents: Record<string, string>) {
 
   let nextHist = messageHistory.slice()
   let nextMsgs = msgs.slice()
-  let tree = graph.tree
+  let tree = { ...graph.tree }
 
   for (const [nodeId, parentId] of Object.entries(parents)) {
     if (typeof parentId !== 'string') continue
@@ -1227,6 +1227,12 @@ function updateMsgParents(chatId: string, parents: Record<string, string>) {
     nextHist = replace(nodeId, nextHist, { parent: parentId })
     nextMsgs = replace(nodeId, nextMsgs, { parent: parentId })
     tree = updateChatTreeNode(tree, next)
+    tree[next._id].children = new Set(prev.children)
+
+    const parent = tree[parentId]
+    if (parent) {
+      parent.children.add(next._id)
+    }
   }
 
   msgStore.setState({
@@ -1251,10 +1257,6 @@ subscribe(
   },
   updateMsgSub
 )
-
-subscribe('message-parents', { chatId: 'string', parents: 'any' }, (body) => {
-  updateMsgParents(body.chatId, body.parents)
-})
 
 subscribe(
   'message-swapped',
