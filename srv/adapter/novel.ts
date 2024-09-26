@@ -134,10 +134,15 @@ export const handleNovel: ModelAdapter = async function* (opts) {
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
   }
 
+  const maxTokens = await getMaxTokens(body.model, headers)
+  if (maxTokens) {
+    body.parameters.max_length = Math.min(body.parameters.max_length, maxTokens)
+  }
+
   const stream =
     opts.kind !== 'summary' && opts.gen.streamResponse
       ? streamCompletion(headers, body, log)
-      : fullCompletition(headers, body, log)
+      : fullCompletion(headers, body, log)
 
   let accum = ''
   while (true) {
@@ -198,11 +203,6 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     mirostat_lr: gen.mirostatLR,
   }
 
-  if (gen.cfgScale) {
-    payload.cfg_scale = gen.cfgScale
-    payload.cfg_uc = gen.cfgOppose || ''
-  }
-
   return payload
 }
 
@@ -252,7 +252,7 @@ const streamCompletion = async function* (headers: any, body: any, _log: AppLog)
   return { text: tokens.join('') }
 }
 
-const fullCompletition = async function* (headers: any, body: any, log: AppLog) {
+async function* fullCompletion(headers: any, body: any, log: AppLog) {
   const res = await needle('post', novelUrl(body.model), body, {
     json: true,
     // timeout: 2000,
@@ -303,4 +303,25 @@ function getBaseUrl(model: string) {
   const url = model.split('/').slice(0, -1).join('/')
   if (url.toLowerCase().startsWith('http')) return url
   return `https://${url}`
+}
+
+async function getMaxTokens(model: string, headers: any) {
+  try {
+    const config = await needle(
+      'get',
+      'https://api.novelai.net/user/subscription',
+      {},
+      { json: true, headers, response_timeout: 5000 }
+    )
+
+    if (model !== 'llama-3-erato-v1' && model !== NOVEL_MODELS.kayra_v1) {
+      return
+    }
+
+    const tier = config.body?.tier ?? 0
+    if (tier !== 3) return 100
+    return 150
+  } catch (ex) {
+    return
+  }
 }
