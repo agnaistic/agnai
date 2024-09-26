@@ -230,7 +230,7 @@ Summary: {{scenario}}
 <|model|>{{post}}`,
   ChatML: neat`
 <|im_start|>system
-{{#if system_prompt}}{{system_prompt}}{{else}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}{{/if}}<|im_end|>
+{{#if system_prompt}}{{system_prompt}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}{{/if}}<|im_end|>
 
 "{{char}}'s" Persona:
 {{personality}}
