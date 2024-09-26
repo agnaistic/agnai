@@ -15,6 +15,7 @@ import { getUserSubscriptionTier, wait } from '/common/util'
 import { createDebounce } from './util'
 
 const win: any = window
+win.enableSticky = JSON.parse(localStorage.getItem('agnai-sticky') || 'true')
 
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
@@ -105,6 +106,7 @@ const Slot: Component<{
 
     if (subtier?.tier.disableSlots) {
       win.enableSticky = undefined
+      localStorage.setItem('agnai-sticky', 'false')
     }
 
     return subtier
@@ -286,7 +288,7 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
-    if (user.sub?.tier?.disableSlots) {
+    if (tier()?.tier.disableSlots) {
       props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
@@ -722,6 +724,7 @@ const [invokeFuse] = createDebounce(() => {
     console.log(`[fuse] init ${ids}`)
     const win: any = window
     win.enableSticky = true
+    localStorage.setItem('agnai-sticky', 'true')
     window.fusetag.que.push(() => {
       window.fusetag.pageInit({ blockingFuseIds: ids })
     })
