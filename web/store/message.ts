@@ -1258,10 +1258,6 @@ subscribe(
   updateMsgSub
 )
 
-subscribe('message-parents', { chatId: 'string', parents: 'any' }, (body) => {
-  updateMsgParents(body.chatId, body.parents)
-})
-
 subscribe(
   'message-swapped',
   {
