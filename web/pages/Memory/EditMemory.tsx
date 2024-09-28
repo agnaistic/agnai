@@ -248,9 +248,9 @@ const EntryCard: Component<{
 
 export function getBookUpdate(ref: Event | HTMLFormElement) {
   const inputs = getFormEntries(ref)
-  const { bookName = '', description } = getStrictForm(ref, {
+  const { bookName = '', bookDesc } = getStrictForm(ref, {
     bookName: 'string?',
-    description: 'string?',
+    bookDesc: 'string?',
   })
 
   const map = new Map<string, AppSchema.MemoryEntry>()
@@ -289,7 +289,7 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
 
   const entries = Array.from(map.values())
 
-  const book = { name: bookName, description, entries }
+  const book = { name: bookName, description: bookDesc, entries }
   return book
 }
 

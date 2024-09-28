@@ -56,6 +56,19 @@ const VALID_ID = /^[a-z0-9-]+$/g
 
 const ID_KEYS = ['id', 'charId', 'inviteId', 'userId']
 
+const INFERENCE_URLS: Record<string, boolean> = {
+  '/models': true,
+  '/v1/models': true,
+  '/completions': true,
+  '/v1/completions': true,
+  '/chat/completions': true,
+  '/v1/chat/completions': true,
+}
+
+function isInferenceUrl(url: string) {
+  return INFERENCE_URLS[url.toLowerCase()]
+}
+
 export function logMiddleware() {
   const middleware = async (req: any, res: Response, next: NextFunction) => {
     for (const prop in ID_KEYS) {
@@ -73,14 +86,14 @@ export function logMiddleware() {
 
     const canLog =
       req.method !== 'OPTIONS' &&
-      (req.url.startsWith('/api') || req.url.startsWith('/v1')) &&
+      (req.url.startsWith('/api') || req.url.startsWith('/v1') || isInferenceUrl(req.url)) &&
       !req.url.includes('/subscriptions?')
 
     const socketId = req.get('socket-id') || ''
     req.socketId = socketId
 
     const auth = req.get('authorization')
-    if (auth && !req.url.startsWith('/v1')) {
+    if (auth && !isInferenceUrl(req.url)) {
       /** API Key usage */
       if (auth.startsWith('Key ') && config.auth.oauth) {
         const apikey = auth.replace('Key ', '')

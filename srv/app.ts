@@ -2,7 +2,7 @@ import cors from 'cors'
 import express from 'express'
 import multer from 'multer'
 import { logMiddleware } from './middleware'
-import api, { keyedRouter } from './api'
+import api, { keyed } from './api'
 import { errors } from './api/wrap'
 import { resolve } from 'path'
 import { setupSockets } from './api/ws'
@@ -40,7 +40,8 @@ export function createApp() {
 
   const index = resolve(baseFolder, 'dist', 'index.html')
 
-  app.use('/v1', keyedRouter)
+  keyed(app)
+
   app.use('/api', api)
 
   app.get('/healthcheck', (_, res) => {

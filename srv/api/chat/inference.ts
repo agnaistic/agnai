@@ -15,6 +15,7 @@ import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
 import { obtainLock, releaseLock } from './lock'
 import { v4 } from 'uuid'
+import { renderMessagesToPrompt } from '/srv/adapter/template-chat-payload'
 
 const validInference = {
   prompt: 'string',
@@ -30,7 +31,8 @@ const validInferenceApi = {
   presetId: 'string?',
   max_tokens: 'number',
   stream: 'boolean?',
-  prompt: 'string',
+  prompt: 'string?',
+  messages: [{ role: 'string', content: 'string' }, '?'],
   presence_penalty: 'number?',
   frequency_penalty: 'number?',
   repetition_penalty: 'number?',
@@ -300,14 +302,21 @@ export const inferenceApi = wrap(async (req, res) => {
     settings.dynatemp_range = body.dynatemp_range
   }
 
+  const rendered = body.messages ? renderMessagesToPrompt(preset, body.messages) : undefined
+
   const request: InferenceRequest = {
-    prompt: body.prompt,
+    prompt: body.prompt ? body.prompt : body.messages ? rendered?.prompt || '' : '',
     user: req.authed!,
     log: req.log,
     settings,
     placeholders: body.placeholders,
     previous: body.previous,
     lists: body.lists,
+    stop: rendered ? [rendered.stop, ...(body.stop || [])] : undefined,
+  }
+
+  if (!request.prompt) {
+    throw new StatusError(`Invalid request: Request must contain 'prompt' or 'messages'`, 400)
   }
 
   await obtainLock(req.userId, 20)
