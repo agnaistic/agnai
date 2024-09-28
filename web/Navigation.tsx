@@ -514,9 +514,12 @@ const NavIcons: Component<{
   )
 }
 
-function onItemClick(onClick?: () => void) {
+function onItemClick(onClick?: () => void, menuOpen?: boolean) {
   return () => {
     onClick?.()
+
+    if (menuOpen) return
+
     const { showMenu } = settingStore.getState()
     if (showMenu) settingStore.closeMenu()
   }
@@ -529,6 +532,7 @@ const Item: Component<{
   class?: string
   onClick?: () => void
   tooltip?: string
+  menuOpen?: boolean
 }> = (props) => {
   return (
     <Tooltip position="top" tip={props.tooltip}>
@@ -541,7 +545,7 @@ const Item: Component<{
             'gap-4': !props.class?.includes('gap-'),
             'min-h-[2.25rem]': !props.class?.includes('h-'),
           }}
-          onClick={onItemClick(props.onClick)}
+          onClick={onItemClick(props.onClick, props.menuOpen)}
           tabindex={0}
           role="button"
           aria-label={props.ariaLabel}
@@ -558,7 +562,7 @@ const Item: Component<{
           classList={{
             'min-h-[2.25rem]': !props.class?.includes('h-'),
           }}
-          onClick={onItemClick(props.onClick)}
+          onClick={onItemClick(props.onClick, props.menuOpen)}
           role="button"
           aria-label={props.ariaLabel}
         >
