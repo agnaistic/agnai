@@ -9,6 +9,7 @@ type Size = 'sm' | 'md' | 'lg'
 export const Card: Component<{
   children: JSX.Element
   class?: string
+  classList?: any
   bgOpacity?: number
   border?: boolean
   bg?: string
@@ -31,6 +32,7 @@ export const Card: Component<{
         'p-1': props.size === 'sm',
         'p-2': props.size === 'md',
         'p-3': !props.size || props.size === 'lg',
+        ...props.classList,
       }}
       style={hooks({
         border: props.border ? '1px solid var(--bg-600)' : 0,

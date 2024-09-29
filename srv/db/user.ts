@@ -202,7 +202,6 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
       smoothingFactor: sub.smoothingFactor,
       tokenHealing: sub.tokenHealing,
       tempLast: sub.tempLast,
-      trimStop: sub.trimStop,
     }
 
     await db('gen-setting').insertOne(preset)

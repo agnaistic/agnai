@@ -13,7 +13,7 @@ import {
 } from 'solid-js'
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
-import { getAISettingServices, toMap } from '../util'
+import { toMap, useValidServiceSetting } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
@@ -25,12 +25,10 @@ import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
-import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
 import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
-import { formatHolders } from '/common/prompt-order'
 import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 
@@ -163,7 +161,6 @@ const PromptEditor: Component<
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
 
-  const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const presets = presetStore()
   const [input, setInput] = createSignal<string>(props.value || '')
   const [autoOpen, setAutoOpen] = createSignal(false)
@@ -283,16 +280,18 @@ const PromptEditor: Component<
     ref.style.height = `${next}px`
   }
 
-  const hide = createMemo(() => {
-    if (props.hide) return 'hidden'
-    if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : `hidden `
-  })
+  const show = useValidServiceSetting(props.aiSetting)
+
+  // const hide = createMemo(() => {
+  //   if (props.hide) return 'hidden'
+  //   if (!props.service || !adapters()) return ''
+  //   return adapters()!.includes(props.service) ? '' : `hidden `
+  // })
 
   onMount(resize)
 
   return (
-    <div class={`relative w-full flex-col gap-2 ${hide()}`}>
+    <div class={`relative w-full flex-col gap-2`} classList={{ hidden: !show() || props.hide }}>
       <Show when={props.showHelp}>
         <FormLabel
           label={
@@ -429,10 +428,6 @@ export const BasicPromptTemplate: Component<{
   hide?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
-  const items = Object.keys(formatHolders).map((label) => ({
-    label: `Format: ${label}`,
-    value: label,
-  }))
 
   const [mod, setMod] = createSignal(
     props.inherit?.promptOrder?.map((o) => ({
@@ -472,11 +467,6 @@ export const BasicPromptTemplate: Component<{
           Enable **Advanced Prompting** for full control and customization."
         />
         <div class="flex flex-wrap gap-4">
-          <Select
-            fieldName="promptOrderFormat"
-            items={items}
-            value={props.inherit?.promptOrderFormat || 'Alpaca'}
-          />
           <Toggle
             fieldName="lockPromptOrder"
             label="Lock Prompt Order"

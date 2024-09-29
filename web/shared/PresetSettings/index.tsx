@@ -27,6 +27,8 @@ import { ToggleSettings } from './Toggles'
 import { presetValidator } from '/common/presets'
 import { AppSchema } from '/common/types'
 import { MemorySettings } from './Memory'
+import { PresetMode } from './Fields'
+import { forms } from '/web/emitter'
 
 export { PresetSettings as default }
 
@@ -49,6 +51,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
   const [format, setFormat] = createSignal(
     props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
   )
+  const [presetMode, setMode] = createSignal(props.inherit?.presetMode || 'advanced')
 
   const sub = createMemo(() => {
     if (props.inherit?.service !== 'agnaistic') return
@@ -60,12 +63,23 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
   })
 
   const tabs = createMemo(() => {
+    if (!props.hideTabs && presetMode() === 'simple') {
+      return ['General', 'Prompt']
+    }
+
     const list: PresetTab[] = ['General', 'Prompt', 'Memory', 'Samplers', 'Toggles']
     if (!props.hideTabs) return list
 
     return list.filter((tab) => !props.hideTabs!.includes(tab))
   })
-  const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
+
+  let startTab = +(search.preset_tab ?? '0')
+  if (!tabs()[startTab]) {
+    startTab = 0
+    setSearch({ preset_tab: '0' })
+  }
+
+  const [tab, setTab] = createSignal(startTab)
 
   const onServiceChange = (opt: Option<string>) => {
     setService(opt.value as any)
@@ -76,10 +90,35 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
     presetStore.getTemplates()
   })
 
+  forms.useSub((field, value) => {
+    if (field === 'presetMode') {
+      setMode(value)
+    }
+
+    if (tab() >= tabs().length) {
+      setTab(0)
+    }
+  })
+
+  const fieldProps = createMemo(() => {
+    return {
+      mode: presetMode(),
+      disabled: props.disabled,
+      inherit: props.inherit,
+      service: service(),
+      format: format(),
+      pane: pane.showing(),
+      setFormat: setFormat,
+      tab: tabs()[tab()],
+      sub: sub(),
+      user: userState,
+    }
+  })
+
   return (
     <>
       <div class="flex flex-col gap-4">
-        <Card>
+        <Card class="flex flex-col gap-2">
           <Select
             fieldName="service"
             label="AI Service"
@@ -121,11 +160,11 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
               { label: 'Mistral API', value: 'mistral' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
-            service={service()}
-            format={format()}
             aiSetting={'thirdPartyFormat'}
             onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
           />
+
+          <PresetMode inherit={props.inherit} />
 
           <RegisteredSettings service={service()} inherit={props.inherit} />
         </Card>
@@ -140,54 +179,14 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
           selected={tab}
           tabs={tabs()}
         />
-        <GeneralSettings
-          disabled={props.disabled}
-          inherit={props.inherit}
-          service={service()}
-          format={format()}
-          pane={pane.showing()}
-          setFormat={setFormat}
-          tab={tabs()[tab()]}
-          sub={sub()}
-        />
-        <PromptSettings
-          disabled={props.disabled}
-          inherit={props.inherit}
-          service={service()}
-          format={format()}
-          pane={pane.showing()}
-          tab={tabs()[tab()]}
-          sub={sub()}
-        />
+        <GeneralSettings {...fieldProps()} />
+        <PromptSettings {...fieldProps()} />
 
-        <MemorySettings
-          disabled={props.disabled}
-          inherit={props.inherit}
-          service={service()}
-          format={format()}
-          pane={pane.showing()}
-          tab={tabs()[tab()]}
-          sub={sub()}
-        />
+        <MemorySettings {...fieldProps()} />
 
-        <SliderSettings
-          disabled={props.disabled}
-          inherit={props.inherit}
-          service={service()}
-          format={format()}
-          pane={pane.showing()}
-          tab={tabs()[tab()]}
-          sub={sub()}
-        />
-        <ToggleSettings
-          disabled={props.disabled}
-          inherit={props.inherit}
-          service={service()}
-          format={format()}
-          pane={pane.showing()}
-          tab={tabs()[tab()]}
-          sub={sub()}
-        />
+        <SliderSettings {...fieldProps()} />
+
+        <ToggleSettings {...fieldProps()} />
       </div>
     </>
   )
@@ -233,15 +232,15 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
 export function getPresetFormData(ref: any) {
   const cfg = settingStore.getState()
   const {
-    promptOrderFormat,
     promptOrder: order,
     jsonSchema,
     ...data
   } = getStrictForm(ref, {
     ...presetValidator,
     thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
+    presetMode: 'string',
+    useMaxContext: 'boolean',
     useAdvancedPrompt: 'string?',
-    promptOrderFormat: 'string?',
     promptOrder: 'string?',
     modelFormat: 'string?',
     disableNameStops: 'boolean',
@@ -288,7 +287,7 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  const preset = { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat, json }
+  const preset = { ...data, stopSequences, phraseBias, promptOrder, json }
   return preset
 }
 

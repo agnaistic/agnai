@@ -292,13 +292,10 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (
     opts.settings?.useAdvancedPrompt === 'basic' &&
-    opts.settings.promptOrderFormat &&
+    opts.settings.modelFormat &&
     opts.settings.promptOrder
   ) {
-    const template = promptOrderToTemplate(
-      opts.settings.promptOrderFormat,
-      opts.settings.promptOrder
-    )
+    const template = promptOrderToTemplate(opts.settings.modelFormat, opts.settings.promptOrder)
     return template
   }
 
@@ -881,6 +878,10 @@ export function getContextLimit(
   switch (adapter) {
     case 'agnaistic': {
       const stratMax = _strategy(user, gen)
+      if (gen?.useMaxContext && stratMax) {
+        return stratMax.context - genAmount
+      }
+
       const max = Math.min(configuredMax, stratMax?.context ?? configuredMax)
       return max - genAmount
     }
@@ -919,6 +920,8 @@ export function getContextLimit(
 
     case 'openrouter':
       if (gen?.openRouterModel) {
+        if (gen.useMaxContext) return gen.openRouterModel.context_length - genAmount
+
         return Math.min(gen.openRouterModel.context_length, configuredMax) - genAmount
       }
 

@@ -233,6 +233,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       generating: false,
       message: 'User message created',
       messageId,
+      created: userMsg,
     })
   }
 
@@ -246,7 +247,14 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
   }
 
-  res.json({ requestId, success: true, generating: true, message: 'Generating message', messageId })
+  res.json({
+    requestId,
+    success: true,
+    generating: true,
+    message: 'Generating message',
+    messageId,
+    created: userMsg,
+  })
 
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
   const schema = entities.gen.jsonSource === 'character' ? replyAs.json : entities.gen.json

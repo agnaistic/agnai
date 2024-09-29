@@ -2,8 +2,8 @@ import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'so
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
-import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
-import { ComponentSubscriber, isValidServiceSetting } from './util'
+import { PresetAISettings } from '/common/adapters'
+import { ComponentSubscriber, useValidServiceSetting } from './util'
 import { forms } from '../emitter'
 
 export type CustomOption = {
@@ -23,8 +23,6 @@ export const CustomSelect: Component<{
   selected: any | undefined
   onSelect: (opt: CustomOption) => void
   hide?: boolean
-  service?: AIAdapter
-  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   parentClass?: string
   classList?: Record<string, boolean>
@@ -34,11 +32,7 @@ export const CustomSelect: Component<{
   let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
 
-  const hide = createMemo(() => {
-    if (props.hide) return ' hidden'
-    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
-    return isValid ? '' : ' hidden'
-  })
+  const show = useValidServiceSetting(props.aiSetting)
 
   onMount(() => {
     if (props.emitter) {
@@ -69,7 +63,10 @@ export const CustomSelect: Component<{
   })
 
   return (
-    <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
+    <div
+      class={`max-w-full ${props.parentClass || ''}`}
+      classList={{ ...props.classList, hidden: !show() || props.hide }}
+    >
       <Show when={props.fieldName}>
         <input
           ref={ref!}

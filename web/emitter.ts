@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events'
 import { send } from './store/create'
 import { v4 } from 'uuid'
-import { onCleanup } from 'solid-js'
+import { createSignal, onCleanup } from 'solid-js'
+import { createStore } from 'solid-js/store'
 
 export const EVENTS = {
   loggedIn: 'logged-in',
@@ -39,8 +40,10 @@ for (const event of Object.values(EVENTS)) {
 }
 
 type FormCallback = (field: string, value: any) => any
+type FieldCallback = (value: any) => any
 
 const formCallbacks = new Map<string, FormCallback>()
+const fieldCallbacks = new Map<string, Record<string, FieldCallback>>()
 
 export const forms = {
   emit: (field: string, value: any) => {
@@ -64,4 +67,51 @@ export const forms = {
 
     return unsub
   },
+  fieldSub: <T = any>(field: string) => {
+    const [value, setValue] = createSignal<T>(getFormValue(field))
+    const id = v4()
+
+    const callbacks = fieldCallbacks.get(field) || {}
+
+    callbacks[id] = setValue
+
+    fieldCallbacks.set(field, callbacks)
+
+    onCleanup(() => {
+      const callbacks = fieldCallbacks.get(field) || {}
+      delete callbacks[id]
+      fieldCallbacks.set(field, callbacks)
+    })
+
+    return value
+  },
+  fields: <T extends string>(fields: T[]): { [key in T]: any } => {
+    const [values, setValues] = createStore<{ [key in T]: any }>({} as any)
+
+    for (const field of fields) {
+      const name = field as T
+      const value = getFormValue(name)
+      setValues(name as any, value)
+    }
+
+    const set = new Set(fields)
+
+    forms.useSub((field, value) => {
+      if (set.has(field as T)) {
+        setValues(field as any, value)
+      }
+    })
+
+    return values
+  },
+}
+
+function getFormValue(field: string) {
+  const elements: any = document.querySelector('form')?.elements
+  if (!elements) return
+
+  const ele = elements[field]
+  if (!ele) return
+
+  return ele.value
 }

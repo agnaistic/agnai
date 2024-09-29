@@ -283,7 +283,11 @@ async function* fullCompletion(headers: any, body: any, log: AppLog) {
 
   if (res.body.error) {
     log.error({ error: res.body }, `Novel response failed (${status})`)
-    yield { error: `Novel API returned an error: ${res.body.error.message || res.body.error}` }
+    yield {
+      error: `Novel API returned an error: ${
+        res.body.error.message || res.body.error || res.body.message
+      }`,
+    }
     return
   }
 

@@ -62,8 +62,11 @@ export const AgnaisticSettings: Component<{
             </div>
           </div>
         }
-        label="Model"
-        helperText={<span class="text-500">Available: {opts().length}</span>}
+        label={
+          <>
+            Model <span class="text-500 text-xs italic">(Available: {opts().length})</span>
+          </>
+        }
         options={opts()}
         onSelect={props.onSave}
         value={props.inherit?.registered?.agnaistic?.subscriptionId}

@@ -9,8 +9,8 @@ import {
   Match,
 } from 'solid-js'
 import IsVisible from './IsVisible'
-import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
-import { createDebounce, isValidServiceSetting } from './util'
+import { PresetAISettings } from '../../common/adapters'
+import { createDebounce, useValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 import { markdown } from './markdown'
@@ -62,8 +62,6 @@ type Props = {
 
   onInputText?: (value: string) => void
 
-  service?: AIAdapter
-  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
 }
 
@@ -165,13 +163,10 @@ const TextInput: Component<Props> = (props) => {
     forms.emit(props.fieldName, ev.currentTarget.value)
   }
 
-  const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
-    return isValid ? '' : ' hidden'
-  })
+  const show = useValidServiceSetting(props.aiSetting)
 
   return (
-    <div class={`${hide()} ${props.parentClass || ''}`}>
+    <div class={`${props.parentClass || ''}`} classList={{ hidden: !show() }}>
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>

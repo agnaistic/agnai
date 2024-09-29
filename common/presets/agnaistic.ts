@@ -34,7 +34,6 @@ export const agnaiPresets = {
     memoryReverseWeight: false,
     antiBond: false,
     useAdvancedPrompt: 'basic',
-    promptOrderFormat: 'Alpaca',
     promptOrder: [
       {
         placeholder: 'system_prompt',

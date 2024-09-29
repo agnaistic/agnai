@@ -393,8 +393,6 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   addBosToken: 'Add BOS Token',
   antiBond: 'Anti-bond',
   banEosToken: 'Ban EOS Token',
-  cfgOppose: 'CFG Opposing Prompt',
-  cfgScale: 'CFG Scale',
   claudeModel: 'Claude Model',
   encoderRepitionPenalty: 'Encoder Repetition Penalty',
   frequencyPenalty: 'Frequency Penalty',
