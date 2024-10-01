@@ -23,6 +23,7 @@ export const Toggle: Component<{
   classList?: Record<string, boolean>
   recommended?: boolean
   vertLabel?: boolean
+  hide?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -47,7 +48,7 @@ export const Toggle: Component<{
         'sm:items-center': !props.vertLabel,
         'gap-1': props.vertLabel && !props.class?.includes('gap-'),
         'gap-2': !props.vertLabel && !props.class?.includes('gap-'),
-        hidden: !show(),
+        hidden: !show() || props.hide,
         ...props.classList,
       }}
     >

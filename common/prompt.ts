@@ -239,7 +239,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    * The queryable embeddings are messages that are _NOT_ included in the context
    */
   const maxContext = opts.settings
-    ? opts.settings.maxContextLength! - templateSize - opts.settings.maxTokens!
+    ? getContextLimit(opts.user, opts.settings) - templateSize - opts.settings.maxTokens!
     : undefined
   const lines = await getLinesForPrompt(opts, encoder, maxContext)
   const parts = await buildPromptParts(opts, lines, encoder)
@@ -291,10 +291,14 @@ export async function assemblePrompt(
 export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (
-    opts.settings?.useAdvancedPrompt === 'basic' &&
+    (opts.settings?.useAdvancedPrompt === 'basic' || opts.settings?.presetMode === 'simple') &&
     opts.settings.modelFormat &&
     opts.settings.promptOrder
   ) {
+    if (opts.settings.presetMode === 'simple') {
+      const template = promptOrderToTemplate('Universal', simpleOrder)
+      return template
+    }
     const template = promptOrderToTemplate(opts.settings.modelFormat, opts.settings.promptOrder)
     return template
   }
@@ -318,6 +322,17 @@ type InjectOpts = {
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: TokenCounter
 }
+
+const simpleOrder: NonNullable<AppSchema.GenSettings['promptOrder']> = [
+  'system_prompt',
+  'scenario',
+  'personality',
+  'impersonating',
+  'chat_embed',
+  'memory',
+  'example_dialogue',
+  'history',
+].map((placeholder) => ({ placeholder, enabled: true }))
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
@@ -349,8 +364,6 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
     hist.lines = next
   }
 
-  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-
   const lines = !hist
     ? []
     : hist.order === 'desc'
@@ -365,7 +378,7 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
     lines,
     ...rest,
     limit: {
-      context: getContextLimit(opts.user, opts.settings, adapter, model),
+      context: getContextLimit(opts.user, opts.settings),
       encoder,
     },
   })
@@ -606,8 +619,7 @@ export async function getLinesForPrompt(
   encoder: TokenCounter,
   maxContext?: number
 ) {
-  const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
-  maxContext = maxContext || getContextLimit(opts.user, settings, adapter, model)
+  maxContext = maxContext || getContextLimit(opts.user, settings)
 
   const profiles = new Map<string, AppSchema.Profile>()
   for (const member of members) {
@@ -844,7 +856,7 @@ export function getAdapter(
     }
   }
 
-  const contextLimit = getContextLimit(user, preset, adapter, model)
+  const contextLimit = getContextLimit(user, preset)
 
   return { adapter, model, preset: presetName, contextLimit, isThirdParty }
 }
@@ -865,17 +877,15 @@ export function setContextLimitStrategy(strategy: LimitStrategy) {
 
 export function getContextLimit(
   user: AppSchema.User,
-  gen: Partial<AppSchema.GenSettings> | undefined,
-  adapter: AIAdapter,
-  model: string
+  gen: Partial<AppSchema.GenSettings> | undefined
 ): number {
-  const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
+  const genAmount = gen?.maxTokens || getFallbackPreset(gen?.service || 'horde')?.maxTokens || 80
   const configuredMax =
-    gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
+    gen?.maxContextLength || getFallbackPreset(gen?.service || 'horde')?.maxContextLength || 4096
 
-  if (gen?.service === 'kobold' || gen?.service === 'ooba') return configuredMax - genAmount
+  if (!gen?.service) return configuredMax - genAmount
 
-  switch (adapter) {
+  switch (gen.service) {
     case 'agnaistic': {
       const stratMax = _strategy(user, gen)
       if (gen?.useMaxContext && stratMax) {
@@ -887,13 +897,14 @@ export function getContextLimit(
     }
 
     // Any LLM could be used here so don't max any assumptions
+    case 'ooba':
     case 'petals':
     case 'kobold':
     case 'horde':
-    case 'ooba':
       return configuredMax - genAmount
 
     case 'novel': {
+      const model = gen?.novelModel || NOVEL_MODELS.kayra_v1
       if (model === NOVEL_MODELS.clio_v1 || model === NOVEL_MODELS.kayra_v1) {
         return Math.min(8000, configuredMax) - genAmount
       }
@@ -902,6 +913,7 @@ export function getContextLimit(
     }
 
     case 'openai': {
+      const model = (gen?.service === 'openai' ? gen?.oaiModel! : gen?.thirdPartyModel) || ''
       const limit = OPENAI_CONTEXTS[model] || 128000
       return Math.min(configuredMax, limit) - genAmount
     }

@@ -28,6 +28,8 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 
+export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
+
 export async function getSubscriptionPreset(
   user: AppSchema.User,
   guest: boolean,
@@ -351,6 +353,7 @@ registerAdapter('agnaistic', handleAgnaistic, {
         label: 'Use Recommended Settings',
         helperText: 'Use the settings provided by the subscription',
         setting: { type: 'boolean' },
+        advanced: false,
       },
     ]
   },

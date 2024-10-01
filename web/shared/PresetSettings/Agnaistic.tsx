@@ -15,6 +15,7 @@ export const AgnaisticSettings: Component<{
   service: AIAdapter
   onSave: () => void
   inherit?: Partial<AppSchema.UserGenPreset>
+  mode: AppSchema.UserGenPreset['presetMode']
 }> = (props) => {
   const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
   const opts = useModelOptions()

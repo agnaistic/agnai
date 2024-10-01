@@ -5,8 +5,10 @@ export const koboldPresets = {
   basic: {
     service: 'kobold',
     name: 'Simple',
+    useMaxContext: true,
+    presetMode: 'simple',
     maxTokens: 300,
-    maxContextLength: 2048,
+    maxContextLength: 4096,
     repetitionPenalty: 1,
     repetitionPenaltySlope: 1,
     repetitionPenaltyRange: 1024,

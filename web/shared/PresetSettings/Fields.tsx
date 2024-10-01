@@ -163,7 +163,7 @@ export const Jailbreak: Field = (props) => {
       <PromptEditor
         fieldName="ultimeJailbreak"
         include={['char', 'user']}
-        placeholder="Respond using"
+        placeholder="Respond succinctly using slang"
         value={props.inherit?.ultimeJailbreak ?? ''}
         disabled={props.disabled}
       />

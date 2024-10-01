@@ -1,7 +1,7 @@
 import { createHooks, recommended } from '@css-hooks/solid'
 import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
-import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
+import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import type { Option } from './Select'
 import { Component, createEffect, createMemo, JSX, onCleanup } from 'solid-js'
 import type { UserState } from '../store'
@@ -9,8 +9,8 @@ import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
 import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
-import { forms } from '../emitter'
-import { ADAPTER_SETTINGS, MODE_SETTINGS } from './PresetSettings/settings'
+import { ADAPTER_SETTINGS } from './PresetSettings/settings'
+import { usePresetContext } from './PresetSettings/context'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -589,13 +589,13 @@ function isPresetSetting(key: string): key is keyof PresetAISettings {
 }
 
 export function useValidServiceSetting(prop: keyof AppSchema.GenSettings | undefined) {
-  const values = forms.fields(['service', 'thirdPartyFormat', 'presetMode'])
+  const values = usePresetContext()
 
   const valid = createMemo(() => {
     if (!prop) return true
 
-    if (values.presetMode && values.presetMode !== 'advanced') {
-      const mode: NonNullable<PresetAISettings['presetMode']> = values.presetMode
+    if (values.mode && values.mode !== 'advanced') {
+      const mode: NonNullable<PresetAISettings['presetMode']> = values.mode
       const enabled = MODE_SETTINGS[mode]?.[prop]
       if (!enabled) return false
     }
@@ -607,12 +607,12 @@ export function useValidServiceSetting(prop: keyof AppSchema.GenSettings | undef
 
     if (services.includes(values.service)) return true
 
-    if (!values.thirdPartyFormat) return false
+    if (!values.format) return false
 
     if (values.service !== 'kobold') return false
 
     for (const srv of services) {
-      if (srv === values.thirdPartyFormat) return true
+      if (srv === values.format) return true
     }
 
     return false

@@ -42,6 +42,7 @@ type Props = {
   textarea?: JSX.TextareaHTMLAttributes<HTMLTextAreaElement>
   children?: any
   initialValue?: number | string
+  hide?: boolean
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -166,7 +167,10 @@ const TextInput: Component<Props> = (props) => {
   const show = useValidServiceSetting(props.aiSetting)
 
   return (
-    <div class={`${props.parentClass || ''}`} classList={{ hidden: !show() }}>
+    <div
+      class={`${props.parentClass || ''}`}
+      classList={{ hidden: !show() || props.parentClass?.includes('hidden') || props.hide }}
+    >
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>

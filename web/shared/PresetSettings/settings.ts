@@ -1,22 +1,4 @@
 import { AIAdapter, AI_ADAPTERS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
-import { AppSchema } from '/common/types/schema'
-
-export const MODE_SETTINGS: {
-  [key in NonNullable<PresetAISettings['presetMode']>]?: {
-    [key in keyof AppSchema.GenSettings]?: boolean
-  }
-} = {
-  simple: {
-    maxContextLength: true,
-    maxTokens: true,
-    modelFormat: true,
-    ultimeJailbreak: true,
-    streamResponse: true,
-    temp: true,
-    localRequests: true,
-  },
-  advanced: {},
-}
 
 export const ADAPTER_SETTINGS: {
   [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>

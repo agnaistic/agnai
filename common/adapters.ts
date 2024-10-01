@@ -18,6 +18,12 @@ export type AdapterSetting = {
 
   setting: SettingType
   preset?: boolean
+
+  /**
+   * If enabled the setting won't be visible in "Simple" preset mode
+   * Defaults to true
+   */
+  advanced?: boolean
 }
 
 type SettingType =
@@ -31,6 +37,23 @@ export type AdapterOptions = {
   settings: AdapterSetting[]
   options: Array<keyof PresetAISettings>
   load?: (user?: AppSchema.User | null) => AdapterSetting[]
+}
+
+export const MODE_SETTINGS: {
+  [key in NonNullable<PresetAISettings['presetMode']>]?: {
+    [key in keyof AppSchema.GenSettings]?: boolean
+  }
+} = {
+  simple: {
+    maxContextLength: true,
+    maxTokens: true,
+    modelFormat: true,
+    ultimeJailbreak: true,
+    streamResponse: true,
+    temp: true,
+    localRequests: true,
+  },
+  advanced: {},
 }
 
 export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'attributes', 'text'] as const

@@ -29,6 +29,7 @@ import { AppSchema } from '/common/types'
 import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
 import { forms } from '/web/emitter'
+import { PresetProvider } from './context'
 
 export { PresetSettings as default }
 
@@ -116,7 +117,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
   })
 
   return (
-    <>
+    <PresetProvider>
       <div class="flex flex-col gap-4">
         <Card class="flex flex-col gap-2">
           <Select
@@ -137,7 +138,12 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
             disabled={props.disabled || props.disableService}
           />
 
-          <AgnaisticSettings service={service()} inherit={props.inherit} onSave={props.onSave} />
+          <AgnaisticSettings
+            service={service()}
+            inherit={props.inherit}
+            onSave={props.onSave}
+            mode={presetMode()}
+          />
 
           <Select
             fieldName="thirdPartyFormat"
@@ -166,7 +172,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
 
           <PresetMode inherit={props.inherit} />
 
-          <RegisteredSettings service={service()} inherit={props.inherit} />
+          <RegisteredSettings service={service()} inherit={props.inherit} mode={presetMode()} />
         </Card>
         <Show when={pane.showing()}>
           <TempSettings service={props.inherit?.service} />
@@ -188,7 +194,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
 
         <ToggleSettings {...fieldProps()} />
       </div>
-    </>
+    </PresetProvider>
   )
 }
 
@@ -234,6 +240,7 @@ export function getPresetFormData(ref: any) {
   const {
     promptOrder: order,
     jsonSchema,
+    'registered.agnaistic.useRecommended': useRecommended,
     ...data
   } = getStrictForm(ref, {
     ...presetValidator,
@@ -248,11 +255,17 @@ export function getPresetFormData(ref: any) {
     jsonEnabled: 'boolean',
     jsonSource: 'string',
     localRequests: 'boolean',
+    'registered.agnaistic.useRecommended': 'boolean?',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
+  if (data.service === 'agnaistic' && registered) {
+    registered.useRecommended = useRecommended
+  }
+
   data.registered = {}
   data.registered[data.service] = registered
+
   data.thirdPartyFormat = data.thirdPartyFormat || (null as any)
 
   if (data.openRouterModel) {
@@ -302,7 +315,7 @@ export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) 
     return Object.assign(prev, { [field]: value })
   }, {})
 
-  return values
+  return values as Record<string, any>
 }
 
 function updateValue(values: TempSetting[], service: AIAdapter, field: string, nextValue: any) {
