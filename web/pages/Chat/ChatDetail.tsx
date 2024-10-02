@@ -37,7 +37,7 @@ import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
 import { AppSchema } from '/common/types'
-import { startTour } from '/web/tours'
+import { canStartTour, startTour } from '/web/tours'
 
 export { ChatDetail as default }
 
@@ -258,7 +258,7 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    if (charName) {
+    if (charName && canStartTour('chat')) {
       settingStore.menu(true)
       setTimeout(() => {
         startTour('chat')
