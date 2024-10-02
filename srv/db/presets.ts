@@ -162,7 +162,7 @@ function mergeModelFormats(gen: AppSchema.UserGenPreset | null) {
   if (!gen) return gen
 
   if (gen.useAdvancedPrompt) {
-    gen.modelFormat = 'ChatML'
+    gen.modelFormat = gen.modelFormat || 'ChatML'
   } else if (gen.promptOrderFormat && gen.promptOrderFormat in BUILTIN_FORMATS) {
     gen.modelFormat = gen.promptOrderFormat as any
   } else {

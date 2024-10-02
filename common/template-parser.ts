@@ -6,6 +6,8 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
+type Section = 'system' | 'def' | 'history' | 'post'
+
 export type TemplateOpts = {
   continue?: boolean
   parts?: Partial<PromptParts>
@@ -31,6 +33,11 @@ export type TemplateOpts = {
     context: number
     encoder: TokenCounter
     output?: Record<string, { src: string; lines: string[] }>
+  }
+
+  sections?: {
+    flags: { [key in Section]?: boolean }
+    sections: { [key in Section]: string[] }
   }
 
   /**
@@ -168,10 +175,18 @@ export async function parseTemplate(
   length?: number
   linesAddedCount: number
   history?: string[]
+  sections: NonNullable<TemplateOpts['sections']>
 }> {
   if (opts.limit) {
     opts.limit.output = {}
   }
+
+  const sections: TemplateOpts['sections'] = {
+    flags: {},
+    sections: { system: [], def: [], history: [], post: [] },
+  }
+
+  opts.sections = sections
 
   const parts = opts.parts || {}
 
@@ -200,6 +215,7 @@ export async function parseTemplate(
   // }
 
   /** Replace iterators */
+  let history: string[] = []
   if (opts.limit && opts.limit.output) {
     for (const [id, { lines, src }] of Object.entries(opts.limit.output)) {
       src
@@ -215,6 +231,7 @@ export async function parseTemplate(
       const trimmed = filled.adding.slice().reverse()
       output = output.replace(id, trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
+      history = trimmed
     }
 
     // Adding the low priority blocks if we still have the budget for them,
@@ -236,11 +253,15 @@ export async function parseTemplate(
     .replace(/\r\n/g, '\n')
     .replace(/\n\n+/g, '\n\n')
     .trim()
+
+  sections.sections.history = history
+
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
     length: await opts.limit?.encoder?.(result),
     linesAddedCount,
+    sections,
   }
 }
 
@@ -324,22 +345,57 @@ function renderNodes(nodes: PNode[], opts: TemplateOpts) {
 
 function renderNode(node: PNode, opts: TemplateOpts, conditionText?: string) {
   if (typeof node === 'string') {
+    fillSection(opts.sections, node)
     return node
   }
 
   switch (node.kind) {
     case 'placeholder': {
-      return getPlaceholder(node, opts, conditionText)
+      const result = getPlaceholder(node, opts, conditionText)
+      // We need to end the definition section prior to filling the history section
+      // History is the only deterministic marker for the end of the definitions
+      if (node.value === 'history') {
+        flagSection(opts.sections, 'def')
+      }
+      fillSection(opts.sections, result)
+      if (node.value === 'history') {
+        flagSection(opts.sections, 'history')
+      }
+      if (node.value === 'system_prompt') {
+        flagSection(opts.sections, 'system')
+      }
+      return result
     }
 
-    case 'each':
-      return renderIterator(node.value, node.children, opts)
+    case 'each': {
+      const result = renderIterator(node.value, node.children, opts)
+      // See 'placeholder' comment above for why we do this
+      if (node.value === 'history') {
+        flagSection(opts.sections, 'def')
+      }
+      fillSection(opts.sections, result)
+      if (node.value === 'history') {
+        flagSection(opts.sections, 'history')
+      }
 
-    case 'if':
-      return renderCondition(node, node.children, opts)
+      return result
+    }
 
-    case 'lowpriority':
-      return renderLowPriority(node, opts)
+    case 'if': {
+      const result = renderCondition(node, node.children, opts)
+      fillSection(opts.sections, result)
+
+      if (node.value === 'system_prompt') {
+        flagSection(opts.sections, 'system')
+      }
+
+      return result
+    }
+
+    case 'lowpriority': {
+      const result = renderLowPriority(node, opts)
+      return result
+    }
   }
 }
 
@@ -714,4 +770,31 @@ function handleDice(node: DiceExpr) {
 
   const rand = usable.reduce((p, c) => p + c, 0) + adjust
   return rand
+}
+
+function fillSection(state: TemplateOpts['sections'], result: string | undefined) {
+  if (!state || !result) return
+  if (result === HISTORY_MARKER) return
+
+  if (!state.flags.system) {
+    state.sections.system.push(result)
+    return
+  }
+
+  if (!state.flags.def) {
+    state.sections.def.push(result)
+    return
+  }
+
+  if (!state.flags.history) {
+    state.sections.history.push(result)
+  }
+
+  state.sections.post.push(result)
+}
+
+function flagSection(state: TemplateOpts['sections'], section: Section) {
+  if (!state) return
+
+  state.flags[section] = true
 }
