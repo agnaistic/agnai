@@ -290,17 +290,16 @@ export async function assemblePrompt(
 
 export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
   const fallback = getFallbackPreset(opts.settings?.service!)
-  if (
-    (opts.settings?.useAdvancedPrompt === 'basic' || opts.settings?.presetMode === 'simple') &&
-    opts.settings.modelFormat &&
-    opts.settings.promptOrder
-  ) {
+  if (opts.settings?.useAdvancedPrompt === 'basic' || opts.settings?.presetMode === 'simple') {
     if (opts.settings.presetMode === 'simple') {
       const template = promptOrderToTemplate('Universal', simpleOrder)
       return template
     }
-    const template = promptOrderToTemplate(opts.settings.modelFormat, opts.settings.promptOrder)
-    return template
+
+    if (opts.settings.modelFormat && opts.settings.promptOrder) {
+      const template = promptOrderToTemplate(opts.settings.modelFormat, opts.settings.promptOrder)
+      return template
+    }
   }
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate

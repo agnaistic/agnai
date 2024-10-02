@@ -15,6 +15,17 @@ export const homeTour = new Shepherd.Tour({
   },
 })
 
+homeTour.on('cancel', onTourClose)
+homeTour.on('complete', onTourClose)
+
+function onTourClose() {
+  const store = getStore('user')
+  const { profile } = store.getState()
+  if (profile?.handle === 'You') {
+    store.modal(true)
+  }
+}
+
 const win: any = window
 win.homeTourCancel = () => {
   homeTour.cancel()
