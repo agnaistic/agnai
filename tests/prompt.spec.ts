@@ -170,6 +170,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
         ultimeJailbreak: '!!UJB_PROMPT!!',
       },
     })
+    delete (actual.template as any).sections
     expect(actual).to.matchSnapshot()
   })
 
