@@ -11,9 +11,9 @@ import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import { adapterSettings } from '../util'
 import PresetSettings, { getPresetFormData } from '/web/shared/PresetSettings'
 import { PresetTab } from '../PresetSettings/types'
+import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -183,7 +183,7 @@ function isPresetDirty(
 
     if (compare[prop] === undefined || original[prop] === undefined) continue
 
-    const usable: string[] | undefined = (adapterSettings as any)[prop]
+    const usable: string[] | undefined = (ADAPTER_SETTINGS as any)[prop]
 
     if (svc && usable && !usable.includes(svc)) continue
 

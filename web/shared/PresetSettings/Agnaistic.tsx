@@ -15,6 +15,7 @@ export const AgnaisticSettings: Component<{
   service: AIAdapter
   onSave: () => void
   inherit?: Partial<AppSchema.UserGenPreset>
+  mode: AppSchema.UserGenPreset['presetMode']
 }> = (props) => {
   const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
   const opts = useModelOptions()
@@ -62,8 +63,11 @@ export const AgnaisticSettings: Component<{
             </div>
           </div>
         }
-        label="Model"
-        helperText={<span class="text-500">Available: {opts().length}</span>}
+        label={
+          <>
+            Model <span class="text-500 text-xs italic">(Available: {opts().length})</span>
+          </>
+        }
         options={opts()}
         onSelect={props.onSave}
         value={props.inherit?.registered?.agnaistic?.subscriptionId}

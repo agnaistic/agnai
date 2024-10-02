@@ -582,6 +582,10 @@ export const msgStore = createStore<MsgState>(
 
       if (res.result) {
         onSuccess?.()
+
+        if (res.result.created) {
+          onMessageReceived({ msg: res.result.created, chatId: res.result.created.chatId })
+        }
       }
 
       if (res.result?.messageId) {
@@ -637,6 +641,9 @@ export const msgStore = createStore<MsgState>(
       }
 
       updateMsgParents(activeChatId, parents)
+      return {
+        msgs: msgs.filter((m) => !deleteIds.includes(m._id)),
+      }
     },
     stopSpeech() {
       stopSpeech()
@@ -1016,6 +1023,11 @@ async function onMessageReceived(body: {
   const msg = body.msg as AppSchema.ChatMessage
   const user = userStore.getState().user
 
+  if (graph.tree[msg._id]) {
+    console.log('message-created: already received')
+    return
+  }
+
   const speech = getMessageSpeechInfo(msg, user)
 
   const isUserMsg = !!msg.userId
@@ -1210,7 +1222,7 @@ const updateMsgSub = (body: {
   })
 }
 
-function updateMsgParents(chatId: string, parents: Record<string, string>) {
+function updateMsgParents(chatId: string, parents: Record<string, string>, deleteIds?: string[]) {
   const { messageHistory, msgs, activeChatId, graph } = msgStore.getState()
   if (activeChatId !== chatId) return
 
@@ -1232,6 +1244,12 @@ function updateMsgParents(chatId: string, parents: Record<string, string>) {
     const parent = tree[parentId]
     if (parent) {
       parent.children.add(next._id)
+    }
+  }
+
+  if (deleteIds) {
+    for (const id of deleteIds) {
+      delete tree[id]
     }
   }
 

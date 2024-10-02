@@ -1,30 +1,28 @@
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { createMemo, createSignal, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select, { Option } from '../Select'
-import { AppSchema } from '../../../common/types/schema'
 import { defaultPresets } from '../../../common/presets'
 import {
   OPENAI_MODELS,
   CLAUDE_MODELS,
   NOVEL_MODELS,
   REPLICATE_MODEL_TYPES,
-  ThirdPartyFormat,
   MISTRAL_MODELS,
 } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { presetStore, settingStore, userStore } from '../../store'
+import { settingStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { createStore } from 'solid-js/store'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
-import { PresetProps } from './types'
 import { getSubscriptionModelLimits } from '/common/util'
-import Button from '../Button'
+import { forms } from '/web/emitter'
+import { Field, ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
 
-const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
+export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 const CLAUDE_LABELS = {
   ClaudeV2: 'Latest: Claude v2',
@@ -47,15 +45,7 @@ const CLAUDE_LABELS = {
   ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
 } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
-export const GeneralSettings: Component<
-  PresetProps & {
-    pane: boolean
-    setFormat: (format: ThirdPartyFormat) => void
-    format?: ThirdPartyFormat
-    tab: string
-    sub?: AppSchema.SubscriptionModelOption
-  }
-> = (props) => {
+export const GeneralSettings: Field = (props) => {
   const cfg = settingStore()
   const user = userStore()
 
@@ -82,14 +72,6 @@ export const GeneralSettings: Component<
       maxTokens: props.sub?.preset.maxTokens,
       maxContextLength: props.sub?.preset.maxContextLength,
     }
-  })
-
-  const maxCtx = createMemo(() => {
-    const ctx = subMax()?.maxContextLength
-    if (!ctx) return
-
-    const max = Math.floor(ctx / 1000)
-    return `${max}K`
   })
 
   const openRouterModels = createMemo(() => {
@@ -138,17 +120,15 @@ export const GeneralSettings: Component<
     return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
   })
 
+  forms.useSub((field, value) => {
+    if (field === 'maxContextLength') {
+      setContext(value)
+    }
+  })
+
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <Select
-        fieldName="modelFormat"
-        label="Prompt Format"
-        helperMarkdown={`Which formatting method to use if using "universal tags" in your prompt template
-            (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
-        items={FORMATS}
-        value={props.inherit?.modelFormat || 'Alpaca'}
-        recommend={props.sub?.preset.modelFormat}
-      />
+      <ModelFormat {...props} />
 
       <Card hide={!serviceHasSetting(props.service, props.format, 'localRequests')}>
         <Toggle
@@ -169,41 +149,6 @@ export const GeneralSettings: Component<
       </Show>
 
       <Card hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl')}>
-        <TextInput
-          fieldName="thirdPartyUrl"
-          label="Third Party URL"
-          helperText="Typically a Kobold, Ooba, or other URL"
-          placeholder="E.g. https://some-tunnel-url.loca.lt"
-          value={props.inherit?.thirdPartyUrl || ''}
-          disabled={props.disabled}
-          service={props.service}
-          format={props.format}
-          aiSetting={'thirdPartyUrl'}
-        />
-
-        <TextInput
-          fieldName="thirdPartyKey"
-          label={
-            <div class="mt-1 flex gap-4">
-              <div>Third Party Password</div>
-              <Show when={props.inherit?._id}>
-                <Button
-                  size="pill"
-                  onClick={() => presetStore.deleteUserPresetKey(props.inherit?._id!)}
-                >
-                  Remove Key
-                </Button>
-              </Show>
-            </div>
-          }
-          helperText="Never enter your official OpenAI, Claude, Mistral keys here."
-          value={props.inherit?.thirdPartyKey}
-          disabled={props.disabled}
-          service={props.service}
-          type="password"
-          aiSetting={'thirdPartyKey'}
-        />
-
         <div class="flex flex-wrap items-start gap-2">
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"
@@ -239,8 +184,6 @@ export const GeneralSettings: Component<
           helperText="Which OpenAI model to use"
           value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'oaiModel'}
         />
 
@@ -251,8 +194,6 @@ export const GeneralSettings: Component<
           helperText="Which Mistral model to use"
           value={props.inherit?.mistralModel ?? ''}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'mistralModel'}
         />
 
@@ -262,8 +203,6 @@ export const GeneralSettings: Component<
           helperText="Model Override (typically for 3rd party APIs)"
           value={props.inherit?.thirdPartyModel ?? ''}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'thirdPartyModel'}
         />
 
@@ -274,8 +213,6 @@ export const GeneralSettings: Component<
           helperText="Which OpenRouter model to use"
           value={props.inherit?.openRouterModel?.id || ''}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'openRouterModel'}
         />
         <div
@@ -288,8 +225,6 @@ export const GeneralSettings: Component<
             items={novelModels()}
             value={props.inherit?.novelModel || ''}
             disabled={props.disabled}
-            service={props.service}
-            format={props.format}
             aiSetting={'novelModel'}
           />
           <Show when={cfg.flags.naiModel}>
@@ -298,27 +233,10 @@ export const GeneralSettings: Component<
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
               aiSetting={'novelModel'}
-              format={props.format}
-              service={props.service}
             />
           </Show>
         </div>
-        <Toggle
-          fieldName="antiBond"
-          label="Anti-Bond"
-          helperText={
-            <>
-              If this option is enabled, OpenAI will be prompted with logit biases to discourage the
-              model from talking about "bonding." This is mostly a problem with GPT-4, but can could
-              also be used with other OpenAI models.
-            </>
-          }
-          value={props.inherit?.antiBond ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          format={props.format}
-          aiSetting={'antiBond'}
-        />
+
         <Select
           fieldName="claudeModel"
           label="Claude Model"
@@ -326,8 +244,6 @@ export const GeneralSettings: Component<
           helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
           value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'claudeModel'}
         />
         <Show when={replicateModels().length > 1}>
@@ -341,8 +257,6 @@ export const GeneralSettings: Component<
                 <span>Publicly available language models.</span>
               </>
             }
-            service={props.service}
-            format={props.format}
             aiSetting="replicateModelVersion"
             onChange={(ev) => setReplicate('model', ev.value)}
           />
@@ -354,9 +268,7 @@ export const GeneralSettings: Component<
           helperText="Which Replicate API input parameters to use."
           value={replicate.type}
           disabled={!!replicate.model || props.disabled}
-          service={props.service}
           aiSetting={'replicateModelType'}
-          format={props.format}
           onChange={(ev) => setReplicate('type', ev.value)}
         />
         <TextInput
@@ -366,9 +278,7 @@ export const GeneralSettings: Component<
           value={replicate.version}
           placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
           disabled={!!replicate.model || props.disabled}
-          service={props.service}
           aiSetting={'replicateModelVersion'}
-          format={props.format}
           onInput={(ev) => setReplicate('version', ev.currentTarget.value)}
         />
       </Card>
@@ -388,50 +298,23 @@ export const GeneralSettings: Component<
             step={1}
             value={props.inherit?.swipesPerGeneration || 1}
             disabled={props.disabled}
-            format={props.format}
             onChange={(val) => setSwipesPerGeneration(val)}
           />
         </Show>
-        <RangeInput
-          fieldName="maxTokens"
-          label="Max New Tokens"
-          helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate."
-          min={16}
-          max={1024}
-          step={1}
-          value={props.inherit?.maxTokens || 150}
-          disabled={props.disabled}
-          format={props.format}
-          onChange={(val) => setTokens(val)}
-          recommended={subMax().maxTokens}
-          recommendLabel="Max"
-        />
-        <RangeInput
-          fieldName="maxContextLength"
-          label="Max Context Length"
-          helperText={
-            <>
-              <p>
-                Maximum context length. If unsure, leave this at 0. Check your AI service
-                documentation for more details.
-              </p>
-            </>
-          }
-          min={16}
-          max={props.service === 'claude' ? 200000 : 32000}
-          step={1}
-          value={props.inherit?.maxContextLength || 4096}
-          disabled={props.disabled}
-          onChange={(val) => setContext(val)}
-          recommended={maxCtx()}
-          recommendLabel="Max"
-        />
+
+        <ResponseLength {...props} subMax={subMax()} setTokens={setTokens} />
+
+        <ContextSize {...props} subMax={subMax()} />
+
+        <Temperature {...props} />
+
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
           helperText="Stream the AI's response as it is generated"
           value={props.inherit?.streamResponse ?? false}
           disabled={props.disabled}
+          aiSetting="streamResponse"
         />
         <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
         <Toggle
@@ -439,17 +322,9 @@ export const GeneralSettings: Component<
           label="Disable Name Stops"
           helperText="Disable automatic character names stopping strings"
           value={props.inherit?.disableNameStops}
+          aiSetting="disableNameStops"
         />
-        <Toggle
-          fieldName="trimStop"
-          label="Trim Stop Sequences"
-          helperText="Trim Stop Sequences from the AI's response. Does not work with Streaming responses."
-          value={props.inherit?.trimStop ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          format={props.format}
-          aiSetting={'trimStop'}
-        />
+
         <PhraseBias inherit={props.inherit} service={props.service} format={props.format} />
       </Card>
     </div>

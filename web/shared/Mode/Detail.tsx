@@ -44,7 +44,7 @@ export const ModeDetail: Component<{
   return (
     <>
       <Show when={props.loading}>
-        <div class="mt-24 w-full justify-center">
+        <div class="mt-24 flex w-full justify-center">
           <Loading />
         </div>
       </Show>

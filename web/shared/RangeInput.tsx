@@ -1,4 +1,4 @@
-import { Component, Show, createSignal, createEffect, createMemo } from 'solid-js'
+import { Component, Show, createSignal, createEffect } from 'solid-js'
 import type { JSX } from 'solid-js'
 import {
   AIAdapter,
@@ -6,11 +6,11 @@ import {
   ThirdPartyFormat,
   samplerDisableValues,
 } from '../../common/adapters'
-import { isValidServiceSetting } from './util'
+import { useValidServiceSetting } from './util'
 import { markdown } from './markdown'
 
 const RangeInput: Component<{
-  label: string
+  label: string | JSX.Element
   fieldName: string
   value: number
   helperText?: string | JSX.Element
@@ -23,8 +23,6 @@ const RangeInput: Component<{
   recommendLabel?: string | JSX.Element
   onChange?: (value: number) => void
 
-  service?: AIAdapter
-  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   parentClass?: string
 }> = (props) => {
@@ -51,10 +49,7 @@ const RangeInput: Component<{
 
   createEffect(updateRangeSliders)
 
-  const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
-    return isValid ? '' : ' hidden'
-  })
+  const show = useValidServiceSetting(props.aiSetting)
 
   const disableSampler = () => {
     if (!props.aiSetting) return
@@ -65,7 +60,7 @@ const RangeInput: Component<{
   }
 
   return (
-    <div class={`relative pt-1 ${hide()} ${props.parentClass || ''}`}>
+    <div class={`relative pt-1 ${props.parentClass || ''}`} classList={{ hidden: !show() }}>
       <ul class="w-full">
         <div class="flex flex-row justify-between gap-2">
           <span>
@@ -160,14 +155,12 @@ export const InlineRangeInput: Component<{
 
   createEffect(updateRangeSliders)
 
-  const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
-    return isValid ? '' : ' hidden'
-  })
+  const show = useValidServiceSetting(props.aiSetting)
 
   return (
     <div
-      class={`bg-800 flex items-center gap-2 rounded-xl px-2 ${hide()} ${props.parentClass || ''}`}
+      class={`bg-800 flex items-center gap-2 rounded-xl px-2 ${props.parentClass || ''}`}
+      classList={{ hidden: !show() }}
     >
       <input
         ref={input}

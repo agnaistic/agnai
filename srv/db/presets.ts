@@ -3,6 +3,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { decryptText, encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
+import { BUILTIN_FORMATS } from '/common/presets/templates'
 
 export async function createTemplate(
   userId: string,
@@ -63,6 +64,12 @@ export async function createUserPreset(userId: string, settings: AppSchema.GenSe
     _id: v4(),
   }
 
+  if (preset.useAdvancedPrompt) {
+    delete preset.promptOrderFormat
+  } else {
+    preset.modelFormat = preset.promptOrderFormat as any
+  }
+
   const originalKey = preset.thirdPartyKey!
   if (preset.thirdPartyKey) {
     preset.thirdPartyKey = encryptText(preset.thirdPartyKey)
@@ -92,7 +99,7 @@ export async function getUserPresets(userId: string) {
     } else {
       pre.thirdPartyKey = ''
     }
-    return pre
+    return mergeModelFormats(pre)
   })
 }
 
@@ -148,5 +155,20 @@ export async function getUserPreset(presetId: string, userId?: string) {
   if (preset?.localRequests && preset.thirdPartyKey && userId === preset.userId) {
     preset.thirdPartyKey = decryptText(preset.thirdPartyKey)
   }
-  return preset
+  return mergeModelFormats(preset)
+}
+
+function mergeModelFormats(gen: AppSchema.UserGenPreset | null) {
+  if (!gen) return gen
+
+  if (gen.useAdvancedPrompt) {
+    gen.modelFormat = 'ChatML'
+  } else if (gen.promptOrderFormat && gen.promptOrderFormat in BUILTIN_FORMATS) {
+    gen.modelFormat = gen.promptOrderFormat as any
+  } else {
+    gen.modelFormat = 'ChatML'
+  }
+
+  delete gen.promptOrderFormat
+  return gen
 }

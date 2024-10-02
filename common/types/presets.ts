@@ -76,6 +76,7 @@ export interface UserGenPreset extends GenSettings {
 export interface GenSettings {
   name: string
   description?: string
+  presetMode?: 'simple' | 'advanced'
 
   service?: AIAdapter
 
@@ -87,6 +88,7 @@ export interface GenSettings {
   smoothingCurve?: number
   maxTokens: number
   maxContextLength?: number
+  useMaxContext?: boolean
   repetitionPenalty: number
   repetitionPenaltyRange: number
   repetitionPenaltySlope: number

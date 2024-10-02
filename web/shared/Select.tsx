@@ -1,8 +1,8 @@
-import { Component, JSX, For, createMemo, Show } from 'solid-js'
+import { Component, JSX, For, createMemo, Show, onMount } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
-import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
-import { getAISettingServices, isValidServiceSetting } from './util'
+import { AIAdapter, PresetAISettings } from '../../common/adapters'
+import { getAISettingServices, useValidServiceSetting } from './util'
 import { forms } from '../emitter'
 
 export type Option<T extends string = string> = {
@@ -25,8 +25,6 @@ const Select: Component<{
   recommend?: string
   recommendLabel?: string
 
-  service?: AIAdapter
-  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   ref?: (ref: HTMLSelectElement) => void
   hide?: boolean
@@ -39,11 +37,11 @@ const Select: Component<{
     forms.emit(props.fieldName, ev.currentTarget.value)
   }
 
-  const hide = createMemo(() => {
-    if (props.hide) return ' hidden'
-    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
-    return isValid ? '' : ' hidden'
+  onMount(() => {
+    forms.emit(props.fieldName, props.value)
   })
+
+  const show = useValidServiceSetting(props.aiSetting)
 
   const recommend = createMemo(() => {
     if (!props.recommend) return
@@ -52,7 +50,13 @@ const Select: Component<{
   })
 
   return (
-    <div class={`${hide()} max-w-full ${props.parentClass || ''}`} classList={props.classList}>
+    <div
+      class={`max-w-full ${props.parentClass || ''}`}
+      classList={{
+        ...props.classList,
+        hidden: !show() || props.hide,
+      }}
+    >
       <FormLabel
         label={
           <span>

@@ -1,29 +1,19 @@
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { createMemo, createSignal, Show } from 'solid-js'
 import TextInput from '../TextInput'
 import Select from '../Select'
-import { AppSchema } from '../../../common/types/schema'
 import { getFallbackPreset } from '../../../common/presets'
-import { ThirdPartyFormat } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
 import { chatStore, presetStore } from '../../store'
 import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { Card } from '../Card'
-import { FormLabel } from '../FormLabel'
 import { defaultTemplate } from '/common/mode-templates'
 import { templates } from '/common/presets/templates'
-import { PresetProps } from './types'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
+import { Field, Jailbreak, SystemPrompt } from './Fields'
 
-export const PromptSettings: Component<
-  PresetProps & {
-    pane: boolean
-    format?: ThirdPartyFormat
-    tab: string
-    sub?: AppSchema.SubscriptionModelOption
-  }
-> = (props) => {
+export const PromptSettings: Field = (props) => {
   let schemaRef: HTMLInputElement
 
   const gaslights = presetStore((s) => ({ list: s.templates }))
@@ -115,9 +105,13 @@ export const PromptSettings: Component<
             ]}
             value={useAdvanced()}
             onChange={(ev) => setAdvanced(ev.value as any)}
+            hide={props.mode === 'simple'}
           />
 
-          <BasicPromptTemplate inherit={props.inherit} hide={useAdvanced() !== 'basic'} />
+          <BasicPromptTemplate
+            inherit={props.inherit}
+            hide={useAdvanced() !== 'basic' || props.mode === 'simple'}
+          />
 
           <PromptEditor
             fieldName="gaslight"
@@ -130,30 +124,9 @@ export const PromptSettings: Component<
             showTemplates
           />
 
-          <FormLabel
-            label="System Prompt"
-            helperText={
-              <>
-                General instructions for how the AI should respond. Use the{' '}
-                <code class="text-sm">{'{{system_prompt}}'}</code> placeholder.
-              </>
-            }
-          />
-          <PromptEditor
-            fieldName="systemPrompt"
-            include={['char', 'user']}
-            placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
-            value={props.inherit?.systemPrompt ?? ''}
-            disabled={props.disabled}
-          />
+          <SystemPrompt {...props} />
 
-          <PromptEditor
-            fieldName="ultimeJailbreak"
-            include={['char', 'user']}
-            placeholder="E.g. Keep OOC out of your reply."
-            value={props.inherit?.ultimeJailbreak ?? ''}
-            disabled={props.disabled}
-          />
+          <Jailbreak {...props} />
 
           <Toggle
             fieldName="prefixNameAppend"
@@ -182,8 +155,6 @@ export const PromptSettings: Component<
             isMultiline
             value={props.inherit?.prefill ?? ''}
             disabled={props.disabled}
-            service={props.service}
-            format={props.format}
             class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
             aiSetting={'prefill'}
           />
@@ -193,12 +164,14 @@ export const PromptSettings: Component<
               label="Override Character System Prompt"
               value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
               disabled={props.disabled}
+              aiSetting="ignoreCharacterSystemPrompt"
             />
             <Toggle
               fieldName="ignoreCharacterUjb"
               label="Override Character Jailbreak"
               value={props.inherit?.ignoreCharacterUjb ?? false}
               disabled={props.disabled}
+              aiSetting="ignoreCharacterUjb"
             />
           </div>
         </Card>

@@ -6,7 +6,9 @@ export const agnaiPresets = {
   agnai: {
     service: 'agnaistic',
     name: 'Agnaistic',
+    presetMode: 'simple',
     maxTokens: 400,
+    useMaxContext: true,
     maxContextLength: 8192,
     repetitionPenalty: 1,
     repetitionPenaltySlope: 0,
@@ -16,7 +18,7 @@ export const agnaiPresets = {
     topP: 1,
     typicalP: 1,
     topA: 0,
-    minP: 0,
+    minP: 0.1,
     tailFreeSampling: 1,
     encoderRepitionPenalty: 1.0,
     penaltyAlpha: 0,
@@ -34,7 +36,6 @@ export const agnaiPresets = {
     memoryReverseWeight: false,
     antiBond: false,
     useAdvancedPrompt: 'basic',
-    promptOrderFormat: 'Alpaca',
     promptOrder: [
       {
         placeholder: 'system_prompt',

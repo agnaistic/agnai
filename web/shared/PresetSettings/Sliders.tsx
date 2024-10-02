@@ -19,19 +19,6 @@ export const SliderSettings: Component<
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
       <Card class="flex flex-col gap-4">
         <RangeInput
-          fieldName="temp"
-          label="Temperature"
-          helperText="Randomness of sampling. High values can increase creativity but may make text less sensible. Lower values will make text more predictable but can become repetitious."
-          min={0.1}
-          max={5}
-          step={0.01}
-          value={props.inherit?.temp || defaultPresets.basic.temp}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'temp'}
-          recommended={props.sub?.preset.temp}
-        />
-        <RangeInput
           fieldName="dynatemp_range"
           label="Dynamic Temperature Range"
           helperText="The range to use for dynamic temperature. When used, the actual temperature is allowed to be automatically adjusted dynamically between DynaTemp ± DynaTempRange. For example, setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3 and max of 0.5. (Put this value on 0 to disable its effect)"
@@ -40,7 +27,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.dynatemp_range || 0}
           disabled={props.disabled}
-          service={props.service} // we dont want this showing if the format is set to aphrodite
           aiSetting={'dynatemp_range'}
           recommended={props.sub?.preset.dynatemp_range}
         />
@@ -54,7 +40,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.dynatemp_exponent || 1}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'dynatemp_exponent'}
           recommended={props.sub?.preset.dynatemp_exponent}
         />
@@ -67,7 +52,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.smoothingFactor || 0}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'smoothingFactor'}
           recommended={props.sub?.preset.dynatemp_exponent}
         />
@@ -80,7 +64,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.smoothingCurve || 1}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'smoothingCurve'}
           recommended={props.sub?.preset.smoothingCurve}
         />
@@ -103,9 +86,7 @@ export const SliderSettings: Component<
           step={0.05}
           value={props.inherit?.cfgScale || 1}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'cfgScale'}
-          format={props.format}
         />
 
         <RangeInput
@@ -117,8 +98,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.minP ?? 0}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'minP'}
           recommended={props.sub?.preset.minP}
         />
@@ -132,8 +111,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.topP ?? defaultPresets.basic.topP}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'topP'}
           recommended={props.sub?.preset.topP}
         />
@@ -147,8 +124,6 @@ export const SliderSettings: Component<
           step={1}
           value={props.inherit?.topK ?? defaultPresets.basic.topK}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'topK'}
           recommended={props.sub?.preset.topK}
         />
@@ -161,8 +136,6 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.topA ?? 0}
           disabled={props.disabled}
-          service={props.service}
-          format={props.format}
           aiSetting={'topA'}
           recommended={props.sub?.preset.topA}
         />
@@ -176,9 +149,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.mirostatTau ?? 0}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'mirostatTau'}
-          format={props.format}
         />
         <RangeInput
           fieldName="mirostatLR"
@@ -189,9 +160,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.mirostatLR ?? 1}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'mirostatLR'}
-          format={props.format}
         />
         <RangeInput
           fieldName="tailFreeSampling"
@@ -202,9 +171,7 @@ export const SliderSettings: Component<
           step={0.001}
           value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'tailFreeSampling'}
-          format={props.format}
           recommended={props.sub?.preset.tailFreeSampling}
         />
         <RangeInput
@@ -216,9 +183,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'typicalP'}
-          format={props.format}
           recommended={props.sub?.preset.typicalP}
         />
         <RangeInput
@@ -230,9 +195,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'repetitionPenalty'}
-          format={props.format}
           recommended={props.sub?.preset.repetitionPenalty}
         />
         <RangeInput
@@ -246,9 +209,7 @@ export const SliderSettings: Component<
             props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
           }
           disabled={props.disabled}
-          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltyRange'}
-          format={props.format}
           recommended={props.sub?.preset.repetitionPenaltyRange}
         />
         <RangeInput
@@ -262,9 +223,7 @@ export const SliderSettings: Component<
             props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
           }
           disabled={props.disabled}
-          service={props.format !== 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltySlope'}
-          format={props.format}
           recommended={props.sub?.preset.repetitionPenaltySlope}
         />
         <RangeInput
@@ -285,9 +244,7 @@ export const SliderSettings: Component<
           step={0.0001}
           value={props.inherit?.etaCutoff ?? 0}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'etaCutoff'}
-          format={props.format}
         />
         <RangeInput
           fieldName="epsilonCutoff"
@@ -298,9 +255,7 @@ export const SliderSettings: Component<
           step={0.0001}
           value={props.inherit?.epsilonCutoff ?? 0}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'epsilonCutoff'}
-          format={props.format}
         />
         <RangeInput
           fieldName="frequencyPenalty"
@@ -311,9 +266,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'frequencyPenalty'}
-          format={props.format}
           recommended={props.sub?.preset.frequencyPenalty}
         />
         <RangeInput
@@ -325,9 +278,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'presencePenalty'}
-          format={props.format}
           recommended={props.sub?.preset.presencePenalty}
         />
         <RangeInput
@@ -341,9 +292,7 @@ export const SliderSettings: Component<
             props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty
           }
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'encoderRepitionPenalty'}
-          format={props.format}
           recommended={props.sub?.preset.encoderRepitionPenalty}
         />
 
@@ -356,9 +305,7 @@ export const SliderSettings: Component<
           step={0.01}
           value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'penaltyAlpha'}
-          format={props.format}
           recommended={props.sub?.preset.penaltyAlpha}
         />
 
@@ -371,9 +318,7 @@ export const SliderSettings: Component<
           step={1}
           value={props.inherit?.numBeams ?? 1}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'numBeams'}
-          format={props.format}
         />
       </Card>
     </div>

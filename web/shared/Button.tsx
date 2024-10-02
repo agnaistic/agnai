@@ -1,4 +1,5 @@
-import { Component, JSX, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { forms } from '../emitter'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -24,6 +25,7 @@ const sizes = {
   sm: 'py-1 text-sm',
   md: 'py-2',
   lg: 'py-4 text-lg',
+  xs: 'py-0.5 text-xs',
 }
 
 const Button: Component<{
@@ -97,15 +99,76 @@ export const LabelButton: Component<{
   </label>
 )
 
+export const ModeButton: Component<{
+  fieldName: string
+  onChange?: (value: string) => void
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  value?: string
+  class?: string
+  alignLeft?: boolean
+  labels?: string[]
+  modes: string[]
+}> = (props) => {
+  let ref: HTMLInputElement
+
+  const [mode, setMode] = createSignal(props.value || props.modes[0])
+
+  const label = createMemo(() => {
+    const id = mode()
+    if (!props.labels) return id
+    const index = props.modes.indexOf(id)
+
+    if (index === -1) id
+    return props.labels[index] ?? id
+  })
+
+  const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (ev) => {
+    let index = props.modes.indexOf(mode()) + 1
+    if (index >= props.modes.length) {
+      index = 0
+    }
+    const value = props.modes[index]
+    setMode(value)
+    ref.value = value
+    props.onChange?.(value)
+    forms.emit(props.fieldName, value)
+  }
+
+  onMount(() => {
+    forms.emit(props.fieldName, props.value)
+  })
+
+  return (
+    <>
+      <button
+        type="button"
+        class={
+          `${kinds.primary} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
+            sizes[props.size || 'md']
+          } ` + (props.class || '')
+        }
+        disabled={props.disabled}
+        onClick={onClick}
+      >
+        {label()}
+      </button>
+      <input ref={ref!} name={props.fieldName} type="text" class="hidden" value={props.value} />
+    </>
+  )
+}
+
 export const ToggleButton: Component<{
   fieldName: string
   children: JSX.Element
   onChange?: (value: boolean) => void
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xs'
   disabled?: boolean
   value?: boolean
   class?: string
   alignLeft?: boolean
+  onText?: string
+  offText?: string
 }> = (props) => {
   let ref: HTMLInputElement
 
@@ -123,7 +186,7 @@ export const ToggleButton: Component<{
       <button
         type="button"
         class={
-          `${kinds.hollow} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
+          `select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
             sizes[props.size || 'md']
           } ` + (props.class || '')
         }
@@ -134,7 +197,8 @@ export const ToggleButton: Component<{
         disabled={props.disabled}
         onClick={onClick}
       >
-        {props.children}
+        {props.children} <Show when={val() && props.onText}>{props.onText}</Show>
+        <Show when={!val() && props.offText}>{props.offText}</Show>
       </button>
       <input
         ref={ref!}

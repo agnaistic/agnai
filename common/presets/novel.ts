@@ -21,8 +21,6 @@ export const novelPresets = {
     topA: 0.1,
     order: [6, 2, 3, 0, 4, 1, 5],
     disabledSamplers: [6, 5],
-    cfgScale: 1,
-    cfgOppose: '',
     streamResponse: true,
     typicalP: 1,
     gaslight: `{{char}} Memory: {{memory}}

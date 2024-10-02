@@ -22,7 +22,7 @@ export const TierCard: Component<{
         r.level > l.level ? 1 : r.level === l.level ? l.name.localeCompare(r.name) : -1
       )
       .map((m) => {
-        const level = getSubscriptionModelLimits(m.preset, m.level)
+        const level = getSubscriptionModelLimits(m.preset, props.tier.level)
         const ctx = level ? `${Math.floor(level.maxContextLength / 1000)}k` : ''
         return `| ${m.name} | ${ctx} |`
       })

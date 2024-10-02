@@ -7,6 +7,7 @@ import { ServiceOption } from '../../pages/Settings/components/RegisteredSetting
 export const RegisteredSettings: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
+  mode: AppSchema.GenSettings['presetMode']
 }> = (props) => {
   const state = settingStore()
 
@@ -29,6 +30,7 @@ export const RegisteredSettings: Component<{
               service={props.service!}
               field={(field) => `registered.${props.service!}.${field}`}
               value={props.inherit?.registered?.[props.service!]?.[opt.field]}
+              hide={props.mode === 'simple' && opt.advanced === false}
             />
           )}
         </For>

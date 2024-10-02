@@ -1,4 +1,4 @@
-import { AlertTriangle, Save, VenetianMask, X } from 'lucide-solid'
+import { AlertTriangle, Save, X } from 'lucide-solid'
 import {
   Component,
   Match,
@@ -17,13 +17,14 @@ import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore, settingStore, toastStore, userStore } from '../../store'
-import { TitleCard } from '/web/shared/Card'
+import { Pill, TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
 import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
+import { startTour } from '/web/tours'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
@@ -160,6 +161,10 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   onMount(() => {
     props.footer?.(footer)
+
+    if (state.profile?.handle === 'You') {
+      startTour('profile', true)
+    }
   })
 
   const footer = (
@@ -183,7 +188,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </div>
 
-          <TitleCard type="orange" ariaRole="note" ariaLabel="Impersonate">
+          <TitleCard type="bg" ariaRole="note" ariaLabel="Impersonate">
             <div class="flex flex-wrap items-center justify-center">
               You can{' '}
               <div class="inline">
@@ -191,8 +196,11 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   Impersonate
                 </Button>{' '}
               </div>
-              characters by clicking the <VenetianMask size={16} class="mx-1" aria-hidden="true" />{' '}
-              icon at the top of the main menu.
+              characters by clicking the{' '}
+              <Pill small class="mx-0.5 px-0.5">
+                Persona
+              </Pill>{' '}
+              button at the top of the main menu.
             </div>
           </TitleCard>
 
@@ -255,7 +263,8 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
           <TextInput
             label="Display Name"
-            helperText="This is your publicly visible name."
+            parentClass="tour-displayname"
+            helperText="Your name in chats and to others (when not impersonating)"
             fieldName="handle"
             value={state.profile?.handle}
           />

@@ -35,6 +35,7 @@ export const ServiceOption: Component<{
   config?: Record<string, any>
   field?: (field: string) => string
   onChange?: (value: any) => void
+  hide?: boolean
 }> = (props) => {
   const field = createMemo(
     () => props.field?.(props.opt.field) || `adapterConfig.${props.service}.${props.opt.field}`
@@ -85,6 +86,7 @@ export const ServiceOption: Component<{
           placeholder={placeholder()}
           value={props.value}
           onChange={(ev) => props.onChange?.(ev.currentTarget.value)}
+          hide={props.hide}
         />
       </Match>
 
@@ -95,6 +97,7 @@ export const ServiceOption: Component<{
           helperText={props.opt.helperText}
           value={!!props.value}
           onChange={props.onChange}
+          hide={props.hide}
         />
       </Match>
 
@@ -106,6 +109,7 @@ export const ServiceOption: Component<{
           items={options()}
           value={props.value}
           onChange={(opt) => props.onChange?.(opt.value)}
+          hide={props.hide}
         />
       </Match>
     </Switch>

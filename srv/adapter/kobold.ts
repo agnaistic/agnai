@@ -52,8 +52,8 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
+  const stop_sequence = getStoppingStrings(opts).concat('END_OF_DIALOG')
   if (opts.gen.thirdPartyFormat === 'kobold' || opts.gen.thirdPartyFormat === 'koboldcpp') {
-    const stop_sequence = getStoppingStrings(opts).concat('END_OF_DIALOG')
     body.stop_sequence = stop_sequence
 
     // Kobold sampler order parameter must contain all 6 samplers to be valid
@@ -115,10 +115,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, [
-    'END_OF_DIALOG',
-    'You:',
-  ])
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, stop_sequence)
 
   yield trimmed || parsed
 }

@@ -39,9 +39,7 @@ export const ToggleSettings: Component<
           }
           value={props.inherit?.cfgOppose || ''}
           disabled={props.disabled}
-          service={props.service}
           aiSetting={'cfgScale'}
-          format={props.format}
         />
 
         <Select
@@ -59,9 +57,7 @@ export const ToggleSettings: Component<
             { label: 'Off', value: 'off' },
           ]}
           value={props.inherit?.phraseRepPenalty || 'aggressive'}
-          service={props.service}
           aiSetting="phraseRepPenalty"
-          format={props.format}
         />
 
         <Toggle

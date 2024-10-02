@@ -152,7 +152,7 @@ const ChatNav: Component<NavProps> = (props) => {
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash size={size} />
         </Nav.Item>
-        <Nav.Item onClick={() => startTour('chat', true)} tooltip="Chat Guide">
+        <Nav.Item onClick={() => startTour('chat', true)} tooltip="Chat Guide" menuOpen>
           <Info size={size} />
         </Nav.Item>
       </div>

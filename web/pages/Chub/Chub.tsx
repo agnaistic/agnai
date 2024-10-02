@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
 import Tabs from '../../shared/Tabs'
@@ -36,6 +36,10 @@ const Chub: Component = () => {
   createEffect(() => {
     const index = tabs.indexOf(params.tab || ('characters' as any))
     setTab(index)
+  })
+
+  onMount(() => {
+    window.flag('chub', true)
   })
 
   const currentTab = createMemo(() => tabs[tab()])
