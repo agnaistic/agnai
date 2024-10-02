@@ -120,7 +120,7 @@ export const PromptSettings: Field = (props) => {
             disabled={props.disabled}
             showHelp
             inherit={props.inherit}
-            hide={useAdvanced() === 'basic'}
+            hide={useAdvanced() === 'basic' || props.mode === 'simple'}
             showTemplates
           />
 

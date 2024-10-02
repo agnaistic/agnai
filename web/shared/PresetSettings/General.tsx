@@ -20,7 +20,7 @@ import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
 import { forms } from '/web/emitter'
-import { Field, ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
+import { Field, ContextSize, ModelFormat, ResponseLength, Temperature, ThirdParty } from './Fields'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -149,6 +149,8 @@ export const GeneralSettings: Field = (props) => {
       </Show>
 
       <Card hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl')}>
+        <ThirdParty {...props} />
+
         <div class="flex flex-wrap items-start gap-2">
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"
@@ -307,6 +309,19 @@ export const GeneralSettings: Field = (props) => {
         <ContextSize {...props} subMax={subMax()} />
 
         <Temperature {...props} />
+
+        <RangeInput
+          fieldName="minP"
+          label="Min P"
+          helperText="Used to discard tokens with the probability under a threshold (min_p) in the sampling process. Higher values will make text more predictable. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.inherit?.minP ?? 0}
+          disabled={props.disabled}
+          aiSetting={'minP'}
+          recommended={props.sub?.preset.minP}
+        />
 
         <Toggle
           fieldName="streamResponse"

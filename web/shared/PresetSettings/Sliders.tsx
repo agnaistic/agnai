@@ -90,19 +90,6 @@ export const SliderSettings: Component<
         />
 
         <RangeInput
-          fieldName="minP"
-          label="Min P"
-          helperText="Used to discard tokens with the probability under a threshold (min_p) in the sampling process. Higher values will make text more predictable. (Put this value on 0 to disable its effect)"
-          min={0}
-          max={1}
-          step={0.01}
-          value={props.inherit?.minP ?? 0}
-          disabled={props.disabled}
-          aiSetting={'minP'}
-          recommended={props.sub?.preset.minP}
-        />
-
-        <RangeInput
           fieldName="topP"
           label="Top P"
           helperText="Used to discard unlikely text in the sampling process. Lower values will make text more predictable but can become repetitious. (Put this value on 1 to disable its effect)"

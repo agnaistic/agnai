@@ -67,6 +67,7 @@ export const ADAPTER_SETTINGS: {
   tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
   minP: [
     'llamacpp',
+    'novel',
     'kobold',
     'koboldcpp',
     'exllamav2',

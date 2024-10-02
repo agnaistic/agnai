@@ -183,6 +183,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     top_k: gen.topK,
     top_p: gen.topP,
     top_a: gen.topA,
+    min_p: gen.minP ?? 0,
     typical_p: gen.typicalP,
     tail_free_sampling: gen.tailFreeSampling,
     repetition_penalty: gen.repetitionPenalty,
