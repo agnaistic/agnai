@@ -231,6 +231,46 @@ SAMPLECHAT OtherBot
 <START>
 MainChar: bot response
 OtherBot:",
+    "sections": Object {
+      "flags": Object {
+        "def": true,
+        "history": true,
+      },
+      "sections": Object {
+        "def": Array [],
+        "history": Array [
+          "How OtherBot speaks:
+SAMPLECHAT OtherBot
+<START>",
+          "MainChar: bot response",
+        ],
+        "post": Array [],
+        "system": Array [
+          "GASLIGHT TEMPLATE
+",
+          "ChatOwner",
+          "
+",
+          "OtherBot",
+          "
+Auto-injected text:
+",
+          "__ee2830fb-4bb0-4eb7-9853-738333e653d0__",
+          "
+",
+          "OtherBot:",
+          "GASLIGHT TEMPLATE
+ChatOwner
+OtherBot
+Auto-injected text:
+How OtherBot speaks:
+SAMPLECHAT OtherBot
+<START>
+MainChar: bot response
+OtherBot:",
+        ],
+      },
+    },
   },
 }
 `;
