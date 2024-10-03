@@ -144,11 +144,9 @@ Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 
 {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
 {{/each}}
-{{#if ujb}}### Instruction:
-{{ujb}}
-{{/if}}
+
 ### Response:
-  {{post}}`,
+{{#if ujb}}({{value}}) {{/if}}{{post}}`,
   Vicuna: neat`
 {{#if system_prompt}}{{system_prompt}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}
 {{/if}}
@@ -185,12 +183,13 @@ Description of {{char}}:
 How {{char}} speaks:
 {{example_dialogue}}
 
-[ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
+[ Title: Dialogue between "{{char}}" and "{{user}}"; Tags: conversation; Genre: online roleplay ]
+[ Style: chat ]
 ***
 Summary: {{scenario}}
 {{history}}
-{{ujb}}
-  {{post}}`,
+{{#if ujb}}{ {{value}} }{{/if}}
+{{post}}`,
   Pyg: neat`
 {{char}}'s Persona:
 {{personality}}
@@ -246,9 +245,6 @@ Then the roleplay chat begins.<|im_end|>
 {{#each msg}}<|im_start|>[{{.name}}]
 {{.msg}}<|im_end|>
 {{/each}}
-{{#if ujb}}<|im_start|>system
-{{ujb}}<|im_end|>
-{{/if}}
 <|im_start|>[{{char}}]
-{{post}}`,
+{{#if ujb}}({{value}}) {{/if}}{{post}}`,
 }

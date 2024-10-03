@@ -5,8 +5,7 @@ import { presetStore } from '/web/store/presets'
 import { Copy, Plus, Save, Trash } from 'lucide-solid'
 import Divider from '/web/shared/Divider'
 import { templates } from '../../../common/presets/templates'
-import { useRootModal } from '/web/shared/hooks'
-import Modal from '/web/shared/Modal'
+import { RootModal } from '/web/shared/Modal'
 import PromptEditor from '/web/shared/PromptEditor'
 import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
@@ -152,34 +151,29 @@ const TemplateModal: Component<{
     </>
   )
 
-  useRootModal({
-    id: 'prompt-templates',
-    element: (
-      <Modal
-        title={'Prompt Templates'}
-        maxWidth="half"
-        show={props.show}
-        close={props.close}
-        footer={Footer}
-      >
-        <form ref={form!} class="flex flex-col gap-4 text-sm">
-          <TextInput
-            fieldName="name"
-            placeholder="Name"
-            label="Name"
-            value={props.edit?.name || ''}
-            required
-          />
-          <PromptEditor
-            fieldName="template"
-            value={props.edit?.template || props.initial || ''}
-            minHeight={100}
-            showHelp
-          />
-        </form>
-      </Modal>
-    ),
-  })
-
-  return null
+  return (
+    <RootModal
+      title={'Prompt Templates'}
+      maxWidth="half"
+      show={props.show}
+      close={props.close}
+      footer={Footer}
+    >
+      <form ref={form!} class="flex flex-col gap-4 text-sm">
+        <TextInput
+          fieldName="name"
+          placeholder="Name"
+          label="Name"
+          value={props.edit?.name || ''}
+          required
+        />
+        <PromptEditor
+          fieldName="template"
+          value={props.edit?.template || props.initial || ''}
+          minHeight={100}
+          showHelp
+        />
+      </form>
+    </RootModal>
+  )
 }
