@@ -157,7 +157,7 @@ const Navigation: Component = () => {
       >
         <div
           ref={content}
-          class="drawer__content sm:text-md text-md flex flex-col gap-1 px-2 sm:gap-1"
+          class="sm:text-md text-md flex min-w-[320px] flex-col gap-1 px-2 sm:min-w-[336px] sm:gap-1"
         >
           <div class="flex w-full items-center justify-between">
             <div
