@@ -472,7 +472,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
       id: 'agn-menu-sm',
       fuseId: location.host === 'agnai.chat' ? '23199579880' : '23199579880', // 23199579880
     }, //
-    lg: { size: '300x600', id: 'agn-menu-lg', fuseId: '23195824742' },
+    lg: { size: '300x600', id: 'agn-menu-lg', fuseId: '23199579880' },
     ez: [106],
   },
   content: {
