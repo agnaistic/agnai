@@ -259,6 +259,17 @@ export async function parseTemplate(
 
   sections.sections.history = history
 
+  // console.log(
+  //   '@System Prompt\n',
+  //   sections.sections.system.join(''),
+  //   '\n@Definitions\n',
+  //   sections.sections.def.join(''),
+  //   '\n@History\n',
+  //   sections.sections.history.join(''),
+  //   '\n@Post\n',
+  //   sections.sections.post.join('')
+  // )
+
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
@@ -328,6 +339,9 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
 
       const result = renderNode(parent, opts)
 
+      const marker = getMarker(parent)
+      fillSection(opts, marker, result)
+
       if (result) output.push(result)
     }
     return output.join('').replace(/\n\n+/g, '\n\n')
@@ -348,50 +362,22 @@ function renderNodes(nodes: PNode[], opts: TemplateOpts) {
 
 function renderNode(node: PNode, opts: TemplateOpts, conditionText?: string) {
   if (typeof node === 'string') {
-    fillSection(opts.sections, node)
     return node
   }
 
   switch (node.kind) {
     case 'placeholder': {
       const result = getPlaceholder(node, opts, conditionText)
-      // We need to end the definition section prior to filling the history section
-      // History is the only deterministic marker for the end of the definitions
-      if (node.value === 'history') {
-        flagSection(opts.sections, 'def')
-      }
-      fillSection(opts.sections, result)
-      if (node.value === 'history') {
-        flagSection(opts.sections, 'history')
-      }
-      if (node.value === 'system_prompt') {
-        flagSection(opts.sections, 'system')
-      }
       return result
     }
 
     case 'each': {
       const result = renderIterator(node.value, node.children, opts)
-      // See 'placeholder' comment above for why we do this
-      if (node.value === 'history') {
-        flagSection(opts.sections, 'def')
-      }
-      fillSection(opts.sections, result)
-      if (node.value === 'history') {
-        flagSection(opts.sections, 'history')
-      }
-
       return result
     }
 
     case 'if': {
       const result = renderCondition(node, node.children, opts)
-      fillSection(opts.sections, result)
-
-      if (node.value === 'system_prompt') {
-        flagSection(opts.sections, 'system')
-      }
-
       return result
     }
 
@@ -779,29 +765,56 @@ function handleDice(node: DiceExpr) {
   return rand
 }
 
-function fillSection(state: TemplateOpts['sections'], result: string | undefined) {
-  if (!state || !result) return
+function fillSection(opts: TemplateOpts, marker: Section | undefined, result: string | undefined) {
+  if (!opts.sections) return
+  if (!result) return
   if (result === HISTORY_MARKER) return
 
-  if (!state.flags.system) {
-    state.sections.system.push(result)
+  const flags = opts.sections.flags
+  const sections = opts.sections.sections
+
+  if (!flags.system) {
+    sections.system.push(result)
+
+    if (marker === 'system') {
+      flags.system = true
+    }
+
     return
   }
 
-  if (!state.flags.def) {
-    state.sections.def.push(result)
+  if (!flags.def) {
+    sections.def.push(result)
     return
   }
 
-  if (!state.flags.history) {
-    state.sections.history.push(result)
+  if (marker === 'history') {
+    flags.def = true
+    flags.history = true
+    return
   }
 
-  state.sections.post.push(result)
+  sections.post.push(result)
 }
 
-function flagSection(state: TemplateOpts['sections'], section: Section) {
-  if (!state) return
+function getMarker(node: PNode): Section | undefined {
+  if (typeof node === 'string') return
 
-  state.flags[section] = true
+  switch (node.kind) {
+    case 'placeholder': {
+      if (node.value === 'history') return 'history'
+      if (node.value === 'system_prompt') return 'system'
+      return
+    }
+
+    case 'each':
+      if (node.value === 'history') return 'history'
+      return
+
+    case 'if':
+      if (node.value === 'system_prompt') return 'system'
+      return
+  }
+
+  return
 }
