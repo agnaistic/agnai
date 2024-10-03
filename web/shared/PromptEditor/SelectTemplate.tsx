@@ -25,6 +25,7 @@ export const SelectTemplate: Component<{
   const state = presetStore((s) => ({ templates: s.templates }))
 
   const [opt, setOpt] = createSignal(props.currentTemplateId || 'Alpaca')
+  const [templateName, setName] = createSignal(props.currentTemplate || 'Alpaca')
   const [template, setTemplate] = createSignal(templates.Alpaca)
   const [builtin, setBuiltin] = createSignal(templates.Alpaca)
   const [filter, setFilter] = createSignal('')
@@ -80,6 +81,7 @@ export const SelectTemplate: Component<{
 
       setOpt(id)
       const existing = state.templates.find((t) => t._id === id)
+      setName(existing?.name || '')
       setTemplate(existing?.template || props.currentTemplate || match.template)
       setBuiltin(match.template)
     }
@@ -106,7 +108,7 @@ export const SelectTemplate: Component<{
 
               presetStore.updateTemplate(
                 opt(),
-                { name: orig.name, template: update, presetId: props.presetId },
+                { name: templateName(), template: update, presetId: props.presetId },
                 () => {
                   toastStore.success('Prompt template updated')
                   props.select(id, update)
@@ -130,7 +132,7 @@ export const SelectTemplate: Component<{
                 return
               }
 
-              presetStore.updateTemplate(opt(), { name: orig.name, template: update }, () => {
+              presetStore.updateTemplate(opt(), { name: templateName(), template: update }, () => {
                 toastStore.success('Prompt template updated')
                 props.select(id, update)
                 props.close()
@@ -145,12 +147,7 @@ export const SelectTemplate: Component<{
           <Button
             schema="primary"
             onClick={() => {
-              const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
-
-              const name =
-                matches.length > 0 ? `Custom ${opt()} #${matches.length + 1}` : `Custom ${opt()}`
-
-              presetStore.createTemplate(name, template(), props.presetId, (id) => {
+              presetStore.createTemplate(templateName(), template(), props.presetId, (id) => {
                 props.select(id, template())
                 props.close()
               })
@@ -202,6 +199,17 @@ export const SelectTemplate: Component<{
             value={opt()}
             onChange={(ev) => {
               setOpt(ev.value)
+
+              const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
+              const name = ev.label.startsWith('(Built-in)')
+                ? matches.length > 0
+                  ? `Custom ${opt()} #${matches.length + 1}`
+                  : `Custom ${opt()}`
+                : templateOpts()[ev.value].name
+              if (ev.label.startsWith('(Built-in)')) {
+              }
+
+              setName(name)
               setTemplate(templateOpts()[ev.value].template)
             }}
           />
@@ -211,6 +219,11 @@ export const SelectTemplate: Component<{
           open={autoOpen()}
           close={() => setAutoOpen(false)}
           jsonValues={{ example: '', 'another long example': '', response: '' }}
+        />
+        <TextInput
+          fieldName="templateName"
+          value={templateName()}
+          onInput={(ev) => setName(ev.currentTarget.value)}
         />
         <TextInput
           ref={(r) => (ref = r)}

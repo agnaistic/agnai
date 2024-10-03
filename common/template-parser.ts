@@ -191,11 +191,15 @@ export async function parseTemplate(
   const parts = opts.parts || {}
 
   if (parts.systemPrompt) {
-    parts.systemPrompt = render(parts.systemPrompt, { ...opts, isPart: true })
+    opts.isPart = true
+    parts.systemPrompt = render(parts.systemPrompt, opts)
+    opts.isPart = false
   }
 
   if (parts.ujb) {
-    parts.ujb = render(parts.ujb, { ...opts, isPart: true })
+    opts.isPart = true
+    parts.ujb = render(parts.ujb, opts)
+    opts.isPart = false
   }
 
   const ast = parser.parse(template, {}) as PNode[]
@@ -249,10 +253,9 @@ export async function parseTemplate(
     }
   }
 
-  const result = render(output, { ...opts, isFinal: true })
-    .replace(/\r\n/g, '\n')
-    .replace(/\n\n+/g, '\n\n')
-    .trim()
+  opts.isFinal = true
+  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+  opts.isFinal = false
 
   sections.sections.history = history
 
@@ -415,7 +418,8 @@ function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts) {
     const result = renderNode(child, opts)
     if (result) output.push(result)
   }
-  opts.lowpriority = opts.lowpriority ?? []
+
+  opts.lowpriority ??= []
   const lowpriorityBlockId = '__' + v4() + '__'
   opts.lowpriority.push({ id: lowpriorityBlockId, content: output.join('') })
   return lowpriorityBlockId
@@ -527,7 +531,10 @@ function renderCondition(
   const output: string[] = []
   for (const child of children) {
     if (typeof child !== 'string' && child.kind === 'else') continue
-    const result = renderNode(child, { ...opts, isPart: false }, value)
+    const isPart = opts.isPart
+    opts.isPart = false
+    const result = renderNode(child, opts, value)
+    opts.isPart = isPart
     if (result) output.push(result)
   }
 

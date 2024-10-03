@@ -11,7 +11,7 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
-import { canUsePane } from '../shared/hooks'
+import { canUsePane, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 
 export type SettingState = {
@@ -59,7 +59,7 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showMenu: false,
+  showMenu: isMobile() ? false : true,
   showImpersonate: false,
   models: [],
   workers: [],
