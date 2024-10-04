@@ -96,6 +96,13 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   mistral: 'kobold',
   ollama: 'kobold',
   vllm: 'kobold',
+  featherless: 'kobold',
+  gemini: 'kobold',
+}
+
+export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
+  featherless: true,
+  gemini: true,
 }
 
 export const THIRDPARTY_FORMATS = [
@@ -112,6 +119,8 @@ export const THIRDPARTY_FORMATS = [
   'mistral',
   'ollama',
   'vllm',
+  'featherless',
+  'gemini',
 ] as const
 
 export const AI_ADAPTERS = [

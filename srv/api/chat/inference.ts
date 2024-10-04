@@ -332,6 +332,7 @@ export const inferenceApi = wrap(async (req, res) => {
         choices: [
           {
             text: result.generated,
+            message: { content: result.generated },
             finish_reason: 'stop',
           },
         ],
@@ -365,7 +366,15 @@ export const inferenceApi = wrap(async (req, res) => {
         object: 'text_completion',
         created: Date.now(),
         model: presetId,
-        choices: [{ index: 0, text: token, finish_reason: null, logprobs: null }],
+        choices: [
+          {
+            index: 0,
+            text: token,
+            delta: { content: token },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
       }
       res.write(`data: ${JSON.stringify(tick)}\n\n`)
       continue
