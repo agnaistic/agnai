@@ -84,8 +84,8 @@
   /* position: fixed; */
   top: 0;
   left: 0;
-  min-width: 320px;
-  max-width: 320px;
+  min-width: 302px;
+  max-width: 302px;
   height: calc(100% - 16px);
   transition: 800ms ease;
 }
