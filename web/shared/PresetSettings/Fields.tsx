@@ -1,5 +1,5 @@
 import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
-import { PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { GOOGLE_MODELS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import { PresetProps } from './types'
 import { AppSchema } from '/common/types/schema'
 import TextInput from '../TextInput'
@@ -271,7 +271,37 @@ export const FeatherlessModels: Field = (props) => {
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => setSelected(opt.value)}
-      buttonLabel={selected()}
+      buttonLabel={selected() || 'None Selected'}
+      selected={selected()}
+    />
+  )
+}
+
+export const GoogleModels: Field = (props) => {
+  const state = settingStore((s) => s.featherless)
+  const [selected, setSelected] = createSignal(props.inherit?.thirdPartyModel || '')
+
+  const options = createMemo(() => {
+    const list = Object.entries(GOOGLE_MODELS).map(([value, label]) => ({ label, value }))
+    return list
+  })
+
+  onMount(() => {
+    if (!state.length) {
+      settingStore.getFeatherless()
+    }
+  })
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="Google Model"
+      fieldName="thirdPartyModel"
+      value={props.inherit?.thirdPartyModel}
+      options={options()}
+      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      onSelect={(opt) => setSelected(opt.value)}
+      buttonLabel={selected() || 'None Selected'}
       selected={selected()}
     />
   )

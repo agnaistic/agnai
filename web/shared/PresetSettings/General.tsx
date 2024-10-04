@@ -28,6 +28,7 @@ import {
   Temperature,
   ThirdParty,
   FeatherlessModels,
+  GoogleModels,
 } from './Fields'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
@@ -191,6 +192,10 @@ export const GeneralSettings: Field = (props) => {
       >
         <Show when={props.format === 'featherless'}>
           <FeatherlessModels {...props} />
+        </Show>
+
+        <Show when={props.format === 'gemini'}>
+          <GoogleModels {...props} />
         </Show>
 
         <Select

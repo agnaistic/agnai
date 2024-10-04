@@ -475,7 +475,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     lg: {
       size: '300x600',
       id: 'agn-menu-lg',
-      fuseId: location.host === 'agnai.chat' ? '23199579880' : '23195824742',
+      fuseId: location.host === 'agnai.chat' ? '23195824742' : '23195824742',
     },
     ez: [106],
   },

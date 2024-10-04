@@ -155,7 +155,7 @@ export function requestStream(
       code = statusCode
       failed = true
       emitter.done()
-    } else if (format === 'openrouter') {
+    } else if (format === 'openrouter' || format === 'gemini') {
       if (
         contentType.startsWith('application/json') ||
         contentType.startsWith('text/event-stream')
@@ -207,6 +207,19 @@ export function requestStream(
     const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
     for (const msg of messages) {
+      if (format === 'gemini') {
+        const start = data.indexOf('"text": "')
+        if (start === -1) continue
+        const end = data.slice(start + 9).indexOf('"\n  ')
+
+        if (end === -1) return
+        const tokens = data.slice(start + 9, start + 9 + end)
+        if (tokens) {
+          emitter.push({ data: JSON.stringify({ token: JSON.parse('"' + tokens + '"') }) })
+        }
+        continue
+      }
+
       if (format === 'vllm') {
         const event = parseVLLM(incomplete + msg)
         if (!event) continue
@@ -262,8 +275,8 @@ export function requestStream(
         continue
       }
 
-      const data: string = event.data
-      if (typeof data === 'string' && incompleteJson(data)) {
+      const eventData: string = event.data
+      if (typeof eventData === 'string' && incompleteJson(eventData)) {
         incomplete = msg
         continue
       }

@@ -382,7 +382,7 @@ export async function createChatStream(
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model, subscription?.preset)
-  const handler = handlers[adapter]
+  const handler = getHandlers(opts.settings)
 
   /**
    * Context limits set by the subscription need to be present before the prompt is finalised.

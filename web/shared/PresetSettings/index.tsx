@@ -165,6 +165,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
               { label: 'TabbyAPI', value: 'tabby' },
               { label: 'Mistral API', value: 'mistral' },
               { label: 'Featherless', value: 'featherless' },
+              { label: 'Google AI Studio', value: 'gemini' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             aiSetting={'thirdPartyFormat'}
