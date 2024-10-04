@@ -1,6 +1,13 @@
 import { AppSchema } from './types'
 import { neat } from './util'
 
+export type OrderOptions = {
+  format?: string
+  order?: NonNullable<AppSchema.GenSettings['promptOrder']>
+  gen?: AppSchema.UserGenPreset
+  char?: AppSchema.Character
+}
+
 export function promptOrderToTemplate(
   format: string,
   order: NonNullable<AppSchema.GenSettings['promptOrder']>
@@ -27,9 +34,56 @@ export function promptOrderToTemplate(
     .trim()
 }
 
+export function promptOrderToSections(opts: OrderOptions) {
+  const order = (opts.order || SIMPLE_ORDER).filter(
+    (o) =>
+      o.placeholder !== 'system_prompt' &&
+      o.placeholder !== 'ujb' &&
+      o.placeholder !== 'post' &&
+      o.placeholder !== 'history' &&
+      o.enabled
+  )
+  const holders = opts.format
+    ? formatHolders[opts.format] || formatHolders.Universal
+    : formatHolders.Universal
+
+  const system = holders.system
+  const defs = order.map((o) => holders[o.placeholder]).join('\n')
+  const history = holders.history
+  const post = holders.post
+
+  return {
+    system,
+    defs: `<user>${defs}</user>`,
+    history,
+    post,
+  }
+}
+
+// export function promptOrderToMessages(opts: OrderOptions) {
+//   const sections = promptOrderToSections(opts)
+
+//   return [
+//     { role: 'system', content: sections.system },
+//     { role: 'user', content: sections.defs },
+
+//   ]
+// }
+
 function getOrderHolder(format: string, holder: string) {
   return formatHolders[format]?.[holder] || formatHolders.Universal[holder] || ''
 }
+
+export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
+  'system_prompt',
+  'scenario',
+  'personality',
+  'impersonating',
+  'chat_embed',
+  'memory',
+  'example_dialogue',
+  'history',
+].map((placeholder) => ({ placeholder, enabled: true }))
 
 export const formatHolders: Record<string, Record<string, string>> = {
   Universal: {

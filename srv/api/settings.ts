@@ -11,6 +11,7 @@ import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHordeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
+import { getFeatherModels } from '../adapter/featherless'
 
 const router = Router()
 
@@ -29,6 +30,10 @@ export const getPublicSubscriptions = handle(async () => {
 
 router.get('/subscriptions', getPublicSubscriptions)
 router.get('/', getSettings)
+router.get('/featherless', (_, res) => {
+  const models = getFeatherModels()
+  res.json({ models })
+})
 
 export default router
 

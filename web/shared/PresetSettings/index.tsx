@@ -164,6 +164,7 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
               { label: 'KoboldCpp', value: 'koboldcpp' },
               { label: 'TabbyAPI', value: 'tabby' },
               { label: 'Mistral API', value: 'mistral' },
+              { label: 'Featherless', value: 'featherless' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             aiSetting={'thirdPartyFormat'}

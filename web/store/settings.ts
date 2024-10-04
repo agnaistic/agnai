@@ -13,6 +13,7 @@ import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 import { canUsePane, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
+import type { FeatherlessModel } from '/srv/adapter/featherless'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -43,6 +44,7 @@ export type SettingState = {
   }
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
+  featherless: FeatherlessModel[]
   showSettings: boolean
 
   slotsLoaded: boolean
@@ -80,6 +82,7 @@ const initState: SettingState = {
     subs: [],
   },
   replicate: {},
+  featherless: [],
   flags: getFlags(),
   showSettings: false,
   slotsLoaded: false,
@@ -169,6 +172,13 @@ export const settingStore = createStore<SettingState>(
     },
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }
+    },
+    async getFeatherless() {
+      const res = await api.get('/settings/featherless')
+
+      if (res.result?.models?.length) {
+        return { featherless: res.result.models }
+      }
     },
     async *getConfig({ cfg }) {
       if (cfg.loading) return

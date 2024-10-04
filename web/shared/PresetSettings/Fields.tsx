@@ -1,4 +1,4 @@
-import { Component, Show, createMemo } from 'solid-js'
+import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import { PresetProps } from './types'
 import { AppSchema } from '/common/types/schema'
@@ -6,7 +6,7 @@ import TextInput from '../TextInput'
 import Button, { ToggleButton } from '../Button'
 import { getStore } from '/web/store/create'
 import RangeInput from '../RangeInput'
-import type { UserState } from '/web/store'
+import { settingStore, type UserState } from '/web/store'
 import Select from '../Select'
 import { MODEL_FORMATS } from './General'
 import { defaultPresets } from '/common/default-preset'
@@ -15,6 +15,7 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { useValidServiceSetting } from '../util'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
+import { CustomSelect } from '../CustomSelect'
 
 export type Field<T = {}> = Component<
   PresetProps & {
@@ -182,6 +183,9 @@ export const ThirdParty: Field = (props) => {
         value={props.inherit?.thirdPartyUrl || ''}
         disabled={props.disabled}
         aiSetting={'thirdPartyUrl'}
+        hide={
+          props.format === 'featherless' || props.format === 'mistral' || props.format === 'gemini'
+        }
       />
 
       <TextInput
@@ -241,5 +245,34 @@ export const Temperature: Field = (props) => {
         recommended={props.sub?.preset.temp}
       />
     </>
+  )
+}
+
+export const FeatherlessModels: Field = (props) => {
+  const state = settingStore((s) => s.featherless)
+  const [selected, setSelected] = createSignal(props.inherit?.thirdPartyModel || '')
+
+  const options = createMemo(() => {
+    return state.map((s) => ({ label: s.name, value: s.id }))
+  })
+
+  onMount(() => {
+    if (!state.length) {
+      settingStore.getFeatherless()
+    }
+  })
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="Featherless Model"
+      fieldName="thirdPartyModel"
+      value={props.inherit?.thirdPartyModel}
+      options={options()}
+      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      onSelect={(opt) => setSelected(opt.value)}
+      buttonLabel={selected()}
+      selected={selected()}
+    />
   )
 }

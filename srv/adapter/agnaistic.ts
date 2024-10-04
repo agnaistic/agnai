@@ -416,6 +416,9 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
     case 'kobold':
     case 'openai':
       return handlers[settings.thirdPartyFormat!]
+
+    case 'featherless':
+      return handlers.kobold
   }
 
   return handlers.ooba
