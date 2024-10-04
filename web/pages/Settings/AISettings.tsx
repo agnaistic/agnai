@@ -132,7 +132,7 @@ const AISettings: Component<{
               title="Agnaistic API Access"
               cta={
                 <div>
-                  <a class="link">How use to API Access</a>
+                  <a class="link">How to use API Access</a>
                 </div>
               }
               markdown={ApiAccessHelp}
