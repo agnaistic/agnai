@@ -136,7 +136,7 @@ const Navigation: Component = () => {
     <>
       <Show when={!state.showMenu && dismissable()}>
         <div
-          class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2 "
+          class="icon-button absolute left-2 top-4 z-50 rounded-md py-2"
           style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
           onClick={() => settingStore.menu(true)}
           classList={{ hidden: !isChat() }}
@@ -155,11 +155,8 @@ const Navigation: Component = () => {
         role="navigation"
         aria-label="Main"
       >
-        <div
-          ref={content}
-          class="drawer__content sm:text-md text-md flex flex-col gap-1 px-2 sm:gap-1"
-        >
-          <div class="flex w-full items-center justify-between">
+        <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-1 sm:gap-1">
+          <div class="flex w-full items-center justify-between px-2">
             <div
               class="icon-button flex w-2/12 justify-start p-1"
               onClick={() => {
@@ -209,7 +206,7 @@ const Navigation: Component = () => {
               <Show when={nav.title}>
                 <div class="text-500 flex w-full justify-center text-xs">{nav.title}</div>
               </Show>
-              {nav.body}
+              <div class="flex flex-col gap-1 px-2">{nav.body}</div>
               <Slots />
             </Match>
             <Match when={user.loggedIn}>
@@ -264,71 +261,73 @@ const UserNavigation: Component = () => {
 
   return (
     <>
-      <UserProfile />
+      <div class="flex flex-col gap-1 px-2">
+        <UserProfile />
 
-      <Show when={menu.flags.chub}>
-        <Item href="/chub" ariaLabel="Character hub">
-          <ShoppingBag aria-hidden="true" />
-          CHUB
-        </Item>
-      </Show>
+        <Show when={menu.flags.chub}>
+          <Item href="/chub" ariaLabel="Character hub">
+            <ShoppingBag aria-hidden="true" />
+            CHUB
+          </Item>
+        </Show>
 
-      <CharacterLink />
+        <CharacterLink />
 
-      <ChatLink />
+        <ChatLink />
 
-      <Show when={guidance()}>
-        <Item href="/saga" ariaLabel="Sagas Preview">
-          <Wand2 aria-hidden="true" />
-          Sagas Preview
-        </Item>
-      </Show>
+        <Show when={guidance()}>
+          <Item href="/saga" ariaLabel="Sagas Preview">
+            <Wand2 aria-hidden="true" />
+            Sagas Preview
+          </Item>
+        </Show>
 
-      <Library />
-      <MultiItem>
-        <Item href="/presets" ariaLabel="Presets">
-          <Sliders aria-hidden="true" />
-          <span aria-hidden="true">Presets</span>
-        </Item>
-        <EndItem>
-          <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
-            <Plus aria-hidden="true" />
-          </A>
-        </EndItem>
-      </MultiItem>
+        <Library />
+        <MultiItem>
+          <Item href="/presets" ariaLabel="Presets">
+            <Sliders aria-hidden="true" />
+            <span aria-hidden="true">Presets</span>
+          </Item>
+          <EndItem>
+            <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
+              <Plus aria-hidden="true" />
+            </A>
+          </EndItem>
+        </MultiItem>
 
-      <Show when={menu.flags.sounds}>
-        <Sounds />
-      </Show>
+        <Show when={menu.flags.sounds}>
+          <Sounds />
+        </Show>
 
-      <Show when={user.user?.admin}>
-        <Item href="/admin/metrics" ariaLabel="Manage">
-          <Activity aria-hidden="true" />
-          <span aria-hidden="true">Manage</span>
-        </Item>
-        <SubMenu>
-          <SubItem href="/admin/configuration" parent="/" ariaLabel="Configuration">
-            Configuration
-          </SubItem>
-          <SubItem href="/admin/users" parent="/" ariaLabel="Users">
-            Users
-          </SubItem>
-          <SubItem href="/admin/subscriptions" parent="/" ariaLabel="Subscriptions">
-            Subscriptions
-          </SubItem>
-          <SubItem href="/admin/announcements" parent="/" ariaLabel="Announcements">
-            Announcements
-          </SubItem>
-        </SubMenu>
-      </Show>
+        <Show when={user.user?.admin}>
+          <Item href="/admin/metrics" ariaLabel="Manage">
+            <Activity aria-hidden="true" />
+            <span aria-hidden="true">Manage</span>
+          </Item>
+          <SubMenu>
+            <SubItem href="/admin/configuration" parent="/" ariaLabel="Configuration">
+              Configuration
+            </SubItem>
+            <SubItem href="/admin/users" parent="/" ariaLabel="Users">
+              Users
+            </SubItem>
+            <SubItem href="/admin/subscriptions" parent="/" ariaLabel="Subscriptions">
+              Subscriptions
+            </SubItem>
+            <SubItem href="/admin/announcements" parent="/" ariaLabel="Announcements">
+              Announcements
+            </SubItem>
+          </SubMenu>
+        </Show>
 
-      <NavIcons
-        supportEmail={menu.config.serverConfig?.supportEmail}
-        patreon={menu.config.patreon}
-        user={user}
-        showMenu={menu.showMenu}
-        mode={user.ui.mode}
-      />
+        <NavIcons
+          supportEmail={menu.config.serverConfig?.supportEmail}
+          patreon={menu.config.patreon}
+          user={user}
+          showMenu={menu.showMenu}
+          mode={user.ui.mode}
+        />
+      </div>
 
       <Slots />
     </>
@@ -346,60 +345,67 @@ const GuestNavigation: Component = () => {
 
   return (
     <>
-      <Show when={menu.config.canAuth}>
-        <Item
-          href="/login"
-          ariaLabel="Login to the application"
-          onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
-          class="tour-register"
-        >
-          <LogIn /> Login
-        </Item>
-      </Show>
-
-      <Show when={menu.guest}>
-        <UserProfile />
-
-        <CharacterLink />
-
-        <Show when={menu.flags.chub}>
-          <Item href="/chub" ariaLabel="Character hub">
-            <ShoppingBag aria-hidden="true" />
-            CHUB
-          </Item>
-        </Show>
-
-        <ChatLink />
-
-        <Library />
-
-        <MultiItem>
+      <div class="flex flex-col gap-1 px-2">
+        <Show when={menu.config.canAuth}>
           <Item
-            href="/presets"
-            ariaLabel="Presets"
-            onClick={() => soundEmitter.emit('menu-item-clicked', 'presets')}
+            href="/login"
+            ariaLabel="Login to the application"
+            onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
+            class="tour-register"
           >
-            <Sliders /> Presets
+            <LogIn /> Login
           </Item>
-          <EndItem>
-            <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
-              <Plus aria-hidden="true" />
-            </A>
-          </EndItem>
-        </MultiItem>
-
-        <Show when={menu.flags.sounds}>
-          <Sounds />
         </Show>
-      </Show>
 
-      <NavIcons
-        supportEmail={menu.config.serverConfig?.supportEmail}
-        patreon={menu.config.patreon}
-        user={user}
-        showMenu={menu.showMenu}
-        mode={user.ui.mode}
-      />
+        <Show when={menu.guest}>
+          <UserProfile />
+
+          <CharacterLink />
+
+          <Show when={menu.flags.chub}>
+            <Item href="/chub" ariaLabel="Character hub">
+              <ShoppingBag aria-hidden="true" />
+              CHUB
+            </Item>
+          </Show>
+
+          <ChatLink />
+
+          <Library />
+
+          <MultiItem>
+            <Item
+              href="/presets"
+              ariaLabel="Presets"
+              onClick={() => soundEmitter.emit('menu-item-clicked', 'presets')}
+            >
+              <Sliders /> Presets
+            </Item>
+            <EndItem>
+              <A
+                class="icon-button"
+                href="/presets/new"
+                role="button"
+                aria-label="Add a new preset"
+              >
+                <Plus aria-hidden="true" />
+              </A>
+            </EndItem>
+          </MultiItem>
+
+          <Show when={menu.flags.sounds}>
+            <Sounds />
+          </Show>
+        </Show>
+
+        <NavIcons
+          supportEmail={menu.config.serverConfig?.supportEmail}
+          patreon={menu.config.patreon}
+          user={user}
+          showMenu={menu.showMenu}
+          mode={user.ui.mode}
+        />
+      </div>
 
       <Slots />
     </>
