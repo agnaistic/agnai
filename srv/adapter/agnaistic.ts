@@ -418,6 +418,9 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
     case 'openai':
       return handlers[settings.thirdPartyFormat!]
 
+    case 'openai-chat':
+      return handlers.openai
+
     case 'featherless':
       return handlers.kobold
 
