@@ -252,10 +252,32 @@ export const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
 
+  const label = createMemo(() => {
+    const id = selected()
+    const match = state.find((s) => s.id === id)
+    if (!match) return id || 'None selected'
+
+    return (
+      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
+        {match.id}
+        <span class="text-500 text-xs"> {match.status}</span>
+      </span>
+    )
+  })
+
   const options = createMemo(() => {
-    return state
-      .filter((s) => s.status === 'active' && s.health === 'HEALTHY')
-      .map((s) => ({ label: s.name, value: s.id }))
+    return state.map((s) => ({
+      label: (
+        <div
+          class="flex w-full justify-between"
+          title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
+        >
+          <div class="ellipsis">{s.id}</div>
+          <div class="text-500 text-xs"> {s.status}</div>
+        </div>
+      ),
+      value: s.id,
+    }))
   })
 
   onMount(() => {
@@ -277,8 +299,11 @@ export const FeatherlessModels: Field = (props) => {
       value={props.inherit?.featherlessModel}
       options={options()}
       search={search}
-      onSelect={(opt) => setSelected(opt.value)}
-      buttonLabel={selected() || 'None Selected'}
+      onSelect={(opt) => {
+        console.log(opt.value)
+        setSelected(opt.value)
+      }}
+      buttonLabel={label()}
       selected={selected()}
       hide={props.service !== 'kobold' || props.format !== 'featherless'}
     />
