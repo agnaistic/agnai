@@ -253,7 +253,9 @@ export const FeatherlessModels: Field = (props) => {
   const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
 
   const options = createMemo(() => {
-    return state.map((s) => ({ label: s.name, value: s.id }))
+    return state
+      .filter((s) => s.status === 'active' && s.health === 'HEALTHY')
+      .map((s) => ({ label: s.name, value: s.id }))
   })
 
   onMount(() => {
@@ -262,6 +264,11 @@ export const FeatherlessModels: Field = (props) => {
     }
   })
 
+  const search = (value: string, input: string) => {
+    let re = new RegExp(input.replace(/\*/gi, '[a-z0-9]'), 'gi')
+    return !!value.match(re)
+  }
+
   return (
     <CustomSelect
       modalTitle="Select a Model"
@@ -269,7 +276,7 @@ export const FeatherlessModels: Field = (props) => {
       fieldName="featherlessModel"
       value={props.inherit?.featherlessModel}
       options={options()}
-      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      search={search}
       onSelect={(opt) => setSelected(opt.value)}
       buttonLabel={selected() || 'None Selected'}
       selected={selected()}
@@ -308,3 +315,4 @@ export const GoogleModels: Field = (props) => {
     />
   )
 }
+createSignal

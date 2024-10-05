@@ -1,3 +1,5 @@
+import { logger } from '../middleware'
+
 export type FeatherlessModel = {
   id: string
   created_at: string
@@ -27,13 +29,21 @@ async function getModelList() {
     method: 'GET',
   })
 
-  const json = (await res.json()) as { items: FeatherlessModel[] }
-
-  if (json.items.length) {
-    modelCache = json.items
+  if (res.status && res.status > 200) {
+    return
   }
 
-  return json
+  try {
+    const json = (await res.json()) as { items: FeatherlessModel[] }
+
+    if (json.items.length) {
+      modelCache = json.items
+    }
+
+    return json
+  } catch (ex) {
+    logger.warn({ err: ex, body: res.body, status: res.status }, `Featherless model list failed`)
+  }
 }
 
 getModelList()

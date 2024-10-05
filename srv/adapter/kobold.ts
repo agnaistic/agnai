@@ -118,6 +118,10 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
   }
 
+  if (opts.gen.service === 'kobold' && body.model) {
+    yield { meta: { model: body.model, fmt: opts.gen.thirdPartyFormat } }
+  }
+
   const parsed = sanitise(accum)
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, stop_sequence)
 
