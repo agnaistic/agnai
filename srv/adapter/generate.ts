@@ -23,7 +23,7 @@ import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
-import { SubscriptionPreset, getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
+import { SubscriptionPreset, getHandlers, getSubscriptionPreset } from './agnaistic'
 import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import {
