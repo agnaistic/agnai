@@ -250,7 +250,7 @@ export const Temperature: Field = (props) => {
 
 export const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
-  const [selected, setSelected] = createSignal(props.inherit?.thirdPartyModel || '')
+  const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
 
   const options = createMemo(() => {
     return state.map((s) => ({ label: s.name, value: s.id }))
@@ -266,43 +266,45 @@ export const FeatherlessModels: Field = (props) => {
     <CustomSelect
       modalTitle="Select a Model"
       label="Featherless Model"
-      fieldName="thirdPartyModel"
-      value={props.inherit?.thirdPartyModel}
+      fieldName="featherlessModel"
+      value={props.inherit?.featherlessModel}
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => setSelected(opt.value)}
       buttonLabel={selected() || 'None Selected'}
       selected={selected()}
+      hide={props.service !== 'kobold' || props.format !== 'featherless'}
     />
   )
 }
 
 export const GoogleModels: Field = (props) => {
-  const state = settingStore((s) => s.featherless)
-  const [selected, setSelected] = createSignal(props.inherit?.thirdPartyModel || '')
-
-  const options = createMemo(() => {
-    const list = Object.entries(GOOGLE_MODELS).map(([value, label]) => ({ label, value }))
-    return list
+  const [selected, setSelected] = createSignal(props.inherit?.googleModel || '')
+  const label = createMemo(() => {
+    const id = selected()
+    if (!id) return 'None Selected'
+    const match = Object.values(GOOGLE_MODELS).find((model) => model.id === id)
+    if (!match) return 'Invalid Model'
+    return match.label
   })
 
-  onMount(() => {
-    if (!state.length) {
-      settingStore.getFeatherless()
-    }
+  const options = createMemo(() => {
+    const list = Object.values(GOOGLE_MODELS).map(({ label, id }) => ({ label, value: id }))
+    return list
   })
 
   return (
     <CustomSelect
       modalTitle="Select a Model"
       label="Google Model"
-      fieldName="thirdPartyModel"
-      value={props.inherit?.thirdPartyModel}
+      fieldName="googleModel"
+      value={props.inherit?.googleModel || GOOGLE_MODELS.GEMINI_15_PRO.id}
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => setSelected(opt.value)}
-      buttonLabel={selected() || 'None Selected'}
+      buttonLabel={label()}
       selected={selected()}
+      hide={props.service !== 'kobold' || props.format !== 'gemini'}
     />
   )
 }

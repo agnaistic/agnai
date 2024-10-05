@@ -104,6 +104,7 @@
     "multer": "1.4.5-lts.1",
     "nai-js-tokenizer": "1.0.1",
     "needle": "^3.2.0",
+    "partial-json": "^0.1.7",
     "patreon-api.ts": "^0.1.0",
     "peggy": "^3.0.2",
     "pino": "^8.10.0",

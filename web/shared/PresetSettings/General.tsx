@@ -190,13 +190,9 @@ export const GeneralSettings: Field = (props) => {
           )
         }
       >
-        <Show when={props.format === 'featherless'}>
-          <FeatherlessModels {...props} />
-        </Show>
+        <FeatherlessModels {...props} />
 
-        <Show when={props.format === 'gemini'}>
-          <GoogleModels {...props} />
-        </Show>
+        <GoogleModels {...props} />
 
         <Select
           fieldName="oaiModel"

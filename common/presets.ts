@@ -56,6 +56,8 @@ export const presetValidator = {
   gaslight: 'string?',
   oaiModel: 'string',
   openRouterModel: 'any?',
+  featherlessModel: 'string?',
+  googleModel: 'string?',
 
   mirostatTau: 'number?',
   mirostatLR: 'number?',

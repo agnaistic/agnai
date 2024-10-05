@@ -248,14 +248,13 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.O1_Mini_20240912]: true,
 }
 
+export type GoogleModel = keyof typeof GOOGLE_MODELS
+
 export const GOOGLE_MODELS = {
-  // 'gemini-1.5-pro-latest': true,
-  // 'gemini-1.5-pro-001': true,
-  // 'gemini-1.5-pro-002': true,
-  'gemini-1.5-pro': 'Gemini 1.5 Pro',
-  'gemini-1.0-pro-latest': 'Gemini 1.0 Pro',
-  'gemini-1.5-flash': 'Gemini 1.5 Flash',
-  'gemini-1.5-flash-8b': 'Gemini 1.5 Flash-8B',
+  GEMINI_15_PRO: { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+  GEMINI_10_PRO_LATEST: { id: 'gemini-1.0-pro-latest', label: 'Gemini 1.0 Pro' },
+  GEMINI_15_FLASH: { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+  GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {

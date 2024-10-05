@@ -160,7 +160,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (format === 'featherless') {
     const payload: any = {
-      model: gen.thirdPartyModel,
+      model: gen.featherlessModel,
       prompt,
       stop: getStoppingStrings(opts, stops),
       presence_penalty: gen.presencePenalty,

@@ -1,6 +1,12 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, NOVEL_MODELS, OPENAI_CONTEXTS, THIRDPARTY_HANDLERS } from './adapters'
+import {
+  AIAdapter,
+  GOOGLE_LIMITS,
+  NOVEL_MODELS,
+  OPENAI_CONTEXTS,
+  THIRDPARTY_HANDLERS,
+} from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -887,9 +893,21 @@ export function getContextLimit(
     // Any LLM could be used here so don't max any assumptions
     case 'ooba':
     case 'petals':
-    case 'kobold':
     case 'horde':
       return configuredMax - genAmount
+
+    case 'kobold': {
+      if (!gen.useMaxContext) return configuredMax - genAmount
+      switch (gen.thirdPartyFormat) {
+        case 'gemini': {
+          const max = GOOGLE_LIMITS[gen.googleModel!]
+          return max ? max - genAmount : configuredMax - genAmount
+        }
+
+        default:
+          return configuredMax - genAmount
+      }
+    }
 
     case 'novel': {
       const model = gen?.novelModel || NOVEL_MODELS.kayra_v1

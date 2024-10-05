@@ -231,6 +231,10 @@ async function getHeaders(opts: AdapterProps) {
     }
 
     case 'featherless': {
+      if (!opts.gen.featherlessModel) {
+        throw new Error(`Featherless model not set. Check your preset`)
+      }
+
       const key = opts.gen.thirdPartyKey
 
       const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''

@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { getEncoder, getEncoderByName, getTokenCounter } from '../tokenize'
+import { getEncoderByName } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { getStoppingStrings } from './prompt'
 import { ModelAdapter } from './type'
@@ -10,9 +10,18 @@ import { requestStream } from './stream'
 
 const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/`
 
+const SYSTEM_INCAPABLE: Record<string, boolean> = {
+  'gemini-1.0-pro-latest': true,
+}
+
 export const handleGemini: ModelAdapter = async function* (opts) {
   const encoder = getEncoderByName('gemma')
   const messages = await toChatCompletionPayload(opts, encoder.count, opts.gen.maxTokens!)
+
+  if (!opts.gen.googleModel) {
+    yield { error: 'Google AI Studio Model not set: Check your preset' }
+    return
+  }
 
   const payload: any = {
     safetySettings,
@@ -34,16 +43,22 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       continue
     }
 
-    contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: { text: msg.content } })
+    contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })
     continue
   }
 
   payload.contents = contents
   if (systems.length) {
-    payload.system_instruction = {
-      parts: {
-        text: systems.join('\n'),
-      },
+    if (!SYSTEM_INCAPABLE[opts.gen.googleModel]) {
+      payload.system_instruction = {
+        parts: [
+          {
+            text: systems.join('\n'),
+          },
+        ],
+      }
+    } else {
+      contents.unshift({ role: 'user', parts: [{ text: systems.join('\n') }] })
     }
   }
 
@@ -84,11 +99,6 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     }
 
     if ('tokens' in generated.value) {
-      const gens = 'gens' in generated.value ? generated.value.gens : undefined
-      if (gens) {
-        yield { gens, tokens: generated.value.tokens }
-      }
-
       accum = generated.value.tokens
       break
     }
@@ -117,8 +127,6 @@ async function* streamCompletion(url: string, body: any, log: AppLog) {
 
   const tokens = []
 
-  const responses: Record<number, string> = {}
-
   try {
     const events = requestStream(resp, 'gemini')
 
@@ -129,7 +137,7 @@ async function* streamCompletion(url: string, body: any, log: AppLog) {
         token: string
         final: boolean
         ptr: number
-        error?: string
+        error: any
         choices?: Array<{ index: number; finish_reason: string; logprobs: any; text: string }>
       }
 
@@ -141,23 +149,6 @@ async function* streamCompletion(url: string, body: any, log: AppLog) {
 
       const res = data.choices ? data.choices[0] : data
       const token = 'text' in res ? res.text : res.token
-
-      /** Handle batch generations */
-      if (res.index !== undefined) {
-        const index = res.index
-        if (!responses[index]) {
-          responses[index] = ''
-        }
-
-        responses[index] += token
-
-        if (index === 0) {
-          tokens.push(token)
-          yield { token: token }
-        }
-
-        continue
-      }
 
       tokens.push(token)
       yield { token }
@@ -176,13 +167,13 @@ async function* fullCompletion(url: string, body: any, log: AppLog) {
 
   if ('error' in resp) {
     yield { error: `Google AI Studio request failed: ${resp.error?.message || resp.error}` }
-    log.error({ error: resp.error }, `Gemini request failed`)
+    log.error({ error: resp.error }, `Google AI Studio request failed`)
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
     yield { error: `Google AI Studio request failed: ${resp.statusMessage}` }
-    log.error({ error: resp.body }, `Gemini request failed`)
+    log.error({ error: resp.body }, `Google AI Studio request failed`)
     return
   }
 

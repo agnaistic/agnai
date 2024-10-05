@@ -150,6 +150,8 @@ export interface GenSettings {
   claudeModel?: string
   mistralModel?: string
   openRouterModel?: OpenRouterModel
+  googleModel?: string
+  featherlessModel?: string
 
   thirdPartyUrl?: string
   thirdPartyFormat?: ThirdPartyFormat
