@@ -27,6 +27,7 @@ import { handleVenus } from './venus'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
+import { handleGemini } from './gemini'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -416,7 +417,13 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
     case 'kobold':
     case 'openai':
       return handlers[settings.thirdPartyFormat!]
+
+    case 'featherless':
+      return handlers.kobold
+
+    case 'gemini':
+      return handleGemini
   }
 
-  return handlers.ooba
+  return handleThirdParty
 }

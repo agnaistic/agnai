@@ -32,7 +32,7 @@ export const ADAPTER_SETTINGS: {
   epsilonCutoff: ['aphrodite'],
   etaCutoff: ['aphrodite'],
 
-  prefill: ['claude', 'openrouter'],
+  prefill: ['claude', 'openrouter', 'openai', 'openai-chat', 'gemini'],
 
   topP: [
     'horde',
@@ -113,7 +113,7 @@ export const ADAPTER_SETTINGS: {
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
   thirdPartyModel: ['openai', 'openai-chat', 'aphrodite', 'tabby', 'ollama', 'vllm'],
-  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'openai', 'openai-chat'],
+  thirdPartyKey: ['kobold', 'aphrodite', 'tabby', 'openai', 'openai-chat', 'featherless', 'gemini'],
 
   claudeModel: ['claude'],
   novelModel: ['novel'],
@@ -152,6 +152,7 @@ export const ADAPTER_SETTINGS: {
     'mistral',
     'ollama',
     'openrouter',
+    'gemini',
   ],
   openRouterModel: ['openrouter'],
   stopSequences: [

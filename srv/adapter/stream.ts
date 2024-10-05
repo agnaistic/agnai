@@ -4,6 +4,7 @@ import { ThirdPartyFormat } from '/common/adapters'
 import { logger } from '../middleware'
 import needle from 'needle'
 import { AsyncDelta, Completion, CompletionGenerator } from './type'
+import * as partial from 'partial-json'
 
 export type ServerSentEvent = {
   id?: string
@@ -155,7 +156,7 @@ export function requestStream(
       code = statusCode
       failed = true
       emitter.done()
-    } else if (format === 'openrouter') {
+    } else if (format === 'openrouter' || format === 'gemini') {
       if (
         contentType.startsWith('application/json') ||
         contentType.startsWith('text/event-stream')
@@ -188,90 +189,137 @@ export function requestStream(
   })
 
   let incomplete = ''
+  let lastContent = ''
 
   stream.on('data', (chunk: Buffer) => {
-    if (failed && !emitter.isDone()) {
-      const result = tryParse(chunk.toString())
-      const error = result?.error?.message || result?.message
-      if (error) {
-        emitter.push({ error: `SSE request failed: ${error}` })
-        emitter.done()
-      }
-
-      return
-    }
-
-    const data = incomplete + chunk.toString()
-    incomplete = ''
-
-    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
-
-    for (const msg of messages) {
-      if (format === 'vllm') {
-        const event = parseVLLM(incomplete + msg)
-        if (!event) continue
-
-        const choice = event.choices?.[0]
-        if (!choice) {
-          continue
+    try {
+      if (failed && !emitter.isDone()) {
+        const result = tryParse(chunk.toString())
+        const error = result?.error?.message || result?.message
+        if (error) {
+          emitter.push({ error: `SSE request failed: ${error}` })
+          emitter.done()
         }
 
-        const token = choice.delta?.content || choice.text
-        if (!token) continue
-
-        const data = JSON.stringify({ token })
-        emitter.push({ data })
-        continue
+        return
       }
 
-      if (format === 'ollama') {
-        const event = parseOllama(incomplete + msg, emitter)
+      const data = incomplete + chunk.toString()
+      incomplete = ''
 
-        if (event.error) {
-          const data = JSON.stringify({ error: event.error })
+      if (format === 'gemini') {
+        const index = findMalformedStart(data)
+        if (index === -1) {
+          return
+        }
+        const partialJson = data.slice(index)
+        const json = partial.parse(partialJson, partial.ALL)
+
+        const candidates = Array.isArray(json) ? json[0]?.candidates : json?.candidates
+        const content = candidates ? candidates[0]?.content?.parts?.[0]?.text : null
+
+        if (content) {
+          if (content === lastContent) {
+            lastContent = content
+            return
+          }
+
+          if (lastContent && content.endsWith(lastContent)) {
+            lastContent = content
+            return
+          }
+
+          lastContent = content
+          emitter.push({ data: JSON.stringify({ token: content }) })
+          return
+        }
+        // Fallback method
+        const start = data.indexOf('"text": "')
+        if (start === -1) return
+        const end = data.slice(start + 9).indexOf('"\n  ')
+
+        if (end === -1) return
+        const tokens = data.slice(start + 9, start + 9 + end)
+        if (tokens) {
+          emitter.push({ data: JSON.stringify({ token: JSON.parse('"' + tokens + '"') }) })
+        }
+        return
+      }
+
+      const messages = data
+        .split(/\r?\n\r?\n/)
+        .filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+
+      for (const msg of messages) {
+        if (format === 'vllm') {
+          const event = parseVLLM(incomplete + msg)
+          if (!event) continue
+
+          const choice = event.choices?.[0]
+          if (!choice) {
+            continue
+          }
+
+          const token = choice.delta?.content || choice.text
+          if (!token) continue
+
+          const data = JSON.stringify({ token })
           emitter.push({ data })
           continue
         }
 
-        const token = event?.response
-        if (!token) continue
+        if (format === 'ollama') {
+          const event = parseOllama(incomplete + msg, emitter)
 
-        const data = JSON.stringify({ token })
-        emitter.push({ data })
-        continue
-      }
+          if (event.error) {
+            const data = JSON.stringify({ error: event.error })
+            emitter.push({ data })
+            continue
+          }
 
-      if (format === 'aphrodite') {
-        const event = parseAphrodite(incomplete + msg, emitter)
-        if (!event?.data) {
-          incomplete += msg
+          const token = event?.response
+          if (!token) continue
+
+          const data = JSON.stringify({ token })
+          emitter.push({ data })
           continue
         }
 
-        const token = getAphroditeToken(event.data)
-        if (!token) continue
+        if (format === 'aphrodite') {
+          const event = parseAphrodite(incomplete + msg, emitter)
+          if (!event?.data) {
+            incomplete += msg
+            continue
+          }
 
-        const data = JSON.stringify({ index: token.index, token: token.token })
-        emitter.push({ data })
-        continue
+          const token = getAphroditeToken(event.data)
+          if (!token) continue
+
+          const data = JSON.stringify({ index: token.index, token: token.token })
+          emitter.push({ data })
+          continue
+        }
+
+        const event: any = parseEvent(msg)
+
+        if (!event.data) {
+          continue
+        }
+
+        const eventData: string = event.data
+        if (typeof eventData === 'string' && incompleteJson(eventData)) {
+          incomplete = msg
+          continue
+        }
+
+        if (event.event) {
+          event.type = event.event
+        }
+        emitter.push(event)
       }
-
-      const event: any = parseEvent(msg)
-
-      if (!event.data) {
-        continue
-      }
-
-      const data: string = event.data
-      if (typeof data === 'string' && incompleteJson(data)) {
-        incomplete = msg
-        continue
-      }
-
-      if (event.event) {
-        event.type = event.event
-      }
-      emitter.push(event)
+    } catch (ex) {
+      logger.error({ err: ex, format }, `Unhandled ${format} event stream parsing error`)
+      emitter.push({ error: `Unexpected error occurred while parsing event stream` })
     }
   })
 
@@ -425,4 +473,11 @@ export async function websocketStream(opts: { url: string; body: any }, timeoutM
   })
 
   return emitter.stream
+}
+
+function findMalformedStart(json: string) {
+  const brace = json.indexOf('{')
+  const bracket = json.indexOf('[')
+
+  return Math.min(brace, bracket)
 }

@@ -46,7 +46,8 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     opts.gen.thirdPartyFormat === 'aphrodite' ||
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
-    opts.gen.thirdPartyFormat === 'koboldcpp'
+    opts.gen.thirdPartyFormat === 'koboldcpp' ||
+    opts.gen.thirdPartyFormat === 'featherless'
       ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
@@ -77,7 +78,10 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   yield { prompt: body.prompt }
 
   logger.debug(`Prompt:\n${body.prompt}`)
-  logger.debug({ ...body, prompt: null, images: null, messages: null }, '3rd-party payload')
+  logger.debug(
+    { ...body, prompt: null, images: null, messages: null },
+    `3rd-party payload ${opts.gen.thirdPartyFormat}`
+  )
 
   const stream = await dispatch(opts, body)
 
@@ -112,6 +116,10 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
       accum = generated.value.tokens
       break
     }
+  }
+
+  if (opts.gen.service === 'kobold' && body.model) {
+    yield { meta: { model: body.model, fmt: opts.gen.thirdPartyFormat } }
   }
 
   const parsed = sanitise(accum)
@@ -171,6 +179,13 @@ async function dispatch(opts: AdapterProps, body: any) {
         : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
     }
 
+    case 'featherless': {
+      const url = 'https://api.featherless.ai/v1/completions'
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
+
     default:
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       return opts.gen.streamResponse && isStreamSupported
@@ -216,6 +231,21 @@ async function getHeaders(opts: AdapterProps) {
     case 'tabby': {
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`
+      break
+    }
+
+    case 'featherless': {
+      if (!opts.gen.featherlessModel) {
+        throw new Error(`Featherless model not set. Check your preset`)
+      }
+
+      const key = opts.gen.thirdPartyKey
+
+      const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`
+      }
+      headers['Content-Type'] = 'application/json'
       break
     }
 
@@ -315,7 +345,7 @@ const streamCompletion = async function* (
     parse: false,
     json: true,
     headers: {
-      Accept: `text/event-stream`,
+      Accept: format === 'featherless' ? 'application/json' : `text/event-stream`,
       ...headers,
     },
   })

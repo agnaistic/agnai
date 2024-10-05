@@ -5,6 +5,7 @@ import { RootModal } from './Modal'
 import { PresetAISettings } from '/common/adapters'
 import { ComponentSubscriber, useValidServiceSetting } from './util'
 import { forms } from '../emitter'
+import TextInput from './TextInput'
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -12,22 +13,24 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
+  buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
+  onSelect: (opt: CustomOption) => void
+  options: CustomOption[]
+  value: any
+
   schema?: ButtonSchema
   size?: 'sm' | 'md' | 'lg' | 'pill'
-  buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
   modalTitle?: string | JSX.Element
   label?: string | JSX.Element
   helperText?: string | JSX.Element
   fieldName?: string
-  options: CustomOption[]
   selected: any | undefined
-  onSelect: (opt: CustomOption) => void
   hide?: boolean
   aiSetting?: keyof PresetAISettings
   parentClass?: string
   classList?: Record<string, boolean>
-  value: any
   emitter?: ComponentSubscriber<'close'>
+  search?: (value: string, search: string) => boolean
 }> = (props) => {
   let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
@@ -92,7 +95,12 @@ export const CustomSelect: Component<{
       <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-2 pr-3">
-            <OptionList options={props.options} onSelect={onSelect} selected={props.selected} />
+            <OptionList
+              options={props.options}
+              onSelect={onSelect}
+              selected={props.selected}
+              search={props.search}
+            />
           </div>
         </div>
       </RootModal>
@@ -101,30 +109,59 @@ export const CustomSelect: Component<{
 }
 
 const OptionList: Component<{
+  search?: (text: string, search: string) => boolean
   options: CustomOption[]
   onSelect: (opt: CustomOption) => void
   title?: string
   selected?: string
-}> = (props) => (
-  <div class={`flex w-full flex-col gap-2`}>
-    <Show when={props.title}>
-      <div class="text-md">{props.title}</div>
-    </Show>
-    <div class={`flex flex-col gap-2 p-2`}>
-      <For each={props.options}>
-        {(option) => (
-          <div
-            classList={{
-              'bg-[var(--hl-800)]': props.selected === option.value,
-              'bg-700': props.selected !== option.value,
-            }}
-            class={`w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`}
-            onClick={() => props.onSelect(option)}
-          >
-            <div class="font-bold">{option.label}</div>
-          </div>
-        )}
-      </For>
+}> = (props) => {
+  const [filter, setFilter] = createSignal('')
+
+  const filtered = createMemo(() => {
+    if (!props.search) return props.options
+
+    const input = filter().trim()
+    if (!input) return props.options
+
+    return props.options.filter((opt) =>
+      typeof opt.label === 'string'
+        ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
+        : props.search?.(opt.value, input)
+    )
+  })
+
+  return (
+    <div class={`flex w-full flex-col gap-2`}>
+      <Show when={props.title}>
+        <div class="text-md">{props.title}</div>
+      </Show>
+
+      <Show when={props.search}>
+        <TextInput
+          parentClass="text-sm"
+          fieldName="options-filter"
+          placeholder="Filter..."
+          onChange={(ev) => setFilter(ev.currentTarget.value)}
+          onInputText={(text) => setFilter(text)}
+        />
+      </Show>
+
+      <div class={`flex flex-col gap-2 p-2`}>
+        <For each={filtered()}>
+          {(option) => (
+            <div
+              classList={{
+                'bg-[var(--hl-800)]': props.selected === option.value,
+                'bg-700': props.selected !== option.value,
+              }}
+              class={`w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`}
+              onClick={() => props.onSelect(option)}
+            >
+              <div class="font-bold">{option.label}</div>
+            </div>
+          )}
+        </For>
+      </div>
     </div>
-  </div>
-)
+  )
+}

@@ -20,7 +20,16 @@ import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
 import { forms } from '/web/emitter'
-import { Field, ContextSize, ModelFormat, ResponseLength, Temperature, ThirdParty } from './Fields'
+import {
+  Field,
+  ContextSize,
+  ModelFormat,
+  ResponseLength,
+  Temperature,
+  ThirdParty,
+  FeatherlessModels,
+  GoogleModels,
+} from './Fields'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -159,6 +168,7 @@ export const GeneralSettings: Field = (props) => {
             value={props.inherit?.thirdPartyUrlNoSuffix}
             service={props.service}
             aiSetting="thirdPartyUrl"
+            hide={props.format === 'featherless'}
           />
         </div>
       </Card>
@@ -175,10 +185,15 @@ export const GeneralSettings: Field = (props) => {
             'claudeModel',
             'mistralModel',
             'replicateModelName',
-            'thirdPartyModel'
+            'thirdPartyModel',
+            'thirdPartyKey'
           )
         }
       >
+        <FeatherlessModels {...props} />
+
+        <GoogleModels {...props} />
+
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"

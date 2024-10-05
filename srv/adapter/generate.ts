@@ -23,7 +23,7 @@ import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
-import { SubscriptionPreset, getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
+import { SubscriptionPreset, getHandlers, getSubscriptionPreset } from './agnaistic'
 import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import {
@@ -382,7 +382,7 @@ export async function createChatStream(
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model, subscription?.preset)
-  const handler = handlers[adapter]
+  const handler = getHandlers(opts.settings)
 
   /**
    * Context limits set by the subscription need to be present before the prompt is finalised.

@@ -71,7 +71,7 @@
 .drawer--pane-open {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 800ms;
-  @apply left-[-302px] sm:left-0 sm:left-0;
+  @apply left-[-320px] sm:left-0 sm:left-0;
 }
 
 .drawer--hide {
@@ -84,10 +84,9 @@
   /* position: fixed; */
   top: 0;
   left: 0;
-  min-width: 302px;
-  max-width: 302px;
   height: calc(100% - 16px);
   transition: 800ms ease;
+  @apply min-w-[320px] max-w-[320px];
 }
 
 .drawer > * > a.active {

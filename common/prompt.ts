@@ -1,6 +1,12 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, NOVEL_MODELS, OPENAI_CONTEXTS, THIRDPARTY_HANDLERS } from './adapters'
+import {
+  AIAdapter,
+  GOOGLE_LIMITS,
+  NOVEL_MODELS,
+  OPENAI_CONTEXTS,
+  THIRDPARTY_HANDLERS,
+} from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -8,7 +14,7 @@ import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
-import { promptOrderToTemplate } from './prompt-order'
+import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceTags } from './presets/templates'
 
 export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
@@ -292,7 +298,7 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (opts.settings?.useAdvancedPrompt === 'basic' || opts.settings?.presetMode === 'simple') {
     if (opts.settings.presetMode === 'simple') {
-      const template = promptOrderToTemplate('Universal', simpleOrder)
+      const template = promptOrderToTemplate('Universal', SIMPLE_ORDER)
       return template
     }
 
@@ -321,17 +327,6 @@ type InjectOpts = {
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: TokenCounter
 }
-
-const simpleOrder: NonNullable<AppSchema.GenSettings['promptOrder']> = [
-  'system_prompt',
-  'scenario',
-  'personality',
-  'impersonating',
-  'chat_embed',
-  'memory',
-  'example_dialogue',
-  'history',
-].map((placeholder) => ({ placeholder, enabled: true }))
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
@@ -898,9 +893,21 @@ export function getContextLimit(
     // Any LLM could be used here so don't max any assumptions
     case 'ooba':
     case 'petals':
-    case 'kobold':
     case 'horde':
       return configuredMax - genAmount
+
+    case 'kobold': {
+      if (!gen.useMaxContext) return configuredMax - genAmount
+      switch (gen.thirdPartyFormat) {
+        case 'gemini': {
+          const max = GOOGLE_LIMITS[gen.googleModel!]
+          return max ? max - genAmount : configuredMax - genAmount
+        }
+
+        default:
+          return configuredMax - genAmount
+      }
+    }
 
     case 'novel': {
       const model = gen?.novelModel || NOVEL_MODELS.kayra_v1

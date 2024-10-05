@@ -248,6 +248,22 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.O1_Mini_20240912]: true,
 }
 
+export type GoogleModel = keyof typeof GOOGLE_MODELS
+
+export const GOOGLE_MODELS = {
+  GEMINI_15_PRO: { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+  GEMINI_10_PRO_LATEST: { id: 'gemini-1.0-pro-latest', label: 'Gemini 1.0 Pro' },
+  GEMINI_15_FLASH: { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+  GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
+}
+
+export const GOOGLE_LIMITS: Record<string, number> = {
+  'gemini-1.5-pro': 2097152,
+  'gemini-1.0-pro-latest': 32768,
+  'gemini-1.5-flash': 1048576,
+  'gemini-1.5-flash-8b': 1048576,
+}
+
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
  * to different models in the future. New models may be less appropriate
  * for roleplaying so they should be updated to manually

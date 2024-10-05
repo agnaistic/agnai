@@ -160,7 +160,7 @@ const Layout: Component<{ children?: any }> = (props) => {
             id="main-content"
             class="w-full overflow-y-auto"
             classList={{
-              'sm:ml-[302px]': cfg.showMenu,
+              'sm:ml-[320px]': cfg.showMenu,
               'sm:ml-0': !cfg.showMenu,
             }}
             data-background

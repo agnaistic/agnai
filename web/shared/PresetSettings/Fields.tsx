@@ -1,12 +1,12 @@
-import { Component, Show, createMemo } from 'solid-js'
-import { PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { GOOGLE_MODELS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import { PresetProps } from './types'
 import { AppSchema } from '/common/types/schema'
 import TextInput from '../TextInput'
 import Button, { ToggleButton } from '../Button'
 import { getStore } from '/web/store/create'
 import RangeInput from '../RangeInput'
-import type { UserState } from '/web/store'
+import { settingStore, type UserState } from '/web/store'
 import Select from '../Select'
 import { MODEL_FORMATS } from './General'
 import { defaultPresets } from '/common/default-preset'
@@ -15,6 +15,7 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { useValidServiceSetting } from '../util'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
+import { CustomSelect } from '../CustomSelect'
 
 export type Field<T = {}> = Component<
   PresetProps & {
@@ -182,6 +183,9 @@ export const ThirdParty: Field = (props) => {
         value={props.inherit?.thirdPartyUrl || ''}
         disabled={props.disabled}
         aiSetting={'thirdPartyUrl'}
+        hide={
+          props.format === 'featherless' || props.format === 'mistral' || props.format === 'gemini'
+        }
       />
 
       <TextInput
@@ -243,3 +247,72 @@ export const Temperature: Field = (props) => {
     </>
   )
 }
+
+export const FeatherlessModels: Field = (props) => {
+  const state = settingStore((s) => s.featherless)
+  const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
+
+  const options = createMemo(() => {
+    return state
+      .filter((s) => s.status === 'active' && s.health === 'HEALTHY')
+      .map((s) => ({ label: s.name, value: s.id }))
+  })
+
+  onMount(() => {
+    if (!state.length) {
+      settingStore.getFeatherless()
+    }
+  })
+
+  const search = (value: string, input: string) => {
+    let re = new RegExp(input.replace(/\*/gi, '[a-z0-9]'), 'gi')
+    return !!value.match(re)
+  }
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="Featherless Model"
+      fieldName="featherlessModel"
+      value={props.inherit?.featherlessModel}
+      options={options()}
+      search={search}
+      onSelect={(opt) => setSelected(opt.value)}
+      buttonLabel={selected() || 'None Selected'}
+      selected={selected()}
+      hide={props.service !== 'kobold' || props.format !== 'featherless'}
+    />
+  )
+}
+
+export const GoogleModels: Field = (props) => {
+  const [selected, setSelected] = createSignal(props.inherit?.googleModel || '')
+  const label = createMemo(() => {
+    const id = selected()
+    if (!id) return 'None Selected'
+    const match = Object.values(GOOGLE_MODELS).find((model) => model.id === id)
+    if (!match) return 'Invalid Model'
+    return match.label
+  })
+
+  const options = createMemo(() => {
+    const list = Object.values(GOOGLE_MODELS).map(({ label, id }) => ({ label, value: id }))
+    return list
+  })
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="Google Model"
+      fieldName="googleModel"
+      value={props.inherit?.googleModel || GOOGLE_MODELS.GEMINI_15_PRO.id}
+      options={options()}
+      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      onSelect={(opt) => setSelected(opt.value)}
+      buttonLabel={label()}
+      selected={selected()}
+      hide={props.service !== 'kobold' || props.format !== 'gemini'}
+    />
+  )
+}
+createSignal
