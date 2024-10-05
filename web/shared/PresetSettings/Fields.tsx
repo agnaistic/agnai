@@ -252,10 +252,22 @@ export const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
 
+  const label = createMemo(() => {
+    const id = selected()
+    const match = state.find((s) => s.id === id)
+    if (!match) return id || 'None selected'
+
+    return (
+      <>
+        {match.id}
+
+        <span class="text-500 text-xs">{match.status}</span>
+      </>
+    )
+  })
+
   const options = createMemo(() => {
-    return state
-      .filter((s) => s.status === 'active' && s.health === 'HEALTHY')
-      .map((s) => ({ label: s.name, value: s.id }))
+    return state.map((s) => ({ label: s.name, value: s.id }))
   })
 
   onMount(() => {
@@ -278,7 +290,7 @@ export const FeatherlessModels: Field = (props) => {
       options={options()}
       search={search}
       onSelect={(opt) => setSelected(opt.value)}
-      buttonLabel={selected() || 'None Selected'}
+      buttonLabel={label()}
       selected={selected()}
       hide={props.service !== 'kobold' || props.format !== 'featherless'}
     />
