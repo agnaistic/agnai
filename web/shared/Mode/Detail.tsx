@@ -3,7 +3,7 @@ import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { settingStore, userStore } from '/web/store'
 import { useCharacterBg, usePane, useRef, useResizeObserver, useWindowSize } from '../hooks'
-import Slot from '../Slot'
+import Slot, { useCanSlot } from '../Slot'
 
 export const ModeDetail: Component<{
   loading: boolean
@@ -37,6 +37,7 @@ export const ModeDetail: Component<{
   })
 
   const slots = useResizeObserver()
+  const canSlot = useCanSlot()
 
   const [slot, onSlot] = useRef()
   const bgStyles = useCharacterBg('page')
