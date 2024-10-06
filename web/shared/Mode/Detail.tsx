@@ -68,7 +68,7 @@ export const ModeDetail: Component<{
                   onSlot(ref)
                   slots.load(ref)
                 }}
-                class="h-min-[100px] sticky top-0 -mt-[8px] flex w-screen max-w-[100vw] justify-center sm:w-full sm:max-w-none"
+                class="h-min-[100px] sticky top-0 -mt-[8px] flex w-[calc(100vw-16px)] max-w-[calc(100vw-16px)] justify-center overflow-x-hidden sm:w-full sm:max-w-none"
                 classList={{
                   hidden: user.sub?.tier.disableSlots,
                 }}
