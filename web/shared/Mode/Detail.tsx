@@ -68,8 +68,10 @@ export const ModeDetail: Component<{
                   onSlot(ref)
                   slots.load(ref)
                 }}
-                class="sticky top-0 -mt-[8px] flex h-fit w-screen max-w-[100vw] justify-center"
-                classList={{ hidden: !canSlot(), 'h-min-[100px]': canSlot() }}
+                class="h-min-[100px] sticky top-0 -mt-[8px] flex w-screen max-w-[100vw] justify-center"
+                classList={{
+                  hidden: user.sub?.tier.disableSlots,
+                }}
               >
                 <Switch>
                   <Match when={slot()}>
