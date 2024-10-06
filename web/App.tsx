@@ -158,7 +158,7 @@ const Layout: Component<{ children?: any }> = (props) => {
 
           <main
             id="main-content"
-            class="w-full overflow-y-auto"
+            class="w-full overflow-y-auto overflow-x-hidden"
             classList={{
               'sm:ml-[320px]': cfg.showMenu,
               'sm:ml-0': !cfg.showMenu,
