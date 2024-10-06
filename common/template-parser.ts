@@ -415,6 +415,21 @@ function renderProp(node: CNode, opts: TemplateOpts, entity: unknown, i: number)
   if (typeof node === 'string') return node
 
   switch (node.kind) {
+    case 'placeholder': {
+      switch (node.value) {
+        case 'char':
+        case 'user':
+        case 'json':
+        case 'random':
+        case 'roll':
+        case 'idle_duration':
+          return getPlaceholder(node, opts)
+
+        default:
+          return
+      }
+    }
+
     case 'bot-if':
     case 'bot-prop': {
       const bot = entity as AppSchema.Character
