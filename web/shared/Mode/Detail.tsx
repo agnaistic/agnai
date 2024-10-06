@@ -37,7 +37,6 @@ export const ModeDetail: Component<{
   })
 
   const slots = useResizeObserver()
-  const canSlot = useCanSlot()
 
   const [slot, onSlot] = useRef()
   const bgStyles = useCharacterBg('page')
