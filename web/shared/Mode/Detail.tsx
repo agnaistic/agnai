@@ -3,7 +3,7 @@ import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
 import Loading from '../Loading'
 import { settingStore, userStore } from '/web/store'
 import { useCharacterBg, usePane, useRef, useResizeObserver, useWindowSize } from '../hooks'
-import Slot from '../Slot'
+import Slot, { useCanSlot } from '../Slot'
 
 export const ModeDetail: Component<{
   loading: boolean
@@ -37,6 +37,7 @@ export const ModeDetail: Component<{
   })
 
   const slots = useResizeObserver()
+  const canSlot = useCanSlot()
 
   const [slot, onSlot] = useRef()
   const bgStyles = useCharacterBg('page')
@@ -68,7 +69,7 @@ export const ModeDetail: Component<{
                   slots.load(ref)
                 }}
                 class="sticky top-0 -mt-[8px] flex h-fit w-screen max-w-[100vw] justify-center"
-                classList={{ hidden: cfg.config.tier?.disableSlots }}
+                classList={{ hidden: !canSlot(), 'h-min-[100px]': canSlot() }}
               >
                 <Switch>
                   <Match when={slot()}>
