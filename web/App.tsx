@@ -164,7 +164,7 @@ const Layout: Component<{ children?: any }> = (props) => {
               'sm:ml-0': !cfg.showMenu,
             }}
             data-background
-            style={{ ...bgStyles(), 'scrollbar-gutter': 'stable both-edges' }}
+            style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
           >
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}

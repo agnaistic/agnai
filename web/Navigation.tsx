@@ -136,7 +136,7 @@ const Navigation: Component = () => {
     <>
       <Show when={!state.showMenu && dismissable()}>
         <div
-          class="icon-button absolute left-2 top-4 z-50 rounded-md py-2"
+          class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2"
           style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
           onClick={() => settingStore.menu(true)}
           classList={{ hidden: !isChat() }}

@@ -67,7 +67,7 @@ export const ModeDetail: Component<{
                   onSlot(ref)
                   slots.load(ref)
                 }}
-                class="sticky top-0 flex h-fit w-full justify-center"
+                class="sticky top-0 -mt-[8px] flex h-fit w-screen max-w-[100vw] justify-center"
                 classList={{ hidden: cfg.config.tier?.disableSlots }}
               >
                 <Switch>
