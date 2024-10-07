@@ -538,7 +538,9 @@ const MessageOptions: Component<{
   onRemove: () => void
   showMore: Signal<boolean>
 }> = (props) => {
-  const showInner = createMemo(() => Object.values(props.ui.msgOptsInline || {}).some((v) => !!v))
+  const showInner = createMemo(() =>
+    Object.values(props.ui.msgOptsInline || {}).some((v) => !v?.outer)
+  )
 
   const closer = (action: () => void) => {
     return () => {
@@ -656,7 +658,7 @@ const MessageOptions: Component<{
 
       <div
         class="flex items-center"
-        classList={{ 'tour-message-opts': props.index === 0 }}
+        classList={{ 'tour-message-opts': props.index === 0, hidden: !showInner() }}
         onClick={() => props.showMore[1](true)}
       >
         <MoreHorizontal class="icon-button" />

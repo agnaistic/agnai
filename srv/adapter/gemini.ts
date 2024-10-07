@@ -65,7 +65,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
   const url = [
     BASE_URL,
-    opts.gen.thirdPartyModel,
+    opts.gen.googleModel,
     ':',
     opts.gen.streamResponse ? 'streamGenerateContent' : 'generateContent',
     '?key=',

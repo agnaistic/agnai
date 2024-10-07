@@ -118,6 +118,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
     const body = getStrictForm(formRef, { handle: 'string' })
     const payload = { handle: body.handle, avatar: avatar() }
     userStore.updateProfile(payload)
+    userStore.modal(false)
   }
 
   createEffect(() => {

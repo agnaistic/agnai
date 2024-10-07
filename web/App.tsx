@@ -158,13 +158,13 @@ const Layout: Component<{ children?: any }> = (props) => {
 
           <main
             id="main-content"
-            class="w-full overflow-y-auto"
+            class="w-full overflow-y-auto overflow-x-hidden"
             classList={{
               'sm:ml-[320px]': cfg.showMenu,
               'sm:ml-0': !cfg.showMenu,
             }}
             data-background
-            style={{ ...bgStyles(), 'scrollbar-gutter': 'stable both-edges' }}
+            style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
           >
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}

@@ -67,8 +67,10 @@ export const ModeDetail: Component<{
                   onSlot(ref)
                   slots.load(ref)
                 }}
-                class="sticky top-0 flex h-fit w-full justify-center"
-                classList={{ hidden: cfg.config.tier?.disableSlots }}
+                class="h-min-[100px] sticky top-0 -mt-[8px] flex w-[calc(100vw-16px)] max-w-[calc(100vw-16px)] justify-center overflow-x-hidden sm:w-full sm:max-w-none"
+                classList={{
+                  hidden: user.sub?.tier.disableSlots,
+                }}
               >
                 <Switch>
                   <Match when={slot()}>

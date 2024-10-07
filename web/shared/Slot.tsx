@@ -65,6 +65,28 @@ const VIDEO_AGE = 125 * 1000
 
 const FuseIds = new Map<string, boolean>()
 
+export function useCanSlot() {
+  const cfg = settingStore((s) => {
+    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
+    return {
+      ready: !s.slots.provider && s.slotsLoaded && s.initLoading === false,
+      provider: s.slots.provider,
+      publisherId: parsed.publisherId || s.slots.publisherId,
+    }
+  })
+
+  const user = userStore((s) => ({
+    sub: s.sub,
+  }))
+
+  const canSlot = createMemo(() => {
+    if (cfg.provider === 'google' && !cfg.publisherId) return false
+    return !!cfg.provider && !!cfg.ready && !user.sub?.tier.disableSlots
+  })
+
+  return canSlot
+}
+
 const Slot: Component<{
   slot: SlotKind
   sticky?: boolean | 'always'

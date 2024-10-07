@@ -112,7 +112,7 @@ JsonSchemaValue "json-schema-value" = ("json."i / "var."i) prop:Word { return { 
 
 ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { return prop.toLowerCase() }
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
-HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
+HistoryProperty "history-prop" = "."? prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
 Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }

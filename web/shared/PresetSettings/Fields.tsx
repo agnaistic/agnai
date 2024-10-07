@@ -1,5 +1,5 @@
 import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
-import { GOOGLE_MODELS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { FLAI_CONTEXTS, GOOGLE_MODELS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import { PresetProps } from './types'
 import { AppSchema } from '/common/types/schema'
 import TextInput from '../TextInput'
@@ -273,7 +273,9 @@ export const FeatherlessModels: Field = (props) => {
           title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
         >
           <div class="ellipsis">{s.id}</div>
-          <div class="text-500 text-xs"> {s.status}</div>
+          <div class="text-500 text-xs">
+            {flaiContext(s.model_class)} {s.status}
+          </div>
         </div>
       ),
       value: s.id,
@@ -287,8 +289,14 @@ export const FeatherlessModels: Field = (props) => {
   })
 
   const search = (value: string, input: string) => {
-    let re = new RegExp(input.replace(/\*/gi, '[a-z0-9]'), 'gi')
-    return !!value.match(re)
+    const res = input.split(' ').map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+
+    for (const re of res) {
+      const match = value.match(re)
+      if (!match) return false
+    }
+
+    return true
   }
 
   return (
@@ -340,4 +348,10 @@ export const GoogleModels: Field = (props) => {
     />
   )
 }
-createSignal
+
+function flaiContext(type: string) {
+  const ctx = FLAI_CONTEXTS[type]
+  if (!ctx) return ''
+
+  return `${Math.round(ctx / 1024)}K`
+}

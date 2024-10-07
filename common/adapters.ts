@@ -248,6 +248,25 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.O1_Mini_20240912]: true,
 }
 
+export const FLAI_CONTEXTS: Record<string, number> = {
+  'qwen2-72b-lc': 16 * 1024,
+  'qwen2-32b-lc': 16 * 1024,
+  'yi1.5-34b-lc': 16 * 1024,
+
+  'llama31-70b-16k': 16 * 1024,
+  'llama31-8b-16k': 16 * 1024,
+  'llama3-70b-8k': 8 * 1024,
+  'llama3-8b-8k': 8 * 1024,
+  'llama2-13b-4k': 4 * 1024,
+  'llama2-solar-10b7-4k': 4 * 1024,
+
+  'mistral-nemo-12b-lc': 16 * 1024,
+  'mixtral-8x22b-lc': 16 * 1024,
+  'mistral-v02-7b-std-lc': 16 * 1024,
+
+  'rwkv5-7b': 16 * 1024,
+}
+
 export type GoogleModel = keyof typeof GOOGLE_MODELS
 
 export const GOOGLE_MODELS = {
