@@ -136,7 +136,7 @@ export function useCharacterBg(src: 'layout' | 'page') {
     if (!isChat || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
       return {
         ...base,
-        'background-image': `url(${state.background})`,
+        'background-image': state.background ? `url(${state.background})` : undefined,
         'background-size': 'cover',
       }
     }

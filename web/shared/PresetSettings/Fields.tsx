@@ -16,6 +16,7 @@ import { useValidServiceSetting } from '../util'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { CustomSelect } from '../CustomSelect'
+import { FeatherlessModel } from '/srv/adapter/featherless'
 
 export type Field<T = {}> = Component<
   PresetProps & {
@@ -274,7 +275,7 @@ export const FeatherlessModels: Field = (props) => {
         >
           <div class="ellipsis">{s.id}</div>
           <div class="text-500 text-xs">
-            {flaiContext(s.model_class)} {s.status}
+            {flaiContext(s)} {s.status}
           </div>
         </div>
       ),
@@ -349,8 +350,8 @@ export const GoogleModels: Field = (props) => {
   )
 }
 
-function flaiContext(type: string) {
-  const ctx = FLAI_CONTEXTS[type]
+function flaiContext(model: FeatherlessModel) {
+  const ctx = model.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 
   return `${Math.round(ctx / 1024)}K`
