@@ -112,14 +112,15 @@ export function getEncoderByName(type: EncoderType) {
     case 'cohere':
       return cohere
 
-    case 'llama3':
-      return llama3
-
     case 'qwen2':
       return qwen2
 
     case 'gemma':
       return gemma
+
+    case 'llama3':
+    default:
+      return llama3
   }
 }
 
