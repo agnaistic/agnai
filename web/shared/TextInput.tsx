@@ -7,6 +7,7 @@ import {
   createSignal,
   Switch,
   Match,
+  on,
 } from 'solid-js'
 import IsVisible from './IsVisible'
 import { PresetAISettings } from '../../common/adapters'
@@ -43,6 +44,9 @@ type Props = {
   children?: any
   initialValue?: number | string
   hide?: boolean
+
+  /** Do not update the input value if the value property receives a new value */
+  static?: boolean
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -122,12 +126,18 @@ const TextInput: Component<Props> = (props) => {
     }
   }
 
-  createEffect(() => {
-    if (props.value === undefined) return
-    if (inputRef && inputRef.value !== props.value) inputRef.value = props.value.toString()
-    resize()
-    updateCount()
-  })
+  createEffect(
+    on(
+      () => props.value,
+      () => {
+        if (props.value === undefined) return
+        if (props.static) return
+        if (inputRef && inputRef.value !== props.value) inputRef.value = props.value.toString()
+        resize()
+        updateCount()
+      }
+    )
+  )
 
   createEffect(() => {
     if (!inputRef) return

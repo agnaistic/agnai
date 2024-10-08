@@ -18,6 +18,8 @@ export const CustomSelect: Component<{
   options: CustomOption[]
   value: any
 
+  header?: JSX.Element
+
   schema?: ButtonSchema
   size?: 'sm' | 'md' | 'lg' | 'pill'
   modalTitle?: string | JSX.Element
@@ -79,6 +81,7 @@ export const CustomSelect: Component<{
           value={props.value}
         />
       </Show>
+
       <div class="flex flex-col text-sm">
         <FormLabel label={props.label} helperText={props.helperText} />
 
@@ -96,6 +99,7 @@ export const CustomSelect: Component<{
         <div class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-2 pr-3">
             <OptionList
+              header={props.header}
               options={props.options}
               onSelect={onSelect}
               selected={props.selected}
@@ -114,6 +118,7 @@ const OptionList: Component<{
   onSelect: (opt: CustomOption) => void
   title?: string
   selected?: string
+  header?: JSX.Element
 }> = (props) => {
   const [filter, setFilter] = createSignal('')
 
@@ -135,6 +140,8 @@ const OptionList: Component<{
       <Show when={props.title}>
         <div class="text-md">{props.title}</div>
       </Show>
+
+      <Show when={props.header}>{props.header}</Show>
 
       <Show when={props.search}>
         <TextInput

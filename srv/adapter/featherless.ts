@@ -30,9 +30,10 @@ export type FeatherlessModel = {
 }
 
 let modelCache: FeatherlessModel[] = []
+let classCache: Record<string, { ctx: number; res: number }> = {}
 
 export function getFeatherModels() {
-  return modelCache
+  return { models: modelCache, classes: classCache }
 }
 
 async function getModelList() {
@@ -60,6 +61,13 @@ async function getModelList() {
 
       const map: { [key: string]: V1Model } = {}
       for (const model of list) {
+        if (!classCache[model.model_class]) {
+          classCache[model.model_class] = {
+            ctx: model.context_length,
+            res: model.max_completion_tokens,
+          }
+        }
+
         map[model.id] = model
       }
       return map

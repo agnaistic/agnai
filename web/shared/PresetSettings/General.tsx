@@ -26,9 +26,10 @@ import {
   ModelFormat,
   ResponseLength,
   Temperature,
-  ThirdParty,
+  ThirdPartyKey,
   FeatherlessModels,
   GoogleModels,
+  ThirdPartyUrl,
 } from './Fields'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
@@ -157,8 +158,11 @@ export const GeneralSettings: Field = (props) => {
         </Card>
       </Show>
 
-      <Card hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl')}>
-        <ThirdParty {...props} />
+      <Card
+        hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl', 'thirdPartyKey')}
+      >
+        <ThirdPartyUrl {...props} />
+        <ThirdPartyKey {...props} />
 
         <div class="flex flex-wrap items-start gap-2">
           <Toggle

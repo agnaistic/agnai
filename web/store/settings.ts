@@ -44,7 +44,7 @@ export type SettingState = {
   }
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
-  featherless: FeatherlessModel[]
+  featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   showSettings: boolean
 
   slotsLoaded: boolean
@@ -82,7 +82,7 @@ const initState: SettingState = {
     subs: [],
   },
   replicate: {},
-  featherless: [],
+  featherless: { models: [], classes: {} },
   flags: getFlags(),
   showSettings: false,
   slotsLoaded: false,
@@ -177,7 +177,7 @@ export const settingStore = createStore<SettingState>(
       const res = await api.get('/settings/featherless')
 
       if (res.result?.models?.length) {
-        return { featherless: res.result.models }
+        return { featherless: res.result }
       }
     },
     async *getConfig({ cfg }) {

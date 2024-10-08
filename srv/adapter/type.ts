@@ -141,6 +141,7 @@ export type AdapterProps = {
   log: AppLog
   isThirdParty?: boolean
   inserts?: Map<number, string>
+  contextSize?: number
 }
 
 export type ModelAdapter = (

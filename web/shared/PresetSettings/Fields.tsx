@@ -173,27 +173,32 @@ export const Jailbreak: Field = (props) => {
   )
 }
 
-export const ThirdParty: Field = (props) => {
+export const ThirdPartyUrl: Field = (props) => {
+  return (
+    <TextInput
+      fieldName="thirdPartyUrl"
+      label="Third Party URL"
+      helperText="API URL for third-party or self-hosted service"
+      placeholder="E.g. https://some-tunnel-url.loca.lt"
+      value={props.inherit?.thirdPartyUrl || ''}
+      disabled={props.disabled}
+      aiSetting={'thirdPartyUrl'}
+      hide={
+        props.format === 'featherless' || props.format === 'mistral' || props.format === 'gemini'
+      }
+      static
+    />
+  )
+}
+
+export const ThirdPartyKey: Field = (props) => {
   return (
     <>
-      <TextInput
-        fieldName="thirdPartyUrl"
-        label="Third Party URL"
-        helperText="Typically a Kobold, Ooba, or other URL"
-        placeholder="E.g. https://some-tunnel-url.loca.lt"
-        value={props.inherit?.thirdPartyUrl || ''}
-        disabled={props.disabled}
-        aiSetting={'thirdPartyUrl'}
-        hide={
-          props.format === 'featherless' || props.format === 'mistral' || props.format === 'gemini'
-        }
-      />
-
       <TextInput
         fieldName="thirdPartyKey"
         label={
           <div class="mt-1 flex gap-4">
-            <div>Third Party Password</div>
+            <div>Third Party API Key</div>
             <Show when={props.inherit?._id}>
               <Button
                 size="pill"
@@ -209,6 +214,7 @@ export const ThirdParty: Field = (props) => {
         disabled={props.disabled}
         type="password"
         aiSetting={'thirdPartyKey'}
+        static
       />
     </>
   )
@@ -252,10 +258,11 @@ export const Temperature: Field = (props) => {
 export const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selected, setSelected] = createSignal(props.inherit?.featherlessModel || '')
+  const [modelclass, setModelclass] = createSignal('')
 
   const label = createMemo(() => {
     const id = selected()
-    const match = state.find((s) => s.id === id)
+    const match = state.models.find((s) => s.id === id)
     if (!match) return id || 'None selected'
 
     return (
@@ -267,24 +274,30 @@ export const FeatherlessModels: Field = (props) => {
   })
 
   const options = createMemo(() => {
-    return state.map((s) => ({
-      label: (
-        <div
-          class="flex w-full justify-between"
-          title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
-        >
-          <div class="ellipsis">{s.id}</div>
-          <div class="text-500 text-xs">
-            {flaiContext(s)} {s.status}
+    return state.models
+      .filter((s) => {
+        const mclass = modelclass()
+        if (!mclass) return true
+        return s.model_class === mclass
+      })
+      .map((s) => ({
+        label: (
+          <div
+            class="flex w-full justify-between"
+            title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
+          >
+            <div class="ellipsis">{s.id}</div>
+            <div class="text-500 text-xs">
+              {flaiContext(s, state.classes)} {s.status}
+            </div>
           </div>
-        </div>
-      ),
-      value: s.id,
-    }))
+        ),
+        value: s.id,
+      }))
   })
 
   onMount(() => {
-    if (!state.length) {
+    if (!state.models.length) {
       settingStore.getFeatherless()
     }
   })
@@ -300,6 +313,13 @@ export const FeatherlessModels: Field = (props) => {
     return true
   }
 
+  const classes = createMemo(() => {
+    const list = Object.entries(state.classes)
+      .map(([label, { ctx }]) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
+      .sort((l, r) => l.label.localeCompare(r.label))
+    return [{ label: 'All', value: '' }].concat(list)
+  })
+
   return (
     <CustomSelect
       modalTitle="Select a Model"
@@ -308,6 +328,16 @@ export const FeatherlessModels: Field = (props) => {
       value={props.inherit?.featherlessModel}
       options={options()}
       search={search}
+      header={
+        <Select
+          items={classes()}
+          value={''}
+          label={'Filter: Model Class'}
+          fieldName="featherless.classFilter"
+          onChange={(ev) => setModelclass(ev.value)}
+          parentClass="text-sm"
+        />
+      }
       onSelect={(opt) => {
         console.log(opt.value)
         setSelected(opt.value)
@@ -350,8 +380,11 @@ export const GoogleModels: Field = (props) => {
   )
 }
 
-function flaiContext(model: FeatherlessModel) {
-  const ctx = model.ctx || FLAI_CONTEXTS[model.model_class]
+function flaiContext(
+  model: FeatherlessModel,
+  classes: Record<string, { ctx: number; res: number }>
+) {
+  const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 
   return `${Math.round(ctx / 1024)}K`
