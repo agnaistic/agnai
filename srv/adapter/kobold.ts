@@ -239,7 +239,7 @@ async function getHeaders(opts: AdapterProps) {
         throw new Error(`Featherless model not set. Check your preset`)
       }
 
-      const key = opts.gen.thirdPartyKey
+      const key = opts.gen.thirdPartyKey || opts.user.featherlessApiKey
 
       const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
       if (apiKey) {
@@ -358,6 +358,11 @@ const streamCompletion = async function* (
     const events = requestStream(resp, format)
 
     for await (const event of events) {
+      if (event?.error) {
+        yield { error: event.error }
+        return
+      }
+
       if (!event.data) continue
       const data = JSON.parse(event.data) as {
         index?: number

@@ -45,6 +45,7 @@ import {
   revealApiKey,
   generateApiKey,
   removeProfileAvatar,
+  deleteFeatherlessKey,
 } from './settings'
 import { deleteUserAccount } from './delete-user'
 
@@ -82,6 +83,7 @@ router.delete('/config/mistral', loggedIn, deleteMistralKey)
 router.delete('/config/claude', loggedIn, deleteClaudeKey)
 router.delete('/config/third-party', loggedIn, deleteThirdPartyPassword)
 router.delete('/config/elevenlabs', loggedIn, deleteElevenLabsKey)
+router.delete('/config/featherless', loggedIn, deleteFeatherlessKey)
 router.delete('/presets/:id', loggedIn, deleteUserPreset)
 router.post('/password', loggedIn, changePassword)
 router.post('/ui', loggedIn, updateUI)

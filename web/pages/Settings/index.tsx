@@ -270,6 +270,7 @@ const settingsForm = {
   hordeModel: 'string?',
   oaiKey: 'string?',
   mistralKey: 'string?',
+  featherlessApiKey: 'string?',
   scaleApiKey: 'string?',
   scaleUrl: 'string?',
   claudeApiKey: 'string?',

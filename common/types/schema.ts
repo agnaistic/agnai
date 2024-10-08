@@ -125,6 +125,9 @@ export namespace AppSchema {
     elevenLabsApiKey?: string
     elevenLabsApiKeySet?: boolean
 
+    featherlessApiKey?: string
+    featherlessApiKeySet?: boolean
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
     defaultPreset?: string

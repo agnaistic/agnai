@@ -664,6 +664,7 @@ export const userStore = createStore<UserState>(
         | 'third-party'
         | 'elevenlabs'
         | 'mistral'
+        | 'featherless'
     ) {
       const res = await usersApi.deleteApiKey(kind)
       if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
@@ -696,6 +697,10 @@ export const userStore = createStore<UserState>(
 
       if (kind === 'mistral') {
         return { user: { ...user, mistralKey: '', mistralKeySet: false } }
+      }
+
+      if (kind === 'featherless') {
+        return { user: { ...user, featherlessApiKey: '', featherlessApiKeySet: false } }
       }
     },
 
