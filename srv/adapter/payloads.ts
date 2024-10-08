@@ -50,9 +50,12 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   // Agnaistic
   if (service !== 'kobold') {
     if (!opts.contextSize) {
-      const encoder = getEncoderByName((opts.subscription?.preset?.tokenizer as any) || 'llama3')
-      const context = encoder.count(prompt)
-      opts.contextSize = context
+      const encoder = getEncoderByName(opts.subscription?.preset?.tokenizer as any)
+      const context = encoder?.count(prompt)
+
+      if (context) {
+        opts.contextSize = context
+      }
     }
 
     const body: any = {
