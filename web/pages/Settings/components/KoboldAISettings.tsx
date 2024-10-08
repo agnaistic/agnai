@@ -11,8 +11,8 @@ const KoboldAISettings: Component = () => {
     <>
       <TextInput
         fieldName="koboldUrl"
-        label="Kobold-compatible or 3rd-party URL"
-        helperText="Fully qualified URL. Typically for Kobold, Textgen, Llama.cpp, or OpenAI compatible APIs. This URL must be publicly accessible."
+        label="Third-party or Self-host URL"
+        helperText="E.g. for Kobold, Textgen, Llama.cpp, Ollama, or OpenAI compatible APIs. This URL must be publicly accessible."
         placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
         value={state.user?.koboldUrl}
       />
@@ -38,9 +38,26 @@ const KoboldAISettings: Component = () => {
       />
       <TextInput
         fieldName="thirdPartyPassword"
-        label="3rd-party password if applicable"
+        label="Third-party API Key"
         helperText="(NEVER put an OpenAI API key here, this would expose your personal information to third parties)"
         placeholder={state.user?.thirdPartyPasswordSet ? 'Password is set' : 'E.g. p4ssw0rd123'}
+        type="password"
+        value={''}
+      />
+
+      <TextInput
+        fieldName="featherlessApiKey"
+        helperText={
+          <div>
+            <Show when={state.user?.featherlessApiKeySet}>
+              <a class="link" onClick={() => userStore.deleteKey('featherless')}>
+                Delete Key
+              </a>
+            </Show>
+          </div>
+        }
+        label="Featherless API Key"
+        placeholder={state.user?.featherlessApiKeySet ? 'Password is set' : 'API Key not set'}
         type="password"
         value={''}
       />

@@ -382,7 +382,7 @@ export type HordeWorker = {
 
 export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   horde: 'Horde',
-  kobold: 'Self-host / 3rd Party',
+  kobold: 'Third-party / Self-host',
   novel: 'NovelAI',
   ooba: 'Textgen',
   openai: 'OpenAI',

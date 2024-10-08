@@ -483,6 +483,11 @@ export function toSafeUser(user: AppSchema.User) {
     user.elevenLabsApiKeySet = true
   }
 
+  if (user.featherlessApiKey) {
+    user.featherlessApiKey = ''
+    user.featherlessApiKeySet = true
+  }
+
   for (const svc of getRegisteredAdapters()) {
     if (!user.adapterConfig) break
     if (!user.adapterConfig[svc.name]) continue

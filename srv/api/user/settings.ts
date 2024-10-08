@@ -126,6 +126,14 @@ export const deleteMistralKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteFeatherlessKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    featherlessApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteElevenLabsKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     elevenLabsApiKey: '',
@@ -160,6 +168,7 @@ const validConfig = {
   hordeWorkers: ['string'],
   oaiKey: 'string?',
   mistralKey: 'string?',
+  featherlessApiKey: 'string?',
   scaleUrl: 'string?',
   scaleApiKey: 'string?',
   claudeApiKey: 'string?',
@@ -336,6 +345,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.mistralKey) {
     update.mistralKey = encryptText(body.mistralKey!)
+  }
+
+  if (body.featherlessApiKey) {
+    update.featherlessApiKey = encryptText(body.featherlessApiKey)
   }
 
   if (body.scaleUrl !== undefined) update.scaleUrl = body.scaleUrl
