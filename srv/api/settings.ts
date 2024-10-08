@@ -31,8 +31,8 @@ export const getPublicSubscriptions = handle(async () => {
 router.get('/subscriptions', getPublicSubscriptions)
 router.get('/', getSettings)
 router.get('/featherless', (_, res) => {
-  const models = getFeatherModels()
-  res.json({ models })
+  const { models, classes } = getFeatherModels()
+  res.json({ models, classes })
 })
 
 export default router

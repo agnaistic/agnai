@@ -3,6 +3,7 @@ import { getStoppingStrings } from './prompt'
 import { clamp, neat } from '/common/util'
 import { JsonSchema, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
+import { getEncoderByName } from '../tokenize'
 
 const chat_template = neat`
 {%- if messages[0]['role'] == 'system' -%}
@@ -48,6 +49,12 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   // Agnaistic
   if (service !== 'kobold') {
+    if (!opts.contextSize) {
+      const encoder = getEncoderByName(opts.subscription?.preset?.tokenizer || ('llama3' as any))
+      const context = encoder.count(prompt)
+      opts.contextSize = context
+    }
+
     const body: any = {
       prompt,
       context_limit: gen.maxContextLength,
@@ -91,6 +98,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       json_schema_v2: ensureSafeSchema(json_schema),
       json_schema,
       imageData: opts.imageData,
+      context_size: opts.contextSize,
     }
 
     if (gen.dynatemp_range) {

@@ -435,6 +435,7 @@ export async function createChatStream(
     subscription,
     encoder,
     jsonValues: opts.jsonValues,
+    contextSize: prompt.length,
   })
 
   return {
