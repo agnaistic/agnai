@@ -93,11 +93,5 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
   }
 
   const stops = Array.from(unique.values()).filter((str) => !!str)
-
-  const formatTag = opts.gen.modelFormat ? replaceTags('</bot>', opts.gen.modelFormat) : null
-  if (formatTag) {
-    stops.push(formatTag)
-  }
-
   return stops
 }
