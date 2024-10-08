@@ -1,7 +1,6 @@
 import { AppSchema, TokenCounter } from '../../common/types'
 import { store } from '../db'
 import { AdapterProps } from './type'
-import { replaceTags } from '/common/presets/templates'
 
 type PromptOpts = {
   chat: AppSchema.Chat
@@ -93,11 +92,5 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
   }
 
   const stops = Array.from(unique.values()).filter((str) => !!str)
-
-  const formatTag = opts.gen.modelFormat ? replaceTags('</bot>', opts.gen.modelFormat) : null
-  if (formatTag) {
-    stops.push(formatTag)
-  }
-
   return stops
 }
