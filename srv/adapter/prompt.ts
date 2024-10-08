@@ -1,7 +1,6 @@
 import { AppSchema, TokenCounter } from '../../common/types'
 import { store } from '../db'
 import { AdapterProps } from './type'
-import { replaceTags } from '/common/presets/templates'
 
 type PromptOpts = {
   chat: AppSchema.Chat
