@@ -11,7 +11,6 @@ MainChar's personality: MainCharacter talks a lot",
   "sections": Object {
     "flags": Object {},
     "sections": Object {
-      "def": Array [],
       "history": Array [],
       "post": Array [],
       "system": Array [

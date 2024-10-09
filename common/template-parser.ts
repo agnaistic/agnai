@@ -6,7 +6,7 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
-type Section = 'system' | 'def' | 'history' | 'post'
+type Section = 'system' | 'history' | 'post'
 
 export type TemplateOpts = {
   continue?: boolean
@@ -183,7 +183,7 @@ export async function parseTemplate(
 
   const sections: TemplateOpts['sections'] = {
     flags: {},
-    sections: { system: [], def: [], history: [], post: [] },
+    sections: { system: [], history: [], post: [] },
   }
 
   opts.sections = sections
@@ -790,21 +790,11 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
 
   if (!flags.system) {
     sections.system.push(result)
-
-    if (marker === 'system') {
-      flags.system = true
-    }
-
-    return
-  }
-
-  if (!flags.def) {
-    sections.def.push(result)
     return
   }
 
   if (marker === 'history') {
-    flags.def = true
+    flags.system = true
     flags.history = true
     return
   }
