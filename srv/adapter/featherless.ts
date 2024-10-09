@@ -37,24 +37,32 @@ export function getFeatherModels() {
 }
 
 async function getModelList() {
-  const models = await fetch('https://api.featherless.ai/v1/models', {
-    headers: {
-      accept: '*/*',
-    },
-    method: 'GET',
-  })
-  const res = await fetch('https://api.featherless.ai/feather/models?page=1&perPage=5000', {
-    headers: {
-      accept: '*/*',
-    },
-    method: 'GET',
-  })
-
-  if (res.status && res.status > 200) {
-    return
-  }
-
   try {
+    const models = await fetch('https://api.featherless.ai/v1/models', {
+      headers: {
+        accept: '*/*',
+      },
+      method: 'GET',
+    })
+    const res = await fetch('https://api.featherless.ai/feather/models?page=1&perPage=5000', {
+      headers: {
+        accept: '*/*',
+      },
+      method: 'GET',
+    })
+
+    if (res.status && res.status > 200) {
+      const body = await res.json()
+      logger.warn({ body, status: res.status }, `Featherless model list failed`)
+      return
+    }
+
+    if (models.status && models.status > 200) {
+      const body = await models.json()
+      logger.warn({ body, status: models.status }, `Featherless model list failed`)
+      return
+    }
+
     const map = await models.json().then((res) => {
       const list = res?.data as V1Model[]
       if (!list) return {}
@@ -95,7 +103,7 @@ async function getModelList() {
 
     return json
   } catch (ex) {
-    logger.warn({ err: ex, body: res.body, status: res.status }, `Featherless model list failed`)
+    logger.error({ err: ex }, `Featherless model list failed`)
   }
 }
 

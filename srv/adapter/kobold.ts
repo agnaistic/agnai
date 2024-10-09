@@ -210,12 +210,9 @@ async function getHeaders(opts: AdapterProps) {
   const password = opts.gen.thirdPartyUrl ? opts.gen.thirdPartyKey : opts.user.thirdPartyPassword
   const headers: any = {}
 
-  if (!password) {
-    return headers
-  }
-
   switch (opts.gen.thirdPartyFormat) {
     case 'aphrodite': {
+      if (!password) return headers
       const apiKey = opts.guest ? password : decryptText(password)
       headers['x-api-key'] = apiKey
       headers['Authorization'] = `Bearer ${apiKey}`
@@ -223,12 +220,14 @@ async function getHeaders(opts: AdapterProps) {
     }
 
     case 'vllm': {
+      if (!password) return headers
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`
       headers['Accept'] = 'application/json'
       break
     }
     case 'tabby': {
+      if (!password) return headers
       const apiKey = opts.guest ? password : decryptText(password)
       headers['Authorization'] = `Bearer ${apiKey}`
       break
@@ -240,6 +239,11 @@ async function getHeaders(opts: AdapterProps) {
       }
 
       const key = opts.gen.thirdPartyKey || opts.user.featherlessApiKey
+      if (!key) {
+        throw new Error(
+          `Featherless API key not set. Check your Settings->AI->Third-party settings`
+        )
+      }
 
       const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
       if (apiKey) {
@@ -251,7 +255,8 @@ async function getHeaders(opts: AdapterProps) {
 
     case 'mistral': {
       const key = opts.user.mistralKey
-      if (!key) throw new Error(`Mistral API key not set. Check your AI->3rd-party settings`)
+      if (!key)
+        throw new Error(`Mistral API key not set. Check your Settings->AI->Third-party settings`)
 
       const apiKey = opts.guest ? key : decryptText(key)
       headers['Authorization'] = `Bearer ${apiKey}`

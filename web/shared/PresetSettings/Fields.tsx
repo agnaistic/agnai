@@ -268,7 +268,10 @@ export const FeatherlessModels: Field = (props) => {
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
         {match.id}
-        <span class="text-500 text-xs"> {match.status}</span>
+        <span class="text-500 text-xs">
+          {' '}
+          {flaiContext(match, state.classes)} {match.status}
+        </span>
       </span>
     )
   })
