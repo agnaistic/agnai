@@ -495,7 +495,6 @@ const SDSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
 }
 
 const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
-  const state = userStore()
   const settings = settingStore((s) => {
     const models = s.config.serverConfig?.imagesModels || []
     return {
@@ -504,7 +503,18 @@ const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
     }
   })
 
-  const [curr, setCurr] = createSignal(state.user?.images?.agnai?.model)
+  const [curr, setCurr] = createSignal(props.cfg?.agnai?.model)
+  const [sampler, setSampler] = createSignal(props.cfg?.agnai?.sampler)
+
+  createEffect(
+    on(
+      () => props.cfg,
+      () => {
+        setCurr(props.cfg?.agnai?.model)
+        setSampler(props.cfg?.agnai?.sampler || SD_SAMPLER['Euler a'])
+      }
+    )
+  )
 
   const model = createMemo(() => {
     const original = props.cfg?.agnai?.model
@@ -516,10 +526,12 @@ const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
     return match
   })
 
-  const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
-    value: key,
-  }))
+  const samplers = createMemo(() => {
+    return Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
+      label: value,
+      value: key,
+    }))
+  })
 
   return (
     <>
@@ -539,9 +551,10 @@ const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
 
       <Select
         fieldName="agnaiSampler"
-        items={samplers}
-        label="Sampler"
-        value={props.cfg?.agnai?.sampler || SD_SAMPLER['DPM++ SDE']}
+        items={samplers()}
+        label={`Sampler ${sampler()}`}
+        value={sampler()}
+        onChange={(ev) => setSampler(ev.value)}
       />
 
       <Show when={!!model()}>
