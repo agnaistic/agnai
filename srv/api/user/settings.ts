@@ -198,6 +198,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       announcement: 'string?',
       defaultPreset: 'string?',
       chargenPreset: 'string?',
+      images: 'any?',
     },
     body
   )
@@ -254,6 +255,10 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
 
   if (body.thirdPartyPassword) {
     update.thirdPartyPassword = encryptText(body.thirdPartyPassword)
+  }
+
+  if (body.images) {
+    update.images = body.images
   }
 
   await store.users.updateUser(userId, update)

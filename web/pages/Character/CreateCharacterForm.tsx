@@ -22,6 +22,7 @@ import {
   SlidersVertical,
   Dices,
   BookPlus,
+  Image,
 } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -48,7 +49,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
-import { Card, SolidCard, TitleCard } from '../../shared/Card'
+import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal, { RootModal } from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
@@ -65,7 +66,6 @@ import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
 import { getAssetUrl, random } from '/web/shared/util'
-import { ImageSettings } from '../Settings/Image/ImageSettings'
 import { v4 } from 'uuid'
 import { imageApi } from '/web/store/data/image'
 import { Page } from '/web/Layout'
@@ -697,8 +697,12 @@ export const CreateCharacterForm: Component<{
               <AdvancedOptions editor={editor} />
             </div>
 
-            <div class={`flex flex-col gap-2`} classList={{ hidden: tabs.current() !== 'Images' }}>
-              <ImageSettings cfg={editor.state.imageSettings} inherit />
+            <div
+              class={`flex items-center gap-2 text-center`}
+              classList={{ hidden: tabs.current() !== 'Images' }}
+            >
+              Image Settings have moved: Click the <Image size={16} />
+              in the main menu
             </div>
 
             <Show when={!props.close}>

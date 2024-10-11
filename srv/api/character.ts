@@ -486,6 +486,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
+  const requestId = body.requestId || v4()
   generateImage(
     {
       user,
@@ -495,13 +496,13 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: body.noAffix,
       chatId: body.chatId,
       characterId: body.characterId,
-      requestId: body.requestId,
+      requestId,
       parentId: body.parent,
     },
     log,
     guestId
   )
-  return { success: true }
+  return { success: true, requestId }
 })
 
 router.post('/image', createImage)

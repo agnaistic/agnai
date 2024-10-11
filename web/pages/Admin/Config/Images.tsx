@@ -6,9 +6,17 @@ import { adminStore, settingStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { FieldUpdater, useRowHelper } from '/web/shared/util'
 import Button from '/web/shared/Button'
+import { v4 } from 'uuid'
 
 type Threshold = { steps: number; cfg: number; height: number; width: number }
-type Model = { name: string; desc: string; init: Threshold; limit: Threshold }
+type Model = {
+  id: string
+  name: string
+  desc: string
+  override: string
+  init: Threshold
+  limit: Threshold
+}
 
 export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (props) => {
   const settings = settingStore((s) => s.config)
@@ -39,8 +47,10 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
   const rows = useRowHelper({
     signal: props.signal,
     empty: {
+      id: v4().slice(0, 4),
       name: '',
       desc: '',
+      override: '',
       init: { steps: 5, cfg: 2, height: 1024, width: 1024 },
       limit: { steps: 128, cfg: 20, height: 1024, width: 1024 },
     },
@@ -50,7 +60,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
     <>
       <div class="flex items-center gap-2">
         Image Models{' '}
-        <Button size="sm" onClick={rows.add}>
+        <Button size="md" onClick={rows.add}>
           Add
         </Button>
       </div>
@@ -59,6 +69,9 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
           <ImageModel index={i()} item={item} updater={rows.updater} remove={rows.remove} />
         )}
       </For>
+      <Button size="sm" onClick={rows.add}>
+        Add Model
+      </Button>
     </>
   )
 }
@@ -74,7 +87,7 @@ const ImageModel: Component<{
       <div class="flex w-full items-center gap-2">
         <TextInput
           fieldName="model.name"
-          parentClass="w-1/2"
+          parentClass="w-1/4"
           placeholder="Model Name..."
           onChange={props.updater(props.index, 'name')}
           value={props.item.name}
@@ -86,6 +99,14 @@ const ImageModel: Component<{
           onChange={props.updater(props.index, 'desc')}
           value={props.item.desc}
         />
+        <TextInput
+          fieldName="model.override"
+          parentClass="w-1/4"
+          placeholder="Override..."
+          onChange={props.updater(props.index, 'override')}
+          value={props.item.override || ''}
+        />
+
         <Button size="sm" schema="red" onClick={() => props.remove(props.index)}>
           Remove
         </Button>

@@ -100,9 +100,13 @@ export function useRef<T = HTMLElement>() {
   return [ref, onRef] as const
 }
 
-export function isChatPage() {
+export function isChatPage(noSaga?: boolean) {
   const location = useLocation()
   const isChat = createMemo(() => {
+    if (noSaga) {
+      return location.pathname.startsWith('/chat/')
+    }
+
     return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/saga/')
   })
 

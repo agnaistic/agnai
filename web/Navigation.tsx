@@ -7,6 +7,7 @@ import {
   ChevronRight,
   HeartHandshake,
   HelpCircle,
+  Image,
   Info,
   LogIn,
   MailQuestion,
@@ -452,6 +453,14 @@ const NavIcons: Component<{
         </Item>
 
         <Item
+          onClick={() => settingStore.imageSettings(true)}
+          ariaLabel="Image Settings"
+          tooltip="Image Settings"
+        >
+          <Image aria-hidden="true" />
+        </Item>
+
+        <Item
           ariaLabel="Toggle between light and dark mode"
           onClick={() => {
             userStore.saveUI({ mode: props.user.ui.mode === 'light' ? 'dark' : 'light' })
@@ -539,12 +548,18 @@ const Item: Component<{
   onClick?: () => void
   tooltip?: string
   menuOpen?: boolean
+  tipClass?: string
 }> = (props) => {
   return (
-    <Tooltip position="top" tip={props.tooltip}>
+    <Tooltip
+      position="top"
+      tip={props.tooltip}
+      class="flex items-center"
+      classList={{ 'min-h-[2.25rem]': !props.class?.includes('h-') }}
+    >
       <Show when={!props.href}>
         <div
-          class={`flex cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
+          class={`flex h-full cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
             props.class || ''
           }`}
           classList={{
@@ -562,7 +577,7 @@ const Item: Component<{
       <Show when={props.href}>
         <A
           href={props.href!}
-          class={`flex items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
+          class={`flex h-full items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] ${
             props.class || ''
           }`}
           classList={{

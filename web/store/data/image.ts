@@ -6,7 +6,7 @@ import { msgsApi } from './messages'
 import { AIAdapter } from '/common/adapters'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
-import { neat } from '/common/util'
+import { neat, wait } from '/common/util'
 import { AppSchema } from '/common/types'
 import { localApi } from './storage'
 import { subscribe } from '../socket'
@@ -114,7 +114,7 @@ export async function generateImageWithPrompt(opts: {
     }
   }
 
-  const res = await api.post<{ success: boolean }>(`/character/image`, {
+  const res = await api.post<{ success: boolean; requestId: string }>(`/character/image`, {
     prompt,
     user,
     ephemeral: true,
@@ -128,7 +128,11 @@ type ImageResult = { image: string; file: File; data?: string; error?: string }
 
 export async function generateImageAsync(
   prompt: string,
-  opts: { noAffix?: boolean; onTick?: (status: horde.HordeCheck) => void } = {}
+  opts: {
+    noAffix?: boolean
+    onTick?: (status: horde.HordeCheck) => void
+    onDone?: (result: { image: string; file: File; data?: string }) => void
+  } = {}
 ): Promise<ImageResult> {
   const user = getStore('user').getState().user
   const source = `image-${v4()}`
@@ -151,6 +155,8 @@ export async function generateImageAsync(
       const file = await dataURLtoFile(image)
       const data = await getImageData(file)
 
+      opts.onDone?.({ image, file, data })
+
       return { image, file, data }
     } catch (ex: any) {
       throw ex
@@ -161,6 +167,7 @@ export async function generateImageAsync(
 
   const promise = new Promise<ImageResult>((resolve, reject) => {
     callbacks.set(requestId, (image) => {
+      opts.onDone?.(image)
       if (image.error) return reject(new Error(image.error))
       resolve(image)
     })
@@ -191,7 +198,7 @@ subscribe(
 
     callbacks.delete(body.requestId)
     const url = getAssetUrl(body.image)
-    const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
+    const image = await tryFetchImage(getAssetUrl(body.image))
     const file = new File([image], `${body.source}.png`, { type: 'image/png' })
 
     const hash = md5(await image.text())
@@ -202,6 +209,22 @@ subscribe(
     callback({ image: url, file, data })
   }
 )
+
+async function tryFetchImage(image: string, attempt = 1) {
+  if (attempt > 3) throw new Error(`failed to download image`)
+
+  try {
+    const res = await fetch(getAssetUrl(image))
+    if (res.status && res.status > 200) {
+      await wait(2.5)
+      return tryFetchImage(image, attempt + 1)
+    }
+
+    return res.blob()
+  } catch (ex) {
+    return tryFetchImage(image, attempt + 1)
+  }
+}
 
 subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   const callback = callbacks.get(body.requestId)

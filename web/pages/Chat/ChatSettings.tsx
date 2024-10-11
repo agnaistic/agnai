@@ -8,14 +8,12 @@ import { getStrictForm } from '../../shared/util'
 import { chatStore, msgStore, presetStore, scenarioStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
-import { Card, TitleCard } from '/web/shared/Card'
+import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
-import { ImageSettings } from '../Settings/Image/ImageSettings'
-import { baseImageValid } from '/common/types/image-schema'
 import Divider from '/web/shared/Divider'
-import { Wand } from 'lucide-solid'
+import { Image, Wand } from 'lucide-solid'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -99,23 +97,7 @@ const ChatSettings: Component<{
   })
 
   const onSave = () => {
-    const {
-      scenarioId,
-      imageCfg,
-      imageHeight,
-      imageNegative,
-      imagePrefix,
-      imageSource,
-      imageSteps,
-      imageSuffix,
-      imageType,
-      imageWidth,
-      imageClipSkip,
-      summariseChat,
-      summaryPrompt,
-
-      ...body
-    } = getStrictForm(ref, {
+    const { scenarioId, imageSource, ...body } = getStrictForm(ref, {
       name: 'string',
       greeting: 'string?',
       sampleChat: 'string?',
@@ -126,7 +108,6 @@ const ChatSettings: Component<{
       scenarioId: 'string?',
       mode: ['standard', 'adventure', 'companion', null],
       imageSource: ['last-character', 'main-character', 'chat', 'settings'],
-      ...baseImageValid,
     })
 
     const attributes = getAttributeMap(ref)
@@ -139,19 +120,6 @@ const ChatSettings: Component<{
       ...body,
       overrides,
       imageSource,
-      imageSettings: {
-        clipSkip: imageClipSkip,
-        type: imageType,
-        steps: imageSteps,
-        width: imageWidth,
-        height: imageHeight,
-        prefix: imagePrefix,
-        suffix: imageSuffix,
-        negative: imageNegative,
-        cfg: imageCfg,
-        summariseChat,
-        summaryPrompt,
-      },
       scenarioIds: scenarioId ? [scenarioId] : [],
       scenarioStates: states(),
     }
@@ -350,11 +318,15 @@ const ChatSettings: Component<{
       </Show>
 
       <Divider />
+
       <FormLabel
         label="Image Generation Settings"
         helperMarkdown="These settings will be used to for image generation if the `Image Source` is set `Chat`"
       />
-      <ImageSettings inherit cfg={state.chat?.imageSettings} />
+      <div class="flex gap-2">
+        Image Settings have moved: Click the <Image size={16} />
+        in the main menu
+      </div>
     </form>
   )
 }

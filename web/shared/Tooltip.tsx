@@ -10,6 +10,7 @@ const Tooltip: Component<{
   class?: string
   followCursor?: boolean
   disable?: boolean
+  classList?: Record<string, boolean>
 }> = (props) => {
   let ref: HTMLDivElement
 
@@ -31,6 +32,7 @@ const Tooltip: Component<{
           ref={ref!}
           class={`tooltip select-none ${props.class || ''}`}
           style={{ position: props.followCursor ? 'inherit' : 'relative' }}
+          classList={props.classList}
         >
           {props.children}
           <Show when={!!props.tip && !props.disable}>

@@ -35,6 +35,7 @@ export type SDRequest = {
   hr_scale?: number
   hr_upscaler?: string
   hr_second_pass_steps?: number
+  model_override?: string
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
@@ -105,7 +106,9 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
   const model =
     models.length === 1
       ? models[0]
-      : models.find((m) => m.name === user.images?.agnai?.model) ?? models[0]
+      : models.find((m) => {
+          return m.id === user.images?.agnai.model || m.name === user.images?.agnai?.model
+        }) ?? models[0]
 
   if (!model) {
     return { kind: 'user', host: userHost }
@@ -117,9 +120,9 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
     `id=${user._id}`,
     `level=${user.admin ? 99999 : sub?.level ?? -1}`,
     `model=${model.name}`,
-  ].join('&')
+  ]
 
-  return { kind: 'agnai', host: srv.imagesHost, params: `?${params}`, model }
+  return { kind: 'agnai', host: srv.imagesHost, params: `?${params.join('&')}`, model }
 }
 
 function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
@@ -145,6 +148,7 @@ function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppS
     restore_faces: false,
     save_images: false,
     send_images: true,
+    model_override: model?.override,
   }
 
   if (model) {

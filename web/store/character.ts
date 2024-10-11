@@ -393,17 +393,19 @@ export const characterStore = createStore<CharacterState>(
         prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')
         yield { generate: { image: null, loading: true, blob: null }, hordeStatus: undefined }
         imageCallback = onDone
-        const res = await imageApi.generateImageWithPrompt({
-          prompt,
-          source: 'avatar',
+        const res = await imageApi.generateImageAsync(prompt, {
           onTick: (status) => {
             set({ hordeStatus: status })
           },
-          onDone: async ({ image, file, data }) => {
-            onDone?.(null, file)
-            set({ generate: { image: data, loading: false, blob: file } })
+          onDone: (result) => {
+            onDone?.(null, result.file)
           },
         })
+        if (res.image) {
+          yield { generate: { image: res.image, loading: false, blob: res.file } }
+          return
+        }
+
         if (res.error) {
           onDone?.(res.error)
           yield { generate: { image: prev.image, loading: false, blob: prev.blob } }

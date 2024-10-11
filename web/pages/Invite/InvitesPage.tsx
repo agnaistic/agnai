@@ -28,7 +28,7 @@ const InvitesPage: Component = () => {
   return (
     <SolidCard border>
       <Show when={!state.invites.length}>
-        <div class="text-md font-bold">You have no pending chat invitations</div>
+        <div class="text-md font-bold">You have no pending Chat Invitations</div>
       </Show>
 
       <Show when={state.invites.length}>

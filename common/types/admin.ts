@@ -43,8 +43,10 @@ export interface AppConfig {
 }
 
 export type ImageModel = {
+  id: string
   name: string
   desc: string
+  override: string
   init: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
   limit: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
 }

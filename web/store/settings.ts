@@ -46,6 +46,7 @@ export type SettingState = {
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   showSettings: boolean
+  showImgSettings: boolean
 
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
@@ -85,6 +86,7 @@ const initState: SettingState = {
   featherless: { models: [], classes: {} },
   flags: getFlags(),
   showSettings: false,
+  showImgSettings: false,
   slotsLoaded: false,
   slots: { publisherId: '' },
   overlay: false,
@@ -119,6 +121,13 @@ export const settingStore = createStore<SettingState>(
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings
       return { showSettings: next }
+    },
+    imageSettings({ showImgSettings }, next?: boolean) {
+      if (next === undefined) {
+        return { showImgSettings: !showImgSettings }
+      }
+
+      return { showImgSettings: next }
     },
     async *init({ config: prev }) {
       yield { initLoading: true }
@@ -178,6 +187,17 @@ export const settingStore = createStore<SettingState>(
 
       if (res.result?.models?.length) {
         return { featherless: res.result }
+      }
+    },
+    async *getServerConfig({ cfg, config }) {
+      if (cfg.loading) return
+
+      yield { cfg: { loading: true, ttl: cfg.ttl } }
+      const res = await api.get('/settings')
+      yield { cfg: { loading: false, ttl: cfg.ttl } }
+
+      if (res.result?.serverConfig) {
+        return { config: { ...config, serverConfig: res.result?.serverConfig } }
       }
     },
     async *getConfig({ cfg }) {

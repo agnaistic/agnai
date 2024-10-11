@@ -1,7 +1,7 @@
 import type { AIAdapter, ChatAdapter, ThirdPartyFormat } from '../adapters'
 import * as Memory from './memory'
 import type { GenerationPreset } from '../presets'
-import type { BaseImageSettings, ImageSettings } from './image-schema'
+import type { ImageSettings } from './image-schema'
 import type { TTSSettings } from './texttospeech-schema'
 import type { UISettings } from './ui'
 import * as Saga from './saga'
@@ -261,7 +261,7 @@ export namespace AppSchema {
     treeLeafId?: string
 
     imageSource?: 'last-character' | 'main-character' | 'chat' | 'settings'
-    imageSettings?: BaseImageSettings
+    imageSettings?: ImageSettings
   }
 
   export interface ChatMember {
