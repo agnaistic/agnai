@@ -106,4 +106,22 @@ describe('trimSentence', () => {
     const result = trimSentence(text)
     expect(result).to.eq(`Hello world.`)
   })
+
+  it('should stop at multi-symbol sequences', () => {
+    const text = '```javascript\nconst x = 1\n```\nMy code'
+    const result = trimSentence(text)
+    expect(result).to.eq('```javascript\nconst x = 1\n```')
+  })
+
+  it('should trim opening multi-symbol sequences that are followed by letters', () => {
+    const text = 'Beginning of my code block.\n```javascript'
+    const result = trimSentence(text)
+    expect(result).to.eq('Beginning of my code block.')
+  })
+
+  it('should trim duplicating symbols in multi-symbol sequences', () => {
+    const text = 'Hello World.\n------- Separated orphan'
+    const result = trimSentence(text)
+    expect(result).to.eq('Hello World.\n---')
+  })
 })

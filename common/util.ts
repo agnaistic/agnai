@@ -140,12 +140,24 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
 }
 
 const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>~`.split(''))
+const END_SEQUENCES = ['\n```', '\n---', '\n***', '\n___', '\n===', '\n"""', '\n*/']
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
   let index = -1,
     checkpoint = -1
-  for (let i = text.length - 1; i >= 0; i--) {
+  sentence_loop: for (let i = text.length - 1; i >= 0; i--) {
+    // first check for end sequences
+    for (const seq of END_SEQUENCES) {
+      if (text.slice(i, i + seq.length) === seq) {
+        // only trim if it's not an opening sequence
+        if (i + seq.length < text.length && /\p{L}/u.test(text[i + seq.length])) {
+          break
+        }
+        index = i + seq.length - 1
+        break sentence_loop
+      }
+    }
     if (END_SYMBOLS.has(text[i])) {
       // Skip ahead if the punctuation mark is preceded by white space
       if (i && /[\p{White_Space}\n<]/u.test(text[i - 1])) {
