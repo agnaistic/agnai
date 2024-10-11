@@ -1,4 +1,4 @@
-import { Component, For, Signal } from 'solid-js'
+import { Component, For, Show, Signal } from 'solid-js'
 import { Card } from '/web/shared/Card'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
@@ -64,11 +64,13 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
           Add
         </Button>
       </div>
-      <For each={rows.items()}>
-        {(item, i) => (
-          <ImageModel index={i()} item={item} updater={rows.updater} remove={rows.remove} />
-        )}
-      </For>
+      <div class="flex flex-col gap-2">
+        <For each={rows.items()}>
+          {(item, i) => (
+            <ImageModel index={i()} item={item} updater={rows.updater} remove={rows.remove} />
+          )}
+        </For>
+      </div>
       <Button size="sm" onClick={rows.add}>
         Add Model
       </Button>
@@ -83,48 +85,59 @@ const ImageModel: Component<{
   remove: (index: number) => void
 }> = (props) => {
   return (
-    <div class="flex flex-col gap-1">
-      <div class="flex w-full items-center gap-2">
-        <TextInput
-          fieldName="model.name"
-          parentClass="w-1/4"
-          placeholder="Model Name..."
-          onChange={props.updater(props.index, 'name')}
-          value={props.item.name}
-        />
-        <TextInput
-          fieldName="model.desc"
-          parentClass="w-1/2"
-          placeholder="Model Description..."
-          onChange={props.updater(props.index, 'desc')}
-          value={props.item.desc}
-        />
-        <TextInput
-          fieldName="model.override"
-          parentClass="w-1/4"
-          placeholder="Override..."
-          onChange={props.updater(props.index, 'override')}
-          value={props.item.override || ''}
-        />
-
-        <Button size="sm" schema="red" onClick={() => props.remove(props.index)}>
-          Remove
-        </Button>
-      </div>
-
-      <table class="table-auto border-separate border-spacing-2">
-        <thead>
-          <tr>
-            <Th />
-            <Th>Steps</Th>
-            <Th>CFG</Th>
-            <Th>Width</Th>
-            <Th>Height</Th>
-          </tr>
-        </thead>
+    <div class="flex flex-col gap-2">
+      <table class="bg-700 table-auto border-separate border-spacing-0.5 rounded-md">
+        <Show when={props.index === 0}>
+          <thead>
+            <tr>
+              <Th />
+              <Th>Steps</Th>
+              <Th>CFG</Th>
+              <Th>Width</Th>
+              <Th>Height</Th>
+            </tr>
+          </thead>
+        </Show>
         <tbody>
           <tr>
-            <Td class="px-2 font-bold">Recommended</Td>
+            <Td>
+              <TextInput
+                prelabel="Name"
+                fieldName="model.name"
+                parentClass=""
+                placeholder="Model Name..."
+                onChange={props.updater(props.index, 'name')}
+                value={props.item.name}
+              />
+            </Td>
+            <Td>
+              <TextInput
+                prelabel="Desc"
+                fieldName="model.desc"
+                parentClass=""
+                placeholder="Model Description..."
+                onChange={props.updater(props.index, 'desc')}
+                value={props.item.desc}
+              />
+            </Td>
+            <Td>
+              <TextInput
+                prelabel="Override"
+                fieldName="model.override"
+                parentClass=""
+                placeholder="Override..."
+                onChange={props.updater(props.index, 'override')}
+                value={props.item.override || ''}
+              />
+            </Td>
+            <Td>
+              <Button size="sm" schema="red" onClick={() => props.remove(props.index)}>
+                Remove
+              </Button>
+            </Td>
+          </tr>
+          <tr>
+            <Td class="text-500 border-0 px-2 text-right text-sm">Recommended</Td>
             <Td>
               <TextInput
                 type="number"
@@ -167,7 +180,7 @@ const ImageModel: Component<{
           </tr>
 
           <tr>
-            <Td class="px-2 font-bold">Maximums</Td>
+            <Td class="text-500 border-0 px-2 text-right text-sm">Maximums</Td>
             <Td>
               <TextInput
                 type="number"

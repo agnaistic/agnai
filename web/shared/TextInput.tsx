@@ -21,6 +21,7 @@ const MIN_HEIGHT = 40
 
 type Props = {
   fieldName: string
+  prelabel?: string
   label?: string | JSX.Element
   helperText?: string | JSX.Element
   helperMarkdown?: string
@@ -179,8 +180,16 @@ const TextInput: Component<Props> = (props) => {
   return (
     <div
       class={`${props.parentClass || ''}`}
-      classList={{ hidden: !show() || props.parentClass?.includes('hidden') || props.hide }}
+      classList={{
+        'flex gap-0': !!props.prelabel && !props.isMultiline,
+        hidden: !show() || props.parentClass?.includes('hidden') || props.hide,
+      }}
     >
+      <Show when={props.prelabel && !props.isMultiline}>
+        <div class="bg-600 flex h-[40px] items-center rounded-l-md px-1 text-center text-sm font-bold">
+          {props.prelabel}
+        </div>
+      </Show>
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>
