@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
-import { BaseImageSettings } from '/common/types/image-schema'
+import { ImageSettings } from '/common/types/image-schema'
 
 export type ImageGenerateRequest = {
   user: AppSchema.User
@@ -20,7 +20,7 @@ export type ImageRequestOpts = {
   user: AppSchema.User
   prompt: string
   negative: string
-  settings: BaseImageSettings | undefined
+  settings: ImageSettings | undefined
 }
 
 export type ImageAdapter = (

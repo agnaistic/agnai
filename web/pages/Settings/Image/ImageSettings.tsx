@@ -90,7 +90,16 @@ export const ImageSettingsModal = () => {
     return tabs
   })
 
-  const tab = useTabs(tabs())
+  const tab = useTabs(
+    tabs(),
+    isChat()
+      ? entity.chat?.imageSource === 'chat'
+        ? 1 //
+        : !entity.chat?.imageSource || entity.chat?.imageSource === 'settings'
+        ? 0
+        : 2
+      : 0
+  )
 
   const canUseImages = createMemo(() => {
     const access = state.sub?.tier.imagesAccess || state.user?.admin
@@ -153,18 +162,7 @@ export const ImageSettingsModal = () => {
 
   const save = async () => {
     const body = getStrictForm(formRef, imageForm)
-    const payload = {
-      type: body.imageType,
-      cfg: body.imageCfg,
-      clipSkip: body.imageClipSkip,
-      height: body.imageHeight,
-      width: body.imageWidth,
-      steps: body.imageSteps,
-      negative: body.imageNegative,
-      prefix: body.imagePrefix,
-      suffix: body.imageSuffix,
-      summariseChat: body.summariseChat,
-      summaryPrompt: body.summaryPrompt,
+    const providers = {
       horde: {
         sampler: body.hordeSampler,
         model: body.hordeImageModel || '',
@@ -179,10 +177,24 @@ export const ImageSettingsModal = () => {
       },
       agnai: { model: body.agnaiModel || '', sampler: body.agnaiSampler || '' },
     }
+    const payload = {
+      type: body.imageType,
+      cfg: body.imageCfg,
+      clipSkip: body.imageClipSkip,
+      height: body.imageHeight,
+      width: body.imageWidth,
+      steps: body.imageSteps,
+      negative: body.imageNegative,
+      prefix: body.imagePrefix,
+      suffix: body.imageSuffix,
+      summariseChat: body.summariseChat,
+      summaryPrompt: body.summaryPrompt,
+      ...providers,
+    }
 
     switch (tab.current()) {
       case 'App': {
-        await userStore.updatePartialConfig({ images: payload })
+        await userStore.updatePartialConfig({ images: { ...payload, ...providers } })
         return
       }
 
@@ -247,19 +259,19 @@ export const ImageSettingsModal = () => {
         <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
 
         <div class={type() === 'novel' ? subclass : 'hidden'}>
-          <NovelSettings cfg={cfg()} />
+          <NovelSettings cfg={cfg() as ImageSettings} />
         </div>
 
         <div class={type() === 'horde' ? subclass : 'hidden'}>
-          <HordeSettings cfg={cfg()} />
+          <HordeSettings cfg={cfg() as ImageSettings} />
         </div>
 
-        <div class={type() === 'sd' ? subclass : 'hidden'}>
-          <SDSettings cfg={cfg()} />
+        <div class={tab.current() === 'App' && type() === 'sd' ? subclass : 'hidden'}>
+          <SDSettings cfg={cfg() as ImageSettings} />
         </div>
 
         <div class={type() === 'agnai' ? subclass : 'hidden'}>
-          <AgnaiSettings cfg={cfg()} />
+          <AgnaiSettings cfg={cfg() as ImageSettings} />
         </div>
 
         <Divider />
@@ -303,7 +315,7 @@ export const ImageSettingsModal = () => {
           min={256}
           max={1280}
           step={128}
-          value={cfg()?.width ?? agnaiModel()?.init.width ?? 384}
+          value={cfg()?.width ?? agnaiModel()?.init.width ?? 1024}
           label="Image Width"
           helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
         />
@@ -313,7 +325,7 @@ export const ImageSettingsModal = () => {
           min={256}
           max={1280}
           step={128}
-          value={cfg()?.height ?? agnaiModel()?.init.height ?? 384}
+          value={cfg()?.height ?? agnaiModel()?.init.height ?? 1024}
           label="Image Height"
           helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
         />

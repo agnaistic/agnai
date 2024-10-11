@@ -323,7 +323,8 @@ const editPartCharacter = handle(async ({ body, params, userId }) => {
 
   if (body.imageSettings) {
     try {
-      update.imageSettings = JSON.parse(body.imageSettings)
+      update.imageSettings =
+        typeof body.imageSettings === 'string' ? JSON.parse(body.imageSettings) : body.imageSettings
     } catch (ex: any) {
       throw new StatusError(`Character 'imageSettings' could not be parsed: ${ex.message}`, 400)
     }
