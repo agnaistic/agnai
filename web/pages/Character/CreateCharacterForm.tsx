@@ -276,7 +276,11 @@ export const CreateCharacterForm: Component<{
   let spriteRef: any
 
   return (
-    <Page>
+    <Page
+      classList={{
+        'p-0': !isPage,
+      }}
+    >
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           title={`${
@@ -317,7 +321,7 @@ export const CreateCharacterForm: Component<{
             </SolidCard>
           </Show>
 
-          <div class={`flex grow flex-col justify-between gap-2 pl-2 pr-3 `}>
+          <div class={`flex grow flex-col justify-between gap-2`}>
             <Show when={!isPage && paneOrPopup() === 'popup'}>
               <div>
                 <em>

@@ -124,7 +124,7 @@ export async function generateImageWithPrompt(opts: {
   return res
 }
 
-type ImageResult = { image: string; file: File; data?: string; error?: string }
+export type ImageResult = { image: string; file: File; data?: string; error?: string }
 
 export async function generateImageAsync(
   prompt: string,
@@ -219,7 +219,7 @@ subscribe(
 )
 
 async function tryFetchImage(image: string, attempt = 1) {
-  if (attempt > 3) throw new Error(`failed to download image`)
+  if (attempt > 5) throw new Error(`failed to download image`)
 
   try {
     const res = await fetch(getAssetUrl(image), { cache: 'no-cache' })

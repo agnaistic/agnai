@@ -490,7 +490,7 @@ const [debounceImage] = createDebounce(async (auto?: boolean) => {
     sagaStore.setState({ image: { ...prev, loading: false, state: 'done', data: res.data } })
   } catch (ex: any) {
     sagaStore.setState({ image: { ...prev, loading: false, state: 'done' } })
-    toastStore.error(`Failed to generate image. ${ex.message || ''}`)
+    toastStore.error(`Failed to generate image. ${ex.message || ex.error || ''}`)
   }
 }, 100)
 

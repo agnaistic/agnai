@@ -5,7 +5,7 @@ import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { charsApi } from './data/chars'
-import { imageApi } from './data/image'
+import { ImageResult, imageApi } from './data/image'
 import { getAssetUrl, storage, toMap } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
 import { getUserId } from './api'
@@ -401,16 +401,19 @@ export const characterStore = createStore<CharacterState>(
         }
         imageCallback = onDone
 
-        const res = await imageApi.generateImageAsync(prompt, {
-          requestId,
-          model: override,
-          onTick: (status) => {
-            set({ hordeStatus: status })
-          },
-          onDone: (result) => {
-            onDone?.(null, result.file)
-          },
-        })
+        const res = await imageApi
+          .generateImageAsync(prompt, {
+            requestId,
+            model: override,
+            onTick: (status) => {
+              set({ hordeStatus: status })
+            },
+            onDone: (result) => {
+              onDone?.(null, result.file)
+            },
+          })
+          .catch((ex) => ex as ImageResult)
+
         if (res.image) {
           yield { generate: { requestId: null, image: res.image, loading: false, blob: res.file } }
           return
