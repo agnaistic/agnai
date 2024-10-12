@@ -1,4 +1,4 @@
-import { Component, Match, Switch, createSignal } from 'solid-js'
+import { Component, Match, Show, Switch, createSignal } from 'solid-js'
 import { getStrictForm } from '/web/shared/util'
 import { toastStore } from '/web/store/toasts'
 import TextInput from '/web/shared/TextInput'
@@ -8,10 +8,13 @@ import Divider from '/web/shared/Divider'
 import { slugify } from '/common/util'
 import { embedApi } from '/web/store/embeddings'
 import Select from '/web/shared/Select'
+import { getStore } from '/web/store/create'
+import { SolidCard } from '/web/shared/Card'
 
 export { EmbedContent as default }
 
 const EmbedContent: Component = (props) => {
+  const user = getStore('user')()
   let ref: any
 
   const options = ['Article', 'PDF', 'Text file', 'Plain Text']
@@ -87,6 +90,12 @@ const EmbedContent: Component = (props) => {
 
   return (
     <form ref={ref} class="flex flex-col gap-2">
+      <Show when={user.user?.disableLTM ?? true}>
+        <SolidCard bg="premium-700">
+          You need need to enable <b>Embeddings/Long-Term Memory</b> in your Settings
+        </SolidCard>
+      </Show>
+
       <Select
         items={options.map((value) => ({ label: `Embed: ${value}`, value }))}
         fieldName="embed-type"
