@@ -47,7 +47,7 @@ export function sanitiseAndTrim(
 
 export function sanitise(generated: string) {
   // If want to support code blocks we need to remove the excess whitespace removal as it breaks indents
-  return generated.trim()
+  return (generated || '').trim()
 }
 
 export function trimResponseV2(
