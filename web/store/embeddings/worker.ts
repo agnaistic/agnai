@@ -25,6 +25,8 @@ type Embeddings = {
 // let Tokenizer: PreTrainedTokenizer
 let Embedder: Pipeline
 let Captioner: Pipeline
+let EMBED_INITED = false
+let CAPTION_INITED = false
 let HttpCaptioner: (base64: string) => Promise<any>
 
 const embeddings: Embeddings = {}
@@ -42,6 +44,7 @@ const handlers: {
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {
+    EMBED_INITED = true
     Embedder = await pipeline('feature-extraction', msg.model, {
       // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
@@ -52,6 +55,7 @@ const handlers: {
     post('embedLoaded', {})
   },
   initCaptioning: async (msg) => {
+    CAPTION_INITED = true
     console.log(`[caption] loading`)
 
     if (msg.model.startsWith('http')) {
@@ -77,6 +81,8 @@ const handlers: {
     post('captionLoaded', {})
   },
   captionImage: async (msg) => {
+    if (!CAPTION_INITED && !HttpCaptioner) return
+
     const base64 = msg.image.includes(',') ? msg.image.split(',')[1] : msg.image
 
     if (HttpCaptioner) {
@@ -104,6 +110,7 @@ const handlers: {
     }
   },
   embedChat: async (msg) => {
+    if (!EMBED_INITED) return
     if (!Embedder) return
     if (!embeddings[msg.chatId]) {
       embeddings[msg.chatId] = {}
@@ -200,6 +207,8 @@ const embedQueue: Array<RequestChatEmbed | RequestDocEmbed> = []
 
 let EMBEDDING = false
 async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
+  if (!EMBED_INITED) return
+
   const type = msg.type === 'embedChat' ? 'chat' : 'document'
   const id = msg.type === 'embedChat' ? msg.chatId : msg.documentId
   if (EMBEDDING) {

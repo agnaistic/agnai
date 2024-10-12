@@ -40,7 +40,7 @@ export type SDRequest = {
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const config = await getConfig(opts)
-  const payload = getPayload(config.kind, opts, config.model)
+  const payload = getPayload(config.kind, opts, config.model, config.temp)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
@@ -81,11 +81,12 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   return { ext: 'png', content: buffer }
 }
 
-async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
+async function getConfig({ user, settings, override }: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
   params?: string
   model?: AppSchema.ImageModel
+  temp?: AppSchema.ImageModel
 }> {
   const type = settings?.type || user.images?.type
 
@@ -105,13 +106,15 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
 
   const models = getAgnaiModels(srv.imagesModels)
 
+  const temp = override ? models.find((m) => m.id === override || m.name === override) : undefined
+
   const match = models.find((m) => {
     return m.id === settings?.agnai?.model || m.name === settings?.agnai?.model
   })
 
   const model = models.length === 1 ? models[0] : match ?? models[0]
 
-  if (!model) {
+  if (!temp && !model) {
     return { kind: 'user', host: userHost }
   }
 
@@ -120,13 +123,18 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
     `key=${config.auth.inferenceKey}`,
     `id=${user._id}`,
     `level=${user.admin ? 99999 : sub?.level ?? -1}`,
-    `model=${model.name}`,
+    `model=${temp?.name || model.name}`,
   ]
 
-  return { kind: 'agnai', host: srv.imagesHost, params: `?${params.join('&')}`, model }
+  return { kind: 'agnai', host: srv.imagesHost, params: `?${params.join('&')}`, model, temp }
 }
 
-function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
+function getPayload(
+  kind: 'agnai' | 'user',
+  opts: ImageRequestOpts,
+  model: AppSchema.ImageModel | undefined,
+  temp: AppSchema.ImageModel | undefined
+) {
   const sampler =
     (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
     defaultSettings.sampler
@@ -149,7 +157,7 @@ function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppS
     restore_faces: false,
     save_images: false,
     send_images: true,
-    model_override: model?.override,
+    model_override: temp ? temp.override : model?.override,
   }
 
   if (model) {

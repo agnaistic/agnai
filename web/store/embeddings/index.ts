@@ -8,6 +8,7 @@ import { toastStore } from '../toasts'
 import { docCache } from './cache'
 import type { MemoryState } from '../memory'
 import type { Tiktoken } from 'js-tiktoken'
+import { getStore } from '../create'
 
 type Callback = () => void
 type QueryResult = Extract<WorkerResponse, { type: 'result' }>
@@ -106,11 +107,14 @@ const handlers: {
     decodeCallbacks.delete(msg.id)
   },
   init: (type) => {
+    const user = getStore('user').getState()
     if (type === 'embed') {
+      if (!user.user?.disableLTM) return
       post('initSimilarity', { model: models.embedding })
     }
 
     if (type === 'image' && window.flags.caption) {
+      if (!user.user?.disableLTM) return
       post('initCaptioning', { model: models.captioning })
     }
   },

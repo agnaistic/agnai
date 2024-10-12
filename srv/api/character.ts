@@ -481,6 +481,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       chatId: 'string?',
       requestId: 'string?',
       parent: 'string?',
+      model: 'string?',
     },
     body
   )
@@ -499,6 +500,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       characterId: body.characterId,
       requestId,
       parentId: body.parent,
+      model: body.model,
     },
     log,
     guestId

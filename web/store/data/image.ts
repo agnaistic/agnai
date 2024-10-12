@@ -15,6 +15,7 @@ import { v4 } from 'uuid'
 import { md5 } from './md5'
 import { getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
+import { toastStore } from '../toasts'
 
 type GenerateOpts = {
   chatId?: string
@@ -129,6 +130,8 @@ type ImageResult = { image: string; file: File; data?: string; error?: string }
 export async function generateImageAsync(
   prompt: string,
   opts: {
+    model?: string
+    requestId?: string
     noAffix?: boolean
     onTick?: (status: horde.HordeCheck) => void
     onDone?: (result: { image: string; file: File; data?: string }) => void
@@ -163,7 +166,7 @@ export async function generateImageAsync(
     }
   }
 
-  const requestId = v4()
+  const requestId = opts.requestId || v4()
 
   const promise = new Promise<ImageResult>((resolve, reject) => {
     callbacks.set(requestId, (image) => {
@@ -179,6 +182,7 @@ export async function generateImageAsync(
     ephemeral: true,
     source,
     noAffix: opts.noAffix,
+    model: opts.model,
     requestId,
   })
 
@@ -198,15 +202,20 @@ subscribe(
 
     callbacks.delete(body.requestId)
     const url = getAssetUrl(body.image)
-    const image = await tryFetchImage(getAssetUrl(body.image))
-    const file = new File([image], `${body.source}.png`, { type: 'image/png' })
 
-    const hash = md5(await image.text())
-    Object.assign(file, { hash })
+    try {
+      const image = await tryFetchImage(getAssetUrl(body.image))
+      const file = new File([image], `${body.source}.png`, { type: 'image/png' })
 
-    const data = await getImageData(file)
+      const hash = md5(await image.text())
+      Object.assign(file, { hash })
 
-    callback({ image: url, file, data })
+      const data = await getImageData(file)
+
+      callback({ image: url, file, data })
+    } catch (ex) {
+      callback({ error: 'Failed to download image', image: '', file: null as any })
+    }
   }
 )
 
@@ -214,9 +223,9 @@ async function tryFetchImage(image: string, attempt = 1) {
   if (attempt > 3) throw new Error(`failed to download image`)
 
   try {
-    const res = await fetch(getAssetUrl(image))
+    const res = await fetch(getAssetUrl(image), { cache: 'no-cache' })
     if (res.status && res.status > 200) {
-      await wait(2.5)
+      await wait(3)
       return tryFetchImage(image, attempt + 1)
     }
 

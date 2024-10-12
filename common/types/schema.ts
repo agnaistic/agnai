@@ -92,6 +92,8 @@ export namespace AppSchema {
     admin: boolean
     role?: 'moderator' | 'admin'
 
+    disableLTM?: boolean
+
     novelApiKey: string
     novelModel: string
     novelVerified?: boolean

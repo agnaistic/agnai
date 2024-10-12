@@ -6,6 +6,7 @@ export type ImageGenerateRequest = {
   user: AppSchema.User
   prompt: string
   chatId?: string
+  model?: string
   messageId?: string
   ephemeral?: boolean
   append?: boolean
@@ -21,6 +22,7 @@ export type ImageRequestOpts = {
   prompt: string
   negative: string
   settings: ImageSettings | undefined
+  override?: string
 }
 
 export type ImageAdapter = (

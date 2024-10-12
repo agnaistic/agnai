@@ -106,7 +106,7 @@ export const forms = {
   },
 }
 
-function getFormValue(field: string) {
+export function getFormValue(field: string) {
   const elements: any = document.querySelector('form')?.elements
   if (!elements) return
 

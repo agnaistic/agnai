@@ -220,6 +220,7 @@ const settingsForm = {
   scaleUrl: 'string?',
   claudeApiKey: 'string?',
   logPromptsToBrowserConsole: 'boolean?',
+  disableLTM: 'boolean?',
 
   useLocalPipeline: 'boolean?',
 

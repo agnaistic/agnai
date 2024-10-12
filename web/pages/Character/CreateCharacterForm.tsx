@@ -1,24 +1,10 @@
+import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
 import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  Match,
-  onMount,
-  Show,
-  Switch,
-} from 'solid-js'
-import {
-  MinusCircle,
   Plus,
   Save,
   X,
   Import,
   Download,
-  ArrowLeft,
-  Trash,
-  ArrowRight,
-  WandSparkles,
   SlidersVertical,
   Dices,
   BookPlus,
@@ -28,52 +14,44 @@ import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput, { ButtonInput } from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
-import FileInput, { FileInputResult } from '../../shared/FileInput'
+import { FileInputResult } from '../../shared/FileInput'
 import {
   characterStore,
   tagStore,
   toastStore,
-  memoryStore,
   chatStore,
   userStore,
   settingStore,
 } from '../../store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
-import AvatarIcon from '../../shared/AvatarIcon'
-import Select, { Option } from '../../shared/Select'
+import Select from '../../shared/Select'
 import TagInput from '../../shared/TagInput'
 import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { AppSchema } from '../../../common/types/schema'
-import Loading from '/web/shared/Loading'
-import { JSX, For } from 'solid-js'
-import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
+import { JSX } from 'solid-js'
 import { Card, SolidCard, TitleCard } from '../../shared/Card'
-import { usePane, useRootModal } from '../../shared/hooks'
-import Modal, { RootModal } from '/web/shared/Modal'
-import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
-import { Toggle, ToggleButtons } from '../../shared/Toggle'
-import AvatarBuilder from '../../shared/Avatar/Builder'
-import { FullSprite } from '/common/types/sprite'
-import { getRandomBody } from '../../asset/sprite'
-import AvatarContainer from '../../shared/Avatar/Container'
-import { CharEditor, useCharEditor } from './editor'
+import { usePane } from '../../shared/hooks'
+import { RootModal } from '/web/shared/Modal'
+import { Toggle } from '../../shared/Toggle'
+import { useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 import Tabs, { useTabs } from '/web/shared/Tabs'
-import RangeInput from '/web/shared/RangeInput'
-import { rootModalStore } from '/web/store/root-modal'
-import { getAssetUrl, random } from '/web/shared/util'
-import { v4 } from 'uuid'
+import { random } from '/web/shared/util'
 import { imageApi } from '/web/store/data/image'
 import { Page } from '/web/Layout'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { charsApi } from '/web/store/data/chars'
-import Tooltip from '/web/shared/Tooltip'
-import { CharacterSchema } from './CharacterSchema'
 import { canStartTour, startTour } from '/web/tours'
+import { Regenerate } from './form/Regenerate'
+import { AvatarModal } from './form/AvatarModal'
+import { AlternateGreetingsInput } from './form/AltGreetings'
+import { SpriteModal } from './form/SpriteModal'
+import { AdvancedOptions } from './form/AdvancedOptions'
+import { AvatarField } from './form/AvatarField'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -128,8 +106,6 @@ export const CreateCharacterForm: Component<{
     const edit = s.editing
 
     return {
-      status: s.hordeStatus,
-      avatar: s.generate,
       creating: s.creating,
       edit: forceNew() ? undefined : edit,
       list: s.characters.list,
@@ -299,11 +275,6 @@ export const CreateCharacterForm: Component<{
         <Save />
         {props.editId && !forceNew() ? 'Update' : 'Create'}
       </Button>
-      <Show when={user.user?.admin}>
-        <Button onClick={onPublish}>
-          <BookPlus /> Publish
-        </Button>
-      </Show>
     </>
   )
 
@@ -459,91 +430,16 @@ export const CreateCharacterForm: Component<{
                 />
               </Card>
 
-              <Card class="flex w-full flex-col gap-4 sm:flex-row">
-                <div class="flex flex-col items-center gap-1">
-                  <Switch>
-                    <Match when={editor.state.visualType === 'sprite'}>
-                      <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
-                        <AvatarContainer body={editor.state.sprite} container={spriteRef} />
-                      </div>
-                    </Match>
-                    <Match when={!state.avatar.loading}>
-                      <div class="flex flex-col items-center gap-1">
-                        <div
-                          class="flex items-baseline"
-                          style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                          onClick={() => setImageUrl(editor.avatar() || image())}
-                        >
-                          <AvatarIcon
-                            format={{ corners: 'sm', size: '3xl' }}
-                            avatarUrl={editor.avatar() || image()}
-                          />
-                        </div>
-                      </div>
-                    </Match>
-                    <Match when={state.avatar.loading}>
-                      <div class="flex w-[80px] flex-col items-center justify-center">
-                        <Loading type="windmill" />
-                        <Show when={state.status && state.status.wait_time > 0}>
-                          <span class="text-500 text-xs italic">{state.status?.wait_time}s</span>
-                        </Show>
-                      </div>
-                    </Match>
-                  </Switch>
-                  <ReelControl editor={editor} loading={state.avatar.loading} />
-                </div>
-                <div class="flex w-full flex-col gap-2">
-                  <ToggleButtons
-                    items={[
-                      { value: 'avatar', label: 'Avatar' },
-                      { value: 'sprite', label: 'Sprite' },
-                    ]}
-                    onChange={(opt) => editor.update('visualType', opt.value)}
-                    selected={editor.state.visualType}
-                  />
-
-                  <Switch>
-                    <Match when={editor.state.visualType === 'avatar'}>
-                      <FileInput
-                        class="w-full"
-                        fieldName="avatar"
-                        label={
-                          <div class="flex gap-2">
-                            <div>Avatar</div>
-                          </div>
-                        }
-                        accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
-                        onUpdate={updateFile}
-                      />
-                      <div class="flex w-full flex-col gap-2 sm:flex-row">
-                        <TextInput
-                          isMultiline
-                          parentClass="w-full"
-                          fieldName="appearance"
-                          label={
-                            <>
-                              <Regenerate
-                                field={'appearance'}
-                                editor={editor}
-                                allowed={editor.canGuidance}
-                              />
-                            </>
-                          }
-                          helperText={`Leave the prompt empty to use your character's persona "looks" / "appearance" attributes`}
-                          placeholder="Appearance Prompt (used for Avatar Generation)"
-                          value={editor.state.appearance}
-                        />
-                      </div>
-                    </Match>
-                    <Match when={true}>
-                      <Button class="w-fit" onClick={() => setShowBuilder(true)}>
-                        Open Character Builder
-                      </Button>
-                    </Match>
-                  </Switch>
-                  <div></div>
-                </div>
-              </Card>
+              <AvatarField
+                user={user}
+                editor={editor}
+                updateFile={updateFile}
+                showBuilder={setShowBuilder}
+                image={image}
+                setImageUrl={setImageUrl}
+                forceNew={forceNew}
+                spriteRef={spriteRef}
+              />
 
               <Card>
                 <TextInput
@@ -765,382 +661,5 @@ export const CreateCharacterForm: Component<{
         </RootModal>
       </Show>
     </Page>
-  )
-}
-
-const Regenerate: Component<{
-  field: string
-  trait?: string
-  editor: CharEditor
-  allowed: boolean
-  class?: string
-}> = (props) => {
-  return (
-    <Tooltip
-      tip="Name and description must be filled"
-      position="right"
-      disable={props.editor.canGenerate()}
-    >
-      <Switch>
-        <Match when={!props.allowed}>{null}</Match>
-
-        <Match when={props.allowed}>
-          <Button
-            size="sm"
-            class={`inline-block ${props.class || ''}`}
-            onClick={() => {
-              if (!props.editor.canGenerate()) {
-                toastStore.warn(`Fill in the Name and Description to generate`)
-                return
-              }
-              props.editor.generateField(props.field, props.trait)
-            }}
-            disabled={props.editor.generating()}
-          >
-            <WandSparkles size={16} />
-          </Button>
-        </Match>
-      </Switch>
-    </Tooltip>
-  )
-}
-
-const AvatarModal: Component<{ url?: string; close: () => void }> = (props) => {
-  rootModalStore.addModal({
-    id: 'char-avatar-modal',
-    element: (
-      <Modal show={!!props.url} close={props.close} maxWidth="half" fixedHeight>
-        <div class="flex justify-center p-4">
-          <img class="rounded-md" src={getAssetUrl(props.url!)} />
-        </div>
-      </Modal>
-    ),
-  })
-
-  return null
-}
-
-const AlternateGreetingsInput: Component<{
-  greetings: string[]
-  setGreetings: (next: string[]) => void
-}> = (props) => {
-  const addGreeting = () => props.setGreetings([...props.greetings, ''])
-  const removeGreeting = (i: number) => {
-    return props.setGreetings(props.greetings.slice(0, i).concat(props.greetings.slice(i + 1)))
-  }
-
-  const onChange = (ev: { currentTarget: HTMLInputElement | HTMLTextAreaElement }, i: number) => {
-    props.setGreetings(
-      props.greetings.map((orig, j) => (j === i ? ev.currentTarget?.value ?? '' : orig))
-    )
-  }
-
-  return (
-    <>
-      <For each={props.greetings}>
-        {(altGreeting, i) => (
-          <div class="flex gap-2">
-            <TextInput
-              isMultiline
-              fieldName={`alternateGreeting${i() + 1}`}
-              placeholder="An alternate greeting for your character"
-              value={altGreeting}
-              onChange={(ev) => onChange(ev, i())}
-              parentClass="w-full"
-            />
-            <div class="1/12 flex items-center" onClick={() => removeGreeting(i())}>
-              <MinusCircle size={16} class="focusable-icon-button" />
-            </div>
-          </div>
-        )}
-      </For>
-      <div>
-        <Button onClick={addGreeting}>
-          <Plus size={16} />
-          Add Alternate Greeting
-        </Button>
-      </div>
-    </>
-  )
-}
-
-const SpriteModal: Component<{
-  body?: FullSprite
-  onChange: (body: FullSprite) => void
-  show: boolean
-  close: () => void
-}> = (props) => {
-  let ref: any
-
-  const [original, setOriginal] = createSignal(props.body)
-  const [body, setBody] = createSignal(props.body || getRandomBody())
-
-  createEffect(() => {
-    if (props.body && !original()) {
-      setOriginal(props.body)
-    }
-  })
-
-  const handleChange = () => {
-    props.onChange(body())
-  }
-
-  useRootModal({
-    id: 'sprite-modal',
-    element: (
-      <Modal
-        show={props.show}
-        close={props.close}
-        fixedHeight
-        maxWidth="half"
-        footer={
-          <>
-            <Button onClick={() => props.onChange(original()!)} schema="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleChange}>Confirm</Button>
-          </>
-        }
-      >
-        <PageHeader title="Character Designer" />
-        <div class="h-[28rem] w-full text-sm sm:h-[42rem]" ref={ref}>
-          <AvatarBuilder body={body()} onChange={(body) => setBody(body)} bounds={ref} noHeader />
-        </div>
-      </Modal>
-    ),
-  })
-
-  return null
-}
-
-const MemoryBookPicker: Component<{
-  bundledBook: AppSchema.MemoryBook | undefined
-  setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
-}> = (props) => {
-  const memory = memoryStore()
-  const [isModalShown, setIsModalShown] = createSignal(false)
-  const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
-  const updateEntrySort = (item: Option<string>) => {
-    if (item.value === 'creationDate' || item.value === 'alpha') {
-      setEntrySort(item.value)
-    }
-  }
-
-  const NONE_VALUE = '__none_character_book__'
-  const internalMemoryBookOptions = createMemo(() => [
-    { label: 'Import Memory Book', value: NONE_VALUE },
-    ...memory.books.list.map((book) => ({ label: book.name, value: book._id })),
-  ])
-  const pickInternalMemoryBook = (option: Option) => {
-    const newBook = memory.books.list.find((book) => book._id === option.value)
-    props.setBundledBook(newBook ? { ...newBook, _id: BUNDLED_CHARACTER_BOOK_ID } : undefined)
-  }
-  const initBlankCharacterBook = () => {
-    props.setBundledBook(emptyBookWithEmptyEntry())
-  }
-  const deleteBook = () => {
-    props.setBundledBook(undefined)
-  }
-  const ModalFooter = () => (
-    <>
-      <Button schema="secondary" onClick={() => setIsModalShown(false)}>
-        Close
-      </Button>
-      <Button type="submit">
-        <Save />
-        Save Character Book
-      </Button>
-    </>
-  )
-  const onSubmitCharacterBookChanges = (ev: Event) => {
-    ev.preventDefault()
-    const update = getBookUpdate(ev)
-    if (props.bundledBook) {
-      props.setBundledBook({ ...props.bundledBook, ...update })
-    }
-    setIsModalShown(false)
-  }
-
-  const BookModal = (
-    <Modal
-      title="Character Memory"
-      show={isModalShown()}
-      close={() => setIsModalShown(false)}
-      footer={<ModalFooter />}
-      onSubmit={onSubmitCharacterBookChanges}
-      maxWidth="half"
-      fixedHeight
-    >
-      <div class="text-sm">
-        <EditMemoryForm
-          hideSave
-          book={props.bundledBook!}
-          entrySort={entrySort()}
-          updateEntrySort={updateEntrySort}
-        />
-      </div>
-    </Modal>
-  )
-
-  useRootModal({ id: 'memoryBook', element: BookModal })
-
-  return (
-    <div>
-      <h4 class="flex gap-1 text-lg">
-        <div>Character Book</div>
-        <Button size="sm" onClick={initBlankCharacterBook}>
-          Create New Book
-        </Button>
-      </h4>
-      <Show when={!props.bundledBook}>
-        <span class="text-sm"> This character doesn't have a Character Book. </span>
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <Select
-            fieldName="memoryBook"
-            value={NONE_VALUE}
-            items={internalMemoryBookOptions()}
-            onChange={pickInternalMemoryBook}
-          />
-        </div>
-      </Show>
-      <Show when={props.bundledBook}>
-        <span class="text-sm">This character has a Character Book.</span>
-        <div class="mt-2 flex gap-3">
-          <Button onClick={() => setIsModalShown(true)}>Edit Book</Button>
-          <Button onClick={deleteBook}>Delete Book</Button>
-        </div>
-      </Show>
-    </div>
-  )
-}
-
-const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
-  return (
-    <>
-      <Card class="flex flex-col gap-2">
-        <CharacterSchema
-          characterId={props.editor.state.editId}
-          update={(next) => props.editor.update('json', next)}
-        />
-        <TextInput
-          isMultiline
-          fieldName="systemPrompt"
-          label="Character System Prompt (optional)"
-          helperText={
-            <span>
-              {`System prompt to bundle with your character. You can use the {{original}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
-            </span>
-          }
-          placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
-          value={props.editor.state.systemPrompt}
-        />
-        <TextInput
-          isMultiline
-          fieldName="postHistoryInstructions"
-          label="Character Jailbreak (optional)"
-          helperText={
-            <span>
-              {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}
-            </span>
-          }
-          placeholder="Write at least four paragraphs."
-          value={props.editor.state.postHistoryInstructions}
-        />
-        <TextInput
-          isMultiline
-          class="min-h-[80px]"
-          fieldName="insertPrompt"
-          label="Insert / Depth Prompt"
-          helperMarkdown={`A.k.a. Author's note. Prompt to be placed near the bottom of the chat history, **Insert Depth** messages from the bottom.`}
-          placeholder={`E.g. ### Instruction: Write like James Joyce.`}
-          value={props.editor.state.insert?.prompt}
-        />
-        <RangeInput
-          fieldName="insertDepth"
-          label="Insert Depth"
-          helperText={
-            <>
-              The number of messages that should exist below the <b>Insert Prompt</b>. Between 1 and
-              5 is recommended.
-            </>
-          }
-          min={0}
-          max={10}
-          step={1}
-          value={props.editor.state.insert?.depth ?? 3}
-        />
-      </Card>
-      <Card>
-        <MemoryBookPicker
-          setBundledBook={(book) => props.editor.update('book', book)}
-          bundledBook={props.editor.state.book}
-        />
-      </Card>
-      <Card>
-        <TextInput
-          fieldName="creator"
-          label="Creator (optional)"
-          placeholder="e.g. John1990"
-          value={props.editor.state.creator}
-        />
-      </Card>
-      <Card>
-        <TextInput
-          fieldName="characterVersion"
-          label="Character Version (optional)"
-          placeholder="any text e.g. 1, 2, v1, v1fempov..."
-          value={props.editor.state.characterVersion}
-        />
-      </Card>
-    </>
-  )
-}
-
-const ReelControl: Component<{ editor: CharEditor; loading: boolean }> = (props) => {
-  const createAvatar = async () => {
-    const base64 = await props.editor.createAvatar()
-    if (!base64) return
-
-    await props.editor.imageCache.addImage(base64, `${v4()}.png`)
-  }
-
-  const size = 14
-
-  return (
-    <div class="flex flex-col items-center gap-1">
-      <div class="flex w-fit gap-2">
-        <Button
-          size="sm"
-          disabled={props.editor.imageCache.state.images.length <= 1 || props.loading}
-          onClick={props.editor.imageCache.prev}
-        >
-          <ArrowLeft size={size} />
-        </Button>
-
-        <Button
-          size="sm"
-          disabled={props.editor.imageCache.state.imageId === '' || props.loading}
-          onClick={() => props.editor.imageCache.removeImage(props.editor.imageCache.state.imageId)}
-        >
-          <Trash size={size} />
-        </Button>
-
-        <Button
-          size="sm"
-          disabled={props.editor.imageCache.state.images.length <= 1 || props.loading}
-          onClick={props.editor.imageCache.next}
-        >
-          <ArrowRight size={size} />
-        </Button>
-      </div>
-      <div class="flex w-fit gap-2">
-        {/* <Button size="sm" >
-          <RotateCcw size={size} />
-        </Button> */}
-        <Button size="sm" onClick={createAvatar} disabled={props.loading}>
-          Generate Image
-        </Button>
-      </div>
-    </div>
   )
 }
