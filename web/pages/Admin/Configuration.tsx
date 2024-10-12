@@ -12,6 +12,8 @@ import { CharLibrary } from './Config/Characters'
 import { General } from './Config/General'
 import { Voice } from './Config/Voice'
 import { Images } from './Config/Images'
+import { v4 } from 'uuid'
+import { ImageModel } from '/common/types/admin'
 
 export { ServerConfiguration as default }
 
@@ -32,7 +34,9 @@ const ServerConfiguration: Component = () => {
   }
 
   const models = createSignal(
-    Array.isArray(state.config?.imagesModels) ? state.config.imagesModels : []
+    Array.isArray(state.config?.imagesModels)
+      ? state.config.imagesModels.map(toIdentifiedModel)
+      : []
   )
 
   createEffect(
@@ -40,7 +44,7 @@ const ServerConfiguration: Component = () => {
       () => state.config,
       () => {
         if (!state.config?.imagesModels) return
-        models[1](state.config?.imagesModels)
+        models[1](state.config?.imagesModels.map(toIdentifiedModel))
         setModschema(state.config.modSchema || {})
       }
     )
@@ -126,4 +130,9 @@ const ServerConfiguration: Component = () => {
       </Switch>
     </Page>
   )
+}
+
+function toIdentifiedModel(item: ImageModel) {
+  if (item.id) return item
+  return { ...item, id: v4().slice(0, 4) }
 }

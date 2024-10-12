@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Pencil,
   Info,
+  Image,
 } from 'lucide-solid'
 import { AgnaisticModel } from '/web/shared/PresetSettings/Agnaistic'
 import { startTour } from '/web/tours'
@@ -139,6 +140,13 @@ const ChatNav: Component<NavProps> = (props) => {
           tooltip="Site Settings"
         >
           <Settings size={size} aria-hidden="true" />
+        </Nav.Item>
+        <Nav.Item
+          onClick={() => settingStore.imageSettings(true)}
+          ariaLabel="Image Settings"
+          tooltip="Image Settings"
+        >
+          <Image size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item onClick={() => settingStore.toggleAnonymize()} tooltip="Anonymize">
           <VenetianMask size={size} />

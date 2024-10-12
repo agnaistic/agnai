@@ -179,6 +179,7 @@ const validConfig = {
   defaultPreset: 'string?',
   chargenPreset: 'string?',
   adapterConfig: 'any?',
+  disableLTM: 'boolean?',
 } as const
 
 /**
@@ -198,6 +199,8 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       announcement: 'string?',
       defaultPreset: 'string?',
       chargenPreset: 'string?',
+      images: 'any?',
+      disableLTM: 'boolean?',
     },
     body
   )
@@ -210,6 +213,10 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       throw new StatusError(`Invalid preset`, 403)
     }
     update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.disableLTM !== undefined) {
+    update.disableLTM = body.disableLTM
   }
 
   if (body.chargenPreset) {
@@ -256,6 +263,10 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
     update.thirdPartyPassword = encryptText(body.thirdPartyPassword)
   }
 
+  if (body.images) {
+    update.images = body.images
+  }
+
   await store.users.updateUser(userId, update)
   const next = await getSafeUserConfig(userId)
   return next
@@ -274,6 +285,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
     hordeUseTrusted: body.hordeUseTrusted ?? false,
     defaultPreset: body.defaultPreset || '',
     useLocalPipeline: body.useLocalPipeline,
+  }
+
+  if (body.disableLTM !== undefined) {
+    update.disableLTM = body.disableLTM
   }
 
   if (body.hordeKey || body.hordeApiKey) {

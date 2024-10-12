@@ -1,4 +1,4 @@
-import { Component, For, Signal } from 'solid-js'
+import { Component, For, Show, Signal } from 'solid-js'
 import { Card } from '/web/shared/Card'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
@@ -6,9 +6,17 @@ import { adminStore, settingStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { FieldUpdater, useRowHelper } from '/web/shared/util'
 import Button from '/web/shared/Button'
+import { v4 } from 'uuid'
 
 type Threshold = { steps: number; cfg: number; height: number; width: number }
-type Model = { name: string; desc: string; init: Threshold; limit: Threshold }
+type Model = {
+  id: string
+  name: string
+  desc: string
+  override: string
+  init: Threshold
+  limit: Threshold
+}
 
 export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (props) => {
   const settings = settingStore((s) => s.config)
@@ -39,8 +47,10 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
   const rows = useRowHelper({
     signal: props.signal,
     empty: {
+      id: v4().slice(0, 4),
       name: '',
       desc: '',
+      override: '',
       init: { steps: 5, cfg: 2, height: 1024, width: 1024 },
       limit: { steps: 128, cfg: 20, height: 1024, width: 1024 },
     },
@@ -50,15 +60,20 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
     <>
       <div class="flex items-center gap-2">
         Image Models{' '}
-        <Button size="sm" onClick={rows.add}>
+        <Button size="md" onClick={rows.add}>
           Add
         </Button>
       </div>
-      <For each={rows.items()}>
-        {(item, i) => (
-          <ImageModel index={i()} item={item} updater={rows.updater} remove={rows.remove} />
-        )}
-      </For>
+      <div class="flex flex-col gap-2">
+        <For each={rows.items()}>
+          {(item, i) => (
+            <ImageModel index={i()} item={item} updater={rows.updater} remove={rows.remove} />
+          )}
+        </For>
+      </div>
+      <Button size="sm" onClick={rows.add}>
+        Add Model
+      </Button>
     </>
   )
 }
@@ -70,40 +85,59 @@ const ImageModel: Component<{
   remove: (index: number) => void
 }> = (props) => {
   return (
-    <div class="flex flex-col gap-1">
-      <div class="flex w-full items-center gap-2">
-        <TextInput
-          fieldName="model.name"
-          parentClass="w-1/2"
-          placeholder="Model Name..."
-          onChange={props.updater(props.index, 'name')}
-          value={props.item.name}
-        />
-        <TextInput
-          fieldName="model.desc"
-          parentClass="w-1/2"
-          placeholder="Model Description..."
-          onChange={props.updater(props.index, 'desc')}
-          value={props.item.desc}
-        />
-        <Button size="sm" schema="red" onClick={() => props.remove(props.index)}>
-          Remove
-        </Button>
-      </div>
-
-      <table class="table-auto border-separate border-spacing-2">
-        <thead>
-          <tr>
-            <Th />
-            <Th>Steps</Th>
-            <Th>CFG</Th>
-            <Th>Width</Th>
-            <Th>Height</Th>
-          </tr>
-        </thead>
+    <div class="flex flex-col gap-2">
+      <table class="bg-700 table-auto border-separate border-spacing-0.5 rounded-md">
+        <Show when={props.index === 0}>
+          <thead>
+            <tr>
+              <Th />
+              <Th>Steps</Th>
+              <Th>CFG</Th>
+              <Th>Width</Th>
+              <Th>Height</Th>
+            </tr>
+          </thead>
+        </Show>
         <tbody>
           <tr>
-            <Td class="px-2 font-bold">Recommended</Td>
+            <Td>
+              <TextInput
+                prelabel="Name"
+                fieldName="model.name"
+                parentClass=""
+                placeholder="Model Name..."
+                onChange={props.updater(props.index, 'name')}
+                value={props.item.name}
+              />
+            </Td>
+            <Td>
+              <TextInput
+                prelabel="Desc"
+                fieldName="model.desc"
+                parentClass=""
+                placeholder="Model Description..."
+                onChange={props.updater(props.index, 'desc')}
+                value={props.item.desc}
+              />
+            </Td>
+            <Td>
+              <TextInput
+                prelabel="Override"
+                fieldName="model.override"
+                parentClass=""
+                placeholder="Override..."
+                onChange={props.updater(props.index, 'override')}
+                value={props.item.override || ''}
+              />
+            </Td>
+            <Td>
+              <Button size="sm" schema="red" onClick={() => props.remove(props.index)}>
+                Remove
+              </Button>
+            </Td>
+          </tr>
+          <tr>
+            <Td class="text-500 border-0 px-2 text-right text-sm">Recommended</Td>
             <Td>
               <TextInput
                 type="number"
@@ -146,7 +180,7 @@ const ImageModel: Component<{
           </tr>
 
           <tr>
-            <Td class="px-2 font-bold">Maximums</Td>
+            <Td class="text-500 border-0 px-2 text-right text-sm">Maximums</Td>
             <Td>
               <TextInput
                 type="number"

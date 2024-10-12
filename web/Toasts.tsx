@@ -1,7 +1,7 @@
 import { Component, For, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { Toast, toastStore } from './store/toasts'
 import Modal from './shared/Modal'
-import { Badge, SolidCard, TitleCard } from './shared/Card'
+import { SolidCard, TitleCard } from './shared/Card'
 import Button from './shared/Button'
 import WizardIcon from './icons/WizardIcon'
 import InvitesPage from './pages/Invite/InvitesPage'
@@ -49,8 +49,6 @@ const Notifications: Component = () => {
     )
   )
 
-  const [tab, setTab] = createSignal(1)
-
   const all = createMemo(() => {
     return announce.list
       .filter((ann) => ann.location === 'notification')
@@ -70,18 +68,6 @@ const Notifications: Component = () => {
     )
   })
 
-  createEffect(
-    on(
-      () => tab(),
-      (id) => {
-        if (id !== 1) return
-        if (unseen().length === 0) return
-
-        userStore.updatePartialConfig({ announcement: new Date().toISOString() }, true)
-      }
-    )
-  )
-
   return (
     <>
       <div class="absolute bottom-2 right-2 flex max-w-[20rem] flex-col gap-2">
@@ -90,16 +76,7 @@ const Notifications: Component = () => {
 
       <Show when={state.modal}>
         <Modal
-          title={
-            <div class="flex gap-2">
-              <Button schema={tab() === 1 ? 'primary' : 'secondary'} onClick={() => setTab(1)}>
-                Updates <Badge>{unseen().length}</Badge>
-              </Button>
-              <Button schema={tab() === 0 ? 'primary' : 'secondary'} onClick={() => setTab(0)}>
-                Notifications
-              </Button>
-            </div>
-          }
+          title={'Site Updates and Notifications'}
           show={state.modal}
           close={() => toastStore.modal(false)}
           maxWidth="half"
@@ -107,51 +84,47 @@ const Notifications: Component = () => {
           maxHeight
         >
           <div class="flex flex-col gap-3">
-            <Show when={tab() === 1}>
-              <SiteUpdates seen={seen()} unseen={unseen()} />
-            </Show>
-
-            <Show when={tab() === 0}>
-              <InvitesPage />
-              <SolidCard border class="mt-2 flex flex-col gap-2 font-bold">
-                <Show when={state.history.length === 0}>You have no notifications.</Show>
-                <Show when={state.history.length > 0}>
-                  <div class="flex justify-center">
-                    <Button
-                      onClick={() => {
-                        toastStore.clearHistory()
-                        toastStore.modal(false)
-                      }}
+            <InvitesPage />
+            <SolidCard border class="mt-2 flex flex-col gap-2 font-bold">
+              <Show when={state.history.length === 0}>You have no notifications.</Show>
+              <Show when={state.history.length > 0}>
+                <div class="flex justify-center">
+                  <Button
+                    onClick={() => {
+                      toastStore.clearHistory()
+                      toastStore.modal(false)
+                    }}
+                  >
+                    Clear Notifications
+                  </Button>
+                </div>
+                <For each={state.history}>
+                  {({ time, toast, seen }) => (
+                    <TitleCard
+                      type={
+                        toast.type === 'admin'
+                          ? 'blue'
+                          : toast.type === 'error'
+                          ? 'rose'
+                          : toast.type === 'warn'
+                          ? 'orange'
+                          : 'bg'
+                      }
                     >
-                      Clear Notifications
-                    </Button>
-                  </div>
-                  <For each={state.history}>
-                    {({ time, toast, seen }) => (
-                      <TitleCard
-                        type={
-                          toast.type === 'admin'
-                            ? 'blue'
-                            : toast.type === 'error'
-                            ? 'rose'
-                            : toast.type === 'warn'
-                            ? 'orange'
-                            : 'bg'
-                        }
-                      >
-                        <p>
-                          <em>{time.toLocaleString()}</em>
-                        </p>
-                        <Show when={toast.type === 'admin'}>
-                          <b>Message from Administrator</b>
-                        </Show>
-                        <p>{toast.message}</p>
-                      </TitleCard>
-                    )}
-                  </For>
-                </Show>
-              </SolidCard>
-            </Show>
+                      <p>
+                        <em>{time.toLocaleString()}</em>
+                      </p>
+                      <Show when={toast.type === 'admin'}>
+                        <b>Message from Administrator</b>
+                      </Show>
+                      <p>{toast.message}</p>
+                    </TitleCard>
+                  )}
+                </For>
+              </Show>
+            </SolidCard>
+
+            <SiteUpdates seen={seen()} unseen={unseen()} />
           </div>
         </Modal>
       </Show>

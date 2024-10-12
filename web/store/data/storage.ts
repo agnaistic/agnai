@@ -81,6 +81,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   presets: [],
   config: {
     _id: 'anon',
+    disableLTM: true,
     admin: false,
     hash: '',
     kind: 'user',

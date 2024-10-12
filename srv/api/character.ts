@@ -323,7 +323,8 @@ const editPartCharacter = handle(async ({ body, params, userId }) => {
 
   if (body.imageSettings) {
     try {
-      update.imageSettings = JSON.parse(body.imageSettings)
+      update.imageSettings =
+        typeof body.imageSettings === 'string' ? JSON.parse(body.imageSettings) : body.imageSettings
     } catch (ex: any) {
       throw new StatusError(`Character 'imageSettings' could not be parsed: ${ex.message}`, 400)
     }
@@ -480,12 +481,14 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       chatId: 'string?',
       requestId: 'string?',
       parent: 'string?',
+      model: 'string?',
     },
     body
   )
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
+  const requestId = body.requestId || v4()
   generateImage(
     {
       user,
@@ -495,13 +498,14 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       noAffix: body.noAffix,
       chatId: body.chatId,
       characterId: body.characterId,
-      requestId: body.requestId,
+      requestId,
       parentId: body.parent,
+      model: body.model,
     },
     log,
     guestId
   )
-  return { success: true }
+  return { success: true, requestId }
 })
 
 router.post('/image', createImage)

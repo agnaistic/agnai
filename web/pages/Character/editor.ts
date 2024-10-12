@@ -17,11 +17,11 @@ import {
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { generateField } from './generate-char'
-import { BaseImageSettings, baseImageValid } from '/common/types/image-schema'
+import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
-import { forms } from '/web/emitter'
+import { forms, getFormValue } from '/web/emitter'
 import { ResponseSchema } from '/common/types/library'
 
 type CharKey = keyof NewCharacter
@@ -59,7 +59,7 @@ type EditState = {
   alternateGreetings: string[]
   persona: AppSchema.Persona
 
-  imageSettings?: BaseImageSettings
+  imageSettings?: ImageSettings
   json?: ResponseSchema
 }
 
@@ -80,7 +80,6 @@ const newCharGuard = {
   characterVersion: 'string',
   voiceDisabled: 'boolean?',
   jsonSchemaEnabled: 'boolean',
-  ...baseImageValid,
 } as const
 
 const fieldMap: Map<CharKey, GuardKey | 'tags'> = new Map([
@@ -144,6 +143,26 @@ const initState: EditState = {
     summariseChat: true,
     summaryPrompt: '',
     template: '',
+
+    agnai: {
+      model: '',
+      sampler: '',
+    },
+
+    horde: {
+      model: '',
+      sampler: '',
+    },
+
+    novel: {
+      model: '',
+      sampler: '',
+    },
+
+    sd: {
+      sampler: '',
+      url: '',
+    },
   },
 }
 
@@ -266,7 +285,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const current = payload()
     const attributes = getAttributeMap(form())
     const desc = current.appearance || (attributes?.appeareance || attributes?.looks)?.join(', ')
-    const avatar = await generateAvatar(desc || '')
+    const override = getFormValue('imageOverride')
+    const avatar = await generateAvatar(desc || '', override)
     if (!avatar) return
 
     return receiveAvatar(avatar)
@@ -480,18 +500,6 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
       kind: body.kind,
       attributes,
     },
-    imageSettings: {
-      type: body.imageType,
-      steps: body.imageSteps,
-      width: body.imageWidth,
-      height: body.imageHeight,
-      prefix: body.imagePrefix,
-      suffix: body.imageSuffix,
-      negative: body.imageNegative,
-      cfg: body.imageCfg,
-      summariseChat: body.summariseChat,
-      summaryPrompt: body.summaryPrompt,
-    },
     json: {
       ...state.json,
       enabled: body.jsonSchemaEnabled,
@@ -501,7 +509,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
   return payload
 }
 
-async function generateAvatar(description: string) {
+async function generateAvatar(description: string, override?: string) {
   const { user } = userStore.getState()
   if (!user) {
     return toastStore.error(`Image generation settings missing`)
@@ -511,7 +519,7 @@ async function generateAvatar(description: string) {
   // return image
 
   return new Promise<File>((resolve, reject) => {
-    characterStore.generateAvatar(user, description, (err, image) => {
+    characterStore.generateAvatar({ user, persona: description, override }, (err, image) => {
       if (image) return resolve(image)
       reject(err)
     })

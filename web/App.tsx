@@ -42,6 +42,7 @@ import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
 import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
+import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 
 const App: Component = () => {
   const state = userStore()
@@ -212,6 +213,9 @@ const Layout: Component<{ children?: any }> = (props) => {
       <ProfileModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
+      <Show when={cfg.showImgSettings}>
+        <ImageSettingsModal />
+      </Show>
       <SettingsModal />
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-20 sm:hidden"

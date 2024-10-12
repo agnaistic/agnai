@@ -5,12 +5,13 @@ import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { charsApi } from './data/chars'
-import { imageApi } from './data/image'
+import { ImageResult, imageApi } from './data/image'
 import { getAssetUrl, storage, toMap } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
 import { getUserId } from './api'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { HordeCheck } from '/common/horde-gen'
+import { v4 } from 'uuid'
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -32,6 +33,7 @@ type CharacterState = {
   }
   creating: boolean
   generate: {
+    requestId: string | null
     image: any
     loading: boolean
     blob?: File | null
@@ -71,6 +73,7 @@ const initState: CharacterState = {
   characters: { loaded: 0, list: [], map: {} },
   chatChars: { chatId: '', list: [], map: {} },
   generate: {
+    requestId: null,
     image: null,
     blob: null,
     loading: false,
@@ -376,14 +379,15 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     clearGeneratedAvatar() {
-      return { generate: { image: null, loading: false, blob: null } }
+      return { generate: { requestId: null, image: null, loading: false, blob: null } }
     },
     async *generateAvatar(
       { generate: prev },
-      user: AppSchema.User,
-      persona: AppSchema.Persona | string,
+      opts: { user: AppSchema.User; persona: AppSchema.Persona | string; override?: string },
       onDone?: (err: any, image?: File) => void
     ) {
+      const { persona, user, override } = opts
+      const requestId = v4()
       try {
         let prompt =
           typeof persona === 'string'
@@ -391,22 +395,35 @@ export const characterStore = createStore<CharacterState>(
             : await createAppearancePrompt(user, { persona })
 
         prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')
-        yield { generate: { image: null, loading: true, blob: null }, hordeStatus: undefined }
+        yield {
+          generate: { requestId, image: null, loading: true, blob: null },
+          hordeStatus: undefined,
+        }
         imageCallback = onDone
-        const res = await imageApi.generateImageWithPrompt({
-          prompt,
-          source: 'avatar',
-          onTick: (status) => {
-            set({ hordeStatus: status })
-          },
-          onDone: async ({ image, file, data }) => {
-            onDone?.(null, file)
-            set({ generate: { image: data, loading: false, blob: file } })
-          },
-        })
+
+        const res = await imageApi
+          .generateImageAsync(prompt, {
+            requestId,
+            model: override,
+            onTick: (status) => {
+              set({ hordeStatus: status })
+            },
+            onDone: (result) => {
+              onDone?.(null, result.file)
+            },
+          })
+          .catch((ex) => ex as ImageResult)
+
+        if (res.image) {
+          yield { generate: { requestId: null, image: res.image, loading: false, blob: res.file } }
+          return
+        }
+
         if (res.error) {
           onDone?.(res.error)
-          yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
+          yield {
+            generate: { requestId: null, image: prev.image, loading: false, blob: prev.blob },
+          }
         }
       } catch (ex: any) {
         toastStore.error(ex.message)
@@ -417,23 +434,38 @@ export const characterStore = createStore<CharacterState>(
 
 let imageCallback: ((err: any, image?: File) => void) | undefined = undefined
 
-subscribe('image-generated', { image: 'string', source: 'string' }, async (body) => {
-  if (body.source !== 'avatar') return
-  const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
-  const file = new File([image], `avatar.png`, { type: 'image/png' })
-  characterStore.setState({ generate: { image: body.image, loading: false, blob: file } })
+subscribe(
+  'image-generated',
+  { image: 'string', source: 'string', requestId: 'string?' },
+  async (body) => {
+    if (body.source !== 'avatar') return
+    const prev = characterStore.getState().generate
 
-  if (imageCallback) {
-    imageCallback(null, file)
-    imageCallback = undefined
+    if (prev.requestId && body.requestId !== prev.requestId) {
+      return
+    }
+
+    const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
+    const file = new File([image], `avatar.png`, { type: 'image/png' })
+    characterStore.setState({
+      generate: { requestId: null, image: body.image, loading: false, blob: file },
+    })
+
+    if (imageCallback) {
+      imageCallback(null, file)
+      imageCallback = undefined
+    }
   }
-})
+)
 
-subscribe('image-failed', { error: 'string' }, (body) => {
+subscribe('image-failed', { error: 'string', requestId: 'string?' }, (body) => {
   const { generate } = characterStore.getState()
   if (!generate.loading) return
+  if (generate.requestId && body.requestId !== generate.requestId) return
 
-  characterStore.setState({ generate: { image: null, loading: false, blob: null } })
+  characterStore.setState({
+    generate: { requestId: null, image: null, loading: false, blob: null },
+  })
   toastStore.error(`Failed to generate avatar: ${body.error}`)
 })
 

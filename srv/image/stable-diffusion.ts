@@ -35,11 +35,12 @@ export type SDRequest = {
   hr_scale?: number
   hr_upscaler?: string
   hr_second_pass_steps?: number
+  model_override?: string
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const config = await getConfig(opts)
-  const payload = getPayload(config.kind, opts, config.model)
+  const payload = getPayload(config.kind, opts, config.model, config.temp)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
@@ -80,14 +81,16 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   return { ext: 'png', content: buffer }
 }
 
-async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
+async function getConfig({ user, settings, override }: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
   params?: string
   model?: AppSchema.ImageModel
+  temp?: AppSchema.ImageModel
 }> {
   const type = settings?.type || user.images?.type
 
+  // Stable Diffusion URL always comes from user settings
   const userHost = user.images?.sd.url || defaultSettings.url
   if (type !== 'agnai') {
     return { kind: 'user', host: userHost }
@@ -102,12 +105,16 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
   if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost }
 
   const models = getAgnaiModels(srv.imagesModels)
-  const model =
-    models.length === 1
-      ? models[0]
-      : models.find((m) => m.name === user.images?.agnai?.model) ?? models[0]
 
-  if (!model) {
+  const temp = override ? models.find((m) => m.id === override || m.name === override) : undefined
+
+  const match = models.find((m) => {
+    return m.id === settings?.agnai?.model || m.name === settings?.agnai?.model
+  })
+
+  const model = models.length === 1 ? models[0] : match ?? models[0]
+
+  if (!temp && !model) {
     return { kind: 'user', host: userHost }
   }
 
@@ -116,15 +123,20 @@ async function getConfig({ user, settings }: ImageRequestOpts): Promise<{
     `key=${config.auth.inferenceKey}`,
     `id=${user._id}`,
     `level=${user.admin ? 99999 : sub?.level ?? -1}`,
-    `model=${model.name}`,
-  ].join('&')
+    `model=${temp?.name || model.name}`,
+  ]
 
-  return { kind: 'agnai', host: srv.imagesHost, params: `?${params}`, model }
+  return { kind: 'agnai', host: srv.imagesHost, params: `?${params.join('&')}`, model, temp }
 }
 
-function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppSchema.ImageModel) {
+function getPayload(
+  kind: 'agnai' | 'user',
+  opts: ImageRequestOpts,
+  model: AppSchema.ImageModel | undefined,
+  temp: AppSchema.ImageModel | undefined
+) {
   const sampler =
-    (kind === 'agnai' ? opts.user.images?.agnai?.sampler : opts.user.images?.sd?.sampler) ||
+    (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
     defaultSettings.sampler
   const payload: SDRequest = {
     prompt: opts.prompt,
@@ -132,19 +144,20 @@ function getPayload(kind: 'agnai' | 'user', opts: ImageRequestOpts, model?: AppS
     // hr_scale: 1.5,
     // hr_second_pass_steps: 15,
     // hr_upscaler: "",
-    clip_skip: opts.user.images?.clipSkip ?? model?.init.clipSkip ?? 0,
-    height: opts.user.images?.height ?? model?.init.height ?? 384,
-    width: opts.user?.images?.width ?? model?.init.width ?? 384,
+    clip_skip: opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
+    height: opts.settings?.height ?? model?.init.height ?? 1024,
+    width: opts.settings?.width ?? model?.init.width ?? 1024,
     n_iter: 1,
     batch_size: 1,
     negative_prompt: opts.negative,
     sampler_name: (SD_SAMPLER_REV as any)[sampler],
-    cfg_scale: opts.user.images?.cfg ?? model?.init.cfg ?? 9,
+    cfg_scale: opts.settings?.cfg ?? model?.init.cfg ?? 9,
     seed: Math.trunc(Math.random() * 1_000_000_000),
-    steps: opts.user.images?.steps ?? model?.init.steps ?? 28,
+    steps: opts.settings?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
     save_images: false,
     send_images: true,
+    model_override: temp ? temp.override : model?.override,
   }
 
   if (model) {

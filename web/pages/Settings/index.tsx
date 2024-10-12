@@ -13,7 +13,6 @@ import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
 import { Show } from 'solid-js'
-import { ImageSettings } from './Image/ImageSettings'
 import { VoiceSettings } from './Voice/VoiceSettings'
 import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
@@ -25,7 +24,6 @@ import { Page } from '/web/Layout'
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
   ui: 'UI Settings',
-  image: 'Image Settings',
   voice: 'Voice Settings',
   guest: 'Guest Data',
   subscription: 'Subscription',
@@ -34,10 +32,9 @@ const settingTabs: Record<Tab, string> = {
 enum MainTab {
   ai = 0,
   ui = 1,
-  image = 2,
-  voice = 3,
-  guest = 4,
-  subscription = 5,
+  voice = 2,
+  guest = 3,
+  subscription = 4,
 }
 
 type Tab = keyof typeof MainTab
@@ -82,7 +79,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
     }
   })
 
-  const tabs: Tab[] = ['ai', 'ui', 'image', 'voice']
+  const tabs: Tab[] = ['ai', 'ui', 'voice']
 
   if (state.tiers.length > 0 || state.user?.billing) {
     tabs.push('subscription')
@@ -97,25 +94,6 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
     const body = getStrictForm(formRef, settingsForm)
 
     const {
-      imageCfg,
-      imageSteps,
-      imageType,
-      imageClipSkip,
-      imageWidth,
-      imageHeight,
-      imageNegative,
-      imagePrefix,
-      imageSuffix,
-
-      sdSampler,
-      agnaiModel = '',
-      agnaiSampler = '',
-      sdUrl,
-      hordeImageModel,
-      hordeSampler,
-      novelImageModel,
-      novelSampler,
-
       speechToTextEnabled,
       speechToTextAutoSubmit,
       speechToTextAutoRecord,
@@ -124,9 +102,6 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
-
-      summariseChat,
-      summaryPrompt,
 
       ...base
     } = body
@@ -145,32 +120,6 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       texttospeech: {
         enabled: textToSpeechEnabled,
         filterActions: textToSpeechFilterActions,
-      },
-      images: {
-        type: imageType,
-        cfg: imageCfg,
-        clipSkip: imageClipSkip,
-        height: imageHeight,
-        width: imageWidth,
-        steps: imageSteps,
-        negative: imageNegative,
-        prefix: imagePrefix,
-        suffix: imageSuffix,
-        summariseChat,
-        summaryPrompt,
-        horde: {
-          sampler: hordeSampler,
-          model: hordeImageModel || '',
-        },
-        novel: {
-          model: novelImageModel,
-          sampler: novelSampler,
-        },
-        sd: {
-          sampler: sdSampler,
-          url: sdUrl,
-        },
-        agnai: { model: agnaiModel || '', sampler: agnaiSampler || '' },
       },
     })
   }
@@ -225,10 +174,6 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
             <UISettings />
           </div>
 
-          <div class={currentTab() === 'image' ? tabClass : 'hidden'}>
-            <ImageSettings />
-          </div>
-
           <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
             <VoiceSettings />
           </div>
@@ -275,32 +220,9 @@ const settingsForm = {
   scaleUrl: 'string?',
   claudeApiKey: 'string?',
   logPromptsToBrowserConsole: 'boolean?',
+  disableLTM: 'boolean?',
 
   useLocalPipeline: 'boolean?',
-  summariseChat: 'boolean?',
-  summaryPrompt: 'string?',
-
-  imageType: ['horde', 'sd', 'novel', 'agnai'],
-  imageSteps: 'number',
-  imageClipSkip: 'number',
-  imageCfg: 'number',
-  imageWidth: 'number',
-  imageHeight: 'number',
-  imagePrefix: 'string?',
-  imageSuffix: 'string?',
-  imageNegative: 'string?',
-
-  novelImageModel: 'string',
-  novelSampler: 'string',
-
-  hordeSampler: 'string',
-  hordeImageModel: 'string?',
-
-  sdUrl: 'string',
-  sdSampler: 'string',
-
-  agnaiModel: 'string?',
-  agnaiSampler: 'string?',
 
   speechToTextEnabled: 'boolean',
   speechToTextAutoSubmit: 'boolean',

@@ -1,6 +1,6 @@
 import { AIAdapter, OpenRouterModel, ThirdPartyFormat } from '../adapters'
 import { ModelFormat } from '../presets/templates'
-import { BaseImageSettings } from './image-schema'
+import { BaseImageSettings, ImageSettings } from './image-schema'
 import { ResponseSchema } from './library'
 
 export interface SubscriptionTier {
@@ -196,4 +196,12 @@ export interface PromptTemplate {
   public?: boolean
   createdAt: string
   updatedAt: string
+}
+
+export interface ImagePreset extends ImageSettings {
+  kind: 'image-preset'
+  _id: string
+  userId: string
+  name: string
+  description: string
 }

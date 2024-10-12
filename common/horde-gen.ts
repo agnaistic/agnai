@@ -104,8 +104,8 @@ export async function generateImage(
   const payload = {
     prompt: `${prompt.slice(0, 500)} ### ${negative}`,
     params: {
-      height: base?.height ?? 384,
-      width: base?.width ?? 384,
+      height: base?.height ?? 1024,
+      width: base?.width ?? 1024,
       cfg_scale: base?.cfg ?? 9,
       seed: Math.trunc(Math.random() * 1_000_000_000).toString(),
       karras: false,

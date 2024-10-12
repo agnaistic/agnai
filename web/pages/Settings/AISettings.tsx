@@ -28,6 +28,7 @@ import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { neat } from '/common/util'
 import { HelpModal } from '/web/shared/Modal'
+import { Toggle } from '/web/shared/Toggle'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -115,6 +116,13 @@ const AISettings: Component<{
       </Show>
 
       <Show when={ready()}>
+        <Toggle
+          fieldName="disableLTM"
+          value={state.user?.disableLTM ?? true}
+          label="Disable Long-Term Memory"
+          helperMarkdown="Improves site performance. Disable long-term memory if your chat is _laggy_ and unresponsive."
+        />
+
         <Show when={!canUseApi()}>
           <PresetSelect
             fieldName="defaultPreset"

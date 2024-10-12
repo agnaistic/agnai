@@ -108,7 +108,7 @@ export async function generateImage(
       case 'sd':
       case 'agnai':
         image = await handleSDImage(
-          { user, prompt, negative, settings: imageSettings },
+          { user, prompt, negative, settings: imageSettings, override: opts.model },
           log,
           guestId
         )

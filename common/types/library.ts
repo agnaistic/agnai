@@ -1,6 +1,6 @@
 import { PersonaFormat } from '../adapters'
 import { JsonField } from '../prompt'
-import { BaseImageSettings, ImageSettings } from './image-schema'
+import { ImageSettings } from './image-schema'
 import { MemoryBook } from './memory'
 import { FullSprite } from './sprite'
 import { VoiceSettings } from './texttospeech-schema'
@@ -44,8 +44,6 @@ export interface Character extends BaseCharacter {
   voice?: VoiceSettings
   voiceDisabled?: boolean
 
-  image?: ImageSettings
-
   json?: ResponseSchema
 
   folder?: string
@@ -58,7 +56,7 @@ export interface Character extends BaseCharacter {
   insert?: { depth: number; prompt: string }
   creator?: string
   characterVersion?: string
-  imageSettings?: BaseImageSettings
+  imageSettings?: ImageSettings
 }
 
 export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {
