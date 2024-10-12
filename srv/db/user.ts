@@ -102,6 +102,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   const user: AppSchema.User = {
     _id: v4(),
     kind: 'user',
+    disableLTM: true,
     username,
     hash,
     admin: !!admin,

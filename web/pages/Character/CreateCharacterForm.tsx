@@ -1,15 +1,5 @@
 import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
-import {
-  Plus,
-  Save,
-  X,
-  Import,
-  Download,
-  SlidersVertical,
-  Dices,
-  BookPlus,
-  Image,
-} from 'lucide-solid'
+import { Plus, Save, X, Import, Download, SlidersVertical, Dices, Image } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput, { ButtonInput } from '../../shared/TextInput'
@@ -44,7 +34,6 @@ import { random } from '/web/shared/util'
 import { imageApi } from '/web/store/data/image'
 import { Page } from '/web/Layout'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
-import { charsApi } from '/web/store/data/chars'
 import { canStartTour, startTour } from '/web/tours'
 import { Regenerate } from './form/Regenerate'
 import { AvatarModal } from './form/AvatarModal'
@@ -259,11 +248,11 @@ export const CreateCharacterForm: Component<{
     }
   }
 
-  const onPublish = async () => {
-    const char = editor.payload(false)
-    const image = editor.state.avatar ? await imageApi.getImageData(editor.state.avatar) : undefined
-    charsApi.publishCharacter(char, image, (response) => {})
-  }
+  // const onPublish = async () => {
+  //   const char = editor.payload(false)
+  //   const image = editor.state.avatar ? await imageApi.getImageData(editor.state.avatar) : undefined
+  //   charsApi.publishCharacter(char, image, (response) => {})
+  // }
 
   const footer = (
     <>
