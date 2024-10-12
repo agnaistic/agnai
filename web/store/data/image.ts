@@ -15,7 +15,6 @@ import { v4 } from 'uuid'
 import { md5 } from './md5'
 import { getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
-import { toastStore } from '../toasts'
 
 type GenerateOpts = {
   chatId?: string
