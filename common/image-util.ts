@@ -4,7 +4,7 @@ import { ImageModel } from './types/admin'
 export function filterImageModels(
   user: AppSchema.User,
   models: ImageModel[],
-  tier?: AppSchema.SubscriptionTier
+  tier?: Pick<AppSchema.SubscriptionTier, 'imagesAccess'>
 ) {
   if (user?.admin) return models
   if (!tier?.imagesAccess) return []

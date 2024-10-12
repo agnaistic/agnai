@@ -3,7 +3,7 @@ import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
 import Button from '/web/shared/Button'
-import { settingStore, UserState } from '/web/store'
+import { settingStore, UserState, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 
 export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user: UserState }> = (
@@ -60,6 +60,7 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
 
 const ModelOverride: Component<{ user: UserState }> = (props) => {
   const state = settingStore((s) => ({ models: s.config.serverConfig?.imagesModels || [] }))
+  const user = userStore()
   const options = createMemo(() => {
     const list = state.models.map((m) => ({ label: m.desc, value: m.id || m.name }))
     return list
@@ -68,11 +69,7 @@ const ModelOverride: Component<{ user: UserState }> = (props) => {
   const [id, setId] = createSignal(props.user.user?.images?.agnai?.model)
 
   return (
-    <Show
-      when={
-        (props.user.sub?.tier.imagesAccess || props.user.user?.admin) && state.models.length > 0
-      }
-    >
+    <Show when={(user.sub?.tier.imagesAccess || user.user?.admin) && state.models.length > 0}>
       <Select
         parentClass="text-sm"
         fieldName="imageOverride"
