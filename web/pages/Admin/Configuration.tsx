@@ -134,5 +134,5 @@ const ServerConfiguration: Component = () => {
 
 function toIdentifiedModel(item: ImageModel) {
   if (item.id) return item
-  return { ...item, id: v4().slice(0, 4) }
+  return { ...item, level: item.level ?? 0, id: v4().slice(0, 4) }
 }

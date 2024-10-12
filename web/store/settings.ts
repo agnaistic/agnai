@@ -4,16 +4,17 @@ import { EVENTS, events } from '../emitter'
 import { setAssetPrefix, storage } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
-import { usersApi } from './data/user'
+import { InitEntities, usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
-import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
+import { getSubscriptionModelLimits, getUserSubscriptionTier, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 import { canUsePane, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
+import { filterImageModels } from '/common/image-util'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -134,22 +135,35 @@ export const settingStore = createStore<SettingState>(
       const res = await usersApi.getInit()
 
       if (res.result) {
-        setAssetPrefix(res.result.config.assetPrefix)
-        loadSlotConfig(res.result.config?.serverConfig?.slots)
+        const init = res.result as InitEntities
+        setAssetPrefix(init.config.assetPrefix)
+        loadSlotConfig(init.config?.serverConfig?.slots)
 
-        const isMaint = res.result.config?.maintenance
+        const isMaint = init.config?.maintenance
+
+        if (init.config.serverConfig) {
+          if (init.config.tier?.imagesAccess) {
+            init.config.serverConfig.imagesModels = []
+          } else {
+            init.config.serverConfig.imagesModels = filterImageModels(
+              init.user,
+              init.config.serverConfig.imagesModels
+            )
+          }
+        }
+
         if (!isMaint) {
-          events.emit(EVENTS.init, res.result)
+          events.emit(EVENTS.init, init)
         }
 
         yield {
-          init: res.result,
-          config: res.result.config,
-          replicate: res.result.replicate || {},
+          init,
+          config: init.config,
+          replicate: init.replicate || {},
           initLoading: false,
         }
 
-        const maint = res.result.config?.maintenance
+        const maint = init.config?.maintenance
 
         if (!maint && prev.maintenance) {
           toastStore.success(`Agnaistic is no longer in maintenance mode`, 10)
@@ -189,15 +203,21 @@ export const settingStore = createStore<SettingState>(
         return { featherless: res.result }
       }
     },
-    async *getServerConfig({ cfg, config }) {
+    async *getServerConfig({ cfg, config, init }) {
       if (cfg.loading) return
 
       yield { cfg: { loading: true, ttl: cfg.ttl } }
-      const res = await api.get('/settings')
+      const res = await api.get<AppSchema.AppConfig>('/settings')
       yield { cfg: { loading: false, ttl: cfg.ttl } }
 
-      if (res.result?.serverConfig) {
-        return { config: { ...config, serverConfig: res.result?.serverConfig } }
+      const serverConfig = res.result?.serverConfig
+      if (serverConfig) {
+        serverConfig.imagesModels = filterImageModels(
+          init?.user!,
+          serverConfig.imagesModels,
+          res.result?.tier
+        )
+        return { config: { ...config, serverConfig } }
       }
     },
     async *getConfig({ cfg }) {

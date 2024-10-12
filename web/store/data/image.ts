@@ -133,7 +133,7 @@ export async function generateImageAsync(
     requestId?: string
     noAffix?: boolean
     onTick?: (status: horde.HordeCheck) => void
-    onDone?: (result: { image: string; file: File; data?: string }) => void
+    onDone?: (result: { image: string; file: File; data?: string; error?: string }) => void
   } = {}
 ): Promise<ImageResult> {
   const user = getStore('user').getState().user

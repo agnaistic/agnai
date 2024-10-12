@@ -1,0 +1,16 @@
+import { AppSchema } from './types'
+import { ImageModel } from './types/admin'
+
+export function filterImageModels(
+  user: AppSchema.User,
+  models: ImageModel[],
+  tier?: AppSchema.SubscriptionTier
+) {
+  if (user?.admin) return models
+  if (!tier?.imagesAccess) return []
+
+  let level = Math.max(user?.sub?.level ?? 0, 0)
+
+  const list = models.filter((m) => (m.level ?? 0) <= level)
+  return list
+}

@@ -16,6 +16,7 @@ type Model = {
   override: string
   init: Threshold
   limit: Threshold
+  level: number
 }
 
 export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (props) => {
@@ -51,6 +52,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
       name: '',
       desc: '',
       override: '',
+      level: 0,
       init: { steps: 5, cfg: 2, height: 1024, width: 1024 },
       limit: { steps: 128, cfg: 20, height: 1024, width: 1024 },
     },
@@ -128,6 +130,16 @@ const ImageModel: Component<{
                 placeholder="Override..."
                 onChange={props.updater(props.index, 'override')}
                 value={props.item.override || ''}
+              />
+            </Td>
+            <Td>
+              <TextInput
+                prelabel="Level"
+                fieldName="model.level"
+                parentClass=""
+                placeholder="Sub Level"
+                onChange={props.updater(props.index, 'level')}
+                value={props.item.level ?? 0}
               />
             </Td>
             <Td>
