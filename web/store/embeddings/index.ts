@@ -62,6 +62,9 @@ export const embedApi = {
     const embeds = ids.map((id) => ({ id, state: 'not-loaded' }))
     setter({ embeds })
   },
+  initSimiliary: () => {
+    post('initSimilarity', { model: models.embedding })
+  },
   encode,
   decode,
   embedChat,

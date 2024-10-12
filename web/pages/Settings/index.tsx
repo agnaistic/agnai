@@ -102,12 +102,13 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
-
+      enableLTM,
       ...base
     } = body
 
     userStore.updateConfig({
       ...base,
+      disableLTM: !enableLTM,
       adapterConfig,
       hordeWorkers: workers(),
       hordeModels: models(),
@@ -220,7 +221,7 @@ const settingsForm = {
   scaleUrl: 'string?',
   claudeApiKey: 'string?',
   logPromptsToBrowserConsole: 'boolean?',
-  disableLTM: 'boolean?',
+  enableLTM: 'boolean?',
 
   useLocalPipeline: 'boolean?',
 

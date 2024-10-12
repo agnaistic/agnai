@@ -76,7 +76,7 @@ async function identity(token: string) {
   const tiers: Patreon.Tier[] =
     identity.body.included?.filter((obj: Patreon.Include) => {
       if (obj.type !== 'tier') return false
-      return obj.relationships.campaign?.data?.id === config.patreon.campaign_id
+      return obj.relationships?.campaign?.data?.id === config.patreon.campaign_id
     }) || []
 
   const tier = tiers.length

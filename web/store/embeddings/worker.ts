@@ -44,6 +44,10 @@ const handlers: {
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {
+    if (EMBED_INITED) {
+      console.log('[embed] already inited')
+      return
+    }
     EMBED_INITED = true
     Embedder = await pipeline('feature-extraction', msg.model, {
       // quantized: true,
@@ -55,6 +59,10 @@ const handlers: {
     post('embedLoaded', {})
   },
   initCaptioning: async (msg) => {
+    if (CAPTION_INITED) {
+      return
+    }
+
     CAPTION_INITED = true
     console.log(`[caption] loading`)
 

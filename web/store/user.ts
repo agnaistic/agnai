@@ -22,6 +22,7 @@ import {
   setRootVariable,
 } from '../shared/colors'
 import { UserType } from '/common/types/admin'
+import { embedApi } from './embeddings'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -376,11 +377,17 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig(_, config: ConfigUpdate) {
+    async updateConfig({ user: prev }, config: ConfigUpdate) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
+
+        const prevLTM = prev?.disableLTM ?? true
+        if (prevLTM && config.disableLTM === false) {
+          embedApi.initSimiliary()
+        }
+
         toastStore.success(`Updated settings`)
         return { user: res.result }
       }
