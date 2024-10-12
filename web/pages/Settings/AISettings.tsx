@@ -121,7 +121,6 @@ const AISettings: Component<{
           value={!(state.user?.disableLTM ?? true)}
           label="Enable Embeddings/Long-Term Memory"
           helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.
-            **Refresh required for this change to take effect**
             `}
         />
 
