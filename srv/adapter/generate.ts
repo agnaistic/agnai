@@ -342,12 +342,14 @@ export async function createChatStream(
   if (entities) {
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getTokenCounter(adapter, model)
+    const nextSettings = simplifyPreset(opts.user, entities.gen, subscription)
+    opts.settings = nextSettings
     opts.parts = await buildPromptParts(
       {
         ...entities,
         sender: opts.sender,
         kind: opts.kind,
-        settings: simplifyPreset(opts.user, entities.gen, subscription),
+        settings: nextSettings,
         chat: opts.chat,
         members: opts.members,
         replyAs: opts.replyAs,
@@ -567,7 +569,14 @@ function simplifyPreset(
   gen: Partial<AppSchema.GenSettings>,
   sub?: SubscriptionPreset
 ): Partial<AppSchema.GenSettings> {
-  if (!gen.presetMode || gen.presetMode === 'advanced') return gen
+  const next: Partial<AppSchema.GenSettings> = { ...gen }
+
+  if (gen.useMaxContext || gen.presetMode === 'simple') {
+    gen.useMaxContext = true
+    next.maxContextLength = getContextLimit(user, next) + (gen.maxTokens ?? 0)
+  }
+
+  if (!gen.presetMode || gen.presetMode === 'advanced') return next
 
   const keep: any = {}
 
@@ -579,14 +588,7 @@ function simplifyPreset(
     }
   }
 
-  const next: Partial<AppSchema.GenSettings> = {
-    ...gen,
-    ...sub?.preset,
-    ...keep,
-    useMaxContext: true,
-  }
-
-  next.maxContextLength = getContextLimit(user, next)
+  Object.assign(next, sub?.preset || {}, keep, { useMaxContext: true })
 
   return next
 }
