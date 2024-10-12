@@ -1095,7 +1095,7 @@ export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
       props[name].type = 'enum'
 
       // @ts-ignore
-      props[key].enum = ['true', 'false', 'yes', 'no']
+      props[name].enum = ['true', 'false', 'yes', 'no']
     }
     schema.required.push(name)
   }
