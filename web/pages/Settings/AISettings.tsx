@@ -120,7 +120,9 @@ const AISettings: Component<{
           fieldName="disableLTM"
           value={state.user?.disableLTM ?? true}
           label="Disable Long-Term Memory"
-          helperMarkdown="Improves site performance. Disable long-term memory if your chat is _laggy_ and unresponsive."
+          helperMarkdown={`Improves site performance. Disable long-term memory if your chat is _laggy_ and unresponsive.
+            **Refresh required for this change to take effect**
+            `}
         />
 
         <Show when={!canUseApi()}>

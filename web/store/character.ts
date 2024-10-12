@@ -409,6 +409,11 @@ export const characterStore = createStore<CharacterState>(
               set({ hordeStatus: status })
             },
             onDone: (result) => {
+              if (result.error) {
+                onDone?.(result.error)
+                return
+              }
+
               onDone?.(null, result.file)
             },
           })

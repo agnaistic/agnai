@@ -520,6 +520,7 @@ async function generateAvatar(description: string, override?: string) {
 
   return new Promise<File>((resolve, reject) => {
     characterStore.generateAvatar({ user, persona: description, override }, (err, image) => {
+      if (err) return reject(err)
       if (image) return resolve(image)
       reject(err)
     })

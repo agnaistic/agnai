@@ -81,7 +81,7 @@ export function getCachedSubscriptionModels() {
   return all.filter((sub) => !sub.subDisabled && !sub.deletedAt)
 }
 
-export function getCachedSubscriptions(user?: AppSchema.User | null) {
+export function getCachedSubscriptions() {
   const all = Array.from(subCache.values())
 
   const subs = all

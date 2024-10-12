@@ -6,12 +6,14 @@ import { UI } from '/common/types'
 import { storage } from '/web/shared/util'
 import { AIAdapter } from '/common/adapters'
 
-type InitEntities = {
+export type InitEntities = {
   profile: AppSchema.Profile
   user: AppSchema.User
   presets: AppSchema.UserGenPreset[]
   config: AppSchema.AppConfig
   books: AppSchema.MemoryBook[]
+  replicate: any
+  scenarios: AppSchema.ScenarioBook[]
 }
 
 export const usersApi = {
