@@ -10,6 +10,7 @@ import { embedApi } from '/web/store/embeddings'
 import Select from '/web/shared/Select'
 import { getStore } from '/web/store/create'
 import { SolidCard } from '/web/shared/Card'
+import { settingStore } from '/web/store'
 
 export { EmbedContent as default }
 
@@ -92,7 +93,11 @@ const EmbedContent: Component = (props) => {
     <form ref={ref} class="flex flex-col gap-2">
       <Show when={user.user?.disableLTM ?? true}>
         <SolidCard bg="premium-700">
-          You need need to enable <b>Embeddings/Long-Term Memory</b> in your Settings
+          You need need to enable{' '}
+          <b class="underline hover:cursor-pointer" onClick={() => settingStore.modal(true)}>
+            Embeddings/Long-Term Memory
+          </b>{' '}
+          in your Settings
         </SolidCard>
       </Show>
 
