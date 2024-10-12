@@ -118,7 +118,7 @@ const AISettings: Component<{
       <Show when={ready()}>
         <Toggle
           fieldName="disableLTM"
-          value={state.user?.disableLTM ?? false}
+          value={state.user?.disableLTM ?? true}
           label="Disable Long-Term Memory"
           helperMarkdown="Improves site performance. Disable long-term memory if your chat is _laggy_ and unresponsive."
         />

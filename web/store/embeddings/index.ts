@@ -108,13 +108,15 @@ const handlers: {
   },
   init: (type) => {
     const user = getStore('user').getState()
+    const disableLTM = user.user?.disableLTM ?? true
     if (type === 'embed') {
-      if (!user.user?.disableLTM) return
+      if (disableLTM) return
       post('initSimilarity', { model: models.embedding })
     }
 
     if (type === 'image' && window.flags.caption) {
-      if (!user.user?.disableLTM) return
+      const httpCaptioning = models.captioning.startsWith('http')
+      if (disableLTM && !httpCaptioning) return
       post('initCaptioning', { model: models.captioning })
     }
   },
