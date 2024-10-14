@@ -80,6 +80,12 @@ export const config = {
     uri: env('DB_URI', ''),
     verbose: !!env('DB_VERBOSE', ''),
   },
+  broadcast: {
+    host: env('BROADCAST_HOST', '127.0.0.1'),
+    port: +env('BROADCAST_PORT', '6379'),
+    user: env('BROADCOST_USER', ''),
+    pass: env('BROADCAST_PASSWORD', ''),
+  },
   redis: {
     host: env('REDIS_HOST', '127.0.0.1'),
     port: +env('REDIS_PORT', '6379'),

@@ -1,4 +1,4 @@
-import { allSockets, sendMany, userSockets } from './bus'
+import { allSockets, sendMany, userSockets } from './redis'
 import { AppSocket } from './types'
 import { assertValid } from '/common/valid'
 import { store } from '/srv/db'

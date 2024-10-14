@@ -45,6 +45,9 @@ const COUNT_EVENT = 'agnaistic-users'
 export const clients = {
   pub: redis.createClient({ url: getUri() }),
   sub: redis.createClient({ url: getUri() }),
+
+  bpub: redis.createClient({ url: getBroadcastUri() }),
+  bsub: redis.createClient({ url: getBroadcastUri() }),
 }
 
 let nonBusMaxCount = 0
@@ -158,6 +161,14 @@ function getUri() {
   if (creds) creds += '@'
 
   return `redis://${creds}${config.redis.host}:${config.redis.port}`
+}
+
+function getBroadcastUri() {
+  let creds = config.broadcast.user || ''
+  if (creds && config.broadcast.pass) creds += `:${config.broadcast.pass}`
+  if (creds) creds += '@'
+
+  return `redis://${creds}${config.broadcast.host}:${config.broadcast.port}`
 }
 
 type BusMessage<T extends { type: string } = { type: string }> =

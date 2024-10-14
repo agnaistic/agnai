@@ -831,13 +831,13 @@ export type FieldUpdater = (index: number, path: string) => (ev: any) => void
  */
 export function useRowHelper<T extends object>(opts: {
   signal: [() => T[], (v: T[]) => void]
-  empty: T
+  empty: () => T
 }) {
   const items = opts.signal[0]
   const setItems = opts.signal[1]
 
   const add = () => {
-    const next = items().concat(deepClone(opts.empty))
+    const next = items().concat(deepClone(opts.empty()))
     setItems(next)
   }
 
