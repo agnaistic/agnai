@@ -50,6 +50,11 @@ export const clients = {
   bsub: redis.createClient({ url: getBroadcastUri() }),
 }
 
+// export const broadcast = {
+//   pub: redis.createClient({ url: getBroadcastUri() }),
+//   sub: redis.createClient({ url: getBroadcastUri() })
+// }
+
 let nonBusMaxCount = 0
 
 export function getAllCount() {
