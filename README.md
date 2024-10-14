@@ -139,7 +139,7 @@ The important parts of the stack are:
 # If required, this will update the dependencies before running the API
 > npm run model # Install poetry into a virtual environment
 
-# Run everything with a single commmand:
+# Run everything with a single command:
 > npm run start:all # Linux and OSX
 > npm run start:all:win # Windows
 ```
@@ -153,7 +153,7 @@ You can also try to access the frontend with hot reloading at http://localhost:1
 - Redux Dev Tools
   - The front-end application state is wired up to the "Redux Dev Tools" Chrome extension.
 - NodeJS debugger
-  - The `pnpm start` script launchs the NodeJS API using the `--inspect` flag
+  - The `pnpm start` script launches the NodeJS API using the `--inspect` flag
   - Attach using the default launch task in VSCode (`F5`)
   - Or go to the url `chrome://inspect` to use the debugger
 - Python dependency management using `Poetry` - https://python-poetry.org/docs/cli
