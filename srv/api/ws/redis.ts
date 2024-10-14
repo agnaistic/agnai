@@ -45,12 +45,10 @@ const COUNT_EVENT = 'agnaistic-users'
 export const clients = {
   pub: redis.createClient({ url: getUri() }),
   sub: redis.createClient({ url: getUri() }),
-}
 
-// export const broadcast = {
-//   pub: redis.createClient({ url: getBroadcastUri() }),
-//   sub: redis.createClient({ url: getBroadcastUri() })
-// }
+  bpub: redis.createClient({ url: getBroadcastUri() }),
+  bsub: redis.createClient({ url: getBroadcastUri() }),
+}
 
 let nonBusMaxCount = 0
 
