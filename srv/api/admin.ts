@@ -3,7 +3,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { isAdmin, loggedIn } from './auth'
 import { StatusError, handle } from './wrap'
-import { getLiveCounts, sendAll } from './ws/bus'
+import { getLiveCounts, sendAll } from './ws/redis'
 import { encryptText } from '../db/util'
 
 const router = Router()

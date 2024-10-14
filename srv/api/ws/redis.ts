@@ -47,6 +47,11 @@ export const clients = {
   sub: redis.createClient({ url: getUri() }),
 }
 
+// export const broadcast = {
+//   pub: redis.createClient({ url: getBroadcastUri() }),
+//   sub: redis.createClient({ url: getBroadcastUri() })
+// }
+
 let nonBusMaxCount = 0
 
 export function getAllCount() {
@@ -158,6 +163,14 @@ function getUri() {
   if (creds) creds += '@'
 
   return `redis://${creds}${config.redis.host}:${config.redis.port}`
+}
+
+function getBroadcastUri() {
+  let creds = config.broadcast.user || ''
+  if (creds && config.broadcast.pass) creds += `:${config.broadcast.pass}`
+  if (creds) creds += '@'
+
+  return `redis://${creds}${config.broadcast.host}:${config.broadcast.port}`
 }
 
 type BusMessage<T extends { type: string } = { type: string }> =

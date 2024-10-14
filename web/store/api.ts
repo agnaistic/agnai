@@ -239,7 +239,7 @@ export function setAltAuth(jwt: string) {
 
   Cookies.set('original-auth', prev, { sameSite: 'strict', expires: 30 })
   Cookies.set('auth', jwt, { sameSite: 'strict', expires: 30 })
-  location.href = `${location.origin}/settings?tab=4`
+  location.href = `${location.origin}/settings?tab=3`
 }
 
 export function revertAuth() {

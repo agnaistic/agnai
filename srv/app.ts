@@ -10,7 +10,7 @@ import { config } from './config'
 import { createServer } from './server'
 import pipeline from './api/pipeline'
 import { getDb } from './db/client'
-import { isConnected } from './api/ws/bus'
+import { isConnected } from './api/ws/redis'
 
 export function createApp() {
   const upload = multer({

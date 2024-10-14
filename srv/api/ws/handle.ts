@@ -1,6 +1,6 @@
 import { AppSocket } from './types'
 import { handlers, WebMessage } from './handlers'
-import { allSockets } from './bus'
+import { allSockets } from './redis'
 
 export function handleMessage(client: AppSocket) {
   client.on('message', (data) => {
