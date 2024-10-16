@@ -30,7 +30,9 @@ const MetricsPage: Component = () => {
   }
 
   const shas = createMemo(() => {
-    return Object.entries(state.metrics?.shas || {}).map(([sha, count]) => ({ sha, count }))
+    return Object.entries(state.metrics?.shas || {})
+      .map(([sha, count]) => ({ sha, count }))
+      .sort((l, r) => r.count - l.count)
   })
 
   return (

@@ -265,7 +265,7 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
     }
 
     if (curr.children.size === 1) {
-      const next = curr.children.values().next().value
+      const next = curr.children.values().next().value!
       if (visited.has(next)) {
         throw new Error(`Invalid chat tree: Contains a circular reference (${next})`)
       }
