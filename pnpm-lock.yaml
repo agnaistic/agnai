@@ -344,8 +344,8 @@ devDependencies:
     specifier: ^3.3.2
     version: 3.3.2
   typescript:
-    specifier: ^5.6.3
-    version: 5.6.3
+    specifier: ^5.4.5
+    version: 5.4.5
   url:
     specifier: ^0.11.1
     version: 0.11.1
@@ -363,7 +363,7 @@ devDependencies:
     version: 2.10.2(solid-js@1.8.17)(vite@5.3.3)
   vite-tsconfig-paths:
     specifier: ^4.3.2
-    version: 4.3.2(typescript@5.6.3)(vite@5.3.3)
+    version: 4.3.2(typescript@5.4.5)(vite@5.3.3)
   zustand:
     specifier: ^4.5.2
     version: 4.5.2(react@18.2.0)
@@ -8007,7 +8007,7 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /tsconfck@3.1.1(typescript@5.6.3):
+  /tsconfck@3.1.1(typescript@5.4.5):
     resolution: {integrity: sha512-00eoI6WY57SvZEVjm13stEVE90VkEdJAFGgpFLTsZbJyW/LwFQ7uQxJHWpZ2hzSWgCPKc9AnBnNP+0X7o3hAmQ==, tarball: https://registry.npmjs.org/tsconfck/-/tsconfck-3.1.1.tgz}
     engines: {node: ^18 || >=20}
     hasBin: true
@@ -8017,7 +8017,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      typescript: 5.6.3
+      typescript: 5.4.5
     dev: true
 
   /tslib@1.14.1:
@@ -8049,8 +8049,8 @@ packages:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
     dev: false
 
-  /typescript@5.6.3:
-    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.6.3.tgz}
+  /typescript@5.4.5:
+    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true
@@ -8189,7 +8189,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite-tsconfig-paths@4.3.2(typescript@5.6.3)(vite@5.3.3):
+  /vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@5.3.3):
     resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==, tarball: https://registry.npmjs.org/vite-tsconfig-paths/-/vite-tsconfig-paths-4.3.2.tgz}
     peerDependencies:
       vite: '*'
@@ -8199,7 +8199,7 @@ packages:
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       globrex: 0.1.2
-      tsconfck: 3.1.1(typescript@5.6.3)
+      tsconfck: 3.1.1(typescript@5.4.5)
       vite: 5.3.3(@types/node@18.13.0)
     transitivePeerDependencies:
       - supports-color
