@@ -243,6 +243,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getThirdPartyPayload(opts, allStops)
+  body.api_key = key
 
   yield { prompt }
 
@@ -252,7 +253,6 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const params = [
     `type=text`,
-    `key=${key}`,
     `id=${opts.user._id}`,
     `model=${subPreset.subModel}`,
     `level=${level}`,
