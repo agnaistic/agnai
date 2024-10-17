@@ -11,7 +11,7 @@ You can also provide `priority` and `weight`, but we'll get to that later.
 
 - Keywords:
   - These are words that "trigger" the memory to be inserted into your prompt.
-  - E.g. `drink, thrist, hydrate, water`
+  - E.g. `drink, thirst, hydrate, water`
 - Entry:
   - This is the text that is inserted into your prompt when one of your keywords is found.
   - E.g. `{{user}}'s favourite drink is red cordial on the rocks`
@@ -39,7 +39,7 @@ In a nutshell, these two values are used to determine which memories to include 
 
 ### Priority
 
-The higher this value is, the more "important" it is. To evalulate which memories we will include in the prompt:
+The higher this value is, the more "important" it is. To evaluate which memories we will include in the prompt:
 
 - We sort the memories by priority
 - We add the memories one by one to the prompt until the budget is full
