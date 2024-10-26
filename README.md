@@ -1,34 +1,40 @@
 # Agnaistic
 
-> AI Roleplay Chat with Personalised Characters with your favorite AI services.
+> AI Roleplay Chat with Personalized Characters using your favorite AI services.
 
 [Live Version](https://agnai.chat) | [Discord](https://discord.agnai.chat)
 
-You can visit the live version at [Agnai.chat](https://agnai.chat)
+Visit the live version at [Agnai.chat](https://agnai.chat).
 
-Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+Based on the early work of [Galatea-UI by PygmalionAI](https://github.com/PygmalionAI/galatea-ui).
+
+---
 
 ## Quick Start
 
 **Important!** _MongoDB and Redis are optional! Agnaistic will run in "Guest Only" mode if MongoDB is not available._
 
-**Agnaistic** is published as an NPM package and can be installed globally:
+Agnaistic is published as an NPM package and can be installed globally:
 
 ```sh
 # Install or update:
-> npm install agnai -g
-> agnai
+npm install agnai -g
+agnai
 
 # View launch options:
-> agnai help
+agnai help
 
 # Run with the Pipeline features
-> agnai --pipeline
+agnai --pipeline
+
 
 ```
 
 When using the NPM package, your images and JSON files will be stored in: `HOME_FOLDER/.agnai`.  
-E.g. Linux: `/home/sceuick/.agnai/` Mac: `/Users/sceuick/.agnai` Windows: `C:\Users\sceuick\.agnai`.
+Examples:<br>
+Linux: `/home/sceuick/.agnai/`<br>
+Mac: `/Users/sceuick/.agnai`<br>
+Windows: `C:\Users\sceuick\.agnai`.
 
 ## Features
 
