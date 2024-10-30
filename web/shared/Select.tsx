@@ -1,9 +1,8 @@
-import { Component, JSX, For, createMemo, Show, onMount } from 'solid-js'
+import { Component, JSX, For, createMemo, Show } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices, useValidServiceSetting } from './util'
-import { forms } from '../emitter'
 
 export type Option<T extends string = string> = {
   label: string
@@ -34,13 +33,7 @@ const Select: Component<{
       const item = props.items.find((item) => item.value === ev.currentTarget.value)
       props.onChange(item!)
     }
-    forms.emit(props.fieldName, ev.currentTarget.value)
   }
-
-  onMount(() => {
-    forms.emit(props.fieldName, props.value)
-  })
-
   const show = useValidServiceSetting(props.aiSetting)
 
   const recommend = createMemo(() => {

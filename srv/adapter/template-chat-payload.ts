@@ -6,7 +6,7 @@ import { parseTemplate } from '/common/template-parser'
 import { AppSchema, TokenCounter } from '/common/types'
 
 export function renderMessagesToPrompt(
-  preset: AppSchema.UserGenPreset,
+  preset: AppSchema.GenSettings,
   messages: Array<{ role: string; content: string }>
 ) {
   const output: string[] = []

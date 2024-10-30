@@ -14,7 +14,7 @@ import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../common/types/schema'
-import { Import, Plus, SortAsc, SortDesc, LayoutList, Image } from 'lucide-solid'
+import { Import, Plus, SortAsc, SortDesc, LayoutList, Image, RefreshCcw } from 'lucide-solid'
 import { A, useSearchParams } from '@solidjs/router'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
@@ -169,21 +169,22 @@ const CharacterList: Component = () => {
         title={
           <div class="flex w-full justify-between">
             <div>Characters</div>
-            <div class="flex text-base">
-              <div class="px-1">
-                <Button onClick={() => setImport(true)}>
-                  <Import />
-                  <span class="hidden sm:inline">Import</span>
+            <div class="flex gap-2 text-base">
+              <Button onClick={() => setImport(true)}>
+                <Import />
+                <span class="hidden sm:inline">Import</span>
+              </Button>
+
+              <A href="/character/create">
+                <Button>
+                  <Plus />
+                  <span class="hidden sm:inline">Create</span>
                 </Button>
-              </div>
-              <div class="px-1">
-                <A href="/character/create">
-                  <Button>
-                    <Plus />
-                    <span class="hidden sm:inline">Create</span>
-                  </Button>
-                </A>
-              </div>
+              </A>
+
+              <Button onClick={() => chatStore.getAllChats()}>
+                <RefreshCcw />
+              </Button>
             </div>
           </div>
         }

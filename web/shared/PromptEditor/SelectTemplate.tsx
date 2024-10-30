@@ -185,7 +185,7 @@ export const SelectTemplate: Component<{
           <TextInput
             fieldName="filter"
             placeholder="Filter templates"
-            onInput={(ev) => setFilter(ev.currentTarget.value)}
+            onChange={(ev) => setFilter(ev.currentTarget.value)}
             parentClass="w-full"
           />
           <Button>
@@ -223,14 +223,14 @@ export const SelectTemplate: Component<{
         <TextInput
           fieldName="templateName"
           value={templateName()}
-          onInput={(ev) => setName(ev.currentTarget.value)}
+          onChange={(ev) => setName(ev.currentTarget.value)}
         />
         <TextInput
           ref={(r) => (ref = r)}
           fieldName="template"
           value={template()}
           isMultiline
-          onInput={(ev) => setTemplate(ev.currentTarget.value)}
+          onChange={(ev) => setTemplate(ev.currentTarget.value)}
           class="font-mono text-xs"
           onKeyDown={(ev) => onPromptKey(ev as any, () => setAutoOpen(true))}
         />

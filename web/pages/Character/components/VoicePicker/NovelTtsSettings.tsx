@@ -30,7 +30,7 @@ export const NovelTtsSettings: Component<{
           label="Seed"
           helperText="Allows you to create a custom voice using a seed of your choice. Overrides the voice."
           value={props.settings.seed ?? ''}
-          onInput={(ev) => update({ seed: ev.currentTarget.value })}
+          onChange={(ev) => update({ seed: ev.currentTarget.value })}
         />
         <Button class="ml-2 rounded-lg" onClick={() => generate()}>
           <RefreshCw size={24} />

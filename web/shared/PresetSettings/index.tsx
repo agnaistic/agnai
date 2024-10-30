@@ -18,7 +18,7 @@ import Tabs from '../Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { AgnaisticSettings } from './Agnaistic'
 import { usePaneManager } from '../hooks'
-import { PresetProps, PresetTab } from './types'
+import { PresetProps, PresetState, PresetTab } from './types'
 import { GeneralSettings } from './General'
 import { RegisteredSettings } from './Registered'
 import { PromptSettings } from './Prompt'
@@ -28,43 +28,43 @@ import { presetValidator } from '/common/presets'
 import { AppSchema } from '/common/types'
 import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
-import { forms } from '/web/emitter'
 import { PresetProvider } from './context'
 
 export { PresetSettings as default }
 
 type TempSetting = AdapterSetting & { value: any }
 
-const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) => {
+const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => {
   const settings = settingStore()
   const userState = userStore()
-  const [search, setSearch] = useSearchParams()
   const pane = usePaneManager()
+  const [search, setSearch] = useSearchParams()
+  const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
 
   const services = createMemo<Option[]>(() => {
     const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     return list
   })
 
-  const [service, setService] = createSignal(
-    props.inherit?.service || (services()[0].value as AIAdapter)
-  )
-  const [format, setFormat] = createSignal(
-    props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
-  )
-  const [presetMode, setMode] = createSignal(props.inherit?.presetMode || 'advanced')
+  const [state, setState] = createStore<PresetState>({
+    ...props.inherit!,
+    disabled: props.disabled,
+    pane: pane.showing(),
+  })
+
+  createEffect(() => setState('pane', pane.showing()))
 
   const sub = createMemo(() => {
-    if (props.inherit?.service !== 'agnaistic') return
+    if (state.service !== 'agnaistic') return
     const match = settings.config.subs.find(
-      (sub) => sub._id === props.inherit?.registered?.agnaistic?.subscriptionId
+      (sub) => sub._id === state.registered?.agnaistic?.subscriptionId
     )
 
     return match
   })
 
   const tabs = createMemo(() => {
-    if (!props.hideTabs && presetMode() === 'simple') {
+    if (!props.hideTabs && state.presetMode === 'simple') {
       return ['General', 'Prompt']
     }
 
@@ -73,47 +73,11 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
 
     return list.filter((tab) => !props.hideTabs!.includes(tab))
   })
-
-  let startTab = +(search.preset_tab ?? '0')
-  if (!tabs()[startTab]) {
-    startTab = 0
-    setSearch({ preset_tab: '0' })
-  }
-
-  const [tab, setTab] = createSignal(startTab)
-
-  const onServiceChange = (opt: Option<string>) => {
-    setService(opt.value as any)
-    props.onService?.(opt.value as any)
-  }
+  const tabName = createMemo(() => tabs()[tab()])
 
   onMount(() => {
     presetStore.getTemplates()
-  })
-
-  forms.useSub((field, value) => {
-    if (field === 'presetMode') {
-      setMode(value)
-    }
-
-    if (tab() >= tabs().length) {
-      setTab(0)
-    }
-  })
-
-  const fieldProps = createMemo(() => {
-    return {
-      mode: presetMode(),
-      disabled: props.disabled,
-      inherit: props.inherit,
-      service: service(),
-      format: format(),
-      pane: pane.showing(),
-      setFormat: setFormat,
-      tab: tabs()[tab()],
-      sub: sub(),
-      user: userState,
-    }
+    props.state?.(state, setState)
   })
 
   return (
@@ -125,25 +89,20 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
             label="AI Service"
             helperText={
               <>
-                <Show when={!service()}>
+                <Show when={!state.service}>
                   <p class="text-red-500">
                     Warning! Your preset does not currently have a service set.
                   </p>
                 </Show>
               </>
             }
-            value={service()}
+            value={state.service}
             items={services()}
-            onChange={onServiceChange}
+            onChange={(ev) => setState('service', ev.value as any)}
             disabled={props.disabled || props.disableService}
           />
 
-          <AgnaisticSettings
-            service={service()}
-            inherit={props.inherit}
-            onSave={props.onSave}
-            mode={presetMode()}
-          />
+          <AgnaisticSettings state={state} setter={setState} noSave={props.noSave} sub={sub()} />
 
           <Select
             fieldName="thirdPartyFormat"
@@ -169,12 +128,16 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             aiSetting={'thirdPartyFormat'}
-            onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
+            onChange={(ev) => setState('thirdPartyFormat', ev.value as ThirdPartyFormat)}
           />
 
-          <PresetMode inherit={props.inherit} />
+          <PresetMode state={state} setter={setState} sub={sub()} />
 
-          <RegisteredSettings service={service()} inherit={props.inherit} mode={presetMode()} />
+          <RegisteredSettings
+            service={state.service}
+            inherit={props.inherit}
+            mode={state.presetMode}
+          />
         </Card>
         <Show when={pane.showing()}>
           <TempSettings service={props.inherit?.service} />
@@ -187,14 +150,15 @@ const PresetSettings: Component<PresetProps & { onSave: () => void }> = (props) 
           selected={tab}
           tabs={tabs()}
         />
-        <GeneralSettings {...fieldProps()} />
-        <PromptSettings {...fieldProps()} />
+        <GeneralSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
 
-        <MemorySettings {...fieldProps()} />
+        <PromptSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
 
-        <SliderSettings {...fieldProps()} />
+        <MemorySettings state={state} setter={setState} sub={sub()} tab={tabName()} />
 
-        <ToggleSettings {...fieldProps()} />
+        <SliderSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+
+        <ToggleSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
       </div>
     </PresetProvider>
   )

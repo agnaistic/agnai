@@ -1,5 +1,14 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onMount,
+  Show,
+} from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
@@ -128,7 +137,10 @@ export const ModeGenSettings: Component<{
       </Button>
     </>
   )
-  props.footer?.(footer)
+
+  onMount(() => {
+    props.footer?.(footer)
+  })
 
   const activePreset = createMemo(() => presets().find((pre) => pre._id === selected()))
 
@@ -159,7 +171,7 @@ export const ModeGenSettings: Component<{
         <For each={presets()}>
           {(preset) => (
             <Show when={selected() === preset._id!}>
-              <PresetSettings hideTabs={props.hideTabs} inherit={preset} onSave={onSave} />
+              <PresetSettings hideTabs={props.hideTabs} inherit={preset as any} noSave={false} />
             </Show>
           )}
         </For>

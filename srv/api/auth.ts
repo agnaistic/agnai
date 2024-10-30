@@ -1,6 +1,7 @@
 import { NextFunction } from 'express'
 import { AppRequest, errors } from './wrap'
 import { store } from '../db'
+import { verifyJwt } from '../db/user'
 
 export const loggedIn: any = (req: AppRequest, _: any, next: NextFunction) => {
   if (!req.user?.userId) return next(errors.Unauthorized)
@@ -19,6 +20,18 @@ export const apiKeyUsage: any = async (req: AppRequest, _: any, next: NextFuncti
   }
 
   key = key.replace('Bearer ', '')
+
+  try {
+    const payload = verifyJwt(key)
+
+    if (payload?.username) {
+      req.userId = (payload as any).userId
+      const user = await store.users.getUser(req.userId)
+      req.authed = user! || {}
+      req.log.setBindings({ user: (payload as any)?.username || 'anonymous' })
+      return next()
+    }
+  } catch (ex) {}
 
   const access = await store.users.validateApiAccess(key)
   if (!access) {

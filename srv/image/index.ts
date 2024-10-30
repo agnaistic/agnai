@@ -8,14 +8,29 @@ import { saveFile } from '../api/upload'
 import { handleSDImage } from './stable-diffusion'
 import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
+import { AppSchema } from '/common/types'
+import { ImageSettings } from '/common/types/image-schema'
 
 const DEFAULT_NEGATIVE = ``
 
-export async function generateImage(
-  { user, chatId, messageId, ...opts }: ImageGenerateRequest,
-  log: AppLog,
-  guestId?: string
-) {
+export async function generateImageSync(opts: ImageGenerateRequest, log: AppLog) {
+  const imageSettings = opts.user.images
+  const prompt = getImagePrompt(opts, imageSettings)
+
+  let { error, image } = await runImageGenerate({
+    imageSettings,
+    user: opts.user,
+    prompt,
+    log,
+    guestId: undefined,
+    opts,
+  })
+
+  return { error, image, output: image?.content }
+}
+
+export async function generateImage(opts: ImageGenerateRequest, log: AppLog, guestId?: string) {
+  const { user, chatId, messageId } = opts
   const broadcastIds: string[] = []
 
   const chat = chatId ? await store.chats.getChatOnly(chatId) : undefined
@@ -36,64 +51,111 @@ export async function generateImage(
     }
   }
 
-  let image: ImageAdapterResponse | undefined
-  let output: string = ''
-  let error: any
-
-  let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
-  let prompt = parsed
-
-  let imageSettings =
-    chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
-      ? character?.imageSettings
-      : chat?.imageSource === 'chat'
-      ? chat?.imageSettings
-      : user.images
-
-  if (!imageSettings) {
-    imageSettings = user.images
-  }
-
-  if (imageSettings?.template) {
-    prompt = imageSettings.template.replace(/\{\{prompt\}\}/g, parsed)
-    if (!prompt.includes(parsed)) {
-      prompt = prompt + ' ' + parsed
-    }
-  }
-
-  prompt = prompt.trim()
-
-  if (!opts.noAffix) {
-    const parts = [prompt]
-    if (imageSettings?.prefix) {
-      parts.unshift(imageSettings.prefix)
-    }
-
-    if (imageSettings?.suffix) {
-      parts.push(imageSettings.suffix)
-    }
-
-    prompt = parts
-      .join(', ')
-      .split(',')
-      .filter((p) => !!p.trim())
-      .join(', ')
-      .replace(/,+/g, ',')
-      .replace(/ +/g, ' ')
-  }
+  const imageSettings = getImageSettings(chat, character, user)
+  const prompt = getImagePrompt(opts, imageSettings)
 
   log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')
-  const negative = imageSettings?.negative || DEFAULT_NEGATIVE
 
   if (!guestId) {
     sendOne(user._id, {
       type: 'image-generation-started',
       prompt,
-      negative,
+      negative: imageSettings?.negative || '',
       service: imageSettings?.type,
       requestId: opts.requestId,
     })
   }
+
+  let { image, output, error } = await runImageGenerate({
+    imageSettings,
+    user,
+    prompt,
+    log,
+    guestId,
+    opts,
+  })
+
+  /**
+   * If the server is configured to save images: we will store the image, generate a message, then publish the message
+   * Otherwise: We will broadcast the image content
+   */
+  if (image) {
+    // Guest images do not get saved under any circumstances
+
+    if (typeof image.content === 'string' && image.content.startsWith('http')) {
+      output = image.content
+    }
+
+    if (guestId) {
+      if (!output) {
+        output = `data:image/png;base64,${image.content.toString('base64')}`
+      }
+    } else if (!opts.ephemeral && config.storage.saveImages) {
+      const name = `${v4()}.${image.ext}`
+
+      if (!output) {
+        output = await saveFile(name, image.content)
+      }
+
+      if (!guestId && chatId) {
+        const msg = await createImageMessage({
+          chatId,
+          userId: user._id,
+          filename: output,
+          memberIds: broadcastIds,
+          messageId,
+          imagePrompt: opts.prompt,
+          append: opts.append,
+          meta: { negative: imageSettings?.negative },
+          parentId: opts.parentId,
+        })
+
+        if (msg) return
+      }
+    } else {
+      output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))
+    }
+  }
+
+  const message = image
+    ? {
+        type: 'image-generated',
+        chatId,
+        image: output,
+        source: opts.source,
+        requestId: opts.requestId,
+      }
+    : {
+        type: 'image-failed',
+        chatId,
+        error: error || 'Invalid image settings (No handler found)',
+        requestId: opts.requestId,
+      }
+
+  if (broadcastIds.length) {
+    sendMany(broadcastIds, message)
+  } else if (guestId) {
+    sendGuest(guestId, message)
+  }
+
+  return { output }
+}
+
+async function runImageGenerate(options: {
+  imageSettings: ImageSettings | undefined
+  user: AppSchema.User
+  prompt: string
+  log: AppLog
+  guestId: string | undefined
+  opts: ImageGenerateRequest
+}) {
+  const { imageSettings, user, prompt, log, guestId, opts } = options
+
+  let image: ImageAdapterResponse | undefined
+  let output: string = ''
+  let error: any
+
+  const negative = imageSettings?.negative || DEFAULT_NEGATIVE
 
   try {
     switch (imageSettings?.type || 'horde') {
@@ -127,70 +189,60 @@ export async function generateImage(
     error = ex.message || ex
   }
 
-  /**
-   * If the server is configured to save images: we will store the image, generate a message, then publish the message
-   * Otherwise: We will broadcast the image content
-   */
-  if (image) {
-    // Guest images do not get saved under any circumstances
+  return { image, output, error }
+}
 
-    if (typeof image.content === 'string' && image.content.startsWith('http')) {
-      output = image.content
-    }
+function getImagePrompt(opts: ImageGenerateRequest, imageSettings: ImageSettings | undefined) {
+  let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
+  let prompt = parsed
 
-    if (guestId) {
-      if (!output) {
-        output = `data:image/png;base64,${image.content.toString('base64')}`
-      }
-    } else if (!opts.ephemeral && config.storage.saveImages) {
-      const name = `${v4()}.${image.ext}`
-
-      if (!output) {
-        output = await saveFile(name, image.content)
-      }
-
-      if (!guestId && chatId) {
-        const msg = await createImageMessage({
-          chatId,
-          userId: user._id,
-          filename: output,
-          memberIds: broadcastIds,
-          messageId,
-          imagePrompt: opts.prompt,
-          append: opts.append,
-          meta: { negative },
-          parentId: opts.parentId,
-        })
-
-        if (msg) return
-      }
-    } else {
-      output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))
+  if (imageSettings?.template) {
+    prompt = imageSettings.template.replace(/\{\{prompt\}\}/g, parsed)
+    if (!prompt.includes(parsed)) {
+      prompt = prompt + ' ' + parsed
     }
   }
 
-  const message = image
-    ? {
-        type: 'image-generated',
-        chatId,
-        image: output,
-        source: opts.source,
-        requestId: opts.requestId,
-      }
-    : {
-        type: 'image-failed',
-        chatId,
-        error: error || 'Invalid image settings (No handler found)',
-        requestId: opts.requestId,
-      }
+  prompt = prompt.trim()
 
-  if (broadcastIds.length) {
-    sendMany(broadcastIds, message)
-  } else if (guestId) {
-    sendGuest(guestId, message)
+  if (!opts.noAffix) {
+    const parts = [prompt]
+    if (imageSettings?.prefix) {
+      parts.unshift(imageSettings.prefix)
+    }
+
+    if (imageSettings?.suffix) {
+      parts.push(imageSettings.suffix)
+    }
+
+    prompt = parts
+      .join(', ')
+      .split(',')
+      .filter((p) => !!p.trim())
+      .join(', ')
+      .replace(/,+/g, ',')
+      .replace(/ +/g, ' ')
   }
 
-  return { output }
+  return prompt
+}
+
+function getImageSettings(
+  chat: AppSchema.Chat | null | undefined,
+  character: AppSchema.Character | undefined,
+  user: AppSchema.User
+) {
+  let imageSettings =
+    chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
+      ? character?.imageSettings
+      : chat?.imageSource === 'chat'
+      ? chat?.imageSettings
+      : user.images
+
+  if (!imageSettings) {
+    imageSettings = user.images
+  }
+  return imageSettings
 }
 
 async function createImageMessage(opts: {

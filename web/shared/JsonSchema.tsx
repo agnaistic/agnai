@@ -219,7 +219,6 @@ const SchemaField: Component<{
                   const next = !enabled()
                   enabledRef.checked = next
                   setEnabled(next)
-                  forms.emit(`${props.index}.disabled`, next)
                 }}
               >
                 <Show when={enabled()}>

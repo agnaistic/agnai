@@ -297,7 +297,7 @@ const InputBar: Component<{
             ev.preventDefault()
           }
         }}
-        onInput={updateText}
+        onChange={updateText}
         textarea={{
           onDragOver: () => setDragging(true),
           onDragExit: () => setDragging(false),

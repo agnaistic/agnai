@@ -143,7 +143,7 @@ const TiersPage: Component = (props) => {
             fieldName="name"
             label="Name"
             value={editing()?.name}
-            onInput={(ev) => setName(ev.currentTarget.value)}
+            onChange={(ev) => setName(ev.currentTarget.value)}
           />
 
           <TextInput
@@ -152,7 +152,7 @@ const TiersPage: Component = (props) => {
             helperText="This is be rendered using the markdown renderer. HTML is also supported here."
             value={editing()?.description}
             isMultiline
-            onInput={(ev) => setDesc(ev.currentTarget.value)}
+            onChange={(ev) => setDesc(ev.currentTarget.value)}
           />
 
           <Toggle

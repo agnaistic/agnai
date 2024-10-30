@@ -4,7 +4,6 @@ import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
 import { PresetAISettings } from '/common/adapters'
 import { ComponentSubscriber, useValidServiceSetting } from './util'
-import { forms } from '../emitter'
 import TextInput from './TextInput'
 
 export type CustomOption = {
@@ -46,10 +45,6 @@ export const CustomSelect: Component<{
   })
 
   const onSelect = (opt: CustomOption) => {
-    if (props.fieldName) {
-      forms.emit(props.fieldName, opt.value)
-    }
-
     if (ref) {
       ref.value = opt.value
     }
@@ -149,7 +144,6 @@ const OptionList: Component<{
           fieldName="options-filter"
           placeholder="Filter..."
           onChange={(ev) => setFilter(ev.currentTarget.value)}
-          onInputText={(text) => setFilter(text)}
         />
       </Show>
 

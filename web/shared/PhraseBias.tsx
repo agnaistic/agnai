@@ -1,36 +1,40 @@
-import { Component, For, createMemo, createSignal } from 'solid-js'
-import { AppSchema } from '/common/types'
-import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
+import { For, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
 import Button from './Button'
 import { isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'
+import { Field } from './PresetSettings/Fields'
 
-export const PhraseBias: Component<{
-  inherit?: Partial<AppSchema.GenSettings>
-  service?: AIAdapter
-  format?: ThirdPartyFormat
-}> = (props) => {
-  const [biases, setBiases] = createSignal<Array<{ seq: string; bias: number }>>(
-    props.inherit?.phraseBias || []
-  )
-
+export const PhraseBias: Field = (props) => {
   const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(props.service, props.format, 'phraseBias')
+    const isValid = isValidServiceSetting(
+      props.state.service,
+      props.state.thirdPartyFormat,
+      'phraseBias'
+    )
     return isValid ? '' : ' hidden'
   })
 
   const add = () => {
-    const next = biases().concat({ seq: '', bias: 0 })
-    setBiases(next)
+    const next = (props.state.phraseBias || []).concat({ seq: '', bias: 0 })
+    props.setter('phraseBias', next)
   }
 
   const remove = (idx: number) => {
-    const curr = biases()
+    const curr = props.state.phraseBias || []
     const next = curr.slice(0, idx).concat(curr.slice(idx + 1))
-    setBiases(next)
+    props.setter('phraseBias', next)
+  }
+
+  const change = (prop: 'bias' | 'seq', index: number, value: any) => {
+    const next = props.state.phraseBias!.map((t, idx) => {
+      if (idx !== index) return t
+      const update = { ...t, [prop]: value }
+      return update
+    })
+    props.setter('phraseBias', next)
   }
 
   return (
@@ -46,7 +50,7 @@ export const PhraseBias: Component<{
         }
         helperText="Increase or decrease the likelihood of certain text appearing in responses. Lower values decrease the chance."
       />
-      <For each={biases()}>
+      <For each={props.state.phraseBias || []}>
         {(each, i) => (
           <div class="flex w-full gap-2">
             <TextInput
@@ -54,6 +58,7 @@ export const PhraseBias: Component<{
               fieldName={`phraseBias.${i()}.seq`}
               value={each.seq}
               placeholder="E.g. \nBob:"
+              onChange={(ev) => change('seq', i(), ev.currentTarget.value)}
             />
             {/* <TextInput
               parentClass="w-24"
@@ -68,6 +73,7 @@ export const PhraseBias: Component<{
               min={-2}
               max={2}
               step={0.1}
+              onChange={(ev) => change('bias', i(), ev)}
             />
             <Button class="icon-button" schema="clear" onClick={() => remove(i())}>
               <MinusCircle />
@@ -79,26 +85,24 @@ export const PhraseBias: Component<{
   )
 }
 
-export const StoppingStrings: Component<{
-  inherit?: Partial<AppSchema.GenSettings>
-  service?: AIAdapter
-  format?: ThirdPartyFormat
-}> = (props) => {
-  const [strings, setStrings] = createSignal<string[]>(props.inherit?.stopSequences || [''])
-
+export const StoppingStrings: Field = (props) => {
   const addString = () => {
-    const next = strings().concat('')
-    setStrings(next)
+    const next = (props.state.stopSequences || []).concat('')
+    props.setter('stopSequences', next)
   }
 
   const removeString = (i: number) => {
-    const next = strings().slice()
+    const next = (props.state.stopSequences || []).slice()
     next.splice(i, 1)
-    setStrings(next)
+    props.setter('stopSequences', next)
   }
 
   const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(props.service, props.format, 'stopSequences')
+    const isValid = isValidServiceSetting(
+      props.state.service,
+      props.state.thirdPartyFormat,
+      'stopSequences'
+    )
     return isValid ? '' : ' hidden'
   })
 
@@ -116,7 +120,7 @@ export const StoppingStrings: Component<{
         helperText="Text that causes the response to complete early. All participant names are included by default."
       />
       <div class="flex flex-col gap-2 text-sm">
-        <For each={strings()}>
+        <For each={props.state.stopSequences || []}>
           {(each, i) => (
             <div class="flex w-full gap-1">
               <TextInput
@@ -125,8 +129,10 @@ export const StoppingStrings: Component<{
                 parentClass="w-full"
                 placeholder="E.g. \n<|user|>"
                 onChange={(ev) => {
-                  const next = strings().map((t, idx) => (idx === i() ? ev.currentTarget.value : t))
-                  setStrings(next)
+                  const next = props.state.stopSequences!.map((t, idx) =>
+                    idx === i() ? ev.currentTarget.value : t
+                  )
+                  props.setter('stopSequences', next)
                 }}
               />
               <Button class="icon-button" schema="clear" onClick={() => removeString(i())}>

@@ -26,11 +26,9 @@ import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
-import PresetSettings, {
-  getPresetFormData,
-  getRegisteredSettings,
-} from '/web/shared/PresetSettings'
+import PresetSettings, { getRegisteredSettings } from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
+import { PresetState, getSubPresetForm } from '/web/shared/PresetSettings/types'
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
@@ -77,6 +75,7 @@ export const SubscriptionModel: Component = () => {
   const [service, setService] = createSignal<AIAdapter>()
   const [replacing, setReplacing] = createSignal(false)
   const [levels, setLevels] = createSignal<AppSchema.SubscriptionModelLevel[]>([])
+  const [presetState, setPresetState] = createSignal<PresetState>()
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -199,9 +198,9 @@ export const SubscriptionModel: Component = () => {
       jsonSchemaCapable: 'boolean?',
     } as const
 
-    const presetData = getPresetFormData(ref)
+    const presetData = getSubPresetForm(presetState()!) // getPresetFormData(ref)
     const subData = getStrictForm(ref, validator)
-    const body = { ...presetData, ...subData, levels: levels() }
+    const body: any = { ...presetData, ...subData, levels: levels() }
 
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
@@ -391,8 +390,8 @@ export const SubscriptionModel: Component = () => {
                   <PresetSettings
                     inherit={editing()}
                     disabled={params.id === 'default'}
-                    onService={setService}
-                    onSave={() => {}}
+                    state={(state) => setPresetState(state)}
+                    noSave
                   />
                   <div class="flex flex-row justify-end">
                     <Button disabled={state.saving} onClick={onSave}>
@@ -552,7 +551,7 @@ const Levels: Component<{
               type="number"
               helperText="Sub Level"
               value={level().level}
-              onInput={(ev) => change(i, { level: +ev.currentTarget.value })}
+              onChange={(ev) => change(i, { level: +ev.currentTarget.value })}
             />
 
             <TextInput
@@ -560,7 +559,7 @@ const Levels: Component<{
               type="number"
               helperText="Tokens"
               value={level().maxTokens}
-              onInput={(ev) => change(i, { maxTokens: +ev.currentTarget.value })}
+              onChange={(ev) => change(i, { maxTokens: +ev.currentTarget.value })}
             />
 
             <TextInput
@@ -568,7 +567,7 @@ const Levels: Component<{
               type="number"
               helperText="Context"
               value={level().maxContextLength}
-              onInput={(ev) => change(i, { maxContextLength: +ev.currentTarget.value })}
+              onChange={(ev) => change(i, { maxContextLength: +ev.currentTarget.value })}
             />
 
             <Button schema="red" onClick={() => remove(i)}>

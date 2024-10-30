@@ -188,7 +188,7 @@ const LoginForm: Component<FormProps> = (props) => {
   )
 
   const handleLogin = () => {
-    userStore.remoteLogin((token) => {
+    userStore.thirdPartyLogin((token) => {
       location.href = `${query.callback}?access_token=${token}`
     })
   }
@@ -198,11 +198,6 @@ const LoginForm: Component<FormProps> = (props) => {
     if (!username || !password) return
 
     userStore.login(username, password, () => {
-      if (query.callback) {
-        handleLogin()
-        return
-      }
-
       navigate('/dashboard')
     })
   }

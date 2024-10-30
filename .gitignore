@@ -24,3 +24,5 @@ settings.json
 *.tsbuildinfo
 !web/pkg/*.js
 !llama3.js
+*.key
+*.pub

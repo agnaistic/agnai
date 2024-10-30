@@ -51,7 +51,7 @@ export const config = {
   clusterWorkers: +env('CLUSTERING', ''),
   auth: {
     inferenceKey: env('INFERENCE_KEY', ''),
-    urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards')
+    urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards,https://agnai.cards')
       .split(',')
       .map((name) => name.trim())
       .filter((name) => !!name.trim()),
@@ -167,8 +167,13 @@ if (config.ui.inject) {
 
 if (config.jwtPrivateKey) {
   try {
-    const file = readFileSync(config.jwtPrivateKey).toString('utf-8')
-    config.jwtPrivateKey = file
+    if (config.jwtPrivateKey.startsWith('"-----')) {
+      const key = JSON.parse(config.jwtPrivateKey)
+      config.jwtPrivateKey = key
+    } else {
+      const file = readFileSync(config.jwtPrivateKey).toString('utf-8')
+      config.jwtPrivateKey = file
+    }
   } catch {}
 }
 

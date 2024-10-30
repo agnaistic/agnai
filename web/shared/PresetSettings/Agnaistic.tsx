@@ -1,43 +1,27 @@
 import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { AIAdapter } from '/common/adapters'
 import { chatStore, presetStore, settingStore, userStore } from '/web/store'
 import { AppSchema } from '/common/types'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import { SubscriptionModelLevel, SubscriptionModelOption } from '/common/types/presets'
-import { forms } from '/web/emitter'
 import { ChevronDown } from 'lucide-solid'
 import { SubCTA } from '/web/Navigation'
 import { createEmitter } from '../util'
 import { isDefaultPreset } from '/common/presets'
+import { Field } from './Fields'
 
-export const AgnaisticSettings: Component<{
-  service: AIAdapter
-  onSave: () => void
-  inherit?: Partial<AppSchema.UserGenPreset>
-  mode: AppSchema.UserGenPreset['presetMode']
-}> = (props) => {
-  const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
+export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const opts = useModelOptions()
 
-  forms.useSub((field, value) => {
-    if (field !== 'registered.agnaistic.subscriptionId') return
-    setSelected(value)
-  })
-
-  createEffect(
-    on(
-      () => props.inherit?.registered?.agnaistic?.subscriptionId,
-      (id) => {
-        setSelected(id)
-      }
-    )
-  )
+  const onSave = (value: string) => {
+    if (props.noSave) return
+    presetStore.updateRegisterPresetProp(props.state._id, 'agnaistic', 'subscriptionId', value)
+  }
 
   const emitter = createEmitter('close')
 
   const label = createMemo(() => {
-    const id = selected()
+    const id = props.state.registered?.agnaistic?.subscriptionId
     let opt = opts().find((v) => v.value === id)
 
     if (!opt) {
@@ -51,7 +35,7 @@ export const AgnaisticSettings: Component<{
   })
 
   return (
-    <Show when={props.service === 'agnaistic'}>
+    <Show when={props.state.service === 'agnaistic'}>
       <CustomSelect
         size="sm"
         buttonLabel={label()}
@@ -69,10 +53,10 @@ export const AgnaisticSettings: Component<{
           </>
         }
         options={opts()}
-        onSelect={props.onSave}
-        value={props.inherit?.registered?.agnaistic?.subscriptionId}
+        onSelect={(ev) => onSave(ev.value)}
+        value={props.state.registered?.agnaistic?.subscriptionId}
         fieldName="registered.agnaistic.subscriptionId"
-        selected={selected()}
+        selected={props.state.registered?.agnaistic?.subscriptionId}
         emitter={emitter.on}
       />
     </Show>
@@ -91,11 +75,6 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
       }
     )
   )
-
-  forms.useSub((field, value) => {
-    if (field !== 'agnaistic_modelId') return
-    setSelected(value)
-  })
 
   const onSave = (opt: CustomOption) => {
     const chat = chatStore.getState().active

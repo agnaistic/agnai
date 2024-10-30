@@ -424,7 +424,7 @@ const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (pro
 
           <TextInput
             fieldName="delete-username"
-            onInput={(ev) => setUsername(ev.currentTarget.value)}
+            onChange={(ev) => setUsername(ev.currentTarget.value)}
             placeholder="Username"
           />
           <Button

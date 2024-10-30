@@ -1,19 +1,10 @@
 import { Component } from 'solid-js'
 import { Card } from '../Card'
 import RangeInput from '../RangeInput'
-import { PresetProps } from './types'
-import { ThirdPartyFormat } from '/common/adapters'
+import { PresetTabProps } from './types'
 import { defaultPresets } from '/common/default-preset'
-import { AppSchema } from '/common/types'
 
-export const MemorySettings: Component<
-  PresetProps & {
-    pane: boolean
-    format?: ThirdPartyFormat
-    tab: string
-    sub?: AppSchema.SubscriptionModelOption
-  }
-> = (props) => {
+export const MemorySettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Memory' }}>
       <Card class="flex flex-col gap-2">
@@ -24,8 +15,9 @@ export const MemorySettings: Component<
           min={1}
           max={2000}
           step={1}
-          value={props.inherit?.memoryContextLimit || defaultPresets.basic.memoryContextLimit}
-          disabled={props.disabled}
+          value={props.state.memoryContextLimit || defaultPresets.basic.memoryContextLimit}
+          disabled={props.state.disabled}
+          onChange={(ev) => props.setter('memoryContextLimit', ev)}
         />
 
         <RangeInput
@@ -35,8 +27,9 @@ export const MemorySettings: Component<
           min={1}
           max={10000}
           step={1}
-          value={props.inherit?.memoryChatEmbedLimit || defaultPresets.basic.memoryContextLimit}
-          disabled={props.disabled}
+          value={props.state.memoryChatEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          disabled={props.state.disabled}
+          onChange={(ev) => props.setter('memoryChatEmbedLimit', ev)}
         />
 
         <RangeInput
@@ -46,8 +39,9 @@ export const MemorySettings: Component<
           min={1}
           max={10000}
           step={1}
-          value={props.inherit?.memoryUserEmbedLimit || defaultPresets.basic.memoryContextLimit}
-          disabled={props.disabled}
+          value={props.state.memoryUserEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          disabled={props.state.disabled}
+          onChange={(ev) => props.setter('memoryUserEmbedLimit', ev)}
         />
 
         <RangeInput
@@ -57,8 +51,9 @@ export const MemorySettings: Component<
           min={1}
           max={100}
           step={1}
-          value={props.inherit?.memoryDepth || defaultPresets.basic.memoryDepth}
-          disabled={props.disabled}
+          value={props.state.memoryDepth || defaultPresets.basic.memoryDepth}
+          disabled={props.state.disabled}
+          onChange={(ev) => props.setter('memoryDepth', ev)}
         />
       </Card>
     </div>

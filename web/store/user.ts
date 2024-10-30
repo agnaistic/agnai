@@ -440,6 +440,17 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async thirdPartyLogin(_, onSuccess: (token: string) => void) {
+      const res = await api.post('/user/login/callback')
+      if (res.result) {
+        onSuccess(res.result.token)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not authenticate: ${res.error}`)
+      }
+    },
+
     async verifyPatreon(_, body: any, onDone: (error?: any) => void) {
       const res = await api.post(`/user/verify/patreon`, body)
       if (res.result) {

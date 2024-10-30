@@ -132,7 +132,7 @@ export const remoteLogin = handle(async (req) => {
   const user = await store.users.getUser(req.userId)
   if (!user) throw errors.Unauthorized
 
-  const token = await store.users.createRemoteAccessToken(user.username, user)
+  const token = await store.users.createAccessToken(user.username, user)
   return { token }
 })
 

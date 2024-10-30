@@ -196,7 +196,7 @@ const Announcement: Component<{}> = (props) => {
           fieldName="title"
           label="Title"
           value={state.item?.title}
-          onInput={(ev) => setTitle(ev.currentTarget.value)}
+          onChange={(ev) => setTitle(ev.currentTarget.value)}
         />
         <Select
           fieldName="location"
@@ -225,7 +225,7 @@ const Announcement: Component<{}> = (props) => {
           value={state.item?.content}
           isMultiline
           class="min-h-[80px]"
-          onInput={(ev) => setContent(ev.currentTarget.value)}
+          onChange={(ev) => setContent(ev.currentTarget.value)}
         />
         <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
         <ButtonInput

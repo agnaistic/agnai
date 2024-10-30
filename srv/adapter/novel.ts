@@ -324,8 +324,8 @@ async function getMaxTokens(model: string, headers: any) {
     }
 
     const tier = config.body?.tier ?? 0
-    if (tier !== 3) return 100
-    return 150
+    if (tier !== 3) return 150
+    return 250
   } catch (ex) {
     return
   }

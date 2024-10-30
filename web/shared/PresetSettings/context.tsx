@@ -1,5 +1,4 @@
 import { createStore } from 'solid-js/store'
-import { forms } from '/web/emitter'
 import { createContext, useContext } from 'solid-js'
 import { AppSchema } from '/common/types'
 
@@ -23,25 +22,6 @@ export function PresetProvider(props: { children: any }) {
     service: getFormValue('service'),
     format: getFormValue('thirdPartyFormat'),
     mode: getFormValue('presetMode'),
-  })
-
-  forms.useSub((field, value) => {
-    switch (field) {
-      case 'service': {
-        setState('service', value)
-        break
-      }
-
-      case 'thirdPartyFormat': {
-        setState('format', value)
-        break
-      }
-
-      case 'presetMode': {
-        setState('mode', value)
-        break
-      }
-    }
   })
 
   return <PresetContext.Provider value={[state, setState]}>{props.children}</PresetContext.Provider>

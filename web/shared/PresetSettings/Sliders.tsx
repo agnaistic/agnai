@@ -1,20 +1,11 @@
 import { Component } from 'solid-js'
 import RangeInput from '../RangeInput'
-import { AppSchema } from '../../../common/types/schema'
 import { defaultPresets } from '../../../common/presets'
-import { ThirdPartyFormat } from '../../../common/adapters'
 import { Card } from '../Card'
 import { A } from '@solidjs/router'
-import { PresetProps } from './types'
+import { PresetTabProps } from './types'
 
-export const SliderSettings: Component<
-  PresetProps & {
-    pane: boolean
-    format?: ThirdPartyFormat
-    tab: string
-    sub?: AppSchema.SubscriptionModelOption
-  }
-> = (props) => {
+export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
       <Card class="flex flex-col gap-4">
@@ -25,10 +16,11 @@ export const SliderSettings: Component<
           min={0}
           max={20}
           step={0.01}
-          value={props.inherit?.dynatemp_range || 0}
-          disabled={props.disabled}
+          value={props.state.dynatemp_range || 0}
+          disabled={props.state.disabled}
           aiSetting={'dynatemp_range'}
           recommended={props.sub?.preset.dynatemp_range}
+          onChange={(ev) => props.setter('dynatemp_range', ev)}
         />
 
         <RangeInput
@@ -38,10 +30,11 @@ export const SliderSettings: Component<
           min={0}
           max={20}
           step={0.01}
-          value={props.inherit?.dynatemp_exponent || 1}
-          disabled={props.disabled}
+          value={props.state.dynatemp_exponent || 1}
+          disabled={props.state.disabled}
           aiSetting={'dynatemp_exponent'}
           recommended={props.sub?.preset.dynatemp_exponent}
+          onChange={(ev) => props.setter('dynatemp_exponent', ev)}
         />
         <RangeInput
           fieldName="smoothingFactor"
@@ -50,10 +43,11 @@ export const SliderSettings: Component<
           min={0}
           max={10}
           step={0.01}
-          value={props.inherit?.smoothingFactor || 0}
-          disabled={props.disabled}
+          value={props.state.smoothingFactor || 0}
+          disabled={props.state.disabled}
           aiSetting={'smoothingFactor'}
-          recommended={props.sub?.preset.dynatemp_exponent}
+          recommended={props.sub?.preset.smoothingFactor}
+          onChange={(ev) => props.setter('smoothingFactor', ev)}
         />
         <RangeInput
           fieldName="smoothingCurve"
@@ -62,10 +56,11 @@ export const SliderSettings: Component<
           min={1}
           max={5}
           step={0.01}
-          value={props.inherit?.smoothingCurve || 1}
-          disabled={props.disabled}
+          value={props.state.smoothingCurve || 1}
+          disabled={props.state.disabled}
           aiSetting={'smoothingCurve'}
           recommended={props.sub?.preset.smoothingCurve}
+          onChange={(ev) => props.setter('smoothingCurve', ev)}
         />
         <RangeInput
           fieldName="cfgScale"
@@ -84,9 +79,10 @@ export const SliderSettings: Component<
           min={1}
           max={3}
           step={0.05}
-          value={props.inherit?.cfgScale || 1}
-          disabled={props.disabled}
+          value={props.state.cfgScale || 1}
+          disabled={props.state.disabled}
           aiSetting={'cfgScale'}
+          onChange={(ev) => props.setter('cfgScale', ev)}
         />
 
         <RangeInput
@@ -96,10 +92,11 @@ export const SliderSettings: Component<
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.topP ?? defaultPresets.basic.topP}
-          disabled={props.disabled}
+          value={props.state.topP ?? defaultPresets.basic.topP}
+          disabled={props.state.disabled}
           aiSetting={'topP'}
           recommended={props.sub?.preset.topP}
+          onChange={(ev) => props.setter('topP', ev)}
         />
 
         <RangeInput
@@ -109,10 +106,11 @@ export const SliderSettings: Component<
           min={0}
           max={100}
           step={1}
-          value={props.inherit?.topK ?? defaultPresets.basic.topK}
-          disabled={props.disabled}
+          value={props.state.topK ?? defaultPresets.basic.topK}
+          disabled={props.state.disabled}
           aiSetting={'topK'}
           recommended={props.sub?.preset.topK}
+          onChange={(ev) => props.setter('topK', ev)}
         />
         <RangeInput
           fieldName="topA"
@@ -121,10 +119,11 @@ export const SliderSettings: Component<
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.topA ?? 0}
-          disabled={props.disabled}
+          value={props.state.topA ?? 0}
+          disabled={props.state.disabled}
           aiSetting={'topA'}
           recommended={props.sub?.preset.topA}
+          onChange={(ev) => props.setter('topA', ev)}
         />
 
         <RangeInput
@@ -134,9 +133,10 @@ export const SliderSettings: Component<
           min={0}
           max={6}
           step={0.01}
-          value={props.inherit?.mirostatTau ?? 0}
-          disabled={props.disabled}
+          value={props.state.mirostatTau ?? 0}
+          disabled={props.state.disabled}
           aiSetting={'mirostatTau'}
+          onChange={(ev) => props.setter('mirostatTau', ev)}
         />
         <RangeInput
           fieldName="mirostatLR"
@@ -145,9 +145,10 @@ export const SliderSettings: Component<
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.mirostatLR ?? 1}
-          disabled={props.disabled}
+          value={props.state.mirostatLR ?? 1}
+          disabled={props.state.disabled}
           aiSetting={'mirostatLR'}
+          onChange={(ev) => props.setter('mirostatLR', ev)}
         />
         <RangeInput
           fieldName="tailFreeSampling"
@@ -156,10 +157,11 @@ export const SliderSettings: Component<
           min={0}
           max={1}
           step={0.001}
-          value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
-          disabled={props.disabled}
+          value={props.state.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
+          disabled={props.state.disabled}
           aiSetting={'tailFreeSampling'}
           recommended={props.sub?.preset.tailFreeSampling}
+          onChange={(ev) => props.setter('tailFreeSampling', ev)}
         />
         <RangeInput
           fieldName="typicalP"
@@ -168,10 +170,11 @@ export const SliderSettings: Component<
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
-          disabled={props.disabled}
+          value={props.state.typicalP ?? defaultPresets.basic.typicalP}
+          disabled={props.state.disabled}
           aiSetting={'typicalP'}
           recommended={props.sub?.preset.typicalP}
+          onChange={(ev) => props.setter('typicalP', ev)}
         />
         <RangeInput
           fieldName="repetitionPenalty"
@@ -180,10 +183,11 @@ export const SliderSettings: Component<
           min={0}
           max={3}
           step={0.01}
-          value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
-          disabled={props.disabled}
+          value={props.state.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
+          disabled={props.state.disabled}
           aiSetting={'repetitionPenalty'}
           recommended={props.sub?.preset.repetitionPenalty}
+          onChange={(ev) => props.setter('repetitionPenalty', ev)}
         />
         <RangeInput
           fieldName="repetitionPenaltyRange"
@@ -192,12 +196,11 @@ export const SliderSettings: Component<
           min={0}
           max={2048}
           step={1}
-          value={
-            props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
-          }
-          disabled={props.disabled}
+          value={props.state.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
+          disabled={props.state.disabled}
           aiSetting={'repetitionPenaltyRange'}
           recommended={props.sub?.preset.repetitionPenaltyRange}
+          onChange={(ev) => props.setter('repetitionPenaltyRange', ev)}
         />
         <RangeInput
           fieldName="repetitionPenaltySlope"
@@ -206,12 +209,11 @@ export const SliderSettings: Component<
           min={0}
           max={10}
           step={0.01}
-          value={
-            props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
-          }
-          disabled={props.disabled}
+          value={props.state.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
+          disabled={props.state.disabled}
           aiSetting={'repetitionPenaltySlope'}
           recommended={props.sub?.preset.repetitionPenaltySlope}
+          onChange={(ev) => props.setter('repetitionPenaltySlope', ev)}
         />
         <RangeInput
           fieldName="etaCutoff"
@@ -229,9 +231,10 @@ export const SliderSettings: Component<
           min={0}
           max={20}
           step={0.0001}
-          value={props.inherit?.etaCutoff ?? 0}
-          disabled={props.disabled}
+          value={props.state.etaCutoff ?? 0}
+          disabled={props.state.disabled}
           aiSetting={'etaCutoff'}
+          onChange={(ev) => props.setter('etaCutoff', ev)}
         />
         <RangeInput
           fieldName="epsilonCutoff"
@@ -240,9 +243,10 @@ export const SliderSettings: Component<
           min={0}
           max={9}
           step={0.0001}
-          value={props.inherit?.epsilonCutoff ?? 0}
-          disabled={props.disabled}
+          value={props.state.epsilonCutoff ?? 0}
+          disabled={props.state.disabled}
           aiSetting={'epsilonCutoff'}
+          onChange={(ev) => props.setter('epsilonCutoff', ev)}
         />
         <RangeInput
           fieldName="frequencyPenalty"
@@ -251,10 +255,11 @@ export const SliderSettings: Component<
           min={-2.0}
           max={2.0}
           step={0.01}
-          value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
-          disabled={props.disabled}
+          value={props.state.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
+          disabled={props.state.disabled}
           aiSetting={'frequencyPenalty'}
           recommended={props.sub?.preset.frequencyPenalty}
+          onChange={(ev) => props.setter('frequencyPenalty', ev)}
         />
         <RangeInput
           fieldName="presencePenalty"
@@ -263,10 +268,11 @@ export const SliderSettings: Component<
           min={-2.0}
           max={2.0}
           step={0.01}
-          value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
-          disabled={props.disabled}
+          value={props.state.presencePenalty ?? defaultPresets.openai.presencePenalty}
+          disabled={props.state.disabled}
           aiSetting={'presencePenalty'}
           recommended={props.sub?.preset.presencePenalty}
+          onChange={(ev) => props.setter('presencePenalty', ev)}
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
@@ -275,12 +281,11 @@ export const SliderSettings: Component<
           min={0.8}
           max={1.5}
           step={0.01}
-          value={
-            props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty
-          }
-          disabled={props.disabled}
+          value={props.state.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
+          disabled={props.state.disabled}
           aiSetting={'encoderRepitionPenalty'}
           recommended={props.sub?.preset.encoderRepitionPenalty}
+          onChange={(ev) => props.setter('encoderRepitionPenalty', ev)}
         />
 
         <RangeInput
@@ -290,10 +295,11 @@ export const SliderSettings: Component<
           min={0}
           max={5}
           step={0.01}
-          value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
-          disabled={props.disabled}
+          value={props.state.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
+          disabled={props.state.disabled}
           aiSetting={'penaltyAlpha'}
           recommended={props.sub?.preset.penaltyAlpha}
+          onChange={(ev) => props.setter('penaltyAlpha', ev)}
         />
 
         <RangeInput
@@ -303,9 +309,10 @@ export const SliderSettings: Component<
           min={1}
           max={20}
           step={1}
-          value={props.inherit?.numBeams ?? 1}
-          disabled={props.disabled}
+          value={props.state.numBeams ?? 1}
+          disabled={props.state.disabled}
           aiSetting={'numBeams'}
+          onChange={(ev) => props.setter('numBeams', ev)}
         />
       </Card>
     </div>

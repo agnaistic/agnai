@@ -1,4 +1,4 @@
-import { createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select, { Option } from '../Select'
@@ -14,14 +14,11 @@ import { Toggle } from '../Toggle'
 import { settingStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
-import { createStore } from 'solid-js/store'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
-import { forms } from '/web/emitter'
 import {
-  Field,
   ContextSize,
   ModelFormat,
   ResponseLength,
@@ -31,6 +28,7 @@ import {
   GoogleModels,
   ThirdPartyUrl,
 } from './Fields'
+import { PresetTabProps } from './types'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -55,22 +53,9 @@ const CLAUDE_LABELS = {
   ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
 } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
-export const GeneralSettings: Field = (props) => {
+export const GeneralSettings: Component<PresetTabProps> = (props) => {
   const cfg = settingStore()
   const user = userStore()
-
-  const [replicate, setReplicate] = createStore({
-    model: props.inherit?.replicateModelName,
-    type: props.inherit?.replicateModelType,
-    version: props.inherit?.replicateModelVersion,
-  })
-
-  const [_, setSwipesPerGeneration] = createSignal(props.inherit?.swipesPerGeneration || 1)
-  const [tokens, setTokens] = createSignal(props.inherit?.maxTokens || 150)
-
-  const [context, setContext] = createSignal(
-    props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
-  )
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.userLevel
@@ -114,8 +99,8 @@ export const GeneralSettings: Field = (props) => {
       .map(({ value }) => ({ label: value, value }))
       .concat({ value: '', label: 'Use service default' })
 
-    const match = base.find((b) => b.value === props.inherit?.novelModel)
-    const model = props.inherit?.novelModel || ''
+    const match = base.find((b) => b.value === props.state.novelModel)
+    const model = props.state.novelModel || ''
     if (model.length > 0 && !match) {
       base.push({ value: model, label: `Custom (${model})` })
     }
@@ -130,36 +115,45 @@ export const GeneralSettings: Field = (props) => {
     return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
   })
 
-  forms.useSub((field, value) => {
-    if (field === 'maxContextLength') {
-      setContext(value)
-    }
-  })
-
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <ModelFormat {...props} />
+      <ModelFormat state={props.state} setter={props.setter} sub={props.sub} />
 
-      <Card hide={!serviceHasSetting(props.service, props.format, 'localRequests')}>
+      <Card
+        hide={
+          !serviceHasSetting(props.state.service, props.state.thirdPartyFormat, 'localRequests')
+        }
+      >
         <Toggle
           fieldName="localRequests"
           label="Use Local Requests"
           helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
-          service={props.service}
-          format={props.format}
+          service={props.state.service}
+          format={props.state.thirdPartyFormat}
           aiSetting={'localRequests'}
-          value={props.inherit?.localRequests}
+          value={props.state.localRequests}
+          onChange={(ev) => props.setter('localRequests', ev)}
         />
       </Card>
 
-      <Show when={props.service === 'horde'}>
+      <Show when={props.state.service === 'horde'}>
         <Card>
-          <HordeDetails maxTokens={tokens()} maxContextLength={context()} />
+          <HordeDetails
+            maxTokens={props.state.maxTokens}
+            maxContextLength={props.state.maxContextLength!}
+          />
         </Card>
       </Show>
 
       <Card
-        hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl', 'thirdPartyKey')}
+        hide={
+          !serviceHasSetting(
+            props.state.service,
+            props.state.thirdPartyFormat,
+            'thirdPartyUrl',
+            'thirdPartyKey'
+          )
+        }
       >
         <ThirdPartyUrl {...props} />
         <ThirdPartyKey {...props} />
@@ -169,10 +163,11 @@ export const GeneralSettings: Field = (props) => {
             fieldName="thirdPartyUrlNoSuffix"
             label="Disable Auto-URL"
             helperText="No paths will be added to your URL."
-            value={props.inherit?.thirdPartyUrlNoSuffix}
-            service={props.service}
+            value={props.state.thirdPartyUrlNoSuffix}
+            service={props.state.service}
             aiSetting="thirdPartyUrl"
-            hide={props.format === 'featherless'}
+            onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
+            hide={props.state.thirdPartyModel === 'featherless'}
           />
         </div>
       </Card>
@@ -181,8 +176,8 @@ export const GeneralSettings: Field = (props) => {
         class="flex flex-wrap gap-5"
         hide={
           !serviceHasSetting(
-            props.service,
-            props.format,
+            props.state.service,
+            props.state.thirdPartyFormat,
             'oaiModel',
             'openRouterModel',
             'novelModel',
@@ -194,18 +189,19 @@ export const GeneralSettings: Field = (props) => {
           )
         }
       >
-        <FeatherlessModels {...props} />
+        <FeatherlessModels state={props.state} setter={props.setter} sub={props.sub} />
 
-        <GoogleModels {...props} />
+        <GoogleModels state={props.state} setter={props.setter} sub={props.sub} />
 
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"
           items={modelsToItems(OPENAI_MODELS)}
           helperText="Which OpenAI model to use"
-          value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
-          disabled={props.disabled}
+          value={props.state.oaiModel ?? defaultPresets.basic.oaiModel}
+          disabled={props.state.disabled}
           aiSetting={'oaiModel'}
+          onChange={(ev) => props.setter('oaiModel', ev.value)}
         />
 
         <Select
@@ -213,18 +209,20 @@ export const GeneralSettings: Field = (props) => {
           label="Mistral Model"
           items={modelsToItems(MISTRAL_MODELS)}
           helperText="Which Mistral model to use"
-          value={props.inherit?.mistralModel ?? ''}
-          disabled={props.disabled}
+          value={props.state.mistralModel ?? ''}
+          disabled={props.state.disabled}
           aiSetting={'mistralModel'}
+          onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
 
         <TextInput
           fieldName="thirdPartyModel"
           label="Model Override"
           helperText="Model Override (typically for 3rd party APIs)"
-          value={props.inherit?.thirdPartyModel ?? ''}
-          disabled={props.disabled}
+          value={props.state.thirdPartyModel ?? ''}
+          disabled={props.state.disabled}
           aiSetting={'thirdPartyModel'}
+          onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
         />
 
         <Select
@@ -232,21 +230,34 @@ export const GeneralSettings: Field = (props) => {
           label="OpenRouter Model"
           items={openRouterModels()}
           helperText="Which OpenRouter model to use"
-          value={props.inherit?.openRouterModel?.id || ''}
-          disabled={props.disabled}
+          value={props.state.openRouterModel?.id || ''}
+          disabled={props.state.disabled}
           aiSetting={'openRouterModel'}
+          onChange={(ev) =>
+            props.setter(
+              'openRouterModel',
+              cfg.config.openRouter.models?.find((m) => m.id === ev.value)
+            )
+          }
         />
         <div
           class="flex flex-wrap gap-2"
-          classList={{ hidden: !isValidServiceSetting(props.service, props.format, 'novelModel') }}
+          classList={{
+            hidden: !isValidServiceSetting(
+              props.state.service,
+              props.state.thirdPartyFormat,
+              'novelModel'
+            ),
+          }}
         >
           <Select
             fieldName="novelModel"
             label="NovelAI Model"
             items={novelModels()}
-            value={props.inherit?.novelModel || ''}
-            disabled={props.disabled}
+            value={props.state.novelModel || ''}
+            disabled={props.state.disabled}
             aiSetting={'novelModel'}
+            onChange={(ev) => props.setter('novelModel', ev.value)}
           />
           <Show when={cfg.flags.naiModel}>
             <TextInput
@@ -263,23 +274,24 @@ export const GeneralSettings: Field = (props) => {
           label="Claude Model"
           items={claudeModels()}
           helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
-          value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
-          disabled={props.disabled}
+          value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
+          disabled={props.state.disabled}
           aiSetting={'claudeModel'}
+          onChange={(ev) => props.setter('claudeModel', ev.value)}
         />
         <Show when={replicateModels().length > 1}>
           <Select
             fieldName="replicateModelName"
             items={replicateModels()}
             label="Replicate Model"
-            value={props.inherit?.replicateModelName}
+            value={props.state.replicateModelName}
             helperText={
               <>
                 <span>Publicly available language models.</span>
               </>
             }
             aiSetting="replicateModelVersion"
-            onChange={(ev) => setReplicate('model', ev.value)}
+            onChange={(ev) => props.setter('replicateModelName', ev.value)}
           />
         </Show>
         <Select
@@ -287,28 +299,26 @@ export const GeneralSettings: Field = (props) => {
           label="Replicate Model Type"
           items={modelsToItems(REPLICATE_MODEL_TYPES)}
           helperText="Which Replicate API input parameters to use."
-          value={replicate.type}
-          disabled={!!replicate.model || props.disabled}
+          value={props.state.replicateModelType}
+          disabled={!!props.state.replicateModelName || props.state.disabled}
           aiSetting={'replicateModelType'}
-          onChange={(ev) => setReplicate('type', ev.value)}
+          onChange={(ev) => props.setter('replicateModelType', ev.value)}
         />
         <TextInput
           fieldName="replicateModelVersion"
           label="Replicate Model by Version (SHA)"
           helperText="Which Replicate model to use (see https://replicate.com/collections/language-models)"
-          value={replicate.version}
+          value={props.state.replicateModelVersion}
           placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
-          disabled={!!replicate.model || props.disabled}
+          disabled={!!props.state.replicateModelName || props.state.disabled}
           aiSetting={'replicateModelVersion'}
-          onInput={(ev) => setReplicate('version', ev.currentTarget.value)}
+          onChange={(ev) => props.setter('replicateModelVersion', ev.currentTarget.value)}
         />
       </Card>
 
       <Card class="flex flex-col gap-2">
         <Show
-          when={
-            props.inherit?.service === 'kobold' && props.inherit.thirdPartyFormat === 'aphrodite'
-          }
+          when={props.state.service === 'kobold' && props.state.thirdPartyFormat === 'aphrodite'}
         >
           <RangeInput
             fieldName="swipesPerGeneration"
@@ -317,15 +327,20 @@ export const GeneralSettings: Field = (props) => {
             min={1}
             max={10}
             step={1}
-            value={props.inherit?.swipesPerGeneration || 1}
-            disabled={props.disabled}
-            onChange={(val) => setSwipesPerGeneration(val)}
+            value={props.state.swipesPerGeneration || 1}
+            disabled={props.state.disabled}
+            onChange={(ev) => props.setter('swipesPerGeneration', ev)}
           />
         </Show>
 
-        <ResponseLength {...props} subMax={subMax()} setTokens={setTokens} />
+        <ResponseLength
+          state={props.state}
+          setter={props.setter}
+          sub={props.sub}
+          subMax={subMax()}
+        />
 
-        <ContextSize {...props} subMax={subMax()} />
+        <ContextSize state={props.state} setter={props.setter} sub={props.sub} subMax={subMax()} />
 
         <Temperature {...props} />
 
@@ -336,30 +351,33 @@ export const GeneralSettings: Field = (props) => {
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.minP ?? 0}
-          disabled={props.disabled}
+          value={props.state.minP ?? 0}
+          disabled={props.state.disabled}
           aiSetting={'minP'}
           recommended={props.sub?.preset.minP}
+          onChange={(ev) => props.setter('minP', ev)}
         />
 
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
           helperText="Stream the AI's response as it is generated"
-          value={props.inherit?.streamResponse ?? false}
-          disabled={props.disabled}
+          value={props.state.streamResponse ?? false}
+          disabled={props.state.disabled}
           aiSetting="streamResponse"
+          onChange={(ev) => props.setter('streamResponse', ev)}
         />
-        <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
+        <StoppingStrings state={props.state} setter={props.setter} sub={props.sub} />
         <Toggle
           fieldName="disableNameStops"
           label="Disable Name Stops"
           helperText="Disable automatic character names stopping strings"
-          value={props.inherit?.disableNameStops}
+          value={props.state.disableNameStops}
           aiSetting="disableNameStops"
+          onChange={(ev) => props.setter('disableNameStops', ev)}
         />
 
-        <PhraseBias inherit={props.inherit} service={props.service} format={props.format} />
+        <PhraseBias state={props.state} setter={props.setter} sub={props.sub} />
       </Card>
     </div>
   )

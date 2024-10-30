@@ -63,6 +63,8 @@ const INFERENCE_URLS: Record<string, boolean> = {
   '/v1/completions': true,
   '/chat/completions': true,
   '/v1/chat/completions': true,
+  '/v1/image': true,
+  '/v1/generate-image': true,
 }
 
 function isInferenceUrl(url: string) {

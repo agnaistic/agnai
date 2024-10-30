@@ -5,12 +5,14 @@ import { ImageSettings } from '/common/types/image-schema'
 export type ImageGenerateRequest = {
   user: AppSchema.User
   prompt: string
+  source: string
+
+  sync?: boolean
   chatId?: string
   model?: string
   messageId?: string
   ephemeral?: boolean
   append?: boolean
-  source: string
   noAffix?: boolean
   characterId?: string
   requestId?: string

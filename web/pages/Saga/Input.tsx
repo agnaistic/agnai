@@ -33,7 +33,6 @@ export const SagaInput: Component<{
         spellcheck
         parentClass="w-full"
         class="input-bar min-h-[80px] w-full py-0"
-        onInput={updateText}
         onChange={updateText}
         disabled={props.loading}
         onKeyDown={(ev) => {

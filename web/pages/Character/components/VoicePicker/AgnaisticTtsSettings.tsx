@@ -32,7 +32,6 @@ export const AgnaisticTtsSettings: Component<{
           helperText="*Select 'Use Seed' in Voice* - Allows you to create a custom voice using a seed of your choice. "
           value={props.settings.seed ?? ''}
           onChange={(ev) => update({ seed: +ev.currentTarget.value })}
-          onInput={(ev) => update({ seed: +ev.currentTarget.value })}
         />
         <Button class="ml-2 rounded-lg" onClick={() => generate()}>
           <RefreshCw size={24} />

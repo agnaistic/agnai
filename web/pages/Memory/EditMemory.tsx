@@ -11,6 +11,7 @@ import { Toggle } from '../../shared/Toggle'
 import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
 import { emptyEntry } from '/common/memory'
 import { Card } from '/web/shared/Card'
+import { createStore } from 'solid-js/store'
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -32,28 +33,32 @@ const EditMemoryForm: Component<{
   entrySort: EntrySort
   onChange?: (book: Partial<AppSchema.MemoryBook>) => void
 }> = (props) => {
-  const [entries, setEntries] = createSignal(props.book.entries)
+  const [state, setState] = createStore({ ...props.book })
+  const [entries, setEntries] = createStore(props.book.entries)
+
   const [search, setSearch] = createSignal('')
 
   const change = (book: Partial<AppSchema.MemoryBook>) => {
+    setState(book)
     props.onChange?.(book)
   }
 
   const addEntry = () => {
-    const next = entries().concat({
+    const entry = {
       entry: '',
       keywords: [],
       name: '',
       priority: 0,
       weight: 0,
       enabled: true,
-    })
-    setEntries(next)
-    change({ ...props.book, entries: next })
+    }
+
+    setEntries(entries.concat(entry))
+    change({ ...props.book, entries })
   }
 
   const onRemoveEntry = (pos: number) => {
-    const next = entries().filter((_, i) => i !== pos)
+    const next = entries.filter((_, i) => i !== pos)
     setEntries(next)
     change({ ...props.book, entries: next })
   }
@@ -62,7 +67,7 @@ const EditMemoryForm: Component<{
     on(
       () => props.entrySort,
       (entrySort) => {
-        const next = sortEntries(entries(), entrySort)
+        const next = sortEntries(entries, entrySort)
         setEntries(next)
       }
     )
@@ -77,9 +82,8 @@ const EditMemoryForm: Component<{
           helperText={props.book._id === '' ? 'New book' : props.book._id}
         />
         <TextInput
-          fieldName="bookName"
           label="Book Name"
-          value={props.book?.name || ''}
+          value={state.name}
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
@@ -88,9 +92,8 @@ const EditMemoryForm: Component<{
         />
 
         <TextInput
-          fieldName="bookDesc"
           label="Description"
-          value={props.book?.description || ''}
+          value={state.name}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
             change({ description: e.currentTarget.value })
@@ -121,7 +124,7 @@ const EditMemoryForm: Component<{
             class="mx-1 my-1"
           />
         </div>
-        <Index each={entries()}>
+        <Index each={entries}>
           {(entry, i) => (
             <EntryCard
               {...entry}
@@ -130,9 +133,7 @@ const EditMemoryForm: Component<{
               onRemove={() => onRemoveEntry(i)}
               search={search()}
               onChange={(e) => {
-                const next = entries().map((entry, idx) =>
-                  idx === i ? Object.assign({}, entry, e) : entry
-                )
+                const next = modify(entries, e, i)
                 setEntries(next)
                 change({ entries: next })
               }}
@@ -177,7 +178,6 @@ const EntryCard: Component<{
             }}
           />
           <Toggle
-            fieldName={`enabled.${props.index}`}
             value={!!props.entry.enabled}
             class="flex items-center"
             onChange={(e) => {
@@ -193,7 +193,6 @@ const EntryCard: Component<{
     >
       <div class="flex flex-col gap-2">
         <TextInput
-          fieldName={`keywords.${props.index}`}
           label="Keywords"
           required
           placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
@@ -208,7 +207,6 @@ const EntryCard: Component<{
         />
         <div class="flex flex-row gap-4">
           <TextInput
-            fieldName={`priority.${props.index}`}
             label="Priority"
             required
             type="number"
@@ -219,7 +217,6 @@ const EntryCard: Component<{
             }}
           />
           <TextInput
-            fieldName={`weight.${props.index}`}
             label="Weight"
             required
             type="number"
@@ -231,7 +228,6 @@ const EntryCard: Component<{
           />
         </div>
         <TextInput
-          fieldName={`entry.${props.index}`}
           isMultiline
           value={props.entry.entry}
           placeholder="Memory entry. E.g. {{user}} likes fruit and vegetables"
@@ -302,4 +298,18 @@ function sortEntries(entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema
     // ensure newly added entries are at the bottom
     return a.name === '' ? 1 : b.name === '' ? -1 : alphaCaseInsensitiveSort(a.name, b.name)
   })
+}
+
+function modify<T>(list: T[], update: Partial<T>, index: number) {
+  const next: T[] = []
+  for (let i = 0; i < list.length; i++) {
+    if (i !== index) {
+      next.push(list[i])
+      continue
+    }
+
+    next.push({ ...list[i], ...update })
+  }
+
+  return next
 }

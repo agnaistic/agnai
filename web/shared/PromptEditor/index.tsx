@@ -31,6 +31,7 @@ import Sortable, { SortItem } from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
+import { PresetState } from '../PresetSettings/types'
 
 type Placeholder = {
   required: boolean
@@ -139,9 +140,9 @@ type Optionals = { exclude: InterpAll[] } | { include: InterpAll[] } | {}
 
 const PromptEditor: Component<
   {
-    fieldName: string
     service?: AIAdapter
-    inherit?: Partial<AppSchema.UserGenPreset>
+    fieldName?: string
+    state?: PresetState
     disabled?: boolean
     value?: string
     onChange?: (value: string) => void
@@ -175,7 +176,7 @@ const PromptEditor: Component<
 
   const openTemplate = () => {
     if (!templateId()) {
-      setTemplateId(props.inherit?.promptTemplateId || '')
+      setTemplateId(props.state?.promptTemplateId || '')
     }
 
     setTemplates(true)
@@ -188,9 +189,9 @@ const PromptEditor: Component<
 
   createEffect(
     on(
-      () => props.inherit?.promptTemplateId,
+      () => props.state?.promptTemplateId,
       () => {
-        setTemplateId(props.inherit?.promptTemplateId || '')
+        setTemplateId(props.state?.promptTemplateId || '')
       }
     )
   )
@@ -208,12 +209,12 @@ const PromptEditor: Component<
   })
 
   const togglePreview = async () => {
-    const opts = await getExampleOpts(props.inherit)
+    const opts = await getExampleOpts(props.state)
     const template = props.noDummyPreview ? input() : ensureValidTemplate(input())
     let { parsed } = await parseTemplate(template, opts)
 
-    if (props.inherit?.modelFormat) {
-      parsed = replaceTags(parsed, props.inherit.modelFormat)
+    if (props.state?.modelFormat) {
+      parsed = replaceTags(parsed, props.state.modelFormat)
     }
 
     setRendered(parsed)
@@ -308,13 +309,13 @@ const PromptEditor: Component<
                   Toggle Preview
                 </Button>
                 <Show when={props.showTemplates}>
-                  <Show when={!props.inherit?.promptTemplateId}>
+                  <Show when={!props.state?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
                       Use Library Template
                     </Button>
                   </Show>
 
-                  <Show when={!!props.inherit?.promptTemplateId}>
+                  <Show when={!!props.state?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
                       Update Library Template
                     </Button>
@@ -324,7 +325,7 @@ const PromptEditor: Component<
                     size="sm"
                     onClick={() => {
                       setTemplateId('')
-                      ref.value = props.inherit?.gaslight || ''
+                      ref.value = props.state?.gaslight || ''
                     }}
                   >
                     Use Preset's Template
@@ -363,8 +364,6 @@ const PromptEditor: Component<
         jsonValues={{ example: '', 'example with spaces': '', response: '' }}
       />
       <textarea
-        id={props.fieldName}
-        name={props.fieldName}
         class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl px-4 py-2 font-mono text-sm"
         classList={{ hidden: preview() }}
         ref={ref}
@@ -396,9 +395,9 @@ const PromptEditor: Component<
             setTemplateId(id)
             ref.value = template
           }}
-          currentTemplateId={templateId() || props.inherit?.promptTemplateId}
+          currentTemplateId={templateId() || props.state?.promptTemplateId}
           currentTemplate={template()}
-          presetId={props.inherit?._id}
+          presetId={props.state?._id}
         />
       </Show>
     </div>
@@ -424,13 +423,13 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
   .sort((l, r) => l.id - r.id)
 
 export const BasicPromptTemplate: Component<{
-  inherit?: Partial<AppSchema.GenSettings>
+  state?: PresetState
   hide?: boolean
 }> = (props) => {
   let ref: HTMLInputElement
 
   const [mod, setMod] = createSignal(
-    props.inherit?.promptOrder?.map((o) => ({
+    props.state?.promptOrder?.map((o) => ({
       ...BASIC_LABELS[o.placeholder],
       value: o.placeholder,
       enabled: o.enabled,
@@ -571,7 +570,7 @@ const HelpModal: Component<{
   return null
 }
 
-async function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
+async function getExampleOpts(inherit?: PresetState) {
   const char = toChar('Rory', {
     scenario: 'Rory is strolling in the park',
     persona: toPersona('Rory is very talkative.'),

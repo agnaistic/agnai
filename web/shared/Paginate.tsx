@@ -96,7 +96,7 @@ export const ManualPaginate: Component<{
         type="number"
         fieldName="paginationSize"
         value={props.pager.pageSize()}
-        onInput={onPageSize}
+        onChange={onPageSize}
         class="w-20 py-[2px]"
       />
     </div>

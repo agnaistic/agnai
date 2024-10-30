@@ -1,5 +1,4 @@
-import { Component, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
-import { forms } from '../emitter'
+import { Component, JSX, Show, createMemo, createSignal } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -132,12 +131,7 @@ export const ModeButton: Component<{
     setMode(value)
     ref.value = value
     props.onChange?.(value)
-    forms.emit(props.fieldName, value)
   }
-
-  onMount(() => {
-    forms.emit(props.fieldName, props.value)
-  })
 
   return (
     <>

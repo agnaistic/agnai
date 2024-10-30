@@ -15,12 +15,11 @@ import { createDebounce, useValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 import { markdown } from './markdown'
-import { forms } from '../emitter'
 
 const MIN_HEIGHT = 40
 
 type Props = {
-  fieldName: string
+  fieldName?: string
   prelabel?: string
   label?: string | JSX.Element
   helperText?: string | JSX.Element
@@ -61,12 +60,6 @@ type Props = {
   onChange?: (
     ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
-
-  onInput?: (
-    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
-  ) => void
-
-  onInputText?: (value: string) => void
 
   aiSetting?: keyof PresetAISettings
 }
@@ -131,7 +124,7 @@ const TextInput: Component<Props> = (props) => {
     on(
       () => props.value,
       () => {
-        if (props.value === undefined) return
+        if (props.value === undefined) return // Unsure about this
         if (props.static) return
         if (inputRef && inputRef.value !== props.value) inputRef.value = props.value.toString()
         resize()
@@ -159,20 +152,11 @@ const TextInput: Component<Props> = (props) => {
     })
   }
 
-  const handleChange = async (
-    ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
-  ) => {
-    props.onChange?.(ev)
-    forms.emit(props.fieldName, ev.currentTarget.value)
-  }
-
   const handleInput = async (
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
     resize()
-    props.onInput?.(ev)
-    props.onInputText?.(ev.currentTarget.value)
-    forms.emit(props.fieldName, ev.currentTarget.value)
+    props.onChange?.(ev)
   }
 
   const show = useValidServiceSetting(props.aiSetting)
@@ -236,7 +220,7 @@ const TextInput: Component<Props> = (props) => {
             lang={props.lang}
             onKeyUp={(ev) => props.onKeyUp?.(ev)}
             onKeyDown={(ev) => props.onKeyDown?.(ev)}
-            onchange={handleChange}
+            onchange={handleInput}
             onInput={handleInput}
             {...props.textarea}
           />
@@ -262,7 +246,7 @@ const TextInput: Component<Props> = (props) => {
               props.onKeyUp?.(ev)
             }}
             onKeyDown={(ev) => props.onKeyDown?.(ev)}
-            onChange={handleChange}
+            onChange={handleInput}
             onInput={handleInput}
             disabled={props.disabled}
             pattern={props.pattern}
@@ -294,7 +278,7 @@ const TextInput: Component<Props> = (props) => {
                 props.onKeyUp?.(ev)
               }}
               onKeyDown={(ev) => props.onKeyDown?.(ev)}
-              onChange={handleChange}
+              onChange={handleInput}
               onInput={handleInput}
               disabled={props.disabled}
               pattern={props.pattern}
