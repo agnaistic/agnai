@@ -10,8 +10,7 @@ import {
   on,
 } from 'solid-js'
 import IsVisible from './IsVisible'
-import { PresetAISettings } from '../../common/adapters'
-import { createDebounce, useValidServiceSetting } from './util'
+import { createDebounce } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 import { markdown } from './markdown'
@@ -60,8 +59,6 @@ type Props = {
   onChange?: (
     ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
-
-  aiSetting?: keyof PresetAISettings
 }
 
 export const ButtonInput: Component<Props & { children: any }> = (props) => {
@@ -159,14 +156,12 @@ const TextInput: Component<Props> = (props) => {
     props.onChange?.(ev)
   }
 
-  const show = useValidServiceSetting(props.aiSetting)
-
   return (
     <div
       class={`${props.parentClass || ''}`}
       classList={{
         'flex gap-0': !!props.prelabel && !props.isMultiline,
-        hidden: !show() || props.parentClass?.includes('hidden') || props.hide,
+        hidden: props.parentClass?.includes('hidden') || props.hide,
       }}
     >
       <Show when={props.prelabel && !props.isMultiline}>

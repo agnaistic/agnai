@@ -11,7 +11,7 @@ import { MODEL_FORMATS } from './General'
 import { defaultPresets } from '/common/default-preset'
 import { FormLabel } from '../FormLabel'
 import { SubscriptionModelLevel } from '/common/types/presets'
-import { useValidServiceSetting } from '../util'
+import { hidePresetSetting } from '../util'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { CustomSelect } from '../CustomSelect'
@@ -113,10 +113,8 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
 }
 
 export const SystemPrompt: Field = (props) => {
-  const show = useValidServiceSetting('systemPrompt')
-
   return (
-    <Card classList={{ hidden: !show() }}>
+    <Card classList={{ hidden: hidePresetSetting(props.state, 'systemPrompt') }}>
       <FormLabel
         label="System Prompt"
         helperText={<>The task the AI is performing. Leave blank if uncertain.</>}
@@ -134,10 +132,8 @@ export const SystemPrompt: Field = (props) => {
 }
 
 export const Jailbreak: Field = (props) => {
-  const show = useValidServiceSetting('ultimeJailbreak')
-
   return (
-    <Card classList={{ hidden: !show() }}>
+    <Card classList={{ hidden: hidePresetSetting(props.state, 'ultimeJailbreak') }}>
       <FormLabel
         label="Jailbreak (UJB)"
         helperText={
@@ -175,8 +171,8 @@ export const ThirdPartyUrl: Field = (props) => {
       placeholder="E.g. https://some-tunnel-url.loca.lt"
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
-      aiSetting={'thirdPartyUrl'}
       hide={
+        hidePresetSetting(props.state, 'thirdPartyUrl') ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini'
@@ -208,7 +204,7 @@ export const ThirdPartyKey: Field = (props) => {
         value={props.state.thirdPartyKey}
         disabled={props.state.disabled}
         type="password"
-        aiSetting={'thirdPartyKey'}
+        hide={hidePresetSetting(props.state, 'thirdPartyKey')}
         onChange={(ev) => props.setter('thirdPartyKey', ev.currentTarget.value)}
       />
     </>

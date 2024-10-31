@@ -1,14 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  onMount,
-  Show,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, JSX, onMount, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
@@ -20,8 +11,8 @@ import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import PresetSettings, { getPresetFormData } from '/web/shared/PresetSettings'
-import { PresetTab } from '../PresetSettings/types'
+import PresetSettings from '/web/shared/PresetSettings'
+import { getPresetForm, PresetState, PresetTab } from '../PresetSettings/types'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 
 export const ModeGenSettings: Component<{
@@ -38,6 +29,8 @@ export const ModeGenSettings: Component<{
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
+
+  const [presetState, setPresetState] = createSignal<PresetState>()
 
   const presetOptions = createMemo(() =>
     getPresetOptions(state.presets, { builtin: true, base: true })
@@ -60,6 +53,8 @@ export const ModeGenSettings: Component<{
     props.presetId || user.user?.defaultPreset || AutoPreset.service
   )
 
+  const inherited = createMemo(() => state.presets.find((p) => p._id === selected()))
+
   createEffect(() => {
     if (!props.presetId) return
     if (selected() !== props.presetId) {
@@ -69,7 +64,7 @@ export const ModeGenSettings: Component<{
 
   const onSave = () => {
     const presetId = selected()
-    const update = getPresetFormData(ref)
+    const update = getPresetForm(presetState()!)
 
     if (isDefaultPreset(presetId)) {
       const original = defaultPresets[presetId] as AppSchema.GenSettings
@@ -80,9 +75,6 @@ export const ModeGenSettings: Component<{
        */
       if (!isPresetDirty(original, update as any)) {
         props.onPresetChanged(presetId)
-        // toastStore.success('Switched preset')
-        // chatStore.editChatGenPreset(props.chat._id, presetId, () => {
-        // })
         return
       }
 
@@ -132,15 +124,13 @@ export const ModeGenSettings: Component<{
         <X /> {props.close ? 'Close' : 'Cancel'}
       </Button>
 
-      <Button onClick={onSave}>
+      <Button onClick={onSave} disabled={!presetState()}>
         <Save /> Save
       </Button>
     </>
   )
 
-  onMount(() => {
-    props.footer?.(footer)
-  })
+  onMount(() => props.footer?.(footer))
 
   const activePreset = createMemo(() => presets().find((pre) => pre._id === selected()))
 
@@ -168,13 +158,12 @@ export const ModeGenSettings: Component<{
           <TextInput fieldName="name" value={getPresetName(selected())} label="Preset Name" />
         </Card>
 
-        <For each={presets()}>
-          {(preset) => (
-            <Show when={selected() === preset._id!}>
-              <PresetSettings hideTabs={props.hideTabs} inherit={preset as any} noSave={false} />
-            </Show>
-          )}
-        </For>
+        <PresetSettings
+          state={setPresetState}
+          hideTabs={props.hideTabs}
+          inherit={inherited() as any}
+          noSave={false}
+        />
       </form>
     </div>
   )

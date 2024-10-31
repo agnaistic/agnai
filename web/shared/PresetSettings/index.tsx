@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, on, onMount, Show } from 'solid-js'
 import Select, { Option } from '../Select'
 import {
   ADAPTER_LABELS,
@@ -9,7 +9,13 @@ import {
 } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import { Card } from '../Card'
-import { getFormEntries, getStrictForm, getUsableServices, storage } from '../util'
+import {
+  getFormEntries,
+  getStrictForm,
+  getUsableServices,
+  hidePresetSetting,
+  storage,
+} from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
 import { ServiceOption } from '../../pages/Settings/components/RegisteredSettings'
@@ -53,6 +59,16 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
   })
 
   createEffect(() => setState('pane', pane.showing()))
+  createEffect(
+    on(
+      () => props.inherit,
+      (inherited) => {
+        if (inherited) {
+          setState(inherited)
+        }
+      }
+    )
+  )
 
   const sub = createMemo(() => {
     if (state.service !== 'agnaistic') return
@@ -127,7 +143,7 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
               { label: 'Google AI Studio', value: 'gemini' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
-            aiSetting={'thirdPartyFormat'}
+            hide={hidePresetSetting(state, 'thirdPartyFormat')}
             onChange={(ev) => setState('thirdPartyFormat', ev.value as ThirdPartyFormat)}
           />
 

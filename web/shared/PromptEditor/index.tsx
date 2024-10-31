@@ -12,8 +12,8 @@ import {
   onMount,
 } from 'solid-js'
 import { FormLabel } from '../FormLabel'
-import { AIAdapter, PresetAISettings } from '/common/adapters'
-import { toMap, useValidServiceSetting } from '../util'
+import { AIAdapter } from '/common/adapters'
+import { toMap } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
@@ -146,7 +146,6 @@ const PromptEditor: Component<
     disabled?: boolean
     value?: string
     onChange?: (value: string) => void
-    aiSetting?: keyof PresetAISettings
     showHelp?: boolean
     placeholder?: string
     minHeight?: number
@@ -281,8 +280,6 @@ const PromptEditor: Component<
     ref.style.height = `${next}px`
   }
 
-  const show = useValidServiceSetting(props.aiSetting)
-
   // const hide = createMemo(() => {
   //   if (props.hide) return 'hidden'
   //   if (!props.service || !adapters()) return ''
@@ -292,7 +289,7 @@ const PromptEditor: Component<
   onMount(resize)
 
   return (
-    <div class={`relative w-full flex-col gap-2`} classList={{ hidden: !show() || props.hide }}>
+    <div class={`relative w-full flex-col gap-2`} classList={{ hidden: props.hide }}>
       <Show when={props.showHelp}>
         <FormLabel
           label={

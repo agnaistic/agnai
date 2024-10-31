@@ -2,8 +2,7 @@ import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'so
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
-import { PresetAISettings } from '/common/adapters'
-import { ComponentSubscriber, useValidServiceSetting } from './util'
+import { ComponentSubscriber } from './util'
 import TextInput from './TextInput'
 
 export type CustomOption = {
@@ -27,7 +26,6 @@ export const CustomSelect: Component<{
   fieldName?: string
   selected: any | undefined
   hide?: boolean
-  aiSetting?: keyof PresetAISettings
   parentClass?: string
   classList?: Record<string, boolean>
   emitter?: ComponentSubscriber<'close'>
@@ -35,8 +33,6 @@ export const CustomSelect: Component<{
 }> = (props) => {
   let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
-
-  const show = useValidServiceSetting(props.aiSetting)
 
   onMount(() => {
     if (props.emitter) {
@@ -65,7 +61,7 @@ export const CustomSelect: Component<{
   return (
     <div
       class={`max-w-full ${props.parentClass || ''}`}
-      classList={{ ...props.classList, hidden: !show() || props.hide }}
+      classList={{ ...props.classList, hidden: props.hide }}
     >
       <Show when={props.fieldName}>
         <input

@@ -3,17 +3,13 @@ import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
 import Button from './Button'
-import { isValidServiceSetting } from './util'
+import { hidePresetSetting, isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'
 import { Field } from './PresetSettings/Fields'
 
 export const PhraseBias: Field = (props) => {
   const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(
-      props.state.service,
-      props.state.thirdPartyFormat,
-      'phraseBias'
-    )
+    const isValid = isValidServiceSetting(props.state, 'phraseBias')
     return isValid ? '' : ' hidden'
   })
 
@@ -97,17 +93,10 @@ export const StoppingStrings: Field = (props) => {
     props.setter('stopSequences', next)
   }
 
-  const hide = createMemo(() => {
-    const isValid = isValidServiceSetting(
-      props.state.service,
-      props.state.thirdPartyFormat,
-      'stopSequences'
-    )
-    return isValid ? '' : ' hidden'
-  })
+  const hide = createMemo(() => hidePresetSetting(props.state, 'stopSequences'))
 
   return (
-    <div class={hide()}>
+    <div classList={{ hidden: hide() }}>
       <FormLabel
         label={
           <div class="flex gap-2">

@@ -13,7 +13,7 @@ import {
 import { Toggle } from '../Toggle'
 import { settingStore, userStore } from '../../store'
 import { Card } from '../Card'
-import { isValidServiceSetting, serviceHasSetting } from '../util'
+import { hidePresetSetting, isValidServiceSetting, serviceHasSetting } from '../util'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
@@ -119,18 +119,14 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
       <ModelFormat state={props.state} setter={props.setter} sub={props.sub} />
 
-      <Card
-        hide={
-          !serviceHasSetting(props.state.service, props.state.thirdPartyFormat, 'localRequests')
-        }
-      >
+      <Card hide={!serviceHasSetting(props.state, 'localRequests')}>
         <Toggle
           fieldName="localRequests"
           label="Use Local Requests"
           helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
           service={props.state.service}
           format={props.state.thirdPartyFormat}
-          aiSetting={'localRequests'}
+          hide={hidePresetSetting(props.state, 'localRequests')}
           value={props.state.localRequests}
           onChange={(ev) => props.setter('localRequests', ev)}
         />
@@ -145,16 +141,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         </Card>
       </Show>
 
-      <Card
-        hide={
-          !serviceHasSetting(
-            props.state.service,
-            props.state.thirdPartyFormat,
-            'thirdPartyUrl',
-            'thirdPartyKey'
-          )
-        }
-      >
+      <Card hide={!serviceHasSetting(props.state, 'thirdPartyUrl', 'thirdPartyKey')}>
         <ThirdPartyUrl {...props} />
         <ThirdPartyKey {...props} />
 
@@ -165,9 +152,11 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             helperText="No paths will be added to your URL."
             value={props.state.thirdPartyUrlNoSuffix}
             service={props.state.service}
-            aiSetting="thirdPartyUrl"
+            hide={
+              hidePresetSetting(props.state, 'thirdPartyUrl') ||
+              props.state.thirdPartyModel === 'featherless'
+            }
             onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
-            hide={props.state.thirdPartyModel === 'featherless'}
           />
         </div>
       </Card>
@@ -176,8 +165,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         class="flex flex-wrap gap-5"
         hide={
           !serviceHasSetting(
-            props.state.service,
-            props.state.thirdPartyFormat,
+            props.state,
             'oaiModel',
             'openRouterModel',
             'novelModel',
@@ -200,7 +188,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which OpenAI model to use"
           value={props.state.oaiModel ?? defaultPresets.basic.oaiModel}
           disabled={props.state.disabled}
-          aiSetting={'oaiModel'}
+          hide={hidePresetSetting(props.state, 'oaiModel')}
           onChange={(ev) => props.setter('oaiModel', ev.value)}
         />
 
@@ -211,7 +199,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Mistral model to use"
           value={props.state.mistralModel ?? ''}
           disabled={props.state.disabled}
-          aiSetting={'mistralModel'}
+          hide={hidePresetSetting(props.state, 'mistralModel')}
           onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
 
@@ -221,8 +209,8 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Model Override (typically for 3rd party APIs)"
           value={props.state.thirdPartyModel ?? ''}
           disabled={props.state.disabled}
-          aiSetting={'thirdPartyModel'}
           onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
+          hide={hidePresetSetting(props.state, 'thirdPartyModel')}
         />
 
         <Select
@@ -231,8 +219,8 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           items={openRouterModels()}
           helperText="Which OpenRouter model to use"
           value={props.state.openRouterModel?.id || ''}
+          hide={props.state.service !== 'openrouter'}
           disabled={props.state.disabled}
-          aiSetting={'openRouterModel'}
           onChange={(ev) =>
             props.setter(
               'openRouterModel',
@@ -242,13 +230,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         />
         <div
           class="flex flex-wrap gap-2"
-          classList={{
-            hidden: !isValidServiceSetting(
-              props.state.service,
-              props.state.thirdPartyFormat,
-              'novelModel'
-            ),
-          }}
+          classList={{ hidden: !isValidServiceSetting(props.state, 'novelModel') }}
         >
           <Select
             fieldName="novelModel"
@@ -256,7 +238,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             items={novelModels()}
             value={props.state.novelModel || ''}
             disabled={props.state.disabled}
-            aiSetting={'novelModel'}
+            hide={hidePresetSetting(props.state, 'novelModel')}
             onChange={(ev) => props.setter('novelModel', ev.value)}
           />
           <Show when={cfg.flags.naiModel}>
@@ -264,7 +246,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
               fieldName="novelModelOverride"
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
-              aiSetting={'novelModel'}
+              hide={hidePresetSetting(props.state, 'novelModel')}
             />
           </Show>
         </div>
@@ -276,7 +258,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
           value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.state.disabled}
-          aiSetting={'claudeModel'}
+          hide={hidePresetSetting(props.state, 'claudeModel')}
           onChange={(ev) => props.setter('claudeModel', ev.value)}
         />
         <Show when={replicateModels().length > 1}>
@@ -290,7 +272,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                 <span>Publicly available language models.</span>
               </>
             }
-            aiSetting="replicateModelVersion"
+            hide={hidePresetSetting(props.state, 'replicateModelName')}
             onChange={(ev) => props.setter('replicateModelName', ev.value)}
           />
         </Show>
@@ -301,7 +283,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Replicate API input parameters to use."
           value={props.state.replicateModelType}
           disabled={!!props.state.replicateModelName || props.state.disabled}
-          aiSetting={'replicateModelType'}
+          hide={hidePresetSetting(props.state, 'replicateModelName')}
           onChange={(ev) => props.setter('replicateModelType', ev.value)}
         />
         <TextInput
@@ -311,7 +293,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.replicateModelVersion}
           placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
           disabled={!!props.state.replicateModelName || props.state.disabled}
-          aiSetting={'replicateModelVersion'}
+          hide={hidePresetSetting(props.state, 'replicateModelVersion')}
           onChange={(ev) => props.setter('replicateModelVersion', ev.currentTarget.value)}
         />
       </Card>
@@ -364,7 +346,6 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Stream the AI's response as it is generated"
           value={props.state.streamResponse ?? false}
           disabled={props.state.disabled}
-          aiSetting="streamResponse"
           onChange={(ev) => props.setter('streamResponse', ev)}
         />
         <StoppingStrings state={props.state} setter={props.setter} sub={props.sub} />
@@ -373,7 +354,6 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           label="Disable Name Stops"
           helperText="Disable automatic character names stopping strings"
           value={props.state.disableNameStops}
-          aiSetting="disableNameStops"
           onChange={(ev) => props.setter('disableNameStops', ev)}
         />
 

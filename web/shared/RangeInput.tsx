@@ -1,12 +1,6 @@
 import { Component, Show, createSignal, createEffect } from 'solid-js'
 import type { JSX } from 'solid-js'
-import {
-  AIAdapter,
-  PresetAISettings,
-  ThirdPartyFormat,
-  samplerDisableValues,
-} from '../../common/adapters'
-import { useValidServiceSetting } from './util'
+import { PresetAISettings, samplerDisableValues } from '../../common/adapters'
 import { markdown } from './markdown'
 
 const RangeInput: Component<{
@@ -22,9 +16,9 @@ const RangeInput: Component<{
   recommended?: number | string
   recommendLabel?: string | JSX.Element
   onChange?: (value: number) => void
-
-  aiSetting?: keyof PresetAISettings
   parentClass?: string
+  aiSetting?: keyof PresetAISettings
+  hide?: boolean
 }> = (props) => {
   const [previousPropsValue, setPreviousPropsValue] = createSignal(props.value)
   const [value, setValue] = createSignal(props.value)
@@ -49,18 +43,14 @@ const RangeInput: Component<{
 
   createEffect(updateRangeSliders)
 
-  const show = useValidServiceSetting(props.aiSetting)
-
   const disableSampler = () => {
-    if (!props.aiSetting) return
-    const value = samplerDisableValues[props.aiSetting]
     if (value === undefined) return
 
     setValue(value)
   }
 
   return (
-    <div class={`relative pt-1 ${props.parentClass || ''}`} classList={{ hidden: !show() }}>
+    <div class={`relative pt-1 ${props.parentClass || ''}`} classList={{ hidden: props.hide }}>
       <ul class="w-full">
         <div class="flex flex-row justify-between gap-2">
           <span>
@@ -131,10 +121,7 @@ export const InlineRangeInput: Component<{
   step: number
   disabled?: boolean
   onChange?: (value: number) => void
-
-  service?: AIAdapter
-  format?: ThirdPartyFormat
-  aiSetting?: keyof PresetAISettings
+  hide?: boolean
   parentClass?: string
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
@@ -154,13 +141,10 @@ export const InlineRangeInput: Component<{
   }
 
   createEffect(updateRangeSliders)
-
-  const show = useValidServiceSetting(props.aiSetting)
-
   return (
     <div
       class={`bg-800 flex items-center gap-2 rounded-xl px-2 ${props.parentClass || ''}`}
-      classList={{ hidden: !show() }}
+      classList={{ hidden: props.hide }}
     >
       <input
         ref={input}
