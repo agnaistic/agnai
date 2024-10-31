@@ -186,9 +186,9 @@ export const GenerationPresetsPage: Component = () => {
                   parentClass="mb-2"
                 />
                 <PresetSettings
-                  inherit={editing()}
+                  inherit={editing() as any}
                   disabled={params.id === 'default'}
-                  onSave={() => {}}
+                  noSave
                 />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>

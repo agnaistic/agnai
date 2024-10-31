@@ -67,6 +67,7 @@
     "test": "mocha --inline-diffs --exit \"tests/**.spec.js\"",
     "snapshot": "mocha --inline-diffs --exit \"tests/**.spec.js\" --update",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "pnpm typecheck && pnpm test",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",
     "deps": "npx --yes pnpm@8.6.2 install --lockfile",
