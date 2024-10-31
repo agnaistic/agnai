@@ -5,9 +5,9 @@ import { AutoComplete, AutoCompleteOption } from '/web/shared/AutoComplete'
 type AvailableTag = string | { label: string; value: string }
 
 interface TagInputProps {
+  fieldName?: string
   availableTags: AvailableTag[]
   value?: string[]
-  fieldName: string
   label?: string
   helperText?: string | JSX.Element
   placeholder?: string

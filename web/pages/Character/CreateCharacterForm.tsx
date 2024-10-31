@@ -65,7 +65,8 @@ export const CreateCharacterForm: Component<{
   close?: () => void
   onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
-  let personaRef: any
+  let spriteRef: any
+
   const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
   const user = userStore()
@@ -171,15 +172,12 @@ export const CreateCharacterForm: Component<{
   })
 
   createEffect(() => {
-    if (!personaRef) return
-
     // We know we're waiting for a character to edit, so let's just wait
     if (!state.edit && srcId()) return
 
     // If this is our first pass: load something no matter what
     if (!editor.original()) {
       if (!srcId()) {
-        // editor.reset(ref)
         return
       }
 
@@ -248,12 +246,6 @@ export const CreateCharacterForm: Component<{
     }
   }
 
-  // const onPublish = async () => {
-  //   const char = editor.payload(false)
-  //   const image = editor.state.avatar ? await imageApi.getImageData(editor.state.avatar) : undefined
-  //   charsApi.publishCharacter(char, image, (response) => {})
-  // }
-
   const footer = (
     <>
       <Button onClick={cancel} schema="secondary">
@@ -272,8 +264,6 @@ export const CreateCharacterForm: Component<{
   )
 
   const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
-
-  let spriteRef: any
 
   return (
     <Page
@@ -300,15 +290,7 @@ export const CreateCharacterForm: Component<{
           }
         />
       </Show>
-      <form
-        class="relative text-base"
-        onSubmit={onSubmit}
-        id="character-form"
-        ref={(form) => {
-          personaRef = form
-          editor.prepare(form)
-        }}
-      >
+      <form class="relative text-base">
         <div class="flex flex-col gap-4">
           <Show when={!isPage}>
             <div> {props.children} </div>
@@ -380,6 +362,7 @@ export const CreateCharacterForm: Component<{
                   placeholder=""
                   value={editor.state.name}
                   parentClass="pb-2"
+                  onChange={(ev) => editor.update('name', ev.currentTarget.value)}
                 >
                   <Button
                     size="sm"
@@ -408,6 +391,7 @@ export const CreateCharacterForm: Component<{
                     fieldName="description"
                     parentClass="w-full"
                     value={editor.state.description}
+                    onChange={(ev) => editor.update('description', ev.currentTarget.value)}
                   />
                 </div>
               </Card>
@@ -451,6 +435,7 @@ export const CreateCharacterForm: Component<{
                   helperText="The current circumstances and context of the conversation and the characters."
                   placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
                   value={editor.state.scenario}
+                  onChange={(ev) => editor.update('scenario', ev.currentTarget.value)}
                   isMultiline
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
                 />
@@ -487,15 +472,16 @@ export const CreateCharacterForm: Component<{
                     class="tour-persona"
                     items={personaFormats()}
                     value={editor.state.personaKind}
+                    onChange={(ev) => editor.update('personaKind', ev.value as any)}
                   />
                 </div>
 
                 <PersonaAttributes
-                  value={editor.state.persona.attributes}
                   schema={editor.state.personaKind}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  form={personaRef}
                   editor={editor}
+                  state={editor.state.personaAttrs}
+                  setter={(next) => editor.update('personaAttrs', next)}
                 />
               </Card>
               <Card class="flex flex-col gap-3">
@@ -543,6 +529,7 @@ export const CreateCharacterForm: Component<{
                   }
                   placeholder="{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
                   value={editor.state.sampleChat}
+                  onChange={(ev) => editor.update('sampleChat', ev.currentTarget.value)}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
                 />
               </Card>
@@ -556,6 +543,7 @@ export const CreateCharacterForm: Component<{
                   value={editor.state.voiceDisabled}
                   label="Disable Character's Voice"
                   helperText="Toggle on to disable this character from automatically speaking"
+                  onChange={(ev) => editor.update('voiceDisabled', ev)}
                 />
 
                 <VoicePicker

@@ -8,10 +8,11 @@ import { FormLabel } from '../../shared/FormLabel'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
-import { emptyEntry } from '/common/memory'
+import { alphaCaseInsensitiveSort } from '../../shared/util'
 import { Card } from '/web/shared/Card'
 import { createStore } from 'solid-js/store'
+
+export type EditBookState = { book: AppSchema.MemoryBook }
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -31,17 +32,10 @@ const EditMemoryForm: Component<{
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
-  onChange?: (book: Partial<AppSchema.MemoryBook>) => void
+  state: (state: EditBookState) => void
 }> = (props) => {
   const [state, setState] = createStore({ ...props.book })
-  const [entries, setEntries] = createStore(props.book.entries)
-
   const [search, setSearch] = createSignal('')
-
-  const change = (book: Partial<AppSchema.MemoryBook>) => {
-    setState(book)
-    props.onChange?.(book)
-  }
 
   const addEntry = () => {
     const entry = {
@@ -53,22 +47,27 @@ const EditMemoryForm: Component<{
       enabled: true,
     }
 
-    setEntries(entries.concat(entry))
-    change({ ...props.book, entries })
+    setState('entries', state.entries.concat(entry))
   }
 
   const onRemoveEntry = (pos: number) => {
-    const next = entries.filter((_, i) => i !== pos)
-    setEntries(next)
-    change({ ...props.book, entries: next })
+    const next = state.entries.filter((_, i) => i !== pos)
+    setState('entries', next)
   }
+
+  createEffect(
+    on(
+      () => props.book,
+      (incoming) => setState({ ...incoming, entries: incoming.entries.slice() })
+    )
+  )
 
   createEffect(
     on(
       () => props.entrySort,
       (entrySort) => {
-        const next = sortEntries(entries, entrySort)
-        setEntries(next)
+        const next = sortEntries(state.entries, entrySort)
+        setState('entries', next)
       }
     )
   )
@@ -87,7 +86,7 @@ const EditMemoryForm: Component<{
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
-            change({ name: e.currentTarget.value })
+            setState({ name: e.currentTarget.value })
           }}
         />
 
@@ -96,7 +95,7 @@ const EditMemoryForm: Component<{
           value={state.name}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
-            change({ description: e.currentTarget.value })
+            setState({ description: e.currentTarget.value })
           }}
         />
         <Divider />
@@ -124,7 +123,7 @@ const EditMemoryForm: Component<{
             class="mx-1 my-1"
           />
         </div>
-        <Index each={entries}>
+        <Index each={state.entries}>
           {(entry, i) => (
             <EntryCard
               {...entry}
@@ -133,9 +132,8 @@ const EditMemoryForm: Component<{
               onRemove={() => onRemoveEntry(i)}
               search={search()}
               onChange={(e) => {
-                const next = modify(entries, e, i)
-                setEntries(next)
-                change({ entries: next })
+                const next = modify(state.entries, e, i)
+                setState('entries', next)
               }}
             />
           )}
@@ -155,7 +153,7 @@ const EntryCard: Component<{
   search: string
   onRemove: () => void
   index: number
-  onChange: (e: AppSchema.MemoryEntry) => void
+  onChange: (e: Partial<AppSchema.MemoryEntry>) => void
 }> = (props) => {
   const cls = createMemo(() =>
     props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
@@ -174,14 +172,14 @@ const EntryCard: Component<{
             class="w-full border-[1px]"
             value={props.entry.name}
             onChange={(e) => {
-              props.onChange({ ...props.entry, name: e.currentTarget.value })
+              props.onChange({ name: e.currentTarget.value })
             }}
           />
           <Toggle
             value={!!props.entry.enabled}
             class="flex items-center"
             onChange={(e) => {
-              props.onChange({ ...props.entry, enabled: !!e })
+              props.onChange({ enabled: !!e })
             }}
           />
 
@@ -200,7 +198,6 @@ const EntryCard: Component<{
           value={props.entry.keywords.map((k) => k.trim()).join(', ')}
           onChange={(e) => {
             props.onChange({
-              ...props.entry,
               keywords: e.currentTarget.value.split(',').map((k) => k.trim()),
             })
           }}
@@ -213,7 +210,7 @@ const EntryCard: Component<{
             class="border-[1px]"
             value={props.entry.priority ?? 0}
             onChange={(e) => {
-              props.onChange({ ...props.entry, priority: +e.currentTarget.value })
+              props.onChange({ priority: +e.currentTarget.value })
             }}
           />
           <TextInput
@@ -223,7 +220,7 @@ const EntryCard: Component<{
             class="border-[1px]"
             value={props.entry.weight ?? 0}
             onChange={(e) => {
-              props.onChange({ ...props.entry, weight: +e.currentTarget.value })
+              props.onChange({ weight: +e.currentTarget.value })
             }}
           />
         </div>
@@ -234,59 +231,12 @@ const EntryCard: Component<{
           class="min-h-[64px] border-[1px]"
           required
           onKeyUp={(e) => {
-            props.onChange({ ...props.entry, entry: e.currentTarget.value })
+            props.onChange({ entry: e.currentTarget.value })
           }}
         />
       </div>
     </Accordian>
   )
-}
-
-export function getBookUpdate(ref: Event | HTMLFormElement) {
-  const inputs = getFormEntries(ref)
-  const { bookName = '', bookDesc } = getStrictForm(ref, {
-    bookName: 'string?',
-    bookDesc: 'string?',
-  })
-
-  const map = new Map<string, AppSchema.MemoryEntry>()
-
-  for (const [key, value] of inputs) {
-    const [prop, i] = key.split('.')
-    if (i === undefined) continue
-
-    const prev = map.get(i) || { ...emptyEntry() }
-
-    switch (prop) {
-      case 'name':
-      case 'entry':
-        prev[prop] = value
-        break
-
-      case 'weight':
-      case 'priority':
-        prev[prop] = +value
-        break
-
-      case 'keywords':
-        prev.keywords = value
-          .split(',')
-          .filter((v) => !!v)
-          .map((v) => v.trim())
-        break
-
-      case 'enabled':
-        prev.enabled = !!value
-        break
-    }
-
-    map.set(i, prev)
-  }
-
-  const entries = Array.from(map.values())
-
-  const book = { name: bookName, description: bookDesc, entries }
-  return book
 }
 
 function sortEntries(entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] {

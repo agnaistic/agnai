@@ -1,11 +1,10 @@
 import { batch, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { createStore } from 'solid-js/store'
+import { SetStoreFunction, createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import { ADAPTER_LABELS, PERSONA_FORMATS } from '/common/adapters'
-import { getStrictForm, setFormField } from '/web/shared/util'
-import { getAttributeMap } from '/web/shared/PersonaAttributes'
+import { ADAPTER_LABELS } from '/common/adapters'
+import { fromAttrs, getAttributeMap, toAttrs } from '/web/shared/PersonaAttributes'
 import {
   NewCharacter,
   characterStore,
@@ -24,13 +23,11 @@ import { v4 } from 'uuid'
 import { forms, getFormValue } from '/web/emitter'
 import { ResponseSchema } from '/common/types/library'
 
-type CharKey = keyof NewCharacter
-type GuardKey = keyof typeof newCharGuard
-
-type EditState = {
+export type EditorState = {
   editId?: string
   name: string
   personaKind: AppSchema.Character['persona']['kind']
+  personaAttrs: Array<{ key: string; values: string }>
   description: string
   appearance: string
   scenario: string
@@ -63,50 +60,12 @@ type EditState = {
   json?: ResponseSchema
 }
 
-const newCharGuard = {
-  kind: PERSONA_FORMATS,
-  name: 'string',
-  description: 'string?',
-  appearance: 'string?',
-  culture: 'string',
-  greeting: 'string',
-  scenario: 'string',
-  sampleChat: 'string',
-  systemPrompt: 'string',
-  postHistoryInstructions: 'string',
-  insertPrompt: 'string',
-  insertDepth: 'number',
-  creator: 'string',
-  characterVersion: 'string',
-  voiceDisabled: 'boolean?',
-  jsonSchemaEnabled: 'boolean',
-} as const
+export type SetEditor = SetStoreFunction<EditorState>
 
-const fieldMap: Map<CharKey, GuardKey | 'tags'> = new Map([
-  ['name', 'name'],
-  ['appearance', 'appearance'],
-  ['description', 'description'],
-  ['greeting', 'greeting'],
-  ['sampleChat', 'sampleChat'],
-  ['creator', 'creator'],
-  ['characterVersion', 'characterVersion'],
-  ['postHistoryInstructions', 'postHistoryInstructions'],
-  ['scenario', 'scenario'],
-  ['systemPrompt', 'systemPrompt'],
-  ['tags', 'tags'],
-  ['name', 'name'],
-  ['description', 'description'],
-  ['scenario', 'scenario'],
-  ['greeting', 'greeting'],
-  ['creator', 'creator'],
-  ['characterVersion', 'characterVersion'],
-  ['postHistoryInstructions', 'postHistoryInstructions'],
-  ['systemPrompt', 'systemPrompt'],
-])
-
-const initState: EditState = {
+const initState: EditorState = {
   name: '',
   personaKind: 'text',
+  personaAttrs: [],
   sampleChat: '',
   description: '',
   appearance: '',
@@ -176,7 +135,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const cache = useImageCache('avatars', { clean: true })
 
   const [original, setOriginal] = createSignal(editing)
-  const [state, setState] = createStore<EditState>({ ...initState })
+  const [state, setState] = createStore<EditorState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
   const [form, setForm] = createSignal<any>()
   const [generating, setGenerating] = createSignal(false)
@@ -318,7 +277,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
           if (!trait) {
             attributes.text = [res]
           } else {
-            attributes[trait] = [res]
+            attributes[trait as 'text'] = [res]
           }
 
           setState('persona', { ...char.persona, attributes })
@@ -326,7 +285,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
         }
 
         if (field in state) {
-          setState(field as keyof EditState, res)
+          setState(field as keyof EditorState, res)
         }
       },
     })
@@ -338,13 +297,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setState({ ...initState })
 
       const personaKind = char?.persona.kind || state.personaKind
-      for (const [key, field] of fieldMap.entries()) {
-        if (!char) setFormField(form(), field, '')
-        else setFormField(form(), field, char[key] || '')
-      }
 
       setState('personaKind', personaKind)
-      setFormField(form(), 'kind', personaKind)
 
       if (char?.originalAvatar) {
         // Intentionally do this in a separate tick
@@ -364,6 +318,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setState({
         ...char,
         personaKind,
+        personaAttrs: toAttrs(char?.persona.attributes),
         alternateGreetings: char?.alternateGreetings || [],
         book: char?.characterBook,
         voice: char?.voice || { service: undefined },
@@ -424,7 +379,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  const updateKind = (kind: EditState['personaKind']) => {
+  const updateKind = (kind: EditorState['personaKind']) => {
     const ref = document.getElementById('character-form') as HTMLFormElement | null
 
     const attributes = ref ? getAttributeMap(ref) : {}
@@ -467,42 +422,38 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   }
 }
 
-function getPayload(ev: any, state: EditState, original?: NewCharacter) {
-  const body = getStrictForm(ev, newCharGuard)
-  const attributes = getAttributeMap(ev)
-
+function getPayload(ev: any, state: EditorState, original?: NewCharacter) {
   const payload = {
-    name: body.name,
-    description: body.description,
-    culture: body.culture,
+    name: state.name,
+    description: state.description,
+    culture: state.culture,
     tags: state.tags,
-    scenario: body.scenario,
-    appearance: body.appearance,
+    scenario: state.scenario,
+    appearance: state.appearance,
     visualType: state.visualType,
     avatar: state.avatar ?? (null as any),
     sprite: state.sprite ?? (null as any),
-    greeting: body.greeting,
-    sampleChat: body.sampleChat,
+    greeting: state.greeting,
+    sampleChat: state.sampleChat,
     originalAvatar: original?.originalAvatar,
-    voiceDisabled: body.voiceDisabled,
+    voiceDisabled: state.voiceDisabled,
     voice: state.voice,
 
     // New fields start here
-    systemPrompt: body.systemPrompt ?? '',
-    postHistoryInstructions: body.postHistoryInstructions ?? '',
-    insert: { prompt: body.insertPrompt, depth: body.insertDepth },
+    systemPrompt: state.systemPrompt ?? '',
+    postHistoryInstructions: state.postHistoryInstructions ?? '',
+    insert: { prompt: state.insert?.prompt || '', depth: state.insert?.depth ?? 3 },
     alternateGreetings: state.alternateGreetings ?? [],
     characterBook: state.book,
-    creator: body.creator ?? '',
+    creator: state.creator ?? '',
     extensions: original?.extensions,
-    characterVersion: body.characterVersion ?? '',
+    characterVersion: state.characterVersion ?? '',
     persona: {
-      kind: body.kind,
-      attributes,
+      kind: state.personaKind,
+      attributes: fromAttrs(state.personaAttrs),
     },
     json: {
       ...state.json,
-      enabled: body.jsonSchemaEnabled,
     } as ResponseSchema,
   }
 

@@ -1,20 +1,10 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  onMount,
-  Show,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
-import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
+import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
 import {
   characterStore,
   chatStore,
@@ -34,44 +24,66 @@ import Divider from '/web/shared/Divider'
 import PageHeader from '/web/shared/PageHeader'
 import { isLoggedIn } from '/web/store/api'
 import { AppSchema } from '/common/types'
-import { isEligible } from './util'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { Page } from '/web/Layout'
+import { createStore } from 'solid-js/store'
 
-const options = [
-  { value: 'wpp', label: 'W++' },
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'sbf', label: 'SBF' },
-]
+const options = [{ value: 'attributes', label: 'Attributes' }]
+
+const backupFormats: any = {
+  // sbf: { value: 'sbf', label: 'SBF' },
+  // wpp: { value: 'wpp', label: 'W++' },
+  // boostyle: { value: 'boostyle', label: 'Boostyle' },
+}
+
+type ChatState = {
+  name: string
+  presetId: string
+  imageSource: NonNullable<AppSchema.Chat['imageSource']>
+  mode: NonNullable<AppSchema.Chat['mode']>
+  useOverrides: boolean
+  scenarioId: string
+  scenarioStates: NonNullable<AppSchema.Chat['scenarioStates']>
+  greeting: string
+  scenario: string
+  sampleChat: string
+  systemPrompt: string
+  postHistoryInstructions: string
+  personaKind: NonNullable<AppSchema.Persona['kind']>
+  personaAttrs: Array<{ key: string; values: string }>
+}
 
 const CreateChatForm: Component<{
   footer?: (footer: JSX.Element) => void
   close?: () => void
   charId?: string
 }> = (props) => {
-  const params = useParams()
   let ref: any
-
+  const params = useParams()
   const nav = useNavigate()
-  const scenarios = scenarioStore((s) => s.scenarios)
+
+  const scen = scenarioStore((s) => s.scenarios)
   const cfg = settingStore()
   const user = userStore((s) => ({ ...s.user, sub: s.sub, userLevel: s.userLevel }))
-  const state = characterStore((s) => ({
+  const chars = characterStore((s) => ({
     char: s.editing,
     chars: (s.characters?.list || []).filter((c) => !isLoggedIn() || c.userId === user._id),
     loaded: s.characters.loaded,
   }))
 
+  const [state, setState] = createStore(getInitState(chars.char))
   const [selectedId, setSelected] = createSignal<string | undefined>(params.id)
-  const [useOverrides, setUseOverrides] = createSignal(false)
-  const [scenario, setScenario] = createSignal<AppSchema.ScenarioBook>()
 
-  const currScenarios = createMemo(() => {
-    if (!scenarios.length) return [{ value: '', label: 'You have no scenarios' }]
-    return [
-      { value: '', label: 'None' },
-      ...scenarios.map((s) => ({ label: s.name, value: s._id })),
-    ]
+  const scenarios = createMemo(() => {
+    if (!scen.length) return [{ value: '', label: 'You have no scenarios' }]
+    return [{ value: '', label: 'None' }, ...scen.map((s) => ({ label: s.name, value: s._id }))]
+  })
+
+  const personaFormats = createMemo(() => {
+    const format = state.personaKind
+    if (!format || format in backupFormats === false) return options
+
+    return options.concat(backupFormats[format])
   })
 
   createEffect(() => {
@@ -79,26 +91,29 @@ const CreateChatForm: Component<{
     const curr = selectedId()
     if (curr) return
 
-    if (!state.chars.length) return
-    setSelected(state.chars[0]._id)
+    if (!chars.chars.length) return
+    setSelected(chars.chars[0]._id)
   })
 
   createEffect(() => {
     const id = selectedId()
     if (!id) return
 
-    if (state.char?._id === id) return
-
+    if (chars.char?._id === id) return
     characterStore.getCharacter(id)
   })
 
-  const setScenarioById = (scenarioId: string) => {
-    setScenario(scenarios.find((s) => s._id === scenarioId))
-  }
-
-  const [presetId, setPresetId] = createSignal(
-    user.defaultPreset ? '' : isEligible() ? 'agnai' : 'horde'
+  createEffect(
+    on(
+      () => chars.char?._id,
+      (id) => {
+        if (!id) return
+        const next = getInitState(chars.char, state)
+        setState(next)
+      }
+    )
   )
+
   const presets = presetStore((s) => s.presets)
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -120,7 +135,7 @@ const CreateChatForm: Component<{
   })
 
   const selectedPreset = createMemo(() => {
-    const id = presetId()
+    const id = state.presetId || user.defaultPreset
 
     if (!id) {
       const userLevel = user.userLevel
@@ -138,28 +153,17 @@ const CreateChatForm: Component<{
   })
 
   const onCreate = () => {
-    if (!state.char) return
+    if (!chars.char) return
 
-    const body = getStrictForm(ref, {
-      name: 'string',
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-      schema: ['wpp', 'boostyle', 'sbf', 'text'],
-      mode: ['standard', 'adventure', 'companion', null],
-    } as const)
+    const characterId = chars.char._id
 
-    const attributes = getAttributeMap(ref)
-
-    const characterId = state.char._id
-
-    const overrides = useOverrides()
+    const overrides = state.useOverrides
       ? {
-          greeting: body.greeting,
-          scenario: body.scenario,
-          sampleChat: body.sampleChat,
-          genPreset: presetId(),
-          overrides: { kind: body.schema, attributes },
+          greeting: state.greeting,
+          scenario: state.scenario,
+          sampleChat: state.sampleChat,
+          genPreset: state.presetId,
+          overrides: { kind: state.personaKind, attributes: fromAttrs(state.personaAttrs) },
         }
       : {
           greeting: undefined,
@@ -168,16 +172,14 @@ const CreateChatForm: Component<{
           overrides: undefined,
         }
 
-    if (useOverrides()) {
-      overrides.greeting = body.greeting
-    }
-
     const payload = {
-      ...body,
+      name: state.name,
+      schema: state.personaKind,
+      mode: state.mode,
       ...overrides,
-      useOverrides: useOverrides(),
-      genPreset: presetId(),
-      scenarioId: scenario()?._id,
+      useOverrides: state.useOverrides,
+      genPreset: state.presetId,
+      scenarioId: state.scenarioId,
     }
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
@@ -189,7 +191,7 @@ const CreateChatForm: Component<{
         Close
       </Button>
 
-      <Button onClick={onCreate} disabled={!state.char}>
+      <Button onClick={onCreate} disabled={!chars.char}>
         <Check />
         Create
       </Button>
@@ -202,7 +204,7 @@ const CreateChatForm: Component<{
 
   return (
     <Page>
-      <PageHeader title={`Create Chat with ${state.char?.name}`} />
+      <PageHeader title={`Create Chat with ${chars.char?.name}`} />
       <form ref={ref}>
         <div class="mb-2 text-sm">
           Optionally modify some of the conversation context. You can override other aspects of the
@@ -216,8 +218,8 @@ const CreateChatForm: Component<{
             <Card>
               <CharacterSelect
                 class="w-48"
-                items={state.chars}
-                value={state.char}
+                items={chars.chars}
+                value={chars.char}
                 fieldName="character"
                 label="Character"
                 helperText="The conversation's main character"
@@ -229,22 +231,17 @@ const CreateChatForm: Component<{
           <Card>
             <PresetSelect
               options={presetOptions()}
-              selected={presetId()}
-              setPresetId={setPresetId}
+              selected={state.presetId}
+              setPresetId={(id) => setState('presetId', id)}
               warning={<ServiceWarning preset={selectedPreset()} />}
             />
           </Card>
 
           <Card>
             <Select
-              fieldName="mode"
               label="Chat Mode"
               helperText={
                 <div class="flex flex-col gap-2">
-                  {/* <TitleCard>
-                    <b>ADVENTURE:</b> Adventure mode is currently disabled and will return when
-                    Sagas are out of Preview.
-                  </TitleCard> */}
                   <TitleCard>
                     <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,
                     Retry Message, Delete Messages, etc.
@@ -256,13 +253,13 @@ const CreateChatForm: Component<{
                 { label: 'Companion', value: 'companion' },
               ]}
               value={'standard'}
+              onChange={(ev) => setState('mode', ev.value as any)}
             />
           </Card>
 
           <Card>
             <TextInput
               class="text-sm"
-              fieldName="name"
               label="Conversation Name"
               helperText={
                 <span>
@@ -274,102 +271,86 @@ const CreateChatForm: Component<{
           </Card>
           <Card>
             <Toggle
-              fieldName="useOverrides"
-              value={useOverrides()}
-              onChange={(use) => setUseOverrides(use)}
               label="Override Character Definitions"
               helperText="Overrides will only apply to the newly created conversation."
+              value={state.useOverrides}
+              onChange={(ev) => setState('useOverrides', ev)}
             />
           </Card>
 
           <Divider />
 
           <Select
-            fieldName="scenarioId"
             label="Scenario"
             helperText="The scenario to use for this conversation"
-            items={currScenarios()}
-            onChange={(option) => setScenarioById(option.value)}
-            disabled={scenarios.length === 0}
+            items={scenarios()}
+            onChange={(ev) => setState('scenarioId', ev.value)}
+            disabled={scen.length === 0}
           />
 
           <Card>
             <TextInput
               isMultiline
-              fieldName="greeting"
               label="Greeting"
-              value={state.char?.greeting}
               class="text-xs"
-              disabled={!useOverrides()}
-            ></TextInput>
+              disabled={!state.useOverrides}
+              value={state.greeting}
+              onChange={(ev) => setState('greeting', ev.currentTarget.value)}
+            />
           </Card>
           <Card>
             <TextInput
               isMultiline
-              fieldName="scenario"
               label="Scenario"
-              value={state.char?.scenario}
+              value={state.scenario}
               class="text-xs"
-              disabled={!useOverrides()}
+              disabled={!state.useOverrides}
+              onChange={(ev) => setState('scenario', ev.currentTarget.value)}
             ></TextInput>
           </Card>
 
           <Card>
             <TextInput
               isMultiline
-              fieldName="sampleChat"
               label="Sample Chat"
-              value={state.char?.sampleChat}
+              value={state.sampleChat}
               class="text-xs"
-              disabled={!useOverrides()}
+              disabled={!state.useOverrides}
+              onChange={(ev) => setState('sampleChat', ev.currentTarget.value)}
             ></TextInput>
           </Card>
 
           <Card>
-            <Show when={state.char?.persona.kind !== 'text'}>
+            <Show when={state.personaKind !== 'text'}>
               <Select
                 class="mb-2 text-sm"
-                fieldName="schema"
                 label="Persona"
-                items={options}
-                value={state.char?.persona.kind || 'wpp'}
-                disabled={!useOverrides()}
+                items={personaFormats()}
+                value={state.personaKind || 'attributes'}
+                disabled={!state.useOverrides}
+                onChange={(ev) => setState('personaKind', ev.value as any)}
               />
             </Show>
 
-            <Show when={state.char?.persona.kind === 'text'}>
+            <Show when={state.personaKind === 'text'}>
               <Select
                 class="mb-2 text-sm"
-                fieldName="schema"
                 label="Persona"
                 items={[{ label: 'Plain text', value: 'text' }]}
                 value={'text'}
-                disabled={!useOverrides()}
+                disabled={!state.useOverrides}
               />
             </Show>
 
             <div class="w-full text-sm">
-              <Show when={state.char}>
+              <Show when={chars.char}>
                 <PersonaAttributes
-                  value={state.char?.persona.attributes}
+                  state={state.personaAttrs}
+                  setter={(next) => setState('personaAttrs', next)}
                   hideLabel
-                  schema={state.char?.persona.kind}
-                  disabled={!useOverrides()}
+                  schema={state.personaKind}
+                  disabled={!state.useOverrides}
                 />
-              </Show>
-              <Show when={!state.char}>
-                <For each={state.chars}>
-                  {(item) => (
-                    <Show when={state.char?._id === item._id}>
-                      <PersonaAttributes
-                        value={item.persona.attributes}
-                        hideLabel
-                        schema={state.char?.persona.kind}
-                        disabled={!useOverrides()}
-                      />
-                    </Show>
-                  )}
-                </For>
               </Show>
             </div>
           </Card>
@@ -383,6 +364,28 @@ const CreateChatForm: Component<{
       </form>
     </Page>
   )
+}
+
+function getInitState(char?: AppSchema.Character, previous?: ChatState): ChatState {
+  return {
+    name: previous?.name || '',
+    presetId: previous?.presetId || '',
+    imageSource: previous?.imageSource || 'settings',
+    mode: previous?.mode || 'standard',
+
+    useOverrides: previous?.useOverrides ?? false,
+    scenarioId: previous?.scenarioId || '',
+    scenarioStates: previous?.scenarioStates || [],
+
+    greeting: char?.greeting || '',
+    scenario: char?.scenario || '',
+    sampleChat: char?.sampleChat || '',
+    systemPrompt: '',
+    postHistoryInstructions: '',
+
+    personaKind: char?.persona.kind || 'text',
+    personaAttrs: toAttrs(char?.persona.attributes),
+  }
 }
 
 export default CreateChatForm

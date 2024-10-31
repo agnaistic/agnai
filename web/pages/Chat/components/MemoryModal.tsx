@@ -6,7 +6,7 @@ import Divider from '../../../shared/Divider'
 import Select, { Option } from '../../../shared/Select'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
-import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
+import EditMemoryForm, { EditBookState, EntrySort } from '../../Memory/EditMemory'
 import EmbedContent from '../../Memory/EmbedContent'
 import { EditEmbedModal } from '/web/shared/EditEmbedModal'
 import { Portal } from 'solid-js/web'
@@ -25,7 +25,8 @@ const ChatMemoryModal: Component<{
   const [id, setId] = createSignal('')
   const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
   const [editingEmbed, setEditingEmbed] = createSignal<boolean>(false)
-  const [book, setBook] = createSignal<AppSchema.MemoryBook>()
+  const [selectedBook, setSelectedBook] = createSignal<AppSchema.MemoryBook>()
+  const [bookState, setBookState] = createSignal<EditBookState>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
     if (item.value === 'creationDate' || item.value === 'alpha') {
@@ -35,7 +36,7 @@ const ChatMemoryModal: Component<{
 
   const changeBook = async (id: string) => {
     setId(id === 'new' ? '' : id)
-    setBook(undefined)
+    setSelectedBook(undefined)
     await Promise.resolve()
 
     const match: AppSchema.MemoryBook | undefined =
@@ -50,7 +51,7 @@ const ChatMemoryModal: Component<{
           }
         : state.books.list.find((book) => book._id === id)
 
-    setBook(match)
+    setSelectedBook(match)
   }
 
   createEffect(() => {
@@ -64,20 +65,18 @@ const ChatMemoryModal: Component<{
     }
   })
 
-  const onSubmit = (ev: Event) => {
-    ev.preventDefault()
-    const update = book()
-
+  const onSubmit = () => {
+    const update = bookState()
     if (!update) return
 
     if (id() === '') {
-      memoryStore.create(update, (next) => {
+      memoryStore.create(update.book, (next) => {
         setId(next._id)
-        setBook(next)
+        setSelectedBook(next)
         useMemoryBook()
       })
     } else {
-      memoryStore.update(id(), update)
+      memoryStore.update(id(), update.book)
     }
   }
 
@@ -100,7 +99,7 @@ const ChatMemoryModal: Component<{
       <Button schema="secondary" onClick={props.close}>
         Close
       </Button>
-      <Button disabled={book() === undefined} type="submit" onClick={onSubmit}>
+      <Button disabled={selectedBook() === undefined} type="submit" onClick={onSubmit}>
         <Save />
         Save Memory Book
       </Button>
@@ -178,17 +177,14 @@ const ChatMemoryModal: Component<{
         </Show>
         <EmbedContent />
 
-        <Show when={book()}>
+        <Show when={selectedBook()}>
           <div class="text-sm">
             <EditMemoryForm
               hideSave
-              book={book()!}
+              book={selectedBook()!}
               entrySort={entrySort()}
               updateEntrySort={updateEntrySort}
-              onChange={(next) => {
-                const prev = book()!
-                setBook({ ...prev, ...next })
-              }}
+              state={setBookState}
             />
           </div>
         </Show>

@@ -1,6 +1,6 @@
 import { Save } from 'lucide-solid'
 import { Component, createSignal, createMemo, Show } from 'solid-js'
-import EditMemoryForm, { EntrySort, getBookUpdate } from '../../Memory/EditMemory'
+import EditMemoryForm, { EditBookState, EntrySort } from '../../Memory/EditMemory'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
@@ -21,6 +21,8 @@ export const MemoryBookPicker: Component<{
       setEntrySort(item.value)
     }
   }
+
+  const [editing, setEditing] = createSignal<EditBookState>()
 
   const NONE_VALUE = '__none_character_book__'
   const internalMemoryBookOptions = createMemo(() => [
@@ -48,11 +50,12 @@ export const MemoryBookPicker: Component<{
       </Button>
     </>
   )
-  const onSubmitCharacterBookChanges = (ev: Event) => {
-    ev.preventDefault()
-    const update = getBookUpdate(ev)
+  const onSubmitCharacterBookChanges = () => {
+    const update = editing()
+    if (!update) return
+
     if (props.bundledBook) {
-      props.setBundledBook({ ...props.bundledBook, ...update })
+      props.setBundledBook(update.book)
     }
     setIsModalShown(false)
   }
@@ -73,6 +76,7 @@ export const MemoryBookPicker: Component<{
           book={props.bundledBook!}
           entrySort={entrySort()}
           updateEntrySort={updateEntrySort}
+          state={setEditing}
         />
       </div>
     </Modal>

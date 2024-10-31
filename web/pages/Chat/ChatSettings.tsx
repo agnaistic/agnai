@@ -1,10 +1,9 @@
-import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, Show, createEffect, createMemo, on, onMount } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
-import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
+import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
 import { chatStore, msgStore, presetStore, scenarioStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -14,6 +13,7 @@ import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
 import { Image, Wand } from 'lucide-solid'
+import { createStore } from 'solid-js/store'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -31,17 +31,15 @@ const ChatSettings: Component<{
   footer: (children: any) => void
 }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+  const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
   const user = userStore()
   const presets = presetStore((s) => s.presets)
-  const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
-  const [kind, setKind] = createSignal(state.chat?.overrides?.kind || state.char?.persona.kind)
   const scenarioState = scenarioStore()
   const pane = usePane()
 
   const personaFormats = createMemo(() => {
-    const format = kind()
-
-    if (!format || format in formatOptions === false) return formatOptions
+    const format = edit.personaKind
+    if (!format || format in backupFormats === false) return formatOptions
 
     return formatOptions.concat(backupFormats[format])
   })
@@ -54,29 +52,29 @@ const ChatSettings: Component<{
     return presets.find((pre) => pre._id === presetId)
   })
 
-  let ref: any
-  let nameRef: any
+  createEffect(
+    on(
+      () => [state.chat, state.char] as const,
+      ([chat, char]) => {
+        if (!chat || !char) return
+        setEdit(getInitState(chat, char))
+      }
+    )
+  )
 
-  const [mode, setMode] = createSignal(state.chat?.mode || 'standard')
-  const [scenarioId, setScenarioId] = createSignal(state.chat?.scenarioIds?.[0] || '')
-  const [scenarioText, setScenarioText] = createSignal(state.chat?.scenario || state.char?.scenario)
-  const [states, setStates] = createSignal(state.chat?.scenarioStates || [])
+  onMount(() => scenarioStore.getAll())
 
-  onMount(() => {
-    scenarioStore.getAll()
+  createEffect(() => {
+    setEdit('scenarioId', state.chat?.scenarioIds?.[0] || '')
   })
 
   createEffect(() => {
-    setScenarioId(state.chat?.scenarioIds?.[0] || '')
-  })
-
-  createEffect(() => {
-    const currentText = scenarioText()
-    const scenario = scenarioState.scenarios.find((s) => s._id === scenarioId())
+    const currentText = edit.scenario
+    const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
     if (scenario?.overwriteCharacterScenario && !state.chat?.scenarioIds?.includes(scenario._id)) {
-      setScenarioText(scenario.text)
+      setEdit('scenario', scenario.text)
     } else {
-      setScenarioText(currentText)
+      setEdit('scenario', currentText)
     }
   })
 
@@ -97,33 +95,22 @@ const ChatSettings: Component<{
   })
 
   const onSave = () => {
-    const { scenarioId, imageSource, ...body } = getStrictForm(ref, {
-      name: 'string',
-      greeting: 'string?',
-      sampleChat: 'string?',
-      systemPrompt: 'string?',
-      postHistoryInstructions: 'string?',
-      scenario: 'string?',
-      schema: ['wpp', 'boostyle', 'sbf', 'text', 'attributes', null],
-      scenarioId: 'string?',
-      mode: ['standard', 'adventure', 'companion', null],
-      imageSource: ['last-character', 'main-character', 'chat', 'settings'],
-    })
-
-    const attributes = getAttributeMap(ref)
-
-    const overrides: AppSchema.Persona | undefined = body.schema
-      ? { kind: body.schema, attributes }
-      : undefined
-
     const payload = {
-      ...body,
-      overrides,
-      imageSource,
-      scenarioIds: scenarioId ? [scenarioId] : [],
-      scenarioStates: states(),
+      name: edit.name,
+      greeting: edit.greeting,
+      sampleChat: edit.sampleChat,
+      systemPrompt: edit.systemPrompt,
+      postHistoryInstructions: edit.postHistoryInstructions,
+      scenario: edit.scenario,
+      overrides: {
+        kind: edit.personaKind,
+        attributes: fromAttrs(edit.personaAttrs),
+      },
+      imageSource: edit.imageSource,
+      scenarioIds: edit.scenarioId ? [edit.scenarioId] : [],
+      scenarioStates: edit.scenarioStates,
     }
-    chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {
+    chatStore.editChat(state.chat?._id!, payload, edit.useOverrides, () => {
       if (pane() !== 'pane') {
         props.close()
       }
@@ -155,10 +142,10 @@ const ChatSettings: Component<{
     </>
   )
 
-  props.footer(Footer)
+  onMount(() => props.footer(Footer))
 
   return (
-    <form ref={ref} onSubmit={onSave} class="flex flex-col gap-3">
+    <form class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
         <Card class="text-xs">{state.chat?._id}</Card>
       </Show>
@@ -168,14 +155,14 @@ const ChatSettings: Component<{
           fieldName="imageSource"
           label="Image Source"
           helperText={<>Which settings to use when generating images for this chat</>}
-          onChange={(ev) => setMode(ev.value as any)}
           items={[
             { label: 'Main Character', value: 'main-character' },
             { label: 'Last Character to Speak', value: 'last-character' },
             { label: 'Chat Settings', value: 'chat' },
             { label: 'App Settings', value: 'settings' },
           ]}
-          value={state.chat?.imageSource || 'settings'}
+          value={edit.imageSource}
+          onChange={(ev) => setEdit(ev.value as any)}
         />
       </Card>
 
@@ -186,7 +173,7 @@ const ChatSettings: Component<{
             label="Chat Mode"
             helperText={
               <>
-                <Show when={state.chat?.mode !== 'companion' && mode() === 'companion'}>
+                <Show when={state.chat?.mode !== 'companion' && edit.mode === 'companion'}>
                   <TitleCard type="orange">
                     Warning! Switching to COMPANION mode is irreversible! You will no longer be able
                     to: retry messages, delete chats, edit chat settings.
@@ -194,12 +181,12 @@ const ChatSettings: Component<{
                 </Show>
               </>
             }
-            onChange={(ev) => setMode(ev.value as any)}
             items={[
               { label: 'Conversation', value: 'standard' },
               { label: 'Companion', value: 'companion' },
             ]}
-            value={state.chat?.mode || 'standard'}
+            value={edit.mode}
+            onChange={(ev) => setEdit('mode', ev.value as any)}
           />
         </Card>
       </Show>
@@ -208,15 +195,14 @@ const ChatSettings: Component<{
           fieldName="name"
           class="text-sm"
           value={state.chat?.name}
-          ref={(ref) => (nameRef = ref)}
           label={
             <>
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery('Generate a name for this conversation', (msg) => {
-                    nameRef.value = msg
-                  })
+                  msgStore.chatQuery('Generate a name for this conversation', (msg) =>
+                    setEdit('name', msg)
+                  )
                 }
               >
                 <Wand />
@@ -227,9 +213,8 @@ const ChatSettings: Component<{
       </Card>
       <Card>
         <Toggle
-          fieldName="useOverrides"
-          value={useOverrides()}
-          onChange={(use) => setUseOverrides(use)}
+          value={edit.useOverrides}
+          onChange={(ev) => setEdit('useOverrides', ev)}
           label="Override Character Definitions"
           helperText="Overrides apply to this chat only. If you want to edit the original character, open the 'Character' link in the Chat Menu instead."
         />
@@ -238,80 +223,78 @@ const ChatSettings: Component<{
       <Show when={scenarios().length > 1}>
         <Card>
           <Select
-            fieldName="scenarioId"
             label="Scenario"
             helperText="The scenario to use for this conversation"
             items={scenarios()}
-            value={scenarioId()}
-            onChange={(option) => setScenarioId(option.value)}
+            value={edit.scenarioId}
+            onChange={(ev) => setEdit('scenarioId', ev.value)}
           />
 
-          <Show when={scenarioId() !== ''}>
+          <Show when={edit.scenarioId !== ''}>
             <TagInput
               availableTags={[]}
-              onSelect={(tags) => setStates(tags)}
-              fieldName="scenarioStates"
+              onSelect={(tags) => setEdit('scenarioStates', tags)}
               label="The current state of the scenario"
               helperText="What flags have been set in the chat by the scenario so far"
-              value={state.chat?.scenarioStates ?? []}
+              value={edit.scenarioStates}
             />
           </Show>
         </Card>
       </Show>
 
-      <Show when={useOverrides()}>
+      <Show when={edit.useOverrides}>
         <Card>
           <TextInput
-            fieldName="greeting"
             class="text-sm"
             isMultiline
-            value={state.chat?.greeting || state.char?.greeting}
             label="Greeting"
+            value={edit.greeting}
+            onChange={(ev) => setEdit('greeting', ev.currentTarget.value)}
           />
 
           <TextInput
-            fieldName="scenario"
             class="text-sm"
             isMultiline
-            value={scenarioText()}
-            onChange={(ev) => setScenarioText(ev.currentTarget.value)}
+            value={edit.scenario}
+            onChange={(ev) => setEdit('scenario', ev.currentTarget.value)}
             label="Scenario"
           />
 
           <TextInput
-            fieldName="sampleChat"
             class="text-sm"
             isMultiline
-            value={state.chat?.sampleChat || state.char?.sampleChat}
             label="Sample Chat"
+            value={edit.sampleChat}
+            onChange={(ev) => setEdit('sampleChat', ev.currentTarget.value)}
           />
 
           <TextInput
-            fieldName="systemPrompt"
             class="text-sm"
             label="Character System Prompt"
-            value={state.chat?.systemPrompt}
+            value={edit.systemPrompt}
+            onChange={(ev) => setEdit('systemPrompt', ev.currentTarget.value)}
           />
 
           <TextInput
-            fieldName="postHistoryInstructions"
             class="text-sm"
             label="Character Post-History Instructions"
-            value={state.chat?.postHistoryInstructions}
+            value={edit.postHistoryInstructions}
+            onChange={(ev) => setEdit('postHistoryInstructions', ev.currentTarget.value)}
           />
 
           <Select
             fieldName="schema"
             label="Persona"
             items={personaFormats()}
-            value={kind()}
-            onChange={(ev) => setKind(ev.value as any)}
+            value={edit.personaKind}
+            onChange={(ev) => setEdit('personaKind', ev.value as any)}
           />
           <div class="mt-4 flex flex-col gap-2 text-sm">
             <PersonaAttributes
-              value={state.chat?.overrides?.attributes || state.char?.persona?.attributes}
+              state={edit.personaAttrs}
+              setter={(next) => setEdit('personaAttrs', next)}
               hideLabel
-              schema={kind()}
+              schema={edit.personaKind}
             />
           </div>
         </Card>
@@ -329,6 +312,26 @@ const ChatSettings: Component<{
       </div>
     </form>
   )
+}
+
+function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
+  return {
+    name: chat?.name || '',
+    imageSource: chat?.imageSource || 'settings',
+    mode: chat?.mode || 'standard',
+    useOverrides: !!chat?.overrides,
+    scenarioId: chat?.scenarioIds?.[0] || '',
+    scenarioStates: chat?.scenarioStates || [],
+
+    greeting: chat?.greeting || char?.greeting || '',
+    scenario: chat?.scenario || char?.scenario || '',
+    sampleChat: chat?.sampleChat || char?.sampleChat || '',
+    systemPrompt: chat?.systemPrompt || '',
+    postHistoryInstructions: chat?.postHistoryInstructions || '',
+
+    personaKind: chat?.overrides?.kind || char?.persona.kind || 'text',
+    personaAttrs: toAttrs(chat?.overrides?.attributes || char?.persona.attributes),
+  }
 }
 
 export default ChatSettings

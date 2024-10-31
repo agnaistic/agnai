@@ -8,7 +8,7 @@ export type Option<T extends string = string> = {
 }
 
 const Select: Component<{
-  fieldName: string
+  fieldName?: string
   label?: JSX.Element | string
   helperText?: string | JSX.Element
   helperMarkdown?: string

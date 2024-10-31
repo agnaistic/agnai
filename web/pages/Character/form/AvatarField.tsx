@@ -103,6 +103,7 @@ export const AvatarField: Component<{
                 helperText={`Leave the prompt empty to use your character's persona "looks" / "appearance" attributes`}
                 placeholder="Appearance Prompt (used for Avatar Generation)"
                 value={props.editor.state.appearance}
+                onChange={(ev) => props.editor.update('appearance', ev.currentTarget.value)}
               />
             </div>
           </Match>

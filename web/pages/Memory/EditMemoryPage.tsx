@@ -4,7 +4,7 @@ import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore } from '../../store'
 import { Show, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
-import EditMemoryForm, { EntrySort } from './EditMemory'
+import EditMemoryForm, { EditBookState, EntrySort } from './EditMemory'
 import { Option } from '../../shared/Select'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
@@ -19,16 +19,12 @@ const EditMemoryPage = () => {
   const params = useParams()
   const state = memoryStore()
   const [editing, setEditing] = createSignal<AppSchema.MemoryBook>()
+  const [modified, setModified] = createSignal<EditBookState>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
     if (item.value === 'creationDate' || item.value === 'alpha') {
       setEntrySort(item.value)
     }
-  }
-
-  const updateBook = (update: Partial<AppSchema.MemoryBook>) => {
-    const prev = editing()!
-    setEditing({ ...prev, ...update })
   }
 
   onMount(() => {
@@ -45,8 +41,7 @@ const EditMemoryPage = () => {
     }
   })
 
-  const saveBook = (ev: Event) => {
-    ev.preventDefault()
+  const saveBook = () => {
     // Why do we set the sort to creationDate before saving, then restore the
     // previous sort? Two reasons:
     // - Creation date is not actually saved in the DB
@@ -56,16 +51,16 @@ const EditMemoryPage = () => {
     // has the entries in creation order, for now.
     const oldEntrySort = entrySort()
     setEntrySort('creationDate')
-    const body = editing()
-    if (!params.id || !body) return
+    const updates = modified()
+    if (!params.id || !updates) return
 
     if (params.id === 'new') {
-      memoryStore.create(body, (book) => {
+      memoryStore.create(updates.book, (book) => {
         setEditing(book)
         nav(`/memory/${book._id}`)
       })
     } else {
-      memoryStore.update(params.id, body)
+      memoryStore.update(params.id, updates.book)
     }
     setEntrySort(oldEntrySort)
   }
@@ -85,7 +80,7 @@ const EditMemoryPage = () => {
             book={editing()!}
             entrySort={entrySort()}
             updateEntrySort={updateEntrySort}
-            onChange={updateBook}
+            state={setModified}
           />
           <div class="mt-4 flex justify-end">
             <Button type="submit">

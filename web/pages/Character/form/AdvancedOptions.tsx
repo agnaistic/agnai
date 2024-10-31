@@ -25,6 +25,7 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           }
           placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
           value={props.editor.state.systemPrompt}
+          onChange={(ev) => props.editor.update('systemPrompt', ev.currentTarget.value)}
         />
         <TextInput
           isMultiline
@@ -37,6 +38,7 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           }
           placeholder="Write at least four paragraphs."
           value={props.editor.state.postHistoryInstructions}
+          onChange={(ev) => props.editor.update('postHistoryInstructions', ev.currentTarget.value)}
         />
         <TextInput
           isMultiline
@@ -46,6 +48,12 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           helperMarkdown={`A.k.a. Author's note. Prompt to be placed near the bottom of the chat history, **Insert Depth** messages from the bottom.`}
           placeholder={`E.g. ### Instruction: Write like James Joyce.`}
           value={props.editor.state.insert?.prompt}
+          onChange={(ev) =>
+            props.editor.update('insert', {
+              prompt: ev.currentTarget.value,
+              depth: props.editor.state.insert?.depth ?? 3,
+            })
+          }
         />
         <RangeInput
           fieldName="insertDepth"
@@ -60,6 +68,12 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           max={10}
           step={1}
           value={props.editor.state.insert?.depth ?? 3}
+          onChange={(ev) =>
+            props.editor.update('insert', {
+              prompt: props.editor.state.insert?.prompt || '',
+              depth: ev,
+            })
+          }
         />
       </Card>
       <Card>
@@ -74,6 +88,7 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           label="Creator (optional)"
           placeholder="e.g. John1990"
           value={props.editor.state.creator}
+          onChange={(ev) => props.editor.update('creator', ev.currentTarget.value)}
         />
       </Card>
       <Card>
@@ -82,6 +97,7 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
           label="Character Version (optional)"
           placeholder="any text e.g. 1, 2, v1, v1fempov..."
           value={props.editor.state.characterVersion}
+          onChange={(ev) => props.editor.update('characterVersion', ev.currentTarget.value)}
         />
       </Card>
     </>
