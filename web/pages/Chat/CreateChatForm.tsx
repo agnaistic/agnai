@@ -30,12 +30,6 @@ import { createStore } from 'solid-js/store'
 
 const options = [{ value: 'attributes', label: 'Attributes' }]
 
-const backupFormats: any = {
-  // sbf: { value: 'sbf', label: 'SBF' },
-  // wpp: { value: 'wpp', label: 'W++' },
-  // boostyle: { value: 'boostyle', label: 'Boostyle' },
-}
-
 type ChatState = {
   name: string
   presetId: string
@@ -77,13 +71,6 @@ const CreateChatForm: Component<{
   const scenarios = createMemo(() => {
     if (!scen.length) return [{ value: '', label: 'You have no scenarios' }]
     return [{ value: '', label: 'None' }, ...scen.map((s) => ({ label: s.name, value: s._id }))]
-  })
-
-  const personaFormats = createMemo(() => {
-    const format = state.personaKind
-    if (!format || format in backupFormats === false) return options
-
-    return options.concat(backupFormats[format])
   })
 
   createEffect(() => {
@@ -325,7 +312,7 @@ const CreateChatForm: Component<{
               <Select
                 class="mb-2 text-sm"
                 label="Persona"
-                items={personaFormats()}
+                items={options}
                 value={state.personaKind || 'attributes'}
                 disabled={!state.useOverrides}
                 onChange={(ev) => setState('personaKind', ev.value as any)}
