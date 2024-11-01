@@ -3,9 +3,11 @@ import { Component, Show, createEffect, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { memoryStore, toastStore } from '../../store'
-import EditMemoryForm, { EditBookState, EntrySort } from '../Memory/EditMemory'
+import EditMemoryForm, { EntrySort } from '../Memory/EditMemory'
 import { AppSchema } from '/common/types'
 import { Option } from '/web/shared/Select'
+import { emptyBookWithEmptyEntry } from '/common/memory'
+import { createStore } from 'solid-js/store'
 
 const ChubImportBookModal: Component<{
   show: boolean
@@ -16,7 +18,7 @@ const ChubImportBookModal: Component<{
 }> = (props) => {
   let ref: any
   const [book, setBook] = createSignal<AppSchema.MemoryBook>(props.book)
-  const [bookState, setBookState] = createSignal<EditBookState>()
+  const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBookWithEmptyEntry())
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
     if (item.value === 'creationDate' || item.value === 'alpha') {
@@ -29,12 +31,10 @@ const ChubImportBookModal: Component<{
   })
 
   const onImport = () => {
-    const state = bookState()
-    if (!state?.book) return
     try {
-      memoryStore.create(state.book)
+      memoryStore.create(state)
     } catch (error) {
-      toastStore.error(`Error importing ${state.book.name}! ${error}`)
+      toastStore.error(`Error importing ${state.name}! ${error}`)
     }
     props.close()
   }
@@ -78,10 +78,10 @@ const ChubImportBookModal: Component<{
           <div class="text-sm">
             <EditMemoryForm
               hideSave
-              book={book()}
+              state={book()}
               entrySort={entrySort()}
               updateEntrySort={updateEntrySort}
-              state={setBookState}
+              setter={setState}
             />
           </div>
         </Show>

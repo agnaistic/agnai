@@ -20,7 +20,7 @@ import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
-import { forms, getFormValue } from '/web/emitter'
+import { getFormValue } from '/web/emitter'
 import { ResponseSchema } from '/common/types/library'
 
 export type EditorState = {
@@ -140,17 +140,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const [form, setForm] = createSignal<any>()
   const [generating, setGenerating] = createSignal(false)
   const [imageId, setImageId] = createSignal('')
-
-  forms.useSub((field, value) => {
-    if (field === 'kind') {
-      updateKind(value as any)
-      return
-    }
-
-    if (field in state === false) return
-
-    setState(field as any, value)
-  })
 
   const canGenerate = createMemo(
     on(

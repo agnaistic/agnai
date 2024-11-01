@@ -1,13 +1,11 @@
 import { createStore } from 'solid-js/store'
 import { JsonField, JsonType } from '/common/prompt'
-import { Component, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, Index, Show, createEffect, createMemo, on } from 'solid-js'
 import { Pill, SolidCard } from './Card'
 import Select from './Select'
 import TextInput from './TextInput'
-import { forms } from '../emitter'
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash } from 'lucide-solid'
 import Button from './Button'
-import { useFormField } from './hooks'
 
 export const JsonSchema: Component<{
   inherit?: JsonField[]
@@ -31,7 +29,6 @@ export const JsonSchema: Component<{
 
   createEffect(() => {
     const fields = state.fields
-
     props.update(fields)
   })
 
@@ -63,43 +60,23 @@ export const JsonSchema: Component<{
     setState({ fields: next })
   }
 
-  forms.useSub((fieldName, value) => {
-    const [index, ...prop] = fieldName.split('.')
-    const match = state.fields[+index]
-    if (!match) return
-
-    const field = prop.join('.')
-    const next = state.fields.map<JsonField>((f, i) => {
-      if (i !== +index) return f
-
-      if (field === 'name') {
-        props.onNameChange?.(f.name, value)
-        return { name: value, disabled: f.disabled, type: f.type }
-      }
-      if (field === 'disabled') return { name: f.name, disabled: !value, type: f.type }
-      if (field === 'enum') {
-        return {
-          name: f.name,
-          disabled: f.disabled,
-          type: {
-            ...f.type,
-            enum: (value || '')
-              .split(',')
-              .map((t: string) => t.trim())
-              .filter((v: string) => !!v),
-          },
-        }
-      }
-
-      return {
-        name: f.name,
-        disabled: f.disabled,
-        type: { ...f.type, [field]: value } as JsonType,
-      } as const
+  const update = (update: Partial<JsonField>, index: number) => {
+    const next = state.fields.map((f, i) => {
+      if (i === index) return { ...f, ...update }
+      return f
     })
 
-    setState('fields', next)
-  })
+    setState({ fields: next })
+  }
+
+  const updateType = (update: Partial<JsonType>, index: number) => {
+    const next = state.fields.map((f, i) => {
+      if (i === index) return { ...f, type: { ...f.type, ...update } }
+      return f
+    })
+
+    setState({ fields: next as any })
+  }
 
   return (
     <>
@@ -108,14 +85,14 @@ export const JsonSchema: Component<{
           {(item, i) => (
             <SchemaField
               index={i}
-              disabled={item().disabled}
-              name={item().name}
-              def={item().type}
+              item={item()}
               validate={props.validate}
               remove={() => removeField(i)}
               last={i === state.fields.length - 1}
               moveUp={moveUp}
               moveDown={moveDown}
+              update={update}
+              updateType={updateType}
             />
           )}
         </Index>
@@ -130,25 +107,16 @@ export const JsonSchema: Component<{
 
 const SchemaField: Component<{
   index: number
-  name: string
-  disabled: boolean
-  def: JsonType
+  item: JsonField
   validate?: boolean
   remove: () => void
   last: boolean
   moveUp: (i: number) => void
   moveDown: (i: number) => void
+  update: (partial: Partial<JsonField>, index: number) => void
+  updateType: (partial: Partial<JsonType>, index: number) => void
 }> = (props) => {
-  let enabledRef: HTMLInputElement
-  const type = useFormField(`${props.index}.type`, props.def.type || 'bool')
-
-  const [enabled, setEnabled] = createSignal(!props.disabled)
-  const border = createMemo(() => (enabled() ? 'bg-500' : 'red-800'))
-
-  createEffect(() => {
-    const disabled = props.disabled
-    setEnabled(!disabled)
-  })
+  const border = createMemo(() => (!props.item.disabled ? 'bg-500' : 'red-800'))
 
   return (
     <div class="flex flex-col">
@@ -162,15 +130,15 @@ const SchemaField: Component<{
               { label: 'Number', value: 'integer' },
               { label: 'Enum', value: 'enum' },
             ]}
-            fieldName={`${props.index}.type`}
-            value={props.def.type}
+            value={props.item.type.type}
+            onChange={(ev) => props.update({ type: ev.value as any }, props.index)}
           />
           <TextInput
-            fieldName={`${props.index}.name`}
             placeholder="Name. E.g. brief_summary"
-            value={props.name}
+            value={props.item.name}
             class="h-8"
             parentClass="w-full"
+            onChange={(ev) => props.update({ name: ev.currentTarget.value }, props.index)}
           />
         </Pill>
         <Button
@@ -192,39 +160,29 @@ const SchemaField: Component<{
               <TextInput
                 fieldName={`${props.index}.title`}
                 placeholder="(Optional) Title. E.g. Brief Chat Summary"
-                value={props.def.title}
+                value={props.item.type.title}
                 parentClass="w-full"
               />
               <TextInput
                 fieldName={`${props.index}.description`}
-                value={props.def.description}
+                value={props.item.type.description}
                 placeholder="(Optional) Description"
                 parentClass="w-1/2 hidden"
               />
             </div>
 
             <div class="flex gap-2">
-              <input
-                ref={(r) => (enabledRef = r)}
-                id={`${props.index}.disabled`}
-                name={`${props.index}.disabled`}
-                type="hidden"
-                checked={props.disabled}
-                onChange={(ev) => forms.emit(`${props.index}.disabled`, !ev.currentTarget.checked)}
-              />
               <Button
                 size="md"
-                schema={enabled() ? 'success' : 'hollow'}
+                schema={!props.item.disabled ? 'success' : 'hollow'}
                 onClick={() => {
-                  const next = !enabled()
-                  enabledRef.checked = next
-                  setEnabled(next)
+                  props.update({ disabled: !props.item.disabled }, props.index)
                 }}
               >
-                <Show when={enabled()}>
+                <Show when={!props.item.disabled}>
                   <Eye size={16} />
                 </Show>
-                <Show when={!enabled()}>
+                <Show when={props.item.disabled}>
                   <EyeOff size={16} />
                 </Show>
               </Button>
@@ -236,33 +194,43 @@ const SchemaField: Component<{
 
           <div
             class="flex w-full gap-2"
-            classList={{ hidden: !props.def.valid && type() !== 'string' && type() !== 'enum' }}
+            classList={{
+              hidden:
+                !props.item.type.valid &&
+                props.item.type.type !== 'string' &&
+                props.item.type.type !== 'enum',
+            }}
           >
-            <Show when={type() === 'string'}>
+            <Show when={props.item.type.type === 'string'}>
               <TextInput
                 type="number"
                 fieldName={`${props.index}.maxLength`}
                 placeholder="Max String Length"
-                value={(props.def as any).maxLength}
+                value={(props.item.type as any).maxLength}
+                onChange={(ev) =>
+                  props.updateType({ maxLength: +ev.currentTarget.value }, props.index)
+                }
               />
             </Show>
-            <Show when={type() === 'enum'}>
+            <Show when={props.item.type.type === 'enum'}>
               <TextInput
-                fieldName={`${props.index}.enum`}
-                initialValue={(props.def as any).enum?.join(', ')}
+                initialValue={(props.item.type as any).enum?.join(', ')}
                 placeholder="(Optional) Allowed values - comma seperated"
                 parentClass="w-1/2"
+                onChange={(ev) =>
+                  props.updateType({ enum: ev.currentTarget.value.split(',') }, props.index)
+                }
               />
             </Show>
-            <Show when={props.validate && type() === 'bool'}>
+            <Show when={props.validate && props.item.type.type === 'bool'}>
               <Select
-                fieldName={`${props.index}.valid`}
                 items={[
                   { label: 'Ignore', value: '' },
                   { label: 'True', value: 'true' },
                   { label: 'False', value: 'false' },
                 ]}
-                value={props.def.valid}
+                value={props.item.type.valid}
+                onChange={(ev) => props.updateType({ valid: ev.value }, props.index)}
               />
             </Show>
           </div>

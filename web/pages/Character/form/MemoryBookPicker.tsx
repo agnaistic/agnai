@@ -1,6 +1,6 @@
 import { Save } from 'lucide-solid'
 import { Component, createSignal, createMemo, Show } from 'solid-js'
-import EditMemoryForm, { EditBookState, EntrySort } from '../../Memory/EditMemory'
+import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
@@ -8,6 +8,7 @@ import { useRootModal } from '/web/shared/hooks'
 import Modal from '/web/shared/Modal'
 import Select, { Option } from '/web/shared/Select'
 import { memoryStore } from '/web/store'
+import { createStore } from 'solid-js/store'
 
 export const MemoryBookPicker: Component<{
   bundledBook: AppSchema.MemoryBook | undefined
@@ -22,7 +23,7 @@ export const MemoryBookPicker: Component<{
     }
   }
 
-  const [editing, setEditing] = createSignal<EditBookState>()
+  const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBookWithEmptyEntry())
 
   const NONE_VALUE = '__none_character_book__'
   const internalMemoryBookOptions = createMemo(() => [
@@ -51,11 +52,8 @@ export const MemoryBookPicker: Component<{
     </>
   )
   const onSubmitCharacterBookChanges = () => {
-    const update = editing()
-    if (!update) return
-
     if (props.bundledBook) {
-      props.setBundledBook(update.book)
+      props.setBundledBook(state)
     }
     setIsModalShown(false)
   }
@@ -73,10 +71,10 @@ export const MemoryBookPicker: Component<{
       <div class="text-sm">
         <EditMemoryForm
           hideSave
-          book={props.bundledBook!}
+          state={props.bundledBook!}
           entrySort={entrySort()}
           updateEntrySort={updateEntrySort}
-          state={setEditing}
+          setter={setState}
         />
       </div>
     </Modal>

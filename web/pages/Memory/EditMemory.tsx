@@ -10,9 +10,7 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { alphaCaseInsensitiveSort } from '../../shared/util'
 import { Card } from '/web/shared/Card'
-import { createStore } from 'solid-js/store'
-
-export type EditBookState = { book: AppSchema.MemoryBook }
+import { SetStoreFunction } from 'solid-js/store'
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -28,13 +26,13 @@ const entrySortItems = [
 ]
 
 const EditMemoryForm: Component<{
-  book: AppSchema.MemoryBook
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
-  state: (state: EditBookState) => void
+
+  state: AppSchema.MemoryBook
+  setter: SetStoreFunction<AppSchema.MemoryBook>
 }> = (props) => {
-  const [state, setState] = createStore({ ...props.book })
   const [search, setSearch] = createSignal('')
 
   const addEntry = () => {
@@ -47,18 +45,18 @@ const EditMemoryForm: Component<{
       enabled: true,
     }
 
-    setState('entries', state.entries.concat(entry))
+    props.setter('entries', props.state.entries.concat(entry))
   }
 
   const onRemoveEntry = (pos: number) => {
-    const next = state.entries.filter((_, i) => i !== pos)
-    setState('entries', next)
+    const next = props.state.entries.filter((_, i) => i !== pos)
+    props.setter('entries', next)
   }
 
   createEffect(
     on(
-      () => props.book,
-      (incoming) => setState({ ...incoming, entries: incoming.entries.slice() })
+      () => props.state,
+      (incoming) => props.setter({ ...incoming, entries: incoming.entries.slice() })
     )
   )
 
@@ -66,8 +64,8 @@ const EditMemoryForm: Component<{
     on(
       () => props.entrySort,
       (entrySort) => {
-        const next = sortEntries(state.entries, entrySort)
-        setState('entries', next)
+        const next = sortEntries(props.state.entries, entrySort)
+        props.setter('entries', next)
       }
     )
   )
@@ -78,24 +76,24 @@ const EditMemoryForm: Component<{
         <FormLabel
           fieldName="id"
           label="Id"
-          helperText={props.book._id === '' ? 'New book' : props.book._id}
+          helperText={props.state._id === '' ? 'New book' : props.state._id}
         />
         <TextInput
           label="Book Name"
-          value={state.name}
+          value={props.state.name}
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
-            setState({ name: e.currentTarget.value })
+            props.setter({ name: e.currentTarget.value })
           }}
         />
 
         <TextInput
           label="Description"
-          value={state.name}
+          value={props.state.name}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
-            setState({ description: e.currentTarget.value })
+            props.setter({ description: e.currentTarget.value })
           }}
         />
         <Divider />
@@ -123,7 +121,7 @@ const EditMemoryForm: Component<{
             class="mx-1 my-1"
           />
         </div>
-        <Index each={state.entries}>
+        <Index each={props.state.entries}>
           {(entry, i) => (
             <EntryCard
               {...entry}
@@ -132,8 +130,8 @@ const EditMemoryForm: Component<{
               onRemove={() => onRemoveEntry(i)}
               search={search()}
               onChange={(e) => {
-                const next = modify(state.entries, e, i)
-                setState('entries', next)
+                const next = modify(props.state.entries, e, i)
+                props.setter('entries', next)
               }}
             />
           )}
