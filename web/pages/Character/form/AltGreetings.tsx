@@ -1,4 +1,4 @@
-import { Component, For } from 'solid-js'
+import { Component, For, Index } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
 import { MinusCircle, Plus } from 'lucide-solid'
 import Button from '/web/shared/Button'
@@ -20,23 +20,23 @@ export const AlternateGreetingsInput: Component<{
 
   return (
     <>
-      <For each={props.greetings}>
+      <Index each={props.greetings}>
         {(altGreeting, i) => (
           <div class="flex gap-2">
             <TextInput
               isMultiline
-              fieldName={`alternateGreeting${i() + 1}`}
+              fieldName={`alternateGreeting${i + 1}`}
               placeholder="An alternate greeting for your character"
-              value={altGreeting}
-              onChange={(ev) => onChange(ev, i())}
+              value={altGreeting()}
+              onChange={(ev) => onChange(ev, i)}
               parentClass="w-full"
             />
-            <div class="1/12 flex items-center" onClick={() => removeGreeting(i())}>
+            <div class="1/12 flex items-center" onClick={() => removeGreeting(i)}>
               <MinusCircle size={16} class="focusable-icon-button" />
             </div>
           </div>
         )}
-      </For>
+      </Index>
       <div>
         <Button onClick={addGreeting}>
           <Plus size={16} />

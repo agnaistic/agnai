@@ -499,6 +499,7 @@ export const CreateCharacterForm: Component<{
                     "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
                   }
                   value={editor.state.greeting}
+                  onChange={(ev) => editor.update('greeting', ev.currentTarget.value)}
                   class="h-60"
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
                 />
