@@ -334,7 +334,6 @@ export const FeatherlessModels: Field = (props) => {
         />
       }
       onSelect={(opt) => {
-        console.log(opt.value)
         props.setter('featherlessModel', opt.value)
       }}
       buttonLabel={label()}

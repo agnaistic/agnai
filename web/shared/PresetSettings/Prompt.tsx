@@ -82,6 +82,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
 
           <BasicPromptTemplate
             state={props.state}
+            setter={props.setter}
             hide={props.state.useAdvancedPrompt !== 'basic' || props.state.presetMode === 'simple'}
           />
 

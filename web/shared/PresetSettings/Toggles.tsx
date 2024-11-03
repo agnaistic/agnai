@@ -1,15 +1,12 @@
-import Sorter from 'sortablejs'
-import { Component, createEffect, createMemo, createSignal, For } from 'solid-js'
+import { Component, createMemo } from 'solid-js'
 import TextInput from '../TextInput'
 import Select from '../Select'
 import { samplerOrders, settingLabels } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
 import { Card } from '../Card'
-import { FormLabel } from '../FormLabel'
 import Sortable, { SortItem } from '../Sortable'
-import Button from '../Button'
 import { A } from '@solidjs/router'
-import { samplerServiceMap } from '/common/sampler-order'
+import { inverseSamplerServiceMap, samplerServiceMap } from '/common/sampler-order'
 import { PresetState, PresetTabProps, SetPresetState } from './types'
 import { hidePresetSetting } from '../util'
 
@@ -171,81 +168,53 @@ const SamplerOrder: Component<{
   state: PresetState
   setter: SetPresetState
 }> = (props) => {
-  const [loaded, setLoaded] = createSignal(false)
-
-  const presetOrder = createMemo(() => {
-    if (!props.state.order) return ''
-    // Guests persist the string instead of the array for some reason
-    if (typeof props.state.order === 'string') return props.state.order
-    return props.state.order.join(',')
-  })
-  const [order, setOrder] = createSignal(presetOrder())
-
-  const [value, setValue] = createSignal(order())
-  const [sorter, setSorter] = createSignal<Sorter>()
-
-  /**
-   * The SamplerOrder component is re-mounted on save for some reason
-   * We need to manually handle this to correctly preserve the order and disabled states
-   */
-  createEffect(() => {
-    if (loaded()) return
-
-    const order = props.state.order || ''
-    const next = Array.isArray(order) ? order.join(',') : order
-
-    setLoaded(true)
-    setOrder(next)
-    setValue(next)
-    resort()
-  })
-
   const updateValue = (next: SortItem[]) => {
     const nextValue = next.map((n) => +n.value)
-    props.setter('order', nextValue)
-  }
-
-  const toggleSampler = (id: number) => {
-    if (!props.state.service) return
-    const temp = samplerOrders[props.state.service]?.findIndex((val) => val === 'temp')!
-
-    const disabled = ensureArray(props.state.disabledSamplers)
-
-    if (disabled.includes(id)) {
-      const next = disabled.filter((sampler) => sampler !== temp && sampler !== id)
-      props.setter('disabledSamplers', next)
-      return
-    }
-
-    const next = id === temp ? disabled : disabled.concat(id)
-    props.setter('disabledSamplers', next)
+    const disabled = next.filter((n) => n.enabled === false).map((n) => n.id)
+    props.setter({ order: nextValue, disabledSamplers: disabled })
   }
 
   const items = createMemo(() => {
     const list: SortItem[] = []
     if (!props.state.service) return list
 
-    const order = samplerOrders[props.state.service]
     const orderMap = samplerServiceMap[props.state.service]
-    if (!order || !orderMap) return []
+    const inverseMap = inverseSamplerServiceMap[props.state.service]
+    const disabled = ensureArray(props.state.disabledSamplers)
+
+    const base = samplerOrders[props.state.service]
+      ?.map((o) => orderMap?.[o])
+      .filter((o) => o !== undefined)
+    const order = ensureArray(props.state.order)
+    const set = new Set(order)
+
+    if (!base || !order || !orderMap || !inverseMap) return []
 
     for (const item of order) {
+      if (item === undefined) continue
+      const prop = inverseMap[item] as keyof typeof settingLabels
       list.push({
-        id: orderMap[item],
+        id: item,
         value: item,
-        label: settingLabels[item]!,
+        label: `${settingLabels[prop]}`,
+        enabled: !disabled.includes(item),
+      })
+    }
+
+    for (const item of base) {
+      if (item === undefined) continue
+      if (set.has(item)) continue
+      const prop = inverseMap[item] as keyof typeof settingLabels
+      list.push({
+        id: item,
+        value: item,
+        label: `${settingLabels[prop]}`,
+        enabled: false,
       })
     }
 
     return list
   })
-
-  const resort = () => {
-    const sort = sorter()
-    if (!sort) return
-
-    sort.sort(value().split(','))
-  }
 
   return (
     <div
@@ -253,41 +222,7 @@ const SamplerOrder: Component<{
         hidden: items().length === 0 || props.state.thirdPartyFormat === 'aphrodite',
       }}
     >
-      <Sortable
-        label="Sampler Order"
-        items={items()}
-        onChange={updateValue}
-        setSorter={(s) => {
-          setSorter(s)
-          resort()
-        }}
-      />
-
-      <Card hide={props.state.service !== 'novel'}>
-        <FormLabel
-          fieldName="disabledSamplers"
-          label="Enabled Samplers"
-          helperText="To disable a sampler, toggle it to grey."
-        />
-
-        <div class="flex flex-wrap gap-2">
-          <For each={items()}>
-            {(item) => (
-              <Button
-                size="sm"
-                schema={
-                  ensureArray(props.state.disabledSamplers).includes(+item.id)
-                    ? 'secondary'
-                    : 'success'
-                }
-                onClick={() => toggleSampler(+item.id)}
-              >
-                {item.label}
-              </Button>
-            )}
-          </For>
-        </div>
-      </Card>
+      <Sortable label="Sampler Order" items={items()} onChange={updateValue} />
     </div>
   )
 }
@@ -301,5 +236,5 @@ function ensureArray(value: any): number[] {
       .map((v) => +v)
   }
 
-  return value.map((v: any) => (typeof v === 'number' ? v : +v)).filter((v: number) => isNaN(v))
+  return value.map((v: any) => (typeof v === 'number' ? v : +v)).filter((v: number) => !isNaN(v))
 }

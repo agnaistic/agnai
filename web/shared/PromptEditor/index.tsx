@@ -27,11 +27,11 @@ import { v4 } from 'uuid'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
-import Sortable, { SortItem } from '../Sortable'
+import Sortable from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
-import { PresetState } from '../PresetSettings/types'
+import { PresetState, SetPresetState } from '../PresetSettings/types'
 
 type Placeholder = {
   required: boolean
@@ -303,18 +303,18 @@ const PromptEditor: Component<
               </div>
               <div class="flex gap-2">
                 <Button size="sm" onClick={togglePreview}>
-                  Toggle Preview
+                  Preview
                 </Button>
                 <Show when={props.showTemplates}>
                   <Show when={!props.state?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
-                      Use Library Template
+                      Use Template
                     </Button>
                   </Show>
 
                   <Show when={!!props.state?.promptTemplateId}>
                     <Button size="sm" onClick={openTemplate}>
-                      Update Library Template
+                      Update Template
                     </Button>
                   </Show>
 
@@ -420,39 +420,20 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
   .sort((l, r) => l.id - r.id)
 
 export const BasicPromptTemplate: Component<{
-  state?: PresetState
+  state: PresetState
+  setter: SetPresetState
   hide?: boolean
 }> = (props) => {
-  let ref: HTMLInputElement
-
-  const [mod, setMod] = createSignal(
-    props.state?.promptOrder?.map((o) => ({
-      ...BASIC_LABELS[o.placeholder],
-      value: o.placeholder,
-      enabled: o.enabled,
-    })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
-  )
-
   const isMobile = createMemo(() => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
   const [lockPromptOrder, setLockPromptOrder] = createSignal(isMobile())
-
-  const updateRef = (items: SortItem[]) => {
-    ref.value = items.map((n) => `${n.value}=${n.enabled ? 'on' : 'off'}`).join(',')
-  }
-
-  const onClick = (id: number) => {
-    const prev = mod()
-    const next = prev.map((o) => {
-      if (o.id !== id) return o
-      return { ...o, enabled: !o.enabled }
-    })
-    setMod(next)
-    updateRef(next)
-  }
-
-  onMount(() => {
-    updateRef(mod())
-  })
+  const items = createMemo(
+    () =>
+      props.state?.promptOrder?.map((o) => ({
+        ...BASIC_LABELS[o.placeholder],
+        value: o.placeholder,
+        enabled: !!o.enabled,
+      })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
+  )
 
   return (
     <Card border hide={props.hide}>
@@ -472,16 +453,14 @@ export const BasicPromptTemplate: Component<{
           />
         </div>
         <Sortable
-          items={mod()}
-          onChange={updateRef}
-          onItemClick={onClick}
+          items={items()}
+          onChange={(next) =>
+            props.setter(
+              'promptOrder',
+              next.map((n) => ({ placeholder: n.value as string, enabled: !!n.enabled }))
+            )
+          }
           disabled={lockPromptOrder()}
-        />
-        <TextInput
-          fieldName="promptOrder"
-          parentClass="hidden"
-          ref={(ele) => (ref = ele)}
-          // value={''}
         />
       </div>
     </Card>

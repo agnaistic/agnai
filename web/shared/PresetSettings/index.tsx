@@ -4,18 +4,11 @@ import {
   ADAPTER_LABELS,
   AIAdapter,
   AdapterSetting,
-  THIRDPARTY_FORMATS,
   ThirdPartyFormat,
 } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import { Card } from '../Card'
-import {
-  getFormEntries,
-  getStrictForm,
-  getUsableServices,
-  hidePresetSetting,
-  storage,
-} from '../util'
+import { getFormEntries, getUsableServices, hidePresetSetting, storage } from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
 import { ServiceOption } from '../../pages/Settings/components/RegisteredSettings'
@@ -30,8 +23,6 @@ import { RegisteredSettings } from './Registered'
 import { PromptSettings } from './Prompt'
 import { SliderSettings } from './Sliders'
 import { ToggleSettings } from './Toggles'
-import { presetValidator } from '/common/presets'
-import { AppSchema } from '/common/types'
 import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
 import { PresetProvider } from './context'
@@ -217,74 +208,74 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
   )
 }
 
-export function getPresetFormData(ref: any) {
-  const cfg = settingStore.getState()
-  const {
-    promptOrder: order,
-    jsonSchema,
-    'registered.agnaistic.useRecommended': useRecommended,
-    ...data
-  } = getStrictForm(ref, {
-    ...presetValidator,
-    thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
-    presetMode: 'string',
-    useMaxContext: 'boolean',
-    useAdvancedPrompt: 'string?',
-    promptOrder: 'string?',
-    modelFormat: 'string?',
-    disableNameStops: 'boolean',
-    jsonSchema: 'string?',
-    jsonEnabled: 'boolean',
-    jsonSource: 'string',
-    localRequests: 'boolean',
-    'registered.agnaistic.useRecommended': 'boolean?',
-  })
+// export function getPresetFormData(ref: any) {
+//   const cfg = settingStore.getState()
+//   const {
+//     promptOrder: order,
+//     jsonSchema,
+//     'registered.agnaistic.useRecommended': useRecommended,
+//     ...data
+//   } = getStrictForm(ref, {
+//     ...presetValidator,
+//     thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
+//     presetMode: 'string',
+//     useMaxContext: 'boolean',
+//     useAdvancedPrompt: 'string?',
+//     promptOrder: 'string?',
+//     modelFormat: 'string?',
+//     disableNameStops: 'boolean',
+//     jsonSchema: 'string?',
+//     jsonEnabled: 'boolean',
+//     jsonSource: 'string',
+//     localRequests: 'boolean',
+//     'registered.agnaistic.useRecommended': 'boolean?',
+//   })
 
-  const registered = getRegisteredSettings(data.service as AIAdapter, ref)
-  if (data.service === 'agnaistic' && registered) {
-    registered.useRecommended = useRecommended
-  }
+//   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
+//   if (data.service === 'agnaistic' && registered) {
+//     registered.useRecommended = useRecommended
+//   }
 
-  data.registered = {}
-  data.registered[data.service] = registered
+//   data.registered = {}
+//   data.registered[data.service] = registered
 
-  data.thirdPartyFormat = data.thirdPartyFormat || (null as any)
+//   data.thirdPartyFormat = data.thirdPartyFormat || (null as any)
 
-  if (data.openRouterModel) {
-    const actual = cfg.config.openRouter.models.find((or) => or.id === data.openRouterModel)
-    data.openRouterModel = actual || undefined
-  }
+//   if (data.openRouterModel) {
+//     const actual = cfg.config.openRouter.models.find((or) => or.id === data.openRouterModel)
+//     data.openRouterModel = actual || undefined
+//   }
 
-  const json = jsonSchema ? JSON.parse(jsonSchema) : undefined
+//   const json = jsonSchema ? JSON.parse(jsonSchema) : undefined
 
-  const promptOrder: AppSchema.GenSettings['promptOrder'] = order
-    ? order.split(',').map((o) => {
-        const [placeholder, enabled] = o.split('=')
-        return { placeholder, enabled: enabled === 'on' }
-      })
-    : undefined
+//   const promptOrder: AppSchema.GenSettings['promptOrder'] = order
+//     ? order.split(',').map((o) => {
+//         const [placeholder, enabled] = o.split('=')
+//         return { placeholder, enabled: enabled === 'on' }
+//       })
+//     : undefined
 
-  const entries = getFormEntries(ref)
-  const stopSequences = entries.reduce<string[]>((prev, [key, value]) => {
-    if (key.startsWith('stop.') && value.length) {
-      prev.push(value)
-    }
-    return prev
-  }, [])
+//   const entries = getFormEntries(ref)
+//   const stopSequences = entries.reduce<string[]>((prev, [key, value]) => {
+//     if (key.startsWith('stop.') && value.length) {
+//       prev.push(value)
+//     }
+//     return prev
+//   }, [])
 
-  const phraseBias = Object.values(
-    entries.reduce<any>((prev, [key, value]) => {
-      if (!key.startsWith('phraseBias.')) return prev
-      const [, id, prop] = key.split('.')
-      if (!prev[id]) prev[id] = {}
-      prev[id][prop] = prop === 'seq' ? value : +value
-      return prev
-    }, {}) as Array<{ seq: string; bias: number }>
-  ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
+//   const phraseBias = Object.values(
+//     entries.reduce<any>((prev, [key, value]) => {
+//       if (!key.startsWith('phraseBias.')) return prev
+//       const [, id, prop] = key.split('.')
+//       if (!prev[id]) prev[id] = {}
+//       prev[id][prop] = prop === 'seq' ? value : +value
+//       return prev
+//     }, {}) as Array<{ seq: string; bias: number }>
+//   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  const preset = { ...data, stopSequences, phraseBias, promptOrder, json }
-  return preset
-}
+//   const preset = { ...data, stopSequences, phraseBias, promptOrder, json }
+//   return preset
+// }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {
   if (!service) return

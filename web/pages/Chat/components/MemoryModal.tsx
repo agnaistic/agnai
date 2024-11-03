@@ -58,8 +58,6 @@ const ChatMemoryModal: Component<{
     if (!props.chat) return
     if (!props.chat.memoryId) return
 
-    console.log(props.chat.memoryId)
-
     if (props.chat.memoryId && !id()) {
       changeBook(props.chat.memoryId)
     }

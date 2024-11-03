@@ -488,11 +488,9 @@ export function useGoogleReady() {
     const timer = setInterval(() => {
       const win: any = window
       if (win.default_gsi) {
-        console.log('ready')
         setReady(true)
         clearInterval(timer)
       } else {
-        console.log('not ready')
       }
     }, 500)
 

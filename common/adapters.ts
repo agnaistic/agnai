@@ -505,6 +505,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   mirostatToggle: 'Mirostat Toggle',
   etaCutoff: 'ETA Cutoff',
   epsilonCutoff: 'Epsilon Cutoff',
+  cfgScale: 'CFG Scale',
 }
 
 export const samplerOrders: { [key in AIAdapter]?: Array<keyof PresetAISettings> } = {

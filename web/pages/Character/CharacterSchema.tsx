@@ -429,7 +429,6 @@ export const CharacterSchema: Component<{
                 }
                 isMultiline
                 value={hist()}
-                // onInputText={(ev) => setHistory(ev)}
                 placeholder="History Template"
               />
             </Card>

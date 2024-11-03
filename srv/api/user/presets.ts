@@ -49,11 +49,12 @@ export const createUserPreset = handle(async ({ userId, body, authed }) => {
     }
   }
 
+  const samplers = toSamplerOrder(body.service, body.order, body.disabledSamplers)
   const preset = {
     ...body,
     service,
-    order: body.order?.split(',').map((i) => +i),
-    disabledSamplers: body.disabledSamplers?.split(',').map((i) => +i),
+    order: samplers?.order,
+    disabledSamplers: samplers?.disabled,
   }
 
   const newPreset = await store.presets.createUserPreset(userId!, preset)

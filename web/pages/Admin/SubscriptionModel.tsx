@@ -198,7 +198,7 @@ export const SubscriptionModel: Component = () => {
       jsonSchemaCapable: 'boolean?',
     } as const
 
-    const presetData = getSubPresetForm(presetState()!) // getPresetFormData(ref)
+    const presetData = getSubPresetForm(presetState()!)
     const subData = getStrictForm(ref, validator)
     const body: any = { ...presetData, ...subData, levels: levels() }
 

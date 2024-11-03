@@ -88,8 +88,8 @@ export const presetValidator = {
   replicateModelVersion: 'string?',
   replicateModelName: 'string?',
 
-  order: 'string?',
-  disabledSamplers: 'string?',
+  order: 'any?',
+  disabledSamplers: 'any?',
   registered: 'any?',
 
   swipesPerGeneration: 'number?',

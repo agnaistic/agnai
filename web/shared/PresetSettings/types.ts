@@ -10,7 +10,7 @@ export type PresetProps = {
   service?: AIAdapter
   disableService?: boolean
   hideTabs?: PresetTab[]
-  state?: (state: PresetState, setter: SetPresetState) => void
+  state: (state: PresetState, setter: SetPresetState) => void
 }
 
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'

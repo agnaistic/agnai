@@ -421,7 +421,6 @@ export const sagaStore = createStore<SagaState>(
       }
 
       prompt = replaceTags(prompt, state.format)
-      console.log(prompt)
       const requestId = v4()
       const original = state.responses.slice()
 
@@ -447,7 +446,6 @@ export const sagaStore = createStore<SagaState>(
         yield { busy: false, state: Object.assign({}, state, { responses: original }) }
         return
       }
-      console.log(JSON.stringify(result, null, 2))
       onDone()
       debounceImage(true)
 

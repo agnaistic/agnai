@@ -32,6 +32,19 @@ export const samplerServiceMap: { [adapter in AIAdapter]?: Record<string, number
   },
 }
 
+export const inverseSamplerServiceMap = Object.entries(samplerServiceMap).reduce(
+  (prev, [svc, order]) => {
+    let map: Record<number, string> = {}
+    for (const [key, value] of Object.entries(order)) {
+      map[value] = key
+    }
+
+    prev[svc as AIAdapter] = map
+    return prev
+  },
+  {} as { [adapter in AIAdapter]?: Record<number, string> }
+)
+
 export function toSamplerOrder(
   adapter: AIAdapter,
   samplers: number[] | string | undefined,
@@ -39,9 +52,22 @@ export function toSamplerOrder(
 ) {
   if (!samplers) return
 
+  const next = {
+    order: [] as number[],
+    disabled: [] as number[],
+  }
+
+  if (Array.isArray(samplers)) {
+    next.order = samplers
+  }
+
+  if (Array.isArray(disabled)) {
+    next.disabled = disabled
+  }
+
   const ordering = samplerServiceMap[adapter]
   if (!ordering) {
-    return
+    return next
   }
 
   const remove = toSamplers(ordering, disabled)
@@ -59,6 +85,8 @@ function toSamplers(map: Record<string, number>, samplers?: number[] | string) {
   if (Array.isArray(samplers)) {
     return samplers
   }
+
+  if (typeof samplers !== 'string') return []
 
   const next: number[] = []
   for (const sampler of samplers.split(',')) {
