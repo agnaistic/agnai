@@ -86,24 +86,19 @@ export const CharacterSchema: Component<{
   const [histErr, setHistErr] = createSignal('')
   const activePreset = useActivePreset()
 
-  const getOriginal = () => {
-    let json: ResponseSchema | undefined
-    if (props.characterId) {
-      const char = ctx.activeMap[props.characterId]
-      json = char ? char.json : chatStore.getState().active?.char.json
-    } else if (props.presetId) {
-      json = props.inherit || activePreset()?.json
-    }
-
-    return json
-  }
-
   createEffect(
     on(
       () => show(),
       (open) => {
         if (!open) return
-        const json = getOriginal()
+        let json: ResponseSchema | undefined
+
+        if (props.characterId) {
+          const char = ctx.activeMap[props.characterId]
+          json = char ? char.json : chatStore.getState().active?.char.json
+        } else if (props.presetId || props.inherit) {
+          json = props.inherit || activePreset()?.json
+        }
 
         const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
         if (json && hasValue) {

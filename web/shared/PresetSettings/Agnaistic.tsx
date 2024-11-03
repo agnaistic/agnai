@@ -9,14 +9,32 @@ import { SubCTA } from '/web/Navigation'
 import { createEmitter } from '../util'
 import { isDefaultPreset } from '/common/presets'
 import { Field } from './Fields'
+import { useAppContext } from '/web/store/context'
 
 export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const opts = useModelOptions()
+  const [ctx] = useAppContext()
 
   const onSave = (value: string) => {
     if (props.noSave) return
     presetStore.updateRegisterPresetProp(props.state._id, 'agnaistic', 'subscriptionId', value)
   }
+
+  createEffect(
+    on(
+      () => ctx.preset?.registered?.agnaistic?.subscriptionId,
+      (id) => {
+        if (!id) return
+        props.setter('registered', {
+          ...props.state.registered,
+          agnaistic: {
+            ...props.state.registered?.agnaistic,
+            subscriptionId: id,
+          },
+        })
+      }
+    )
+  )
 
   const emitter = createEmitter('close')
 

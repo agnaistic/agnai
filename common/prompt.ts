@@ -1041,7 +1041,7 @@ export const schema = {
   str: (o?: { desc?: string; title?: string; maxLength?: number }) => ({
     type: 'string',
     title: o?.title,
-    maxLength: o?.maxLength,
+    maxLength: o?.maxLength ? +o.maxLength : undefined,
   }),
   int: (o?: { title?: string; desc?: string }) => ({
     type: 'integer',
@@ -1066,7 +1066,7 @@ export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
   if (!Array.isArray(body) || !body.length) return
   if (body.every((field) => field.disabled)) return
 
-  const schema: JsonSchema = {
+  const sch: JsonSchema = {
     title: 'Response',
     type: 'object',
     properties: {},
@@ -1089,6 +1089,32 @@ export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
 
     added++
     props[name] = { ...type }
+    switch (type.type) {
+      case 'string': {
+        props[name] = schema.str(type)
+        break
+      }
+
+      case 'bool': {
+        props[name] = schema.bool(type)
+        props[name].type = 'enum'
+        break
+      }
+
+      case 'enum': {
+        props[name] = {
+          type: 'enum',
+          enum: type.enum,
+        }
+        break
+      }
+
+      case 'integer': {
+        props[name] = schema.int(type)
+        break
+      }
+    }
+
     delete props[name].valid
 
     if (type.type === 'bool') {
@@ -1097,13 +1123,13 @@ export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
       // @ts-ignore
       props[name].enum = ['true', 'false', 'yes', 'no']
     }
-    schema.required.push(name)
+    sch.required.push(name)
   }
 
-  schema.properties = props
+  sch.properties = props
 
   if (added === 0) return
-  return schema
+  return sch
 }
 
 export function fromJsonResponse(schema: JsonField[], response: any, output: any = {}): any {

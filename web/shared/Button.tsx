@@ -1,4 +1,4 @@
-import { Component, JSX, Show, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -174,6 +174,17 @@ export const ToggleButton: Component<{
     setVal(value)
     props.onChange?.(value)
   }
+
+  createEffect(
+    on(
+      () => props.value,
+      (next) => {
+        if (next === undefined) return
+        setVal(next)
+        ref.checked = next
+      }
+    )
+  )
 
   return (
     <>

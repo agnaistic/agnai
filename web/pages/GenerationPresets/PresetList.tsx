@@ -148,6 +148,10 @@ const importValid = {
   name: 'string?',
   oaiModel: 'string?',
   claudeModel: 'string?',
+  json: 'any?',
+  jsonSource: 'string?',
+  jsonEnabled: 'boolean?',
+  ultimeJailbreak: 'string?',
 } as const
 
 const ImportPreset: Component<{ close: () => void; success: () => void }> = (props) => {

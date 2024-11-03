@@ -44,7 +44,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
           <CharacterSchema
             characterId={jsonCharId()}
             presetId={props.state._id}
-            update={(schema) => props.setter('json', schema)}
+            update={(schema) => {
+              console.log('changing schema', schema)
+              props.setter('json', schema)
+            }}
             inherit={props.state.json}
           >
             <Select
