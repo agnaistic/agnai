@@ -586,13 +586,11 @@ const EditPreset: Component<{
   select: (preset: AppSchema.SubscriptionModel) => void
 }> = (props) => {
   const params = useParams()
-
-  let ref: any
   const state = presetStore()
+  const [id, setId] = createSignal('')
 
   const select = () => {
-    const body = getStrictForm(ref, { preset: 'string' })
-    const preset = state.subs.find((preset) => preset._id === body.preset)
+    const preset = state.subs.find((preset) => preset._id === id())
     props.select(preset!)
     props.close()
   }
@@ -613,12 +611,13 @@ const EditPreset: Component<{
         </>
       }
     >
-      <form ref={ref}>
+      <form>
         <Select
-          fieldName="preset"
           label="Preset"
           helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
-          items={state.presets
+          value={id()}
+          onChange={(ev) => setId(ev.value)}
+          items={state.subs
             .filter((pre) => pre._id !== params.id)
             .map((pre) => ({ label: pre.name, value: pre._id }))}
         />

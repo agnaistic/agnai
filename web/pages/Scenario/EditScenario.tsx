@@ -1,4 +1,4 @@
-import { Component, Show, createSignal, onMount } from 'solid-js'
+import { Component, Show, createEffect, createSignal, on, onMount } from 'solid-js'
 import { scenarioStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
@@ -12,12 +12,27 @@ import { ConfirmModal } from '/web/shared/Modal'
 import { ExportScenarioModal } from './components/DownloadScenarioModal'
 import EditScenarioEvents from './EditScenarioEvents'
 import { Page } from '/web/Layout'
+import { createStore } from 'solid-js/store'
+import { AppSchema } from '/common/types/index'
+
+const init: AppSchema.ScenarioBook = {
+  _id: '',
+  entries: [],
+  kind: 'scenario',
+  name: '',
+  overwriteCharacterScenario: false,
+  states: [],
+  text: '',
+  userId: '',
+  description: '',
+  instructions: '',
+}
 
 const CreateScenario: Component = () => {
   let ref: any
   const params = useParams<{ editId: string }>()
   const nav = useNavigate()
-  const state = scenarioStore((x) => ({
+  const scenarios = scenarioStore((x) => ({
     loading: x.loading,
     scenario: x.scenarios.find((s) => s._id === params.editId),
   }))
@@ -25,17 +40,27 @@ const CreateScenario: Component = () => {
   const [showDelete, setShowDelete] = createSignal(false)
   const [showDownload, setShowDownload] = createSignal(false)
 
-  onMount(() => {
-    scenarioStore.getOne(params.editId)
-  })
+  const [state, setState] = createStore(scenarios.scenario || { ...init })
+
+  onMount(() => scenarioStore.getOne(params.editId))
+
+  createEffect(
+    on(
+      () => scenarios.scenario,
+      (s) => {
+        if (!s) return
+        setState(s)
+      }
+    )
+  )
 
   const confirmDelete = () => {
     scenarioStore.remove(params.editId, () => nav('/scenario'))
   }
 
   const duplicateScenario = () => {
-    if (!state.scenario) return
-    const clone = deepCloneAndRemoveFields(state.scenario, ['_id', 'userId', 'kind'])
+    if (!scenarios.scenario) return
+    const clone = deepCloneAndRemoveFields(scenarios.scenario, ['_id', 'userId', 'kind'])
     scenarioStore.create(clone, (r) => nav(`/scenario/${r._id}/edit`))
   }
 
@@ -48,19 +73,19 @@ const CreateScenario: Component = () => {
             <div class="flex text-base">
               <div class="px-1">
                 <Button schema="secondary" onClick={() => duplicateScenario()}>
-                  <Copy />
+                  <Copy size={16} />
                   <span class="hidden sm:inline">Duplicate</span>
                 </Button>
               </div>
               <div class="px-1">
                 <Button schema="secondary" onClick={() => setShowDownload(true)}>
-                  <Download />
+                  <Download size={16} />
                   <span class="hidden sm:inline">Download</span>
                 </Button>
               </div>
               <div class="px-1">
                 <Button schema="red" onClick={() => setShowDelete(true)}>
-                  <Trash />
+                  <Trash size={16} />
                   <span class="hidden sm:inline">Delete</span>
                 </Button>
               </div>
@@ -71,10 +96,10 @@ const CreateScenario: Component = () => {
 
       <div class="flex items-center gap-2">
         <Show
-          when={state.scenario?.entries.length ?? 0 > 0}
+          when={state.entries.entries.length ?? 0 > 0}
           fallback={<p>No events attached to this scenario</p>}
         >
-          <p>{state.scenario!.entries.length} event(s)</p>
+          <p>{state.entries.length} event(s)</p>
         </Show>
       </div>
 
@@ -84,48 +109,52 @@ const CreateScenario: Component = () => {
 
       <form class="flex flex-col gap-4" ref={ref}>
         <TextInput
-          fieldName="name"
           required
           label="Name"
           helperText="The name of your scenario."
           placeholder="My scenario"
-          value={state.scenario?.name}
+          value={state.name}
+          onChange={(ev) => setState('name', ev.currentTarget.value)}
         />
 
         <TextInput
-          fieldName="description"
           label="Description"
           helperText="More information about your scenario."
           placeholder="This scenario is about..."
-          value={state.scenario?.description}
+          value={state.description}
         />
 
         <TextInput
-          fieldName="text"
           isMultiline
           label="Prompt Text"
           helperText="Optional. Additional text to add to the scenario prompt."
           placeholder="{{char}} and {{user}} are in a scenario. They are..."
-          value={state.scenario?.text}
+          value={state.text}
+          onChange={(ev) => setState('text', ev.currentTarget.value)}
         />
 
         <Toggle
           fieldName="overwriteCharacterScenario"
           label="Overwrite character's scenario"
           helperText="If the character already has a scenario, overwrite it with this one. Otherwise, append to it."
-          value={state.scenario?.overwriteCharacterScenario}
+          value={state.overwriteCharacterScenario}
+          onChange={(ev) => setState('overwriteCharacterScenario', ev)}
         />
 
         <TextInput
-          fieldName="instructions"
           isMultiline
           label="User Instructions"
           helperText="Optional. Text to display to the user to help them understand how to use this scenario."
           placeholder="Thanks for trying out my scenario! Use the Trigger Event menu to move the story forward."
-          value={state.scenario?.instructions}
+          value={state.instructions}
+          onChange={(ev) => setState('instructions', ev.currentTarget.value)}
         />
 
-        <EditScenarioEvents editId={params.editId} form={ref} />
+        <EditScenarioEvents
+          loading={scenarios.loading}
+          state={state}
+          setter={(next) => setState('entries', next)}
+        />
       </form>
 
       <ConfirmModal
@@ -138,7 +167,7 @@ const CreateScenario: Component = () => {
       <ExportScenarioModal
         show={!!showDownload()}
         close={() => setShowDownload(false)}
-        scenario={showDownload() ? state.scenario : undefined}
+        scenario={showDownload() ? scenarios.scenario : undefined}
       />
     </Page>
   )

@@ -326,10 +326,10 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
 const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (
   props
 ) => {
-  let ref: any
+  const [password, setPassword] = createSignal('')
+
   const save = () => {
-    const body = getStrictForm(ref, { newPassword: 'string' })
-    adminStore.setPassword(props.user._id, body.newPassword, props.close)
+    adminStore.setPassword(props.user._id, password(), props.close)
   }
 
   return (
@@ -353,8 +353,13 @@ const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () 
         Update password for: <b>{props.user.username}</b>
       </div>
       <div>
-        <form ref={ref}>
-          <TextInput type="password" fieldName="newPassword" required />
+        <form>
+          <TextInput
+            type="password"
+            value={password()}
+            onChange={(ev) => setPassword(ev.currentTarget.value)}
+            required
+          />
         </form>
       </div>
     </Modal>

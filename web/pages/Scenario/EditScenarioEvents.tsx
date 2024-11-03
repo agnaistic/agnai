@@ -1,15 +1,4 @@
-import {
-  Component,
-  For,
-  Index,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-} from 'solid-js'
+import { Component, For, Index, Match, Show, Switch, createMemo, onMount } from 'solid-js'
 import { scenarioStore } from '../../store'
 import Button from '../../shared/Button'
 import { ChevronDown, ChevronUp, Plus, Save, X } from 'lucide-solid'
@@ -19,7 +8,6 @@ import { AppSchema, NewScenario } from '/common/types'
 import Accordian from '/web/shared/Accordian'
 import Select, { Option } from '/web/shared/Select'
 import RangeInput from '/web/shared/RangeInput'
-import { getForm, getStrictForm } from '/web/shared/util'
 import TagInput from '/web/shared/TagInput'
 import PromptEditor from '/web/shared/PromptEditor'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -51,19 +39,16 @@ const triggerTypeOptions: Array<Option<AppSchema.ScenarioTriggerKind>> = [
   },
 ]
 
-const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> = (props) => {
+const EditScenarioEvents: Component<{
+  loading: boolean
+  state: AppSchema.ScenarioBook
+  setter: (events: AppSchema.ScenarioEvent[]) => void
+}> = (props) => {
   const nav = useNavigate()
-  const state = scenarioStore((x) => ({
-    loading: x.loading,
-    scenario: x.scenarios.find((s) => s._id === props.editId),
-  }))
-
-  const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
-
   const availableStates = createMemo(() => {
     const states = new Set<string>()
 
-    for (const entry of entries()) {
+    for (const entry of props.state.entries) {
       for (const state of entry.assigns.concat(entry.requires)) {
         if (state.startsWith('!')) continue
         states.add(state)
@@ -86,7 +71,7 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
     const mod = availableStates()
     const set = new Set(mod)
 
-    for (const entry of entries()) {
+    for (const entry of props.state.entries) {
       const both = entry.requires.concat(entry.assigns)
       for (const tag of both) {
         if (!set.has(tag)) bad.add(tag)
@@ -96,23 +81,21 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
     return Array.from(bad.keys())
   })
 
-  createEffect(() => {
-    setEntries(state.scenario?.entries || [])
-  })
-
   const updateEntry = <T extends AppSchema.ScenarioEventTrigger = AppSchema.ScenarioEventTrigger>(
     index: number,
     update: Partial<AppSchema.ScenarioEvent<T>>
   ) => {
-    setEntries((prev) => {
-      return prev.map((entry, i) => (index !== i ? entry : { ...entry, ...update }))
-    })
+    const next = props.state.entries.map((entry, i) =>
+      index !== i ? entry : { ...entry, ...update }
+    )
+    props.setter(next)
   }
 
   const addEntry = () => {
     const requiresGreeting =
-      state.scenario?.overwriteCharacterScenario &&
-      !entries().some((e) => e.trigger.kind === 'onGreeting')
+      props.state.overwriteCharacterScenario &&
+      !props.state.entries.some((e) => e.trigger.kind === 'onGreeting')
+
     const newEvent: AppSchema.ScenarioEvent = {
       name: requiresGreeting ? 'Greeting' : '',
       type: 'world',
@@ -126,18 +109,19 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
             probability: 1,
           },
     }
-    setEntries([...entries(), newEvent])
+    props.setter([...props.state.entries, newEvent])
   }
 
   const moveItem = (index: number, direction: number) => {
-    const newItems = [...entries()]
+    const newItems = props.state.entries.slice()
     const itemToMove = newItems.splice(index, 1)[0]
     newItems.splice(index + direction, 0, itemToMove)
-    setEntries(newItems)
+    props.setter(newItems)
   }
 
   const removeEntry = (entry: AppSchema.ScenarioEvent) => {
-    setEntries(entries().filter((e) => e !== entry))
+    const next = props.state.entries.filter((e) => e !== entry)
+    props.setter(next)
   }
 
   const changeTriggerKind = (
@@ -174,58 +158,22 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
         break
     }
     const newEntry = { ...entry, trigger }
-    setEntries(entries().map((e) => (e === entry ? newEntry : e)))
+    const next = props.state.entries.map((e) => (e === entry ? newEntry : e))
+    props.setter(next)
   }
 
   const onSubmit = () => {
-    if (!state.scenario) return
-
-    const body = getStrictForm(props.form, {
-      name: 'string',
-      description: 'string?',
-      text: 'string',
-      overwriteCharacterScenario: 'boolean',
-      instructions: 'string?',
-    })
-
-    const inputs = getForm<any>(props.form)
-
-    const ents = entries()
-
-    for (let i = 0; i < ents.length; i++) {
-      const entry = ents[i]
-      entry.name = inputs['name.' + i]
-      entry.text = inputs['text.' + i]
-      entry.type = inputs['type.' + i]
-      entry.trigger.kind = inputs['trigger-kind.' + i]
-
-      switch (entry.trigger.kind) {
-        case 'onManualTrigger':
-          entry.trigger.probability = +inputs['trigger-probability.' + i]
-          break
-
-        case 'onCharacterMessageReceived':
-          entry.trigger.minMessagesSinceLastEvent =
-            +inputs['trigger-minMessagesSinceLastEvent.' + i]
-          break
-
-        case 'onChatOpened':
-          entry.trigger.awayHours = +inputs['trigger-awayHours.' + i]
-          break
-      }
-    }
-
     const update: NewScenario = {
-      name: body.name,
-      description: body.description,
-      text: body.text,
+      name: props.state.name,
+      description: props.state.description,
+      text: props.state.text,
       states: [],
-      overwriteCharacterScenario: body.overwriteCharacterScenario,
-      instructions: body.instructions,
-      entries: ents,
+      overwriteCharacterScenario: props.state.overwriteCharacterScenario,
+      instructions: props.state.instructions,
+      entries: props.state.entries,
     }
 
-    scenarioStore.update(state.scenario._id, update)
+    scenarioStore.update(props.state._id, update)
   }
 
   return (
@@ -251,14 +199,14 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
         </div>
 
         <Switch>
-          <Match when={!entries().length}>
+          <Match when={!props.state.entries.length}>
             <div class="mt-16 flex w-full justify-center rounded-full text-xl">
               You have no events yet.
             </div>
           </Match>
 
           <Match when={true}>
-            <Index each={entries()}>
+            <Index each={props.state.entries}>
               {(entry, index) => (
                 <Accordian
                   open={!entry().text}
@@ -280,7 +228,7 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
                               <ChevronUp size={16} />
                             </button>
                           </Show>
-                          <Show when={index !== entries().length - 1}>
+                          <Show when={index !== props.state.entries.length - 1}>
                             <button class="ml-2" onClick={() => moveItem(index, 1)}>
                               <ChevronDown size={16} />
                             </button>
@@ -438,7 +386,7 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
             <X />
             Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={state.loading || invalidStates().length > 0}>
+          <Button onClick={onSubmit} disabled={props.loading || invalidStates().length > 0}>
             <Save />
             Update
           </Button>

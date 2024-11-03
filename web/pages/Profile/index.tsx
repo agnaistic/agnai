@@ -13,9 +13,9 @@ import {
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import Modal from '../../shared/Modal'
+import Modal, { RootModal } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { setComponentPageTitle } from '../../shared/util'
 import { adminStore, settingStore, toastStore, userStore } from '../../store'
 import { Pill, TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
@@ -25,6 +25,7 @@ import { useTabs } from '/web/shared/Tabs'
 import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
 import { startTour } from '/web/tours'
+import { createStore } from 'solid-js/store'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
@@ -97,6 +98,8 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const state = userStore()
   const admin = adminStore()
   const settings = settingStore()
+
+  const [handle, setHandle] = createSignal(state.profile?.handle || '')
   const [pass, setPass] = createSignal(false)
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
@@ -115,16 +118,25 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   }
 
   const submit = () => {
-    const body = getStrictForm(formRef, { handle: 'string' })
-    const payload = { handle: body.handle, avatar: avatar() }
+    const payload = { handle: handle(), avatar: avatar() }
     userStore.updateProfile(payload)
     userStore.modal(false)
   }
 
-  createEffect(() => {
+  onMount(() => {
     userStore.getProfile()
     userStore.getConfig()
   })
+
+  createEffect(
+    on(
+      () => state.profile?.handle,
+      (name) => {
+        if (name === undefined) return
+        setHandle(name)
+      }
+    )
+  )
 
   const initGoogle = () => {
     const win: any = window
@@ -267,7 +279,8 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             parentClass="tour-displayname"
             helperText="Your name in chats and to others (when not impersonating)"
             fieldName="handle"
-            value={state.profile?.handle}
+            value={handle()}
+            onChange={(ev) => setHandle(ev.currentTarget.value)}
           />
 
           <FileInput
@@ -330,60 +343,62 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 export default ProfilePage
 
 const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  let ref: any
+  const [store, setStore] = createStore({ newPassword: '', confirmPassword: '' })
+
   const save = () => {
-    const body = getStrictForm(ref, { newPassword: 'string', confirmPassword: 'string' })
-    if (body.newPassword !== body.confirmPassword) {
+    if (store.newPassword !== store.confirmPassword) {
       toastStore.warn(`Your passwords do not match`)
       return
     }
 
-    userStore.changePassword(body.newPassword, props.close)
+    if (!store.newPassword) {
+      toastStore.warn('You must provide a password')
+      return
+    }
+
+    userStore.changePassword(store.newPassword, props.close)
   }
 
-  rootModalStore.addModal({
-    id: 'user-password-change',
-    element: (
-      <Modal
-        show={props.show}
-        close={props.close}
-        title="Change Password"
-        ariaLabel="Change Password"
-        ariaDescription="This window lets you change your account password"
-        footer={
-          <>
-            {' '}
-            <Button schema="secondary" onClick={props.close}>
-              <X /> Cancel
-            </Button>
-            <Button onClick={save}>
-              <Save /> Update
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <form ref={ref} class="flex flex-col gap-2">
-            <div class="w-full justify-center">Update your password</div>
-            <TextInput
-              type="password"
-              fieldName="newPassword"
-              required
-              placeholder="New Password"
-            />
-            <TextInput
-              type="password"
-              fieldName="confirmPassword"
-              required
-              placeholder="Repeat Password"
-            />
-          </form>
-        </div>
-      </Modal>
-    ),
-  })
-
-  return null
+  return (
+    <RootModal
+      show={props.show}
+      close={props.close}
+      title="Change Password"
+      ariaLabel="Change Password"
+      ariaDescription="This window lets you change your account password"
+      footer={
+        <>
+          {' '}
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={save}>
+            <Save /> Update
+          </Button>
+        </>
+      }
+    >
+      <div>
+        <form class="flex flex-col gap-2">
+          <div class="w-full justify-center">Update your password</div>
+          <TextInput
+            type="password"
+            required
+            placeholder="New Password"
+            value={store.newPassword}
+            onChange={(ev) => setStore('newPassword', ev.currentTarget.value)}
+          />
+          <TextInput
+            type="password"
+            required
+            placeholder="Confirm Password"
+            value={store.confirmPassword}
+            onChange={(ev) => setStore('confirmPassword', ev.currentTarget.value)}
+          />
+        </form>
+      </div>
+    </RootModal>
+  )
 }
 
 const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (props) => {
