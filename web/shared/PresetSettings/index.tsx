@@ -6,9 +6,9 @@ import {
   AdapterSetting,
   ThirdPartyFormat,
 } from '../../../common/adapters'
-import { presetStore, settingStore, userStore } from '../../store'
+import { presetStore, settingStore } from '../../store'
 import { Card } from '../Card'
-import { getFormEntries, getUsableServices, hidePresetSetting, storage } from '../util'
+import { getFormEntries, getUsableServices, storage } from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
 import { ServiceOption } from '../../pages/Settings/components/RegisteredSettings'
@@ -34,7 +34,6 @@ const PresetSettings: Component<
   PresetProps & { noSave: boolean; store: PresetState; setter: SetPresetState }
 > = (props) => {
   const settings = settingStore()
-  const userState = userStore()
   const pane = usePaneManager()
   const [search, setSearch] = useSearchParams()
   const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
@@ -59,7 +58,7 @@ const PresetSettings: Component<
   createEffect(
     on(
       () => (props.store.service || '') + services().length,
-      (curr) => {
+      () => {
         if (props.disabled) return
         if (props.store.service) return
         if (!services().length) return

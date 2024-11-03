@@ -77,21 +77,15 @@ const ModelOverride: Component<{ state: string; setter: (override: string) => vo
 
   createEffect(
     on(
-      () => user.user?.images?.agnai?.model,
-      (id) => {
-        if (!id) return
+      () => user.user?.images?.agnai?.model + props.state,
+      () => {
+        const id = user.user?.images?.agnai?.model
+        if (props.state || !id || !state.models.length) return
+        console.log('setting', id)
         props.setter(id)
       }
     )
   )
-
-  createEffect(() => {
-    if (!options().length) return
-    const id = user.user?.images?.agnai?.model
-    if (!id) return
-
-    props.setter(id)
-  })
 
   return (
     <Show when={(user.sub?.tier.imagesAccess || user.user?.admin) && state.models.length > 0}>
