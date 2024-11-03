@@ -1,16 +1,14 @@
-import { SetStoreFunction } from 'solid-js/store'
+import { SetStoreFunction, createStore } from 'solid-js/store'
 import { AIAdapter } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
 
 export type PresetProps = {
-  inherit?: Omit<AppSchema.SubscriptionModel, 'kind'>
   disabled?: boolean
   service?: AIAdapter
   disableService?: boolean
   hideTabs?: PresetTab[]
-  state: (state: PresetState, setter: SetPresetState) => void
 }
 
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
@@ -51,7 +49,11 @@ export function getSubPresetForm(state: PresetState) {
   return form
 }
 
-export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> = {
+export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
+  userId: string
+  disabled: boolean
+  pane: boolean
+} = {
   _id: '',
   ...agnaiPresets.agnai,
   stopSequences: [],
@@ -62,5 +64,13 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> = {
   levels: [],
   subDisabled: false,
   subModel: '',
+  userId: '',
   allowGuestUsage: false,
+  disabled: false,
+  pane: false,
+}
+
+export function getPresetEditor() {
+  const [store, setStore] = createStore(initPreset)
+  return [store, setStore] as const
 }
