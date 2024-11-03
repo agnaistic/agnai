@@ -1,4 +1,4 @@
-import { For, createMemo } from 'solid-js'
+import { For, Index, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
@@ -109,27 +109,26 @@ export const StoppingStrings: Field = (props) => {
         helperText="Text that causes the response to complete early. All participant names are included by default."
       />
       <div class="flex flex-col gap-2 text-sm">
-        <For each={props.state.stopSequences || []}>
+        <Index each={props.state.stopSequences || []}>
           {(each, i) => (
             <div class="flex w-full gap-1">
               <TextInput
-                fieldName={`stop.${i()}`}
-                value={each}
+                value={each()}
                 parentClass="w-full"
                 placeholder="E.g. \n<|user|>"
                 onChange={(ev) => {
                   const next = props.state.stopSequences!.map((t, idx) =>
-                    idx === i() ? ev.currentTarget.value : t
+                    idx === i ? ev.currentTarget.value : t
                   )
                   props.setter('stopSequences', next)
                 }}
               />
-              <Button class="icon-button" schema="clear" onClick={() => removeString(i())}>
+              <Button class="icon-button" schema="clear" onClick={() => removeString(i)}>
                 <MinusCircle />
               </Button>
             </div>
           )}
-        </For>
+        </Index>
       </div>
     </div>
   )
