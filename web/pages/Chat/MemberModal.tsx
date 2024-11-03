@@ -7,7 +7,6 @@ import { ConfirmModal } from '../../shared/Modal'
 import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
-import { getStrictForm } from '../../shared/util'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { getActiveBots } from './util'
@@ -318,15 +317,17 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
   let ref: any
   const state = chatStore()
 
+  const [userId, setUserId] = createSignal('')
+
   const invite = () => {
     if (!state.active?.chat) return
     const chatId = state.active.chat._id
-    const body = getStrictForm(ref, { userId: 'string' })
-    if (!body.userId) {
+
+    if (!userId()) {
       toastStore.warn('No user ID provided')
       return
     }
-    return chatStore.inviteUser(chatId, body.userId, () => props.setView('list'))
+    return chatStore.inviteUser(chatId, userId(), () => props.setView('list'))
   }
 
   return (
@@ -334,10 +335,10 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
       <form ref={ref} class="flex w-full max-w-full flex-col gap-2">
         <TextInput
           class="text-sm"
-          fieldName="userId"
           label="Invite User"
           helperText="The ID of the user to invite. The user should provide this to you"
           placeholder={`E.g. ${v4()}`}
+          onChange={(ev) => setUserId(ev.currentTarget.value)}
         />
 
         <div class="mt-4">

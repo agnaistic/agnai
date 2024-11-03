@@ -1,4 +1,4 @@
-import { Component, JSX, For, createMemo, Show } from 'solid-js'
+import { Component, JSX, For, createMemo, Show, createEffect, on } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
 
@@ -25,12 +25,24 @@ const Select: Component<{
   ref?: (ref: HTMLSelectElement) => void
   hide?: boolean
 }> = (props) => {
+  let ref: any
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
     if (props.onChange) {
       const item = props.items.find((item) => item.value === ev.currentTarget.value)
       props.onChange(item!)
     }
   }
+
+  createEffect(
+    on(
+      () => props.value,
+      (next) => {
+        if (next === undefined) return
+        if (!ref) return
+        ref.value = next
+      }
+    )
+  )
 
   const recommend = createMemo(() => {
     if (!props.recommend) return
@@ -64,7 +76,10 @@ const Select: Component<{
       <div class="flex items-center">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select
-            ref={(ele) => props.ref?.(ele)}
+            ref={(ele) => {
+              ref = ele
+              props.ref?.(ele)
+            }}
             name={props.fieldName}
             class={`form-field cursor-pointer appearance-none rounded-xl bg-[var(--hl-700)] py-2 pl-3 pr-8 shadow-none ${
               props.class || ''

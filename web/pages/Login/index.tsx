@@ -4,13 +4,14 @@ import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
 import { ACCOUNT_KEY, settingStore, toastStore, userStore } from '../../store'
-import { getStrictForm, setComponentPageTitle, storage } from '../../shared/util'
+import { setComponentPageTitle, storage } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
 import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
+import { createStore } from 'solid-js/store'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
@@ -98,14 +99,10 @@ export default LoginPage
 type FormProps = { isLoading: boolean }
 
 const RegisterForm: Component<FormProps> = (props) => {
+  const [store, setStore] = createStore({ handle: '', username: '', password: '', confirm: '' })
   const navigate = useNavigate()
-  const register = (evt: Event) => {
-    const { username, password, confirm, handle } = getStrictForm(evt, {
-      handle: 'string',
-      username: 'string',
-      password: 'string',
-      confirm: 'string',
-    })
+  const register = () => {
+    const { username, password, confirm, handle } = store
 
     if (!handle || !username || !password) return
     if (password !== confirm) {
@@ -119,19 +116,36 @@ const RegisterForm: Component<FormProps> = (props) => {
   return (
     <form onSubmit={register} class="flex flex-col gap-6">
       <div class="flex flex-col gap-2">
-        <TextInput label="Display Name" fieldName="handle" placeholder="Display name" required />
-        <TextInput label="Username" fieldName="username" placeholder="Username" required />
+        <TextInput
+          label="Display Name"
+          placeholder="Display name"
+          required
+          onChange={(ev) => setStore('handle', ev.currentTarget.value)}
+        />
+        <TextInput
+          label="Username"
+          fieldName="username"
+          placeholder="Username"
+          required
+          onChange={(ev) => setStore('username', ev.currentTarget.value)}
+        />
         <TextInput
           label="Password"
-          fieldName="password"
           placeholder="Password"
           type="password"
+          onChange={(ev) => setStore('password', ev.currentTarget.value)}
           required
         />
-        <TextInput fieldName="confirm" placeholder="Confirm Password" type="password" required />
+        <TextInput
+          placeholder="Confirm Password"
+          type="password"
+          required
+          onChange={(ev) => setStore('confirm', ev.currentTarget.value)}
+          onKeyDown={(ev) => (ev.key === 'Enter' ? register() : null)}
+        />
       </div>
 
-      <Button type="submit" disabled={props.isLoading}>
+      <Button disabled={props.isLoading} onClick={register}>
         {props.isLoading ? 'Registering...' : 'Register'}
       </Button>
     </form>
@@ -146,6 +160,8 @@ const LoginForm: Component<FormProps> = (props) => {
   const state = settingStore()
   const [error, setError] = createSignal<string>()
   const google = useGoogleReady()
+
+  const [store, setStore] = createStore({ username: '', password: '' })
 
   createEffect(() => {
     if (state.initLoading) return
@@ -193,8 +209,8 @@ const LoginForm: Component<FormProps> = (props) => {
     })
   }
 
-  const login = (evt: Event) => {
-    const { username, password } = getStrictForm(evt, { username: 'string', password: 'string' })
+  const login = () => {
+    const { username, password } = store
     if (!username || !password) return
 
     userStore.login(username, password, () => {
@@ -203,22 +219,28 @@ const LoginForm: Component<FormProps> = (props) => {
   }
 
   return (
-    <form onSubmit={login} class="flex flex-col gap-6">
+    <form class="flex flex-col gap-6">
       <div class="flex flex-col gap-2">
         <TextInput
-          fieldName="username"
           placeholder="Username"
           required
           value={loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''}
+          onChange={(ev) => setStore('username', ev.currentTarget.value)}
         />
-        <TextInput fieldName="password" placeholder="Password" type="password" required />
+        <TextInput
+          placeholder="Password"
+          type="password"
+          required
+          onChange={(ev) => setStore('password', ev.currentTarget.value)}
+          onKeyDown={(ev) => (ev.key === 'Enter' ? login() : null)}
+        />
       </div>
 
       <Show when={error()}>
         <TitleCard type="rose">{error()}</TitleCard>
       </Show>
 
-      <Button type="submit" disabled={props.isLoading || !!error()}>
+      <Button onClick={login} disabled={props.isLoading || !!error()}>
         {props.isLoading ? 'Logging in...' : 'Login'}
       </Button>
 

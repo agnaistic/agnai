@@ -9,6 +9,7 @@ import billing, { stripe } from './billing'
 import { config } from '../config'
 import { patreon } from './user/patreon'
 import { sendAll } from './ws'
+import { toSamplerOrder } from '/common/sampler-order'
 
 const subSetting = {
   ...presetValidator,
@@ -34,11 +35,14 @@ const get = handle(async () => {
 
 const create = handle(async ({ body }) => {
   assertValid(subSetting, body)
+
+  const samplers = toSamplerOrder(body.service, body.order, body.disabledSamplers)
+
   const create = {
     ...body,
     subApiKey: body.subApiKey ? encryptText(body.subApiKey) : '',
-    order: body.order?.split(',').map((v) => +v),
-    disabledSamplers: body.disabledSamplers?.split(',').map((v) => +v),
+    order: samplers?.order,
+    disabledSamplers: samplers?.disabled,
   }
   const preset = await store.subs.createSubscription(create)
   return preset
@@ -46,11 +50,12 @@ const create = handle(async ({ body }) => {
 
 const update = handle(async ({ body, params }) => {
   assertValid(subSetting, body)
+  const samplers = toSamplerOrder(body.service, body.order, body.disabledSamplers)
   const update = {
     ...body,
     subApiKey: body.subApiKey ? encryptText(body.subApiKey) : '',
-    order: body.order?.split(',').map((v) => +v),
-    disabledSamplers: body.disabledSamplers?.split(',').map((v) => +v),
+    order: samplers?.order,
+    disabledSamplers: samplers?.disabled,
   }
 
   const preset = await store.subs.updateSubscription(params.id, update)

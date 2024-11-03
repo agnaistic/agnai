@@ -8,7 +8,7 @@ import Select, { Option } from '../../shared/Select'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
@@ -231,16 +231,15 @@ const EditPreset: Component<{
   select: (preset: AppSchema.UserGenPreset) => void
 }> = (props) => {
   const params = useParams()
-
-  let ref: any
   const state = presetStore()
 
   const select = () => {
-    const body = getStrictForm(ref, { preset: 'string' })
-    const preset = state.presets.find((preset) => preset._id === body.preset)
+    const preset = state.presets.find((preset) => preset._id === id())
     props.select(preset!)
     props.close()
   }
+
+  const [id, setId] = createSignal(state.presets[0]?._id)
 
   return (
     <Modal
@@ -258,14 +257,14 @@ const EditPreset: Component<{
         </>
       }
     >
-      <form ref={ref}>
+      <form>
         <Select
-          fieldName="preset"
           label="Preset"
           helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
           items={state.presets
             .filter((pre) => pre._id !== params.id)
             .map((pre) => ({ label: pre.name, value: pre._id }))}
+          onChange={(ev) => setId(ev.value)}
         />
       </form>
     </Modal>

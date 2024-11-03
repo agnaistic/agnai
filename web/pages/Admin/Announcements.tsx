@@ -1,14 +1,4 @@
-import {
-  Component,
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createSignal,
-  on,
-  onMount,
-} from 'solid-js'
+import { Component, For, Match, Show, Switch, createEffect, on, onMount } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
 import Button from '/web/shared/Button'
@@ -17,12 +7,13 @@ import { useNavigate, useParams } from '@solidjs/router'
 import { announceStore, toastStore } from '/web/store'
 import { elapsedSince, now } from '/common/util'
 import { Toggle } from '/web/shared/Toggle'
-import { getStrictForm, toLocalTime } from '/web/shared/util'
+import { toLocalTime } from '/web/shared/util'
 import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
 import { Page } from '/web/Layout'
 import Select from '/web/shared/Select'
+import { createStore } from 'solid-js/store'
 
 export { AnnoucementPage as default }
 
@@ -127,54 +118,44 @@ function Label(item: AppSchema.Announcement) {
   )
 }
 
-const Announcement: Component<{}> = (props) => {
-  let ref: HTMLFormElement
-  let showAtRef: HTMLInputElement
+const init = {
+  title: '',
+  content: '',
+  showAt: toLocalTime(now()),
+  hide: false,
+  userLevel: -1,
+  location: 'notification' as 'home' | 'notification',
+}
 
+const Announcement: Component<{}> = (props) => {
   const nav = useNavigate()
   const params = useParams()
 
-  const state = announceStore((s) => ({ item: s.admin.find((a) => a._id === params.id) }))
+  const admin = announceStore((s) => ({ item: s.admin.find((a) => a._id === params.id) }))
 
-  const [title, setTitle] = createSignal(state.item?.title || '')
-  const [content, setContent] = createSignal(state.item?.content || '')
-  const [showAt, setShowAt] = createSignal(new Date(state.item?.showAt || now()))
-
-  onMount(() => {
-    announceStore.getAllAdmin()
-  })
+  const [state, setState] = createStore(
+    admin.item ? { ...admin.item, showAt: toLocalTime(admin.item.showAt) } : { ...init }
+  )
 
   createEffect(
     on(
-      () => (state.item?.title || '') + (state.item?.content || ''),
-      () => {
-        if (state.item?.title) {
-          setTitle(state.item?.title)
-        }
-        if (state.item?.content) {
-          setContent(state.item.content)
-        }
+      () => admin.item,
+      (item) => {
+        if (!item) return
+        setState({ ...item, showAt: toLocalTime(item?.showAt) })
       }
     )
   )
 
-  const onSave = () => {
-    const body = getStrictForm(ref, {
-      title: 'string',
-      content: 'string',
-      hide: 'boolean',
-      showAt: 'string',
-      location: ['home', 'notification'],
-      userLevel: 'number',
-    })
+  onMount(() => announceStore.getAllAdmin())
 
-    const showAt = new Date(body.showAt)
+  const onSave = () => {
+    const showAt = new Date(state.showAt)
     if (isNaN(showAt.valueOf())) {
       toastStore.error(`"Display At" is required`)
       return
     }
-
-    body.showAt = showAt.toISOString()
+    const body = { ...state, showAt: new Date(showAt).toISOString() }
 
     if (params.id === 'new') {
       announceStore.create(body, (announce) => {
@@ -189,61 +170,55 @@ const Announcement: Component<{}> = (props) => {
     <Page>
       <PageHeader title="Announcement" />
 
-      <form ref={ref!} class="flex flex-col gap-2">
+      <form class="flex flex-col gap-2">
         <TextInput fieldName="id" disabled value={params.id} label="ID" />
 
         <TextInput
-          fieldName="title"
           label="Title"
-          value={state.item?.title}
-          onChange={(ev) => setTitle(ev.currentTarget.value)}
+          value={state.title}
+          onChange={(ev) => setState('title', ev.currentTarget.value)}
         />
         <Select
-          fieldName="location"
           items={[
             { label: 'Home', value: 'home' },
             { label: 'Notification', value: 'notification' },
           ]}
           label="Location"
           helperText="Appear on the homepage or notifications list"
-          value={state.item?.location || 'home'}
+          value={state.location || 'home'}
+          onChange={(ev) => setState('location', ev.value as any)}
         />
 
         <TextInput
           type="number"
-          fieldName="userLevel"
           label="User Level (Threshold)"
           helperMarkdown={
             'Announce to users with a tier level or greater `All Users = -1` `Subscribed = 0`'
           }
-          value={state.item?.userLevel || -1}
+          value={state.userLevel}
+          onChange={(ev) => setState('userLevel', +ev.currentTarget.value)}
         />
 
         <TextInput
-          fieldName="content"
           label="Content"
-          value={state.item?.content}
+          value={state.content}
           isMultiline
           class="min-h-[80px]"
-          onChange={(ev) => setContent(ev.currentTarget.value)}
+          onChange={(ev) => setState('content', ev.currentTarget.value)}
         />
-        <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
+        <Toggle fieldName="hide" label="Hide Announcement" value={state.hide} />
         <ButtonInput
-          ref={(r) => (showAtRef = r)}
-          fieldName="showAt"
           type="datetime-local"
           label="Display At"
-          value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
-          onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
+          value={state.showAt}
+          onChange={(ev) => setState('showAt', ev.currentTarget.value)}
         >
           <Button
             size="sm"
             class="mr-20 text-xs"
             schema="clear"
             onClick={() => {
-              const time = toLocalTime(new Date(Date.now() - 60000).toISOString())
-              setShowAt(new Date(time))
-              showAtRef.value = time
+              setState('showAt', toLocalTime(now()))
             }}
           >
             Now
@@ -258,12 +233,12 @@ const Announcement: Component<{}> = (props) => {
 
         <div class="w-full rounded-md border-[1px] border-[var(--bg-600)] sm:w-1/2">
           <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
-            <div class="text-lg font-bold">{title()}</div>
-            <div class="text-700 text-xs">{elapsedSince(showAt())} ago</div>
+            <div class="text-lg font-bold">{state.title}</div>
+            <div class="text-700 text-xs">{elapsedSince(new Date(state.showAt))} ago</div>
           </div>
           <div
             class="rendered-markdown bg-900 rounded-b-md p-2"
-            innerHTML={markdown.makeHtml(content())}
+            innerHTML={markdown.makeHtml(state.content)}
           ></div>
         </div>
       </form>

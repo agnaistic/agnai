@@ -34,7 +34,7 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { getAssetUrl, getStrictForm } from '../../../shared/util'
+import { getAssetUrl } from '../../../shared/util'
 import {
   chatStore,
   userStore,
@@ -806,13 +806,11 @@ const Meta: Component<{
   flags: FeatureFlags
   tree: ChatTree
 }> = (props) => {
-  let ref: any
-
   if (!props.msg) return null
+  const [prompt, setPrompt] = createSignal('')
 
   const updateImagePrompt = () => {
-    const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
-    msgStore.editMessageProp(props.msg._id, { imagePrompt }, () => {
+    msgStore.editMessageProp(props.msg._id, { imagePrompt: prompt() }, () => {
       toastStore.success('Image prompt updated')
     })
   }
@@ -827,7 +825,7 @@ const Meta: Component<{
   const depth = props.tree[props.msg._id]?.depth || -1
 
   return (
-    <form ref={ref} class="flex w-full flex-col gap-2">
+    <form class="flex w-full flex-col gap-2">
       <Card>
         <table class="text-sm">
           <Show when={props.msg.adapter}>
@@ -884,8 +882,8 @@ const Meta: Component<{
             }
             parentClass="text-sm"
             isMultiline
-            value={props.msg.imagePrompt}
-            fieldName="imagePrompt"
+            value={prompt()}
+            onChange={(ev) => setPrompt(ev.currentTarget.value)}
           />
         </Card>
       </Show>

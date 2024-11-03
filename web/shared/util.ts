@@ -11,6 +11,7 @@ import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
 import { PresetState } from './PresetSettings/types'
+import { Reference } from '/common/valid/types'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -264,6 +265,59 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
 }
 
 type Field = HTMLSelectElement | HTMLInputElement
+
+export function toStrictInitializer<T extends Validator>(
+  valid: T,
+  partial: Partial<UnwrapBody<T>> = {}
+): UnwrapBody<T> {
+  const init: any = {}
+
+  for (const [key, type] of Object.entries(valid)) {
+    if (partial[key] !== undefined) {
+      init[key] = partial[key] as any
+      continue
+    }
+
+    init[key] = getInitValue(type)
+  }
+
+  return init
+}
+
+function getInitValue(ref: Reference): any {
+  if (ref === 'string') return ''
+  if (ref === 'boolean') return false
+  if (ref === 'number') return 0
+  if (Array.isArray(ref)) {
+    // Optional union or object
+    if (ref.some((r) => r === '?')) return
+
+    // Optional primitive
+    if (typeof ref[0] === 'string' && ref[0]?.endsWith('?')) return
+
+    // String literal union
+    if (ref.length > 1) return ref[0]
+
+    // Array of objects
+    if (typeof ref[0] === 'object') {
+      return toStrictInitializer(ref[0] as Validator, {})
+    }
+
+    console.error(ref)
+    throw new Error(`Unexpected initializer type`)
+  }
+
+  // Nested object
+  if (typeof ref === 'object') {
+    // Optional object
+    if (Object.keys(ref).some((r) => r === '?')) return
+
+    return toStrictInitializer(ref as Validator, {})
+  }
+
+  console.error(ref)
+  throw new Error(`Unexpected initializer type`)
+}
 
 export function getStrictForm<T extends Validator>(
   evt: Event | HTMLFormElement,
