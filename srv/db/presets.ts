@@ -59,8 +59,8 @@ export async function updateGenPreset(chatId: string, preset: string) {
 export async function createUserPreset(userId: string, settings: AppSchema.GenSettings) {
   const preset: AppSchema.UserGenPreset = {
     kind: 'gen-setting',
-    userId,
     ...settings,
+    userId,
     _id: v4(),
   }
 
@@ -112,8 +112,12 @@ export async function deleteUserPresetKey(userId: string, presetId: string) {
 export async function updateUserPreset(
   userId: string,
   presetId: string,
-  update: Partial<AppSchema.GenSettings>
+  update: Partial<AppSchema.UserGenPreset>
 ) {
+  if (update.userId) {
+    delete update.userId
+  }
+
   if (update.registered) {
     const prev = await getUserPreset(presetId)
     update.registered = {

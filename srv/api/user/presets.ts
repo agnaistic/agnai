@@ -53,6 +53,7 @@ export const createUserPreset = handle(async ({ userId, body, authed }) => {
   const preset = {
     ...body,
     service,
+    userId,
     order: samplers?.order,
     disabledSamplers: samplers?.disabled,
   }
