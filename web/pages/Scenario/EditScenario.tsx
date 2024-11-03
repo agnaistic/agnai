@@ -122,6 +122,7 @@ const CreateScenario: Component = () => {
           helperText="More information about your scenario."
           placeholder="This scenario is about..."
           value={state.description}
+          onChange={(ev) => setState('description', ev.currentTarget.value)}
         />
 
         <TextInput

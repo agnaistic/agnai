@@ -45,6 +45,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             characterId={jsonCharId()}
             presetId={props.state._id}
             update={(schema) => props.setter('json', schema)}
+            inherit={props.state.json}
           >
             <Select
               fieldName="jsonSource"

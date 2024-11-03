@@ -1,4 +1,4 @@
-import { Component, Setter, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import Button from '/web/shared/Button'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import { JsonSchema } from '/web/shared/JsonSchema'
@@ -16,6 +16,7 @@ import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
 import { useActivePreset } from '/web/store/data/common'
 import { useAppContext } from '/web/store/context'
+import { createStore } from 'solid-js/store'
 
 const helpMarkdown = neat`
 
@@ -57,7 +58,7 @@ const exampleSchema: ResponseSchema = {
 export const CharacterSchema: Component<{
   characterId?: string
   presetId?: string
-  // inherit?: ResponseSchema
+  inherit?: ResponseSchema
   children?: any
   update: (next: ResponseSchema) => void
 }> = (props) => {
@@ -67,56 +68,34 @@ export const CharacterSchema: Component<{
   let histRef: HTMLTextAreaElement
 
   const [show, setShow] = createSignal(false)
-  const [fields, setFields] = createSignal<JsonField[]>([])
   const [showImport, setShowImport] = createSignal(false)
-  const [response, setResponse] = createSignal('')
-  const [hist, setHistory] = createSignal('')
-  const [candidate, setCandidate] = createSignal<JsonField[]>([])
   const [auto, setAuto] = createSignal('')
   const [hotkey, setHotkey] = createSignal(false)
 
+  const [store, setStore] = createStore({
+    response: '',
+    history: '',
+    fields: [] as JsonField[],
+  })
+
   const vars = createMemo(() => {
-    const sch = candidate()
-    return sch.map((s) => ({ label: s.name, value: s.name }))
+    return store.fields.map((s) => ({ label: s.name, value: s.name }))
   })
 
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
-
   const activePreset = useActivePreset()
 
-  const inherited = createMemo(() => {
+  const getOriginal = () => {
     let json: ResponseSchema | undefined
     if (props.characterId) {
       const char = ctx.activeMap[props.characterId]
       json = char ? char.json : chatStore.getState().active?.char.json
     } else if (props.presetId) {
-      json = activePreset()?.json
+      json = props.inherit || activePreset()?.json
     }
 
     return json
-  })
-
-  const onRefMounted = () => {
-    if (!show()) return
-    if (!histRef || !respRef) return
-
-    const json = inherited()
-
-    const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
-    if (json && hasValue) {
-      setFields(json.schema || [])
-      setHistory(json.history || '')
-      setResponse(json.response || '')
-      histRef.value = json.history || ''
-      respRef.value = json.response || ''
-    } else {
-      setFields(exampleSchema.schema)
-      setHistory(exampleSchema.history)
-      setResponse(exampleSchema.response)
-      histRef.value = exampleSchema.history
-      respRef.value = exampleSchema.response
-    }
   }
 
   createEffect(
@@ -124,16 +103,31 @@ export const CharacterSchema: Component<{
       () => show(),
       (open) => {
         if (!open) return
+        const json = getOriginal()
+
+        const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
+        if (json && hasValue) {
+          setStore({
+            fields: json.schema || [],
+            history: json.history || '',
+            response: json.response || '',
+          })
+        } else {
+          setStore({
+            history: exampleSchema.history,
+            response: exampleSchema.response,
+            fields: exampleSchema.schema.slice(),
+          })
+        }
       }
     )
   )
 
   createEffect(() => {
-    const resVars = response().match(JSON_NAME_RE())
-    const histVars = hist().match(JSON_NAME_RE())
+    const resVars = store.response.match(JSON_NAME_RE())
+    const histVars = store.history.match(JSON_NAME_RE())
 
-    const sch = candidate()
-    const names = new Set(sch.map((s) => s.name))
+    const names = new Set(store.fields.map((s) => s.name))
 
     if (resVars) {
       const bad: string[] = []
@@ -159,20 +153,17 @@ export const CharacterSchema: Component<{
   })
 
   const onFieldNameChange = (from: string, to: string) => {
-    const res = respRef.value.split(`{{${from}}}`).join(`{{${to}}}`)
-    const his = histRef.value.split(`{{${from}}}`).join(`{{${to}}}`)
+    const res = store.response.split(`{{${from}}}`).join(`{{${to}}}`)
+    const his = store.history.split(`{{${from}}}`).join(`{{${to}}}`)
 
-    histRef.value = his
-    respRef.value = res
-    setResponse(res)
-    setHistory(his)
+    setStore({ history: his, response: res })
   }
 
-  const onAutoComplete = (setter: Setter<string>) => (opt: { label: string }) => {
+  const onAutoComplete = (field: 'history' | 'response') => (opt: { label: string }) => {
     const ref = auto() === 'history' ? histRef : auto() === 'response' ? respRef : undefined
+    const prev = store[field]
 
     if (ref) {
-      let prev = ref.value
       let before = prev.slice(0, ref.selectionStart - (hotkey() ? 0 : 1))
       let after = prev.slice(ref.selectionStart)
 
@@ -190,7 +181,7 @@ export const CharacterSchema: Component<{
 
       const next = `${before}${opt.label}${after}`
       ref.value = next
-      setter(next)
+      setStore(field as any, next)
       ref.focus()
       ref.setSelectionRange(
         before.length + opt.label.length,
@@ -209,22 +200,18 @@ export const CharacterSchema: Component<{
       return
     }
 
-    setCandidate(schema.schema)
-    setHistory(schema.history)
-    setResponse(schema.response)
-
+    setStore(schema)
     close(true)
   }
 
   const close = (save?: boolean | ResponseSchema) => {
     if (typeof save === 'boolean' && save) {
       const update = {
-        history: histRef.value,
-        response: respRef.value,
-        schema: candidate(),
+        history: store.history,
+        response: store.response,
+        schema: store.fields,
       }
       props.update(update)
-      setFields(candidate())
 
       if (ctx.chat?._id && props.characterId && props.characterId.startsWith('temp-')) {
         const char = ctx.activeMap[props.characterId]
@@ -244,7 +231,7 @@ export const CharacterSchema: Component<{
 
     if (save && typeof save !== 'boolean') {
       props.update(save)
-      setFields(save.schema)
+      setStore('fields', save.schema)
 
       if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: save })
@@ -276,11 +263,11 @@ export const CharacterSchema: Component<{
               <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
                 Import
               </Button>
-              <Show when={inherited()?.schema?.length}>
+              <Show when={store.fields.length}>
                 <Button
                   size="pill"
                   schema="secondary"
-                  onClick={() => downloadJson(inherited()!, filename())}
+                  onClick={() => downloadJson(store, filename())}
                 >
                   Export
                 </Button>
@@ -345,17 +332,14 @@ export const CharacterSchema: Component<{
                   options={vars()}
                   close={() => setAuto('')}
                   dir="down"
-                  onSelect={onAutoComplete(setResponse)}
+                  onSelect={onAutoComplete('response')}
                 />
               </Show>
               <TextInput
                 isMultiline
-                ref={(r) => {
-                  respRef = r
-                  onRefMounted()
-                }}
                 fieldName="jsonSchemaResponse"
                 label="Response Template"
+                ref={(r) => (respRef = r)}
                 onKeyDown={(ev) => {
                   if (ev.key === '{') setAuto('response')
                   if (ev.ctrlKey && ev.code === 'Space') {
@@ -373,11 +357,10 @@ export const CharacterSchema: Component<{
                     </Show>
                   </>
                 }
-                value={response()}
-                // onInputText={(ev) => setResponse(ev)}
+                value={store.response}
                 placeholder="Response Template"
                 class="font-mono text-xs"
-                onChange={(ev) => setResponse(ev.currentTarget.value)}
+                onChange={(ev) => setStore('response', ev.currentTarget.value)}
               />
             </Card>
 
@@ -387,17 +370,14 @@ export const CharacterSchema: Component<{
                   options={vars()}
                   close={() => setAuto('')}
                   dir="down"
-                  onSelect={onAutoComplete(setHistory)}
+                  onSelect={onAutoComplete('history')}
                 />
               </Show>
               <TextInput
                 class="font-mono text-xs"
                 fieldName="jsonSchemaHistory"
-                ref={(r) => {
-                  histRef = r
-                  onRefMounted()
-                }}
                 label="History Template"
+                ref={(r) => (histRef = r)}
                 onKeyDown={(ev) => {
                   if (ev.key === '{') setAuto('history')
                   if (ev.ctrlKey && ev.code === 'Space') {
@@ -418,13 +398,17 @@ export const CharacterSchema: Component<{
                   </>
                 }
                 isMultiline
-                value={hist()}
+                value={store.history}
                 placeholder="History Template"
-                onChange={(ev) => setHistory(ev.currentTarget.value)}
+                onChange={(ev) => setStore('history', ev.currentTarget.value)}
               />
             </Card>
 
-            <Show when={!hist().includes('{{response}}') || !response().includes('{{response}}')}>
+            <Show
+              when={
+                !store.history.includes('{{response}}') || !store.response.includes('{{response}}')
+              }
+            >
               <SolidCard type="orange">
                 <b>Warning:</b> <code>{'{{response}}'}</code> is not included in your history or
                 response template. The <b>response</b> field is always generated and is highly
@@ -433,8 +417,8 @@ export const CharacterSchema: Component<{
             </Show>
 
             <JsonSchema
-              inherit={fields()}
-              update={(ev) => setCandidate(ev)}
+              inherit={store.fields}
+              update={(ev) => setStore('fields', ev)}
               onNameChange={onFieldNameChange}
             />
           </div>
