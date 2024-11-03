@@ -56,6 +56,21 @@ const PresetSettings: Component<
     )
   )
 
+  createEffect(
+    on(
+      () => (props.store.service || '') + services().length,
+      (curr) => {
+        if (props.disabled) return
+        if (props.store.service) return
+        if (!services().length) return
+        if (props.store._id) return
+
+        console.log('new', services()[0].value)
+        props.setter('service', services()[0].value as any)
+      }
+    )
+  )
+
   const sub = createMemo(() => {
     if (props.store.service !== 'agnaistic') return
     const match = settings.config.subs.find(
@@ -129,8 +144,8 @@ const PresetSettings: Component<
             { label: 'Featherless', value: 'featherless' },
             { label: 'Google AI Studio', value: 'gemini' },
           ]}
-          value={props.store.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
-          hide={hidePresetSetting(props.store, 'thirdPartyFormat')}
+          value={props.store.thirdPartyFormat}
+          hide={props.store.service !== 'kobold'}
           onChange={(ev) => props.setter('thirdPartyFormat', ev.value as ThirdPartyFormat)}
         />
 

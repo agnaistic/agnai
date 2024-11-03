@@ -15,6 +15,7 @@ import { TitleCard } from '/web/shared/Card'
 import { Page } from '/web/Layout'
 import PresetSettings from '/web/shared/PresetSettings'
 import { getPresetEditor, getPresetForm } from '/web/shared/PresetSettings/types'
+import { templates } from '/common/presets/templates'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -194,6 +195,7 @@ export default GenerationPresetsPage
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
+  gaslight: templates.Universal,
   service: '' as any,
   name: '',
   maxTokens: 300,
