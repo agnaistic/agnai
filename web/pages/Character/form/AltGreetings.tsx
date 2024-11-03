@@ -1,4 +1,4 @@
-import { Component, For, Index } from 'solid-js'
+import { Component, Index } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
 import { MinusCircle, Plus } from 'lucide-solid'
 import Button from '/web/shared/Button'
