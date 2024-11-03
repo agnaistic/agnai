@@ -95,11 +95,9 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Nav.DoubleItem>
 
-      <Nav.DoubleItem class="tour-participants">
-        <Nav.Item onClick={() => props.togglePane('participants')}>
-          <Users size={size} /> Participants
-        </Nav.Item>
-      </Nav.DoubleItem>
+      <Nav.Item onClick={() => props.togglePane('participants')}>
+        <Users size={size} /> Participants
+      </Nav.Item>
 
       <Nav.Item onClick={() => props.togglePane('chat-settings')}>
         <Settings size={size} /> Edit Chat

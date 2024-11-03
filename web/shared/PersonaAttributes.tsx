@@ -3,7 +3,6 @@ import { Component, createMemo, createSignal, Index, onMount, Show } from 'solid
 import Button from './Button'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
-import { getFormEntries } from './util'
 import { getEncoder } from '/common/tokenize'
 import { formatCharacter } from '/common/characters'
 import { AppSchema } from '/common/types'
@@ -42,7 +41,7 @@ const PersonaAttributes: Component<{
 
   const updateCount = async () => {
     if (!props.tokenCount || !props.form) return
-    const attributes = getAttributeMap(props.form)
+    const attributes = fromAttrs(props.state)
 
     const encoder = await getEncoder()
 
@@ -77,13 +76,6 @@ const PersonaAttributes: Component<{
     const next = props.state.map((a, i) => (i === index ? upd : a))
     props.setter(next)
   }
-
-  // const onKey = (key: string, index: number) => {
-  //   updateCount()
-  //   if (key !== 'Enter') return
-  //   if (index + 1 !== attrs.list.length) return
-  //   add()
-  // }
 
   return (
     <>
@@ -193,34 +185,6 @@ const Attribute: Component<{
 }
 
 export default PersonaAttributes
-
-export function getAttributeMap(event: Event | HTMLFormElement) {
-  const entries = getFormEntries(event)
-  const map: any = {}
-
-  for (const [key, value] of entries) {
-    if (key.startsWith('attr-key')) {
-      const id = key.replace('attr-key.', '')
-      if (!map[id]) map[id] = {}
-      map[id].key = value
-    }
-
-    if (key.startsWith('attr-value')) {
-      const id = key.replace('attr-value.', '')
-      if (!map[id]) map[id] = {}
-      map[id].value = [value]
-      map[id].values = [value]
-    }
-  }
-
-  const values = Object.values(map).reduce<Record<string, string[]>>((prev: any, curr: any) => {
-    if (!curr.values || !curr.values.length) return prev
-    if (curr.key === 'text') prev[curr.key] = curr.value
-    else prev[curr.key] = curr.values
-    return prev
-  }, {})
-  return values
-}
 
 export function toAttrs(value?: Record<string, string[]>) {
   if (!value) return defaultAttrs

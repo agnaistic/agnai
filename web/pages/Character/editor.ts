@@ -4,7 +4,7 @@ import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { ADAPTER_LABELS } from '/common/adapters'
-import { fromAttrs, getAttributeMap, toAttrs } from '/web/shared/PersonaAttributes'
+import { fromAttrs, toAttrs } from '/web/shared/PersonaAttributes'
 import {
   NewCharacter,
   characterStore,
@@ -231,7 +231,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
   const createAvatar = async () => {
     const current = payload()
-    const attributes = getAttributeMap(form())
+    const attributes = fromAttrs(state.personaAttrs)
     const desc = current.appearance || (attributes?.appeareance || attributes?.looks)?.join(', ')
     const override = getFormValue('imageOverride')
     const avatar = await generateAvatar(desc || '', override)
@@ -368,29 +368,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  const updateKind = (kind: EditorState['personaKind']) => {
-    const ref = document.getElementById('character-form') as HTMLFormElement | null
-
-    const attributes = ref ? getAttributeMap(ref) : {}
-    const next = Object.values(attributes)
-      .map((values) => values.filter((v) => !!v.trim()).join(', '))
-      .join('\n\n')
-
-    if (kind === 'text') {
-      setState({ personaKind: 'text', persona: { kind: 'text', attributes: { text: [next] } } })
-      return
-    }
-
-    setState({
-      personaKind: 'attributes',
-      persona: { kind: 'attributes', attributes: { personality: [next] } },
-    })
-  }
-
   return {
     state,
     update: setState,
-    updateKind,
     reset,
     load,
     convert,
