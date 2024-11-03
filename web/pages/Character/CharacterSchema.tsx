@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Button from '/web/shared/Button'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import { JsonSchema } from '/web/shared/JsonSchema'
