@@ -1,5 +1,5 @@
 import { ArrowLeft, Trash, ArrowRight } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, on, onMount, Show } from 'solid-js'
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
 import Button from '/web/shared/Button'
@@ -45,7 +45,10 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
           <ArrowRight size={size} />
         </Button>
       </div>
-      <ModelOverride user={props.user} />
+      <ModelOverride
+        state={props.editor.state.imageOverride}
+        setter={(override) => props.editor.update('imageOverride', override)}
+      />
       <div class="flex w-fit gap-2">
         {/* <Button size="sm" >
           <RotateCcw size={size} />
@@ -58,24 +61,45 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
   )
 }
 
-const ModelOverride: Component<{ user: UserState }> = (props) => {
+const ModelOverride: Component<{ state: string; setter: (override: string) => void }> = (props) => {
   const state = settingStore((s) => ({ models: s.config.serverConfig?.imagesModels || [] }))
   const user = userStore()
+
   const options = createMemo(() => {
     const list = state.models.map((m) => ({ label: m.desc, value: m.id || m.name }))
     return list
   })
 
-  const [id, setId] = createSignal(props.user.user?.images?.agnai?.model)
+  onMount(() => {
+    if (state.models.length) return
+    settingStore.getServerConfig()
+  })
+
+  createEffect(
+    on(
+      () => user.user?.images?.agnai?.model,
+      (id) => {
+        if (!id) return
+        props.setter(id)
+      }
+    )
+  )
+
+  createEffect(() => {
+    if (!options().length) return
+    const id = user.user?.images?.agnai?.model
+    if (!id) return
+
+    props.setter(id)
+  })
 
   return (
     <Show when={(user.sub?.tier.imagesAccess || user.user?.admin) && state.models.length > 0}>
       <Select
         parentClass="text-sm"
-        fieldName="imageOverride"
-        value={id()}
+        value={props.state}
         items={options()}
-        onChange={(ev) => setId(ev.value)}
+        onChange={(ev) => props.setter(ev.value)}
       />
     </Show>
   )

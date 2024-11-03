@@ -25,7 +25,6 @@ import { SliderSettings } from './Sliders'
 import { ToggleSettings } from './Toggles'
 import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
-import { PresetProvider } from './context'
 
 export { PresetSettings as default }
 
@@ -88,86 +87,84 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
   })
 
   return (
-    <PresetProvider>
-      <div class="flex flex-col gap-4">
-        <Card class="flex flex-col gap-2">
-          <Select
-            fieldName="service"
-            label="AI Service"
-            helperText={
-              <>
-                <Show when={!state.service}>
-                  <p class="text-red-500">
-                    Warning! Your preset does not currently have a service set.
-                  </p>
-                </Show>
-              </>
-            }
-            value={state.service}
-            items={services()}
-            onChange={(ev) => setState('service', ev.value as any)}
-            disabled={props.disabled || props.disableService}
-          />
-
-          <AgnaisticSettings state={state} setter={setState} noSave={props.noSave} sub={sub()} />
-
-          <Select
-            fieldName="thirdPartyFormat"
-            label="Self-host / 3rd-party Format"
-            helperText="Re-formats the prompt to the desired output format."
-            items={[
-              { label: 'None', value: '' },
-              { label: 'Kobold', value: 'kobold' },
-              { label: 'OpenAI', value: 'openai' },
-              { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
-              { label: 'Claude', value: 'claude' },
-              { label: 'Textgen (Ooba)', value: 'ooba' },
-              { label: 'Llama.cpp', value: 'llamacpp' },
-              { label: 'Ollama', value: 'ollama' },
-              { label: 'vLLM', value: 'vllm' },
-              { label: 'Aphrodite', value: 'aphrodite' },
-              { label: 'ExLlamaV2', value: 'exllamav2' },
-              { label: 'KoboldCpp', value: 'koboldcpp' },
-              { label: 'TabbyAPI', value: 'tabby' },
-              { label: 'Mistral API', value: 'mistral' },
-              { label: 'Featherless', value: 'featherless' },
-              { label: 'Google AI Studio', value: 'gemini' },
-            ]}
-            value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
-            hide={hidePresetSetting(state, 'thirdPartyFormat')}
-            onChange={(ev) => setState('thirdPartyFormat', ev.value as ThirdPartyFormat)}
-          />
-
-          <PresetMode state={state} setter={setState} sub={sub()} />
-
-          <RegisteredSettings
-            service={state.service}
-            inherit={props.inherit}
-            mode={state.presetMode}
-          />
-        </Card>
-        <Show when={pane.showing()}>
-          <TempSettings service={props.inherit?.service} />
-        </Show>
-        <Tabs
-          select={(ev) => {
-            setTab(ev)
-            setSearch({ preset_tab: ev })
-          }}
-          selected={tab}
-          tabs={tabs()}
+    <div class="flex flex-col gap-4">
+      <Card class="flex flex-col gap-2">
+        <Select
+          fieldName="service"
+          label="AI Service"
+          helperText={
+            <>
+              <Show when={!state.service}>
+                <p class="text-red-500">
+                  Warning! Your preset does not currently have a service set.
+                </p>
+              </Show>
+            </>
+          }
+          value={state.service}
+          items={services()}
+          onChange={(ev) => setState('service', ev.value as any)}
+          disabled={props.disabled || props.disableService}
         />
-        <GeneralSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
 
-        <PromptSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+        <AgnaisticSettings state={state} setter={setState} noSave={props.noSave} sub={sub()} />
 
-        <MemorySettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+        <Select
+          fieldName="thirdPartyFormat"
+          label="Self-host / 3rd-party Format"
+          helperText="Re-formats the prompt to the desired output format."
+          items={[
+            { label: 'None', value: '' },
+            { label: 'Kobold', value: 'kobold' },
+            { label: 'OpenAI', value: 'openai' },
+            { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
+            { label: 'Claude', value: 'claude' },
+            { label: 'Textgen (Ooba)', value: 'ooba' },
+            { label: 'Llama.cpp', value: 'llamacpp' },
+            { label: 'Ollama', value: 'ollama' },
+            { label: 'vLLM', value: 'vllm' },
+            { label: 'Aphrodite', value: 'aphrodite' },
+            { label: 'ExLlamaV2', value: 'exllamav2' },
+            { label: 'KoboldCpp', value: 'koboldcpp' },
+            { label: 'TabbyAPI', value: 'tabby' },
+            { label: 'Mistral API', value: 'mistral' },
+            { label: 'Featherless', value: 'featherless' },
+            { label: 'Google AI Studio', value: 'gemini' },
+          ]}
+          value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
+          hide={hidePresetSetting(state, 'thirdPartyFormat')}
+          onChange={(ev) => setState('thirdPartyFormat', ev.value as ThirdPartyFormat)}
+        />
 
-        <SliderSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+        <PresetMode state={state} setter={setState} sub={sub()} />
 
-        <ToggleSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
-      </div>
-    </PresetProvider>
+        <RegisteredSettings
+          service={state.service}
+          inherit={props.inherit}
+          mode={state.presetMode}
+        />
+      </Card>
+      <Show when={pane.showing()}>
+        <TempSettings service={props.inherit?.service} />
+      </Show>
+      <Tabs
+        select={(ev) => {
+          setTab(ev)
+          setSearch({ preset_tab: ev })
+        }}
+        selected={tab}
+        tabs={tabs()}
+      />
+      <GeneralSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+
+      <PromptSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+
+      <MemorySettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+
+      <SliderSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+
+      <ToggleSettings state={state} setter={setState} sub={sub()} tab={tabName()} />
+    </div>
   )
 }
 

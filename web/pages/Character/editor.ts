@@ -20,7 +20,6 @@ import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
-import { getFormValue } from '/web/emitter'
 import { ResponseSchema } from '/common/types/library'
 
 export type EditorState = {
@@ -58,6 +57,7 @@ export type EditorState = {
 
   imageSettings?: ImageSettings
   json?: ResponseSchema
+  imageOverride: string
 }
 
 export type SetEditor = SetStoreFunction<EditorState>
@@ -123,6 +123,7 @@ const initState: EditorState = {
       url: '',
     },
   },
+  imageOverride: '',
 }
 
 export type CharEditor = ReturnType<typeof useCharEditor>
@@ -233,7 +234,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const current = payload()
     const attributes = fromAttrs(state.personaAttrs)
     const desc = current.appearance || (attributes?.appeareance || attributes?.looks)?.join(', ')
-    const override = getFormValue('imageOverride')
+    const override = state.imageOverride
     const avatar = await generateAvatar(desc || '', override)
     if (!avatar) return
 

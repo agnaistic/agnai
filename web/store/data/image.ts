@@ -219,7 +219,7 @@ subscribe(
 )
 
 async function tryFetchImage(image: string, attempt = 1) {
-  if (attempt > 5) throw new Error(`failed to download image`)
+  if (attempt > 10) throw new Error(`failed to download image`)
 
   try {
     const res = await fetch(getAssetUrl(image), { cache: 'no-cache' })

@@ -15,7 +15,6 @@ import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
 import { useActivePreset } from '/web/store/data/common'
-import { forms } from '/web/emitter'
 import { useAppContext } from '/web/store/context'
 
 const helpMarkdown = neat`
@@ -83,16 +82,6 @@ export const CharacterSchema: Component<{
 
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
-
-  forms.useSub((field, value) => {
-    if (field === 'jsonSchemaResponse') {
-      setResponse(value)
-    }
-
-    if (field === 'jsonSchemaHistory') {
-      setHistory(value)
-    }
-  })
 
   const activePreset = useActivePreset()
 
@@ -388,6 +377,7 @@ export const CharacterSchema: Component<{
                 // onInputText={(ev) => setResponse(ev)}
                 placeholder="Response Template"
                 class="font-mono text-xs"
+                onChange={(ev) => setResponse(ev.currentTarget.value)}
               />
             </Card>
 
@@ -430,6 +420,7 @@ export const CharacterSchema: Component<{
                 isMultiline
                 value={hist()}
                 placeholder="History Template"
+                onChange={(ev) => setHistory(ev.currentTarget.value)}
               />
             </Card>
 

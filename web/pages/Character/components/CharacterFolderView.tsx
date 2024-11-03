@@ -30,7 +30,6 @@ import { characterStore, chatStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
-import { forms } from '/web/emitter'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -443,14 +442,7 @@ function getChildFolders(tree: FolderTree, path: string, sort: SortDirection) {
 }
 
 const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
-  let ref: HTMLInputElement
-
   const [actual, setActual] = createSignal('/')
-
-  forms.useSub((field, value) => {
-    if (field !== 'next-folder') return
-    setActual(toFolderSlug(value))
-  })
 
   createEffect(
     on(
@@ -459,14 +451,12 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
         if (!props.char) return
 
         setActual(toFolderSlug(props.char.folder || '/'))
-        ref.value = props.char.folder || '/'
-        ref.focus()
       }
     )
   )
 
   const save = () => {
-    let folder = ref.value
+    let folder = actual()
     if (!folder.startsWith('/')) {
       folder = '/' + folder
     }
@@ -475,9 +465,7 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
       folder = folder.slice(0, -1)
     }
 
-    characterStore.editPartialCharacter(props.char?._id!, { folder: ref.value }, () =>
-      props.close()
-    )
+    characterStore.editPartialCharacter(props.char?._id!, { folder }, () => props.close())
   }
 
   return (
@@ -501,11 +489,10 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
         />
 
         <TextInput
-          fieldName="next-folder"
           helperMarkdown={`Folder names are 'normalized'.\nNoramlized name: ${actual()}`}
-          ref={(r) => (ref = r)}
           label="New Folder"
           value={props.char?.folder || '/'}
+          onChange={(ev) => setActual(toFolderSlug(ev.currentTarget.value))}
         />
       </div>
     </RootModal>

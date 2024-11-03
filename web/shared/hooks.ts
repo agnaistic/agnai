@@ -8,24 +8,12 @@ import { getSettingColor, hexToRgb } from './colors'
 import { getAssetUrl } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
-import { forms } from '../emitter'
 import { getStore } from '../store/create'
 
 const PANE_BREAKPOINT = 1280
 
 export function getPlatform() {
   return window.innerWidth >= 1280 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
-}
-
-export function useFormField(field: string, init?: string) {
-  const [value, setValue] = createSignal(init || '')
-
-  forms.useSub((f, value) => {
-    if (f !== field) return
-    setValue(value)
-  })
-
-  return value
 }
 
 export function usePresetOptions() {
