@@ -295,7 +295,7 @@ export const ImageSettingsModal = () => {
           min={5}
           max={128}
           step={1}
-          value={cfg()?.steps ?? agnaiModel()?.init.steps ?? 28}
+          value={cfg()?.steps ?? agnaiModel()?.init.steps ?? 50}
           label="Sampling Steps"
           helperText="(Novel Anlas Threshold: 28)"
         />

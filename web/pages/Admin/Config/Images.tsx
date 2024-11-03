@@ -53,8 +53,8 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
       desc: '',
       override: '',
       level: 0,
-      init: { steps: 5, cfg: 2, height: 1024, width: 1024 },
-      limit: { steps: 128, cfg: 20, height: 1024, width: 1024 },
+      init: { steps: 10, cfg: 2, height: 1024, width: 1024 },
+      limit: { steps: 50, cfg: 20, height: 1024, width: 1024 },
     }),
   })
 
