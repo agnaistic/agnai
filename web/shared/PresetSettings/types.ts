@@ -46,7 +46,8 @@ export function getPresetForm(state: PresetState) {
 
 export function getSubPresetForm(state: PresetState) {
   const { disabled, pane, ...form } = state
-  return form
+
+  return { ...form, kind: 'subscription-setting' as const }
 }
 
 export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
