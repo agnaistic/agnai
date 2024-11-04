@@ -59,6 +59,39 @@ const PersonaAttributes: Component<{
     )
   )
 
+  createEffect(
+    on(
+      () => props.schema,
+      (kind, prev) => {
+        // Convert the attributes to a text blob if switching from text -> attrs
+        if (prev !== 'text' && kind === 'text') {
+          let squished: string[] = []
+          for (const { key, values } of props.state) {
+            squished.push(`${key}:\n${values}`)
+          }
+
+          props.setter([{ key: 'text', values: squished.join('\n\n') }].concat(props.state))
+        }
+
+        // If we switch from text -> attrs, omit the 'text' attribute if it is the squished version from above
+        if (kind !== 'text' && prev === 'text') {
+          const text = props.state.find((s) => s.key === 'text')
+          if (!text) return
+
+          let matching = true
+          for (const { values } of props.state) {
+            if (!text.values.includes(values)) matching = false
+            break
+          }
+
+          if (matching) {
+            props.setter(props.state.filter((s) => s.key !== 'text'))
+          }
+        }
+      }
+    )
+  )
+
   const plainText = createMemo(() => props.schema === 'text')
 
   const updateCount = async () => {

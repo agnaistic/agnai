@@ -22,7 +22,6 @@ export type PresetTabProps = {
 
 export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {
   disabled?: boolean
-  pane: boolean
 }
 
 export type SetPresetState = SetStoreFunction<PresetState>
@@ -30,7 +29,6 @@ export type SetPresetState = SetStoreFunction<PresetState>
 export function getPresetForm(state: PresetState) {
   const {
     disabled,
-    pane,
     subApiKey,
     subDisabled,
     subLevel,
@@ -45,7 +43,7 @@ export function getPresetForm(state: PresetState) {
 }
 
 export function getSubPresetForm(state: PresetState) {
-  const { disabled, pane, ...form } = state
+  const { disabled, ...form } = state
 
   return { ...form, kind: 'subscription-setting' as const }
 }
@@ -53,7 +51,6 @@ export function getSubPresetForm(state: PresetState) {
 export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   userId: string
   disabled: boolean
-  pane: boolean
 } = {
   _id: '',
   ...agnaiPresets.agnai,
@@ -68,7 +65,6 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   userId: '',
   allowGuestUsage: false,
   disabled: false,
-  pane: false,
 }
 
 export function getPresetEditor() {

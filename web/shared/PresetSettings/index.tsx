@@ -43,18 +43,6 @@ const PresetSettings: Component<
     return list
   })
 
-  createEffect(() => props.setter('pane', pane.showing()))
-  createEffect(
-    on(
-      () => props.store,
-      (inherited) => {
-        if (inherited) {
-          props.setter(inherited)
-        }
-      }
-    )
-  )
-
   createEffect(
     on(
       () => (props.store.service || '') + services().length,
@@ -64,7 +52,6 @@ const PresetSettings: Component<
         if (!services().length) return
         if (props.store._id) return
 
-        console.log('new', services()[0].value)
         props.setter('service', services()[0].value as any)
       }
     )

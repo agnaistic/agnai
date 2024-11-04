@@ -25,6 +25,9 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
       () => ctx.preset?.registered?.agnaistic?.subscriptionId,
       (id) => {
         if (!id) return
+        const curr = props.state.registered?.agnaistic?.subscriptionId
+        if (id === curr) return
+
         props.setter('registered', {
           ...props.state.registered,
           agnaistic: {

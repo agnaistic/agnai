@@ -66,12 +66,17 @@ export const ModeGenSettings: Component<{
     )
   )
 
-  createEffect(() => {
-    if (!props.presetId) return
-    if (selected() !== props.presetId) {
-      setSelected(props.presetId)
-    }
-  })
+  createEffect(
+    on(
+      () => props.presetId,
+      () => {
+        if (!props.presetId) return
+        if (selected() !== props.presetId) {
+          setSelected(props.presetId)
+        }
+      }
+    )
+  )
 
   const onSave = () => {
     const presetId = selected()
