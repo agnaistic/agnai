@@ -90,7 +90,7 @@ const EditMemoryForm: Component<{
 
         <TextInput
           label="Description"
-          value={props.state.name}
+          value={props.state.description}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
             props.setter({ description: e.currentTarget.value })
