@@ -29,10 +29,12 @@ import Button from '/web/shared/Button'
 import { neat } from '/common/util'
 import { HelpModal } from '/web/shared/Modal'
 import { Toggle } from '/web/shared/Toggle'
+import { AppSchema } from '/common/types/index'
+import { SetStoreFunction } from 'solid-js/store'
 
 const AISettings: Component<{
-  onHordeWorkersChange: (workers: string[]) => void
-  onHordeModelsChange: (models: string[]) => void
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
 }> = (props) => {
   const [query] = useSearchParams()
   const state = userStore()
@@ -41,8 +43,6 @@ const AISettings: Component<{
     server: s.config.serverConfig,
   }))
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
-
-  let keyRef: any
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
 
   const revealKey = () => {
@@ -94,7 +94,6 @@ const AISettings: Component<{
     )
     return opts
   })
-  const [presetId, setPresetId] = createSignal(state.user?.defaultPreset || '')
 
   const canUseApi = createMemo(() => {
     if (!cfg.server) return false
@@ -117,21 +116,19 @@ const AISettings: Component<{
 
       <Show when={ready()}>
         <Toggle
-          fieldName="enableLTM"
-          value={!(state.user?.disableLTM ?? true)}
+          value={!props.state.disableLTM}
           label="Enable Embeddings/Long-Term Memory"
-          helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.
-            `}
+          helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
+          onChange={(ev) => props.setter('disableLTM', ev)}
         />
 
         <Show when={!canUseApi()}>
           <PresetSelect
-            fieldName="defaultPreset"
             label="Default Preset"
             helperText="The initially selected preset when creating a new chat. "
             options={presetOptions()}
-            selected={presetId()}
-            setPresetId={setPresetId}
+            selected={props.state.defaultPreset}
+            setPresetId={(ev) => props.setter('defaultPreset', ev)}
           />
         </Show>
 
@@ -152,8 +149,8 @@ const AISettings: Component<{
               label="Default/API Access Preset"
               helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
               options={presetOptions()}
-              selected={presetId()}
-              setPresetId={setPresetId}
+              selected={props.state.defaultPreset}
+              setPresetId={(ev) => props.setter('defaultPreset', ev)}
             />
 
             <TextInput
@@ -177,7 +174,6 @@ const AISettings: Component<{
                   </Show>
                 </div>
               }
-              ref={keyRef}
               label="API Key"
               readonly
               placeholder="API Key Hidden"
@@ -197,33 +193,33 @@ const AISettings: Component<{
 
       <div class={currentTab() === ADAPTER_LABELS.horde ? tabClass : 'hidden'}>
         <HordeAISettings
-          onHordeWorkersChange={props.onHordeWorkersChange}
-          onHordeModelsChange={props.onHordeModelsChange}
+          onHordeWorkersChange={(workers) => props.setter('hordeWorkers', workers)}
+          onHordeModelsChange={(models) => props.setter('hordeModel', models)}
         />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>
-        <KoboldAISettings />
+        <KoboldAISettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.ooba ? tabClass : 'hidden'}>
-        <OobaAISettings />
+        <OobaAISettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.openai ? tabClass : 'hidden'}>
-        <OpenAISettings />
+        <OpenAISettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.scale ? tabClass : 'hidden'}>
-        <ScaleSettings />
+        <ScaleSettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.novel ? tabClass : 'hidden'}>
-        <NovelAISettings />
+        <NovelAISettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.claude ? tabClass : 'hidden'}>
-        <ClaudeSettings />
+        <ClaudeSettings state={props.state} setter={props.setter} />
       </div>
 
       <For each={cfg.config.registered}>
@@ -246,7 +242,7 @@ const AISettings: Component<{
               </Match>
             </Switch>
 
-            <RegisteredSettings service={each} />
+            <RegisteredSettings service={each} state={props.state} setter={props.setter} />
           </div>
         )}
       </For>

@@ -139,7 +139,8 @@ const PresetSettings: Component<
 
         <RegisteredSettings
           service={props.store.service}
-          inherit={props.store}
+          setter={props.setter}
+          state={props.store}
           mode={props.store.presetMode}
         />
       </Card>

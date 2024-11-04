@@ -251,6 +251,10 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
     setGenerating(true)
 
+    const index = trait
+      ? state.personaAttrs.findIndex((a) => a.key === trait)
+      : state.personaAttrs.findIndex((a) => a.key === 'text')
+
     generateField({
       char,
       prop: field,
@@ -263,14 +267,17 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
         if (st !== 'done' && st !== 'partial') return
 
         if (field === 'persona') {
-          const attributes = { ...char.persona.attributes }
-          if (!trait) {
-            attributes.text = [res]
-          } else {
-            attributes[trait as 'text'] = [res]
-          }
+          const next = [...state.personaAttrs]
+          next[index] = { key: trait || 'text', values: res }
+          setState('personaAttrs', next)
+          // const attributes = { ...char.persona.attributes }
+          // if (!trait) {
+          //   attributes.text = [res]
+          // } else {
+          //   attributes[trait as 'text'] = [res]
+          // }
 
-          setState('persona', { ...char.persona, attributes })
+          // setState('personaAttrs', attributes)
           return
         }
 

@@ -259,8 +259,9 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.state.disabled}
           hide={
-            props.state.service === 'claude' ||
-            (props.state.service === 'kobold' && props.state.thirdPartyFormat === 'claude')
+            props.state.service !== 'claude' &&
+            props.state.service !== 'kobold' &&
+            props.state.thirdPartyFormat !== 'claude'
           }
           onChange={(ev) => props.setter('claudeModel', ev.value)}
         />

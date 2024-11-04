@@ -163,7 +163,7 @@ const validConfig = {
   oobaUrl: 'string?',
   hordeApiKey: 'string?',
   hordeKey: 'string?',
-  hordeModel: 'string?',
+  hordeModel: 'any?',
   hordeModels: ['string?'],
   hordeWorkers: ['string'],
   oaiKey: 'string?',
@@ -337,6 +337,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.hordeModels) {
     update.hordeModel = toArray(body.hordeModels)
+  } else if (body.hordeModel) {
+    update.hordeModel = toArray(body.hordeModel)
   }
 
   if (body.novelModel) {

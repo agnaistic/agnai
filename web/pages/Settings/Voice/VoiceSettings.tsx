@@ -1,4 +1,3 @@
-import { userStore } from '../../../store'
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { Toggle } from '../../../shared/Toggle'
 import Tabs from '../../../shared/Tabs'
@@ -9,6 +8,8 @@ import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
 import AgnaisticSettings from './AgnaisticSettings'
 import { isAgnaisticSpeechAllowed } from '/web/shared/Audio/speech'
+import { AppSchema } from '/common/types/index'
+import { SetStoreFunction } from 'solid-js/store'
 
 const ttsServiceTabs = {
   agnaistic: 'Agnaistic',
@@ -19,9 +20,10 @@ const ttsServiceTabs = {
 
 type Tab = keyof typeof ttsServiceTabs
 
-export const VoiceSettings: Component = () => {
-  const state = userStore()
-
+export const VoiceSettings: Component<{
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
+}> = (props) => {
   const canUseTts = createMemo(() => {
     return isAgnaisticSpeechAllowed()
   })
@@ -56,21 +58,21 @@ export const VoiceSettings: Component = () => {
             label="Enabled"
             helperText="Whether to show the microphone button."
             fieldName="speechToTextEnabled"
-            value={state.user?.speechtotext?.enabled ?? true}
+            value={props.state.speechtotext?.enabled ?? true}
           />
 
           <Toggle
             label="Submit Automatically"
             helperText="Whether to send the message when a sentence has been completed."
             fieldName="speechToTextAutoSubmit"
-            value={state.user?.speechtotext?.autoSubmit ?? true}
+            value={props.state.speechtotext?.autoSubmit ?? true}
           />
 
           <Toggle
             label="Resume Listening Automatically"
             helperText="Whether to re-start recording after a message has been received."
             fieldName="speechToTextAutoRecord"
-            value={state.user?.speechtotext?.autoRecord ?? true}
+            value={props.state.speechtotext?.autoRecord ?? true}
           />
         </Show>
 
@@ -84,14 +86,14 @@ export const VoiceSettings: Component = () => {
           label="Enabled"
           helperText="Characters with a configured voice will speak automatically."
           fieldName="textToSpeechEnabled"
-          value={state.user?.texttospeech?.enabled ?? true}
+          value={props.state.texttospeech?.enabled ?? true}
         />
 
         <Toggle
           label="Filter Action Text"
           helperText="Skips text in asterisks and parenthesis."
           fieldName="textToSpeechFilterActions"
-          value={state.user?.texttospeech?.filterActions ?? true}
+          value={props.state.texttospeech?.filterActions ?? true}
         />
 
         <Divider />
@@ -112,7 +114,7 @@ export const VoiceSettings: Component = () => {
           </div>
 
           <div class={currentTab() === 'elevenlabs' ? subclass : 'hidden'}>
-            <ElevenLabsSettings />
+            <ElevenLabsSettings state={props.state} setter={props.setter} />
           </div>
 
           <div class={currentTab() === 'novel' ? subclass : 'hidden'}>

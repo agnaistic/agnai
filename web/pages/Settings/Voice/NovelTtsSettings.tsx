@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 
-const NovelTtsSettings: Component = () => {
+const NovelTtsSettings: Component<{}> = () => {
   return (
     <>
       <div class="text-xl">NovelAI Text To Speech</div>

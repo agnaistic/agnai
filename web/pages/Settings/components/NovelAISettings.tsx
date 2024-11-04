@@ -4,12 +4,15 @@ import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select from '../../../shared/Select'
 import Divider from '/web/shared/Divider'
+import { SetStoreFunction } from 'solid-js/store/types/store'
+import { AppSchema } from '/common/types/index'
 
-const NovelAISettings: Component = () => {
-  const state = userStore()
-
+const NovelAISettings: Component<{
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
+}> = (props) => {
   const novelVerified = createMemo(
-    () => (state.user?.novelApiKey || state.user?.novelVerified ? 'API Key has been verified' : ''),
+    () => (props.state.novelApiKey || props.state.novelVerified ? 'API Key has been verified' : ''),
     { equals: false }
   )
 
@@ -23,7 +26,8 @@ const NovelAISettings: Component = () => {
           { label: 'Kayra', value: 'kayra-v1' },
           { label: 'Clio', value: 'clio-v1' },
         ]}
-        value={state.user?.novelModel}
+        value={props.state.novelModel}
+        onChange={(ev) => props.setter('novelModel', ev.value)}
       />
 
       <Divider />
@@ -32,7 +36,7 @@ const NovelAISettings: Component = () => {
         fieldName="novelApiKey"
         label="Novel API Key"
         type="password"
-        value={''}
+        value={props.state.novelApiKey || ''}
         helperText={
           <>
             NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.{' '}
@@ -47,9 +51,10 @@ const NovelAISettings: Component = () => {
           </>
         }
         placeholder={novelVerified()}
+        onChange={(ev) => props.setter('novelApiKey', ev.currentTarget.value)}
       />
 
-      <Show when={state.user?.novelVerified}>
+      <Show when={props.state.novelVerified}>
         <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
           Delete Novel API Key
         </Button>

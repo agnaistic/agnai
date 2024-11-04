@@ -4,10 +4,14 @@ import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
 import Select from '/web/shared/Select'
 import { userStore } from '/web/store'
+import { AppSchema } from '/common/types/index'
+import { SetStoreFunction } from 'solid-js/store'
 
-const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) => {
-  const user = userStore((s) => s.user?.adapterConfig)
-
+const RegisteredSettings: Component<{
+  service: RegisteredAdapter
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
+}> = (props) => {
   return (
     <>
       <For each={props.service.settings}>
@@ -16,8 +20,14 @@ const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) =>
             <ServiceOption
               service={props.service.name}
               opt={each}
-              value={user?.[props.service.name]?.[each.field]}
-              config={user?.[props.service.name]}
+              value={props.state.adapterConfig?.[props.service.name]?.[each.field]}
+              config={props.state.adapterConfig?.[props.service.name]}
+              onChange={(ev) => {
+                const prev = { ...(props.state.adapterConfig as any)[props.service.name] }
+                prev[each.field] = ev
+                const next = { ...props.state.adapterConfig, [props.service.name]: prev }
+                props.setter('adapterConfig', next)
+              }}
             />
           </Show>
         )}

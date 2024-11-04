@@ -9,8 +9,12 @@ import { PatreonControls } from '../Settings/PatreonOauth'
 import { getUserSubscriptionTier } from '/common/util'
 import { isLoggedIn } from '/web/store/api'
 import { useNavigate } from '@solidjs/router'
+import { SetStoreFunction } from 'solid-js/store'
 
-export const SubscriptionPage: Component = (props) => {
+export const SubscriptionPage: Component<{
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
+}> = (props) => {
   const settings = settingStore((s) => s.config)
   const user = userStore()
   const cfg = userStore((s) => {

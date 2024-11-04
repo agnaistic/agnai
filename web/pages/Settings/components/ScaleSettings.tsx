@@ -2,8 +2,13 @@ import { Component } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
+import { SetStoreFunction } from 'solid-js/store'
+import { AppSchema } from '/common/types/index'
 
-const ScaleSettings: Component = () => {
+const ScaleSettings: Component<{
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
+}> = () => {
   const state = userStore()
 
   return (

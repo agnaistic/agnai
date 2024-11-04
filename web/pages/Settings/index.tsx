@@ -1,25 +1,20 @@
-import { Component, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import {
-  applyDotProperty,
-  getFormEntries,
-  getStrictForm,
-  setComponentPageTitle,
-} from '../../shared/util'
+import { applyDotProperty, setComponentPageTitle } from '../../shared/util'
 import { settingStore, userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
 import { Show } from 'solid-js'
 import { VoiceSettings } from './Voice/VoiceSettings'
-import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
 import { RootModal } from '/web/shared/Modal'
 import { THIRDPARTY_FORMATS } from '/common/adapters'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
 import { Page } from '/web/Layout'
+import { createStore } from 'solid-js/store'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -63,15 +58,23 @@ export const SettingsModal = () => {
 }
 
 const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
-  let formRef: HTMLFormElement
-
   setComponentPageTitle('Settings')
-  const state = userStore()
+  const user = userStore()
 
   const [query, setQuery] = useSearchParams()
   const [tab, setTab] = createSignal<number>(+(query.tab ?? '0'))
-  const [workers, setWorkers] = createSignal<string[]>(toArray(state.user?.hordeWorkers))
-  const [models, setModels] = createSignal<string[]>(toArray(state.user?.hordeModel))
+
+  const [store, setStore] = createStore(user.user!)
+
+  createEffect(
+    on(
+      () => user.user,
+      (next) => {
+        if (!next) return
+        setStore(next)
+      }
+    )
+  )
 
   onMount(() => {
     if (!query.tab) {
@@ -81,48 +84,16 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
   const tabs: Tab[] = ['ai', 'ui', 'voice']
 
-  if (state.tiers.length > 0 || state.user?.billing) {
+  if (user.tiers.length > 0 || user.user?.billing) {
     tabs.push('subscription')
   }
 
-  if (!state.loggedIn) tabs.push('guest')
+  if (!user.loggedIn) tabs.push('guest')
 
   const currentTab = createMemo(() => tabs[tab()])
 
   const onSubmit = () => {
-    const adapterConfig = getAdapterConfig(getFormEntries(formRef))
-    const body = getStrictForm(formRef, settingsForm)
-
-    const {
-      speechToTextEnabled,
-      speechToTextAutoSubmit,
-      speechToTextAutoRecord,
-
-      textToSpeechEnabled,
-      textToSpeechFilterActions,
-
-      elevenLabsApiKey,
-      enableLTM,
-      ...base
-    } = body
-
-    userStore.updateConfig({
-      ...base,
-      disableLTM: !enableLTM,
-      adapterConfig,
-      hordeWorkers: workers(),
-      hordeModels: models(),
-      speechtotext: {
-        enabled: speechToTextEnabled,
-        autoSubmit: speechToTextAutoSubmit,
-        autoRecord: speechToTextAutoRecord,
-      },
-      elevenLabsApiKey,
-      texttospeech: {
-        enabled: textToSpeechEnabled,
-        filterActions: textToSpeechFilterActions,
-      },
-    })
+    userStore.updateConfig(store)
   }
 
   const tabClass = `flex flex-col gap-4`
@@ -165,22 +136,22 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           }}
         />
       </div>
-      <form ref={formRef!} autocomplete="off">
+      <form autocomplete="off">
         <div class="flex flex-col gap-4">
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
-            <AISettings onHordeWorkersChange={setWorkers} onHordeModelsChange={setModels} />
+            <AISettings state={store} setter={setStore} />
           </div>
 
           <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
-            <UISettings />
+            <UISettings state={store} setter={setStore} />
           </div>
 
           <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
-            <VoiceSettings />
+            <VoiceSettings state={store} setter={setStore} />
           </div>
 
           <div class={currentTab() === 'subscription' ? tabClass : 'hidden'}>
-            <SubscriptionPage />
+            <SubscriptionPage state={store} setter={setStore} />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
