@@ -258,7 +258,10 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
           value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.state.disabled}
-          hide={hidePresetSetting(props.state, 'claudeModel')}
+          hide={
+            props.state.service === 'claude' ||
+            (props.state.service === 'kobold' && props.state.thirdPartyFormat === 'claude')
+          }
           onChange={(ev) => props.setter('claudeModel', ev.value)}
         />
         <Show when={replicateModels().length > 1}>
