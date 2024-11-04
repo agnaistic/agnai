@@ -2,7 +2,7 @@ import { Component, createEffect, createMemo, createSignal, on, onMount } from '
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { applyDotProperty, setComponentPageTitle } from '../../shared/util'
+import { setComponentPageTitle } from '../../shared/util'
 import { settingStore, userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
@@ -11,7 +11,6 @@ import { Show } from 'solid-js'
 import { VoiceSettings } from './Voice/VoiceSettings'
 import { useSearchParams } from '@solidjs/router'
 import { RootModal } from '/web/shared/Modal'
-import { THIRDPARTY_FORMATS } from '/common/adapters'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
@@ -151,7 +150,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           </div>
 
           <div class={currentTab() === 'subscription' ? tabClass : 'hidden'}>
-            <SubscriptionPage state={store} setter={setStore} />
+            <SubscriptionPage />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
@@ -173,48 +172,3 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 }
 
 export default Settings
-
-const settingsForm = {
-  defaultPreset: 'string?',
-  koboldUrl: 'string?',
-  thirdPartyFormat: THIRDPARTY_FORMATS,
-  oobaUrl: 'string?',
-  thirdPartyPassword: 'string?',
-  novelApiKey: 'string?',
-  novelModel: 'string?',
-  hordeUseTrusted: 'boolean?',
-  hordeKey: 'string?',
-  hordeModel: 'string?',
-  oaiKey: 'string?',
-  mistralKey: 'string?',
-  featherlessApiKey: 'string?',
-  scaleApiKey: 'string?',
-  scaleUrl: 'string?',
-  claudeApiKey: 'string?',
-  logPromptsToBrowserConsole: 'boolean?',
-  enableLTM: 'boolean?',
-
-  useLocalPipeline: 'boolean?',
-
-  speechToTextEnabled: 'boolean',
-  speechToTextAutoSubmit: 'boolean',
-  speechToTextAutoRecord: 'boolean',
-
-  textToSpeechEnabled: 'boolean',
-  textToSpeechFilterActions: 'boolean',
-
-  elevenLabsApiKey: 'string?',
-} as const
-
-function getAdapterConfig(entries: Array<[string, any]>) {
-  let obj: any = {}
-
-  for (const [prop, value] of entries) {
-    if (!prop.startsWith('adapterConfig.')) continue
-    applyDotProperty(obj, prop.replace('adapterConfig.', ''), value)
-    // const name = prop.replace('adapterConfig.', '')
-    // obj[name] = value
-  }
-
-  return obj
-}

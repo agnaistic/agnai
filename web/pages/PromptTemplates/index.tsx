@@ -175,7 +175,7 @@ const TemplateModal: Component<{
         />
         <PromptEditor
           value={store.template}
-          onChange={(ev) => setStore('template', ev)}
+          onChange={(ev) => setStore('template', ev.prompt!)}
           minHeight={100}
           showHelp
         />

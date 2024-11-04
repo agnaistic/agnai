@@ -8,7 +8,7 @@ import { AppSchema } from '/common/types/index'
 const ScaleSettings: Component<{
   state: AppSchema.User
   setter: SetStoreFunction<AppSchema.User>
-}> = () => {
+}> = (props) => {
   const state = userStore()
 
   return (
@@ -18,7 +18,8 @@ const ScaleSettings: Component<{
         label="Scale URL"
         helperText="Fully qualified Scale URL."
         placeholder={'E.g. https://dashboard.scale.com/spellbook/api/v2/deploy/a1b2c3'}
-        value={state.user?.scaleUrl}
+        value={props.state.scaleUrl}
+        onChange={(ev) => props.setter('scaleUrl', ev.currentTarget.value)}
       />
       <TextInput
         fieldName="scaleApiKey"
@@ -27,7 +28,8 @@ const ScaleSettings: Component<{
           state.user?.scaleApiKeySet ? 'Scale API key is set' : 'E.g. 9rv440nv7ogj6s7j312flqijd'
         }
         type="password"
-        value={state.user?.scaleApiKey}
+        value={props.state.scaleApiKey}
+        onChange={(ev) => props.setter('scaleApiKey', ev.currentTarget.value)}
       />
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
         Delete Scale API Key

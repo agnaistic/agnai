@@ -302,7 +302,7 @@ const EditScenarioEvents: Component<{
                       hideHelperText
                       noDummyPreview
                       value={entry().text}
-                      onChange={(ev) => updateEntry(index, { text: ev })}
+                      onChange={(ev) => updateEntry(index, { text: ev.prompt! })}
                       include={['char', 'user', 'random', 'roll', 'idle_duration', 'chat_age']}
                     />
 

@@ -192,10 +192,7 @@ const AISettings: Component<{
       </Show>
 
       <div class={currentTab() === ADAPTER_LABELS.horde ? tabClass : 'hidden'}>
-        <HordeAISettings
-          onHordeWorkersChange={(workers) => props.setter('hordeWorkers', workers)}
-          onHordeModelsChange={(models) => props.setter('hordeModel', models)}
-        />
+        <HordeAISettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>

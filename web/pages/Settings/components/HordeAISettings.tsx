@@ -10,45 +10,49 @@ import { HordeModel, HordeWorker } from '../../../../common/adapters'
 import { Toggle } from '../../../shared/Toggle'
 import { toArray } from '/common/util'
 import { Pill } from '/web/shared/Card'
+import { SetStoreFunction } from 'solid-js/store'
+import { AppSchema } from '/common/types'
 
 const HordeAISettings: Component<{
-  onHordeWorkersChange: (workers: string[]) => void
-  onHordeModelsChange: (models: string[]) => void
+  state: AppSchema.User
+  setter: SetStoreFunction<AppSchema.User>
 }> = (props) => {
   const state = userStore((s) => ({
-    workers: toArray(s.user?.hordeWorkers),
-    models: toArray(s.user?.hordeModel),
-    user: s.user,
     stats: s.metadata?.hordeStats,
     loading: s.hordeStatsLoading,
   }))
 
-  const [workers, setWorkers] = createSignal<Option[]>()
-  const [models, setModels] = createSignal<Option[]>()
+  const models = createMemo(() => toArray(props.state.hordeModel))
+  const workers = createMemo(() => toArray(props.state.hordeWorkers))
+
   const [showModels, setShowModels] = createSignal(false)
   const [show, setShow] = createSignal(false)
 
   const selectedModels = createMemo(() => {
     const selected = models()
-    if (selected?.length) {
-      return selected.map((m) => m.value)
+    if (selected.length) {
+      return selected
     }
 
-    if (!state.models.length) {
+    if (!selected.length) {
       return ['Any']
     }
 
-    return state.models
+    return selected
   })
 
   const onSaveHordeModels = (options: Option[]) => {
-    setModels(options)
-    props.onHordeModelsChange(options.map((o) => o.value))
+    props.setter(
+      'hordeModel',
+      options.map((o) => o.value)
+    )
   }
 
   const onSaveHordeWorkers = (options: Option[]) => {
-    setWorkers(options)
-    props.onHordeWorkersChange(options.map((o) => o.value))
+    props.setter(
+      'hordeWorkers',
+      options.map((o) => o.value)
+    )
   }
 
   const refreshHorde = () => {
@@ -58,11 +62,11 @@ const HordeAISettings: Component<{
 
   const hordeName = createMemo(
     () => {
-      if (state.user?.hordeName)
+      if (props.state.hordeName)
         return (
           <div class="flex flex-col">
             <div>
-              Logged in as {state.user.hordeName}.{' '}
+              Logged in as {props.state.hordeName}.{' '}
               <Show when={!state.loading}>
                 <a class="link" onClick={() => userStore.hordeStats()}>
                   Get stats
@@ -103,21 +107,23 @@ const HordeAISettings: Component<{
       <Toggle
         fieldName="hordeUseTrusted"
         label="Use Trusted Workers Only"
-        value={state.user?.hordeUseTrusted ?? true}
+        value={props.state.hordeUseTrusted ?? true}
         helperText="This may help reduce 'bad responses' by using only 'trusted' workers. Warning: This may increase response times."
+        onChange={(ev) => props.setter('hordeUseTrusted', ev)}
       />
       <TextInput
         fieldName="hordeKey"
         label="AI Horde API Key"
         helperText={HordeHelpText}
         placeholder={
-          state.user?.hordeName || state.user?.hordeKey ? 'API key has been verified' : ''
+          props.state.hordeName || props.state.hordeKey ? 'API key has been verified' : ''
         }
         type="password"
-        value={state.user?.hordeKey}
+        value={props.state.hordeKey}
+        onChange={(ev) => props.setter('hordeKey', ev.currentTarget.value)}
       />
 
-      <Show when={state.user?.hordeName}>
+      <Show when={props.state.hordeName}>
         <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('horde')}>
           Delete Horde API Key
         </Button>
@@ -133,7 +139,7 @@ const HordeAISettings: Component<{
       </div>
       <div class="flex items-center gap-4">
         <Button onClick={() => setShow(true)}>Select Workers</Button>
-        <div>Workers selected: {workers()?.length ?? state.workers.length}</div>
+        <div>Workers selected: {workers().length}</div>
       </div>
 
       <ModelModal show={showModels()} close={() => setShowModels(false)} save={onSaveHordeModels} />

@@ -8,7 +8,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  on,
   onMount,
 } from 'solid-js'
 import { FormLabel } from '../FormLabel'
@@ -144,8 +143,8 @@ const PromptEditor: Component<
     fieldName?: string
     state?: PresetState
     disabled?: boolean
-    value?: string
-    onChange?: (value: string) => void
+    value: string
+    onChange: (update: { prompt?: string; templateId?: string }) => void
     showHelp?: boolean
     placeholder?: string
     minHeight?: number
@@ -162,10 +161,11 @@ const PromptEditor: Component<
   let ref: HTMLTextAreaElement = null as any
 
   const presets = presetStore()
-  const [input, setInput] = createSignal<string>(props.value || '')
-  const [autoOpen, setAutoOpen] = createSignal(false)
 
-  const [templateId, setTemplateId] = createSignal('')
+  // const [templateId, setTemplateId] = createSignal('')
+  // const [input, setInput] = createSignal<string>(props.value || '')
+
+  const [autoOpen, setAutoOpen] = createSignal(false)
   const [template, setTemplate] = createSignal('')
 
   const [help, showHelp] = createSignal(false)
@@ -174,10 +174,6 @@ const PromptEditor: Component<
   const [rendered, setRendered] = createSignal('')
 
   const openTemplate = () => {
-    if (!templateId()) {
-      setTemplateId(props.state?.promptTemplateId || '')
-    }
-
     setTemplates(true)
     setTemplate(ref.value)
   }
@@ -186,18 +182,8 @@ const PromptEditor: Component<
     onPromptKey(ev, () => setAutoOpen(true))
   }
 
-  createEffect(
-    on(
-      () => props.state?.promptTemplateId,
-      () => {
-        setTemplateId(props.state?.promptTemplateId || '')
-      }
-    )
-  )
-
   const templateName = createMemo(() => {
-    const nextId = templateId()
-    const id = nextId
+    const id = props.state?.promptTemplateId
     if (!id) return ''
     if (isDefaultTemplate(id)) {
       return id
@@ -209,7 +195,7 @@ const PromptEditor: Component<
 
   const togglePreview = async () => {
     const opts = await getExampleOpts(props.state)
-    const template = props.noDummyPreview ? input() : ensureValidTemplate(input())
+    const template = props.noDummyPreview ? props.value : ensureValidTemplate(props.value)
     let { parsed } = await parseTemplate(template, opts)
 
     if (props.state?.modelFormat) {
@@ -221,14 +207,12 @@ const PromptEditor: Component<
   }
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
-    setInput(ev.currentTarget.value)
     resize()
-    props.onChange?.(ev.currentTarget.value)
+    props.onChange?.({ prompt: ev.currentTarget.value, templateId: props.state?.promptTemplateId })
   }
 
   createEffect(() => {
-    if (!props.value) return
-    setInput(props.value)
+    if (props.value === undefined) return
     ref.value = props.value
   })
 
@@ -259,7 +243,6 @@ const PromptEditor: Component<
     const start = ref.selectionStart
     const end = ref.selectionEnd
     ref.setRangeText(text, ref.selectionStart, ref.selectionEnd, 'select')
-    setInput(ref.value)
     setTimeout(() => ref.setSelectionRange(text.length + start, text.length + end))
     ref.focus()
   }
@@ -279,12 +262,6 @@ const PromptEditor: Component<
     const next = +ref.scrollHeight < min ? min : ref.scrollHeight
     ref.style.height = `${next}px`
   }
-
-  // const hide = createMemo(() => {
-  //   if (props.hide) return 'hidden'
-  //   if (!props.service || !adapters()) return ''
-  //   return adapters()!.includes(props.service) ? '' : `hidden `
-  // })
 
   onMount(resize)
 
@@ -321,8 +298,7 @@ const PromptEditor: Component<
                   <Button
                     size="sm"
                     onClick={() => {
-                      setTemplateId('')
-                      ref.value = props.state?.gaslight || ''
+                      props.onChange?.({ templateId: '', prompt: props.state?.gaslight || '' })
                     }}
                   >
                     Use Preset's Template
@@ -349,9 +325,8 @@ const PromptEditor: Component<
         <pre class="whitespace-pre-wrap break-words text-sm">{rendered()}</pre>
       </Show>
 
-      <Show when={props.fieldName === 'gaslight'}>
+      <Show when={props.fieldName === 'gaslight' && !!props.state?.promptTemplateId}>
         <TextInput readonly fieldName="promptTemplateName" value={`Template: ${templateName()}`} />
-        <TextInput fieldName="promptTemplateId" value={templateId()} parentClass="hidden" />
       </Show>
 
       <PromptSuggestions
@@ -365,15 +340,15 @@ const PromptEditor: Component<
         classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}
-        disabled={props.disabled || !!templateId()}
+        disabled={props.disabled || !!props.state?.promptTemplateId}
         placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
         onKeyDown={onTemplateKeyDown}
       />
 
-      <div class="flex flex-wrap gap-2" classList={{ hidden: !!templateId() }}>
+      <div class="flex flex-wrap gap-2" classList={{ hidden: !!props.state?.promptTemplateId }}>
         <For each={usable()}>
           {([name, data]) => (
-            <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />
+            <Placeholder name={name} {...data} input={props.value} onClick={onPlaceholder} />
           )}
         </For>
       </div>
@@ -389,10 +364,9 @@ const PromptEditor: Component<
           show={templates()}
           close={() => setTemplates(false)}
           select={(id, template) => {
-            setTemplateId(id)
-            ref.value = template
+            props.onChange({ templateId: id, prompt: props.value })
           }}
-          currentTemplateId={templateId() || props.state?.promptTemplateId}
+          currentTemplateId={props.state?.promptTemplateId}
           currentTemplate={template()}
           presetId={props.state?._id}
         />

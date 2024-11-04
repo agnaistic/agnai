@@ -2,7 +2,7 @@ import { Component, createMemo, Show } from 'solid-js'
 import TextInput from '../TextInput'
 import Select from '../Select'
 import { Toggle } from '../Toggle'
-import { chatStore, presetStore } from '../../store'
+import { chatStore } from '../../store'
 import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { Card } from '../Card'
 import { defaultTemplate } from '/common/mode-templates'
@@ -14,7 +14,6 @@ import { PresetTabProps } from './types'
 import { hidePresetSetting } from '../util'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
-  const pre = presetStore()
   const character = chatStore((s) => s.active?.char)
   const isChat = isChatPage()
 
@@ -24,17 +23,6 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
     if (!isChat()) return
 
     return character?._id
-  })
-
-  const gaslight = createMemo(() => {
-    if (props.state.promptTemplateId) {
-      return (
-        pre.templates.find((t) => t._id === props.state.promptTemplateId)?.template ||
-        props.state.gaslight
-      )
-    }
-
-    return props.state.gaslight
   })
 
   return (
@@ -91,12 +79,11 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
 
           <PromptEditor
             fieldName="gaslight"
-            value={gaslight()}
+            value={props.state.gaslight!}
             state={props.state}
-            onChange={(ev) => {
-              if (props.state.promptTemplateId) return
-              props.setter('gaslight', ev)
-            }}
+            onChange={(ev) =>
+              props.setter({ promptTemplateId: ev.templateId, gaslight: ev.prompt })
+            }
             placeholder={defaultTemplate}
             disabled={props.state.disabled}
             showHelp
