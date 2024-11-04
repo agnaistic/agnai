@@ -137,7 +137,7 @@ const ChatMemoryModal: Component<{
           }}
         />
         <div>
-          <Button onClick={() => changeBook('new')}>Create New Memory Book {id()}</Button>
+          <Button onClick={() => changeBook('new')}>Create New Memory Book</Button>
         </div>
 
         <Divider />
