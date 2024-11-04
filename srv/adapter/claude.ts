@@ -19,6 +19,7 @@ import { CLAUDE_CHAT_MODELS, OPENAI_MODELS } from '/common/adapters'
 import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
 import { sanitiseAndTrim } from '/common/requests/util'
+import { GenSettings } from '/common/types/presets'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -50,8 +51,13 @@ const encoder = () => getTokenCounter('claude', '')
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { members, user, log, guest, gen, isThirdParty } = opts
   const claudeModel = gen.claudeModel ?? defaultPresets.claude.claudeModel
-  const base = getBaseUrl(user, claudeModel, isThirdParty)
-  if (!user.claudeApiKey && !base.changed) {
+  const base = getBaseUrl(user, gen, claudeModel, isThirdParty)
+
+  const hasKey = isThirdParty
+    ? !!(gen.thirdPartyKey || user.thirdPartyPassword)
+    : !!user.claudeApiKey
+
+  if (!hasKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
@@ -147,9 +153,15 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User, model: string, isThirdParty?: boolean) {
-  if (isThirdParty && user.thirdPartyFormat === 'claude' && user.koboldUrl) {
-    return { url: user.koboldUrl, changed: true }
+function getBaseUrl(
+  user: AppSchema.User,
+  gen: Partial<GenSettings>,
+  model: string,
+  isThirdParty?: boolean
+) {
+  if (isThirdParty && user.thirdPartyFormat === 'claude') {
+    const url = gen.thirdPartyUrl || user.koboldUrl
+    return { url, changed: true }
   }
 
   if (CLAUDE_CHAT_MODELS[model]) {
