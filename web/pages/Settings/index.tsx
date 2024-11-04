@@ -142,7 +142,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           </div>
 
           <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
-            <UISettings state={store} setter={setStore} />
+            <UISettings />
           </div>
 
           <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>

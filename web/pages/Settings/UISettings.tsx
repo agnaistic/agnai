@@ -11,12 +11,11 @@ import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
-import { AppSchema, UI } from '/common/types'
+import { UI } from '/common/types'
 import { Save } from 'lucide-solid'
 import { Card } from '/web/shared/Card'
 import Sortable, { SortItem } from '/web/shared/Sortable'
 import { defaultUIsettings } from '/common/types/ui'
-import { SetStoreFunction } from 'solid-js/store'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -30,10 +29,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   trash: 'Delete',
 }
 
-const UISettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
-}> = () => {
+const UISettings: Component<{}> = () => {
   const state = userStore()
   const chars = characterStore()
 
