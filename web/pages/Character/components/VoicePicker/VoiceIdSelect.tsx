@@ -2,6 +2,8 @@ import { TTSService } from '../../../../../common/types/texttospeech-schema'
 import { voiceStore } from '../../../../store/voice'
 import { Component, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Select, { Option } from '../../../../shared/Select'
+import Button from '/web/shared/Button'
+import { RefreshCcw } from 'lucide-solid'
 
 export const VoiceIdSelect: Component<{
   service: TTSService
@@ -11,26 +13,34 @@ export const VoiceIdSelect: Component<{
   const state = voiceStore((s) => ({ list: s.voices }))
 
   const [options, setOptions] = createSignal<Option[]>([])
+  const [load, setLoad] = createSignal(false)
+
+  const loadVoices = async () => {
+    setLoad(true)
+    await voiceStore.getVoices(props.service).catch(() => null)
+    setLoad(false)
+  }
 
   createEffect(() => {
     voiceStore.getVoices(props.service)
   })
 
-  const list = createMemo(() => state.list[props.service])
-
   createEffect(
-    on(list, (list) => {
-      let voicesList: Option[]
-      if (!list) {
-        voicesList = [{ value: '', label: 'Voices loading...' }]
-      } else {
-        voicesList = list.map((v) => ({ value: v.id, label: v.label }))
+    on(
+      () => state.list[props.service],
+      (list) => {
+        let voicesList: Option[]
+        if (!list) {
+          voicesList = [{ value: '', label: 'Voices loading...' }]
+        } else {
+          voicesList = list.map((v) => ({ value: v.id, label: v.label }))
+        }
+        if (!props.value && list?.length) {
+          props.onChange(list[0].id)
+        }
+        setOptions(voicesList)
       }
-      if (!props.value && list?.length) {
-        props.onChange(list[0].id)
-      }
-      setOptions(voicesList)
-    })
+    )
   )
 
   const onVoiceChanged = (ev: { value: string }) => {
@@ -39,13 +49,19 @@ export const VoiceIdSelect: Component<{
 
   return (
     <>
-      <Select
-        fieldName="voiceId"
-        items={options()}
-        value={props.value}
-        label="Voice"
-        onChange={onVoiceChanged}
-      ></Select>
+      <div class="flex items-end gap-1">
+        <Select
+          fieldName="voiceId"
+          items={options()}
+          value={props.value}
+          label="Voice"
+          onChange={onVoiceChanged}
+          disabled={load()}
+        />
+        <Button onClick={loadVoices}>
+          <RefreshCcw />
+        </Button>
+      </div>
     </>
   )
 }

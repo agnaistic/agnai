@@ -10,6 +10,7 @@ import AgnaisticSettings from './AgnaisticSettings'
 import { isAgnaisticSpeechAllowed } from '/web/shared/Audio/speech'
 import { AppSchema } from '/common/types/index'
 import { SetStoreFunction } from 'solid-js/store'
+import { applyStoreProperty } from '/web/shared/util'
 
 const ttsServiceTabs = {
   agnaistic: 'Agnaistic',
@@ -59,6 +60,12 @@ export const VoiceSettings: Component<{
             helperText="Whether to show the microphone button."
             fieldName="speechToTextEnabled"
             value={props.state.speechtotext?.enabled ?? true}
+            onChange={(ev) =>
+              props.setter(
+                'speechtotext',
+                applyStoreProperty(props.state.speechtotext, 'enabled', ev)
+              )
+            }
           />
 
           <Toggle
@@ -66,6 +73,12 @@ export const VoiceSettings: Component<{
             helperText="Whether to send the message when a sentence has been completed."
             fieldName="speechToTextAutoSubmit"
             value={props.state.speechtotext?.autoSubmit ?? true}
+            onChange={(ev) =>
+              props.setter(
+                'speechtotext',
+                applyStoreProperty(props.state.speechtotext, 'autoSubmit', ev)
+              )
+            }
           />
 
           <Toggle
@@ -73,6 +86,12 @@ export const VoiceSettings: Component<{
             helperText="Whether to re-start recording after a message has been received."
             fieldName="speechToTextAutoRecord"
             value={props.state.speechtotext?.autoRecord ?? true}
+            onChange={(ev) =>
+              props.setter(
+                'speechtotext',
+                applyStoreProperty(props.state.speechtotext, 'autoRecord', ev)
+              )
+            }
           />
         </Show>
 
@@ -87,6 +106,12 @@ export const VoiceSettings: Component<{
           helperText="Characters with a configured voice will speak automatically."
           fieldName="textToSpeechEnabled"
           value={props.state.texttospeech?.enabled ?? true}
+          onChange={(ev) =>
+            props.setter(
+              'texttospeech',
+              applyStoreProperty(props.state.texttospeech, 'enabled', ev)
+            )
+          }
         />
 
         <Toggle
@@ -94,6 +119,12 @@ export const VoiceSettings: Component<{
           helperText="Skips text in asterisks and parenthesis."
           fieldName="textToSpeechFilterActions"
           value={props.state.texttospeech?.filterActions ?? true}
+          onChange={(ev) =>
+            props.setter(
+              'texttospeech',
+              applyStoreProperty(props.state.texttospeech, 'filterActions', ev)
+            )
+          }
         />
 
         <Divider />
