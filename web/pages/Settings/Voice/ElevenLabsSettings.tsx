@@ -22,7 +22,7 @@ const ElevenLabsSettings: Component<{
         }
         type="password"
         value={props.state.elevenLabsApiKey}
-        onChange={(ev) => props.setter('elevenLabsApiKey', props.state.elevenLabsApiKey)}
+        onChange={(ev) => props.setter('elevenLabsApiKey', ev.currentTarget.value)}
       />
 
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('elevenlabs')}>
