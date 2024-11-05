@@ -1,6 +1,6 @@
 import { TTSService } from '../../../../../common/types/texttospeech-schema'
 import { voiceStore } from '../../../../store/voice'
-import { Component, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, createEffect, createSignal, on } from 'solid-js'
 import Select, { Option } from '../../../../shared/Select'
 import Button from '/web/shared/Button'
 import { RefreshCcw } from 'lucide-solid'
