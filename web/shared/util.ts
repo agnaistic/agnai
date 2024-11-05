@@ -44,7 +44,7 @@ export type ComponentEmitter<T extends string> = {
 export type ComponentSubscriber<T> = (event: T, callback: () => any) => void
 
 export function createEmitter<T extends string>(...events: T[]) {
-  const emit: any = {}
+  let emit: any = {}
   const listeners: Array<{ event: T; callback: () => void }> = []
 
   const on = (event: T, callback: () => void) => {
@@ -59,12 +59,12 @@ export function createEmitter<T extends string>(...events: T[]) {
     }
   }
 
-  const emitter: ComponentEmitter<T> = {
-    emit,
-    on,
-  }
+  onCleanup(() => {
+    listeners.length = 0
+    emit = undefined
+  })
 
-  return emitter
+  return { emit, on } as ComponentEmitter<T>
 }
 
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {
@@ -722,6 +722,29 @@ export function applyDotProperty<T>(obj: T, property: string, value: any) {
   }
 
   return obj
+}
+
+export function applyStoreProperty<T>(obj: T, property: string, value: any) {
+  const props = property.split('.')
+
+  let base: any = JSON.parse(JSON.stringify(obj))
+  let ref: any = base
+
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i]
+    if (i === props.length - 1) {
+      ref[prop] = value
+      break
+    }
+
+    if (!ref[prop]) {
+      ref[prop] = {}
+    }
+
+    ref = ref[prop]
+  }
+
+  return base
 }
 
 export function appendFormOptional(

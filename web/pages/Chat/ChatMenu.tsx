@@ -127,7 +127,7 @@ const ChatNav: Component<NavProps> = (props) => {
 
       <Show when={canModel()}>
         <div class="flex w-full justify-center">
-          <AgnaisticModel inherit={props.ctx.preset} />
+          <AgnaisticModel />
         </div>
       </Show>
 

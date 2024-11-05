@@ -23,7 +23,6 @@ export const CustomSelect: Component<{
   modalTitle?: string | JSX.Element
   label?: string | JSX.Element
   helperText?: string | JSX.Element
-  fieldName?: string
   selected: any | undefined
   hide?: boolean
   parentClass?: string
@@ -31,7 +30,6 @@ export const CustomSelect: Component<{
   emitter?: ComponentSubscriber<'close'>
   search?: (value: string, search: string) => boolean
 }> = (props) => {
-  let ref: HTMLInputElement
   const [open, setOpen] = createSignal(false)
 
   onMount(() => {
@@ -41,9 +39,6 @@ export const CustomSelect: Component<{
   })
 
   const onSelect = (opt: CustomOption) => {
-    if (ref) {
-      ref.value = opt.value
-    }
     props.onSelect(opt)
     setOpen(false)
   }
@@ -63,16 +58,6 @@ export const CustomSelect: Component<{
       class={`max-w-full ${props.parentClass || ''}`}
       classList={{ ...props.classList, hidden: props.hide }}
     >
-      <Show when={props.fieldName}>
-        <input
-          ref={ref!}
-          type="hidden"
-          id={props.fieldName}
-          name={props.fieldName}
-          value={props.value}
-        />
-      </Show>
-
       <div class="flex flex-col text-sm">
         <FormLabel label={props.label} helperText={props.helperText} />
 

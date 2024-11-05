@@ -1,12 +1,11 @@
 import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { chatStore, presetStore, settingStore, userStore } from '/web/store'
-import { AppSchema } from '/common/types'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import { SubscriptionModelLevel, SubscriptionModelOption } from '/common/types/presets'
 import { ChevronDown } from 'lucide-solid'
 import { SubCTA } from '/web/Navigation'
-import { createEmitter } from '../util'
+import { applyStoreProperty, createEmitter } from '../util'
 import { isDefaultPreset } from '/common/presets'
 import { Field } from './Fields'
 import { useAppContext } from '/web/store/context'
@@ -16,7 +15,11 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const [ctx] = useAppContext()
 
   const onSave = (value: string) => {
-    if (props.noSave) return
+    if (props.noSave) {
+      const next = applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', value)
+      props.setter('registered', next)
+      return
+    }
     presetStore.updateRegisterPresetProp(props.state._id, 'agnaistic', 'subscriptionId', value)
   }
 
@@ -24,17 +27,16 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
     on(
       () => ctx.preset?.registered?.agnaistic?.subscriptionId,
       (id) => {
-        if (!id) return
+        if (!ctx.preset?._id || !id) return
+        if (ctx.preset._id !== props.state._id) return
+
         const curr = props.state.registered?.agnaistic?.subscriptionId
         if (id === curr) return
 
-        props.setter('registered', {
-          ...props.state.registered,
-          agnaistic: {
-            ...props.state.registered?.agnaistic,
-            subscriptionId: id,
-          },
-        })
+        props.setter(
+          'registered',
+          applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', id)
+        )
       }
     )
   )
@@ -76,7 +78,6 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         options={opts()}
         onSelect={(ev) => onSave(ev.value)}
         value={props.state.registered?.agnaistic?.subscriptionId}
-        fieldName="registered.agnaistic.subscriptionId"
         selected={props.state.registered?.agnaistic?.subscriptionId}
         emitter={emitter.on}
       />
@@ -84,13 +85,15 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   )
 }
 
-export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = (props) => {
-  const [selected, setSelected] = createSignal(props.inherit?.registered?.agnaistic?.subscriptionId)
+export const AgnaisticModel: Component = (props) => {
+  const [ctx] = useAppContext()
+
+  const [selected, setSelected] = createSignal(ctx.preset?.registered?.agnaistic?.subscriptionId)
   const opts = useModelOptions()
 
   createEffect(
     on(
-      () => props.inherit?.registered?.agnaistic?.subscriptionId,
+      () => ctx.preset?.registered?.agnaistic?.subscriptionId,
       (id) => {
         setSelected(id)
       }
@@ -100,9 +103,9 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
   const onSave = (opt: CustomOption) => {
     const chat = chatStore.getState().active
 
-    if (isDefaultPreset(props.inherit?._id)) {
+    if (isDefaultPreset(ctx.preset?._id)) {
       const create = {
-        ...props.inherit,
+        ...ctx.preset,
         name: `My Preset`,
         service: 'agnaistic' as const,
         chatId: chat?.chat._id,
@@ -114,14 +117,14 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
       }
 
       presetStore.createPreset(create, (preset) => {
-        if (!chat?.chat._id) return
-        chatStore.setChat(chat.chat._id, { genPreset: preset._id, genSettings: undefined })
+        if (!ctx.chat?._id) return
+        chatStore.setChat(ctx.chat._id, { genPreset: preset._id, genSettings: undefined })
       })
       return
     }
 
-    presetStore.updatePreset(props.inherit?._id!, {
-      registered: { ...props.inherit?.registered, agnaistic: { subscriptionId: opt.value } },
+    presetStore.updatePreset(ctx.preset?._id!, {
+      registered: { ...ctx.preset?.registered, agnaistic: { subscriptionId: opt.value } },
     })
   }
 
@@ -143,7 +146,7 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
   const emitter = createEmitter('close')
 
   return (
-    <Show when={props.inherit} fallback={null}>
+    <Show when={ctx.preset} fallback={null}>
       <CustomSelect
         size="sm"
         buttonLabel={label()}
@@ -157,8 +160,7 @@ export const AgnaisticModel: Component<{ inherit?: AppSchema.UserGenPreset }> = 
         }
         options={opts()}
         onSelect={onSave}
-        value={props.inherit?.registered?.agnaistic?.subscriptionId}
-        fieldName="agnaistic_modelId"
+        value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
         emitter={emitter.on}
       />

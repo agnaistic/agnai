@@ -319,7 +319,6 @@ export const FeatherlessModels: Field = (props) => {
     <CustomSelect
       modalTitle="Select a Model"
       label="Featherless Model"
-      fieldName="featherlessModel"
       value={props.state.featherlessModel}
       options={options()}
       search={search}
@@ -361,7 +360,6 @@ export const GoogleModels: Field = (props) => {
     <CustomSelect
       modalTitle="Select a Model"
       label="Google Model"
-      fieldName="googleModel"
       value={props.state.googleModel || GOOGLE_MODELS.GEMINI_15_PRO.id}
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
