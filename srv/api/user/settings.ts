@@ -165,7 +165,7 @@ const validConfig = {
   hordeKey: 'string?',
   hordeModel: 'any?',
   hordeModels: ['string?'],
-  hordeWorkers: ['string'],
+  hordeWorkers: ['string?'],
   oaiKey: 'string?',
   mistralKey: 'string?',
   featherlessApiKey: 'string?',
@@ -281,10 +281,13 @@ export const updateConfig = handle(async ({ userId, body }) => {
   }
 
   const update: Partial<AppSchema.User> = {
-    hordeWorkers: body.hordeWorkers,
     hordeUseTrusted: body.hordeUseTrusted ?? false,
     defaultPreset: body.defaultPreset || '',
     useLocalPipeline: body.useLocalPipeline,
+  }
+
+  if (body.hordeWorkers) {
+    update.hordeWorkers = toArray(body.hordeWorkers)
   }
 
   if (body.disableLTM !== undefined) {
