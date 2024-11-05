@@ -176,3 +176,5 @@ $ pnpm run format:fix
 # runs the TypeScript compiler so any type errors will be shown
 $ pnpm run typecheck
 ```
+
+This project is tested with BrowserStack.
