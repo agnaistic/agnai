@@ -86,7 +86,7 @@ async function handleElevenLabsVoicesList(
   guestId: string | undefined
 ): Promise<VoiceListResponse['voices']> {
   const key = getKey(user, guestId)
-  const result = await needle('get', `${baseUrl}/voices`, {
+  const result = await needle('get', `${baseUrl}/voices?show_legacy=true`, {
     headers: {
       'xi-api-key': key,
       accept: 'application/json',
@@ -103,11 +103,15 @@ async function handleElevenLabsVoicesList(
 
   if (!body.voices) return []
 
-  return body.voices.map((voice) => ({
+  const voices = body.voices.map((voice) => ({
     id: voice.voice_id,
     label: voice.name,
     previewUrl: voice.preview_url,
   }))
+
+  voices.sort((l, r) => l.label.localeCompare(r.label))
+
+  return voices
 }
 
 async function handleElevenLabsModelsList(

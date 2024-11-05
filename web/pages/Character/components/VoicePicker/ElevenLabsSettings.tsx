@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, createEffect, createSignal, on, onMount } from 'solid-js'
 import { ElevenLabsModel, VoiceSettingForm } from '/common/types/texttospeech-schema'
 import RangeInput from '../../../../shared/RangeInput'
 import Select, { Option } from '../../../../shared/Select'
@@ -21,25 +21,26 @@ export const ElevenLabsSettings: Component<{
 
   const [modelOptions, setModelOptions] = createSignal<Option[]>([])
 
-  createEffect(() => {
+  onMount(() => {
     voiceStore.getVoiceModels('elevenlabs')
   })
 
-  const list = createMemo(() => state.list['elevenlabs'])
-
   createEffect(
-    on(list, (list) => {
-      let options: Option[]
-      if (!list || !list.length) {
-        options = [{ value: '', label: 'Models loading...' }]
-      } else {
-        options = list.map((m) => ({ value: m.id, label: m.label }))
+    on(
+      () => state.list.elevenlabs,
+      (list) => {
+        let options: Option[]
+        if (!list || !list.length) {
+          options = [{ value: '', label: 'Models loading...' }]
+        } else {
+          options = list.map((m) => ({ value: m.id, label: m.label }))
+        }
+        if (!props.settings.model && options?.length) {
+          update({ model: options[0].value as ElevenLabsModel })
+        }
+        setModelOptions(options)
       }
-      if (!props.settings.model && options?.length) {
-        update({ model: options[0].value as ElevenLabsModel })
-      }
-      setModelOptions(options)
-    })
+    )
   )
 
   return (
