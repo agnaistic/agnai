@@ -8,7 +8,10 @@ const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
 const indexFile = path.resolve(__dirname, '../dist/index.html')
 const outFile = path.resolve(__dirname, '../dist/index.html')
 
-let content = fs.readFileSync(indexFile).toString().replace('{{unknown}}', process.env.GITHUB_SHA)
+let content = fs
+  .readFileSync(indexFile)
+  .toString()
+  .replace('{{unknown}}",', process.env.GITHUB_SHA + '";')
 
 if (inject) {
   for (const tag of tags) {
