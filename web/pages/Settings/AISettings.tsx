@@ -119,7 +119,7 @@ const AISettings: Component<{
           value={!props.state.disableLTM}
           label="Enable Embeddings/Long-Term Memory"
           helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
-          onChange={(ev) => props.setter('disableLTM', ev)}
+          onChange={(ev) => props.setter('disableLTM', !ev)}
         />
 
         <Show when={!canUseApi()}>
