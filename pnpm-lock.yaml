@@ -262,6 +262,9 @@ devDependencies:
   js-cookie:
     specifier: ^3.0.1
     version: 3.0.1
+  jwt-decode:
+    specifier: ^4.0.0
+    version: 4.0.0
   libsodium-wrappers-sumo:
     specifier: ^0.7.11
     version: 0.7.11
@@ -6053,6 +6056,11 @@ packages:
       jwa: 2.0.0
       safe-buffer: 5.2.1
     dev: false
+
+  /jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==, tarball: https://registry.npmjs.org/jwt-decode/-/jwt-decode-4.0.0.tgz}
+    engines: {node: '>=18'}
+    dev: true
 
   /libsodium-sumo@0.7.11:
     resolution: {integrity: sha512-bY+7ph7xpk51Ez2GbE10lXAQ5sJma6NghcIDaSPbM/G9elfrjLa0COHl/7P6Wb/JizQzl5UQontOOP1z0VwbLA==}

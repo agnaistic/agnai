@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
+import { jwtDecode } from 'jwt-decode'
 
 let socketId = ''
 
@@ -226,8 +227,7 @@ export function getUserId() {
 }
 
 function getTokenBody(jwt: string) {
-  const [_head, body, _sign] = jwt.split('.')
-  const data = JSON.parse(window.atob(body))
+  const data = jwtDecode(jwt)
   return data as { admin: boolean; exp: number; iat: number; userId: string; username: string }
 }
 
