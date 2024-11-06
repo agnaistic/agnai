@@ -508,7 +508,7 @@ const AgnaiSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<Im
   )
 
   const model = createMemo(() => {
-    const original = props.cfg?.agnai?.model
+    const original = props.cfg.agnai?.model
     const id =
       settings.models.length === 1
         ? settings.models[0].id || settings.models[0].name
