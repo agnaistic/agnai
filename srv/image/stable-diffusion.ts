@@ -126,7 +126,13 @@ async function getConfig({ user, settings, override }: ImageRequestOpts): Promis
     `model=${temp?.name || model.name}`,
   ]
 
-  return { kind: 'agnai', host: srv.imagesHost, params: `?${params.join('&')}`, model, temp }
+  return {
+    kind: 'agnai',
+    host: srv.imagesHost,
+    params: `?${params.join('&')}`,
+    model: temp || model,
+    temp,
+  }
 }
 
 function getPayload(
@@ -144,16 +150,16 @@ function getPayload(
     // hr_scale: 1.5,
     // hr_second_pass_steps: 15,
     // hr_upscaler: "",
-    clip_skip: opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
-    height: opts.settings?.height ?? model?.init.height ?? 1024,
-    width: opts.settings?.width ?? model?.init.width ?? 1024,
+    clip_skip: opts.params?.clip_skip ?? opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
+    height: opts.params?.height ?? opts.settings?.height ?? model?.init.height ?? 1024,
+    width: opts.params?.width ?? opts.settings?.width ?? model?.init.width ?? 1024,
     n_iter: 1,
     batch_size: 1,
-    negative_prompt: opts.negative,
-    sampler_name: (SD_SAMPLER_REV as any)[sampler],
-    cfg_scale: opts.settings?.cfg ?? model?.init.cfg ?? 9,
+    negative_prompt: opts.params?.negative ?? opts.negative,
+    sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
+    cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
     seed: Math.trunc(Math.random() * 1_000_000_000),
-    steps: opts.settings?.steps ?? model?.init.steps ?? 28,
+    steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
     save_images: false,
     send_images: true,
@@ -161,10 +167,10 @@ function getPayload(
   }
 
   if (model) {
-    payload.steps = Math.min(model.limit.steps, payload.steps)
-    payload.cfg_scale = Math.min(model.limit.cfg, payload.cfg_scale)
-    payload.width = Math.min(model.limit.width, payload.width)
-    payload.height = Math.min(model.limit.height, payload.height)
+    payload.steps = Math.min(+model.limit.steps, payload.steps)
+    payload.cfg_scale = Math.min(+model.limit.cfg, payload.cfg_scale)
+    payload.width = Math.min(+model.limit.width, payload.width)
+    payload.height = Math.min(+model.limit.height, payload.height)
   }
 
   // width and height must be divisible by 64

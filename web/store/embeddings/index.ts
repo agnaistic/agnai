@@ -110,18 +110,20 @@ const handlers: {
     decodeCallbacks.delete(msg.id)
   },
   init: (type) => {
-    const user = getStore('user').getState()
-    const disableLTM = user.user?.disableLTM ?? true
-    if (type === 'embed') {
-      if (disableLTM) return
-      post('initSimilarity', { model: models.embedding })
-    }
+    try {
+      const user = getStore('user').getState()
+      const disableLTM = user.user?.disableLTM ?? true
+      if (type === 'embed') {
+        if (disableLTM) return
+        post('initSimilarity', { model: models.embedding })
+      }
 
-    if (type === 'image' && window.flags.caption) {
-      const httpCaptioning = models.captioning.startsWith('http')
-      if (disableLTM && !httpCaptioning) return
-      post('initCaptioning', { model: models.captioning })
-    }
+      if (type === 'image' && window.flags.caption) {
+        const httpCaptioning = models.captioning.startsWith('http')
+        if (disableLTM && !httpCaptioning) return
+        post('initCaptioning', { model: models.captioning })
+      }
+    } catch (ex) {}
   },
   embedLoaded: async () => {
     EMBED_READY = true

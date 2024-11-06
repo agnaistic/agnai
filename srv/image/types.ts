@@ -17,6 +17,15 @@ export type ImageGenerateRequest = {
   characterId?: string
   requestId?: string
   parentId: string | undefined
+  params?: {
+    clip_skip?: number
+    cfg_scale?: number
+    width?: number
+    height?: number
+    negative?: string
+    steps?: number
+    sampler?: string
+  }
 }
 
 export type ImageRequestOpts = {
@@ -25,6 +34,7 @@ export type ImageRequestOpts = {
   negative: string
   settings: ImageSettings | undefined
   override?: string
+  params?: ImageGenerateRequest['params']
 }
 
 export type ImageAdapter = (

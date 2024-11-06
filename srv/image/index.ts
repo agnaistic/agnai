@@ -161,7 +161,7 @@ async function runImageGenerate(options: {
     switch (imageSettings?.type || 'horde') {
       case 'novel':
         image = await handleNovelImage(
-          { user, prompt, negative, settings: imageSettings },
+          { user, prompt, negative, settings: imageSettings, params: opts.params },
           log,
           guestId
         )
@@ -170,7 +170,14 @@ async function runImageGenerate(options: {
       case 'sd':
       case 'agnai':
         image = await handleSDImage(
-          { user, prompt, negative, settings: imageSettings, override: opts.model },
+          {
+            user,
+            prompt,
+            negative,
+            settings: imageSettings,
+            override: opts.model,
+            params: opts.params,
+          },
           log,
           guestId
         )
@@ -179,7 +186,7 @@ async function runImageGenerate(options: {
       case 'horde':
       default:
         image = await handleHordeImage(
-          { user, prompt, negative, settings: imageSettings },
+          { user, prompt, negative, settings: imageSettings, params: opts.params },
           log,
           guestId
         )

@@ -26,6 +26,7 @@ const validImage = {
   cfg_scale: 'number?',
   clip_skip: 'number?',
   steps: 'number?',
+  sampler: 'string?',
 } as const
 
 const validInference = {
@@ -89,6 +90,8 @@ export const generateImageApi = wrap(async ({ authed, userId, log, body }) => {
       prompt: body.prompt,
       source: 'api',
       parentId: undefined,
+      params: body,
+      noAffix: true,
     },
     log
   )
