@@ -1,9 +1,9 @@
 {
+  "plugins": [],
   "presets": ["solid"],
   "env": {
     "development": {
       "presets": ["babel-preset-solid"]
-      // "plugins": ["module:solid-refresh/babel"]
     }
   }
 }
