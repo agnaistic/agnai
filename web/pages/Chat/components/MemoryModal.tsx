@@ -105,7 +105,7 @@ const ChatMemoryModal: Component<{
       <Button schema="secondary" onClick={props.close}>
         Close
       </Button>
-      <Button onClick={onSubmit} disabled={!state.entries.length}>
+      <Button onClick={onSubmit}>
         <Save />
         Save Memory Book
       </Button>
