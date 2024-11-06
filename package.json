@@ -8,6 +8,10 @@
     "agnaistic": "./srv/bin.js",
     "agnai": "./srv/bin.js"
   },
+  "browserslist": [
+    "iOS 13",
+    "> 5%"
+  ],
   "homepage": "https://github.com/agnaistic/agnai/issues",
   "files": [
     "poetry.lock",
@@ -153,6 +157,7 @@
     "assert": "^2.0.0",
     "babel-preset-solid": "^1.6.9",
     "browserify-zlib": "^0.2.0",
+    "browserslist": "^4.24.2",
     "buffer": "^5.5.0",
     "chai": "^4.3.7",
     "concurrently": "^7.6.0",
