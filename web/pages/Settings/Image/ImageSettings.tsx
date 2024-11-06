@@ -24,38 +24,44 @@ import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
 import Tabs, { useTabs } from '/web/shared/Tabs'
-import { getStrictForm } from '/web/shared/util'
 import Button from '/web/shared/Button'
 import { Save, X } from 'lucide-solid'
 import { RootModal } from '/web/shared/Modal'
 import { ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
+import { SetStoreFunction, createStore } from 'solid-js/store'
+import { applyStoreProperty } from '/web/shared/util'
 
-const imageForm = {
-  imageType: ['horde', 'sd', 'novel', 'agnai'],
-  imageSteps: 'number',
-  imageClipSkip: 'number',
-  imageCfg: 'number',
-  imageWidth: 'number',
-  imageHeight: 'number',
-  imagePrefix: 'string?',
-  imageSuffix: 'string?',
-  imageNegative: 'string?',
-  summariseChat: 'boolean?',
-  summaryPrompt: 'string?',
-
-  novelImageModel: 'string',
-  novelSampler: 'string',
-
-  hordeSampler: 'string',
-  hordeImageModel: 'string?',
-
-  sdUrl: 'string',
-  sdSampler: 'string',
-
-  agnaiModel: 'string?',
-  agnaiSampler: 'string?',
-} as const
+const init: ImageSettings = {
+  cfg: 7,
+  height: 1216,
+  width: 768,
+  steps: 28,
+  clipSkip: 2,
+  negative: '',
+  prefix: '',
+  suffix: 'full body shot, studio lighting',
+  summariseChat: true,
+  summaryPrompt: '',
+  template: '',
+  type: 'horde',
+  agnai: {
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+  },
+  horde: {
+    sampler: SD_SAMPLER['Euler a'],
+    model: '',
+  },
+  sd: {
+    sampler: SD_SAMPLER['Euler a'],
+    url: '',
+  },
+  novel: {
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+  },
+}
 
 export const ImageSettingsModal = () => {
   let formRef: any
@@ -67,37 +73,27 @@ export const ImageSettingsModal = () => {
     char: s.active?.char,
   }))
 
-  const isChat = isChatPage(true)
-  const [type, setType] = createSignal(state.user?.images?.type || 'horde')
+  const [store, setStore] = createStore(init)
 
-  onMount(() => {
-    settingStore.getServerConfig()
-  })
+  const isChat = isChatPage(true)
+
+  onMount(() => settingStore.getServerConfig())
 
   const tabs = createMemo(() => {
     const tabs = ['App']
-
     if (isChat()) {
-      if (entity.chat) {
-        tabs.push('Chat')
-      }
-
-      if (entity.char) {
-        tabs.push('Character')
-      }
+      if (entity.chat) tabs.push('Chat')
+      if (entity.char) tabs.push('Character')
     }
-
     return tabs
   })
 
   const tab = useTabs(
     tabs(),
-    isChat()
-      ? entity.chat?.imageSource === 'chat'
-        ? 1 //
-        : !entity.chat?.imageSource || entity.chat?.imageSource === 'settings'
-        ? 0
-        : 2
+    isChat() && entity.chat?.imageSource === 'chat'
+      ? 1
+      : entity.chat?.imageSource?.includes('character')
+      ? 2
       : 0
   )
 
@@ -112,7 +108,7 @@ export const ImageSettingsModal = () => {
 
   const agnaiModel = createMemo(() => {
     if (!canUseImages()) return
-    if (type() !== 'agnai') return
+    if (store.type !== 'agnai') return
 
     const id = state.user?.images?.agnai?.model
     return settings.config.serverConfig?.imagesModels?.find((m) => m.name === id)
@@ -137,7 +133,7 @@ export const ImageSettingsModal = () => {
       () => cfg(),
       (cfg) => {
         if (!cfg) return
-        setType(cfg.type)
+        setStore({ ...init, ...cfg })
       }
     )
   )
@@ -161,55 +157,24 @@ export const ImageSettingsModal = () => {
   const subclass = 'flex flex-col gap-4'
 
   const save = async () => {
-    const body = getStrictForm(formRef, imageForm)
-    const providers = {
-      horde: {
-        sampler: body.hordeSampler,
-        model: body.hordeImageModel || '',
-      },
-      novel: {
-        model: body.novelImageModel,
-        sampler: body.novelSampler,
-      },
-      sd: {
-        sampler: body.sdSampler,
-        url: body.sdUrl,
-      },
-      agnai: { model: body.agnaiModel || '', sampler: body.agnaiSampler || '' },
-    }
-    const payload = {
-      type: body.imageType,
-      cfg: body.imageCfg,
-      clipSkip: body.imageClipSkip,
-      height: body.imageHeight,
-      width: body.imageWidth,
-      steps: body.imageSteps,
-      negative: body.imageNegative,
-      prefix: body.imagePrefix,
-      suffix: body.imageSuffix,
-      summariseChat: body.summariseChat,
-      summaryPrompt: body.summaryPrompt,
-      ...providers,
-    }
-
     switch (tab.current()) {
       case 'App': {
-        await userStore.updatePartialConfig({ images: { ...payload, ...providers } })
+        await userStore.updatePartialConfig({ images: store })
         return
       }
 
       case 'Chat': {
-        chatStore.editChat(entity.chat?._id!, { imageSettings: payload }, undefined)
+        chatStore.editChat(entity.chat?._id!, { imageSettings: store }, undefined)
         return
       }
 
       case 'Character': {
-        characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: payload })
+        characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: store })
         return
       }
 
       default:
-        return state.user?.images
+        return
     }
   }
 
@@ -258,20 +223,20 @@ export const ImageSettingsModal = () => {
 
         <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
 
-        <div class={type() === 'novel' ? subclass : 'hidden'}>
-          <NovelSettings cfg={cfg() as ImageSettings} />
+        <div class={store.type === 'novel' ? subclass : 'hidden'}>
+          <NovelSettings cfg={store} setter={setStore} />
         </div>
 
-        <div class={type() === 'horde' ? subclass : 'hidden'}>
-          <HordeSettings cfg={cfg() as ImageSettings} />
+        <div class={store.type === 'horde' ? subclass : 'hidden'}>
+          <HordeSettings cfg={store} setter={setStore} />
         </div>
 
-        <div class={tab.current() === 'App' && type() === 'sd' ? subclass : 'hidden'}>
-          <SDSettings cfg={cfg() as ImageSettings} />
+        <div class={tab.current() === 'App' && store.type === 'sd' ? subclass : 'hidden'}>
+          <SDSettings cfg={store} setter={setStore} />
         </div>
 
-        <div class={type() === 'agnai' ? subclass : 'hidden'}>
-          <AgnaiSettings cfg={cfg() as ImageSettings} />
+        <div class={store.type === 'agnai' ? subclass : 'hidden'}>
+          <AgnaiSettings cfg={store} setter={setStore} />
         </div>
 
         <Divider />
@@ -279,11 +244,11 @@ export const ImageSettingsModal = () => {
         <Select
           fieldName="imageType"
           items={imageTypes()}
-          value={cfg()?.type ?? 'horde'}
-          onChange={(value) => setType(value.value as any)}
+          value={store.type ?? 'horde'}
+          onChange={(value) => setStore('type', value.value as any)}
         />
 
-        <Show when={type() === 'agnai'}>
+        <Show when={store.type === 'agnai'}>
           <SolidCard bg="rose-600">
             Refer to the recommended settings at the bottom of the page when using Agnaistic image
             models
@@ -295,9 +260,10 @@ export const ImageSettingsModal = () => {
           min={5}
           max={128}
           step={1}
-          value={cfg()?.steps ?? agnaiModel()?.init.steps ?? 50}
+          value={store.steps ?? agnaiModel()?.init.steps ?? 50}
           label="Sampling Steps"
           helperText="(Novel Anlas Threshold: 28)"
+          onChange={(ev) => setStore('steps', ev)}
         />
 
         <RangeInput
@@ -305,9 +271,10 @@ export const ImageSettingsModal = () => {
           min={0}
           max={4}
           step={1}
-          value={cfg()?.clipSkip ?? agnaiModel()?.init.clipSkip ?? 0}
+          value={store.clipSkip ?? agnaiModel()?.init.clipSkip ?? 0}
           label="Clip Skip"
           helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+          onChange={(ev) => setStore('clipSkip', ev)}
         />
 
         <RangeInput
@@ -315,9 +282,10 @@ export const ImageSettingsModal = () => {
           min={256}
           max={1280}
           step={128}
-          value={cfg()?.width ?? agnaiModel()?.init.width ?? 1024}
+          value={store.width ?? agnaiModel()?.init.width ?? 1024}
           label="Image Width"
           helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+          onChange={(ev) => setStore('width', ev)}
         />
 
         <RangeInput
@@ -325,62 +293,71 @@ export const ImageSettingsModal = () => {
           min={256}
           max={1280}
           step={128}
-          value={cfg()?.height ?? agnaiModel()?.init.height ?? 1024}
+          value={store.height ?? agnaiModel()?.init.height ?? 1024}
           label="Image Height"
           helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
+          onChange={(ev) => setStore('height', ev)}
         />
 
         <TextInput
           fieldName="imageCfg"
-          value={cfg()?.cfg ?? agnaiModel()?.init.cfg ?? 9}
+          value={store.cfg ?? agnaiModel()?.init.cfg ?? 9}
           label="CFG Scale"
           helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
+          onChange={(ev) => setStore('cfg', +ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="imagePrefix"
-          value={cfg()?.prefix}
+          value={store.prefix}
           label="Prompt Prefix"
           helperText="(Optional) Text to prepend to your image prompt"
           placeholder={`E.g.: best quality, masterpiece`}
+          onChange={(ev) => setStore('prefix', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="imageSuffix"
-          value={cfg()?.suffix}
+          value={store.suffix}
           label="Prompt Suffix"
           helperText="(Optional) Text to append to your image prompt"
           placeholder={`E.g.: full body, visible legs, dramatic lighting`}
+          onChange={(ev) => setStore('suffix', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="imageNegative"
-          value={cfg()?.negative}
           label="Negative Prompt"
           helperText="(Optional) Negative Prompt"
           placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
+          value={store.negative}
+          onChange={(ev) => setStore('negative', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="summaryPrompt"
-          value={cfg()?.summaryPrompt}
           label="Summary Prompt"
           helperText='When summarising the chat to an image caption, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
           placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
+          value={store.summaryPrompt}
+          onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
         />
 
         <Toggle
           fieldName="summariseChat"
           label="Summarise Chat"
           helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (Agnai, NovelAI, OpenAI, Claude, etc)"
-          value={cfg()?.summariseChat}
+          value={store.summariseChat}
+          onChange={(ev) => setStore('summariseChat', ev)}
         />
       </form>
     </RootModal>
   )
 }
 
-const NovelSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
+const NovelSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<ImageSettings> }> = (
+  props
+) => {
   const state = userStore()
 
   const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({ label: key, value }))
@@ -405,18 +382,22 @@ const NovelSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
         items={models}
         label="Model"
         value={props.cfg?.novel?.model}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.model', ev.value))}
       />
       <Select
         fieldName="novelSampler"
         items={samplers}
         label="Sampler"
         value={props.cfg?.novel?.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.sampler', ev.value))}
       />
     </>
   )
 }
 
-const HordeSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
+const HordeSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<ImageSettings> }> = (
+  props
+) => {
   const cfg = settingStore()
 
   const models = createMemo(() => {
@@ -457,19 +438,23 @@ const HordeSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
         fieldName="hordeImageModel"
         items={models()}
         label="Model"
-        value={props.cfg?.horde?.model || 'stable_diffusion'}
+        value={props.cfg.horde?.model || 'stable_diffusion'}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.model', ev.value))}
       />
       <Select
         fieldName="hordeSampler"
         items={samplers}
         label="Sampler"
-        value={props.cfg?.horde?.sampler || SD_SAMPLER['DPM++ 2M']}
+        value={props.cfg.horde?.sampler || SD_SAMPLER['DPM++ 2M']}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.sampler', ev.value))}
       />
     </>
   )
 }
 
-const SDSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
+const SDSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<ImageSettings> }> = (
+  props
+) => {
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
     label: value,
     value: key,
@@ -482,19 +467,25 @@ const SDSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
         label="Stable Diffusion WebUI URL"
         helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
         placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-        value={props.cfg?.sd?.url}
+        value={props.cfg.sd?.url}
+        onChange={(ev) =>
+          props.setter(applyStoreProperty(props.cfg, 'sd.url', ev.currentTarget.value))
+        }
       />
       <Select
         fieldName="sdSampler"
         items={samplers}
         label="Sampler"
-        value={props.cfg?.sd?.sampler || SD_SAMPLER['DPM++ 2M']}
+        value={props.cfg.sd?.sampler || SD_SAMPLER['DPM++ 2M']}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.sampler', ev.value))}
       />
     </>
   )
 }
 
-const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => {
+const AgnaiSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<ImageSettings> }> = (
+  props
+) => {
   const settings = settingStore((s) => {
     const models = s.config.serverConfig?.imagesModels || []
     return {
@@ -543,18 +534,18 @@ const AgnaiSettings: Component<{ cfg: ImageSettings | undefined }> = (props) => 
         fieldName="agnaiModel"
         label="Agnaistic Image Model"
         items={settings.names}
-        value={curr()}
+        value={props.cfg.agnai?.model || settings.names[0]?.value}
         disabled={settings.models.length <= 1}
         classList={{ hidden: settings.models.length === 0 }}
-        onChange={(ev) => setCurr(ev.value)}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.model', ev.value))}
       />
 
       <Select
         fieldName="agnaiSampler"
         items={samplers()}
         label={`Sampler ${sampler()}`}
-        value={sampler()}
-        onChange={(ev) => setSampler(ev.value)}
+        value={props.cfg.agnai?.sampler}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.sampler', ev.value))}
       />
 
       <Show when={!!model()}>
