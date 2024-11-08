@@ -1,14 +1,4 @@
-import {
-  Component,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onMount,
-} from 'solid-js'
+import { Component, Match, Show, Switch, createEffect, createMemo, on, onMount } from 'solid-js'
 import {
   NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
@@ -494,25 +484,12 @@ const AgnaiSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<Im
     }
   })
 
-  const [curr, setCurr] = createSignal(props.cfg?.agnai?.model)
-  const [sampler, setSampler] = createSignal(props.cfg?.agnai?.sampler)
-
-  createEffect(
-    on(
-      () => props.cfg,
-      () => {
-        setCurr(props.cfg?.agnai?.model)
-        setSampler(props.cfg?.agnai?.sampler || SD_SAMPLER['Euler a'])
-      }
-    )
-  )
-
   const model = createMemo(() => {
     const original = props.cfg.agnai?.model
     const id =
       settings.models.length === 1
         ? settings.models[0].id || settings.models[0].name
-        : curr() || original
+        : props.cfg.agnai?.model || original
     const match = settings.models.find((m) => m.id === id || m.name === id)
     return match
   })
@@ -543,7 +520,7 @@ const AgnaiSettings: Component<{ cfg: ImageSettings; setter: SetStoreFunction<Im
       <Select
         fieldName="agnaiSampler"
         items={samplers()}
-        label={`Sampler ${sampler()}`}
+        label={`Sampler`}
         value={props.cfg.agnai?.sampler}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.sampler', ev.value))}
       />

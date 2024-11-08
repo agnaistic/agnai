@@ -1,4 +1,4 @@
-import { ArrowLeft, Trash, ArrowRight } from 'lucide-solid'
+import { ArrowLeft, Trash, ArrowRight, ImagePlus, Settings } from 'lucide-solid'
 import { Component, createEffect, createMemo, on, onMount, Show } from 'solid-js'
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
@@ -54,7 +54,10 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
           <RotateCcw size={size} />
         </Button> */}
         <Button size="sm" onClick={createAvatar} disabled={props.loading}>
-          Generate Image
+          Generate <ImagePlus size={20} />
+        </Button>
+        <Button size="sm" onClick={() => settingStore.imageSettings(true)}>
+          <Settings size={20} />
         </Button>
       </div>
     </div>

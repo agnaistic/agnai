@@ -17,7 +17,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={20}
           step={0.01}
-          value={props.state.dynatemp_range || 0}
+          value={props.state.dynatemp_range ?? 0}
           disabled={props.state.disabled}
           aiSetting={'dynatemp_range'}
           recommended={props.sub?.preset.dynatemp_range}
@@ -32,7 +32,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={20}
           step={0.01}
-          value={props.state.dynatemp_exponent || 1}
+          value={props.state.dynatemp_exponent ?? 1}
           disabled={props.state.disabled}
           aiSetting={'dynatemp_exponent'}
           recommended={props.sub?.preset.dynatemp_exponent}
@@ -46,7 +46,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={10}
           step={0.01}
-          value={props.state.smoothingFactor || 0}
+          value={props.state.smoothingFactor ?? 0}
           disabled={props.state.disabled}
           aiSetting={'smoothingFactor'}
           recommended={props.sub?.preset.smoothingFactor}
@@ -60,7 +60,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={1}
           max={5}
           step={0.01}
-          value={props.state.smoothingCurve || 1}
+          value={props.state.smoothingCurve ?? 1}
           disabled={props.state.disabled}
           aiSetting={'smoothingCurve'}
           recommended={props.sub?.preset.smoothingCurve}
@@ -84,7 +84,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={1}
           max={3}
           step={0.05}
-          value={props.state.cfgScale || 1}
+          value={props.state.cfgScale ?? 1}
           disabled={props.state.disabled}
           aiSetting={'cfgScale'}
           onChange={(ev) => props.setter('cfgScale', ev)}

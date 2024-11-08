@@ -7,7 +7,7 @@ import { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { NewCharacter, toastStore } from '/web/store'
 import { CHUB_URL } from '/web/store/chub'
 
-type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
+type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai' | 'chara'
 
 export const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 
@@ -86,6 +86,32 @@ export function jsonToCharacter(json: any): NewCharacter {
     }
   }
 
+  if (format === 'chara') {
+    const v2 = json.data || {}
+    const ext = v2.extensions || {}
+
+    return {
+      name: json.name,
+      description: json.description,
+      greeting: json.first_mes,
+      appearance: ext?.appearance,
+      creator: v2.creator,
+      persona: {
+        kind: 'text',
+        attributes: {
+          text: [[json.personality].filter((text) => !!text).join('\n')],
+        },
+      },
+      sampleChat: json.mes_example,
+      scenario: json.scenario,
+      originalAvatar: undefined,
+      systemPrompt: v2.system_prompt,
+      postHistoryInstructions: v2.post_history_instructions,
+      tags: Array.isArray(v2.tags) ? v2.tags : [],
+      alternateGreetings: Array.isArray(v2.alternate_greetings) ? v2.alternate_greetings : [],
+      extensions: ext,
+    }
+  }
   /**
    * format === 'tavernV2'
    * Tests, in the case we previously saved the lossless Agnai "Persona" data,
