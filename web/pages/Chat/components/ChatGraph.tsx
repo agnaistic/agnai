@@ -1,6 +1,6 @@
 import cyto from 'cytoscape'
 import dagre from 'cytoscape-dagre'
-import { Component, createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
+import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
 import { msgStore, settingStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'

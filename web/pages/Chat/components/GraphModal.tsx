@@ -5,7 +5,6 @@ import Modal from '/web/shared/Modal'
 import { useLocalStorage } from '/web/shared/hooks'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
-import { AppSchema } from '/common/types'
 import { GraphState } from './ChatGraph'
 import Message from './Message'
 
