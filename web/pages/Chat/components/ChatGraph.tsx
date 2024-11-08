@@ -1,22 +1,45 @@
 import cyto from 'cytoscape'
 import dagre from 'cytoscape-dagre'
-import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
 import { msgStore, settingStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'
 import { FeatureFlags } from '/web/store/flags'
+import { AppSchema } from '/common/types'
+import { SetStoreFunction } from 'solid-js/store'
 
 export { ChatGraph as default }
 
 cyto.use(dagre)
 
-export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short' | 'full' }> = (
-  props
-) => {
+export type GraphState = {
+  hovered: string
+  clicked: string
+  msg?: AppSchema.ChatMessage
+}
+
+export const ChatGraph: Component<{
+  leafId: string
+  dir?: string
+  nodes: 'short' | 'full'
+  state: GraphState
+  setter: SetStoreFunction<GraphState>
+}> = (props) => {
   let cyRef: any
 
   const graph = msgStore((s) => s.graph)
   const flags = settingStore((s) => s.flags)
+
+  createEffect(() => {
+    const id = props.state.hovered || props.state.clicked
+    if (!id) {
+      props.setter({ msg: undefined })
+      return
+    }
+
+    const msg = graph.tree[id]
+    props.setter({ msg: msg?.msg })
+  })
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
@@ -73,12 +96,26 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
 
     cy.on('click', 'node', function (this: any, evt) {
       const id = this.id()
+      props.setter('clicked', props.state.clicked === id ? '' : id)
       msgStore.fork(id)
     })
 
     cy.on('tap', 'node', function (this: any, evt) {
       const id = this.id()
+      props.setter('clicked', props.state.clicked === id ? '' : id)
       msgStore.fork(id)
+    })
+
+    cy.on('mouseover', 'node', function (this: any, evt) {
+      props.setter('hovered', this.id())
+      document.body.style.cursor = 'pointer'
+      this.style('border-color', getSettingColor('hl-200'))
+      this.style('border-width', '1')
+    })
+
+    cy.on('mouseout', 'node', function (this: any) {
+      document.body.style.cursor = ''
+      this.style('border-width', '0')
     })
 
     const win: any = window
@@ -127,7 +164,13 @@ export const ChatGraph: Component<{ leafId: string; dir?: string; nodes: 'short'
         const nodes = cy.nodes()
 
         nodes.each((ele) => {
-          const color = ele.id() === leafId ? 'hl-500' : 'bg-500'
+          const color =
+            ele.id() === leafId
+              ? 'green-500'
+              : graph.tree[ele.id()]?.msg.userId
+              ? 'bg-500'
+              : 'hl-500'
+
           ele.style({ 'background-color': getSettingColor(color) })
         })
       }
@@ -180,6 +223,8 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
           shape: smsg._id === root ? 'star' : 'ellipse',
           'background-color':
             root === smsg._id || leafId === smsg._id
+              ? getSettingColor('green-500')
+              : !smsg.userId
               ? getSettingColor('hl-500')
               : getSettingColor('bg-500'),
         },
@@ -193,7 +238,11 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
         data: { id: emsg._id, label: emsg._id.slice(0, 3) },
         style: {
           'background-color':
-            leafId === emsg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
+            leafId === emsg._id
+              ? getSettingColor('green-500')
+              : !emsg.userId
+              ? getSettingColor('hl-500')
+              : getSettingColor('bg-500'),
         },
       })
     }
