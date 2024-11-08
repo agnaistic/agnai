@@ -766,7 +766,7 @@ export function applyDotProperty<T>(obj: T, property: string, value: any) {
 export function applyStoreProperty<T>(obj: T, property: string, value: any) {
   const props = property.split('.')
 
-  let base: any = JSON.parse(JSON.stringify(obj || '{}'))
+  let base: any = JSON.parse(JSON.stringify(obj || {}))
   let ref: any = base
 
   for (let i = 0; i < props.length; i++) {
