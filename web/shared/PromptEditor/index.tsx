@@ -8,6 +8,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onMount,
 } from 'solid-js'
 import { FormLabel } from '../FormLabel'
@@ -162,9 +163,6 @@ const PromptEditor: Component<
 
   const presets = presetStore()
 
-  // const [templateId, setTemplateId] = createSignal('')
-  // const [input, setInput] = createSignal<string>(props.value || '')
-
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [template, setTemplate] = createSignal('')
 
@@ -211,10 +209,25 @@ const PromptEditor: Component<
     props.onChange?.({ prompt: ev.currentTarget.value, templateId: props.state?.promptTemplateId })
   }
 
-  createEffect(() => {
-    if (props.value === undefined) return
-    ref.value = props.value
-  })
+  /**
+   * Specifically for the .gaslight property only:
+   * If there is a `promptTemplateId` set, we need to assign the ref.value to the template prompt
+   * Otherwise use the `props.value` which is the gaslight template.
+   */
+  createEffect(
+    on(
+      () => [props.value, template(), props.state?.promptTemplateId, presets.templates],
+      () => {
+        if (props.state?.promptTemplateId) {
+          const template = presets.templates.find((t) => t._id === props.state?.promptTemplateId)
+          ref.value = template?.template || 'Loading...'
+          return
+        }
+
+        ref.value = props.value
+      }
+    )
+  )
 
   const usable = createMemo(() => {
     type Entry = [Interp, Placeholder]
