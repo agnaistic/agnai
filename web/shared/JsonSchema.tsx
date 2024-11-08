@@ -131,7 +131,7 @@ const SchemaField: Component<{
               { label: 'Enum', value: 'enum' },
             ]}
             value={props.item.type.type}
-            onChange={(ev) => props.update({ type: ev.value as any }, props.index)}
+            onChange={(ev) => props.updateType({ type: ev.value as any }, props.index)}
           />
           <TextInput
             placeholder="Name. E.g. brief_summary"
@@ -162,12 +162,16 @@ const SchemaField: Component<{
                 placeholder="(Optional) Title. E.g. Brief Chat Summary"
                 value={props.item.type.title}
                 parentClass="w-full"
+                onChange={(ev) => props.updateType({ title: ev.currentTarget.value }, props.index)}
               />
               <TextInput
                 fieldName={`${props.index}.description`}
                 value={props.item.type.description}
                 placeholder="(Optional) Description"
                 parentClass="w-1/2 hidden"
+                onChange={(ev) =>
+                  props.updateType({ description: ev.currentTarget.value }, props.index)
+                }
               />
             </div>
 
