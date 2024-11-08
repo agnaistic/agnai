@@ -402,6 +402,45 @@ export function formatDate(value: string | number | Date) {
   return `${month} ${day} ${time}`
 }
 
+export function toShortDuration(valueSecs: number | Date | string, parts?: number) {
+  if (valueSecs instanceof Date) {
+    valueSecs = Math.round((Date.now() - valueSecs.valueOf()) / 1000)
+  } else if (typeof valueSecs === 'string') {
+    valueSecs = Math.round((Date.now() - new Date(valueSecs).valueOf()) / 1000)
+  }
+
+  if (valueSecs < 60) {
+    return '<1m'
+  }
+  const {
+    duration: [days, hours, minutes, seconds],
+  } = toRawDuration(valueSecs)
+
+  if (parts) {
+    const sects: string[] = []
+    if (days) sects.push(`${days}d`)
+    if (hours) sects.push(`${hours}h`)
+    if (minutes) sects.push(`${minutes}m`)
+    if (seconds) sects.push(`${seconds}s`)
+
+    return sects.slice(0, parts).join(' ')
+  }
+
+  if (days) {
+    return `${days}d`
+  }
+
+  if (hours) {
+    return `${hours}h`
+  }
+
+  if (minutes) {
+    return `${minutes}m`
+  }
+
+  return `${seconds}s`
+}
+
 export function toDuration(valueSecs: number | Date, full?: boolean) {
   if (valueSecs instanceof Date) {
     valueSecs = Math.round((Date.now() - valueSecs.valueOf()) / 1000)

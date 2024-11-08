@@ -7,6 +7,7 @@ import { getSettingColor } from '/web/shared/colors'
 import { FeatureFlags } from '/web/store/flags'
 import { AppSchema } from '/common/types'
 import { SetStoreFunction } from 'solid-js/store'
+import { toShortDuration } from '/web/shared/util'
 
 export { ChatGraph as default }
 
@@ -218,7 +219,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
       visited.add(smsg._id)
       elements.push({
         group: 'nodes',
-        data: { id: smsg._id, label: smsg._id.slice(0, 3) },
+        data: { id: smsg._id, label: toLabel(smsg) },
         style: {
           shape: smsg._id === root ? 'star' : 'ellipse',
           'background-color':
@@ -235,7 +236,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
       visited.add(emsg._id)
       elements.push({
         group: 'nodes',
-        data: { id: emsg._id, label: emsg._id.slice(0, 3) },
+        data: { id: emsg._id, label: toLabel(emsg) },
         style: {
           'background-color':
             leafId === emsg._id
@@ -266,7 +267,7 @@ function getAllElements(tree: ChatTree, leafId: string) {
   for (const node of Object.values(tree)) {
     elements.push({
       group: 'nodes',
-      data: { id: node.msg._id, label: node.msg._id.slice(0, 3) },
+      data: { id: node.msg._id, label: toLabel(node.msg) },
       style: {
         'background-color':
           leafId === node.msg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
@@ -369,4 +370,8 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
     // }
     return edges
   } while (true)
+}
+
+function toLabel(msg: AppSchema.ChatMessage) {
+  return toShortDuration(msg.createdAt, 1)
 }
