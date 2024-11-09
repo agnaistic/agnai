@@ -256,7 +256,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     `id=${opts.user._id}`,
     `model=${subPreset.subModel}`,
     `level=${level}`,
-  ].join('&')
+  ]
+    .filter((p) => !!p)
+    .join('&')
 
   const resp = gen.streamResponse
     ? await websocketStream({
@@ -292,6 +294,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     if (generated.value.error) {
       opts.log.error({ err: generated.value.error }, 'Agnaistic request failed')
       yield generated.value
+      await releaseLock(lockId)
       return
     }
 

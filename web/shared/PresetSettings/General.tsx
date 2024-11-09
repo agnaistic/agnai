@@ -13,7 +13,7 @@ import {
 import { Toggle } from '../Toggle'
 import { settingStore, userStore } from '../../store'
 import { Card } from '../Card'
-import { hidePresetSetting, isValidServiceSetting, serviceHasSetting } from '../util'
+import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
@@ -117,7 +117,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <ModelFormat state={props.state} setter={props.setter} sub={props.sub} />
+      <ModelFormat state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
 
       <Card hide={!serviceHasSetting(props.state, 'localRequests')}>
         <Toggle
@@ -126,7 +126,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
           service={props.state.service}
           format={props.state.thirdPartyFormat}
-          hide={hidePresetSetting(props.state, 'localRequests')}
+          hide={props.hides.localRequests}
           value={props.state.localRequests}
           onChange={(ev) => props.setter('localRequests', ev)}
         />
@@ -152,10 +152,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             helperText="No paths will be added to your URL."
             value={props.state.thirdPartyUrlNoSuffix}
             service={props.state.service}
-            hide={
-              hidePresetSetting(props.state, 'thirdPartyUrl') ||
-              props.state.thirdPartyModel === 'featherless'
-            }
+            hide={props.hides.thirdPartyFormat || props.state.thirdPartyModel === 'featherless'}
             onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
           />
         </div>
@@ -177,9 +174,19 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           )
         }
       >
-        <FeatherlessModels state={props.state} setter={props.setter} sub={props.sub} />
+        <FeatherlessModels
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+        />
 
-        <GoogleModels state={props.state} setter={props.setter} sub={props.sub} />
+        <GoogleModels
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+        />
 
         <Select
           fieldName="oaiModel"
@@ -188,7 +195,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which OpenAI model to use"
           value={props.state.oaiModel ?? defaultPresets.basic.oaiModel}
           disabled={props.state.disabled}
-          hide={hidePresetSetting(props.state, 'oaiModel')}
+          hide={props.hides.oaiModel}
           onChange={(ev) => props.setter('oaiModel', ev.value)}
         />
 
@@ -199,7 +206,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Mistral model to use"
           value={props.state.mistralModel ?? ''}
           disabled={props.state.disabled}
-          hide={hidePresetSetting(props.state, 'mistralModel')}
+          hide={props.hides.mistralModel}
           onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
 
@@ -210,7 +217,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.thirdPartyModel ?? ''}
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
-          hide={hidePresetSetting(props.state, 'thirdPartyModel')}
+          hide={props.hides.thirdPartyModel}
         />
 
         <Select
@@ -238,7 +245,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             items={novelModels()}
             value={props.state.novelModel || ''}
             disabled={props.state.disabled}
-            hide={hidePresetSetting(props.state, 'novelModel')}
+            hide={props.hides.novelModel}
             onChange={(ev) => props.setter('novelModel', ev.value)}
           />
           <Show when={cfg.flags.naiModel}>
@@ -246,7 +253,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
               fieldName="novelModelOverride"
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
-              hide={hidePresetSetting(props.state, 'novelModel')}
+              hide={props.hides.novelModel}
             />
           </Show>
         </div>
@@ -258,11 +265,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
           value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.state.disabled}
-          hide={
-            props.state.service !== 'claude' &&
-            props.state.service !== 'kobold' &&
-            props.state.thirdPartyFormat !== 'claude'
-          }
+          hide={props.hides.claudeModel}
           onChange={(ev) => props.setter('claudeModel', ev.value)}
         />
         <Show when={replicateModels().length > 1}>
@@ -276,7 +279,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                 <span>Publicly available language models.</span>
               </>
             }
-            hide={hidePresetSetting(props.state, 'replicateModelName')}
+            hide={props.hides.replicateModelName}
             onChange={(ev) => props.setter('replicateModelName', ev.value)}
           />
         </Show>
@@ -287,7 +290,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Which Replicate API input parameters to use."
           value={props.state.replicateModelType}
           disabled={!!props.state.replicateModelName || props.state.disabled}
-          hide={hidePresetSetting(props.state, 'replicateModelName')}
+          hide={props.hides.replicateModelName}
           onChange={(ev) => props.setter('replicateModelType', ev.value)}
         />
         <TextInput
@@ -297,7 +300,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           value={props.state.replicateModelVersion}
           placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
           disabled={!!props.state.replicateModelName || props.state.disabled}
-          hide={hidePresetSetting(props.state, 'replicateModelVersion')}
+          hide={props.hides.replicateModelName}
           onChange={(ev) => props.setter('replicateModelVersion', ev.currentTarget.value)}
         />
       </Card>
@@ -321,12 +324,19 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
         <ResponseLength
           state={props.state}
+          hides={props.hides}
           setter={props.setter}
           sub={props.sub}
           subMax={subMax()}
         />
 
-        <ContextSize state={props.state} setter={props.setter} sub={props.sub} subMax={subMax()} />
+        <ContextSize
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+          subMax={subMax()}
+        />
 
         <Temperature {...props} />
 
@@ -352,7 +362,12 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('streamResponse', ev)}
         />
-        <StoppingStrings state={props.state} setter={props.setter} sub={props.sub} />
+        <StoppingStrings
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+        />
         <Toggle
           fieldName="disableNameStops"
           label="Disable Name Stops"
@@ -361,7 +376,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setter('disableNameStops', ev)}
         />
 
-        <PhraseBias state={props.state} setter={props.setter} sub={props.sub} />
+        <PhraseBias state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
       </Card>
     </div>
   )

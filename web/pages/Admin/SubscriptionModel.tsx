@@ -72,7 +72,7 @@ export const SubscriptionModel: Component = () => {
   const [deleting, setDeleting] = createSignal(false)
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
   const [replacing, setReplacing] = createSignal(false)
-  const [state, setState] = getPresetEditor()
+  const [state, setState, hides] = getPresetEditor()
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -263,7 +263,6 @@ export const SubscriptionModel: Component = () => {
                     label="API Key"
                     helperText="(Optional) API Key for your AI service if applicable."
                     placeholder={state.subApiKeySet ? 'API Key is set' : 'API Key is not set'}
-                    type="password"
                     value={state.subApiKey}
                     onChange={(ev) => setState('subApiKey', ev.currentTarget.value)}
                     required
@@ -368,6 +367,7 @@ export const SubscriptionModel: Component = () => {
                   disabled={params.id === 'default'}
                   store={state}
                   setter={setState}
+                  hides={hides}
                   noSave
                 />
                 <div class="flex flex-row justify-end">

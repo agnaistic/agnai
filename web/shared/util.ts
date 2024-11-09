@@ -1,9 +1,9 @@
 import { createHooks, recommended } from '@css-hooks/solid'
 import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
-import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import type { Option } from './Select'
-import { Component, createEffect, createSignal, JSX, on, onCleanup } from 'solid-js'
+import { Component, createEffect, JSX, onCleanup } from 'solid-js'
 import type { UserState } from '../store'
 import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
@@ -678,48 +678,6 @@ export function getAISettingServices(prop?: keyof AppSchema.GenSettings) {
 
 function isPresetSetting(key: string): key is keyof PresetAISettings {
   return key in ADAPTER_SETTINGS === true
-}
-
-export function hidePresetSetting(
-  state: Pick<PresetState, 'service' | 'thirdPartyFormat' | 'presetMode'>,
-  prop?: keyof PresetAISettings
-) {
-  let initial = false
-  if (!prop) {
-    initial = false
-  } else if (state.presetMode && state.presetMode !== 'advanced') {
-    const enabled = MODE_SETTINGS[state.presetMode]?.[prop]
-    if (!enabled) initial = true
-  } else {
-    const valid = isValidServiceSetting(state, prop)
-    if (valid) initial = false
-    else initial = true
-  }
-
-  const [hide, setHide] = createSignal(initial)
-
-  createEffect(
-    on(
-      () => (state.service || '') + (state.thirdPartyFormat || '') + (state.presetMode || ''),
-      () => {
-        let next = false
-        if (!prop) {
-          next = false
-        } else if (state.presetMode && state.presetMode !== 'advanced') {
-          const enabled = MODE_SETTINGS[state.presetMode]?.[prop]
-          if (!enabled) next = true
-        } else {
-          const valid = isValidServiceSetting(state, prop)
-          if (valid) next = false
-          else next = true
-        }
-
-        setHide(next)
-      }
-    )
-  )
-
-  return hide()
 }
 
 export function isValidServiceSetting(

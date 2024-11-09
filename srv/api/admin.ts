@@ -99,12 +99,7 @@ const updateConfiguration = handle(async ({ body }) => {
       imagesModels: ['any'],
       supportEmail: 'string',
       googleClientId: 'string',
-      modPrompt: 'string',
-      modFieldPrompt: 'string',
-      modPresetId: 'string',
-      modSchema: 'any',
-      charlibPublish: ['off', 'users', 'subscribers', 'moderators', 'admins'],
-      charlibGuidelines: 'string',
+      stripeCustomerPortal: 'string',
     },
     body
   )

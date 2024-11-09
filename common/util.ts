@@ -18,6 +18,11 @@ export function findOne<T extends { _id: string }>(id: string, list: T[]): T | v
   }
 }
 
+export function round(value: number, places = 2) {
+  const pow = Math.pow(10, places)
+  return Math.round(value * pow) / pow
+}
+
 export function toArray<T>(values?: T | T[]): T[] {
   if (values === undefined) return []
   if (Array.isArray(values)) return values

@@ -58,6 +58,12 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
         />
 
         <TextInput
+          fieldName="stripeCustomerPortal"
+          label="Stripe Customer Portal"
+          value={state.config?.stripeCustomerPortal}
+        />
+
+        <TextInput
           fieldName="lockSeconds"
           type="number"
           label="Lock Duration (seconds)"

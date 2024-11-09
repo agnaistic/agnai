@@ -17,7 +17,7 @@ import Tabs from '../Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { AgnaisticSettings } from './Agnaistic'
 import { usePaneManager } from '../hooks'
-import { PresetProps, PresetState, PresetTab, SetPresetState } from './types'
+import { HideState, PresetProps, PresetState, PresetTab, SetPresetState } from './types'
 import { GeneralSettings } from './General'
 import { RegisteredSettings } from './Registered'
 import { PromptSettings } from './Prompt'
@@ -31,7 +31,7 @@ export { PresetSettings as default }
 type TempSetting = AdapterSetting & { value: any }
 
 const PresetSettings: Component<
-  PresetProps & { noSave: boolean; store: PresetState; setter: SetPresetState }
+  PresetProps & { noSave: boolean; store: PresetState; setter: SetPresetState; hides: HideState }
 > = (props) => {
   const settings = settingStore()
   const pane = usePaneManager()
@@ -103,6 +103,7 @@ const PresetSettings: Component<
 
         <AgnaisticSettings
           state={props.store}
+          hides={props.hides}
           setter={props.setter}
           noSave={props.noSave}
           sub={sub()}
@@ -135,7 +136,7 @@ const PresetSettings: Component<
           onChange={(ev) => props.setter('thirdPartyFormat', ev.value as ThirdPartyFormat)}
         />
 
-        <PresetMode state={props.store} setter={props.setter} sub={sub()} />
+        <PresetMode state={props.store} setter={props.setter} hides={props.hides} sub={sub()} />
 
         <RegisteredSettings
           service={props.store.service}
@@ -155,15 +156,45 @@ const PresetSettings: Component<
         selected={tab}
         tabs={tabs()}
       />
-      <GeneralSettings state={props.store} setter={props.setter} sub={sub()} tab={tabName()} />
+      <GeneralSettings
+        state={props.store}
+        hides={props.hides}
+        setter={props.setter}
+        sub={sub()}
+        tab={tabName()}
+      />
 
-      <PromptSettings state={props.store} setter={props.setter} sub={sub()} tab={tabName()} />
+      <PromptSettings
+        state={props.store}
+        hides={props.hides}
+        setter={props.setter}
+        sub={sub()}
+        tab={tabName()}
+      />
 
-      <MemorySettings state={props.store} setter={props.setter} sub={sub()} tab={tabName()} />
+      <MemorySettings
+        state={props.store}
+        hides={props.hides}
+        setter={props.setter}
+        sub={sub()}
+        tab={tabName()}
+      />
 
-      <SliderSettings state={props.store} setter={props.setter} sub={sub()} tab={tabName()} />
+      <SliderSettings
+        state={props.store}
+        hides={props.hides}
+        setter={props.setter}
+        sub={sub()}
+        tab={tabName()}
+      />
 
-      <ToggleSettings state={props.store} setter={props.setter} sub={sub()} tab={tabName()} />
+      <ToggleSettings
+        state={props.store}
+        hides={props.hides}
+        setter={props.setter}
+        sub={sub()}
+        tab={tabName()}
+      />
     </div>
   )
 }

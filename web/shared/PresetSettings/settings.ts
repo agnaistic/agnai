@@ -21,6 +21,7 @@ export const ADAPTER_SETTINGS: {
   tempLast: ['agnaistic', 'tabby', 'exllamav2'],
   dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite', 'ollama'],
   dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic', 'ollama'],
+  dryMultiplier: ['agnaistic', 'ooba', 'tabby'],
   smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
   smoothingCurve: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
@@ -31,6 +32,9 @@ export const ADAPTER_SETTINGS: {
   swipesPerGeneration: ['aphrodite'],
   epsilonCutoff: ['aphrodite'],
   etaCutoff: ['aphrodite'],
+
+  xtcProbability: ['agnaistic', 'tabby', 'ooba'],
+  xtcThreshold: ['agnaistic', 'tabby', 'ooba'],
 
   prefill: ['claude', 'openrouter', 'openai', 'openai-chat', 'gemini'],
 

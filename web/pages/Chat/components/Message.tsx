@@ -60,6 +60,7 @@ import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { Spinner } from '/web/shared/Loading'
+import { LogProbs } from './LogProbs'
 
 type MessageProps = {
   msg: SplitMessage
@@ -827,6 +828,7 @@ const Meta: Component<{
   return (
     <form class="flex w-full flex-col gap-2">
       <Card>
+        <LogProbs msg={props.msg} />
         <table class="text-sm">
           <Show when={props.msg.adapter}>
             <tr>
@@ -856,7 +858,7 @@ const Meta: Component<{
               </td>
             </tr>
           </Show>
-          <For each={Object.entries(props.msg.meta || {})}>
+          <For each={Object.entries(props.msg.meta || {}).filter(([key]) => key !== 'probs')}>
             {([key, value]) => (
               <tr>
                 <td class="pr-2">

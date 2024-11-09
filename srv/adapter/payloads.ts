@@ -4,6 +4,7 @@ import { clamp, neat } from '/common/util'
 import { JsonSchema, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { getEncoderByName } from '../tokenize'
+import { decryptText } from '../db/util'
 
 const chat_template = neat`
 {%- if messages[0]['role'] == 'system' -%}
@@ -102,6 +103,14 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       json_schema,
       imageData: opts.imageData,
       context_size: opts.contextSize,
+      xtc_threshold: gen.xtcThreshold,
+      xtc_probability: gen.xtcProbability,
+
+      dry_multiplier: gen.dryMultiplier,
+      dry_base: gen.dryBase,
+      dry_allowed_length: gen.dryAllowedLength,
+      dry_range: gen.dryRange,
+      dry_sequence_breakers: gen.drySequenceBreakers,
     }
 
     if (gen.dynatemp_range) {
@@ -113,6 +122,10 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       body.max_temp = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
       body.dynatemp_range = gen.dynatemp_range
       body.temp_exponent = gen.dynatemp_exponent
+    }
+
+    if (subscription?.preset?.subApiKey) {
+      body.api_key = decryptText(subscription.preset.subApiKey)
     }
 
     return body
@@ -273,6 +286,14 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       stream: gen.streamResponse,
       token_healing: gen.tokenHealing,
       temperature_last: gen.minP ? !!gen.tempLast : false,
+      xtc_threshold: gen.xtcThreshold,
+      xtc_probability: gen.xtcProbability,
+
+      dry_multiplier: gen.dryMultiplier,
+      dry_base: gen.dryBase,
+      dry_allowed_length: gen.dryAllowedLength,
+      dry_range: gen.dryRange,
+      dry_sequence_breakers: gen.drySequenceBreakers,
       json_schema,
     }
 
@@ -337,6 +358,14 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       smoothing_factor: gen.smoothingFactor,
       smoothing_curve: gen.smoothingCurve,
       tfs: gen.tailFreeSampling,
+      xtc_threshold: gen.xtcThreshold,
+      xtc_probability: gen.xtcProbability,
+
+      dry_multiplier: gen.dryMultiplier,
+      dry_base: gen.dryBase,
+      dry_allowed_length: gen.dryAllowedLength,
+      dry_range: gen.dryRange,
+      dry_sequence_breakers: gen.drySequenceBreakers,
     }
 
     if (gen.dynatemp_range) {

@@ -8,7 +8,6 @@ import Button from '/web/shared/Button'
 import { Page } from '/web/Layout'
 import Loading from '/web/shared/Loading'
 import Tabs, { useTabs } from '/web/shared/Tabs'
-import { CharLibrary } from './Config/Characters'
 import { General } from './Config/General'
 import { Voice } from './Config/Voice'
 import { Images } from './Config/Images'
@@ -26,7 +25,6 @@ const ServerConfiguration: Component = () => {
   const tab = useTabs(['General', 'Images', 'Voice', 'Characters'])
 
   const [slots, setSlots] = createSignal(state.config?.slots || '{}')
-  const [modschema, setModschema] = createSignal(state.config?.modSchema || [])
 
   if (!user.user?.admin) {
     nav('/')
@@ -45,7 +43,6 @@ const ServerConfiguration: Component = () => {
       () => {
         if (!state.config?.imagesModels) return
         models[1](state.config?.imagesModels.map(toIdentifiedModel))
-        setModschema(state.config.modSchema || {})
       }
     )
   )
@@ -74,12 +71,8 @@ const ServerConfiguration: Component = () => {
       maxGuidanceVariables: 'number',
       googleClientId: 'string',
       googleEnabled: 'boolean',
-      modPresetId: 'string',
-      modPrompt: 'string',
-      modFieldPrompt: 'string',
-      charlibGuidelines: 'string',
       lockSeconds: 'number',
-      charlibPublish: ['off', 'users', 'subscribers', 'moderators', 'admins'],
+      stripeCustomerPortal: 'string',
     })
 
     adminStore.updateServerConfig({
@@ -88,7 +81,6 @@ const ServerConfiguration: Component = () => {
       slots: slots(),
       imagesModels: models[0](),
       enabledAdapters: [],
-      modSchema: modschema(),
     })
   }
 
@@ -115,9 +107,6 @@ const ServerConfiguration: Component = () => {
             </div>
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'Images' }}>
               <Images models={models} />
-            </div>
-            <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'Characters' }}>
-              <CharLibrary setSchema={setModschema} />
             </div>
 
             <div class="flex justify-end">

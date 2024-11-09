@@ -267,7 +267,8 @@ export const generateMessageV2 = handle(async (req, res) => {
   let retries: string[] = []
   let error = false
   let adapter = 'local'
-  let meta = {}
+  let meta: Record<string, any> = {}
+  let probs: any
 
   if (body.response === undefined) {
     const { stream, ...metadata } = await createChatStream(
@@ -377,6 +378,11 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
   }
 
+  if (meta.probs) {
+    probs = meta.probs
+    delete meta.probs
+  }
+
   let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
   const parent = getNewMessageParent(body, userMsg)
   const updatedAt = new Date().toISOString()
@@ -425,6 +431,8 @@ export const generateMessageV2 = handle(async (req, res) => {
         name: replyAs.name,
       })
 
+      msg.meta.probs = probs
+
       sendMany(members, {
         type: 'message-created',
         requestId,
@@ -454,6 +462,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           json: hydration ? hydration : (null as any),
         })
         treeLeafId = body.replacing._id
+        meta.probs = probs
         sendMany(members, {
           type: 'message-retry',
           requestId,
@@ -482,6 +491,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           json: hydration,
           name: replyAs.name,
         })
+        msg.meta.probs = probs
         treeLeafId = requestId
         sendMany(members, {
           type: 'message-created',
@@ -504,6 +514,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         state: 'continued',
       })
       treeLeafId = body.continuing._id
+      meta.probs = probs
       sendMany(members, {
         type: 'message-retry',
         requestId,

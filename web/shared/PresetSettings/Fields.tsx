@@ -11,7 +11,6 @@ import { MODEL_FORMATS } from './General'
 import { defaultPresets } from '/common/default-preset'
 import { FormLabel } from '../FormLabel'
 import { SubscriptionModelLevel } from '/common/types/presets'
-import { hidePresetSetting } from '../util'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { CustomSelect } from '../CustomSelect'
@@ -114,7 +113,7 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
 
 export const SystemPrompt: Field = (props) => {
   return (
-    <Card classList={{ hidden: hidePresetSetting(props.state, 'systemPrompt') }}>
+    <Card classList={{ hidden: props.hides.systemPrompt }}>
       <FormLabel
         label="System Prompt"
         helperText={<>The task the AI is performing. Leave blank if uncertain.</>}
@@ -133,7 +132,7 @@ export const SystemPrompt: Field = (props) => {
 
 export const Jailbreak: Field = (props) => {
   return (
-    <Card classList={{ hidden: hidePresetSetting(props.state, 'ultimeJailbreak') }}>
+    <Card classList={{ hidden: props.hides.ultimeJailbreak }}>
       <FormLabel
         label="Jailbreak (UJB)"
         helperText={
@@ -172,7 +171,7 @@ export const ThirdPartyUrl: Field = (props) => {
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
       hide={
-        hidePresetSetting(props.state, 'thirdPartyUrl') ||
+        props.hides.thirdPartyUrl ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini'
@@ -204,7 +203,7 @@ export const ThirdPartyKey: Field = (props) => {
         value={props.state.thirdPartyKey}
         disabled={props.state.disabled}
         type="password"
-        hide={hidePresetSetting(props.state, 'thirdPartyKey')}
+        hide={props.hides.thirdPartyKey}
         onChange={(ev) => props.setter('thirdPartyKey', ev.currentTarget.value)}
       />
     </>

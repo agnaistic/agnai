@@ -53,9 +53,6 @@ export async function getAppConfig(user?: AppSchema.User) {
     configuration.imagesHost = ''
     configuration.ttsHost = ''
     configuration.ttsApiKey = ''
-    configuration.modFieldPrompt = ''
-    configuration.modPrompt = ''
-    configuration.modSchema = []
 
     configuration.imagesModels = filterImageModels(
       user!,

@@ -1,8 +1,11 @@
 import { SetStoreFunction, createStore } from 'solid-js/store'
-import { AIAdapter } from '/common/adapters'
+import { AIAdapter, MODE_SETTINGS, PresetAISettings } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
+import { createEffect, on } from 'solid-js'
+import { ADAPTER_SETTINGS } from './settings'
+import { isValidServiceSetting } from '../util'
 
 export type PresetProps = {
   disabled?: boolean
@@ -16,6 +19,7 @@ export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
 export type PresetTabProps = {
   state: PresetState
   setter: SetPresetState
+  hides: HideState
   sub: SubscriptionModelOption | undefined
   tab: string
 }
@@ -23,6 +27,8 @@ export type PresetTabProps = {
 export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {
   disabled?: boolean
 }
+
+export type HideState = ReturnType<typeof getPresetEditor>[2]
 
 export type SetPresetState = SetStoreFunction<PresetState>
 
@@ -43,7 +49,7 @@ export function getPresetForm(state: PresetState) {
 }
 
 export function getSubPresetForm(state: PresetState) {
-  const { disabled, ...form } = state
+  const { disabled, subApiKeySet, ...form } = state
 
   return { ...form, kind: 'subscription-setting' as const }
 }
@@ -65,9 +71,49 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   userId: '',
   allowGuestUsage: false,
   disabled: false,
+  xtcThreshold: 0,
+  xtcProbability: 0,
+  dryAllowedLength: 2,
+  dryBase: 1.75,
+  dryMultiplier: 0,
 }
 
 export function getPresetEditor() {
   const [store, setStore] = createStore(initPreset)
-  return [store, setStore] as const
+  const [hide, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>({})
+
+  createEffect(
+    on(
+      () => [store.service, store.thirdPartyFormat, store.presetMode],
+      () => {
+        const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
+
+        for (const key of keys) {
+          setHides(key, hidePresetSetting(store, key as any))
+        }
+      }
+    )
+  )
+
+  return [store, setStore, hide] as const
+}
+
+function hidePresetSetting(
+  state: Pick<PresetState, 'service' | 'thirdPartyFormat' | 'presetMode'>,
+  prop?: keyof PresetAISettings
+) {
+  let hide = false
+  if (!prop) {
+    hide = false
+  } else if (!isValidServiceSetting(state, prop)) {
+    console.log('eval:invalid', prop)
+    hide = true
+  } else if (state.presetMode && state.presetMode !== 'advanced') {
+    const enabled = MODE_SETTINGS[state.presetMode]?.[prop]
+    if (!enabled) {
+      hide = true
+    }
+  }
+
+  return hide
 }

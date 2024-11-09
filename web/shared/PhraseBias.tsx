@@ -3,7 +3,7 @@ import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
 import Button from './Button'
-import { hidePresetSetting, isValidServiceSetting } from './util'
+import { isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'
 import { Field } from './PresetSettings/Fields'
 
@@ -93,10 +93,8 @@ export const StoppingStrings: Field = (props) => {
     props.setter('stopSequences', next)
   }
 
-  const hide = createMemo(() => hidePresetSetting(props.state, 'stopSequences'))
-
   return (
-    <div classList={{ hidden: hide() }}>
+    <div classList={{ hidden: props.hides.stopSequences }}>
       <FormLabel
         label={
           <div class="flex gap-2">

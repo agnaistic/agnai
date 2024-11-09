@@ -4,41 +4,142 @@ import { defaultPresets } from '../../../common/presets'
 import { Card } from '../Card'
 import { A } from '@solidjs/router'
 import { PresetTabProps } from './types'
-import { hidePresetSetting } from '../util'
+import { HelpModal } from '../Modal'
 
 export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
-      <Card class="flex flex-col gap-4">
-        <RangeInput
-          fieldName="dynatemp_range"
-          label="Dynamic Temperature Range"
-          helperText="The range to use for dynamic temperature. When used, the actual temperature is allowed to be automatically adjusted dynamically between DynaTemp ± DynaTempRange. For example, setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3 and max of 0.5. (Put this value on 0 to disable its effect)"
-          min={0}
-          max={20}
-          step={0.01}
-          value={props.state.dynatemp_range ?? 0}
-          disabled={props.state.disabled}
-          aiSetting={'dynatemp_range'}
-          recommended={props.sub?.preset.dynatemp_range}
-          onChange={(ev) => props.setter('dynatemp_range', ev)}
-          hide={hidePresetSetting(props.state, 'dynatemp_range')}
-        />
+      <Card class="flex flex-col gap-1" bg="bg-600">
+        <div>Dynamic Temperature</div>
+        <div class="text-600 text-sm">
+          The range to use for dynamic temperature. When used, the actual temperature is allowed to
+          be automatically adjusted dynamically between DynaTemp ± DynaTempRange. For example,
+          setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3
+          and max of 0.5.
+        </div>
+        <div class="flex w-full gap-2">
+          <RangeInput
+            parentClass="w-1/2"
+            fieldName="dynatemp_range"
+            label="Range"
+            min={0}
+            max={20}
+            step={0.01}
+            value={props.state.dynatemp_range ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'dynatemp_range'}
+            onChange={(ev) => props.setter('dynatemp_range', ev)}
+            hide={props.hides.dynatemp_range}
+          />
 
-        <RangeInput
-          fieldName="dynatemp_exponent"
-          label="Dynamic Temperature Exponent"
-          helperText="Exponent for dynatemp sampling. Range [0, inf)."
-          min={0}
-          max={20}
-          step={0.01}
-          value={props.state.dynatemp_exponent ?? 1}
-          disabled={props.state.disabled}
-          aiSetting={'dynatemp_exponent'}
-          recommended={props.sub?.preset.dynatemp_exponent}
-          onChange={(ev) => props.setter('dynatemp_exponent', ev)}
-          hide={hidePresetSetting(props.state, 'dynatemp_exponent')}
-        />
+          <RangeInput
+            fieldName="dynatemp_exponent"
+            parentClass="w-1/2"
+            label="Exponent"
+            min={0}
+            max={20}
+            step={0.01}
+            value={props.state.dynatemp_exponent ?? 1}
+            disabled={props.state.disabled}
+            aiSetting={'dynatemp_exponent'}
+            onChange={(ev) => props.setter('dynatemp_exponent', ev)}
+            hide={props.hides.dynatemp_exponent}
+          />
+        </div>
+      </Card>
+
+      <Card class="flex flex-col gap-1" bg="bg-600">
+        <div class="flex gap-1">
+          XTC (Exclude Top Choices) <XTCHelpModal />
+        </div>
+        <div class="flex w-full gap-2">
+          <RangeInput
+            label="Threshold"
+            parentClass="w-1/2"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.state.xtcThreshold ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'xtcThreshold'}
+            recommended={0.1}
+            onChange={(ev) => props.setter('xtcThreshold', ev)}
+            hide={props.hides.xtcThreshold}
+          />
+
+          <RangeInput
+            label="Probability"
+            parentClass="w-1/2"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.state.dynatemp_range ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'xtcProbability'}
+            recommended={0.5}
+            onChange={(ev) => props.setter('xtcProbability', ev)}
+            hide={props.hides.xtcThreshold}
+          />
+        </div>
+      </Card>
+
+      <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.dryMultiplier}>
+        <div>
+          DRY Sampling{' '}
+          <a
+            class="link"
+            href="https://github.com/oobabooga/text-generation-webui/pull/5677"
+            target="_blank"
+          >
+            Reference
+          </a>
+        </div>
+
+        <div class="flex items-start gap-2">
+          <RangeInput
+            parentClass="w-1/3"
+            label={'Multiplier'}
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.state.dryMultiplier ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'dryMultiplier'}
+            recommended={0.8}
+            onChange={(ev) => props.setter('dryMultiplier', ev)}
+            hide={props.hides.dryMultiplier}
+          />
+
+          <RangeInput
+            label="Base"
+            parentClass="w-1/3"
+            min={0}
+            max={1}
+            step={0.01}
+            value={props.state.dryBase ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'dryBase'}
+            recommended={1.75}
+            onChange={(ev) => props.setter('dryBase', ev)}
+            hide={props.hides.dryBase}
+          />
+
+          <RangeInput
+            label="Allowed Length"
+            parentClass="w-1/3"
+            min={0}
+            max={10}
+            step={1}
+            value={props.state.dryAllowedLength ?? 0}
+            disabled={props.state.disabled}
+            aiSetting={'dryAllowedLength'}
+            recommended={2}
+            onChange={(ev) => props.setter('dryAllowedLength', ev)}
+          />
+        </div>
+      </Card>
+
+      <Card class="flex flex-col gap-4" bg="bg-600" hide={props.hides.dryMultiplier}>
         <RangeInput
           fieldName="smoothingFactor"
           label="Smoothing Factor"
@@ -51,7 +152,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'smoothingFactor'}
           recommended={props.sub?.preset.smoothingFactor}
           onChange={(ev) => props.setter('smoothingFactor', ev)}
-          hide={hidePresetSetting(props.state, 'smoothingFactor')}
+          hide={props.hides.smoothingFactor}
         />
         <RangeInput
           fieldName="smoothingCurve"
@@ -65,7 +166,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'smoothingCurve'}
           recommended={props.sub?.preset.smoothingCurve}
           onChange={(ev) => props.setter('smoothingCurve', ev)}
-          hide={hidePresetSetting(props.state, 'smoothingCurve')}
+          hide={props.hides.smoothingCurve}
         />
         <RangeInput
           fieldName="cfgScale"
@@ -88,7 +189,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'cfgScale'}
           onChange={(ev) => props.setter('cfgScale', ev)}
-          hide={hidePresetSetting(props.state, 'cfgScale')}
+          hide={props.hides.cfgScale}
         />
 
         <RangeInput
@@ -103,7 +204,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'topP'}
           recommended={props.sub?.preset.topP}
           onChange={(ev) => props.setter('topP', ev)}
-          hide={hidePresetSetting(props.state, 'topP')}
+          hide={props.hides.topP}
         />
 
         <RangeInput
@@ -118,7 +219,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'topK'}
           recommended={props.sub?.preset.topK}
           onChange={(ev) => props.setter('topK', ev)}
-          hide={hidePresetSetting(props.state, 'topK')}
+          hide={props.hides.topK}
         />
         <RangeInput
           fieldName="topA"
@@ -132,7 +233,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'topA'}
           recommended={props.sub?.preset.topA}
           onChange={(ev) => props.setter('topA', ev)}
-          hide={hidePresetSetting(props.state, 'topA')}
+          hide={props.hides.topA}
         />
 
         <RangeInput
@@ -146,7 +247,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'mirostatTau'}
           onChange={(ev) => props.setter('mirostatTau', ev)}
-          hide={hidePresetSetting(props.state, 'mirostatTau')}
+          hide={props.hides.mirostatTau}
         />
         <RangeInput
           fieldName="mirostatLR"
@@ -159,7 +260,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'mirostatLR'}
           onChange={(ev) => props.setter('mirostatLR', ev)}
-          hide={hidePresetSetting(props.state, 'mirostatLR')}
+          hide={props.hides.mirostatTau}
         />
         <RangeInput
           fieldName="tailFreeSampling"
@@ -173,7 +274,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'tailFreeSampling'}
           recommended={props.sub?.preset.tailFreeSampling}
           onChange={(ev) => props.setter('tailFreeSampling', ev)}
-          hide={hidePresetSetting(props.state, 'tailFreeSampling')}
+          hide={props.hides.tailFreeSampling}
         />
         <RangeInput
           fieldName="typicalP"
@@ -187,7 +288,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'typicalP'}
           recommended={props.sub?.preset.typicalP}
           onChange={(ev) => props.setter('typicalP', ev)}
-          hide={hidePresetSetting(props.state, 'typicalP')}
+          hide={props.hides.typicalP}
         />
         <RangeInput
           fieldName="repetitionPenalty"
@@ -201,7 +302,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'repetitionPenalty'}
           recommended={props.sub?.preset.repetitionPenalty}
           onChange={(ev) => props.setter('repetitionPenalty', ev)}
-          hide={hidePresetSetting(props.state, 'repetitionPenalty')}
+          hide={props.hides.repetitionPenalty}
         />
         <RangeInput
           fieldName="repetitionPenaltyRange"
@@ -215,7 +316,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'repetitionPenaltyRange'}
           recommended={props.sub?.preset.repetitionPenaltyRange}
           onChange={(ev) => props.setter('repetitionPenaltyRange', ev)}
-          hide={hidePresetSetting(props.state, 'repetitionPenaltyRange')}
+          hide={props.hides.repetitionPenaltyRange}
         />
         <RangeInput
           fieldName="repetitionPenaltySlope"
@@ -229,7 +330,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'repetitionPenaltySlope'}
           recommended={props.sub?.preset.repetitionPenaltySlope}
           onChange={(ev) => props.setter('repetitionPenaltySlope', ev)}
-          hide={hidePresetSetting(props.state, 'repetitionPenaltySlope')}
+          hide={props.hides.repetitionPenaltySlope}
         />
         <RangeInput
           fieldName="etaCutoff"
@@ -251,7 +352,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'etaCutoff'}
           onChange={(ev) => props.setter('etaCutoff', ev)}
-          hide={hidePresetSetting(props.state, 'etaCutoff')}
+          hide={props.hides.etaCutoff}
         />
         <RangeInput
           fieldName="epsilonCutoff"
@@ -264,7 +365,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'epsilonCutoff'}
           onChange={(ev) => props.setter('epsilonCutoff', ev)}
-          hide={hidePresetSetting(props.state, 'epsilonCutoff')}
+          hide={props.hides.epsilonCutoff}
         />
         <RangeInput
           fieldName="frequencyPenalty"
@@ -278,7 +379,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'frequencyPenalty'}
           recommended={props.sub?.preset.frequencyPenalty}
           onChange={(ev) => props.setter('frequencyPenalty', ev)}
-          hide={hidePresetSetting(props.state, 'frequencyPenalty')}
+          hide={props.hides.frequencyPenalty}
         />
         <RangeInput
           fieldName="presencePenalty"
@@ -292,7 +393,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'presencePenalty'}
           recommended={props.sub?.preset.presencePenalty}
           onChange={(ev) => props.setter('presencePenalty', ev)}
-          hide={hidePresetSetting(props.state, 'presencePenalty')}
+          hide={props.hides.presencePenalty}
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
@@ -306,7 +407,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'encoderRepitionPenalty'}
           recommended={props.sub?.preset.encoderRepitionPenalty}
           onChange={(ev) => props.setter('encoderRepitionPenalty', ev)}
-          hide={hidePresetSetting(props.state, 'encoderRepitionPenalty')}
+          hide={props.hides.encoderRepitionPenalty}
         />
 
         <RangeInput
@@ -321,7 +422,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           aiSetting={'penaltyAlpha'}
           recommended={props.sub?.preset.penaltyAlpha}
           onChange={(ev) => props.setter('penaltyAlpha', ev)}
-          hide={hidePresetSetting(props.state, 'penaltyAlpha')}
+          hide={props.hides.penaltyAlpha}
         />
 
         <RangeInput
@@ -335,9 +436,31 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'numBeams'}
           onChange={(ev) => props.setter('numBeams', ev)}
-          hide={hidePresetSetting(props.state, 'numBeams')}
+          hide={props.hides.numBeams}
         />
       </Card>
     </div>
   )
 }
+
+const XTCHelpModal = () => (
+  <HelpModal cta={<a class="link">Reference</a>} title="Exclude Top Choices">
+    <p>
+      XTC is a novel sampler that turns truncation on its head: Instead of pruning the least likely
+      tokens, under certain circumstances, it removes the most likely tokens from consideration.
+    </p>
+    <p>
+      More precisely, it removes all except the least likely token meeting a given threshold, with a
+      given probability
+    </p>
+    <p>
+      <a
+        href="https://github.com/oobabooga/text-generation-webui/pull/6335"
+        target="_blank"
+        class="link"
+      >
+        Reference
+      </a>
+    </p>
+  </HelpModal>
+)

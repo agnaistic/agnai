@@ -126,6 +126,11 @@ export const SubscriptionPage: Component<{}> = (props) => {
 
           <Show when={user.sub?.level! > 0}>
             <h3 class="font-bold">Current Subscription</h3>
+            <Show when={user.user?.billing}>
+              <a href={settings.serverConfig?.stripeCustomerPortal} target="_blank">
+                Update Payment Method
+              </a>
+            </Show>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
                 <div class="text-700 text-sm italic">

@@ -13,9 +13,6 @@ import { v4 } from 'uuid'
 import { validBook } from './memory'
 import { isObject, tryParse } from '/common/util'
 import { assertStrict } from '/common/valid/validate'
-import { buildModPrompt, fromJsonResponse } from '/common/prompt'
-import { createInferenceStream } from '../adapter/generate'
-import { sendOne } from './ws'
 
 const router = Router()
 
@@ -156,139 +153,6 @@ const createCharacter = handle(async (req) => {
 const getCharacters = handle(async ({ userId }) => {
   const chars = await store.characters.getCharacters(userId!)
   return { characters: chars }
-})
-
-const publishCharacter = handle(async ({ userId, body, log }, res) => {
-  assertValid(
-    { requestId: 'string?', character: 'any?', characterId: 'any?', imageData: 'string?' },
-    body
-  )
-  const config = await store.admin.getServerConfiguration()
-
-  if (!config.modPresetId) {
-    throw new StatusError(`Mod preset not configured`, 400)
-  }
-
-  const user = await store.users.getUser(userId)
-  if (!user) {
-    throw new StatusError('Not authorized', 401)
-  }
-
-  const settings = await store.presets.getUserPreset(config.modPresetId)
-  if (!settings) {
-    throw new StatusError('Mod preset not found', 400)
-  }
-
-  let character = body.character
-
-  if (body.characterId) {
-    character = await store.characters.getCharacter(userId, body.characterId)
-  }
-
-  if (!character) {
-    throw new StatusError(`Character not provided`, 400)
-  }
-
-  const prompt = buildModPrompt({
-    char: character,
-    prompt: config.modPrompt,
-    fields: config.modFieldPrompt,
-  })
-
-  const requestId = body.requestId || v4()
-
-  const { stream, service } = await createInferenceStream({
-    requestId,
-    jsonSchema: config.modSchema,
-    user,
-    log,
-    prompt,
-    settings,
-    imageData: body.imageData,
-  })
-
-  res.json({ success: true, generating: true, requestId })
-
-  if (user.admin) {
-    sendOne(userId, { type: 'inference-prompt', prompt })
-  }
-
-  let response = ''
-  let partial = ''
-  let output: any = {}
-
-  try {
-    for await (const gen of stream) {
-      if (typeof gen === 'string') {
-        response = gen
-        continue
-      }
-
-      if ('meta' in gen && user.admin) {
-        sendOne(userId, { type: 'inference-meta', meta: gen.meta, requestId })
-      }
-
-      if ('partial' in gen) {
-        partial = gen.partial
-        fromJsonResponse(config.modSchema, gen.partial, output)
-        if (user.admin)
-          sendOne(userId, { type: 'inference-partial', partial, service, requestId, output })
-        continue
-      }
-
-      if ('error' in gen) {
-        sendOne(userId, { type: 'inference-error', partial, error: gen.error, requestId })
-        continue
-      }
-
-      if ('warning' in gen) {
-        sendOne(userId, { type: 'inference-warning', requestId, warning: gen.warning })
-        continue
-      }
-    }
-  } catch (ex: any) {
-    if (ex instanceof StatusError) {
-      sendOne(userId, {
-        type: 'inference-error',
-        partial,
-        error: `[${ex.status}] ${ex.message}`,
-        requestId,
-      })
-    } else {
-      sendOne(userId, { type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
-    }
-  }
-
-  if (!response) return
-  if (user.admin) sendOne(userId, { type: 'inference', requestId, response: response, output })
-
-  let acceptable = true
-  for (const [key, value] of Object.entries(output)) {
-    const def = config.modSchema.find((s) => s.name === key)
-    if (!def) continue
-    if (!def.type.valid) continue
-
-    switch (def.type.type) {
-      case 'integer':
-      case 'string':
-        continue
-
-      case 'bool': {
-        const expected = def.type.valid === 'true'
-        if (value !== expected) acceptable = false
-        continue
-      }
-
-      case 'enum': {
-        const values = def.type.valid.split(',').map((v) => v.trim())
-        const valid = values.includes((value || '') as string)
-        if (!valid) acceptable = false
-        continue
-      }
-    }
-  }
-
-  sendOne(userId, { type: 'publish-response', acceptable, requestId })
 })
 
 const editPartCharacter = handle(async ({ body, params, userId }) => {
@@ -512,7 +376,6 @@ router.post('/image', createImage)
 router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
-router.post('/publish', publishCharacter)
 router.post('/:id/update', editPartCharacter)
 router.post('/:id', editFullCharacter)
 router.get('/:id', getCharacter)

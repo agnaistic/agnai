@@ -5,7 +5,6 @@ import type {
   OpenRouterModel,
   RegisteredAdapter,
 } from '../adapters'
-import { JsonField } from '../prompt'
 import { SubscriptionModelOption, SubscriptionTier } from './presets'
 import { ThemeColor } from './ui'
 
@@ -87,6 +86,7 @@ export interface Configuration {
   maintenance: boolean
 
   supportEmail: string
+  stripeCustomerPortal: string
 
   /** Markdown */
   maintenanceMessage: string
@@ -123,14 +123,6 @@ export interface Configuration {
 
   maxGuidanceTokens: number
   maxGuidanceVariables: number
-
-  modPresetId: string
-  modPrompt: string
-  modFieldPrompt: string
-  modSchema: JsonField[]
-
-  charlibPublish: 'off' | 'users' | 'subscribers' | 'moderators' | 'admins'
-  charlibGuidelines: string
 
   actionCalls: ActionCall[]
 }

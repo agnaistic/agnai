@@ -438,6 +438,8 @@ export const samplerDisableValues: { [key in keyof PresetAISettings]?: number } 
   frequencyPenalty: 0,
   presencePenalty: 0,
   tailFreeSampling: 1,
+  xtcThreshold: 0,
+  dryMultiplier: 0,
 }
 
 export function adaptersToOptions(adapters: AIAdapter[]) {

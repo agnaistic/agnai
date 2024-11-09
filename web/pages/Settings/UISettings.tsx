@@ -124,6 +124,7 @@ const UISettings: Component<{}> = () => {
         <div class="flex items-center gap-2">
           <Select
             fieldName="themeBg"
+            label="Background Color"
             items={themeBgOptions()}
             value={state.ui.themeBg}
             onChange={(item) => userStore.saveUI({ themeBg: item.value })}

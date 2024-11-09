@@ -11,7 +11,6 @@ import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
 import { Jailbreak, SystemPrompt } from './Fields'
 import { PresetTabProps } from './types'
-import { hidePresetSetting } from '../util'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)
@@ -107,7 +106,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             disabled={props.state.disabled}
             service={props.state.service}
             format={props.state.thirdPartyFormat}
-            hide={hidePresetSetting(props.state, 'prefixNameAppend')}
+            hide={props.hides.prefixNameAppend}
             onChange={(ev) => props.setter('prefixNameAppend', ev)}
           />
           <TextInput
@@ -122,7 +121,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             value={props.state.prefill ?? ''}
             disabled={props.state.disabled}
             class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-            hide={hidePresetSetting(props.state, 'prefill')}
+            hide={props.hides.prefill}
             onChange={(ev) => props.setter('prefill', ev.currentTarget.value)}
           />
           <div class="flex flex-wrap gap-4">
@@ -130,14 +129,14 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               label="Override Character System Prompt"
               value={props.state.ignoreCharacterSystemPrompt ?? false}
               disabled={props.state.disabled}
-              hide={hidePresetSetting(props.state, 'ignoreCharacterSystemPrompt')}
+              hide={props.hides.ignoreCharacterSystemPrompt}
               onChange={(ev) => props.setter('ignoreCharacterSystemPrompt', ev)}
             />
             <Toggle
               label="Override Character Jailbreak"
               value={props.state.ignoreCharacterUjb ?? false}
               disabled={props.state.disabled}
-              hide={hidePresetSetting(props.state, 'ignoreCharacterUjb')}
+              hide={props.hides.ignoreCharacterUjb}
               onChange={(ev) => props.setter('ignoreCharacterUjb', ev)}
             />
           </div>

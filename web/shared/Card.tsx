@@ -1,4 +1,4 @@
-import { Component, JSX, Show, createMemo } from 'solid-js'
+import { Accessor, Component, JSX, Show, createMemo } from 'solid-js'
 import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
@@ -13,7 +13,7 @@ export const Card: Component<{
   bgOpacity?: number
   border?: boolean
   bg?: string
-  hide?: boolean
+  hide?: boolean | Accessor<boolean>
   size?: Size
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
@@ -24,11 +24,16 @@ export const Card: Component<{
     opacity: props.bgOpacity ?? 0.08,
   })
 
+  const hide = createMemo(() => {
+    if (typeof props.hide === 'function') return props.hide()
+    return props.hide
+  })
+
   return (
     <div
       class={`rounded-lg ${props.class ?? ''}`}
       classList={{
-        hidden: props.hide,
+        hidden: hide(),
         'p-1': props.size === 'sm',
         'p-2': props.size === 'md',
         'p-3': !props.size || props.size === 'lg',

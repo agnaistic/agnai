@@ -39,14 +39,9 @@ export async function getServerConfiguration() {
     maxGuidanceVariables: 15,
     googleClientId: '',
     googleEnabled: false,
-    charlibPublish: 'off',
-    charlibGuidelines: '',
-    modFieldPrompt: '',
-    modPresetId: '',
-    modPrompt: '',
-    modSchema: [],
     actionCalls: [],
     lockSeconds: 0,
+    stripeCustomerPortal: '',
   }
 
   await db('configuration').insertOne(next)

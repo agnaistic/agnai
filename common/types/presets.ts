@@ -82,10 +82,22 @@ export interface GenSettings {
 
   temp: number
   tempLast?: boolean
+
   dynatemp_range?: number
   dynatemp_exponent?: number
+
+  xtcProbability?: number
+  xtcThreshold?: number
+
+  dryMultiplier?: number
+  dryBase?: number
+  dryAllowedLength?: number
+  dryRange?: number
+  drySequenceBreakers?: string[]
+
   smoothingFactor?: number
   smoothingCurve?: number
+
   maxTokens: number
   maxContextLength?: number
   useMaxContext?: boolean
