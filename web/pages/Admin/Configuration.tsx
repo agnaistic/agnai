@@ -1,6 +1,6 @@
 import { Component, Match, Switch, createEffect, createSignal, on, onMount } from 'solid-js'
 import { adminStore, userStore } from '/web/store'
-import { useNavigate } from '@solidjs/router'
+import { useNavigate, useSearchParams } from '@solidjs/router'
 import PageHeader from '/web/shared/PageHeader'
 import { getStrictForm } from '/web/shared/util'
 import { SaveIcon } from 'lucide-solid'
@@ -20,9 +20,14 @@ const ServerConfiguration: Component = () => {
   let form: HTMLFormElement
   const user = userStore()
   const nav = useNavigate()
+  const [search, setSearch] = useSearchParams()
 
   const state = adminStore()
-  const tab = useTabs(['General', 'Images', 'Voice', 'Characters'])
+  const tab = useTabs(['General', 'Images', 'Voice', 'Characters'], +(search.cfg_tab || '0'))
+
+  createEffect(() => {
+    setSearch({ cfg_tab: tab.selected().toString() })
+  })
 
   const [slots, setSlots] = createSignal(state.config?.slots || '{}')
 

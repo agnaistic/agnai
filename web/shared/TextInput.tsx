@@ -166,7 +166,7 @@ const TextInput: Component<Props> = (props) => {
       }}
     >
       <Show when={props.prelabel && !props.isMultiline}>
-        <div class="bg-600 flex h-[40px] items-center rounded-l-md px-1 text-center text-sm font-bold">
+        <div class="bg-600 flex h-full items-center rounded-l-md px-2 text-center text-sm font-bold">
           {props.prelabel}
         </div>
       </Show>
@@ -242,9 +242,10 @@ const TextInput: Component<Props> = (props) => {
             }
             classList={{
               'w-full': !props.class?.includes('w-'),
-              'border-0.25': props.variant === 'outline',
+              'border-[1px]': props.variant === 'outline',
               'border-[var(--bg-600)]': props.variant === 'outline',
               'py-2': !props.class?.includes('p-') && !props.class?.includes('py-'),
+              'rounded-l-none': !!props.prelabel,
               ...props.classList,
             }}
             onkeyup={(ev) => {
@@ -277,6 +278,8 @@ const TextInput: Component<Props> = (props) => {
               class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
               classList={{
                 'w-full': !props.class?.includes('w-'),
+                'border-[1px]': props.variant === 'outline',
+                'border-[var(--bg-600)]': props.variant === 'outline',
                 ...props.classList,
               }}
               onkeyup={(ev) => {

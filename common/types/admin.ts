@@ -47,7 +47,16 @@ export type ImageModel = {
   desc: string
   override: string
   level: number
-  init: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
+  init: {
+    clipSkip?: number
+    steps: number
+    cfg: number
+    height: number
+    width: number
+    suffix: string
+    prefix: string
+    negative: string
+  }
   limit: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
 }
 
