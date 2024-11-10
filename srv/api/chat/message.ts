@@ -670,7 +670,8 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     responseText = hydration.response
   }
 
-  const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
+  const characterId =
+    body.kind === 'self' ? body.impersonate?._id : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
   const parent = getNewMessageParent(body, newMsg)
 

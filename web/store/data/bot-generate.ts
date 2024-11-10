@@ -111,7 +111,9 @@ export async function generateResponse(
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
-    replyAs: removeAvatar(props.replyAs),
+    replyAs: removeAvatar(
+      opts.kind === 'self' && props.impersonate ? props.impersonate : props.replyAs
+    ),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
     parent: props.parent?._id,

@@ -214,7 +214,7 @@ const ChatDetail: Component = () => {
     waitingMsgs.push(
       emptyMsg({
         id: 'partial-response',
-        charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
+        charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
         userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
         message: msgs.partial || '',
         adapter: 'partial-response',

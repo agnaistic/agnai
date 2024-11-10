@@ -106,7 +106,6 @@ function hidePresetSetting(
   if (!prop) {
     hide = false
   } else if (!isValidServiceSetting(state, prop)) {
-    console.log('eval:invalid', prop)
     hide = true
   } else if (state.presetMode && state.presetMode !== 'advanced') {
     const enabled = MODE_SETTINGS[state.presetMode]?.[prop]

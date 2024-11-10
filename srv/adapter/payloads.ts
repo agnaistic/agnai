@@ -64,7 +64,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       context_limit: gen.maxContextLength,
       max_new_tokens: gen.maxTokens,
       do_sample: gen.doSample ?? true,
-      temperature: gen.temp,
+      temperature: Math.min(gen.temp, 10),
       top_p: gen.topP,
       typical_p: gen.typicalP || 1,
       repetition_penalty: gen.repetitionPenalty,

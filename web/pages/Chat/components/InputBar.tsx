@@ -1,4 +1,13 @@
-import { ImagePlus, ImageUp, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
+import {
+  ImagePlus,
+  ImageUp,
+  Megaphone,
+  MessageCircle,
+  MoreHorizontal,
+  PlusCircle,
+  Send,
+  Zap,
+} from 'lucide-solid'
 import {
   Component,
   createMemo,
@@ -322,10 +331,16 @@ const InputBar: Component<{
 
       <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
         <div class="flex w-48 flex-col gap-2 p-2">
-          {/* <Button schema="secondary" class="w-full" onClick={generateSelf} alignLeft>
-              <MessageCircle size={18} />
-              Respond as Me
-            </Button> */}
+          <Button
+            schema="secondary"
+            class="w-full"
+            onClick={() => msgStore.selfGenerate()}
+            alignLeft
+            disabled={!ctx.impersonate}
+          >
+            <MessageCircle size={18} />
+            Respond as Me
+          </Button>
           <Show when={ctx.activeBots.length > 1}>
             <div>Auto-reply</div>
             <Button
