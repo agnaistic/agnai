@@ -929,7 +929,9 @@ export function useRowHelper<T extends object>(opts: {
 
   const updateItem = (index: number, field: string, value: any) => {
     const prev = items()
-    const item = setProperty(prev[index], field, value)
+    const base = getProperty(opts.empty(), field)
+    const parsed = typeof base === 'number' ? +value : value
+    const item = setProperty(prev[index], field, parsed)
 
     const next = prev
       .slice(0, index)
@@ -946,6 +948,7 @@ export function useRowHelper<T extends object>(opts: {
       }
 
       // Textarea and Input fields
+
       if ('currentTarget' in ev) {
         return updateItem(index, field, ev.currentTarget.value)
       }
@@ -976,6 +979,20 @@ function setProperty(obj: any, path: string, value: any): any {
     ...obj,
     [head]: rest.length ? setProperty(obj[head], rest.join('.'), value) : value,
   }
+}
+
+function getProperty(obj: any, path: string) {
+  const [head, ...props] = path.split('.')
+
+  let curr = obj[head]
+  if (curr === undefined) return
+
+  for (const prop of props) {
+    if (curr === undefined) return
+    curr = curr[prop]
+  }
+
+  return curr
 }
 
 export const sticky = {

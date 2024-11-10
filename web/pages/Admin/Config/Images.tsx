@@ -107,20 +107,20 @@ const Model: Component<{
     <Card bg="bg-700" bgOpacity={1} class="flex flex-col gap-2">
       <div class="flex gap-2 text-sm font-normal">
         <TextInput
-          prelabel="Name"
-          placeholder="Model Name..."
-          onChange={props.updater(props.index, 'name')}
-          value={props.item.name}
-          parentClass="h-8 w-1/3"
-          variant="outline"
-        />
-
-        <TextInput
           prelabel="Desc"
           placeholder="Model Description..."
           onChange={props.updater(props.index, 'desc')}
           parentClass="h-8 w-1/3"
           value={props.item.desc}
+          variant="outline"
+        />
+
+        <TextInput
+          prelabel="Host"
+          placeholder="Model Name..."
+          onChange={props.updater(props.index, 'name')}
+          value={props.item.name}
+          parentClass="h-8 w-1/3"
           variant="outline"
         />
 

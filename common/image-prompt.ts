@@ -1,5 +1,4 @@
 import { AppSchema } from './types/schema'
-import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 
 export type ImagePromptOpts = {
@@ -21,7 +20,7 @@ export async function createAppearancePrompt(
 
   const prefix = ''
   const max = getMaxImageContext(user)
-  let size = await tokenize(prefix)
+  let size = prefix.length
 
   const { persona } = avatar
 
@@ -37,7 +36,7 @@ export async function createAppearancePrompt(
     if (!value) continue
 
     for (const visual of value) {
-      size += await tokenize(visual)
+      size += visual.length
       if (size > max) break
       visuals.push(visual)
     }
@@ -71,7 +70,7 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
 
     for (const index of indexes.reverse()) {
       const line = msg.slice(index)
-      const size = await tokenize(line)
+      const size = line.length
       tokens += size
 
       if (tokens > maxTokens) {
@@ -85,7 +84,7 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
     if (tokens > maxTokens) break
 
     const handle = userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name
-    tokens += await tokenize(handle + ':')
+    tokens += (handle || '').length
 
     if (tokens > maxTokens) {
       lines.push(last.trim())
@@ -134,4 +133,14 @@ function tokenizeMessage(line: string) {
   }
 
   return matches
+}
+
+export function fixImagePrompt(prompt: string) {
+  return prompt
+    .replace(/ +/g, ' ')
+    .replace(/,+/g, ',')
+    .split(',')
+    .filter((t) => !!t.trim())
+    .map((t) => t.trim())
+    .join(', ')
 }

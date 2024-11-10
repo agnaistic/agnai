@@ -161,7 +161,14 @@ async function runImageGenerate(options: {
     switch (imageSettings?.type || 'horde') {
       case 'novel':
         image = await handleNovelImage(
-          { user, prompt, negative, settings: imageSettings, params: opts.params },
+          {
+            user,
+            prompt,
+            negative,
+            settings: imageSettings,
+            params: opts.params,
+            raw_prompt: opts.prompt,
+          },
           log,
           guestId
         )
@@ -177,6 +184,7 @@ async function runImageGenerate(options: {
             settings: imageSettings,
             override: opts.model,
             params: opts.params,
+            raw_prompt: opts.prompt,
           },
           log,
           guestId
@@ -186,7 +194,14 @@ async function runImageGenerate(options: {
       case 'horde':
       default:
         image = await handleHordeImage(
-          { user, prompt, negative, settings: imageSettings, params: opts.params },
+          {
+            user,
+            prompt,
+            negative,
+            settings: imageSettings,
+            params: opts.params,
+            raw_prompt: opts.prompt,
+          },
           log,
           guestId
         )
@@ -211,6 +226,7 @@ function getImagePrompt(opts: ImageGenerateRequest, imageSettings: ImageSettings
   }
 
   prompt = prompt.trim()
+  opts.raw_prompt = prompt
 
   if (!opts.noAffix) {
     const parts = [prompt]

@@ -5,6 +5,10 @@ import { ImageSettings } from '/common/types/image-schema'
 export type ImageGenerateRequest = {
   user: AppSchema.User
   prompt: string
+
+  /** Prompt without any prefix or suffix applied */
+  raw_prompt?: string
+
   source: string
 
   sync?: boolean
@@ -34,6 +38,7 @@ export type ImageRequestOpts = {
   negative: string
   settings: ImageSettings | undefined
   override?: string
+  raw_prompt: string | undefined
   params?: ImageGenerateRequest['params']
 }
 

@@ -27,6 +27,7 @@ const validImage = {
   clip_skip: 'number?',
   steps: 'number?',
   sampler: 'string?',
+  use_recommended: 'string?',
 } as const
 
 const validInference = {
@@ -82,6 +83,10 @@ const validInferenceApi = {
 
 export const generateImageApi = wrap(async ({ authed, userId, log, body }) => {
   assertValid(validImage, body)
+
+  if (body.use_recommended && authed) {
+    authed.useRecommendedImages = body.use_recommended
+  }
 
   const result = await generateImageSync(
     {

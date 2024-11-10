@@ -146,6 +146,8 @@ export namespace AppSchema {
     texttospeech?: TTSSettings
 
     images?: ImageSettings
+    useRecommendedImages?: string // 'all' | 'except-(size|affix|negative)' | 'none'
+
     adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
 
     ui?: UISettings

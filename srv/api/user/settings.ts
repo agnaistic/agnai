@@ -201,6 +201,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       chargenPreset: 'string?',
       images: 'any?',
       disableLTM: 'boolean?',
+      useRecommendedImages: 'string?',
     },
     body
   )
@@ -213,6 +214,10 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       throw new StatusError(`Invalid preset`, 403)
     }
     update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.useRecommendedImages !== undefined) {
+    update.useRecommendedImages = body.useRecommendedImages
   }
 
   if (body.disableLTM !== undefined) {
