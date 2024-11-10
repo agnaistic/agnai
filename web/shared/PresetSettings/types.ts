@@ -97,7 +97,7 @@ export function getPresetEditor() {
   return [store, setStore, hide] as const
 }
 
-function createHides(store: PresetState[0]) {
+function createHides(store: PresetState) {
   const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
   let hides: any = {}
 
