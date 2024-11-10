@@ -5,6 +5,7 @@ import { markdown } from '/web/shared/markdown'
 import { settingStore } from '/web/store'
 import { HelpModal } from '/web/shared/Modal'
 import { getSubscriptionModelLimits } from '/common/util'
+import Button from '/web/shared/Button'
 
 type TierPreview = OmitId<AppSchema.SubscriptionTier, Dates | 'enabled' | 'priceId' | 'productId'>
 
@@ -76,7 +77,11 @@ export const TierCard: Component<{
         <Show when={models().length > 0}>
           <HelpModal
             title={`Models on ${props.tier.name}`}
-            cta={<div class="link flex justify-center text-sm">View Models</div>}
+            cta={
+              <div class="flex justify-center">
+                <Button size="sm">View Models</Button>
+              </div>
+            }
           >
             <div
               class="markdown text-sm"
