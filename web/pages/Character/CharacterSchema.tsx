@@ -75,11 +75,11 @@ export const CharacterSchema: Component<{
   const [store, setStore] = createStore({
     response: '',
     history: '',
-    fields: [] as JsonField[],
+    schema: [] as JsonField[],
   })
 
   const vars = createMemo(() => {
-    return store.fields.map((s) => ({ label: s.name, value: s.name }))
+    return store.schema.map((s) => ({ label: s.name, value: s.name }))
   })
 
   const [resErr, setResErr] = createSignal('')
@@ -103,7 +103,7 @@ export const CharacterSchema: Component<{
         const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
         if (json && hasValue) {
           setStore({
-            fields: json.schema || [],
+            schema: json.schema || [],
             history: json.history || '',
             response: json.response || '',
           })
@@ -111,7 +111,7 @@ export const CharacterSchema: Component<{
           setStore({
             history: exampleSchema.history,
             response: exampleSchema.response,
-            fields: exampleSchema.schema.slice(),
+            schema: exampleSchema.schema.slice(),
           })
         }
       }
@@ -122,7 +122,7 @@ export const CharacterSchema: Component<{
     const resVars = store.response.match(JSON_NAME_RE())
     const histVars = store.history.match(JSON_NAME_RE())
 
-    const names = new Set(store.fields.map((s) => s.name))
+    const names = new Set(store.schema.map((s) => s.name))
 
     if (resVars) {
       const bad: string[] = []
@@ -204,7 +204,7 @@ export const CharacterSchema: Component<{
       const update = {
         history: store.history,
         response: store.response,
-        schema: store.fields,
+        schema: store.schema,
       }
       props.update(update)
 
@@ -226,7 +226,7 @@ export const CharacterSchema: Component<{
 
     if (save && typeof save !== 'boolean') {
       props.update(save)
-      setStore('fields', save.schema)
+      setStore('schema', save.schema)
 
       if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: save })
@@ -258,7 +258,7 @@ export const CharacterSchema: Component<{
               <Button size="pill" schema="secondary" onClick={() => setShowImport(true)}>
                 Import
               </Button>
-              <Show when={store.fields.length}>
+              <Show when={store.schema.length}>
                 <Button
                   size="pill"
                   schema="secondary"
@@ -412,8 +412,8 @@ export const CharacterSchema: Component<{
             </Show>
 
             <JsonSchema
-              inherit={store.fields}
-              update={(ev) => setStore('fields', ev)}
+              inherit={store.schema}
+              update={(ev) => setStore('schema', ev)}
               onNameChange={onFieldNameChange}
             />
           </div>
@@ -438,14 +438,19 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
       const json = JSON.parse(content)
 
       curr = json
-      assertValid({ response: 'string', history: 'string', schema: ['any'] }, json)
+      assertValid(
+        { response: 'string', history: 'string', fields: ['any?'], schema: ['any?'] },
+        json
+      )
 
-      for (const field of json.schema) {
+      const schema = curr.fields || curr.schema
+
+      for (const field of schema) {
         curr = field
         assertValid({ type: { type: 'string' }, name: 'string' }, field)
       }
 
-      props.close(json)
+      props.close({ response: json.response, history: json.history, schema })
     } catch (ex: any) {
       toastStore.error(`Invalid JSON Schema: ${ex.message}`)
       console.error(ex)
