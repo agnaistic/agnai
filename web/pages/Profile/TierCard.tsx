@@ -76,7 +76,7 @@ export const TierCard: Component<{
         <Show when={models().length > 0}>
           <HelpModal
             title={`Models on ${props.tier.name}`}
-            cta={<div class="link flex justify-center text-sm">Models</div>}
+            cta={<div class="link flex justify-center text-sm">View Models</div>}
           >
             <div
               class="markdown text-sm"

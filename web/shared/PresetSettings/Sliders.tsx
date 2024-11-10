@@ -73,7 +73,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
             min={0}
             max={1}
             step={0.01}
-            value={props.state.dynatemp_range ?? 0}
+            value={props.state.xtcProbability ?? 0}
             disabled={props.state.disabled}
             aiSetting={'xtcProbability'}
             recommended={0.5}
