@@ -80,22 +80,33 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
 
 export function getPresetEditor() {
   const [store, setStore] = createStore(initPreset)
-  const [hide, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>({})
+  const [hide, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
+    createHides(store)
+  )
 
   createEffect(
     on(
-      () => [store.service, store.thirdPartyFormat, store.presetMode],
+      () => store.service! + store.thirdPartyFormat! + store.presetMode!,
       () => {
-        const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
-
-        for (const key of keys) {
-          setHides(key, hidePresetSetting(store, key as any))
-        }
+        const next = createHides(store)
+        setHides(next)
       }
     )
   )
 
   return [store, setStore, hide] as const
+}
+
+function createHides(store: PresetState[0]) {
+  const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
+  let hides: any = {}
+
+  for (const key of keys) {
+    const hide = hidePresetSetting(store, key as any)
+    hides[key] = hide
+  }
+
+  return hides
 }
 
 function hidePresetSetting(

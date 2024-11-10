@@ -42,7 +42,7 @@ export const Toggle: Component<{
         'sm:items-center': !props.vertLabel,
         'gap-1': props.vertLabel && !props.class?.includes('gap-'),
         'gap-2': !props.vertLabel && !props.class?.includes('gap-'),
-        hidden: props.hide,
+        hidden: props.hide ?? false,
         ...props.classList,
       }}
     >

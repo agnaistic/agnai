@@ -48,7 +48,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
         </div>
       </Card>
 
-      <Card class="flex flex-col gap-1" bg="bg-600">
+      <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.xtcThreshold}>
         <div class="flex gap-1">
           XTC (Exclude Top Choices) <XTCHelpModal />
         </div>
@@ -139,7 +139,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
         </div>
       </Card>
 
-      <Card class="flex flex-col gap-4" bg="bg-600" hide={props.hides.dryMultiplier}>
+      <Card class="flex flex-col gap-4" bg="bg-600">
         <RangeInput
           fieldName="smoothingFactor"
           label="Smoothing Factor"

@@ -94,7 +94,7 @@ export const StoppingStrings: Field = (props) => {
   }
 
   return (
-    <div classList={{ hidden: props.hides.stopSequences }}>
+    <div classList={{ hidden: props.hides.stopSequences ?? false }}>
       <FormLabel
         label={
           <div class="flex gap-2">

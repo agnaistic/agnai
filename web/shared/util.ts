@@ -689,9 +689,13 @@ export function isValidServiceSetting(
   if (!services || !state.service) return true
 
   if (services.includes(state.service)) return true
-  if (!state.thirdPartyFormat) return false
+  if (!state.thirdPartyFormat) {
+    return false
+  }
 
-  if (state.service !== 'kobold') return false
+  if (state.service !== 'kobold') {
+    return false
+  }
 
   for (const srv of services) {
     if (srv === state.thirdPartyFormat) return true

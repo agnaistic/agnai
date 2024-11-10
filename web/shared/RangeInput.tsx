@@ -83,7 +83,10 @@ const RangeInput: Component<{
   }
 
   return (
-    <div class={`relative pt-1 ${props.parentClass || ''}`} classList={{ hidden: props.hide }}>
+    <div
+      class={`relative pt-1 ${props.parentClass || ''}`}
+      classList={{ hidden: props.hide ?? false }}
+    >
       <ul class="w-full">
         <div class="flex flex-row justify-between gap-2">
           <span>
@@ -213,7 +216,7 @@ export const InlineRangeInput: Component<{
   return (
     <div
       class={`bg-800 flex items-center gap-2 rounded-xl px-2 ${props.parentClass || ''}`}
-      classList={{ hidden: props.hide }}
+      classList={{ hidden: props.hide ?? false }}
     >
       <Show when={props.label}>
         <div class="bold">{props.label}</div>

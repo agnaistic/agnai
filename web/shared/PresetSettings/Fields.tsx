@@ -113,7 +113,7 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
 
 export const SystemPrompt: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.hides.systemPrompt }}>
+    <Card classList={{ hidden: props.hides.systemPrompt ?? false }}>
       <FormLabel
         label="System Prompt"
         helperText={<>The task the AI is performing. Leave blank if uncertain.</>}
@@ -132,7 +132,7 @@ export const SystemPrompt: Field = (props) => {
 
 export const Jailbreak: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.hides.ultimeJailbreak }}>
+    <Card classList={{ hidden: props.hides.ultimeJailbreak ?? false }}>
       <FormLabel
         label="Jailbreak (UJB)"
         helperText={

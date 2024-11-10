@@ -56,7 +56,7 @@ export const CustomSelect: Component<{
   return (
     <div
       class={`max-w-full ${props.parentClass || ''}`}
-      classList={{ ...props.classList, hidden: props.hide }}
+      classList={{ ...props.classList, hidden: props.hide ?? false }}
     >
       <div class="flex flex-col text-sm">
         <FormLabel label={props.label} helperText={props.helperText} />

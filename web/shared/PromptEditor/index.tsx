@@ -279,7 +279,7 @@ const PromptEditor: Component<
   onMount(resize)
 
   return (
-    <div class={`relative w-full flex-col gap-2`} classList={{ hidden: props.hide }}>
+    <div class={`relative w-full flex-col gap-2`} classList={{ hidden: props.hide ?? false }}>
       <Show when={props.showHelp}>
         <FormLabel
           label={

@@ -55,7 +55,7 @@ const Select: Component<{
       class={`max-w-full ${props.parentClass || ''}`}
       classList={{
         ...props.classList,
-        hidden: props.hide,
+        hidden: props.hide ?? false,
       }}
     >
       <FormLabel
