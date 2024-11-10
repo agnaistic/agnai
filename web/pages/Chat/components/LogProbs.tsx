@@ -21,7 +21,7 @@ export const LogProbs: Component<{ msg: AppSchema.ChatMessage }> = (props) => {
   })
   return (
     <Show when={props.msg.meta?.probs}>
-      <div class="min-h-48 mb-2 flex h-48 w-full flex-col gap-1">
+      <div class="mb-2 flex w-full flex-col gap-1">
         <b class="text-md">Token Probabilities</b>
         <div class="mb-2 text-sm">
           <For each={props.msg.meta.probs}>
@@ -39,7 +39,7 @@ export const LogProbs: Component<{ msg: AppSchema.ChatMessage }> = (props) => {
           </For>
         </div>
 
-        <div class="flex flex-wrap gap-1">
+        <div class="min-h-16 flex h-16 flex-wrap gap-1">
           <Show when={probs().length}>
             <For each={probs()}>
               {(item) => {
