@@ -109,7 +109,7 @@ const ImportChatModal: Component<{
         <FileInput
           label="JSON Lines File (.jsonl)"
           fieldName="json"
-          accept="application/json-lines,application/jsonl,text/jsonl,application/json,text/json"
+          accept=".txt, application/json, application/json-lines, application/jsonl, text/jsonl"
           helperText="Supported formats: Agnaistic, TavernAI"
           required
           onUpdate={onSelectLog}

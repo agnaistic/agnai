@@ -123,7 +123,9 @@ const ChatDetail: Component = () => {
         }
 
         const handle = ctx.allBots[msg.characterId] || ctx.tempMap[msg.characterId]
-        return { ...msg, handle: handle?.name }
+        if (handle) {
+          return { ...msg, handle: handle?.name || msg.handle }
+        }
       }
 
       if (msg.userId) {

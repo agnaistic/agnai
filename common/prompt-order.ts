@@ -142,7 +142,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     example_dialogue: neat`{{#if example_dialogue}}How "{{char}}" speaks:\n{{example_dialogue}}\n{{/if}}`,
     history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
-    {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}{{.name}}: {{.msg}}<|im_end|>{{/each}}`,
+    {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}\n{{.name}}: {{.msg}}<|im_end|>{{/each}}`,
     post: neat`<|im_start|>assistant
     {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },

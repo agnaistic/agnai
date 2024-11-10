@@ -176,7 +176,7 @@ const Message: Component<MessageProps> = (props) => {
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
-      data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
+      data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : props.msg.name}
       data-last={props.last?.toString()}
       data-lastsplit="true"
       style={true ? {} : alt()}
@@ -236,6 +236,15 @@ const Message: Component<MessageProps> = (props) => {
                     anonymize={ctx.anonymize}
                   />
                 </Match>
+
+                <Match when>
+                  <AvatarIcon
+                    format={format()}
+                    Icon={DownloadCloud}
+                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    anonymize={ctx.anonymize}
+                  />
+                </Match>
               </Switch>
             </span>
             <span class="flex flex-row justify-between pb-1">
@@ -264,7 +273,7 @@ const Message: Component<MessageProps> = (props) => {
                 >
                   {ctx.anonymize && !props.msg.characterId
                     ? getAnonName(props.msg.userId!)
-                    : props.msg.handle || ''}
+                    : props.msg.handle}
                 </b>
 
                 <span

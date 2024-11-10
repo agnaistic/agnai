@@ -168,7 +168,18 @@ export async function createChat(characterId: string, props: NewChat) {
   return localApi.result(chat)
 }
 
-export async function importChat(characterId: string, props: ImportChat) {
+export async function importChat(
+  characterId: string,
+  props: ImportChat,
+  allChars: { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> }
+) {
+  for (const msg of props.messages) {
+    if (msg.characterId === 'imported') {
+      msg.characterId = characterId
+      continue
+    }
+  }
+
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.Chat>(`/chat/import`, { characterId, ...props })
     return res

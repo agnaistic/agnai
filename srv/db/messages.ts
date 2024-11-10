@@ -25,6 +25,7 @@ export type NewMessage = {
   retries?: string[]
   parent?: string
   json?: AppSchema.ChatMessage['json']
+  values?: any
   name: string | undefined
 }
 
@@ -60,27 +61,50 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
 
 export async function importMessages(userId: string, messages: NewMessage[]) {
   const start = Date.now()
-  const docs: AppSchema.ChatMessage[] = messages.map((msg, i) => ({
-    _id: v4(),
-    kind: 'chat-message',
-    rating: 'none',
-    chatId: msg.chatId,
-    characterId: msg.characterId,
-    /**
-     * We will use this soon to retain the original handles.
-     * This needs further consideration for how it'll be handled in the front-end
-     * and how ancestors of this chat will retain this information when subsequent exports occur.
-     */
-    // userId: msg.senderId === 'anon' ? userId : msg.senderId,
-    // handle: msg.handle ? { name: msg.handle, userId: msg.senderId } : undefined,
-    handle: msg.handle || undefined,
-    userId: msg.senderId ? msg.senderId : undefined,
-    msg: msg.message,
-    adapter: msg.adapter,
-    createdAt: new Date(start + i).toISOString(),
-    updatedAt: new Date(start + i).toISOString(),
-    retries: [],
-  }))
+
+  const parents = new Map<string, AppSchema.ChatMessage>()
+
+  const docs: AppSchema.ChatMessage[] = messages.map((msg, i) => {
+    const id = v4()
+
+    const mapped = {
+      _id: id,
+      kind: 'chat-message',
+      chatId: msg.chatId,
+      characterId: msg.characterId,
+      /**
+       * We will use this soon to retain the original handles.
+       * This needs further consideration for how it'll be handled in the front-end
+       * and how ancestors of this chat will retain this information when subsequent exports occur.
+       */
+      // userId: msg.senderId === 'anon' ? userId : msg.senderId,
+      // handle: msg.handle ? { name: msg.handle, userId: msg.senderId } : undefined,
+      handle: msg.handle || undefined,
+      userId: msg.senderId ? userId : undefined,
+      parent: msg.parent,
+      ooc: msg.ooc,
+      json: msg.json,
+      values: msg.values,
+      msg: msg.message,
+      name: msg.name,
+      adapter: msg.adapter,
+      createdAt: new Date(start + i).toISOString(),
+      updatedAt: new Date(start + i).toISOString(),
+      retries: [],
+    } as AppSchema.ChatMessage
+
+    if (msg.parent) {
+      parents.set(msg._id!, mapped)
+    }
+
+    return mapped
+  })
+
+  for (const msg of docs) {
+    if (!msg.parent) continue
+    const parent = parents.get(msg.parent)
+    msg.parent = parent?._id
+  }
 
   await db('chat-message').insertMany(docs)
   return docs

@@ -504,12 +504,12 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *importChat(
-      { allChats, char },
+      { allChats, char, allChars },
       characterId: string,
       imported: ImportChat,
       onSuccess?: (chat: AppSchema.Chat) => void
     ) {
-      const res = await chatsApi.importChat(characterId, imported)
+      const res = await chatsApi.importChat(characterId, imported, allChars)
       if (res.error) toastStore.error(`Failed to import chat: ${res.error}`)
       if (res.result) {
         yield { allChats: [res.result, ...allChats] }

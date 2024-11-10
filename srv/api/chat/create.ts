@@ -58,14 +58,23 @@ export const importChat = handle(async ({ body, userId }) => {
       greeting: 'string?',
       scenario: 'string?',
       scenarioId: 'string?',
+      treeLeafId: 'string?',
       messages: [
         {
+          _id: 'string?',
           msg: 'string',
+          parent: 'string?',
           characterId: 'string?',
           userId: 'string?',
           handle: 'string?',
           ooc: 'boolean?',
           retries: ['string?'],
+          createdAt: 'string?',
+          json: 'any?',
+          values: 'any?',
+          state: 'string?',
+          name: 'string?',
+          extras: 'any?',
         },
       ],
     },
@@ -91,12 +100,12 @@ export const importChat = handle(async ({ body, userId }) => {
     body.characterId,
     {
       name: body.name,
-      greeting: body.greeting ?? character.greeting,
       scenario: body.scenario,
       overrides: character.persona,
       sampleChat: '',
       userId,
       scenarioIds: body.scenarioId ? [body.scenarioId] : [],
+      treeLeafId: body.treeLeafId,
     },
     profile!
   )
@@ -105,13 +114,16 @@ export const importChat = handle(async ({ body, userId }) => {
     chatId: chat._id,
     message: msg.msg,
     adapter: 'import',
-    characterId: msg.characterId ? character._id : undefined,
+    characterId: msg.characterId === 'imported' ? character._id : msg.characterId,
     senderId: msg.userId ? msg.userId : undefined,
     handle: msg.handle,
     ooc: msg.ooc ?? false,
+    parent: msg.parent,
     retries: character.alternateGreetings,
     event: undefined,
-    name: character.name,
+    name: msg.name,
+    json: msg.json,
+    values: msg.values,
   }))
 
   await store.msgs.importMessages(userId, messages)

@@ -5,22 +5,35 @@ import Modal from '../../shared/Modal'
 import { chatStore, msgStore } from '../../store'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
-  const chats = chatStore()
-  const msgs = msgStore()
+  const chats = chatStore.getState()
+  const msgs = msgStore.getState()
 
   const json = createMemo(() => {
     const chat = chats.active?.chat
-    const messages = msgs.msgs.slice()
+    const messages = msgs.messageHistory.concat(msgs.msgs)
 
     const json = {
       name: 'Exported',
       greeting: chat?.greeting || '',
       sampleChat: chat?.sampleChat || '',
       scenario: chat?.scenario || '',
+      treeLeafId: chat?.treeLeafId,
       messages: messages.map((msg) => ({
-        handle: msg.userId ? chats.memberIds[msg.userId]?.handle || 'You' : undefined,
+        _id: msg._id.slice(0, 8),
+        createdAt: msg.createdAt,
+        json: msg.json,
+        extras: msg.extras,
+        ooc: msg.ooc,
+        values: msg.values,
+        parent: msg.parent ? msg.msg.slice(0, 8) : undefined,
+        handle: msg.characterId
+          ? chats.allChars.map[msg.characterId!]?.name
+          : msg.userId
+          ? chats.memberIds[msg.userId]?.handle || 'You'
+          : undefined,
         userId: msg.userId ? msg.userId : undefined,
-        characterId: msg.characterId ? 'imported' : undefined,
+        characterId: msg.characterId === chat?.characterId ? 'imported' : msg.characterId,
+        name: chats.allChars.map[msg.characterId!]?.name || chats.memberIds[msg.userId!]?.handle,
         msg: msg.msg,
         state: msg.state,
       })),
@@ -46,16 +59,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
     </>
   )
 
-  return (
-    <Modal show={props.show} close={props.close} title="Export Chat" footer={Footer}>
-      <p class="text-xl font-bold">Note</p>
-      <p>This will only export the conversation that you currently have loaded.</p>
-      <p>
-        If you want to export the entire chat, you will need to scroll up in the chat until the
-        entire conversation it loaded.
-      </p>
-    </Modal>
-  )
+  return <Modal show={props.show} close={props.close} title="Export Chat" footer={Footer}></Modal>
 }
 
 export default ChatExport

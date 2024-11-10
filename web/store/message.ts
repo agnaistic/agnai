@@ -47,7 +47,7 @@ type SendModes =
   | 'self'
   | 'send-noreply'
 
-export type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
+export type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string; handle?: string }
 
 export type MsgState = {
   hordeStatus?: HordeCheck

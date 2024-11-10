@@ -17,6 +17,7 @@ export async function getChat(id: string) {
   if (!chat) return
 
   const charIds = Object.keys(chat.characters || {})
+
   const characters = await db('character')
     .find({ _id: { $in: charIds.concat(chat.characterId) } })
     .toArray()
@@ -60,6 +61,7 @@ export async function create(
     | 'genPreset'
     | 'mode'
     | 'imageSource'
+    | 'treeLeafId'
   >,
   profile: AppSchema.Profile,
   impersonating?: AppSchema.Character
@@ -89,6 +91,7 @@ export async function create(
     messageCount: props.greeting ? 1 : 0,
     tempCharacters: {},
     imageSource: props.imageSource,
+    treeLeafId: props.treeLeafId,
   }
 
   await db('chat').insertOne(doc)
