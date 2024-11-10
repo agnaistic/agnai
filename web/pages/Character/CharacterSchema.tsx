@@ -9,7 +9,7 @@ import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import { characterStore, chatStore, presetStore, toastStore } from '/web/store'
+import { characterStore, chatStore, presetStore, settingStore, toastStore } from '/web/store'
 import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
@@ -94,7 +94,7 @@ export const CharacterSchema: Component<{
         let json: ResponseSchema | undefined
 
         if (props.characterId) {
-          const char = ctx.activeMap[props.characterId]
+          const char = ctx.allBots[props.characterId]
           json = char ? char.json : chatStore.getState().active?.char.json
         } else if (props.presetId || props.inherit) {
           json = props.inherit || activePreset()?.json
@@ -282,11 +282,10 @@ export const CharacterSchema: Component<{
         <RootModal
           title={
             <>
-              Editing{' '}
+              Editing Schema:
               <Show when={props.characterId} fallback="Preset">
-                Character
-              </Show>{' '}
-              Schema
+                {ctx.allBots[props.characterId!]?.name || 'Character'}
+              </Show>
             </>
           }
           show={show()}
