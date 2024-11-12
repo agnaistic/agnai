@@ -15,7 +15,6 @@ import {
   Users,
   Map,
   Download,
-  VenetianMask,
   Trash,
   RotateCcw,
   ChevronLeft,
@@ -145,9 +144,6 @@ const ChatNav: Component<NavProps> = (props) => {
           tooltip="Image Settings"
         >
           <Image size={size} aria-hidden="true" />
-        </Nav.Item>
-        <Nav.Item onClick={() => settingStore.toggleAnonymize()} tooltip="Anonymize">
-          <VenetianMask size={size} />
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Chat">
           <Download size={size} />

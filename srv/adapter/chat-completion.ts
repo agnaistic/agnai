@@ -246,7 +246,7 @@ async function getPostInstruction(
       return [{ role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }]
 
     case 'summary': {
-      let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
+      let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.other
 
       if (!content.startsWith('(')) content = '(' + content
       if (!content.endsWith(')')) content = content + ')'

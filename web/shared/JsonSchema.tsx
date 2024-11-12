@@ -218,7 +218,7 @@ const SchemaField: Component<{
             </Show>
             <Show when={props.item.type.type === 'enum'}>
               <TextInput
-                initialValue={(props.item.type as any).enum?.join(', ')}
+                value={(props.item.type as any).enum?.join(',')}
                 placeholder="(Optional) Allowed values - comma seperated"
                 parentClass="w-1/2"
                 onChange={(ev) =>

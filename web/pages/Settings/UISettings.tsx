@@ -6,7 +6,7 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { createDebounce, toDropdownItems } from '../../shared/util'
-import { characterStore, userStore } from '../../store'
+import { characterStore, settingStore, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
@@ -32,6 +32,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
 const UISettings: Component<{}> = () => {
   const state = userStore()
   const chars = characterStore()
+  const settings = settingStore()
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
@@ -170,26 +171,6 @@ const UISettings: Component<{}> = () => {
         <Show when={inline().length > 0}>
           <Sortable items={inline()} onChange={updateInline} />
         </Show>
-        <div class="flex flex-wrap gap-2 rounded-md">
-          {/* <For each={Object.entries(msgInlineOpts)}>
-            {([opt, label]) => (
-              <Button
-                size="sm"
-                schema={state.ui.msgOptsInline[opt as UI.MessageOption] ? 'green' : 'secondary'}
-                onClick={() =>
-                  userStore.saveUI({
-                    msgOptsInline: {
-                      ...state.ui.msgOptsInline,
-                      [opt]: !state.ui.msgOptsInline[opt as UI.MessageOption],
-                    },
-                  })
-                }
-              >
-                {label}
-              </Button>
-            )}
-          </For> */}
-        </div>
       </Card>
 
       <Toggle
@@ -197,6 +178,13 @@ const UISettings: Component<{}> = () => {
         fieldName="trimSentences"
         value={state.ui.trimSentences ?? false}
         onChange={(next) => userStore.saveUI({ trimSentences: next })}
+      />
+
+      <Toggle
+        value={settings.anonymize}
+        label="Anonymize Chat"
+        helperText="Hide profile name in conversations. Typically for screenshots."
+        onChange={() => settingStore.toggleAnonymize()}
       />
 
       <Toggle

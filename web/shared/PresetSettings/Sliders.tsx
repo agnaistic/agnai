@@ -41,6 +41,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
             step={0.01}
             value={props.state.dynatemp_exponent ?? 1}
             disabled={props.state.disabled}
+            recommended={1}
             aiSetting={'dynatemp_exponent'}
             onChange={(ev) => props.setter('dynatemp_exponent', ev)}
             hide={props.hides.dynatemp_exponent}
