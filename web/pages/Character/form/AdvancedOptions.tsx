@@ -80,6 +80,7 @@ export const AdvancedOptions: Component<{ editor: CharEditor }> = (props) => {
         <MemoryBookPicker
           setBundledBook={(book) => props.editor.update('book', book)}
           bundledBook={props.editor.state.book}
+          characterId={props.editor.state.editId}
         />
       </Card>
       <Card>

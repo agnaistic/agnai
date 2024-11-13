@@ -4,7 +4,7 @@ import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getAssetUrl, getStrictForm, setComponentPageTitle, toLocalTime } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle, toLocalTime } from '../../shared/util'
 import { adminStore, presetStore, toastStore, userStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
@@ -12,6 +12,7 @@ import { A } from '@solidjs/router'
 import { elapsedSince, getUserSubscriptionTier, now } from '/common/util'
 import type Stripe from 'stripe'
 import { Page } from '/web/Layout'
+import { createStore } from 'solid-js/store'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -21,20 +22,15 @@ const UsersPage: Component = () => {
 
   const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
+  const [store, setStore] = createStore({ username: '', subscribed: false, customerId: '' })
 
   const loadInfo = (id: string, name: string) => {
     setInfo({ id, name })
     adminStore.getInfo(id)
   }
 
-  const search = (ev: Event) => {
-    ev?.preventDefault()
-    const opts = getStrictForm(ref, {
-      username: 'string',
-      subscribed: 'boolean',
-      customerId: 'string',
-    })
-    adminStore.getUsers(opts)
+  const search = () => {
+    adminStore.getUsers(store)
   }
 
   onMount(() => {
@@ -62,11 +58,24 @@ const UsersPage: Component = () => {
       </A>
 
       <div class="flex flex-col gap-2 pb-4">
-        <form ref={ref} class="flex justify-between" onSubmit={search}>
+        <form ref={ref} class="flex justify-between">
           <div class="flex flex-wrap gap-2">
-            <TextInput class="text-xs" fieldName="username" placeholder="Username" />
-            <TextInput class="text-xs" fieldName="customerId" placeholder="Customer ID" />
-            <ToggleButton fieldName="subscribed">Subscribed</ToggleButton>
+            <TextInput
+              class="text-xs"
+              fieldName="username"
+              placeholder="Username"
+              onChange={(ev) => setStore('username', ev.currentTarget.value)}
+              onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
+            />
+            <TextInput
+              class="text-xs"
+              fieldName="customerId"
+              placeholder="Customer ID"
+              onChange={(ev) => setStore('customerId', ev.currentTarget.value)}
+            />
+            <ToggleButton fieldName="subscribed" onChange={(ev) => setStore('subscribed', ev)}>
+              Subscribed
+            </ToggleButton>
           </div>
           <Button onClick={search}>Search</Button>
         </form>

@@ -6,12 +6,13 @@ import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import { RootModal } from '/web/shared/Modal'
 import Select, { Option } from '/web/shared/Select'
-import { memoryStore } from '/web/store'
+import { characterStore, memoryStore } from '/web/store'
 import { createStore } from 'solid-js/store'
 
 export const MemoryBookPicker: Component<{
   bundledBook: AppSchema.MemoryBook | undefined
   setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
+  characterId: string | undefined
 }> = (props) => {
   const memory = memoryStore()
   const [isModalShown, setIsModalShown] = createSignal(false)
@@ -56,23 +57,25 @@ export const MemoryBookPicker: Component<{
     props.setBundledBook(undefined)
   }
 
+  const onSave = () => {
+    if (!props.characterId) return
+    characterStore.editPartialCharacter(props.characterId, { characterBook: state }, () => {
+      props.setBundledBook(state)
+      setIsModalShown(false)
+    })
+  }
+
   const ModalFooter = () => (
     <>
       <Button schema="secondary" onClick={() => setIsModalShown(false)}>
         Close
       </Button>
-      <Button type="submit">
+      <Button onClick={onSave}>
         <Save />
         Save Character Book
       </Button>
     </>
   )
-  const onSubmitCharacterBookChanges = () => {
-    if (props.bundledBook) {
-      props.setBundledBook(state)
-    }
-    setIsModalShown(false)
-  }
 
   return (
     <>
@@ -107,7 +110,6 @@ export const MemoryBookPicker: Component<{
         show={isModalShown()}
         close={() => setIsModalShown(false)}
         footer={<ModalFooter />}
-        onSubmit={onSubmitCharacterBookChanges}
         maxWidth="half"
         fixedHeight
       >

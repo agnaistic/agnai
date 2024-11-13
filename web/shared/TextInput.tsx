@@ -166,7 +166,7 @@ const TextInput: Component<Props> = (props) => {
       }}
     >
       <Show when={props.prelabel && !props.isMultiline}>
-        <div class="bg-600 flex h-full items-center rounded-l-md px-2 text-center text-sm font-bold">
+        <div class="bg-600 flex items-center rounded-l-md px-2 text-center text-sm font-bold">
           {props.prelabel}
         </div>
       </Show>
