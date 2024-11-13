@@ -11,7 +11,6 @@ import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
 import { PresetState } from './PresetSettings/types'
-import { Reference } from '/common/valid/types'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -247,77 +246,7 @@ export function setAssetPrefix(prefix: string) {
   assetPrefix = prefix
 }
 
-export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
-  evt.preventDefault?.()
-  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
-  const form = new FormData(target as HTMLFormElement)
-
-  const disable = enableAll(target)
-
-  const body = Array.from(form.entries()).reduce((prev, [key, value]) => {
-    Object.assign(prev, { [key]: value })
-    return prev
-  }, {})
-
-  disable()
-
-  return body as any
-}
-
 type Field = HTMLSelectElement | HTMLInputElement
-
-export function toStrictInitializer<T extends Validator>(
-  valid: T,
-  partial: Partial<UnwrapBody<T>> = {}
-): UnwrapBody<T> {
-  const init: any = {}
-
-  for (const [key, type] of Object.entries(valid)) {
-    if (partial[key] !== undefined) {
-      init[key] = partial[key] as any
-      continue
-    }
-
-    init[key] = getInitValue(type)
-  }
-
-  return init
-}
-
-function getInitValue(ref: Reference): any {
-  if (ref === 'string') return ''
-  if (ref === 'boolean') return false
-  if (ref === 'number') return 0
-  if (Array.isArray(ref)) {
-    // Optional union or object
-    if (ref.some((r) => r === '?')) return
-
-    // Optional primitive
-    if (typeof ref[0] === 'string' && ref[0]?.endsWith('?')) return
-
-    // String literal union
-    if (ref.length > 1) return ref[0]
-
-    // Array of objects
-    if (typeof ref[0] === 'object') {
-      return toStrictInitializer(ref[0] as Validator, {})
-    }
-
-    console.error(ref)
-    throw new Error(`Unexpected initializer type`)
-  }
-
-  // Nested object
-  if (typeof ref === 'object') {
-    // Optional object
-    if (Object.keys(ref).some((r) => r === '?')) return
-
-    return toStrictInitializer(ref as Validator, {})
-  }
-
-  console.error(ref)
-  throw new Error(`Unexpected initializer type`)
-}
 
 export function getStrictForm<T extends Validator>(
   evt: Event | HTMLFormElement,
@@ -350,46 +279,6 @@ export function getStrictForm<T extends Validator>(
 
   assertValid(body, values, partial)
   return values
-}
-
-export function setFormField(ref: HTMLFormElement, field: string, value: any) {
-  const elem = document.querySelector(`.form-field[name="${field}"]`)
-  if (!elem) {
-    console.warn(`[${field}] Could not update field: Element not found`)
-    return
-  }
-
-  if ('value' in elem) {
-    elem.value = value
-  }
-}
-
-export function setFormFields(ref: HTMLFormElement, update: Record<string, any>) {
-  for (const [field, value] of Object.entries(update)) {
-    setFormField(ref, field, value)
-  }
-}
-
-export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, string]> {
-  evt.preventDefault?.()
-  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
-  const disable = enableAll(target)
-  const form = new FormData(target as HTMLFormElement)
-  const entries = Array.from(form.entries()).map(
-    ([key, value]) => [key, value.toString()] as [string, string]
-  )
-
-  const dangling = target.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>
-  for (const input of dangling) {
-    const prev = entries.find((e) => e[0] === input.id)
-    if (prev) continue
-
-    entries.push([input.id, input.checked ? 'on' : ''])
-  }
-
-  disable()
-
-  return entries
 }
 
 export function formatDate(value: string | number | Date) {

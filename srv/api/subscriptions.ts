@@ -10,6 +10,7 @@ import { config } from '../config'
 import { patreon } from './user/patreon'
 import { sendAll } from './ws'
 import { toSamplerOrder } from '/common/sampler-order'
+import { v4 } from 'uuid'
 
 const subSetting = {
   ...presetValidator,
@@ -43,6 +44,7 @@ const create = handle(async ({ body }) => {
     subApiKey: body.subApiKey ? encryptText(body.subApiKey) : '',
     order: samplers?.order,
     disabledSamplers: samplers?.disabled,
+    _id: v4(),
   }
   const preset = await store.subs.createSubscription(create)
   return preset

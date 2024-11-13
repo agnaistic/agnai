@@ -24,7 +24,6 @@ const ChatMemoryModal: Component<{
     embeds: s.embeds,
   }))
 
-  const [id, setId] = createSignal('')
   const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
   const [editingEmbed, setEditingEmbed] = createSignal<boolean>(false)
   const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBook())
@@ -46,11 +45,6 @@ const ChatMemoryModal: Component<{
   )
 
   const changeBook = async (id: string) => {
-    const nextId = id === 'new' ? '' : id
-    setId(nextId)
-    console.log('nextid', nextId)
-    await Promise.resolve()
-
     const match: AppSchema.MemoryBook | undefined =
       id === 'new' || id === ''
         ? {
@@ -61,7 +55,7 @@ const ChatMemoryModal: Component<{
             name: '',
             description: '',
           }
-        : books.books.list.find((book) => book._id === nextId)
+        : books.books.list.find((book) => book._id === id)
 
     if (match) setState(match)
   }
@@ -76,13 +70,13 @@ const ChatMemoryModal: Component<{
   })
 
   const onSubmit = () => {
-    if (id() === '') {
+    if (!state._id) {
       memoryStore.create(state, (next) => {
-        setId(next._id)
-        useMemoryBook()
+        setState('_id', next._id)
+        useMemoryBook(next._id)
       })
     } else {
-      memoryStore.update(id(), state)
+      memoryStore.update(state._id, state)
     }
   }
 
@@ -90,7 +84,7 @@ const ChatMemoryModal: Component<{
     if (!props.chat?._id) return
     chatStore.editChat(
       props.chat._id,
-      { memoryId: nextId === undefined ? id() : nextId },
+      { memoryId: nextId === undefined ? state._id : nextId },
       undefined
     )
   }
@@ -130,7 +124,7 @@ const ChatMemoryModal: Component<{
           label="Chat Memory Book"
           helperText="The memory book your chat will use"
           items={[{ label: 'None', value: '' }].concat(books.items)}
-          value={id()}
+          value={state._id}
           onChange={(item) => {
             changeBook(item.value)
             useMemoryBook(item.value)

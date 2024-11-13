@@ -8,7 +8,7 @@ import {
 } from '../../../common/adapters'
 import { presetStore, settingStore } from '../../store'
 import { Card } from '../Card'
-import { getFormEntries, getUsableServices, storage } from '../util'
+import { getUsableServices, storage } from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
 import { ServiceOption } from '../../pages/Settings/components/RegisteredSettings'
@@ -234,20 +234,6 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
       </Accordian>
     </Show>
   )
-}
-
-export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {
-  if (!service) return
-
-  const prefix = `registered.${service}.`
-  const values = getFormEntries(ref).reduce((prev, [key, value]) => {
-    if (!key.startsWith(prefix)) return prev
-    const field = key.replace(prefix, '')
-
-    return Object.assign(prev, { [field]: value })
-  }, {})
-
-  return values as Record<string, any>
 }
 
 function updateValue(values: TempSetting[], service: AIAdapter, field: string, nextValue: any) {

@@ -7,7 +7,7 @@ import { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { NewCharacter, toastStore } from '/web/store'
 import { CHUB_URL } from '/web/store/chub'
 
-type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai' | 'chara'
+type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai' | 'charas'
 
 export const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 
@@ -86,7 +86,7 @@ export function jsonToCharacter(json: any): NewCharacter {
     }
   }
 
-  if (format === 'chara') {
+  if (format === 'charas') {
     const v2 = json.data || {}
     const ext = v2.extensions || {}
 
@@ -174,6 +174,7 @@ export async function downloadCharacterHub(path: string) {
 
 function getImportFormat(obj: any): ImportFormat {
   if (obj.kind === 'character' || isNativeCharacter(obj)) return 'agnai'
+  if (obj.extensions?.charas) return 'charas'
   if ('char_name' in obj) return 'ooba'
   if (obj.spec === 'chara_card_v2') return 'tavernV2'
   if ('mes_example' in obj) return 'tavern'

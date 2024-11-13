@@ -20,13 +20,12 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { setComponentPageTitle } from '../../shared/util'
 import { presetStore, settingStore, toastStore } from '../../store'
-import { AIAdapter } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
-import PresetSettings, { getRegisteredSettings } from '/web/shared/PresetSettings'
+import PresetSettings from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { getPresetEditor, getSubPresetForm } from '/web/shared/PresetSettings/types'
 
@@ -189,10 +188,6 @@ export const SubscriptionModel: Component = () => {
       setMissingPlaceholder(true)
       return
     }
-
-    const registered = getRegisteredSettings(body.service as AIAdapter, ref)
-    body.registered = { ...state.registered }
-    body.registered[body.service] = registered
 
     if (state._id) {
       presetStore.updateSubscription(state._id, body as any)
