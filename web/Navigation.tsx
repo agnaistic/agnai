@@ -240,7 +240,7 @@ const Navigation: Component = () => {
             </div>
           </Show>
           <div class="text-500 mb-1 text-[0.6rem] italic" role="contentinfo" aria-label="Version">
-            {sha()}
+            ver. {sha()}
           </div>
         </div>
       </div>
