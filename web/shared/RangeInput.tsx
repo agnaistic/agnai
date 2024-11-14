@@ -138,9 +138,10 @@ const RangeInput: Component<{
           ref={slider}
           id={props.fieldName}
           name={props.fieldName}
-          class="form-field focusable-field border-0.25 float-right box-border inline-block w-12 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
+          class="form-field focusable-field border-0.25 min-w-12 float-right box-border inline-block w-fit rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
           value={props.value}
           min={props.min}
+          type="number"
           max={props.max}
           step={props.step}
           onInput={onInput}
