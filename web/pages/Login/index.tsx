@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
-import { A, useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { A, useLocation, useNavigate, useSearchParams } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
