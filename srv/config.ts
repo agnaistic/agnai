@@ -51,7 +51,10 @@ export const config = {
   clusterWorkers: +env('CLUSTERING', ''),
   auth: {
     inferenceKey: env('INFERENCE_KEY', ''),
-    urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards,https://agnai.cards')
+    urls: env(
+      'AUTH_URLS',
+      'https://chara.cards,https://dev.chara.cards,https://agnai.cards,https://char.as,https://dev.char.as,https://dev.agnai.cards'
+    )
       .split(',')
       .map((name) => name.trim())
       .filter((name) => !!name.trim()),
