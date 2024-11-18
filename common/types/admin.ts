@@ -56,6 +56,8 @@ export type ImageModel = {
     suffix: string
     prefix: string
     negative: string
+    sampler: string
+    denoise: number
   }
   limit: { clipSkip?: number; steps: number; cfg: number; height: number; width: number }
 }

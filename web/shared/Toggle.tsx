@@ -36,11 +36,13 @@ export const Toggle: Component<{
 
   return (
     <div
-      class={`sm: flex flex-col gap-2 ${justify()}`}
+      class={`flex flex-col items-center gap-2 ${justify()}`}
       classList={{
+        'flex-col': props.vertLabel,
+        'flex-row': !props.vertLabel,
         'sm:flex-row': !props.vertLabel,
-        'sm:items-center': !props.vertLabel,
-        'gap-1': props.vertLabel && !props.class?.includes('gap-'),
+        // 'sm:items-center': !props.vertLabel,
+        '!gap-0': props.vertLabel && !props.class?.includes('gap-'),
         'gap-2': !props.vertLabel && !props.class?.includes('gap-'),
         hidden: props.hide ?? false,
         ...props.classList,

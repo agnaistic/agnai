@@ -37,6 +37,7 @@ export type SDRequest = {
   hr_upscaler?: string
   hr_second_pass_steps?: number
   model_override?: string
+  denoise?: number
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
@@ -166,6 +167,7 @@ function getPayload(
     save_images: false,
     send_images: true,
     model_override: temp ? temp.override : model?.override,
+    denoise: temp ? temp.init.denoise : model?.init.denoise,
   }
 
   if (model) {
@@ -175,19 +177,23 @@ function getPayload(
     payload.height = Math.min(+model.limit.height, payload.height)
   }
 
-  const rec = opts.user.useRecommendedImages
-  if (rec && rec !== 'none' && model) {
-    const init = model.init
-    if (init.cfg) payload.cfg_scale = +init.cfg
-    if (init.clipSkip !== undefined) payload.clip_skip = +init.clipSkip
-    if (init.steps) payload.steps = +init.steps
+  const rec = getDefaultConfig(opts.user)
 
-    if (!rec.includes('size')) {
+  if (model) {
+    const init = model.init
+
+    if (rec.config) {
+      if (init.cfg) payload.cfg_scale = +init.cfg
+      if (init.clipSkip !== undefined) payload.clip_skip = +init.clipSkip
+      if (init.steps) payload.steps = +init.steps
+    }
+
+    if (rec.size) {
       payload.width = +init.width
       payload.height = +init.height
     }
 
-    if (!rec.includes('affix')) {
+    if (rec.affixes) {
       const prompt = [
         init.prefix || opts.settings?.prefix,
         opts.raw_prompt,
@@ -195,20 +201,59 @@ function getPayload(
       ].join(',')
 
       payload.prompt = fixImagePrompt(prompt)
+    }
 
-      if (init.negative) {
-        payload.negative_prompt = init.negative
-      }
+    if (rec.negative && init.negative) {
+      payload.negative_prompt = init.negative
+    }
+
+    if (rec.sampler && init.sampler) {
+      payload.sampler_name = init.sampler
     }
   }
 
-  // width and height must be divisible by 64
-  payload.width = Math.ceil(payload.width / 32) * 32
-  payload.height = Math.ceil(payload.height / 32) * 32
+  // width and height must be divisible by 16
+  payload.width = Math.ceil(payload.width / 16) * 16
+  payload.height = Math.ceil(payload.height / 16) * 16
 
   return payload
 }
 
 function getAgnaiModels(csv: AppSchema.Configuration['imagesModels']) {
   return csv
+}
+
+function getDefaultConfig(user: AppSchema.User) {
+  if (user.imageDefaults) return user.imageDefaults
+
+  const config: NonNullable<AppSchema.User['imageDefaults']> = {
+    affixes: false,
+    config: false,
+    negative: false,
+    sampler: false,
+    size: false,
+  }
+
+  const legacy = user.useRecommendedImages
+  if (!legacy || legacy === 'none') return config
+
+  config.affixes = true
+  config.config = true
+  config.negative = true
+  config.sampler = true
+  config.size = true
+
+  if (legacy.includes('size')) {
+    config.size = false
+  }
+
+  if (legacy.includes('affix')) {
+    config.affixes = false
+  }
+
+  if (legacy.includes('negative')) {
+    config.negative = false
+  }
+
+  return config
 }

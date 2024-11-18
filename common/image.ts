@@ -56,6 +56,11 @@ export const SD_SAMPLER_REV = {
   UniPC: 'UniPC',
 } as const
 
+export const SD_SAMPLER_OPTS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
+  label: value,
+  value: key,
+}))
+
 export const SD_SAMPLER = reverseKeyValue(SD_SAMPLER_REV)
 
 type ReverseMap<T extends Record<keyof T, keyof any>> = {

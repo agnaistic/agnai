@@ -1,4 +1,4 @@
-import { Component, JSX, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, JSX, Show, createMemo, createSignal } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -153,9 +153,9 @@ export const ModeButton: Component<{
 }
 
 export const ToggleButton: Component<{
-  fieldName: string
+  fieldName?: string
   children: JSX.Element
-  onChange?: (value: boolean) => void
+  onChange: (value: boolean) => void
   size?: 'sm' | 'md' | 'lg' | 'xs'
   disabled?: boolean
   value?: boolean
@@ -164,54 +164,32 @@ export const ToggleButton: Component<{
   onText?: string
   offText?: string
 }> = (props) => {
-  let ref: HTMLInputElement
-
-  const [val, setVal] = createSignal(props.value ?? false)
-
-  const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (ev) => {
-    const value = !ref.checked
-    ref.checked = value
-    setVal(value)
-    props.onChange?.(value)
+  const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (_ev) => {
+    props.onChange(!props.value)
   }
-
-  createEffect(
-    on(
-      () => props.value,
-      (next) => {
-        if (next === undefined) return
-        setVal(next)
-        ref.checked = next
-      }
-    )
-  )
 
   return (
     <>
       <button
         type="button"
         class={
-          `select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
+          `box-border select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
             sizes[props.size || 'md']
           } ` + (props.class || '')
         }
         classList={{
-          [kinds.hollow]: !val(),
-          [kinds.success]: val(),
+          [kinds.hollow]: !props.value,
+          [kinds.success]: props.value,
+          'border-[1px]': !props.value,
+          'border-solid': !props.value,
+          'border-[var(--hl-500)]': !props.value,
         }}
         disabled={props.disabled}
         onClick={onClick}
       >
-        {props.children} <Show when={val() && props.onText}>{props.onText}</Show>
-        <Show when={!val() && props.offText}>{props.offText}</Show>
+        {props.children} <Show when={props.value && props.onText}>{props.onText}</Show>
+        <Show when={!props.value && props.offText}>{props.offText}</Show>
       </button>
-      <input
-        ref={ref!}
-        name={props.fieldName}
-        type="checkbox"
-        class="hidden"
-        checked={props.value}
-      />
     </>
   )
 }

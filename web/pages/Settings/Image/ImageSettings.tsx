@@ -9,13 +9,14 @@ import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
 import Tabs, { useTabs } from '/web/shared/Tabs'
-import Button from '/web/shared/Button'
+import Button, { ToggleButton } from '/web/shared/Button'
 import { Save, X } from 'lucide-solid'
 import { RootModal } from '/web/shared/Modal'
 import { ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
 import { createStore } from 'solid-js/store'
 import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './ServiceSettings'
+import { FormLabel } from '/web/shared/FormLabel'
 
 const init: ImageSettings = {
   cfg: 7,
@@ -58,6 +59,26 @@ export const ImageSettingsModal = () => {
   }))
 
   const [store, setStore] = createStore(init)
+  const [defaults, setDefaults] = createStore(
+    user.user?.imageDefaults || {
+      size: false,
+      affixes: false,
+      sampler: false,
+      config: false,
+      negative: false,
+    }
+  )
+
+  const toggleDefaults = (next: boolean) =>
+    setDefaults({
+      size: next,
+      affixes: next,
+      sampler: next,
+      config: next,
+      negative: next,
+    })
+
+  const isAllEnabled = createMemo(() => Array.from(Object.values(defaults)).every((v) => !!v))
 
   const isChat = isChatPage(true)
 
@@ -121,6 +142,20 @@ export const ImageSettingsModal = () => {
       }
     )
   )
+
+  createEffect(
+    on(
+      () => user.user?.imageDefaults,
+      (next) => {
+        if (!next) return
+        setDefaults(next)
+      }
+    )
+  )
+
+  createEffect(() => {
+    userStore.updatePartialConfig({ imageDefaults: defaults }, true)
+  })
 
   const cfg = createMemo(() => {
     switch (tab.current()) {
@@ -186,19 +221,50 @@ export const ImageSettingsModal = () => {
         <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
 
         <Show when={canUseImages() && store.type === 'agnai'}>
-          <Select
+          <FormLabel
             label="Use Recommended Settings"
             helperText="When available use the image model's recommended settings."
-            items={[
-              { value: 'none', label: 'Off' },
-              { value: 'all', label: 'On' },
-              { value: 'except-size', label: 'On, except Size' },
-              { value: 'except-affix', label: 'On, except Affixes' },
-              { value: 'except-size-affix', label: 'On except Size and Affixes' },
-            ]}
-            value={user.user?.useRecommendedImages || 'none'}
-            onChange={(ev) => userStore.updatePartialConfig({ useRecommendedImages: ev.value })}
           />
+          <div class="flex flex-wrap justify-center gap-2">
+            <ToggleButton size="sm" value={isAllEnabled()} onChange={(ev) => toggleDefaults(ev)}>
+              Toggle All
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.affixes}
+              onChange={(ev) => setDefaults('affixes', ev)}
+            >
+              Affixes
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.size}
+              onChange={(ev) => setDefaults('size', ev)}
+            >
+              Size
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.config}
+              onChange={(ev) => setDefaults('config', ev)}
+            >
+              CFG Scale / Steps
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.negative}
+              onChange={(ev) => setDefaults('negative', ev)}
+            >
+              Negative Prompt
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.sampler}
+              onChange={(ev) => setDefaults('sampler', ev)}
+            >
+              Sampler
+            </ToggleButton>
+          </div>
         </Show>
 
         <div class={store.type === 'novel' ? subclass : 'hidden'}>

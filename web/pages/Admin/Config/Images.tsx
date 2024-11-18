@@ -7,8 +7,10 @@ import { AppSchema } from '/common/types'
 import { FieldUpdater, useRowHelper } from '/web/shared/util'
 import Button from '/web/shared/Button'
 import { v4 } from 'uuid'
-import { Plus } from 'lucide-solid'
+import { Plus, Trash } from 'lucide-solid'
 import { ImageModel } from '/common/types/admin'
+import { SD_SAMPLER, SD_SAMPLER_OPTS } from '/common/image'
+import Select from '/web/shared/Select'
 
 type Threshold = { steps: number; cfg: number; height: number; width: number }
 type InitThreshold = ImageModel['init']
@@ -65,6 +67,8 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
         suffix: '',
         negative: '',
         clipSkip: 2,
+        denoise: 1,
+        sampler: SD_SAMPLER['Euler a'],
       },
       limit: { steps: 40, cfg: 10, height: 1024, width: 1024 },
     }),
@@ -79,7 +83,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
           Add
         </Button>
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-3">
         <Index each={rows.items()}>
           {(item, i) => (
             <Model index={i} item={item()} updater={rows.updater} remove={rows.remove} />
@@ -93,7 +97,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
   )
 }
 
-const bg = 'bg-800'
+const bg = 'bg-700'
 const size = 'md'
 const opacity = 0.5
 
@@ -104,17 +108,20 @@ const Model: Component<{
   remove: (index: number) => void
 }> = (props) => {
   return (
-    <Card bg="bg-700" bgOpacity={1} class="flex flex-col gap-2">
+    <Card
+      bg="bg-900"
+      bgOpacity={1}
+      class="box-border flex flex-col gap-3 !border-[1px] !border-solid !border-[var(--bg-700)] "
+    >
+      <TextInput
+        prelabel="Description"
+        placeholder="Model Description..."
+        onChange={props.updater(props.index, 'desc')}
+        parentClass="h-8 w-full"
+        value={props.item.desc}
+        variant="outline"
+      />
       <div class="flex gap-2 text-sm font-normal">
-        <TextInput
-          prelabel="Desc"
-          placeholder="Model Description..."
-          onChange={props.updater(props.index, 'desc')}
-          parentClass="h-8 w-1/3"
-          value={props.item.desc}
-          variant="outline"
-        />
-
         <TextInput
           prelabel="Host"
           placeholder="Model Name..."
@@ -141,6 +148,40 @@ const Model: Component<{
           value={props.item.level ?? 0}
           variant="outline"
         />
+
+        <Select
+          value={props.item.init.sampler}
+          items={[{ label: 'None', value: '' }].concat(SD_SAMPLER_OPTS)}
+          onChange={props.updater(props.index, 'init.sampler')}
+        ></Select>
+      </div>
+
+      <div class="flex w-full gap-3">
+        <TextInput
+          prelabel="Prefix"
+          onChange={props.updater(props.index, 'init.prefix')}
+          value={props.item.init.prefix}
+          variant="outline"
+          parentClass="w-1/3 h-8"
+        />
+        <TextInput
+          prelabel="Suffix"
+          onChange={props.updater(props.index, 'init.suffix')}
+          value={props.item.init.suffix}
+          variant="outline"
+          parentClass="w-1/3 h-8"
+        />
+
+        <TextInput
+          prelabel="Negative"
+          onChange={props.updater(props.index, 'init.negative')}
+          value={props.item.init.negative}
+          variant="outline"
+          parentClass="w-1/3 h-8"
+        />
+        <Button schema="red" onClick={() => props.remove(props.index)}>
+          <Trash size={16} />
+        </Button>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -166,7 +207,7 @@ const Model: Component<{
           </div>
         </Card>
 
-        <Card class="flex flex-col gap-1" bgOpacity={opacity} bg={bg} size={size}>
+        <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
           <div class="flex justify-center">CFG Scale</div>
           <div class="flex gap-1">
             <TextInput
@@ -188,7 +229,7 @@ const Model: Component<{
           </div>
         </Card>
 
-        <Card class="flex flex-col gap-1" bgOpacity={opacity} bg={bg} size={size}>
+        <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
           <div class="flex justify-center">Width</div>
           <div class="flex gap-1">
             <TextInput
@@ -210,7 +251,7 @@ const Model: Component<{
           </div>
         </Card>
 
-        <Card class="flex flex-col gap-1" bgOpacity={opacity} bg={bg} size={size}>
+        <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
           <div class="flex justify-center">Height</div>
           <div class="flex gap-1">
             <TextInput
@@ -232,7 +273,7 @@ const Model: Component<{
           </div>
         </Card>
 
-        <Card class="flex flex-col gap-1" bgOpacity={opacity} bg={bg} size={size}>
+        <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
           <div class="flex justify-center">Clip Skip</div>
           <div class="flex gap-1">
             <TextInput
@@ -244,31 +285,6 @@ const Model: Component<{
               variant="outline"
             />
           </div>
-        </Card>
-
-        <Card class="flex w-full gap-1" bgOpacity={opacity} bg={bg} size={size}>
-          <TextInput
-            prelabel="Prefix"
-            onChange={props.updater(props.index, 'init.prefix')}
-            value={props.item.init.prefix}
-            variant="outline"
-            parentClass="w-1/3 h-8"
-          />
-          <TextInput
-            prelabel="Suffix"
-            onChange={props.updater(props.index, 'init.suffix')}
-            value={props.item.init.suffix}
-            variant="outline"
-            parentClass="w-1/3 h-8"
-          />
-
-          <TextInput
-            prelabel="Negative"
-            onChange={props.updater(props.index, 'init.negative')}
-            value={props.item.init.negative}
-            variant="outline"
-            parentClass="w-1/3 h-8"
-          />
         </Card>
       </div>
     </Card>
