@@ -204,7 +204,8 @@ function getPayload(
     }
 
     if (rec.negative && init.negative) {
-      payload.negative_prompt = init.negative
+      payload.negative_prompt =
+        init.negative || opts.params?.negative || opts.settings?.negative || ''
     }
 
     if (rec.sampler && init.sampler) {

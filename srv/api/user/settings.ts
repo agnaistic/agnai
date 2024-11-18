@@ -201,7 +201,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       chargenPreset: 'string?',
       images: 'any?',
       disableLTM: 'boolean?',
-      useRecommendedImages: 'string?',
+      imageDefaults: 'any?',
     },
     body
   )
@@ -216,8 +216,8 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
     update.defaultPreset = body.defaultPreset
   }
 
-  if (body.useRecommendedImages !== undefined) {
-    update.useRecommendedImages = body.useRecommendedImages
+  if (body.imageDefaults) {
+    update.imageDefaults = body.imageDefaults
   }
 
   if (body.disableLTM !== undefined) {
