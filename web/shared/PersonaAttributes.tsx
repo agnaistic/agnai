@@ -67,7 +67,11 @@ const PersonaAttributes: Component<{
         if (prev !== 'text' && kind === 'text') {
           let squished: string[] = []
           for (const { key, values } of props.state) {
-            squished.push(`${key}:\n${values}`)
+            if (key === 'text') {
+              squished.push(values)
+            } else {
+              squished.push(`${key}:\n${values}`)
+            }
           }
 
           props.setter([{ key: 'text', values: squished.join('\n\n') }].concat(props.state))

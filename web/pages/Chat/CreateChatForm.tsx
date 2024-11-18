@@ -254,6 +254,7 @@ const CreateChatForm: Component<{
                 </span>
               }
               placeholder="Untitled"
+              onChange={(ev) => setState('name', ev.currentTarget.value)}
             />
           </Card>
           <Card>
