@@ -128,13 +128,19 @@ async function getConfig({ user, settings, override }: ImageRequestOpts): Promis
     `model=${temp?.name || model.name}`,
   ]
 
-  return {
-    kind: 'agnai',
-    host: srv.imagesHost,
+  const cfg = {
+    kind: 'agnai' as const,
+    host: temp ? temp.host : model?.host,
     params: `?${params.join('&')}`,
     model: temp || model,
     temp,
   }
+
+  if (!cfg.host) {
+    cfg.host = srv.imagesHost
+  }
+
+  return cfg
 }
 
 function getPayload(

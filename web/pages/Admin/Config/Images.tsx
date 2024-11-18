@@ -23,6 +23,7 @@ type Model = {
   init: InitThreshold
   limit: Threshold
   level: number
+  host: string
 }
 
 export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (props) => {
@@ -58,6 +59,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
       name: '',
       desc: '',
       override: '',
+      host: '',
       level: 0,
       init: {
         steps: 20,
@@ -123,6 +125,16 @@ const Model: Component<{
           value={props.item.desc}
           variant="outline"
         />
+
+        <TextInput
+          prelabel="URL"
+          placeholder=""
+          onChange={props.updater(props.index, 'host')}
+          parentClass="h-8 w-full"
+          value={props.item.host}
+          variant="outline"
+        />
+
         <div class="flex gap-2 text-sm font-normal">
           <TextInput
             prelabel="Host"
