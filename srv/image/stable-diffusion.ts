@@ -38,6 +38,7 @@ export type SDRequest = {
   hr_second_pass_steps?: number
   model_override?: string
   denoise?: number
+  draft_mode?: boolean
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
@@ -174,6 +175,7 @@ function getPayload(
     send_images: true,
     model_override: temp ? temp.override : model?.override,
     denoise: temp ? temp.init.denoise : model?.init.denoise,
+    draft_mode: opts.settings?.agnai?.draftMode,
   }
 
   if (model) {

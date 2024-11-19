@@ -11,6 +11,7 @@ import { settingStore, userStore } from '../../../store'
 import { ImageSettings } from '/common/types/image-schema'
 import { SetStoreFunction } from 'solid-js/store'
 import { applyStoreProperty } from '/web/shared/util'
+import { Toggle } from '/web/shared/Toggle'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -180,7 +181,7 @@ export const AgnaiSettings: Component<{
       </Show>
       <Select
         fieldName="agnaiModel"
-        label="Agnaistic Image Model"
+        label="Image Model"
         items={settings.names}
         value={props.cfg.agnai?.model || settings.names[0]?.value}
         disabled={settings.models.length <= 1}
@@ -194,6 +195,13 @@ export const AgnaiSettings: Component<{
         label={`Sampler`}
         value={props.cfg.agnai?.sampler}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.sampler', ev.value))}
+      />
+
+      <Toggle
+        label="Draft Mode"
+        helperText="If available: Quickly generate a lower quality image"
+        value={props.cfg.agnai?.draftMode}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.draftMode', ev))}
       />
 
       <Show when={!!model()}>

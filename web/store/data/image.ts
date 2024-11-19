@@ -222,7 +222,9 @@ async function tryFetchImage(image: string, attempt = 1) {
   if (attempt > 10) throw new Error(`failed to download image`)
 
   try {
-    const res = await fetch(getAssetUrl(image), { cache: 'no-cache' })
+    const res = await fetch(getAssetUrl(image), {
+      cache: 'no-cache',
+    })
     if (res.status && res.status > 200) {
       await wait(3)
       return tryFetchImage(image, attempt + 1)

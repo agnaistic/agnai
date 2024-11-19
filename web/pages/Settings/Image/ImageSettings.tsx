@@ -34,6 +34,7 @@ const init: ImageSettings = {
   agnai: {
     model: '',
     sampler: SD_SAMPLER['Euler a'],
+    draftMode: false,
   },
   horde: {
     sampler: SD_SAMPLER['Euler a'],

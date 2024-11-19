@@ -48,6 +48,7 @@ export type ImageModel = {
   override: string
   level: number
   host: string
+  lora: boolean
   init: {
     clipSkip?: number
     steps: number

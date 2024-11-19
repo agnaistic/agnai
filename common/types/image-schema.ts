@@ -47,18 +47,5 @@ export type AgnaiSettings = {
   type: 'agnai'
   model: string
   sampler: string
+  draftMode: boolean
 }
-
-export const baseImageValid = {
-  imageType: ['horde', 'sd', 'agnai', 'novel'],
-  imageSteps: 'number',
-  imageWidth: 'number',
-  imageHeight: 'number',
-  imageCfg: 'number',
-  imagePrefix: 'string',
-  imageSuffix: 'string',
-  imageClipSkip: 'number?',
-  imageNegative: 'string',
-  summaryPrompt: 'string',
-  summariseChat: 'boolean',
-} as const
