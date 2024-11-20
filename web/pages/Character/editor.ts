@@ -106,6 +106,7 @@ const initState: EditorState = {
     agnai: {
       model: '',
       sampler: '',
+      draftMode: false,
     },
 
     horde: {
