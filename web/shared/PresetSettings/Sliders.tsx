@@ -17,71 +17,65 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           setting `temperature=0.4` and `dynatemp_range=0.1` will result in a minimum temp of 0.3
           and max of 0.5.
         </div>
-        <div class="flex w-full gap-2">
-          <RangeInput
-            parentClass="w-1/2"
-            fieldName="dynatemp_range"
-            label="Range"
-            min={0}
-            max={20}
-            step={0.01}
-            value={props.state.dynatemp_range ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'dynatemp_range'}
-            onChange={(ev) => props.setter('dynatemp_range', ev)}
-            hide={props.hides.dynatemp_range}
-          />
 
-          <RangeInput
-            fieldName="dynatemp_exponent"
-            parentClass="w-1/2"
-            label="Exponent"
-            min={0}
-            max={20}
-            step={0.01}
-            value={props.state.dynatemp_exponent ?? 1}
-            disabled={props.state.disabled}
-            recommended={1}
-            aiSetting={'dynatemp_exponent'}
-            onChange={(ev) => props.setter('dynatemp_exponent', ev)}
-            hide={props.hides.dynatemp_exponent}
-          />
-        </div>
+        <RangeInput
+          fieldName="dynatemp_range"
+          label="Range"
+          min={0}
+          max={20}
+          step={0.01}
+          value={props.state.dynatemp_range ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'dynatemp_range'}
+          onChange={(ev) => props.setter('dynatemp_range', ev)}
+          hide={props.hides.dynatemp_range}
+        />
+
+        <RangeInput
+          fieldName="dynatemp_exponent"
+          label="Exponent"
+          min={0}
+          max={20}
+          step={0.01}
+          value={props.state.dynatemp_exponent ?? 1}
+          disabled={props.state.disabled}
+          recommended={1}
+          aiSetting={'dynatemp_exponent'}
+          onChange={(ev) => props.setter('dynatemp_exponent', ev)}
+          hide={props.hides.dynatemp_exponent}
+        />
       </Card>
 
       <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.xtcThreshold}>
         <div class="flex gap-1">
           XTC (Exclude Top Choices) <XTCHelpModal />
         </div>
-        <div class="flex w-full gap-2">
-          <RangeInput
-            label="Threshold"
-            parentClass="w-1/2"
-            min={0}
-            max={1}
-            step={0.01}
-            value={props.state.xtcThreshold ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'xtcThreshold'}
-            recommended={0.1}
-            onChange={(ev) => props.setter('xtcThreshold', ev)}
-            hide={props.hides.xtcThreshold}
-          />
 
-          <RangeInput
-            label="Probability"
-            parentClass="w-1/2"
-            min={0}
-            max={1}
-            step={0.01}
-            value={props.state.xtcProbability ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'xtcProbability'}
-            recommended={0.5}
-            onChange={(ev) => props.setter('xtcProbability', ev)}
-            hide={props.hides.xtcThreshold}
-          />
-        </div>
+        <RangeInput
+          label="Threshold"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.state.xtcThreshold ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'xtcThreshold'}
+          recommended={0.1}
+          onChange={(ev) => props.setter('xtcThreshold', ev)}
+          hide={props.hides.xtcThreshold}
+        />
+
+        <RangeInput
+          label="Probability"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.state.xtcProbability ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'xtcProbability'}
+          recommended={0.5}
+          onChange={(ev) => props.setter('xtcProbability', ev)}
+          hide={props.hides.xtcThreshold}
+        />
       </Card>
 
       <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.dryMultiplier}>
@@ -96,48 +90,43 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           </a>
         </div>
 
-        <div class="flex items-start gap-2">
-          <RangeInput
-            parentClass="w-1/3"
-            label={'Multiplier'}
-            min={0}
-            max={1}
-            step={0.01}
-            value={props.state.dryMultiplier ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'dryMultiplier'}
-            recommended={0.8}
-            onChange={(ev) => props.setter('dryMultiplier', ev)}
-            hide={props.hides.dryMultiplier}
-          />
+        <RangeInput
+          label={'Multiplier'}
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.state.dryMultiplier ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'dryMultiplier'}
+          recommended={0.8}
+          onChange={(ev) => props.setter('dryMultiplier', ev)}
+          hide={props.hides.dryMultiplier}
+        />
 
-          <RangeInput
-            label="Base"
-            parentClass="w-1/3"
-            min={0}
-            max={1}
-            step={0.01}
-            value={props.state.dryBase ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'dryBase'}
-            recommended={1.75}
-            onChange={(ev) => props.setter('dryBase', ev)}
-            hide={props.hides.dryBase}
-          />
+        <RangeInput
+          label="Base"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.state.dryBase ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'dryBase'}
+          recommended={1.75}
+          onChange={(ev) => props.setter('dryBase', ev)}
+          hide={props.hides.dryBase}
+        />
 
-          <RangeInput
-            label="Allowed Length"
-            parentClass="w-1/3"
-            min={0}
-            max={10}
-            step={1}
-            value={props.state.dryAllowedLength ?? 0}
-            disabled={props.state.disabled}
-            aiSetting={'dryAllowedLength'}
-            recommended={2}
-            onChange={(ev) => props.setter('dryAllowedLength', ev)}
-          />
-        </div>
+        <RangeInput
+          label="Allowed Length"
+          min={0}
+          max={10}
+          step={1}
+          value={props.state.dryAllowedLength ?? 0}
+          disabled={props.state.disabled}
+          aiSetting={'dryAllowedLength'}
+          recommended={2}
+          onChange={(ev) => props.setter('dryAllowedLength', ev)}
+        />
       </Card>
 
       <Card class="flex flex-col gap-4" bg="bg-600">

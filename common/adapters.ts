@@ -202,6 +202,7 @@ export const MISTRAL_MODELS = {
   MistralSmall: 'mistral-small-latest',
   MistralMedium: 'mistral-medium-latest',
   MistralLarge: 'mistral-large-latest',
+  MistralLarge2411: 'mistral-large-2411',
 } as const
 
 export const OPENAI_CONTEXTS: Record<string, number> = {
@@ -273,7 +274,9 @@ export const GOOGLE_MODELS = {
   GEMINI_15_PRO: { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
   GEMINI_10_PRO_LATEST: { id: 'gemini-1.0-pro-latest', label: 'Gemini 1.0 Pro' },
   GEMINI_15_FLASH: { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+  GEMINI_15_FLASH_002: { id: 'gemini-1.5-flash-002', label: 'Gemini 1.5 Flash 002' },
   GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
+  GEMINI_EXP_1114: { id: 'gemini-exp-1114', label: 'Gemini Exp 1114' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {
@@ -306,7 +309,11 @@ export const CLAUDE_MODELS = {
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
   ClaudeV3_Haiku: 'claude-3-haiku-20240307',
+  ClaudeV35_Haiku_Oct2024: 'claude-3-5-haiku-20241022',
+  ClaudeV35_Haiku_Latest: 'claude-3-5-haiku-latest',
   ClaudeV35_Sonnet: 'claude-3-5-sonnet-20240620',
+  ClaudeV35_Sonnet_Oct2024: 'claude-3-5-sonnet-20241022',
+  ClaudeV35_Sonnet_Latest: 'claude-3-5-sonnet-latest',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
@@ -314,6 +321,10 @@ export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
   [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
   [CLAUDE_MODELS.ClaudeV35_Sonnet]: true,
+  [CLAUDE_MODELS.ClaudeV35_Sonnet_Oct2024]: true,
+  [CLAUDE_MODELS.ClaudeV35_Sonnet_Latest]: true,
+  [CLAUDE_MODELS.ClaudeV35_Haiku_Oct2024]: true,
+  [CLAUDE_MODELS.ClaudeV35_Haiku_Latest]: true,
 }
 
 export const NOVEL_MODELS = {

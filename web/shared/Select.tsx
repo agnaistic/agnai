@@ -64,7 +64,7 @@ const Select: Component<{
             <label class="form-label">{props.label}</label>
             <Show when={recommend() !== undefined}>
               <span class="text-xs italic text-gray-500">
-                &nbsp;({props.recommendLabel || 'Eg.'}: {recommend()?.toString()})
+                &nbsp;({props.recommendLabel || 'Recommended'}: {recommend()?.toString()})
               </span>
             </Show>
           </span>

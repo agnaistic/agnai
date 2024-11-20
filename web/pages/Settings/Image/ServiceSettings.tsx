@@ -238,7 +238,7 @@ export const AgnaiSettings: Component<{
 
               <Show when={model()?.init.prefix}>
                 <tr>
-                  <Td span={6}>
+                  <Td span={6} class="!border-0">
                     <div class="flex flex-col gap-2">
                       <Show when={model()?.init.sampler}>
                         <TextInput
@@ -286,9 +286,9 @@ const Th: Component<{ children?: any }> = (props) => (
     {props.children}
   </th>
 )
-const Td: Component<{ children?: any; span?: number }> = (props) => (
+const Td: Component<{ children?: any; span?: number; class?: string }> = (props) => (
   <td
-    class="rounded-md border-[var(--bg-700)] p-2 "
+    class={`rounded-md border-[var(--bg-700)] p-2 ${props.class || ''}`}
     colSpan={props.span}
     classList={{ border: !!props.children }}
   >

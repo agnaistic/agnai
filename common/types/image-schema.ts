@@ -16,6 +16,7 @@ export type BaseImageSettings = {
   height: number
   steps: number
   cfg: number
+  seed?: number
 }
 
 export type ImageSettings = BaseImageSettings & {
