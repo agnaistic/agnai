@@ -174,7 +174,10 @@ const LoginForm: Component<FormProps> = (props) => {
   const [error, setError] = createSignal<string>()
   const google = useGoogleReady()
 
-  const [store, setStore] = createStore({ username: '', password: '' })
+  const [store, setStore] = createStore({
+    username: loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : '',
+    password: '',
+  })
 
   createEffect(() => {
     if (state.initLoading) return
@@ -247,7 +250,7 @@ const LoginForm: Component<FormProps> = (props) => {
           placeholder="Username"
           disabled={user.loggedIn}
           required
-          value={loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''}
+          value={store.username}
           onChange={(ev) => setStore('username', ev.currentTarget.value)}
         />
         <TextInput
