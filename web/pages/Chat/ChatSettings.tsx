@@ -193,7 +193,7 @@ const ChatSettings: Component<{
       <Card>
         <TextInput
           class="text-sm"
-          value={state.chat?.name}
+          value={edit?.name || ''}
           onChange={(ev) => setEdit('name', ev.currentTarget.value)}
           label={
             <>
