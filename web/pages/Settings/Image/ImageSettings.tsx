@@ -306,7 +306,6 @@ export const ImageSettingsModal = () => {
           step={1}
           value={store.steps ?? agnaiModel()?.init.steps ?? 50}
           label="Sampling Steps"
-          helperText="(Novel Anlas Threshold: 28)"
           onChange={(ev) => setStore('steps', ev)}
         />
 
@@ -317,7 +316,7 @@ export const ImageSettingsModal = () => {
           step={1}
           value={store.clipSkip ?? agnaiModel()?.init.clipSkip ?? 0}
           label="Clip Skip"
-          helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+          helperText="The larger the image, the less that can be retained in your local cache."
           onChange={(ev) => setStore('clipSkip', ev)}
         />
 
@@ -328,7 +327,7 @@ export const ImageSettingsModal = () => {
           step={128}
           value={store.width ?? agnaiModel()?.init.width ?? 1024}
           label="Image Width"
-          helperText="The larger the image, the less that can be retained in your local cache. (Novel Anlas Threshold: 512)"
+          helperText="The larger the image, the less that can be retained in your local cache."
           onChange={(ev) => setStore('width', ev)}
         />
 
@@ -339,7 +338,7 @@ export const ImageSettingsModal = () => {
           step={128}
           value={store.height ?? agnaiModel()?.init.height ?? 1024}
           label="Image Height"
-          helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
+          helperText="The larger the image, the less that can be retain in your local cache."
           onChange={(ev) => setStore('height', ev)}
         />
 

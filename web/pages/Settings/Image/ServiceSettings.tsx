@@ -33,9 +33,7 @@ export const NovelSettings: Component<{
           Novel.
         </div>
       </Show>
-      <em>
-        Note: The <b>Anlas Threshold</b> means anything above this value is cost Anlas credits
-      </em>
+
       <Select
         fieldName="novelImageModel"
         items={models}
@@ -206,7 +204,7 @@ export const AgnaiSettings: Component<{
 
       <Show when={!!model()}>
         <div>
-          <table class="table-auto border-separate border-spacing-2 ">
+          <table class="table-auto border-separate border-spacing-1 text-sm ">
             <thead>
               <tr>
                 <Th />
@@ -219,7 +217,7 @@ export const AgnaiSettings: Component<{
             </thead>
             <tbody>
               <tr>
-                <Td>Recommended</Td>
+                <Td class="bg-700 !border-0">Recommended</Td>
                 <Td>{model()?.init.steps}</Td>
                 <Td>{model()?.init.cfg}</Td>
                 <Td>{model()?.init.width}</Td>
@@ -228,7 +226,7 @@ export const AgnaiSettings: Component<{
               </tr>
 
               <tr>
-                <Td>Limits</Td>
+                <Td class="bg-700 !border-0">Limits</Td>
                 <Td>{model()?.limit.steps}</Td>
                 <Td>{model()?.limit.cfg}</Td>
                 <Td>{model()?.limit.width}</Td>
@@ -236,40 +234,27 @@ export const AgnaiSettings: Component<{
                 <Td>{model()?.limit.clipSkip || ''}</Td>
               </tr>
 
-              <Show when={model()?.init.prefix}>
+              <Show when={model()?.init.sampler}>
                 <tr>
-                  <Td span={6} class="!border-0">
-                    <div class="flex flex-col gap-2">
-                      <Show when={model()?.init.sampler}>
-                        <TextInput
-                          variant="outline"
-                          disabled
-                          prelabel="Sampler"
-                          value={(SD_SAMPLER_REV as any)[model()?.init.sampler!]}
-                        />
-                      </Show>
-                      <TextInput
-                        variant="outline"
-                        disabled
-                        prelabel="Prefix"
-                        value={model()?.init.prefix}
-                      />
-                      <TextInput
-                        variant="outline"
-                        disabled
-                        prelabel="Suffix"
-                        value={model()?.init.suffix}
-                      />
-                      <TextInput
-                        variant="outline"
-                        disabled
-                        prelabel="Negative"
-                        value={model()?.init.negative}
-                      />
-                    </div>
-                  </Td>
+                  <Td class="bg-700 !border-0">Sampler</Td>
+                  <Td span={5}>{(SD_SAMPLER_REV as any)[model()?.init.sampler!]}</Td>
                 </tr>
               </Show>
+
+              <tr>
+                <Td class="bg-700 !border-0">Prefix</Td>
+                <Td span={5}>{model()?.init.prefix}</Td>
+              </tr>
+
+              <tr>
+                <Td class="bg-700 !border-0">Suffix</Td>
+                <Td span={5}>{model()?.init.suffix}</Td>
+              </tr>
+
+              <tr>
+                <Td class="bg-700 !border-0">Negative</Td>
+                <Td span={5}>{model()?.init.negative}</Td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -280,7 +265,7 @@ export const AgnaiSettings: Component<{
 
 const Th: Component<{ children?: any }> = (props) => (
   <th
-    class="rounded-md border-[var(--bg-600)] p-2 font-bold"
+    class="rounded-md border-[var(--bg-600)] px-2 font-bold"
     classList={{ border: !!props.children, 'bg-[var(--bg-700)]': !!props.children }}
   >
     {props.children}
@@ -288,7 +273,7 @@ const Th: Component<{ children?: any }> = (props) => (
 )
 const Td: Component<{ children?: any; span?: number; class?: string }> = (props) => (
   <td
-    class={`rounded-md border-[var(--bg-700)] p-2 ${props.class || ''}`}
+    class={`rounded-md border-[var(--bg-700)] px-2 ${props.class || ''}`}
     colSpan={props.span}
     classList={{ border: !!props.children }}
   >
