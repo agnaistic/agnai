@@ -78,7 +78,6 @@ export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
   'system_prompt',
   'scenario',
   'personality',
-  'impersonating',
   'chat_embed',
   'memory',
   'example_dialogue',
@@ -87,14 +86,14 @@ export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
 
 export const formatHolders: Record<string, Record<string, string>> = {
   Universal: {
-    system_prompt: neat`<system>{{#if system_prompt}}{{value}}{{#else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{char}}" and "{{user}}"{{/else}}{{/if}}</system>`,
+    system_prompt: neat`<system>{{#if system_prompt}}{{value}}{{#else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{char}}" and "{{user}}"{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,
     impersonating: neat`{{#if impersonating}}{{user}}'s personality:\n{{impersonating}}\n{{/if}}`,
     chat_embed: neat`{{#if chat_embed}}Relevant past conversation history:\n{{chat_embed}}\n{{/if}}`,
     example_dialogue: neat`{{#if example_dialogue}}How "{{char}}" speaks:\n{{example_dialogue}}\n{{/if}}`,
-    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.</system>
     
     {{#each msg}}{{#if .isbot}}<bot>{{/if}}{{#if .isuser}}<user>{{/if}}{{.name}}: {{.msg}}{{#if .isbot}}</bot>{{/if}}{{#if .isuser}}</user>{{/if}}{{/each}}`,
     post: neat`<bot>{{#if ujb}}({{value}}) {{/if}}{{post}}`,
