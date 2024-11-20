@@ -152,7 +152,8 @@ export namespace AppSchema {
       affixes: boolean
       negative: boolean
       sampler: boolean
-      config: boolean
+      guidance: boolean
+      steps: boolean
     }
     useRecommendedImages?: string // 'all' | 'except-(size|affix|negative)' | 'none'
 

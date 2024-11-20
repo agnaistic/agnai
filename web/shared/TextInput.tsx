@@ -124,7 +124,11 @@ const TextInput: Component<Props> = (props) => {
       () => {
         if (props.value === undefined) return // Unsure about this
         if (props.static) return
-        if (inputRef && inputRef.value !== props.value) inputRef.value = props.value.toString()
+
+        if (inputRef) {
+          inputRef.value = props.value.toString()
+        }
+
         resize()
         updateCount()
       }
@@ -143,7 +147,7 @@ const TextInput: Component<Props> = (props) => {
     props.ref?.(ref)
     setTimeout(() => {
       inputRef = ref
-      if (props.value) {
+      if (props.value !== undefined) {
         ref.value = props.value
       }
       resize()
@@ -155,6 +159,16 @@ const TextInput: Component<Props> = (props) => {
   ) => {
     resize()
     props.onChange?.(ev)
+
+    // On the next tick: Evaluate if the props.value and input.value are inconsistent
+    // If the component caller 'clamps' the value, the createEffect that monitors the props.value won't be called
+    // Therefore we must also monitor it on-input
+    setTimeout(() => {
+      if (props.value === undefined || !inputRef) return
+      if (props.value.toString().trim() !== inputRef.value.toString().trim()) {
+        inputRef.value = props.value.toString()
+      }
+    })
   }
 
   return (
@@ -229,6 +243,7 @@ const TextInput: Component<Props> = (props) => {
         <Match when={!props.children}>
           <input
             id={props.fieldName}
+            ref={onRef}
             name={props.fieldName}
             type={props.type || 'text'}
             required={props.required}
@@ -259,7 +274,6 @@ const TextInput: Component<Props> = (props) => {
             pattern={props.pattern}
             spellcheck={props.spellcheck}
             lang={props.lang}
-            ref={onRef}
             step={props.step}
             {...props.input}
           />

@@ -65,8 +65,9 @@ export const ImageSettingsModal = () => {
       size: false,
       affixes: false,
       sampler: false,
-      config: false,
       negative: false,
+      guidance: false,
+      steps: false,
     }
   )
 
@@ -75,7 +76,8 @@ export const ImageSettingsModal = () => {
       size: next,
       affixes: next,
       sampler: next,
-      config: next,
+      guidance: next,
+      steps: next,
       negative: next,
     })
 
@@ -246,10 +248,17 @@ export const ImageSettingsModal = () => {
             </ToggleButton>
             <ToggleButton
               size="sm"
-              value={defaults.config}
-              onChange={(ev) => setDefaults('config', ev)}
+              value={defaults.guidance}
+              onChange={(ev) => setDefaults('guidance', ev)}
             >
-              CFG Scale / Steps
+              Guidance
+            </ToggleButton>
+            <ToggleButton
+              size="sm"
+              value={defaults.steps}
+              onChange={(ev) => setDefaults('steps', ev)}
+            >
+              Steps
             </ToggleButton>
             <ToggleButton
               size="sm"
@@ -345,9 +354,23 @@ export const ImageSettingsModal = () => {
         <TextInput
           fieldName="imageCfg"
           value={store.cfg ?? agnaiModel()?.init.cfg ?? 9}
-          label="CFG Scale"
+          label="Guidance Scale"
           helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
           onChange={(ev) => setStore('cfg', +ev.currentTarget.value)}
+        />
+
+        <TextInput
+          fieldName="seed"
+          value={store.seed ?? 0}
+          label="Seed"
+          type="number"
+          helperText="Seed number (0 = random). Note: The seed will not be consistent across different servers."
+          onChange={(ev) =>
+            setStore(
+              'seed',
+              Math.max(0, Math.min(+ev.currentTarget.value, Number.MAX_SAFE_INTEGER))
+            )
+          }
         />
 
         <TextInput

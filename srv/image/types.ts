@@ -29,6 +29,7 @@ export type ImageGenerateRequest = {
     negative?: string
     steps?: number
     sampler?: string
+    seed?: number
   }
 }
 

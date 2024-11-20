@@ -168,7 +168,10 @@ function getPayload(
     negative_prompt: opts.params?.negative ?? opts.negative,
     sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
     cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
-    seed: Math.trunc(Math.random() * 1_000_000_000),
+    seed:
+      opts.params?.seed ||
+      opts.settings?.seed ||
+      Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
     steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
     save_images: false,
@@ -190,9 +193,12 @@ function getPayload(
   if (model) {
     const init = model.init
 
-    if (rec.config) {
+    if (rec.guidance) {
       if (init.cfg) payload.cfg_scale = +init.cfg
       if (init.clipSkip !== undefined) payload.clip_skip = +init.clipSkip
+    }
+
+    if (rec.steps) {
       if (init.steps) payload.steps = +init.steps
     }
 
@@ -237,7 +243,8 @@ function getDefaultConfig(user: AppSchema.User) {
 
   const config: NonNullable<AppSchema.User['imageDefaults']> = {
     affixes: false,
-    config: false,
+    guidance: false,
+    steps: false,
     negative: false,
     sampler: false,
     size: false,
@@ -247,7 +254,8 @@ function getDefaultConfig(user: AppSchema.User) {
   if (!legacy || legacy === 'none') return config
 
   config.affixes = true
-  config.config = true
+  config.guidance = true
+  config.steps = true
   config.negative = true
   config.sampler = true
   config.size = true

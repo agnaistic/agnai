@@ -27,6 +27,7 @@ const validImage = {
   clip_skip: 'number?',
   steps: 'number?',
   sampler: 'string?',
+  seed: 'number?',
   use_recommended: 'string?',
 } as const
 

@@ -1097,7 +1097,7 @@ export function toJsonSchema(body: JsonField[]): JsonSchema | undefined {
 
       case 'bool': {
         props[name] = schema.bool(type)
-        props[name].type = 'enum'
+        props[name].type = 'enum' as any
         break
       }
 
