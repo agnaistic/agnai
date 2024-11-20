@@ -196,7 +196,7 @@ const CharacterList: Component = () => {
             <TextInput
               fieldName="search"
               placeholder="Search by name..."
-              onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+              onChange={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
 

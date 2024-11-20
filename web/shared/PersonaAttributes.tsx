@@ -237,7 +237,6 @@ const Attribute: Component<{
       <TextInput
         placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
         value={props.attr.values}
-        // onKeyUp={(ev) => props.onKey(ev.key, props.index)}
         onChange={(ev) => props.update(props.attr, props.index, 'values', ev.currentTarget.value)}
         isMultiline
         disabled={props.disabled}

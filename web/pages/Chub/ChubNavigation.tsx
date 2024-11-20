@@ -16,7 +16,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
   onMount(update)
 
   const onSearch = (
-    ev: KeyboardEvent & {
+    ev: Event & {
       target: Element
       currentTarget: HTMLInputElement | HTMLTextAreaElement
     }
@@ -34,7 +34,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
             fieldName="search"
             placeholder="Search by name..."
             value={state.search}
-            onKeyUp={onSearch}
+            onChange={(ev) => onSearch(ev)}
           />
           <Show when={props.buttons}>
             <Button
@@ -56,7 +56,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               <TextInput
                 fieldName="number"
                 value={state.page}
-                onKeyUp={(ev) => {
+                onChange={(ev) => {
                   const n = Number(ev.currentTarget.value)
                   if (!isNaN(n) && n !== 0) {
                     chubStore.setPage(n)
