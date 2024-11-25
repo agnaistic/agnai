@@ -1,4 +1,4 @@
-import { trimSentence } from '../common/util'
+import { neat, trimSentence } from '../common/util'
 import { expect } from 'chai'
 
 describe('trimSentence', () => {
@@ -33,7 +33,7 @@ describe('trimSentence', () => {
     expect(result).to.eq('*Hello world.*')
   })
 
-  it ('should trim a sentence to new line ignoring any number of orphans', () => {
+  it('should trim a sentence to new line ignoring any number of orphans', () => {
     const text = `*Hello world.*
     * ! `
     const result = trimSentence(text)
@@ -65,7 +65,7 @@ describe('trimSentence', () => {
   })
 
   it('should trim repeated orphaned punctuation', () => {
-    const text = "*Hello world.*\n ***Hello      "
+    const text = '*Hello world.*\n ***Hello      '
     const result = trimSentence(text)
     expect(result).to.eq(`*Hello world.*`)
   })
@@ -106,4 +106,18 @@ describe('trimSentence', () => {
     const result = trimSentence(text)
     expect(result).to.eq(`Hello world.`)
   })
+
+  it('will not trim code block at end of text', () => {
+    const text = neat`
+    This is a codeblock
+
+    ${ticks}
+    const foo = bar()
+    ${ticks}`
+
+    const result = trimSentence(text)
+    expect(result).to.eq(text)
+  })
 })
+
+const ticks = '```'

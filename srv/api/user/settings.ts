@@ -14,10 +14,11 @@ import { v4 } from 'uuid'
 import { getRegisteredAdapters } from '/srv/adapter/register'
 import { AIAdapter } from '/common/adapters'
 import { config } from '/srv/config'
-import { toArray } from '/common/util'
+import { getUserSubscriptionTier, toArray } from '/common/util'
 import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
+import { getCachedTiers } from '/srv/db/subscriptions'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const replicate = await getLanguageModels()
@@ -492,6 +493,11 @@ async function verifyHordeKey(key: string) {
 export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
   if (!user) return
+
+  const sub = getUserSubscriptionTier(user, getCachedTiers())
+  const next = sub ? { type: sub?.type, level: sub?.level, tierId: sub.tier._id } : undefined
+  await store.users.updateUser(userId, { sub: next })
+  user.sub = next
 
   return toSafeUser(user)
 }

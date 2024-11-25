@@ -35,7 +35,7 @@ export const Convertible: Component<ConvertibleProps> = (props) => {
               </div>
             </div>
           </div>
-          <div style={{ 'grid-area': 'content' }} class="overflow-y-auto px-2">
+          <div style={{ 'grid-area': 'content' }} class="overflow-x-none overflow-y-auto px-2">
             {body}
           </div>
           <Footer>{props.footer}</Footer>

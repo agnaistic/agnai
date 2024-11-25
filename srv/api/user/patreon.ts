@@ -6,6 +6,7 @@ import { getCachedTiers } from '/srv/db/subscriptions'
 import { store } from '/srv/db'
 import { command } from '/srv/domains'
 import { sendOne } from '../ws'
+import { getPatreonEntitledTierByCost } from '/common/util'
 
 export const patreon = {
   authorize,
@@ -95,7 +96,7 @@ async function identity(token: string) {
   })
 
   const contrib = tier.attributes.amount_cents
-  const sub = getPatronSubscriptionTier(contrib)
+  const sub = getPatreonEntitledTierByCost(contrib, getCachedTiers())
 
   return { tier, sub, user, member }
 }
@@ -148,20 +149,6 @@ async function revalidatePatron(userId: string | AppSchema.User) {
   })
   await command.patron.link(patron.user.id, { userId: user._id })
   return next
-}
-
-function getPatronSubscriptionTier(contrib: number) {
-  const sub = getCachedTiers().reduce((prev, curr) => {
-    if (!curr.enabled || curr.deletedAt) return prev
-    if (!curr.patreon?.tierId) return prev
-    if (curr.patreon.cost > contrib) return prev
-
-    if (!prev) return curr
-    if (prev.patreon?.cost! > curr.patreon.cost) return prev
-    return curr
-  })
-
-  return sub
 }
 
 async function initialVerifyPatron(userId: string, code: string) {

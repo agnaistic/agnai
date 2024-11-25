@@ -148,6 +148,13 @@ const END_SYMBOLS = new Set(`."”;’'*!！?？)}]\`>~`.split(''))
 const MID_SYMBOLS = new Set(`.)}’'!?\``.split(''))
 
 export function trimSentence(text: string) {
+  if (text.trim().endsWith('```')) {
+    // We want pairs of code block symbols
+    const count = text.match(/```/g)?.length
+
+    if (count && count % 2 === 0) return text.trimEnd()
+  }
+
   let index = -1,
     checkpoint = -1
   for (let i = text.length - 1; i >= 0; i--) {
@@ -367,7 +374,7 @@ export function getUserSubscriptionTier(
   previous?: UserSub
 ): UserSub | undefined {
   let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
-  let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
+  let patronTier = getPatreonEntitledTier(user, tiers)
 
   const manualId = !isExpired(user.manualSub?.expiresAt) ? user.manualSub?.tierId : null
   let manualTier = manualId ? tiers.find((t) => t._id === manualId) : undefined
@@ -401,6 +408,35 @@ export function getUserSubscriptionTier(
   }
 
   return result
+}
+
+export function getPatreonEntitledTier(
+  user: Pick<AppSchema.User, 'patreon'>,
+  tiers: AppSchema.SubscriptionTier[]
+) {
+  if (!user.patreon?.tier) return
+  const entitlement = user.patreon.tier.attributes?.amount_cents
+  if (!entitlement) return
+
+  return getPatreonEntitledTierByCost(entitlement, tiers)
+}
+
+export function getPatreonEntitledTierByCost(
+  entitlement: number,
+  tiers: AppSchema.SubscriptionTier[]
+) {
+  if (!entitlement) return
+
+  const tier = tiers.reduce((prev, curr) => {
+    if (!curr.enabled || curr.deletedAt) return prev
+    if (!curr.patreon) return prev
+    if (!curr.patreon.tierId) return prev
+    if (curr.patreon.cost > entitlement) return prev
+    if (prev.patreon?.cost! > curr.patreon.cost) return prev
+    return curr
+  })
+
+  return tier
 }
 
 function isExpired(expiresAt?: string, graceHrs = 3) {

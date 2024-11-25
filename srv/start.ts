@@ -10,6 +10,7 @@ import { store } from './db'
 import { connect, createIndexes } from './db/client'
 import { logger } from './middleware'
 import { setupDomain } from './domains'
+import { prepSubscriptionCache, prepTierCache } from './db/subscriptions'
 const pkg = require('../package.json')
 
 export async function start() {
@@ -33,6 +34,7 @@ export async function start() {
 
   prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
+  await Promise.allSettled([prepSubscriptionCache(), prepTierCache()])
 
   server.on('error', (err) => {
     logger.error({ cause: err.message }, 'Failed to start API')
