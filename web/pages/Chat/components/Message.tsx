@@ -817,7 +817,7 @@ const Meta: Component<{
   tree: ChatTree
 }> = (props) => {
   if (!props.msg) return null
-  const [prompt, setPrompt] = createSignal('')
+  const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
 
   const updateImagePrompt = () => {
     msgStore.editMessageProp(props.msg._id, { imagePrompt: prompt() }, () => {
