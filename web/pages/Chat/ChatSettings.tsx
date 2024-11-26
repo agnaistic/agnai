@@ -162,7 +162,7 @@ const ChatSettings: Component<{
             { label: 'App Settings', value: 'settings' },
           ]}
           value={edit.imageSource}
-          onChange={(ev) => setEdit(ev.value as any)}
+          onChange={(ev) => setEdit('imageSource', ev.value as any)}
         />
       </Card>
 
