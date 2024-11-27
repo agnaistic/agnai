@@ -427,14 +427,14 @@ export function getPatreonEntitledTierByCost(
 ) {
   if (!entitlement) return
 
-  const tier = tiers.reduce((prev, curr) => {
+  const tier = tiers.reduce<AppSchema.SubscriptionTier | undefined>((prev, curr) => {
     if (!curr.enabled || curr.deletedAt) return prev
     if (!curr.patreon) return prev
     if (!curr.patreon.tierId) return prev
     if (curr.patreon.cost > entitlement) return prev
-    if (prev.patreon?.cost! > curr.patreon.cost) return prev
+    if (prev && prev.patreon?.cost! > curr.patreon.cost) return prev
     return curr
-  })
+  }, undefined)
 
   return tier
 }
