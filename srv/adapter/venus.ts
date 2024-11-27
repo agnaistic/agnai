@@ -80,7 +80,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accumulated)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, body.stop)
 
   yield trimmed || parsed
 }

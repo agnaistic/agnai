@@ -164,7 +164,7 @@ export type OAIUsage = {
   total_usage: number
 }
 
-function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {
+export function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {
   if (!completion) {
     return ''
   }

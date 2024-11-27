@@ -311,7 +311,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, ['END_OF_DIALOG'])
+  const trimmed = trimResponseV2(
+    parsed,
+    opts.replyAs,
+    members,
+    opts.characters,
+    Array.from(stops.values())
+  )
   yield trimmed || parsed
 }
 

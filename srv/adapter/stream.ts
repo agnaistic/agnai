@@ -173,7 +173,10 @@ export function requestStream(
         error: `SSE request received unexpected content-type ${headers['content-type']}`,
       })
       emitter.done()
-    } else if (!contentType.startsWith('text/event-stream')) {
+    } else if (
+      !contentType.startsWith('text/event-stream') &&
+      !contentType.startsWith('application/json')
+    ) {
       emitter.push({
         error: `SSE request received unexpected content-type ${headers['content-type']}`,
       })
