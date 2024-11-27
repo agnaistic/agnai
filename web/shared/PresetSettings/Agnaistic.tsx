@@ -21,6 +21,10 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
       return
     }
     presetStore.updateRegisterPresetProp(props.state._id, 'agnaistic', 'subscriptionId', value)
+    props.setter(
+      'registered',
+      applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', value)
+    )
   }
 
   createEffect(
