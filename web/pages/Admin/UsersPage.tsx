@@ -208,7 +208,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                     parentClass="text-xs"
                     fieldName="expiry"
                     type="datetime-local"
-                    value={toLocalTime(state.info?.manualSub?.expiresAt || now())}
+                    value={toLocalTime(expiry().toISOString())}
                     onChange={(ev) => setExpiry(new Date(ev.currentTarget.value))}
                   />
                   <Button onClick={() => adminStore.assignGift(props.userId, manualId(), expiry())}>
