@@ -81,10 +81,10 @@ async function identity(token: string) {
     }) || []
 
   const tier = tiers.length
-    ? tiers.reduce((prev, curr) => {
+    ? tiers.reduce<Patreon.Tier | undefined>((prev, curr) => {
         if (!prev) return curr
         return curr.attributes.amount_cents > prev.attributes.amount_cents ? curr : prev
-      })
+      }, undefined)
     : undefined
 
   if (!tier) return { user }
