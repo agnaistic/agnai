@@ -23,10 +23,10 @@ const RegisteredSettings: Component<{
               value={props.state.adapterConfig?.[props.service.name]?.[each.field]}
               config={props.state.adapterConfig?.[props.service.name]}
               onChange={(ev) => {
-                const prev = { ...(props.state.adapterConfig as any)[props.service.name] }
+                const prev = { ...(props.state.adapterConfig as any)?.[props.service.name] }
                 prev[each.field] = ev
                 const next = { ...props.state.adapterConfig, [props.service.name]: prev }
-                props.setter('adapterConfig', next)
+                props.setter({ adapterConfig: next })
               }}
             />
           </Show>

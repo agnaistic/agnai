@@ -110,7 +110,7 @@ export const characterStore = createStore<CharacterState>(
     async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
       const allChars = chars.concat(temps)
       set({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
-      characterStore.loadImpersonate()
+      characterStore.loadImpersonate(chatId)
     }
   )
 
@@ -200,14 +200,14 @@ export const characterStore = createStore<CharacterState>(
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate({
-      activeChatId,
-      chatChars: { list },
-      characters: { list: allList },
-      impersonating: current,
-    }) {
+    async loadImpersonate(
+      { activeChatId, chatChars: { list }, characters: { list: allList }, impersonating: current },
+      chatId?: string
+    ) {
       const fallback = storage.localGetItem(IMPERSONATE_KEY) || ''
-      let id = activeChatId ? getStoredValue(`${activeChatId}-impersonate`, fallback) : fallback
+      let id = activeChatId
+        ? getStoredValue(`${chatId || activeChatId}-impersonate`, fallback)
+        : fallback
 
       if (!id) return
 
