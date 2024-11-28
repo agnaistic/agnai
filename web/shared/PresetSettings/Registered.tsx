@@ -36,7 +36,7 @@ export const RegisteredSettings: Component<{
               onChange={(ev) => {
                 if (!props.setter || !props.state) return
                 if (!props.state.service) return
-                const prev = { ...(props.state.registered as any)[props.state.service!] }
+                const prev = { ...(props.state.registered as any)?.[props.state.service!] }
                 prev[opt.field] = ev
                 const next = { ...props.state.registered, [props.state.service]: prev }
                 props.setter('registered', next)
