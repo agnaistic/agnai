@@ -189,7 +189,7 @@ const UISettings: Component<{}> = () => {
 
       <Toggle
         fieldName="mobileSendOnEnter"
-        label="Send Message on Enter on Mobile"
+        label="Send on Enter on Mobile"
         helperText='Instead of adding a line break, "Enter" will send the message (Mobile only)'
         value={state.ui.mobileSendOnEnter}
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}

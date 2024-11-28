@@ -36,7 +36,7 @@ import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { createDebounce } from '/web/shared/util'
-import { useDraft, useEffect } from '/web/shared/hooks'
+import { useDraft, useEffect, useMobileDetect } from '/web/shared/hooks'
 import { eventStore } from '/web/store/event'
 import { useAppContext } from '/web/store/context'
 import NoCharacterIcon from '/web/icons/NoCharacterIcon'
@@ -103,6 +103,7 @@ const InputBar: Component<{
   const [complete, setComplete] = createSignal(false)
   const [listening, setListening] = createSignal(false)
   const [dragging, setDragging] = createSignal(false)
+  const mob = useMobileDetect()
 
   const completeOpts = createMemo(() => {
     const list = ctx.activeBots.map((char) => ({ label: char.name, value: char._id }))
@@ -298,8 +299,7 @@ const InputBar: Component<{
             setComplete(true)
           }
 
-          const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
-          const canMobileSend = isMobileDevice ? user.ui.mobileSendOnEnter : true
+          const canMobileSend = mob() ? user.ui.mobileSendOnEnter : true
           if (ev.key === 'Enter' && !ev.shiftKey && canMobileSend) {
             if (complete()) return
             send()

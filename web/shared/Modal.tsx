@@ -44,7 +44,7 @@ const Modal: Component<Props> = (props) => {
   return (
     <Portal>
       <Show when={props.show}>
-        <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+        <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center">
           <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
             <div class="absolute inset-0 bg-black" />
           </div>
@@ -52,7 +52,7 @@ const Modal: Component<Props> = (props) => {
             <form
               ref={autofocus}
               onSubmit={props.onSubmit || defaultSubmit}
-              class={`modal-height bg-900 z-50 w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
+              class={`modal-height bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
               classList={{ 'h-full': props.maxHeight, 'opacity-80': props.transparent }}
               role="dialog"
               aria-modal="true"
