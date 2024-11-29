@@ -313,7 +313,11 @@ export const userStore = createStore<UserState>(
 
       if (res.result) {
         const next = getUserSubscriptionTier(res.result.user, tiers, previous)
-        yield { user: res.result.user, sub: next, userLevel: res.result.user.sub.level ?? 0 }
+        yield {
+          user: res.result.user,
+          sub: next,
+          userLevel: res.result.user.sub?.level ?? next?.level ?? 0,
+        }
       }
 
       if (quiet) return
