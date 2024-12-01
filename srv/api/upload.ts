@@ -11,7 +11,7 @@ import { errors } from './wrap'
 const s3 = new S3({
   region: 'us-east-1',
   forcePathStyle: false,
-  endpoint: `https://${config.storage.endpoint}`,
+  endpoint: config.storage.endpoint ? `https://${config.storage.endpoint}` : undefined,
   credentials: {
     accessKeyId: config.storage.id,
     secretAccessKey: config.storage.key,
@@ -90,6 +90,10 @@ export async function upload(attachment: Attachment, name: string, ttl?: number)
       ContentType: attachment.type,
       ACL: 'public-read',
     })
+    if (config.cdnHostname) {
+      return `https://${config.cdnHostname}/assets/${filename}`
+    }
+
     return `/assets/` + filename
   }
 

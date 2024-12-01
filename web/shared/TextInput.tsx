@@ -165,6 +165,7 @@ const TextInput: Component<Props> = (props) => {
     // Therefore we must also monitor it on-input
     setTimeout(() => {
       if (props.value === undefined || !inputRef) return
+      if (!props.onChange) return
       if (props.value.toString().trim() !== inputRef.value.toString().trim()) {
         inputRef.value = props.value.toString()
       }

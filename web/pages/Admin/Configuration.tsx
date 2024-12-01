@@ -23,7 +23,7 @@ const ServerConfiguration: Component = () => {
   const [search, setSearch] = useSearchParams()
 
   const state = adminStore()
-  const tab = useTabs(['General', 'Images', 'Voice', 'Characters'], +(search.cfg_tab || '0'))
+  const tab = useTabs(['General', 'Images', 'Voice'], +(search.cfg_tab || '0'))
 
   createEffect(() => {
     setSearch({ cfg_tab: tab.selected().toString() })
