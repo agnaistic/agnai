@@ -711,7 +711,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
-      const parent = messageId ? graph.tree[messageId].msg.parent : msgs.slice(-1)[0]._id
+      const parent = prev ? prev.parent : msgs.slice(-1)[0]._id
 
       const res = await imageApi.generateImage({
         messageId,
