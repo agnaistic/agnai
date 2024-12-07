@@ -28,6 +28,7 @@ export type MancerModel = {
 const modelOptions = Object.entries(mancerOptions).map(([label, value]) => ({ label, value }))
 
 export const handleMancer: ModelAdapter = async function* (opts) {
+  const { gen } = opts
   const url = 'https://neuro.mancer.tech/oai/v1/completions'
 
   const userModel: string = opts.gen.registered?.mancer?.url || opts.user.adapterConfig?.mancer?.url
@@ -36,27 +37,35 @@ export const handleMancer: ModelAdapter = async function* (opts) {
   const body: any = {
     prompt: opts.prompt,
     model,
-    add_bos_token: opts.gen.addBosToken ?? false,
-    ban_eos_token: opts.gen.banEosToken ?? false,
-    do_sample: true,
+    ignore_eos: !opts.gen.banEosToken,
     max_new_tokens: opts.gen.maxTokens,
     temperature: opts.gen.temp!,
     top_a: opts.gen.topA,
     top_k: opts.gen.topK,
     top_p: opts.gen.topP,
+    min_p: gen.minP,
     length_penalty: 1,
-    truncation_length: opts.gen.maxContextLength,
+    max_tokens: opts.gen.maxContextLength,
     typical_p: opts.gen.typicalP,
-    encoder_repetition_penalty: opts.gen.encoderRepitionPenalty,
     repetition_penalty: opts.gen.repetitionPenalty,
-    repetition_penalty_range: opts.gen.repetitionPenaltyRange,
-    skip_special_tokens: true,
+    presence_penalty: opts.gen.presencePenalty,
+    frequency_penalty: opts.gen.frequencyPenalty,
     tfs: opts.gen.tailFreeSampling,
-    penalty_alpha: opts.gen.penaltyAlpha,
-    num_beams: 1,
     seed: -1,
     stop: getStoppingStrings(opts),
+    smoothing_factor: gen.smoothingFactor,
+    smoothing_curve: gen.smoothingCurve,
     stream: opts.gen.streamResponse,
+  }
+  if (gen.dynatemp_range) {
+    if (gen.dynatemp_range >= gen.temp!) {
+      gen.dynatemp_range = gen.temp! - 0.1
+    }
+
+    body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+    body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+    body.dynatemp_exponent = gen.dynatemp_exponent
+    body.dynatemp_mode = 1
   }
 
   if (!model) {

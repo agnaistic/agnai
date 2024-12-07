@@ -72,19 +72,24 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const useThirdPartyPassword =
     base.changed && isThirdParty && (gen.thirdPartyKey || user.thirdPartyPassword)
 
-  const apiKey = useThirdPartyPassword
+  let apiKey = useThirdPartyPassword
     ? gen.thirdPartyKey || user.thirdPartyPassword
     : !isThirdParty
     ? user.oaiKey
     : null
-  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
+
+  if (!guest && apiKey) {
+    apiKey = decryptText(apiKey)
+  }
+  const bearer = !!apiKey ? `Bearer ${apiKey}` : null
 
   const headers: any = {
     'Content-Type': 'application/json',
   }
 
-  if (bearer) {
+  if (apiKey) {
     headers.Authorization = bearer
+    headers['X-RapidAPI-Key'] = apiKey
   }
 
   log.debug(body, 'OpenAI payload')
