@@ -57,6 +57,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     smoothing_curve: gen.smoothingCurve,
     stream: opts.gen.streamResponse,
   }
+
   if (gen.dynatemp_range) {
     if (gen.dynatemp_range >= gen.temp!) {
       gen.dynatemp_range = gen.temp! - 0.1
@@ -136,6 +137,8 @@ export const handleMancer: ModelAdapter = async function* (opts) {
       yield { error: `Mancer request failed: Received empty response. Try again.` }
       return
     }
+
+    accumulated = text
 
     const parsed = sanitise(accumulated.replace(opts.prompt, ''))
     const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, body.stop)
