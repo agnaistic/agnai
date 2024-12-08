@@ -45,6 +45,7 @@ async function authorize(code: string, refresh?: boolean) {
 const memberProps = [
   'patron_status',
   'last_charge_date',
+  'is_gifted',
   'last_charge_status',
   'next_charge_date',
   'currently_entitled_amount_cents',
@@ -95,7 +96,9 @@ async function identity(token: string) {
     return match
   })
 
-  const contrib = tier.attributes.amount_cents
+  let contrib = tier.attributes.amount_cents
+  if (!contrib) {
+  }
   const sub = getPatreonEntitledTierByCost(contrib, getCachedTiers())
 
   return { tier, sub, user, member }

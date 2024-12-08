@@ -380,6 +380,7 @@ export function getUserSubscriptionTier(
   let manualTier = manualId ? tiers.find((t) => t._id === manualId) : undefined
 
   const nativeExpired = isExpired(user.billing?.validUntil) || user.billing?.status === 'cancelled'
+  const patronGifted = user.patreon?.member?.attributes?.is_gifted === true
   const patronExpired =
     isExpired(user.patreon?.member?.attributes.next_charge_date) ||
     user.patreon?.member?.attributes.patron_status !== 'active_patron'
@@ -388,7 +389,7 @@ export function getUserSubscriptionTier(
     nativeTier = undefined
   }
 
-  if (patronExpired) {
+  if (patronExpired && !patronGifted) {
     patronTier = undefined
   }
 

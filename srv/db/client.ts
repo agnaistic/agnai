@@ -34,7 +34,7 @@ export async function connect(verbose = false) {
 
     cli.on('connectionPoolCleared', onClose('connectionPoolCleared'))
 
-    logger.info({ uri }, 'Connected to MongoDB')
+    logger.info('Connected to MongoDB')
     connected = true
     return database
   } catch (ex) {
