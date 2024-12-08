@@ -7,6 +7,7 @@ import { store } from '/srv/db'
 import { command } from '/srv/domains'
 import { sendOne } from '../ws'
 import { getPatreonEntitledTierByCost } from '/common/util'
+import { logger } from '/srv/middleware'
 
 export const patreon = {
   authorize,
@@ -35,6 +36,10 @@ async function authorize(code: string, refresh?: boolean) {
   })
 
   if (result.statusCode && result.statusCode > 200) {
+    logger.error(
+      { result: result.body, status: result.statusCode, message: result.statusMessage },
+      'Patreon validation failed'
+    )
     throw new StatusError(`Unable to verify Patreon account`, 400)
   }
 
