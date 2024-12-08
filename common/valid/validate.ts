@@ -189,7 +189,7 @@ export function validateBody<T extends Validator>(
 
       if (typeof value !== 'string') {
         errors.push(
-          `.${prop} is ${typeof value}, expected undefined or literal of ${bodyType
+          `.${prop} is ${typeof value} ('${value}'), expected undefined or literal of ${bodyType
             .filter((v) => v !== null)
             .join(' | ')}`
         )
@@ -198,7 +198,7 @@ export function validateBody<T extends Validator>(
 
       if (bodyType.includes(value) === false) {
         errors.push(
-          `.${prop} value is invalid, expected undefined or literal of ${bodyType
+          `.${prop} value is invalid ('${value}'), expected undefined or literal of ${bodyType
             .filter((v) => v !== null)
             .join(' | ')}`
         )
@@ -209,12 +209,16 @@ export function validateBody<T extends Validator>(
     }
     if (isUnion(bodyType)) {
       if (typeof value !== 'string') {
-        errors.push(`.${prop} is ${typeof value}, expected literal of ${bodyType.join(' | ')}`)
+        errors.push(
+          `.${prop} is ${typeof value} ('${value}'), expected literal of ${bodyType.join(' | ')}`
+        )
         continue start
       }
 
       if (bodyType.includes(value) === false) {
-        errors.push(`.${prop} value is invalid, expected literal of ${bodyType.join(' | ')}`)
+        errors.push(
+          `.${prop} value is invalid ('${value}'), expected literal of ${bodyType.join(' | ')}`
+        )
         continue start
       }
 
