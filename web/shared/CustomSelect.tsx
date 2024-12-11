@@ -8,6 +8,7 @@ import TextInput from './TextInput'
 export type CustomOption = {
   label: string | JSX.Element
   value: any
+  disabled?: boolean
 }
 
 export const CustomSelect: Component<{
@@ -134,9 +135,13 @@ const OptionList: Component<{
             <div
               classList={{
                 'bg-[var(--hl-800)]': props.selected === option.value,
-                'bg-700': props.selected !== option.value,
+                'bg-700': !option.disabled && props.selected !== option.value,
+                'bg-[var(--error-900)] text-700':
+                  option.disabled && props.selected !== option.value,
+                'cursor-not-allowed': option.disabled,
+                'cursor-pointer': !option.disabled,
               }}
-              class={`w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`}
+              class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
               onClick={() => props.onSelect(option)}
             >
               <div class="font-bold">{option.label}</div>

@@ -44,6 +44,18 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
+  const characterNames = Object.values(opts.characters || {}).map((c) => c.name)
+  const sequenceBreakers = Array.from(
+    new Set([
+      opts.char.name,
+      opts.replyAs.name,
+      ...characterNames,
+      ...opts.members.map((m) => m.handle),
+    ]).values()
+  )
+    .concat(gen.drySequenceBreakers || [])
+    .filter((t) => !!t)
+
   if (!gen.temp) {
     gen.temp = 0.75
   }
@@ -110,7 +122,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       dry_base: gen.dryBase,
       dry_allowed_length: gen.dryAllowedLength,
       dry_range: gen.dryRange,
-      dry_sequence_breakers: gen.drySequenceBreakers,
+      dry_sequence_breakers: sequenceBreakers,
     }
 
     if (gen.dynatemp_range) {
@@ -293,7 +305,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       dry_base: gen.dryBase,
       dry_allowed_length: gen.dryAllowedLength,
       dry_range: gen.dryRange,
-      dry_sequence_breakers: gen.drySequenceBreakers,
+      dry_sequence_breakers: sequenceBreakers,
       json_schema,
     }
 
@@ -365,7 +377,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       dry_base: gen.dryBase,
       dry_allowed_length: gen.dryAllowedLength,
       dry_range: gen.dryRange,
-      dry_sequence_breakers: gen.drySequenceBreakers,
+      dry_sequence_breakers: sequenceBreakers,
     }
 
     if (gen.dynatemp_range) {

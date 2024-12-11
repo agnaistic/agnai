@@ -2,7 +2,11 @@ import { Component, Show, createEffect, createMemo, createSignal, on } from 'sol
 import { chatStore, presetStore, settingStore, userStore } from '/web/store'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
-import { SubscriptionModelLevel, SubscriptionModelOption } from '/common/types/presets'
+import {
+  SubscriptionModelLevel,
+  SubscriptionModelOption,
+  SubscriptionTier,
+} from '/common/types/presets'
 import { ChevronDown } from 'lucide-solid'
 import { SubCTA } from '/web/Navigation'
 import { applyStoreProperty, createEmitter } from '../util'
@@ -58,7 +62,16 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
     if (!opt) {
       return <div>None</div>
     }
-    return <ModelLabel sub={opt?.sub!} limit={opt?.limit} nodesc />
+    return (
+      <ModelLabel
+        sub={opt?.sub!}
+        limit={opt?.limit}
+        nodesc
+        tier={opt.tierName}
+        disabled={opt.disabled}
+        requires={opt.requires}
+      />
+    )
   })
 
   return (
@@ -185,20 +198,55 @@ function useModelOptions() {
     const tierLevel = state.user?.admin ? Infinity : state.userLevel
     const level = state.user?.admin ? Infinity : tierLevel
 
-    return settings.config.subs
-      .filter((sub) => (!!sub.preset.allowGuestUsage ? true : sub.level <= level))
-      .map((sub) => {
-        const limit = getSubscriptionModelLimits(sub.preset, level)
+    return (
+      settings.config.subs
+        .map((sub) => {
+          const limit = getSubscriptionModelLimits(sub.preset, level)
+          const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
+          const tier =
+            sub.level <= 0
+              ? 'Free'
+              : state.tiers.reduce<SubscriptionTier | null>((prev, curr) => {
+                  if (prev?.level === sub.level) return prev
+                  if (curr.level === sub.level) return curr
+                  if (curr.level < sub.level) return prev
+                  if (!prev) return curr
 
-        return {
-          label: <ModelLabel sub={sub} limit={limit} />,
-          value: sub._id,
-          level: sub.level,
-          sub,
-          limit,
-        }
-      })
-      .sort((l, r) => r.level - l.level)
+                  // Return the lowest tier above the threshold
+                  return prev.level > curr.level ? curr : prev
+                }, null)?.name
+
+          const requires = sub.level <= 0 ? 'Registering' : tier || 'Staff Only'
+          return {
+            label: (
+              <ModelLabel
+                sub={sub}
+                limit={limit}
+                disabled={disabled}
+                tier={tier || 'Staff'}
+                requires={requires}
+              />
+            ),
+            value: sub._id,
+            level: sub.level,
+            sub,
+            limit,
+            disabled,
+            tierName: tier || 'Staff',
+            requires,
+            title: sub.name,
+          }
+        })
+        // Remove staff models from the list
+        .filter((sub) => (sub.tierName === 'Staff' && !state.user?.admin ? false : true))
+        .sort((l, r) => {
+          if (l.disabled && !r.disabled) return 1
+          if (r.disabled && !l.disabled) return -1
+          // if (l.disabled && r.disabled) return l.title.localeCompare(r.title)
+          if (l.level !== r.level) return l.level - r.level
+          return l.title.localeCompare(r.title)
+        })
+    )
   })
 
   return opts
@@ -206,7 +254,10 @@ function useModelOptions() {
 
 const ModelLabel: Component<{
   sub: SubscriptionModelOption
+  tier: string
+  requires: string
   limit?: SubscriptionModelLevel
+  disabled: boolean
   nodesc?: boolean
 }> = (props) => {
   const context = createMemo(() =>
@@ -224,8 +275,15 @@ const ModelLabel: Component<{
           {Math.floor(context() / 1000)}K, {tokens()} tokens
         </div>
       </div>
-      <Show when={props.sub.preset.description && !props.nodesc}>
-        <div class="text-700 text-xs">{props.sub.preset.description}</div>
+      <Show when={!props.disabled && !props.nodesc}>
+        <div class="text-700 text-xs">
+          {props.tier}
+          {props.sub.preset.description ? ', ' : ''}
+          {props.sub.preset.description}
+        </div>
+      </Show>
+      <Show when={props.disabled}>
+        <div class="text-700 text-xs">Requires {props.requires}</div>
       </Show>
     </div>
   )

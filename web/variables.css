@@ -225,6 +225,46 @@
   --coolgray-900: #111827;
   --coolgray-1000: #0b111f;
 
+  --info-100: #e0f2fe;
+  --info-200: #bae6fd;
+  --info-300: #7dd3fc;
+  --info-400: #38bdf8;
+  --info-500: #0ea5e9;
+  --info-600: #0284c7;
+  --info-700: #0369a1;
+  --info-800: #075985;
+  --info-900: #0c4a6e;
+
+  --success-100: #dcfce7;
+  --success-200: #bbf7d0;
+  --success-300: #86efac;
+  --success-400: #4ade80;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+  --success-800: #166534;
+  --success-900: #14532d;
+
+  --warning-100: #fef9c3;
+  --warning-200: #fef08a;
+  --warning-300: #fde047;
+  --warning-400: #facc15;
+  --warning-500: #eab308;
+  --warning-600: #ca8a04;
+  --warning-700: #a16207;
+  --warning-800: #854d0e;
+  --warning-900: #713f12;
+
+  --error-100: #fee2e2;
+  --error-200: #fecaca;
+  --error-300: #fca5a5;
+  --error-400: #f87171;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --error-700: #b91c1c;
+  --error-800: #991b1b;
+  --error-900: #7f1d1d;
+
   --highlight: rgb(14 165 233);
 
   --rgba-chat-bot: rgba(0, 0, 0);

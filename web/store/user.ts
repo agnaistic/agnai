@@ -867,11 +867,23 @@ async function updateTheme(ui: UI.UISettings) {
 
   const gradients = ui.bgCustomGradient ? getColorShades(ui.bgCustomGradient) : []
 
+  const notifies = Object.entries({
+    info: 'sky',
+    success: 'green',
+    warning: 'premium',
+    error: 'red',
+  })
+
   for (let shade = 100; shade <= 1000; shade += 100) {
     const index = shade / 100 - 1
     const num = ui.mode === 'light' ? 1000 - shade : shade
 
     if (shade <= 900) {
+      for (const [notify, source] of notifies) {
+        const color = getRootVariable(`--${source}-${num}`)
+        root.style.setProperty(`--${notify}-${num}`, color)
+      }
+
       const color = getRootVariable(`--${ui.theme}-${num}`)
       const colorRgb = hexToRgb(color)
       root.style.setProperty(`--hl-${shade}`, color)
