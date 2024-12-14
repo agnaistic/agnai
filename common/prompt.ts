@@ -263,6 +263,8 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   return { lines: lines.reverse(), parts, template: prompt }
 }
 
+export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
+
 /**
  * This is only ever invoked server-side
  *
@@ -281,7 +283,7 @@ export async function assemblePrompt(
   const template = getTemplate(opts)
 
   const history = { lines, order: 'asc' } as const
-  let { parsed, inserts, length } = await injectPlaceholders(template, {
+  let { parsed, inserts, length, sections } = await injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -291,7 +293,7 @@ export async function assemblePrompt(
     jsonValues: opts.jsonValues,
   })
 
-  return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
+  return { lines: history.lines, prompt: parsed, inserts, parts, post, length, sections }
 }
 
 export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {

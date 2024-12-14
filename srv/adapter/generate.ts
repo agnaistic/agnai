@@ -34,6 +34,7 @@ import {
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
+import { toChatMessages } from './template-chat-payload'
 
 let version = ''
 
@@ -232,6 +233,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     guidance: opts.guidance,
     previous: opts.previous,
     placeholders: opts.placeholders,
+    characters: {},
     lists: opts.lists,
     jsonSchema: opts.jsonSchema,
     imageData: opts.imageData,
@@ -392,6 +394,7 @@ export async function createChatStream(
    */
 
   const prompt = await assemblePrompt(opts, opts.parts, opts.lines, encoder)
+  const messages = await toChatMessages(opts, prompt, encoder)
 
   const size = encoder(
     [
@@ -421,6 +424,7 @@ export async function createChatStream(
     log,
     members: opts.members.concat(opts.sender),
     prompt: prompt.prompt,
+    messages,
     parts: prompt.parts,
     sender: opts.sender,
     mappedSettings,

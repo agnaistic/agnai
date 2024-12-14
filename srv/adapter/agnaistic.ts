@@ -423,6 +423,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
       return handlers[settings.thirdPartyFormat!]
 
     case 'openai-chat':
+    case 'openai-chatv2':
       return handlers.openai
 
     case 'featherless':

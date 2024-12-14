@@ -47,8 +47,8 @@ export function promptOrderToSections(opts: OrderOptions) {
     ? formatHolders[opts.format] || formatHolders.Universal
     : formatHolders.Universal
 
-  const system = holders.system
-  const defs = order.map((o) => holders[o.placeholder]).join('\n')
+  const system = holders.system_prompt || holders.system
+  const defs = order.map((o) => getOrderHolder(opts.format!, o.placeholder)).join('\n')
   const history = holders.history
   const post = holders.post
 

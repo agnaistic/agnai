@@ -110,7 +110,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             onChange={(ev) => props.setter('prefixNameAppend', ev)}
           />
           <TextInput
-            label="Bot response prefilling"
+            label="Bot Response Prefilling"
             helperText={
               <>
                 Force the bot response to start with this text. Typically used to jailbreak Claude.

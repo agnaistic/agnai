@@ -108,11 +108,14 @@ export type AdapterProps = {
   user: AppSchema.User
   members: AppSchema.Profile[]
   sender: AppSchema.Profile
+
   prompt: string
+  messages?: Array<{ role: string; content: string }>
+
   parts: PromptParts
   lines: string[]
   retries?: string[]
-  characters?: Record<string, AppSchema.Character>
+  characters: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
   lastMessage?: string
   requestId: string

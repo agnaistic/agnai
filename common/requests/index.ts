@@ -60,6 +60,7 @@ function startRequest(request: GenerateRequestV2, prompt: string) {
   switch (request.settings!.thirdPartyFormat) {
     case 'openai':
     case 'openai-chat':
+    case 'openai-chatv2':
       return handleOAI(opts, payload)
 
     case 'aphrodite':

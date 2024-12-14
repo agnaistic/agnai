@@ -38,6 +38,7 @@ export type TemplateOpts = {
   sections?: {
     flags: { [key in Section]?: boolean }
     sections: { [key in Section]: string[] }
+    done: boolean
   }
 
   /**
@@ -184,6 +185,7 @@ export async function parseTemplate(
   const sections: TemplateOpts['sections'] = {
     flags: {},
     sections: { system: [], history: [], post: [] },
+    done: false,
   }
 
   opts.sections = sections
@@ -205,6 +207,7 @@ export async function parseTemplate(
   const ast = parser.parse(template, {}) as PNode[]
   readInserts(opts, ast)
   let output = render(template, opts, ast)
+  opts.sections.done = true
   let unusedTokens = 0
   let linesAddedCount = 0
 
@@ -333,16 +336,24 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
     }
 
     const output: string[] = []
+    let prevMarker: Section = 'system'
 
     for (let i = 0; i < ast.length; i++) {
       const parent = ast[i]
 
       const result = renderNode(parent, opts)
 
-      const marker = getMarker(parent)
-      fillSection(opts, marker, result)
+      const marker = getMarker(opts, parent, prevMarker)
+      prevMarker = marker
 
-      if (result) output.push(result)
+      if (!opts.sections?.done) {
+        fillSection(opts, marker, result)
+        if (result) console.log(marker, result.slice(0, 40))
+      }
+
+      if (result) {
+        output.push(result)
+      }
     }
     return output.join('').replace(/\n\n+/g, '\n\n')
   } catch (err) {
@@ -623,6 +634,9 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
   if (isHistory && opts.limit?.output) {
     const id = HISTORY_MARKER
     opts.limit.output[id] = { src: holder, lines: output }
+    if (opts.sections) {
+      opts.sections.flags.history = true
+    }
     return id
   }
 
@@ -788,38 +802,40 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
   const flags = opts.sections.flags
   const sections = opts.sections.sections
 
-  if (!flags.system) {
+  if (!flags.system && marker === 'system') {
     sections.system.push(result)
     return
   }
 
   if (marker === 'history') {
     flags.system = true
-    flags.history = true
     return
   }
 
   sections.post.push(result)
 }
 
-function getMarker(node: PNode): Section | undefined {
-  if (typeof node === 'string') return
+function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section {
+  if (!opts.sections) return previous
+  if (opts.sections.flags.history) return 'post'
+
+  if (typeof node === 'string') return previous
 
   switch (node.kind) {
     case 'placeholder': {
       if (node.value === 'history') return 'history'
       if (node.value === 'system_prompt') return 'system'
-      return
+      return previous
     }
 
     case 'each':
       if (node.value === 'history') return 'history'
-      return
+      return previous
 
     case 'if':
       if (node.value === 'system_prompt') return 'system'
-      return
+      return previous
   }
 
-  return
+  return previous
 }

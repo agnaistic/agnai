@@ -44,7 +44,10 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
-  const characterNames = Object.values(opts.characters || {}).map((c) => c.name)
+  const characterNames = Object.values(opts.characters || {})
+    .map((c) => c.name.split(' '))
+    .flat()
+
   const sequenceBreakers = Array.from(
     new Set([
       opts.char.name,

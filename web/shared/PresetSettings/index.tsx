@@ -118,6 +118,7 @@ const PresetSettings: Component<
             { label: 'Kobold', value: 'kobold' },
             { label: 'OpenAI', value: 'openai' },
             { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
+            { label: 'OpenAI (Chat w/ Template)', value: 'openai-chatv2' },
             { label: 'Claude', value: 'claude' },
             { label: 'Textgen (Ooba)', value: 'ooba' },
             { label: 'Llama.cpp', value: 'llamacpp' },

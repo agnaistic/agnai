@@ -54,8 +54,9 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
   }
 
   const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'
-  const urlPath =
-    gen.thirdPartyFormat === 'openai-chat' ? `${suffix}chat/completions` : `${suffix}completions`
+  const urlPath = gen.thirdPartyFormat?.startsWith('openai-chat')
+    ? `${suffix}chat/completions`
+    : `${suffix}completions`
   const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
 
   if (!gen.streamResponse) {

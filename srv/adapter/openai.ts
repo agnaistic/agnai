@@ -1,9 +1,8 @@
 import { sanitiseAndTrim } from '/common/requests/util'
-import { ChatRole, CompletionItem, ModelAdapter } from './type'
+import { ChatRole, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
-import { config } from '../config'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
@@ -42,6 +41,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
+    max_completion_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
@@ -49,16 +49,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
-  const useChat =
-    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
+  const isChatFormat =
+    gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
+  const useChat = (isThirdParty && isChatFormat) || !!OPENAI_CHAT_MODELS[oaiModel]
   if (useChat) {
-    const messages: CompletionItem[] = config.inference.flatChatCompletion
-      ? [{ role: 'system', content: opts.prompt }]
-      : await toChatCompletionPayload(
-          opts,
-          getTokenCounter('openai', OPENAI_MODELS.Turbo),
-          body.max_tokens
-        )
+    const messages =
+      gen.thirdPartyFormat === 'openai-chatv2' && opts.messages
+        ? opts.messages
+        : await toChatCompletionPayload(
+            opts,
+            getTokenCounter('openai', OPENAI_MODELS.Turbo),
+            body.max_tokens
+          )
 
     body.messages = messages
     yield { prompt: messages }

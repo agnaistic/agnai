@@ -1,18 +1,18 @@
 {
   "version": "2.0.0",
   "tasks": [
-    {
-      "type": "typescript",
-      "tsconfig": "tsconfig.json",
-      "option": "watch",
-      "problemMatcher": ["$tsc-watch"],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "isBackground": true,
-      "label": "tsc: watch - tsconfig.json"
-    },
+    // {
+    //   "type": "typescript",
+    //   "tsconfig": "tsconfig.json",
+    //   "option": "watch",
+    //   "problemMatcher": ["$tsc-watch"],
+    //   "group": {
+    //     "kind": "build",
+    //     "isDefault": true
+    //   },
+    //   "isBackground": true,
+    //   "label": "tsc: watch - tsconfig.json"
+    // },
     {
       "type": "typescript",
       "tsconfig": "srv.tsconfig.json",
@@ -27,13 +27,13 @@
     {
       "type": "shell",
       "command": "pnpm",
-      "args": ["tsc", "-p", "tsconfig.json", "--noEmit"],
+      "args": ["tsc", "-p", "tsconfig.json", "--noEmit", "-w"],
       "problemMatcher": "$tsc-watch",
       "label": "tsc: watch no-emit",
       "isBackground": true,
       "group": {
         "kind": "build",
-        "isDefault": false
+        "isDefault": true
       }
     }
   ]

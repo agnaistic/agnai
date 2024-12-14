@@ -85,6 +85,7 @@ export const JSON_SCHEMA_SUPPORTED: { [key in AIAdapter | ThirdPartyFormat]?: bo
 export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   openai: 'openai',
   'openai-chat': 'openai',
+  'openai-chatv2': 'openai',
   claude: 'claude',
   aphrodite: 'kobold',
   exllamav2: 'kobold',
@@ -109,6 +110,7 @@ export const THIRDPARTY_FORMATS = [
   'kobold',
   'openai',
   'openai-chat',
+  'openai-chatv2',
   'claude',
   'ooba',
   'llamacpp',
