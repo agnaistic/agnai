@@ -5,11 +5,12 @@ import { Card } from '../Card'
 import { A } from '@solidjs/router'
 import { PresetTabProps } from './types'
 import { HelpModal } from '../Modal'
+import { ListInput } from '../ListInput'
 
 export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Samplers' }}>
-      <Card class="flex flex-col gap-1" bg="bg-600">
+      <Card class="flex flex-col gap-1" bg="bg-500">
         <div>Dynamic Temperature</div>
         <div class="text-600 text-sm">
           The range to use for dynamic temperature. When used, the actual temperature is allowed to
@@ -46,7 +47,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
         />
       </Card>
 
-      <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.xtcThreshold}>
+      <Card class="flex flex-col gap-1" bg="bg-500" hide={props.hides.xtcThreshold}>
         <div class="flex gap-1">
           XTC (Exclude Top Choices) <XTCHelpModal />
         </div>
@@ -78,7 +79,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
         />
       </Card>
 
-      <Card class="flex flex-col gap-1" bg="bg-600" hide={props.hides.dryMultiplier}>
+      <Card class="flex flex-col gap-1" bg="bg-500" hide={props.hides.dryMultiplier}>
         <div>
           DRY Sampling{' '}
           <a
@@ -127,9 +128,17 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           recommended={2}
           onChange={(ev) => props.setter('dryAllowedLength', ev)}
         />
+
+        <ListInput
+          value={props.state.drySequenceBreakers || []}
+          label="Sequence Breakers"
+          helperText="Words and phrases that can be repeated. E.g: Chararacter nicknames"
+          setter={(next) => props.setter('drySequenceBreakers', next)}
+          hide={props.hides.drySequenceBreakers}
+        />
       </Card>
 
-      <Card class="flex flex-col gap-4" bg="bg-600">
+      <Card class="flex flex-col gap-4" bg="bg-500">
         <RangeInput
           fieldName="smoothingFactor"
           label="Smoothing Factor"
