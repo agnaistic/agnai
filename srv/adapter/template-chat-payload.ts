@@ -64,7 +64,7 @@ export async function toChatMessages(
   for (let i = 0; i < history.length; i++) {
     const line = history[i]
     const original = opts.lines[i]
-    const role = original.startsWith(sender) ? 'user' : 'assistant'
+    const role = original?.startsWith(sender) ? 'user' : 'assistant'
     messages.push({ role, content: line })
   }
 
