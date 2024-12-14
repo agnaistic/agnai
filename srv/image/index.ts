@@ -208,6 +208,10 @@ async function runImageGenerate(options: {
         break
     }
   } catch (ex: any) {
+    log.error(
+      { err: ex, body: ex.body },
+      `[${imageSettings?.type || 'default'}] Image generation failed `
+    )
     error = ex.message || ex
   }
 
