@@ -59,7 +59,10 @@ async function get<T = any>(path: string, query: Query = {}) {
     .map((key) => `${key}=${query[key]}`)
     .join('&')
 
-  return callApi<T>(`${path}?${params}`, {
+  const infix = path.includes('?') ? '&' : '?'
+  let url = params ? `${path}${infix}${params}` : path
+
+  return callApi<T>(url, {
     method: 'get',
   })
 }

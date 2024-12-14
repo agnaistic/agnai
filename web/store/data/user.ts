@@ -4,6 +4,7 @@ import { localApi } from './storage'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
 import { storage } from '/web/shared/util'
+import { HORDE_SEED } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 
 export type InitEntities = {
@@ -34,7 +35,7 @@ export const usersApi = {
 
 export async function getInit() {
   if (isLoggedIn()) {
-    const res = await api.get<InitEntities>('/user/init')
+    const res = await api.get<InitEntities>(`/user/init?seed=${HORDE_SEED}&ts=${Date.now()}`)
     return res
   }
 

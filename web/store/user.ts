@@ -305,7 +305,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *retrieveSubscription({ subLoading, tiers, sub: previous }, quiet?: boolean) {
+    async *retrieveSubscription({ subLoading, tiers, sub: previous, user: last }, quiet?: boolean) {
       if (subLoading) return
       yield { subLoading: true }
       const res = await api.post('/admin/billing/subscribe/retrieve')
@@ -313,6 +313,8 @@ export const userStore = createStore<UserState>(
 
       if (res.result) {
         const next = getUserSubscriptionTier(res.result.user, tiers, previous)
+        res.result.user.hordeKey = last?.hordeKey
+
         yield {
           user: res.result.user,
           sub: next,

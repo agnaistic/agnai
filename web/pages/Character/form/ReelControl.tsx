@@ -84,7 +84,6 @@ const ModelOverride: Component<{ state: string; setter: (override: string) => vo
       () => {
         const id = user.user?.images?.agnai?.model
         if (props.state || !id || !state.models.length) return
-        console.log('setting', id)
         props.setter(id)
       }
     )

@@ -1,8 +1,14 @@
+import crypto from 'crypto'
 import { AppSchema } from './types/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
 import { toArray } from './util'
 import type { AppLog } from '../srv/middleware'
+import { v4 } from 'uuid'
+
+export const HORDE_SEED = v4()
+
+const ALGO = 'aes256'
 
 const HORDE_GUEST_KEY = '0000000000'
 const baseUrl = 'https://aihorde.net/api/v2'
@@ -109,7 +115,6 @@ export async function generateImage(
       cfg_scale: base?.cfg ?? 9,
       clip_skip: base?.clipSkip,
       denoising_strength: 1,
-      // seed: Math.trunc(Math.random() * 1_000_000_000).toString(),
       karras: false,
       n: 1,
       post_processing: [],
@@ -127,10 +132,17 @@ export async function generateImage(
   log?.debug({ ...payload, prompt: null }, 'Horde payload')
   log?.debug(`Prompt:\n${payload.prompt}`)
 
+  let key = user.hordeKey
+  if (!key) {
+    key = HORDE_GUEST_KEY
+  } else {
+    key = decryptText(user.hordeKey)
+  }
+
   const image = await generate({
     type: 'image',
     payload,
-    key: user.hordeKey || HORDE_GUEST_KEY,
+    key,
     onTick,
   })
 
@@ -280,6 +292,16 @@ async function poll(
 
 function wait(secs: number) {
   return new Promise((resolve) => setTimeout(resolve, secs * 1000))
+}
+
+function decryptText(text: string) {
+  try {
+    const decipher = crypto.createDecipher(ALGO, HORDE_SEED)
+    const decrypted = decipher.update(text, 'hex', 'utf8') + decipher.final('utf8')
+    return decrypted
+  } catch (ex) {
+    return text
+  }
 }
 
 export type FindUserResponse = {

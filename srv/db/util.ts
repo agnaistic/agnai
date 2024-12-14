@@ -19,6 +19,12 @@ export async function encryptPassword(value: string) {
   return hash
 }
 
+export function encryptUserText(text: string, key: string) {
+  const cipher = crypto.createCipher('aes256', key)
+  const encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex')
+  return encrypted
+}
+
 export function encryptText(text: string) {
   const iv = crypto.randomBytes(16)
   const cipher = crypto.createCipheriv(ALGO, KEY, iv)

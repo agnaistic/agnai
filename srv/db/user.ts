@@ -7,7 +7,7 @@ import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../middleware'
 import { errors, StatusError } from '../api/wrap'
-import { encryptPassword, now } from './util'
+import { decryptText, encryptPassword, encryptUserText, now } from './util'
 import { defaultChars } from '/common/characters'
 import { resyncSubscription } from '../api/billing/stripe'
 import { getCachedSubscriptionModels, getCachedTiers, getTier } from './subscriptions'
@@ -433,7 +433,7 @@ export async function unlinkPatreonAccount(userId: string, reason: string) {
   await command.patron.unlink(user.patreonUserId, { userId, reason })
 }
 
-export function toSafeUser(user: AppSchema.User) {
+export function toSafeUser(user: AppSchema.User, seed?: string) {
   if (user.patreon) {
     user.patreon.access_token = ''
     user.patreon.refresh_token = ''
@@ -451,7 +451,12 @@ export function toSafeUser(user: AppSchema.User) {
     user.novelApiKey = ''
   }
 
-  user.hordeKey = ''
+  if (user.hordeKey) {
+    if (seed) {
+      const key = decryptText(user.hordeKey, true)
+      user.hordeKey = encryptUserText(key, seed)
+    } else user.hordeKey = ''
+  }
   user.apiKey = user.apiKey ? '*********' : 'Not set'
 
   if (user.oaiKey) {

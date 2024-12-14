@@ -20,7 +20,7 @@ import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
 
-export const getInitialLoad = handle(async ({ userId }) => {
+export const getInitialLoad = handle(async ({ userId, query }) => {
   const replicate = await getLanguageModels()
   if (config.ui.maintenance) {
     const appConfig = await getAppConfig()
@@ -29,7 +29,7 @@ export const getInitialLoad = handle(async ({ userId }) => {
 
   const [profile, user, presets, books, scenarios] = await Promise.all([
     store.users.getProfile(userId!),
-    getSafeUserConfig(userId!),
+    getSafeUserConfig(userId!, query.seed as string),
     store.presets.getUserPresets(userId!),
     store.memory.getBooks(userId!),
     store.scenario.getScenarios(userId!),
@@ -490,7 +490,7 @@ async function verifyHordeKey(key: string) {
   return user.result?.username
 }
 
-export async function getSafeUserConfig(userId: string) {
+export async function getSafeUserConfig(userId: string, seed?: string) {
   const user = await store.users.getUser(userId!)
   if (!user) return
 
@@ -499,5 +499,5 @@ export async function getSafeUserConfig(userId: string) {
   await store.users.updateUser(userId, { sub: next })
   user.sub = next
 
-  return toSafeUser(user)
+  return toSafeUser(user, seed)
 }

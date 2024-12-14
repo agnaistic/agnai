@@ -1,6 +1,6 @@
 import * as horde from '../../../common/horde-gen'
 import { createImagePrompt, getMaxImageContext } from '../../../common/image-prompt'
-import { api, isLoggedIn } from '../api'
+import { api } from '../api'
 import { getStore } from '../create'
 import { msgsApi } from './messages'
 import { AIAdapter } from '/common/adapters'
@@ -93,7 +93,7 @@ export async function generateImageWithPrompt(opts: {
     throw new Error('Could not get user settings')
   }
 
-  if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
+  if (!user.images || user.images.type === 'horde') {
     try {
       const { text: image } = await horde.generateImage(
         user,
@@ -143,7 +143,7 @@ export async function generateImageAsync(
     throw new Error('Could not get user settings')
   }
 
-  if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
+  if (!user.images || user.images.type === 'horde') {
     try {
       const { text: image } = await horde.generateImage(
         user,
