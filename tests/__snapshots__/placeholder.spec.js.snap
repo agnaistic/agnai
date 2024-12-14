@@ -9,6 +9,7 @@ Object {
 
 MainChar's personality: MainCharacter talks a lot",
   "sections": Object {
+    "done": true,
     "flags": Object {},
     "sections": Object {
       "history": Array [],
@@ -19,9 +20,6 @@ MainChar's personality: MainCharacter talks a lot",
 
 ",
         "MainChar's personality: MainCharacter talks a lot",
-        "OtherBot replies a lot
-
-MainChar's personality: MainCharacter talks a lot",
       ],
     },
   },
