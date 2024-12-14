@@ -46,17 +46,16 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const characterNames = Object.values(opts.characters || {})
     .map((c) => c.name.split(' '))
+    .concat(opts.members.map((m) => m.handle.split(' ')))
     .flat()
 
   const sequenceBreakers = Array.from(
-    new Set([
-      opts.char.name,
-      opts.replyAs.name,
-      ...characterNames,
-      ...opts.members.map((m) => m.handle),
-    ]).values()
+    new Set(
+      [opts.char.name.split(' '), opts.replyAs.name.split(' '), ...characterNames].flat()
+    ).values()
   )
     .concat(gen.drySequenceBreakers || [])
+    .flat()
     .filter((t) => !!t)
 
   if (!gen.temp) {

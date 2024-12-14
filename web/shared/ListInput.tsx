@@ -44,7 +44,7 @@ export const ListInput: Component<{
           {(item, i) => (
             <code class="flex items-center gap-2">
               {item()}{' '}
-              <div onClick={() => removeString(i)}>
+              <div class="cursor-pointer" onClick={() => removeString(i)}>
                 <X size={12} />
               </div>
             </code>

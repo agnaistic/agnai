@@ -348,7 +348,6 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
 
       if (!opts.sections?.done) {
         fillSection(opts, marker, result)
-        if (result) console.log(marker, result.slice(0, 40))
       }
 
       if (result) {
