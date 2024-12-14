@@ -277,6 +277,7 @@ export const GOOGLE_MODELS = {
   GEMINI_15_FLASH_002: { id: 'gemini-1.5-flash-002', label: 'Gemini 1.5 Flash 002' },
   GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
   GEMINI_EXP_1114: { id: 'gemini-exp-1114', label: 'Gemini Exp 1114' },
+  GEMINI_20_FLASH: { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {
@@ -284,6 +285,7 @@ export const GOOGLE_LIMITS: Record<string, number> = {
   'gemini-1.0-pro-latest': 32768,
   'gemini-1.5-flash': 1048576,
   'gemini-1.5-flash-8b': 1048576,
+  'gemini-2.0-flash-exp': 1048576,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point

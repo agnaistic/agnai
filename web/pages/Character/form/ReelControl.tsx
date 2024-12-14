@@ -80,7 +80,7 @@ const ModelOverride: Component<{ state: string; setter: (override: string) => vo
 
   createEffect(
     on(
-      () => user.user?.images?.agnai?.model + props.state,
+      () => [{ models: state.models }, user.user?.images?.agnai?.model + props.state],
       () => {
         const id = user.user?.images?.agnai?.model
         if (props.state || !id || !state.models.length) return
