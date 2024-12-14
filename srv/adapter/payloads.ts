@@ -51,7 +51,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   const sequenceBreakers = Array.from(
     new Set(
-      [opts.char.name.split(' '), opts.replyAs.name.split(' '), ...characterNames].flat()
+      [opts.char.name?.split(' '), opts.replyAs.name?.split(' '), ...characterNames].flat()
     ).values()
   )
     .concat(gen.drySequenceBreakers || [])
