@@ -71,6 +71,24 @@ const KoboldAISettings: Component<{
       />
 
       <TextInput
+        fieldName="arliApiKey"
+        helperText={
+          <div>
+            <Show when={props.state.arliApiKeySet}>
+              <a class="link" onClick={() => userStore.deleteKey('arli')}>
+                Delete Key
+              </a>
+            </Show>
+          </div>
+        }
+        label="ArliAI API Key"
+        placeholder={props.state.arliApiKeySet ? 'Password is set' : 'API Key not set'}
+        type="password"
+        value={props.state.arliApiKey}
+        onChange={(ev) => props.setter('arliApiKey', ev.currentTarget.value)}
+      />
+
+      <TextInput
         fieldName="mistralKey"
         helperText={
           <div>

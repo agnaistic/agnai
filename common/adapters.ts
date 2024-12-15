@@ -99,6 +99,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   vllm: 'kobold',
   featherless: 'kobold',
   gemini: 'kobold',
+  arli: 'kobold',
 }
 
 export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
@@ -122,6 +123,7 @@ export const THIRDPARTY_FORMATS = [
   'ollama',
   'vllm',
   'featherless',
+  'arli',
   'gemini',
 ] as const
 

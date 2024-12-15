@@ -13,6 +13,7 @@ import { getOpenRouterModels } from '../adapter/openrouter'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
 import { getFeatherModels } from '../adapter/featherless'
 import { filterImageModels } from '/common/image-util'
+import { getArliModels } from '../adapter/arli'
 
 const router = Router()
 
@@ -33,6 +34,10 @@ router.get('/subscriptions', getPublicSubscriptions)
 router.get('/', getSettings)
 router.get('/featherless', (_, res) => {
   const { models, classes } = getFeatherModels()
+  res.json({ models, classes })
+})
+router.get('/arli', (_, res) => {
+  const { models, classes } = getArliModels()
   res.json({ models, classes })
 })
 

@@ -15,6 +15,7 @@ import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { CustomSelect } from '../CustomSelect'
 import { FeatherlessModel } from '/srv/adapter/featherless'
+import { ArliModel } from '/srv/adapter/arli'
 
 export type Field<T = {}> = Component<Omit<PresetTabProps, 'tab'> & T>
 
@@ -174,7 +175,8 @@ export const ThirdPartyUrl: Field = (props) => {
         props.hides.thirdPartyUrl ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
-        props.state.thirdPartyFormat === 'gemini'
+        props.state.thirdPartyFormat === 'gemini' ||
+        props.state.thirdPartyFormat === 'arli'
       }
       onChange={(ev) => props.setter('thirdPartyUrl', ev.currentTarget.value)}
     />
@@ -341,6 +343,96 @@ export const FeatherlessModels: Field = (props) => {
   )
 }
 
+export const ArliModels: Field = (props) => {
+  const state = settingStore((s) => s.arliai)
+  const [modelclass, setModelclass] = createSignal('')
+
+  const label = createMemo(() => {
+    const id = props.state.arliModel
+    const match = state.models.find((s) => s.id === id)
+    if (!match) return id || 'None selected'
+
+    return (
+      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
+        {match.id}
+        <span class="text-500 text-xs">
+          {' '}
+          {flaiContext(match, state.classes)} {match.status}
+        </span>
+      </span>
+    )
+  })
+
+  const options = createMemo(() => {
+    return state.models
+      .filter((s) => {
+        const mclass = modelclass()
+        if (!mclass) return true
+        return s.model_class === mclass
+      })
+      .map((s) => ({
+        label: (
+          <div class="flex w-full justify-between" title={`${s.status}`}>
+            <div class="ellipsis">{s.id}</div>
+            <div class="text-500 text-xs">
+              {arliContext(s, state.classes)} {s.status}
+            </div>
+          </div>
+        ),
+        value: s.id,
+      }))
+  })
+
+  onMount(() => {
+    if (!state.models.length) {
+      settingStore.getArliAI()
+    }
+  })
+
+  const search = (value: string, input: string) => {
+    const res = input.split(' ').map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+
+    for (const re of res) {
+      const match = value.match(re)
+      if (!match) return false
+    }
+
+    return true
+  }
+
+  const classes = createMemo(() => {
+    const list = Object.entries(state.classes)
+      .map(([label, { ctx }]) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
+      .sort((l, r) => l.label.localeCompare(r.label))
+    return [{ label: 'All', value: '' }].concat(list)
+  })
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="ArliAI Model"
+      value={props.state.arliModel}
+      options={options()}
+      search={search}
+      header={
+        <Select
+          items={classes()}
+          value={''}
+          label={'Filter: Model Size'}
+          onChange={(ev) => setModelclass(ev.value)}
+          parentClass="text-sm"
+        />
+      }
+      onSelect={(opt) => {
+        props.setter('arliModel', opt.value)
+      }}
+      buttonLabel={label()}
+      selected={props.state.arliModel}
+      hide={props.state.service !== 'kobold' || props.state.thirdPartyFormat !== 'arli'}
+    />
+  )
+}
+
 export const GoogleModels: Field = (props) => {
   const label = createMemo(() => {
     const id = props.state.googleModel
@@ -374,6 +466,13 @@ function flaiContext(
   model: FeatherlessModel,
   classes: Record<string, { ctx: number; res: number }>
 ) {
+  const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
+  if (!ctx) return ''
+
+  return `${Math.round(ctx / 1024)}K`
+}
+
+function arliContext(model: ArliModel, classes: Record<string, { ctx: number; res: number }>) {
   const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 

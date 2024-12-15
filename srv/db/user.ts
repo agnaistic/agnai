@@ -489,9 +489,9 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
     user.elevenLabsApiKeySet = true
   }
 
-  if (user.featherlessApiKey) {
-    user.featherlessApiKey = ''
-    user.featherlessApiKeySet = true
+  if (user.arliApiKey) {
+    user.arliApiKey = ''
+    user.arliApiKeySet = true
   }
 
   for (const svc of getRegisteredAdapters()) {

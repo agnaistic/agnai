@@ -19,10 +19,28 @@ export const ADAPTER_SETTINGS: {
     'openrouter',
   ],
   tempLast: ['agnaistic', 'tabby', 'exllamav2'],
-  dynatemp_range: ['kobold', 'ooba', 'tabby', 'agnaistic', 'aphrodite', 'ollama'],
-  dynatemp_exponent: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic', 'ollama'],
-  dryMultiplier: ['agnaistic', 'ooba', 'tabby'],
-  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic'],
+  dynatemp_range: [
+    'kobold',
+    'ooba',
+    'tabby',
+    'agnaistic',
+    'aphrodite',
+    'ollama',
+    'arli',
+    'aphrodite',
+  ],
+  dynatemp_exponent: [
+    'kobold',
+    'aphrodite',
+    'ooba',
+    'tabby',
+    'agnaistic',
+    'ollama',
+    'arli',
+    'aphrodite',
+  ],
+  dryMultiplier: ['agnaistic', 'ooba', 'tabby', 'arli', 'aphrodite'],
+  smoothingFactor: ['kobold', 'aphrodite', 'ooba', 'tabby', 'agnaistic', 'arli'],
   smoothingCurve: ['kobold', 'aphrodite'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
@@ -33,8 +51,8 @@ export const ADAPTER_SETTINGS: {
   epsilonCutoff: ['aphrodite'],
   etaCutoff: ['aphrodite'],
 
-  xtcProbability: ['agnaistic', 'tabby', 'ooba'],
-  xtcThreshold: ['agnaistic', 'tabby', 'ooba'],
+  xtcProbability: ['agnaistic', 'tabby', 'ooba', 'arli', 'aphrodite'],
+  xtcThreshold: ['agnaistic', 'tabby', 'ooba', 'arli', 'aphrodite'],
 
   prefill: ['claude', 'openrouter', 'openai', 'openai-chat', 'gemini', 'openai-chatv2'],
 
@@ -69,7 +87,7 @@ export const ADAPTER_SETTINGS: {
   ],
   repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'tabby', 'ollama'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
-  tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby'],
+  tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby', 'arli'],
   minP: [
     'llamacpp',
     'novel',
@@ -133,6 +151,7 @@ export const ADAPTER_SETTINGS: {
     'openai',
     'openai-chat',
     'featherless',
+    'arli',
     'gemini',
     'openai-chatv2',
   ],
@@ -151,6 +170,7 @@ export const ADAPTER_SETTINGS: {
     'aphrodite',
     'tabby',
     'openrouter',
+    'arli',
   ],
   presencePenalty: [
     'openai',
@@ -162,6 +182,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'ollama',
     'openrouter',
+    'arli',
   ],
   streamResponse: [
     'openai',
@@ -178,6 +199,7 @@ export const ADAPTER_SETTINGS: {
     'ollama',
     'openrouter',
     'gemini',
+    'arli',
   ],
   openRouterModel: ['openrouter'],
   stopSequences: [
@@ -193,6 +215,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'ollama',
     'openrouter',
+    'arli',
   ],
   trimStop: ['koboldcpp'],
 

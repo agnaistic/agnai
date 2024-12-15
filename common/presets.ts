@@ -57,6 +57,7 @@ export const presetValidator = {
   oaiModel: 'string',
   openRouterModel: 'any?',
   featherlessModel: 'string?',
+  arliModel: 'string?',
   googleModel: 'string?',
 
   mirostatTau: 'number?',
@@ -72,6 +73,11 @@ export const presetValidator = {
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',
   thirdPartyModel: 'string?',
+
+  dryAllowedLength: 'number?',
+  dryBase: 'number?',
+  drySequenceBreakers: ['string?'],
+  dryMultiplier: 'number?',
 
   novelModel: 'string?',
   novelModelOverride: 'string?',

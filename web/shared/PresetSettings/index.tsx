@@ -130,6 +130,7 @@ const PresetSettings: Component<
             { label: 'TabbyAPI', value: 'tabby' },
             { label: 'Mistral API', value: 'mistral' },
             { label: 'Featherless', value: 'featherless' },
+            { label: 'ArliAI', value: 'arli' },
             { label: 'Google AI Studio', value: 'gemini' },
           ]}
           value={props.store.thirdPartyFormat}

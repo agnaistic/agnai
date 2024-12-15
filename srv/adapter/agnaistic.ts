@@ -427,6 +427,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
       return handlers.openai
 
     case 'featherless':
+    case 'arli':
       return handlers.kobold
 
     case 'gemini':

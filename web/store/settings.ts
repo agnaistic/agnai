@@ -13,8 +13,9 @@ import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
 import { canUsePane, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
-import type { FeatherlessModel } from '/srv/adapter/featherless'
 import { filterImageModels } from '/common/image-util'
+import type { FeatherlessModel } from '/srv/adapter/featherless'
+import type { ArliModel } from '/srv/adapter/arli'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -46,6 +47,7 @@ export type SettingState = {
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
+  arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
   showSettings: boolean
   showImgSettings: boolean
 
@@ -85,6 +87,7 @@ const initState: SettingState = {
   },
   replicate: {},
   featherless: { models: [], classes: {} },
+  arliai: { models: [], classes: {} },
   flags: getFlags(),
   showSettings: false,
   showImgSettings: false,
@@ -202,6 +205,13 @@ export const settingStore = createStore<SettingState>(
 
       if (res.result?.models?.length) {
         return { featherless: res.result }
+      }
+    },
+    async getArliAI() {
+      const res = await api.get('/settings/arli')
+
+      if (res.result?.models?.length) {
+        return { arliai: res.result }
       }
     },
     async *getServerConfig({ cfg, config, init }) {

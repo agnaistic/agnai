@@ -135,6 +135,14 @@ export const deleteFeatherlessKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteArliKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    arliApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteElevenLabsKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     elevenLabsApiKey: '',
@@ -170,6 +178,7 @@ const validConfig = {
   oaiKey: 'string?',
   mistralKey: 'string?',
   featherlessApiKey: 'string?',
+  arliApiKey: 'string?',
   scaleUrl: 'string?',
   scaleApiKey: 'string?',
   claudeApiKey: 'string?',
@@ -196,6 +205,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
+      arliApiKey: 'string?',
       patreonToken: 'string?',
       announcement: 'string?',
       defaultPreset: 'string?',
@@ -375,6 +385,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.featherlessApiKey) {
     update.featherlessApiKey = encryptText(body.featherlessApiKey)
+  }
+
+  if (body.arliApiKey) {
+    update.arliApiKey = encryptText(body.arliApiKey)
   }
 
   if (body.scaleUrl !== undefined) update.scaleUrl = body.scaleUrl

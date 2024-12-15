@@ -76,6 +76,7 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   dryAllowedLength: 2,
   dryBase: 1.75,
   dryMultiplier: 0,
+  drySequenceBreakers: [],
 }
 
 export function getPresetEditor() {

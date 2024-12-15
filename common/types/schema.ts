@@ -130,6 +130,9 @@ export namespace AppSchema {
     featherlessApiKey?: string
     featherlessApiKeySet?: boolean
 
+    arliApiKey?: string
+    arliApiKeySet?: boolean
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
     defaultPreset?: string

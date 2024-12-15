@@ -27,6 +27,7 @@ import {
   FeatherlessModels,
   GoogleModels,
   ThirdPartyUrl,
+  ArliModels,
 } from './Fields'
 import { PresetTabProps } from './types'
 
@@ -156,7 +157,11 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             helperText="No paths will be added to your URL."
             value={props.state.thirdPartyUrlNoSuffix}
             service={props.state.service}
-            hide={props.hides.thirdPartyFormat || props.state.thirdPartyModel === 'featherless'}
+            hide={
+              props.hides.thirdPartyFormat ||
+              props.state.thirdPartyModel === 'featherless' ||
+              props.state.thirdPartyFormat === 'arli'
+            }
             onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
           />
         </div>
@@ -184,6 +189,8 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setter={props.setter}
           sub={props.sub}
         />
+
+        <ArliModels state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
 
         <GoogleModels
           state={props.state}

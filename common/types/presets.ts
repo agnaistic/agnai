@@ -164,6 +164,7 @@ export interface GenSettings {
   openRouterModel?: OpenRouterModel
   googleModel?: string
   featherlessModel?: string
+  arliModel?: string
 
   thirdPartyUrl?: string
   thirdPartyFormat?: ThirdPartyFormat

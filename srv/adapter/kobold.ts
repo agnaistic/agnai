@@ -47,7 +47,8 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
     opts.gen.thirdPartyFormat === 'koboldcpp' ||
-    opts.gen.thirdPartyFormat === 'featherless'
+    opts.gen.thirdPartyFormat === 'featherless' ||
+    opts.gen.thirdPartyFormat === 'arli'
       ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
@@ -186,6 +187,13 @@ async function dispatch(opts: AdapterProps, body: any) {
         : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
     }
 
+    case 'arli': {
+      const url = 'https://api.arliai.com/v1/completions'
+      return opts.gen.streamResponse
+        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+    }
+
     default:
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       return opts.gen.streamResponse && isStreamSupported
@@ -243,6 +251,24 @@ async function getHeaders(opts: AdapterProps) {
         throw new Error(
           `Featherless API key not set. Check your Settings->AI->Third-party settings`
         )
+      }
+
+      const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`
+      }
+      headers['Content-Type'] = 'application/json'
+      break
+    }
+
+    case 'arli': {
+      if (!opts.gen.arliModel) {
+        throw new Error(`ArliAI model not set. Check your preset`)
+      }
+
+      const key = opts.gen.thirdPartyKey || opts.user.arliApiKey
+      if (!key) {
+        throw new Error(`ArliAI API key not set. Check your Settings->AI->Third-party settings`)
       }
 
       const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''

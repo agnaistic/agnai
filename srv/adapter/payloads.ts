@@ -216,6 +216,55 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return payload
   }
 
+  if (format === 'arli') {
+    const body: any = {
+      model: gen.arliModel,
+      prompt,
+      stop: getStoppingStrings(opts, stops),
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
+      length_penalty: gen.repetitionPenalty,
+      tfs: gen.tailFreeSampling,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      typical_p: gen.typicalP,
+      ignore_eos: false,
+      max_tokens: gen.maxTokens,
+      smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
+
+      stream: gen.streamResponse,
+    }
+
+    if (gen.dryMultiplier) {
+      body.dry_multiplier = gen.dryMultiplier
+      body.dry_base = gen.dryBase
+      body.dry_allowed_length = gen.dryAllowedLength
+      body.dry_range = gen.dryRange
+      body.dry_sequence_breakers = sequenceBreakers
+    }
+
+    if (gen.dynatemp_range) {
+      body.dynamic_temperature = true
+      body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_exponent = gen.dynatemp_exponent
+    }
+
+    if (gen.xtcThreshold) {
+      body.xtc_threshold = gen.xtcThreshold
+      body.xtc_probability = gen.xtcProbability
+    }
+
+    if (body.top_k <= 0) {
+      body.top_k = -1
+    }
+
+    return body
+  }
+
   if (format === 'ollama') {
     const payload: any = {
       prompt,
@@ -426,10 +475,24 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       epsilon_cutoff: gen.epsilonCutoff,
     }
 
+    if (gen.dryMultiplier) {
+      body.dry_multiplier = gen.dryMultiplier
+      body.dry_base = gen.dryBase
+      body.dry_allowed_length = gen.dryAllowedLength
+      body.dry_range = gen.dryRange
+      body.dry_sequence_breakers = sequenceBreakers
+    }
+
     if (gen.dynatemp_range) {
+      body.dynamic_temperature = true
       body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
       body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
       body.dynatemp_exponent = gen.dynatemp_exponent
+    }
+
+    if (gen.xtcThreshold) {
+      body.xtc_threshold = gen.xtcThreshold
+      body.xtc_probability = gen.xtcProbability
     }
 
     return body
