@@ -107,7 +107,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
         <RangeInput
           label="Base"
           min={0}
-          max={1}
+          max={6}
           step={0.01}
           value={props.state.dryBase ?? 0}
           disabled={props.state.disabled}
