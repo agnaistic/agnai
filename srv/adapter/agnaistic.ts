@@ -251,9 +251,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   log.debug(`Prompt:\n${prompt}`)
 
-  let params = [`type=text`, `id=${opts.user._id}`, `model=${subPreset.subModel}`, `level=${level}`]
+  const [submodel, override] = subPreset.subModel.split(',')
+
+  let params = [`type=text`, `id=${opts.user._id}`, `model=${submodel}`, `level=${level}`]
     .filter((p) => !!p)
     .join('&')
+
+  body.model_override = override
 
   const resp = gen.streamResponse
     ? await websocketStream({

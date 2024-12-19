@@ -119,7 +119,6 @@ const HordeAISettings: Component<{
           props.state.hordeName || props.state.hordeKey ? 'API key has been verified' : ''
         }
         type="password"
-        value={props.state.hordeKey}
         onChange={(ev) => props.setter('hordeKey', ev.currentTarget.value)}
       />
 

@@ -334,7 +334,10 @@ const InputBar: Component<{
           <Button
             schema="secondary"
             class="w-full"
-            onClick={() => msgStore.selfGenerate()}
+            onClick={() => {
+              setMenu(false)
+              msgStore.selfGenerate()
+            }}
             alignLeft
             disabled={!ctx.impersonate}
           >
