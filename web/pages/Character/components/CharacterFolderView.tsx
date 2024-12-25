@@ -442,15 +442,15 @@ function getChildFolders(tree: FolderTree, path: string, sort: SortDirection) {
 }
 
 const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
-  const [actual, setActual] = createSignal('/')
+  const [name, setName] = createSignal(props.char?.folder || '')
+  const actual = createMemo(() => toFolderSlug(name()))
 
   createEffect(
     on(
       () => props.char,
       () => {
         if (!props.char) return
-
-        setActual(toFolderSlug(props.char.folder || '/'))
+        setName(props.char.folder || '/')
       }
     )
   )
@@ -489,10 +489,10 @@ const ChangeFolder: Component<{ char?: AppSchema.Character; close: () => void }>
         />
 
         <TextInput
-          helperMarkdown={`Folder names are 'normalized'.\nNoramlized name: ${actual()}`}
+          helperMarkdown={`Folder names are 'normalized'.\nNormalized name: ${actual()}`}
           label="New Folder"
-          value={props.char?.folder || '/'}
-          onChange={(ev) => setActual(toFolderSlug(ev.currentTarget.value))}
+          value={name()}
+          onChange={(ev) => setName(ev.currentTarget.value)}
         />
       </div>
     </RootModal>

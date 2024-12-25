@@ -70,7 +70,7 @@ const PersonaAttributes: Component<{
             if (key === 'text') {
               squished.push(values)
             } else {
-              squished.push(`${key}:\n${values}`)
+              squished.push(`{values}`)
             }
           }
 
@@ -82,8 +82,14 @@ const PersonaAttributes: Component<{
           const text = props.state.find((s) => s.key === 'text')
           if (!text) return
 
+          if (props.state.length === 1) {
+            props.setter([{ key: 'personality', values: props.state[0].values }])
+            return
+          }
+
           let matching = true
-          for (const { values } of props.state) {
+          for (const { key, values } of props.state) {
+            if (key === '')
             if (!text.values.includes(values)) matching = false
             break
           }

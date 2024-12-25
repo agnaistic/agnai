@@ -251,9 +251,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   log.debug(`Prompt:\n${prompt}`)
 
-  const [submodel, override] = subPreset.subModel.split(',')
+  const [submodel, override = ''] = subPreset.subModel.split(',')
 
-  let params = [`type=text`, `id=${opts.user._id}`, `model=${submodel}`, `level=${level}`]
+  let params = [
+    `type=text`,
+    `id=${opts.user._id}`,
+    `model=${submodel}`,
+    `level=${level}`,
+    `sub_model=${override}`,
+  ]
     .filter((p) => !!p)
     .join('&')
 
