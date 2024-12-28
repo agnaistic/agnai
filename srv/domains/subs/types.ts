@@ -10,6 +10,7 @@ export type SubsEvt =
       periodStart: string
     }
   | { type: 'cancelled' }
+  | { type: 'cancelled-duplicate'; subscriptionId: string; replacementId?: string }
   | { type: 'upgraded'; tierId: string; priceId: string }
   | { type: 'downgraded'; tierId: string; priceId: string; activeAt: string }
   | { type: 'session-started'; sessionId: string; tierId: string }
@@ -36,6 +37,7 @@ export type SubsCmd =
       productId: string
       subscription: Stripe.Subscription
     }
+  | { type: 'cancelDuplicate'; subscriptionId: string; replacementId?: string }
   | { type: 'cancel' }
   | { type: 'resume' }
   | { type: 'upgrade'; tierId: string; priceId: string }

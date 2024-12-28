@@ -66,13 +66,14 @@ export function trimResponseV2(
     generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
   }
 
-  if (bots) {
-    for (const bot of Object.values(bots)) {
-      if (!bot) continue
-      if (bot?._id === char._id) continue
-      endTokens.push(`${bot.name}:`)
-    }
-  }
+  /** Do not always add character names as stop tokens here */
+  // if (bots) {
+  //   for (const bot of Object.values(bots)) {
+  //     if (!bot) continue
+  //     if (bot?._id === char._id) continue
+  //     endTokens.push(`${bot.name}:`)
+  //   }
+  // }
 
   let index = -1
   let trimmed = allEndTokens.concat(...endTokens).reduce((prev, endToken) => {

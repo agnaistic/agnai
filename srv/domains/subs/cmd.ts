@@ -96,6 +96,15 @@ export const subsCmd = createCommands<SubsEvt, SubsAgg, SubsCmd>(domain.subscrip
 
     return { type: 'resumed' }
   },
+
+  async cancelDuplicate(cmd, agg) {
+    return {
+      type: 'cancelled-duplicate',
+      subscriptionId: cmd.subscriptionId,
+      replacementId: cmd.replacementId,
+    }
+  },
+
   async cancel(cmd, agg) {
     if (agg.state !== 'active') {
       throw new CommandError('Cannot cancel subscription - Subscription not active', 'NOT_ACTIVE')

@@ -6,6 +6,7 @@ import { v4 } from 'uuid'
 import { config } from '../../config'
 import { billingCmd, domain } from '../../domains'
 import { subsCmd } from '../../domains/subs/cmd'
+import { AppSchema } from '/common/types'
 
 export const startCheckout = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string', callback: 'string' }, body)
@@ -180,6 +181,10 @@ export const finishCheckout = handle(async ({ body, userId }) => {
       subscriptionId: subscription.id,
     })
 
+    if (user && subscription.id) {
+      await ensureOnlyActiveSubscription(user, subscription.id)
+    }
+
     const config = await store.users.updateUser(userId, {
       sub: {
         tierId: agg.tierId,
@@ -205,3 +210,22 @@ export const finishCheckout = handle(async ({ body, userId }) => {
     await billingCmd.cancel(body.sessionId, { userId })
   }
 })
+
+async function ensureOnlyActiveSubscription(user: AppSchema.User, subscriptionId: string) {
+  // The user isn't an existing customer -- ignore
+  if (!user.billing?.customerId) return
+
+  const subs = await stripe.subscriptions
+    .list({ customer: user.billing.customerId, status: 'active' })
+    .then((res) => res.data)
+    .catch(() => [])
+
+  for (const sub of subs) {
+    if (sub.id !== subscriptionId) {
+      await subsCmd.cancelDuplicate(user._id, { subscriptionId, replacementId: subscriptionId })
+      await stripe.subscriptions.cancel(sub.id, {
+        cancellation_details: { comment: 'duplicate detected during checkout' },
+      })
+    }
+  }
+}
