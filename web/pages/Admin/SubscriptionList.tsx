@@ -35,13 +35,22 @@ const SubscriptionList: Component = () => {
     const cats = new Map<number, Array<SubscriptionModel & { label: string }>>()
 
     for (const sub of state.enabled) {
-      if (!cats.has(sub.subLevel)) {
-        cats.set(sub.subLevel, [])
+      let level = sub.levels.reduce<number | null>(
+        (prev, curr) => (prev === null ? curr.level : curr.level < prev ? curr.level : prev),
+        null
+      )
+
+      if (level === null) {
+        level = sub.subLevel
       }
 
-      const list = cats.get(sub.subLevel)
+      if (!cats.has(level)) {
+        cats.set(level, [])
+      }
+
+      const list = cats.get(level)
       list!.push(sub)
-      cats.set(sub.subLevel, list!)
+      cats.set(level, list!)
     }
 
     const all = Array.from(cats.entries())
