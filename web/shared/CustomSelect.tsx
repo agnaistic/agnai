@@ -4,7 +4,6 @@ import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
 import { ComponentSubscriber } from './util'
 import TextInput from './TextInput'
-import Divider from './Divider'
 
 export type CustomOption = {
   label: string | JSX.Element
