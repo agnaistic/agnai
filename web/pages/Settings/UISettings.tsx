@@ -27,6 +27,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   prompt: 'Prompt View',
   fork: 'Fork',
   trash: 'Delete',
+  'schema-regen': 'Retry Schema',
 }
 
 const UISettings: Component<{}> = () => {

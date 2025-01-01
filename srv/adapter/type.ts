@@ -69,6 +69,7 @@ export type GenerateRequestV2 = {
   impersonate?: AppSchema.Character
 
   jsonSchema?: JsonField[]
+  reschemaPrompt?: string
   jsonValues?: Record<string, any>
 
   /** Base64 */
@@ -122,6 +123,7 @@ export type AdapterProps = {
   encoder?: TokenCounter
 
   jsonSchema?: any
+  reschemaPrompt?: string
   jsonValues: Record<string, any> | undefined
 
   imageData?: string

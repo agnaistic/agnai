@@ -438,6 +438,7 @@ export async function createChatStream(
     lastMessage: opts.lastMessage,
     imageData: opts.imageData,
     jsonSchema: jsonSchema || opts.jsonSchema,
+    reschemaPrompt: opts.reschemaPrompt,
     subscription,
     encoder,
     jsonValues: opts.jsonValues,

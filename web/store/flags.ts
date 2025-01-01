@@ -13,4 +13,5 @@ export const defaultFlags = {
   folders: false,
   sounds: false,
   google: false,
+  reschema: false,
 } satisfies { [key: string]: boolean }

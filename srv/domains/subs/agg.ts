@@ -55,6 +55,14 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
         }
       }
 
+      case 'cancelled-duplicate': {
+        return {
+          state: prev.state,
+          downgrade: prev.downgrade,
+          history,
+        }
+      }
+
       case 'cancelled': {
         const endAt = new Date(prev.periodStart)
         endAt.setFullYear(meta.timestamp.getFullYear())

@@ -42,7 +42,7 @@ export type CustomUI = {
   chatQuoteColor: string
 }
 
-export type MessageOption = 'edit' | 'regen' | 'trash' | 'fork' | 'prompt'
+export type MessageOption = 'edit' | 'regen' | 'trash' | 'fork' | 'prompt' | 'schema-regen'
 
 export type UISettings = {
   theme: string
@@ -147,5 +147,6 @@ export const defaultUIsettings: UISettings = {
     fork: { outer: false, pos: 2 },
     regen: { outer: true, pos: 1 },
     trash: { outer: false, pos: 4 },
+    'schema-regen': { outer: false, pos: 5 },
   },
 }

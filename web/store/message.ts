@@ -428,12 +428,7 @@ export const msgStore = createStore<MsgState>(
       yield { msgs: page, messageHistory: path }
     },
 
-    async *retry(
-      { msgs, activeCharId },
-      chatId: string,
-      messageId?: string,
-      onSuccess?: () => void
-    ) {
+    async *retry({ msgs, activeCharId }, chatId: string, messageId?: string) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -441,7 +436,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (msgs.length === 0) {
-        msgStore.request(chatId, activeCharId, onSuccess)
+        msgStore.request(chatId, activeCharId)
         return
       }
 
@@ -461,8 +456,43 @@ export const msgStore = createStore<MsgState>(
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined, retrying: undefined }
-      } else if (res.result) {
-        onSuccess?.()
+      }
+    },
+
+    async *retrySchema({ msgs, activeCharId }, chatId: string, messageId: string) {
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        yield { partial: undefined }
+        return
+      }
+
+      if (msgs.length === 0) {
+        msgStore.request(chatId, activeCharId)
+        return
+      }
+
+      const msg = msgs.find((msg) => msg._id === messageId)
+      if (!msg) {
+        toastStore.error(`Could not regenerate: Message not found`)
+        yield { partial: undefined }
+        return
+      }
+
+      const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
+      const characterId = replace?.characterId || activeCharId
+      yield {
+        partial: '',
+        waiting: { chatId, mode: 'retry', characterId },
+        retrying: replace,
+      }
+
+      const res = await botGen
+        .generate({ kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
+        .catch((err) => ({ error: err.message, result: undefined }))
+
+      if (res.error) {
+        toastStore.error(`(Retry) Generation request failed: ${res.error}`)
+        yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
 

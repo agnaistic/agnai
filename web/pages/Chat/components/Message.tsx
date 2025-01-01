@@ -16,6 +16,7 @@ import {
   Zap,
   Split,
   MoreHorizontal,
+  Braces,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -548,10 +549,6 @@ const MessageOptions: Component<{
   onRemove: () => void
   showMore: Signal<boolean>
 }> = (props) => {
-  const showInner = createMemo(() =>
-    Object.values(props.ui.msgOptsInline || {}).some((v) => !v?.outer)
-  )
-
   const closer = (action: () => void) => {
     return () => {
       action()
@@ -617,6 +614,20 @@ const MessageOptions: Component<{
         icon: RefreshCw,
       },
 
+      'schema-regen': {
+        key: 'schema-regen',
+        class: 'refresh-btn',
+        label: 'Schema Regen',
+        outer: props.ui.msgOptsInline['schema-regen'],
+        show:
+          window.flags.reschema &&
+          ((props.msg.json && props.last) ||
+            (props.msg.adapter === 'image' && !!props.msg.imagePrompt)) &&
+          !!props.msg.characterId,
+        onClick: () => !props.partial && retryJsonSchema(props.msg, props.msg),
+        icon: Braces,
+      },
+
       trash: {
         key: 'trash',
         label: 'Delete',
@@ -630,6 +641,14 @@ const MessageOptions: Component<{
     }
 
     return items
+  })
+
+  const showInner = createMemo(() => {
+    for (const opt of Object.values(logic())) {
+      if (!opt.outer && opt.show) return true
+    }
+
+    return false
   })
 
   const order = createMemo(() => {
@@ -736,7 +755,7 @@ const MessageOption: Component<{
 
         <Show when={!props.outer}>
           <Button
-            class={`${props.class || ''} w-full`}
+            class={`${props.class || ''} w-full min-w-max`}
             schema={props.schema || 'secondary'}
             onClick={props.onClick}
             size="sm"
@@ -756,6 +775,10 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   } else {
     msgStore.createImage(split._id)
   }
+}
+
+function retryJsonSchema(original: AppSchema.ChatMessage, split: SplitMessage) {
+  msgStore.retrySchema(split.chatId, original._id)
 }
 
 function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {

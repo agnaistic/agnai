@@ -4,6 +4,7 @@ import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
 import { ComponentSubscriber } from './util'
 import TextInput from './TextInput'
+import Divider from './Divider'
 
 export type CustomOption = {
   label: string | JSX.Element
@@ -14,7 +15,8 @@ export type CustomOption = {
 export const CustomSelect: Component<{
   buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
   onSelect: (opt: CustomOption) => void
-  options: CustomOption[]
+  options?: CustomOption[]
+  categories?: Array<{ name: string; options: CustomOption[] }>
   value: any
 
   header?: JSX.Element
@@ -74,15 +76,33 @@ export const CustomSelect: Component<{
       </div>
       <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>
         <div class="flex flex-col gap-4">
-          <div class="flex flex-wrap gap-2 pr-3">
-            <OptionList
-              header={props.header}
-              options={props.options}
-              onSelect={onSelect}
-              selected={props.selected}
-              search={props.search}
-            />
-          </div>
+          <Show when={props.categories}>
+            <For each={props.categories}>
+              {(category) => (
+                <div class="flex flex-wrap gap-2 pr-3">
+                  <div class="bold text-md">{category.name}</div>
+                  <OptionList
+                    header={props.header}
+                    options={category.options}
+                    onSelect={onSelect}
+                    selected={props.selected}
+                    search={props.search}
+                  />
+                </div>
+              )}
+            </For>
+          </Show>
+          <Show when={props.options}>
+            <div class="flex flex-wrap gap-2 pr-3">
+              <OptionList
+                header={props.header}
+                options={props.options!}
+                onSelect={onSelect}
+                selected={props.selected}
+                search={props.search}
+              />
+            </div>
+          </Show>
         </div>
       </RootModal>
     </div>

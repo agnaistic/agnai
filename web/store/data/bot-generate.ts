@@ -49,7 +49,7 @@ export type GenerateOpts =
    * - The last message in the chat is a user message so we are going to generate a new response
    * - The last message in the chat is a bot message so we are going to re-generate a response and update the 'replacingId' chat message
    */
-  | { kind: 'retry'; messageId?: string }
+  | { kind: 'retry'; messageId?: string; reschema_prompt?: string }
   /**
    * The last message in the chat is a bot message and we want to generate more text for this message.
    */
@@ -122,6 +122,7 @@ export async function generateResponse(
     chatEmbeds,
     userEmbeds,
     jsonValues: props.json,
+    reschemaPrompt: props.reschemaPrompt,
   }
 
   if (
@@ -358,6 +359,7 @@ export type GenerateProps = {
   impersonate?: AppSchema.Character
   parent?: AppSchema.ChatMessage
   json: Record<string, any>
+  reschemaPrompt?: string
 }
 
 async function getGenerateProps(
@@ -418,6 +420,8 @@ async function getGenerateProps(
   switch (opts.kind) {
     case 'retry': {
       props.impersonate = entities.impersonating
+      props.reschemaPrompt = opts.reschema_prompt
+
       if (opts.messageId) {
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)

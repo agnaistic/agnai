@@ -16,6 +16,8 @@ import { useAppContext } from '/web/store/context'
 
 export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const opts = useModelOptions()
+  const categories = useModelCategories()
+
   const [ctx] = useAppContext()
 
   const onSave = (value: string) => {
@@ -92,7 +94,8 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
             Model <span class="text-500 text-xs italic">(Available: {opts().length})</span>
           </>
         }
-        options={opts()}
+        // options={opts()}
+        categories={categories}
         onSelect={(ev) => onSave(ev.value)}
         value={props.state.registered?.agnaistic?.subscriptionId}
         selected={props.state.registered?.agnaistic?.subscriptionId}
@@ -107,6 +110,7 @@ export const AgnaisticModel: Component = (props) => {
 
   const [selected, setSelected] = createSignal(ctx.preset?.registered?.agnaistic?.subscriptionId)
   const opts = useModelOptions()
+  const categories = useModelCategories()
 
   createEffect(
     on(
@@ -175,7 +179,8 @@ export const AgnaisticModel: Component = (props) => {
             </div>
           </div>
         }
-        options={opts()}
+        // options={opts()}
+        categories={categories}
         onSelect={onSave}
         value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
@@ -183,6 +188,88 @@ export const AgnaisticModel: Component = (props) => {
       />
     </Show>
   )
+}
+
+function useModelCategories() {
+  const state = userStore((s) => ({
+    user: s.user,
+    tiers: s.tiers,
+    sub: s.sub,
+    userLevel: s.userLevel,
+  }))
+
+  const settings = settingStore()
+
+  const tierLevel = state.user?.admin ? Infinity : state.userLevel
+  const level = state.user?.admin ? Infinity : tierLevel
+
+  const cats = new Map<
+    string,
+    {
+      options: Array<{
+        label: any
+        value: string
+        level: number
+        sub: any
+        limit?: SubscriptionModelLevel
+        disabled: boolean
+        tierName: string
+        requires: string
+        title: string
+      }>
+      tier: number
+    }
+  >()
+
+  for (const sub of settings.config.subs) {
+    const limit = getSubscriptionModelLimits(sub.preset, level)
+    const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
+    const tier =
+      sub.level <= 0
+        ? 'Free'
+        : state.tiers.reduce<SubscriptionTier | null>((prev, curr) => {
+            if (prev?.level === sub.level) return prev
+            if (curr.level === sub.level) return curr
+            if (curr.level < sub.level) return prev
+            if (!prev) return curr
+
+            // Return the lowest tier above the threshold
+            return prev.level > curr.level ? curr : prev
+          }, null)?.name
+
+    const requires = sub.level <= 0 ? 'Registering' : tier || 'Staff Only'
+    const tierName = tier || 'Staff'
+
+    const category = cats.get(tierName) || { tier: sub.level, options: [] }
+    category.options.push({
+      label: (
+        <ModelLabel
+          sub={sub}
+          limit={limit}
+          disabled={disabled}
+          tier={tier || 'Staff'}
+          requires={requires}
+        />
+      ),
+      value: sub._id,
+      level: sub.level,
+      sub,
+      limit,
+      disabled,
+      tierName: tier || 'Staff',
+      requires,
+      title: sub.name,
+    })
+    cats.set(tierName, category)
+  }
+
+  const categories = Array.from(cats.entries())
+    .sort((l, r) => l[1].tier - r[1].tier)
+    .map(([name, item]) => ({
+      name,
+      options: item.options.sort((l, r) => l.title.localeCompare(r.title)),
+    }))
+  return categories
 }
 
 function useModelOptions() {
@@ -277,8 +364,8 @@ const ModelLabel: Component<{
       </div>
       <Show when={!props.disabled && !props.nodesc}>
         <div class="text-700 text-xs">
-          {props.tier}
-          {props.sub.preset.description ? ', ' : ''}
+          {/* {props.tier}
+          {props.sub.preset.description ? ', ' : ''} */}
           {props.sub.preset.description}
         </div>
       </Show>

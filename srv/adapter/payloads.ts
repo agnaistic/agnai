@@ -114,6 +114,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       lists: opts.lists,
       previous: opts.previous,
       json_schema_v2: ensureSafeSchema(json_schema),
+      reschema_prompt: opts.reschemaPrompt,
       json_schema,
       imageData: opts.imageData,
       context_size: opts.contextSize,
