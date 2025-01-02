@@ -646,7 +646,6 @@ const MessageOptions: Component<{
   const showInner = createMemo(() => {
     const logics = logic()
     for (const opt of Object.values(logics)) {
-      console.log(opt.key, opt.outer.outer, opt.show)
       if (!opt.outer.outer && opt.show) return true
     }
 
