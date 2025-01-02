@@ -9,6 +9,7 @@ import { PatreonControls } from '../Settings/PatreonOauth'
 import { getUserSubscriptionTier } from '/common/util'
 import { isLoggedIn } from '/web/store/api'
 import { useNavigate } from '@solidjs/router'
+import { ModelList } from '/web/shared/PresetSettings/Agnaistic'
 
 export const SubscriptionPage: Component<{}> = (props) => {
   const settings = settingStore((s) => s.config)
@@ -29,6 +30,7 @@ export const SubscriptionPage: Component<{}> = (props) => {
   const [showUnsub, setUnsub] = createSignal(false)
   const [showUpgrade, setUpgrade] = createSignal<AppSchema.SubscriptionTier>()
   const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
+  const [showModels, setShowModels] = createSignal(false)
 
   const hasExpired = createMemo(() => {
     // We should leave this out. It's possible a user can subscribe multiple ways
@@ -106,9 +108,9 @@ export const SubscriptionPage: Component<{}> = (props) => {
               contexts.
             </p>
             <p>
-              In the future you'll also have access to additional features! Such as: Image
-              generation, image storage, and with third-party apps like Discord, Slack, and
-              WhatsApp, and more!
+              In the future you'll also have access to additional features! Such as: voice
+              generation, image storage, and with integration third-party apps like Discord, Slack,
+              and WhatsApp, and more!
             </p>
             <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
           </SolidCard>
@@ -121,6 +123,10 @@ export const SubscriptionPage: Component<{}> = (props) => {
               </a>
             </SolidCard>
           </Show>
+
+          <Button schema="primary" onClick={() => setShowModels(true)}>
+            View Available Models
+          </Button>
 
           <PatreonControls />
 
@@ -336,6 +342,8 @@ export const SubscriptionPage: Component<{}> = (props) => {
         }
         confirm={() => userStore.modifySubscription(showDowngrade()!._id)}
       />
+
+      <ModelList show={showModels()} close={() => setShowModels(false)} />
     </>
   )
 }

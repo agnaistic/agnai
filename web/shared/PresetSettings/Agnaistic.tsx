@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { chatStore, presetStore, settingStore, userStore } from '/web/store'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
@@ -13,11 +13,14 @@ import { applyStoreProperty, createEmitter } from '../util'
 import { isDefaultPreset } from '/common/presets'
 import { Field } from './Fields'
 import { useAppContext } from '/web/store/context'
+import { AppSchema } from '/common/types'
+import { Pill } from '../Card'
+import { RootModal } from '../Modal'
 
 export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
-  const opts = useModelOptions()
-  const categories = useModelCategories()
+  const state = userStore((s) => ({ tiers: s.tiers }))
 
+  const cats = useModelCategories()
   const [ctx] = useAppContext()
 
   const onSave = (value: string) => {
@@ -55,10 +58,10 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
 
   const label = createMemo(() => {
     const id = props.state.registered?.agnaistic?.subscriptionId
-    let opt = opts().find((v) => v.value === id)
+    let opt = cats.all.find((v) => v.value === id)
 
     if (!opt) {
-      opt = opts().find((v) => v.sub.preset.isDefaultSub)
+      opt = cats.all.find((v) => v.sub.preset.isDefaultSub)
     }
 
     if (!opt) {
@@ -72,6 +75,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         tier={opt.tierName}
         disabled={opt.disabled}
         requires={opt.requires}
+        tiers={state.tiers}
       />
     )
   })
@@ -91,11 +95,11 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         }
         label={
           <>
-            Model <span class="text-500 text-xs italic">(Available: {opts().length})</span>
+            Model <span class="text-500 text-xs italic">(Available: {cats.all.length})</span>
           </>
         }
         // options={opts()}
-        categories={categories}
+        categories={cats.categories}
         onSelect={(ev) => onSave(ev.value)}
         value={props.state.registered?.agnaistic?.subscriptionId}
         selected={props.state.registered?.agnaistic?.subscriptionId}
@@ -105,12 +109,65 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   )
 }
 
+export const ModelList: Component<{ show: boolean; close: () => void }> = (props) => {
+  const state = userStore((s) => ({
+    tiers: s.tiers,
+  }))
+
+  const cfg = settingStore((s) => ({
+    images: s.config.serverConfig?.imagesModels || [],
+  }))
+
+  const cats = useModelCategories()
+
+  return (
+    <RootModal show={props.show} close={props.close} maxWidth="half" title="Available Models">
+      <div class="flex flex-col gap-2">
+        <Show when={cfg.images.length > 0}>
+          <div class="font-bold">Image Models</div>
+          <div class="flex flex-col gap-2">
+            <For each={cfg.images}>
+              {(model) => (
+                <div class="bg-700 w-full gap-4 rounded-md px-2 py-1 text-sm">
+                  <div class="font-bold">{model.desc}</div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <For each={cats.categories}>
+          {(cat) => (
+            <>
+              <div class="font-bold">{cat.name}</div>
+              <div class="flex flex-col gap-2">
+                <For each={cat.options}>
+                  {(model) => (
+                    <div class="bg-700 w-full gap-4 rounded-md px-2 py-1 text-sm">
+                      <ModelLabel
+                        tiers={state.tiers}
+                        requires={model.requires}
+                        disabled={model.disabled}
+                        sub={model.sub}
+                        tier={model.tierName}
+                        limit={model.limit}
+                      />
+                    </div>
+                  )}
+                </For>
+              </div>
+            </>
+          )}
+        </For>
+      </div>
+    </RootModal>
+  )
+}
+
 export const AgnaisticModel: Component = (props) => {
   const [ctx] = useAppContext()
 
   const [selected, setSelected] = createSignal(ctx.preset?.registered?.agnaistic?.subscriptionId)
-  const opts = useModelOptions()
-  const categories = useModelCategories()
+  const cats = useModelCategories()
 
   createEffect(
     on(
@@ -151,10 +208,10 @@ export const AgnaisticModel: Component = (props) => {
 
   const label = createMemo(() => {
     const id = selected()
-    let opt = opts().find((v) => v.value === id)
+    let opt = cats.all.find((v) => v.value === id)
 
     if (!opt) {
-      opt = opts().find((v) => v.sub.preset.isDefaultSub)
+      opt = cats.all.find((v) => v.sub.preset.isDefaultSub)
     }
 
     return (
@@ -179,8 +236,7 @@ export const AgnaisticModel: Component = (props) => {
             </div>
           </div>
         }
-        // options={opts()}
-        categories={categories}
+        categories={cats.categories}
         onSelect={onSave}
         value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
@@ -188,6 +244,17 @@ export const AgnaisticModel: Component = (props) => {
       />
     </Show>
   )
+}
+
+type ModelOption = {
+  value: string
+  level: number
+  sub: any
+  limit?: SubscriptionModelLevel
+  disabled: boolean
+  tierName: string
+  requires: string
+  title: string
 }
 
 function useModelCategories() {
@@ -203,25 +270,19 @@ function useModelCategories() {
   const tierLevel = state.user?.admin ? Infinity : state.userLevel
   const level = state.user?.admin ? Infinity : tierLevel
 
+  const all: Array<ModelOption> = []
+
   const cats = new Map<
     string,
     {
-      options: Array<{
-        label: any
-        value: string
-        level: number
-        sub: any
-        limit?: SubscriptionModelLevel
-        disabled: boolean
-        tierName: string
-        requires: string
-        title: string
-      }>
+      options: Array<ModelOption & { label: any }>
       tier: number
     }
   >()
 
   for (const sub of settings.config.subs) {
+    if (sub.preset.subDisabled && !state.user?.admin) continue
+
     const limit = getSubscriptionModelLimits(sub.preset, level)
     const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
     const tier =
@@ -241,16 +302,7 @@ function useModelCategories() {
     const tierName = tier || 'Staff'
 
     const category = cats.get(tierName) || { tier: sub.level, options: [] }
-    category.options.push({
-      label: (
-        <ModelLabel
-          sub={sub}
-          limit={limit}
-          disabled={disabled}
-          tier={tier || 'Staff'}
-          requires={requires}
-        />
-      ),
+    const base = {
       value: sub._id,
       level: sub.level,
       sub,
@@ -259,7 +311,23 @@ function useModelCategories() {
       tierName: tier || 'Staff',
       requires,
       title: sub.name,
+    }
+
+    category.options.push({
+      ...base,
+      label: (
+        <ModelLabel
+          sub={sub}
+          limit={limit}
+          disabled={disabled}
+          tier={tier || 'Staff'}
+          requires={requires}
+          tiers={state.tiers}
+        />
+      ),
     })
+
+    all.push(base)
     cats.set(tierName, category)
   }
 
@@ -269,74 +337,8 @@ function useModelCategories() {
       name,
       options: item.options.sort((l, r) => l.title.localeCompare(r.title)),
     }))
-  return categories
-}
 
-function useModelOptions() {
-  const state = userStore((s) => ({
-    user: s.user,
-    tiers: s.tiers,
-    sub: s.sub,
-    userLevel: s.userLevel,
-  }))
-  const settings = settingStore()
-
-  const opts = createMemo(() => {
-    const tierLevel = state.user?.admin ? Infinity : state.userLevel
-    const level = state.user?.admin ? Infinity : tierLevel
-
-    return (
-      settings.config.subs
-        .map((sub) => {
-          const limit = getSubscriptionModelLimits(sub.preset, level)
-          const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
-          const tier =
-            sub.level <= 0
-              ? 'Free'
-              : state.tiers.reduce<SubscriptionTier | null>((prev, curr) => {
-                  if (prev?.level === sub.level) return prev
-                  if (curr.level === sub.level) return curr
-                  if (curr.level < sub.level) return prev
-                  if (!prev) return curr
-
-                  // Return the lowest tier above the threshold
-                  return prev.level > curr.level ? curr : prev
-                }, null)?.name
-
-          const requires = sub.level <= 0 ? 'Registering' : tier || 'Staff Only'
-          return {
-            label: (
-              <ModelLabel
-                sub={sub}
-                limit={limit}
-                disabled={disabled}
-                tier={tier || 'Staff'}
-                requires={requires}
-              />
-            ),
-            value: sub._id,
-            level: sub.level,
-            sub,
-            limit,
-            disabled,
-            tierName: tier || 'Staff',
-            requires,
-            title: sub.name,
-          }
-        })
-        // Remove staff models from the list
-        .filter((sub) => (sub.tierName === 'Staff' && !state.user?.admin ? false : true))
-        .sort((l, r) => {
-          if (l.disabled && !r.disabled) return 1
-          if (r.disabled && !l.disabled) return -1
-          // if (l.disabled && r.disabled) return l.title.localeCompare(r.title)
-          if (l.level !== r.level) return l.level - r.level
-          return l.title.localeCompare(r.title)
-        })
-    )
-  })
-
-  return opts
+  return { categories, all }
 }
 
 const ModelLabel: Component<{
@@ -346,6 +348,7 @@ const ModelLabel: Component<{
   limit?: SubscriptionModelLevel
   disabled: boolean
   nodesc?: boolean
+  tiers: AppSchema.SubscriptionTier[]
 }> = (props) => {
   const context = createMemo(() =>
     props.limit ? props.limit.maxContextLength : props.sub.preset.maxContextLength!
@@ -354,20 +357,51 @@ const ModelLabel: Component<{
     props.limit ? props.limit.maxTokens : props.sub.preset.maxTokens
   )
 
+  const maxes = createMemo(() => {
+    const pills: any[] = []
+    if (!props.sub.preset.levels?.length) {
+      pills.push(<>{tokens()} tokens</>)
+      return pills
+    }
+
+    for (const level of props.sub.preset.levels) {
+      const required = props.tiers.reduce<AppSchema.SubscriptionTier | null>((prev, curr) => {
+        if (curr.level < level.level) return prev
+        if (!prev) return curr
+        // Return the minimum required
+        return curr.level < prev.level ? curr : prev
+      }, null)
+
+      if (!required) continue
+      pills.push(
+        <Pill small class="text-xs" inverse>
+          {required.name} {Math.floor(level.maxContextLength / 1000)}K {level.maxTokens}
+        </Pill>
+      )
+    }
+
+    return pills
+  })
+
   return (
     <div class="flex flex-col items-start">
       <div class="flex items-center justify-between gap-1">
         <div class="font-bold">{props.sub.name}</div>
-        <div class="text-700 text-xs">
-          {Math.floor(context() / 1000)}K, {tokens()} tokens
+        <div class="text-700 flex gap-1 text-xs">
+          <Show
+            when={maxes().length}
+            fallback={
+              <>
+                {Math.floor(context() / 1000)}K, {tokens()} tokens
+              </>
+            }
+          >
+            <For each={maxes()}>{(max) => <>{max}</>}</For>
+          </Show>
         </div>
       </div>
       <Show when={!props.disabled && !props.nodesc}>
-        <div class="text-700 text-xs">
-          {/* {props.tier}
-          {props.sub.preset.description ? ', ' : ''} */}
-          {props.sub.preset.description}
-        </div>
+        <div class="text-700 text-xs">{props.sub.preset.description}</div>
       </Show>
       <Show when={props.disabled}>
         <div class="text-700 text-xs">Requires {props.requires}</div>

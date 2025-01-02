@@ -122,6 +122,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       topK: sub.topK,
       topP: sub.topP,
       minP: sub.minP,
+      subDisabled: sub.subDisabled,
       typicalP: sub.typicalP,
       addBosToken: sub.addBosToken,
       antiBond: sub.antiBond,

@@ -37,7 +37,7 @@ export interface SubscriptionModelOption {
   preset: GenSettings &
     Pick<
       SubscriptionModel,
-      'allowGuestUsage' | 'isDefaultSub' | '_id' | 'service' | 'levels' | 'subLevel'
+      'allowGuestUsage' | 'isDefaultSub' | '_id' | 'service' | 'levels' | 'subLevel' | 'subDisabled'
     > & {
       kind: 'submodel'
     }
