@@ -28,6 +28,8 @@ export type SettingState = {
   showMenu: boolean
   showImpersonate: boolean
   config: AppSchema.AppConfig
+
+  allImageModels: AppSchema.ImageModel[]
   models: HordeModel[]
   workers: HordeWorker[]
   imageWorkers: HordeWorker[]
@@ -44,6 +46,7 @@ export type SettingState = {
     url: string
     options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }>
   }
+
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
@@ -70,6 +73,7 @@ const initState: SettingState = {
   models: [],
   workers: [],
   imageWorkers: [],
+  allImageModels: [],
   config: {
     serverConfig: {} as any,
     registered: [],
@@ -145,6 +149,8 @@ export const settingStore = createStore<SettingState>(
         const isMaint = init.config?.maintenance
 
         if (init.config.serverConfig) {
+          yield { allImageModels: init.config.serverConfig.imagesModels || [] }
+
           if (!init.config.tier?.imagesAccess && !init.user?.admin) {
             init.config.serverConfig.imagesModels = []
           } else {

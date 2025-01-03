@@ -7,12 +7,7 @@ export function filterImageModels(
   tier?: Pick<AppSchema.SubscriptionTier, 'imagesAccess'>
 ) {
   if (user?.admin) return models
-  if (!tier?.imagesAccess) return []
 
-  let level = Math.max(user?.sub?.level ?? 0, 0)
-
-  const list = models
-    .filter((m) => (m.level ?? 0) <= level)
-    .map((m) => ({ ...m, override: '', host: '' }))
+  const list = models.map((m) => ({ ...m, override: '', host: '' }))
   return list
 }

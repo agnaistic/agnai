@@ -115,7 +115,7 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
   }))
 
   const cfg = settingStore((s) => ({
-    images: s.config.serverConfig?.imagesModels || [],
+    images: s.allImageModels || [],
   }))
 
   const cats = useModelCategories()
