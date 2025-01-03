@@ -89,7 +89,7 @@ export const retrieveSubscription = handle(async ({ userId }) => {
 
   const errors: string[] = []
 
-  if (user?.billing?.subscriptionId) {
+  if (user?.billing?.subscriptionId || user?.stripeSessions?.length) {
     const result = await resyncSubscription(user).catch((err: Error) => ({ err }))
     if (!result) {
       errors.push(`Error occurred while retrieving subscription infomation`)

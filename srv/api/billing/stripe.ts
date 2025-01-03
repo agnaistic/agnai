@@ -83,6 +83,7 @@ export async function resyncSubscription(user: AppSchema.User) {
 
   if (billing.subscriptionId !== subscription.id) {
     billing.subscriptionId = subscription.id
+    billing.customerId = subscription.customer as string
   }
 
   /**

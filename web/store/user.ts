@@ -90,7 +90,12 @@ export const userStore = createStore<UserState>(
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
 
-    if (init.user?.patreonUserId || init.user?.billing || init.user?.manualSub) {
+    if (
+      init.user?.patreonUserId ||
+      init.user?.billing ||
+      init.user?.manualSub ||
+      init.user?.stripeSessions?.length
+    ) {
       userStore.retrieveSubscription(true)
     }
 
