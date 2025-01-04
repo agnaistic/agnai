@@ -113,7 +113,6 @@ export const SubscriptionModel: Component = () => {
         ...emptyPreset,
         ...preset,
         _id: '',
-        subLevel: 0,
         subApiKey: '',
         subDisabled: false,
         allowGuestUsage: false,
@@ -469,39 +468,28 @@ const Levels: Component<{
   levels: AppSchema.SubscriptionModelLevel[]
   update: (levels: AppSchema.SubscriptionModelLevel[]) => void
 }> = (props) => {
-  const [levels, setLevels] = createSignal(props.levels || [])
-
-  createEffect(
-    on(
-      () => props.levels,
-      (l) => {
-        setLevels(l)
-      }
-    )
-  )
-
   const change = (index: number, update: Partial<AppSchema.SubscriptionModelLevel>) => {
-    const next = levels().map((l, i) => {
+    const next = props.levels.map((l, i) => {
       if (i !== index) return l
       return { ...l, ...update }
     })
-    setLevels(next)
+
     props.update(next)
   }
 
   const add = () => {
-    const next = levels().concat({
+    const next = props.levels.concat({
       level: 0,
       maxTokens: 400,
       maxContextLength: 8192,
     })
-    setLevels(next)
+    props.update(next)
   }
 
   const remove = (i: number) => {
-    const next = levels().slice()
+    const next = props.levels.slice()
     next.splice(i, 1)
-    setLevels(next)
+    props.update(next)
   }
 
   return (
@@ -519,7 +507,7 @@ const Levels: Component<{
         />
       </div>
 
-      <Index each={levels()}>
+      <Index each={props.levels}>
         {(level, i) => (
           <div class="flex gap-2">
             <TextInput

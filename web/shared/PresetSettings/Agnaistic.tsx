@@ -58,10 +58,10 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
 
   const label = createMemo(() => {
     const id = props.state.registered?.agnaistic?.subscriptionId
-    let opt = cats.all.find((v) => v.value === id)
+    let opt = cats().all.find((v) => v.value === id)
 
     if (!opt) {
-      opt = cats.all.find((v) => v.sub.preset.isDefaultSub)
+      opt = cats().all.find((v) => v.sub.preset.isDefaultSub)
     }
 
     if (!opt) {
@@ -95,11 +95,11 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         }
         label={
           <>
-            Model <span class="text-500 text-xs italic">(Available: {cats.all.length})</span>
+            Model <span class="text-500 text-xs italic">(Available: {cats().all.length})</span>
           </>
         }
         // options={opts()}
-        categories={cats.categories}
+        categories={cats().categories}
         onSelect={(ev) => onSave(ev.value)}
         value={props.state.registered?.agnaistic?.subscriptionId}
         selected={props.state.registered?.agnaistic?.subscriptionId}
@@ -135,7 +135,7 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
             </For>
           </div>
         </Show>
-        <For each={cats.categories}>
+        <For each={cats().categories}>
           {(cat) => (
             <>
               <div class="font-bold">{cat.name}</div>
@@ -208,10 +208,10 @@ export const AgnaisticModel: Component = (props) => {
 
   const label = createMemo(() => {
     const id = selected()
-    let opt = cats.all.find((v) => v.value === id)
+    let opt = cats().all.find((v) => v.value === id)
 
     if (!opt) {
-      opt = cats.all.find((v) => v.sub.preset.isDefaultSub)
+      opt = cats().all.find((v) => v.sub.preset.isDefaultSub)
     }
 
     return (
@@ -236,7 +236,7 @@ export const AgnaisticModel: Component = (props) => {
             </div>
           </div>
         }
-        categories={cats.categories}
+        categories={cats().categories}
         onSelect={onSave}
         value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
@@ -267,78 +267,81 @@ function useModelCategories() {
 
   const settings = settingStore()
 
-  const tierLevel = state.user?.admin ? Infinity : state.userLevel
-  const level = state.user?.admin ? Infinity : tierLevel
+  const list = createMemo(() => {
+    const tierLevel = state.user?.admin ? Infinity : state.userLevel
+    const level = state.user?.admin ? Infinity : tierLevel
+    const all: Array<ModelOption> = []
 
-  const all: Array<ModelOption> = []
+    const cats = new Map<
+      string,
+      {
+        options: Array<ModelOption & { label: any }>
+        tier: number
+      }
+    >()
 
-  const cats = new Map<
-    string,
-    {
-      options: Array<ModelOption & { label: any }>
-      tier: number
+    for (const sub of settings.config.subs) {
+      if (sub.preset.subDisabled && !state.user?.admin) continue
+
+      const limit = getSubscriptionModelLimits(sub.preset, level)
+      const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
+      const tier =
+        sub.level <= 0
+          ? 'Free'
+          : state.tiers.reduce<SubscriptionTier | null>((prev, curr) => {
+              if (prev?.level === sub.level) return prev
+              if (curr.level === sub.level) return curr
+              if (curr.level < sub.level) return prev
+              if (!prev) return curr
+
+              // Return the lowest tier above the threshold
+              return prev.level > curr.level ? curr : prev
+            }, null)?.name
+
+      const requires = sub.level <= 0 ? 'Registering' : tier || 'Staff Only'
+      const tierName = tier || 'Staff'
+
+      const category = cats.get(tierName) || { tier: sub.level, options: [] }
+      const base = {
+        value: sub._id,
+        level: sub.level,
+        sub,
+        limit,
+        disabled,
+        tierName: tier || 'Staff',
+        requires,
+        title: sub.name,
+      }
+
+      category.options.push({
+        ...base,
+        label: (
+          <ModelLabel
+            sub={sub}
+            limit={limit}
+            disabled={disabled}
+            tier={tier || 'Staff'}
+            requires={requires}
+            tiers={state.tiers}
+          />
+        ),
+      })
+
+      all.push(base)
+      cats.set(tierName, category)
     }
-  >()
 
-  for (const sub of settings.config.subs) {
-    if (sub.preset.subDisabled && !state.user?.admin) continue
+    const categories = Array.from(cats.entries())
+      .sort((l, r) => l[1].tier - r[1].tier)
+      .map(([name, item]) => ({
+        name,
+        options: item.options.sort((l, r) => l.title.localeCompare(r.title)),
+      }))
 
-    const limit = getSubscriptionModelLimits(sub.preset, level)
-    const disabled = !!sub.preset.allowGuestUsage ? false : sub.level > level
-    const tier =
-      sub.level <= 0
-        ? 'Free'
-        : state.tiers.reduce<SubscriptionTier | null>((prev, curr) => {
-            if (prev?.level === sub.level) return prev
-            if (curr.level === sub.level) return curr
-            if (curr.level < sub.level) return prev
-            if (!prev) return curr
+    return { categories, all }
+  })
 
-            // Return the lowest tier above the threshold
-            return prev.level > curr.level ? curr : prev
-          }, null)?.name
-
-    const requires = sub.level <= 0 ? 'Registering' : tier || 'Staff Only'
-    const tierName = tier || 'Staff'
-
-    const category = cats.get(tierName) || { tier: sub.level, options: [] }
-    const base = {
-      value: sub._id,
-      level: sub.level,
-      sub,
-      limit,
-      disabled,
-      tierName: tier || 'Staff',
-      requires,
-      title: sub.name,
-    }
-
-    category.options.push({
-      ...base,
-      label: (
-        <ModelLabel
-          sub={sub}
-          limit={limit}
-          disabled={disabled}
-          tier={tier || 'Staff'}
-          requires={requires}
-          tiers={state.tiers}
-        />
-      ),
-    })
-
-    all.push(base)
-    cats.set(tierName, category)
-  }
-
-  const categories = Array.from(cats.entries())
-    .sort((l, r) => l[1].tier - r[1].tier)
-    .map(([name, item]) => ({
-      name,
-      options: item.options.sort((l, r) => l.title.localeCompare(r.title)),
-    }))
-
-  return { categories, all }
+  return list
 }
 
 const ModelLabel: Component<{
@@ -364,18 +367,33 @@ const ModelLabel: Component<{
       return pills
     }
 
-    for (const level of props.sub.preset.levels) {
+    const levels = props.sub.preset.levels.slice()
+    const baseIncluded = props.sub.preset.levels.find((l) => l.level === props.sub.preset.subLevel)
+    if (!baseIncluded) {
+      levels.push({
+        level: props.sub.preset.subLevel,
+        maxContextLength: props.sub.preset.maxContextLength!,
+        maxTokens: props.sub.preset.maxTokens,
+      })
+    }
+
+    levels.sort((l, r) => l.level - r.level)
+
+    for (const level of levels) {
       const required = props.tiers.reduce<AppSchema.SubscriptionTier | null>((prev, curr) => {
+        if (level.level <= 0) return null
         if (curr.level < level.level) return prev
         if (!prev) return curr
         // Return the minimum required
         return curr.level < prev.level ? curr : prev
       }, null)
 
-      if (!required) continue
+      if (!required && props.sub.preset.subLevel > -1) continue
+      const name = required ? required.name : level.level === 0 ? 'User' : 'Guest'
+
       pills.push(
         <Pill small class="text-xs" inverse>
-          {required.name} {Math.floor(level.maxContextLength / 1000)}K {level.maxTokens}
+          {name} {Math.floor(level.maxContextLength / 1000)}K
         </Pill>
       )
     }
@@ -386,8 +404,8 @@ const ModelLabel: Component<{
   return (
     <div class="flex flex-col items-start">
       <div class="flex items-center justify-between gap-1">
-        <div class="font-bold">{props.sub.name}</div>
-        <div class="text-700 flex gap-1 text-xs">
+        <div class="min-w-fit font-bold">{props.sub.name}</div>
+        <div class="text-700 flex flex-wrap gap-1 text-xs">
           <Show
             when={maxes().length}
             fallback={
