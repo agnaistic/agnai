@@ -143,8 +143,8 @@ const PresetList: Component = () => {
 
 const importValid = {
   ...presetValidator,
-  order: 'any',
-  disabledSamplers: 'any',
+  order: 'any?',
+  disabledSamplers: 'any?',
   name: 'string?',
   oaiModel: 'string?',
   claudeModel: 'string?',
