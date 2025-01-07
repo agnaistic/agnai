@@ -61,21 +61,21 @@ export function isValidPartial<T extends Validator>(
 }
 
 export function validateBody<T extends Validator>(
-  type: T,
+  guard: T,
   compare: any,
   opts: { partial?: boolean; prefix?: string; notThrow?: boolean } = {}
-): { errors: string[]; actual: UnwrapBody<T> } {
+): { errors: string[]; actual: UnwrapBody<T>; original: UnwrapBody<T> } {
   const prefix = opts.prefix ? `${opts.prefix}.` : ''
   const errors: string[] = []
   const actual: any = {}
 
-  if (!compare && '?' in type && (type as any)['?'] === '?') {
-    return { errors, actual }
+  if (!compare && '?' in guard && (guard as any)['?'] === '?') {
+    return { errors, actual, original: compare }
   }
 
-  start: for (const key in type) {
+  start: for (const key in guard) {
     const prop = `${prefix}${key}`
-    const bodyType = type[key]
+    const bodyType = guard[key]
     let value
     try {
       value = compare?.[key]
@@ -246,5 +246,5 @@ export function validateBody<T extends Validator>(
     throw new Error(`Object does not match type: ${errors.join(', ')}`)
   }
 
-  return { errors, actual }
+  return { errors, actual, original: compare }
 }

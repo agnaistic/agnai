@@ -102,6 +102,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       skip_special_tokens: gen.skipSpecialTokens ?? true,
       stopping_strings: getStoppingStrings(opts, stops),
       dynamic_temperature: gen.dynatemp_range ? true : false,
+      smoothing_curve: gen.smoothingCurve,
       smoothing_factor: gen.smoothingFactor,
       token_healing: gen.tokenHealing,
       temp_last: gen.tempLast,

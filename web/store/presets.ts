@@ -334,6 +334,28 @@ type SafePreset = Pick<
   | 'dynatemp_exponent'
   | 'smoothingFactor'
   | 'smoothingCurve'
+  | 'presetMode'
+  | 'arliModel'
+  | 'disableNameStops'
+  | 'dryAllowedLength'
+  | 'dryBase'
+  | 'dryMultiplier'
+  | 'drySequenceBreakers'
+  | 'dryRange'
+  | 'featherlessModel'
+  | 'thirdPartyFormat'
+  | 'description'
+  | 'googleModel'
+  | 'name'
+  | 'json'
+  | 'jsonEnabled'
+  | 'localRequests'
+  | 'registered'
+  | 'xtcProbability'
+  | 'xtcThreshold'
+  | 'tokenHealing'
+  | 'tempLast'
+  | 'useMaxContext'
 >
 
 export async function exportPreset(preset: AppSchema.UserGenPreset) {
@@ -360,6 +382,12 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
   } = preset
 
   const safe: SafePreset = json
+
+  if (registered?.agnaistic) {
+    safe.registered = {
+      agnaistic: registered.agnaistic,
+    }
+  }
 
   downloadJson(safe, `preset-${_id.slice(0, 4)}`)
 }

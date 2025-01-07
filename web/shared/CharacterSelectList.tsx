@@ -5,12 +5,15 @@ import { Star, Users } from 'lucide-solid'
 import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
+import { Pill } from './Card'
 import Divider from './Divider'
 
 export type Option<T extends string = string> = {
   label: string
   value: T
 }
+
+const MAX_DISPLAY = 50
 
 const CharacterSelectList: Component<{
   items: AppSchema.Character[]
@@ -66,6 +69,13 @@ const CharacterSelectList: Component<{
             onKeyUp={(e) => setSearch(e.currentTarget.value)}
             ref={assignRef}
           />
+          <Show when={props.items.length > MAX_DISPLAY}>
+            <div class="flex w-full justify-center">
+              <Pill type="orange" small>
+                Too many characters to display - Use the search field
+              </Pill>
+            </div>
+          </Show>
           <Show when={props.emptyLabel}>
             <div
               class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
@@ -167,6 +177,7 @@ function narrow(
       }
     })
     .sort(faveSort)
+    .slice(0, MAX_DISPLAY)
 }
 
 function faveSort(a: AppSchema.Character, b: AppSchema.Character) {

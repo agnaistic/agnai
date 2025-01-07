@@ -102,6 +102,7 @@ export const presetValidator = {
   epsilonCutoff: 'number?',
   etaCutoff: 'number?',
   mirostatToggle: 'boolean?',
+  presetMode: 'string?',
 } as const
 
 const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {

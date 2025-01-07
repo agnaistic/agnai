@@ -164,14 +164,14 @@ const ImportPreset: Component<{ close: () => void; success: () => void }> = (pro
       const content = await getFileAsString(files[0])
       const parsed = JSON.parse(content)
 
-      const { errors, actual } = validateBody(importValid, parsed, { notThrow: true })
+      const { errors, original } = validateBody(importValid, parsed, { notThrow: true })
       if (errors.length) {
         toastStore.error(`Preset is not valid: ${errors.join(', ')}`)
         console.log(errors)
         return
       }
 
-      presetStore.setImportPreset(actual as any)
+      presetStore.setImportPreset(original as any)
       props.success()
     } catch (ex: any) {
       toastStore.error(`Could not parse preset: ${ex.message}`)

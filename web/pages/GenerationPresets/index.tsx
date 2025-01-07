@@ -54,8 +54,11 @@ export const GenerationPresetsPage: Component = () => {
       }
 
       if (presets.importing) {
-        setStore({ ...presets.importing, _id: '', name: '' })
-        console.log(presets.importing)
+        setStore({
+          ...presets.importing,
+          _id: '',
+          name: presets.importing.name ? `${presets.importing.name} - Imported` : 'Imported Preset',
+        })
         presetStore.setImportPreset()
         return
       }
