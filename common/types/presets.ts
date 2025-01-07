@@ -76,7 +76,7 @@ export interface UserGenPreset extends GenSettings {
 export interface GenSettings {
   name: string
   description?: string
-  presetMode?: 'simple' | 'advanced'
+  presetMode?: 'simple' | 'advanced' | undefined
 
   service?: AIAdapter
 
