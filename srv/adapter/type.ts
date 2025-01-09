@@ -61,6 +61,7 @@ export type GenerateRequestV2 = {
 
   parts: PromptParts
   lines: string[]
+  linesCount?: number
   text?: string
   settings?: Partial<AppSchema.GenSettings>
   replacing?: AppSchema.ChatMessage

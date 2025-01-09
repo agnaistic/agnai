@@ -64,6 +64,7 @@ export type InferenceRequest = {
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
+  maxKnownLines?: number
 
   guidance?: boolean
   placeholders?: any
@@ -394,6 +395,13 @@ export async function createChatStream(
    */
 
   const prompt = await assemblePrompt(opts, opts.parts, opts.lines, encoder)
+  if (prompt.linesAddedCount === 0 && opts.linesCount) {
+    throw new StatusError(
+      `Could not fit any messages in prompt. Check your character definition, context size, and template`,
+      400
+    )
+  }
+
   const messages = await toChatMessages(opts, prompt, encoder)
 
   const size = encoder(

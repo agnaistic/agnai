@@ -66,6 +66,7 @@ const genValidator = {
     userEmbeds: 'any?',
   },
   lines: ['string'],
+  linesCount: 'number?',
   text: 'string?',
   settings: 'any?',
   lastMessage: 'string?',
@@ -247,15 +248,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
   }
 
-  res.json({
-    requestId,
-    success: true,
-    generating: true,
-    message: 'Generating message',
-    messageId,
-    created: userMsg,
-  })
-
   const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
   const schema = entities.gen.jsonSource === 'character' ? replyAs.json : entities.gen.json
   const hydrator = entities.gen.jsonEnabled && schema ? jsonHydrator(schema) : undefined
@@ -271,9 +263,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   let probs: any
 
   if (body.response === undefined) {
-    const { stream, ...metadata } = await createChatStream(
+    const chatStream = await createChatStream(
       {
         ...body,
+        linesCount: body.linesCount,
         chat,
         replyAs,
         impersonate,
@@ -282,7 +275,22 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatSchema: schema,
       },
       log
-    )
+    ).catch((err) => ({ err }))
+
+    if ('err' in chatStream) {
+      throw chatStream.err
+    }
+
+    res.json({
+      requestId,
+      success: true,
+      generating: true,
+      message: 'Generating message',
+      messageId,
+      created: userMsg,
+    })
+
+    const { stream, ...metadata } = chatStream
 
     adapter = metadata.adapter
 
@@ -584,8 +592,6 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     return { success: true }
   }
 
-  res.json({ success: true, generating: true, message: 'Generating message', requestId })
-
   const schema = body.settings.jsonSource === 'character' ? body.char.json : body.settings.json
   const hydrator = body.settings.jsonEnabled && schema ? jsonHydrator(schema) : undefined
   let generated = body.response || ''
@@ -597,11 +603,19 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let jsonPartial: any
 
   if (body.response === undefined) {
-    const { stream, ...entities } = await createChatStream(
-      { ...body, chat, replyAs, requestId, chatSchema: schema },
+    const chatStream = await createChatStream(
+      { ...body, chat, replyAs, requestId, chatSchema: schema, linesCount: body.linesCount },
       log,
       guest
     )
+
+    if ('err' in chatStream) {
+      throw chatStream.err
+    }
+
+    const { stream, ...entities } = chatStream
+
+    res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
     log.setBindings({ adapter })
 

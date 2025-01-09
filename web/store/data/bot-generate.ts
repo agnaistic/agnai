@@ -108,6 +108,7 @@ export async function generateResponse(
         ? opts.text
         : undefined,
     lines: prompt.lines,
+    linesCount: props.messages.length,
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,

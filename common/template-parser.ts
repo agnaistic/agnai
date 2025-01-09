@@ -221,6 +221,13 @@ export async function parseTemplate(
   //   }
   // }
 
+  /**
+   * Some placeholders require re-parsing as they also contain placeholders
+   */
+  opts.isFinal = true
+  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+  opts.isFinal = false
+
   /** Replace iterators */
   let history: string[] = []
   if (opts.limit && opts.limit.output) {
@@ -255,10 +262,6 @@ export async function parseTemplate(
       }
     }
   }
-
-  opts.isFinal = true
-  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
-  opts.isFinal = false
 
   sections.sections.history = history
 
