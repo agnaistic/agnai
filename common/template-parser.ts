@@ -243,7 +243,7 @@ export async function parseTemplate(
       })
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.slice().reverse()
-      output = output.replace(id, trimmed.join('\n'))
+      output = output.replace(new RegExp(id, 'gi'), trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
       history = trimmed
     }
@@ -276,8 +276,10 @@ export async function parseTemplate(
   //   sections.sections.post.join('')
   // )
 
+  output = output.replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+
   return {
-    parsed: result,
+    parsed: output,
     inserts: opts.inserts ?? new Map(),
     length: await opts.limit?.encoder?.(result),
     linesAddedCount,

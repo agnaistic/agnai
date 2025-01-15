@@ -383,6 +383,10 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
 
   const safe: SafePreset = json
 
+  if ('chatId' in safe) {
+    delete safe.chatId
+  }
+
   if (registered?.agnaistic) {
     safe.registered = {
       agnaistic: registered.agnaistic,

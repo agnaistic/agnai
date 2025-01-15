@@ -1,12 +1,13 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { getEncoderByName } from '../tokenize'
+import { getEncoder, getEncoderByName } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { getStoppingStrings } from './prompt'
-import { ModelAdapter } from './type'
+import { AdapterProps, ModelAdapter } from './type'
 import { AppLog } from '../middleware'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { requestStream } from './stream'
+import { injectPlaceholders } from '/common/prompt'
 
 const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/`
 
@@ -34,12 +35,13 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     },
   }
 
-  const systems: string[] = []
+  const fallback = await fallbackSystemMessage(opts)
+  const systems: string[] = [opts.parts.systemPrompt || fallback.parsed]
   const contents: any[] = []
 
   for (const msg of messages) {
     if (msg.role === 'system') {
-      systems.push(msg.content)
+      contents.push({ role: 'user', parts: [{ text: msg.content }] })
       continue
     }
 
@@ -51,11 +53,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   if (systems.length) {
     if (!SYSTEM_INCAPABLE[opts.gen.googleModel]) {
       payload.system_instruction = {
-        parts: [
-          {
-            text: systems.join('\n'),
-          },
-        ],
+        parts: [{ text: systems.join('\n') }],
       }
     } else {
       contents.unshift({ role: 'user', parts: [{ text: systems.join('\n') }] })
@@ -224,3 +222,18 @@ const safetySettings = [
     threshold: 'BLOCK_NONE',
   },
 ]
+
+function fallbackSystemMessage(opts: AdapterProps) {
+  const message = injectPlaceholders(
+    `Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}"`,
+    {
+      characters: opts.characters,
+      encoder: getEncoder('main').count,
+      jsonValues: {},
+      parts: opts.parts,
+      opts,
+    }
+  )
+
+  return message
+}
