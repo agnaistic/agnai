@@ -38,6 +38,12 @@ const [debouceUI] = createDebounce((update: UI.UISettings) => {
   updateTheme(update)
 }, 50)
 
+type SubscriberInfo = {
+  level: number
+  type: AppSchema.SubscriptionType
+  tier: AppSchema.SubscriptionTier
+}
+
 export type UserState = {
   loading: boolean
   error?: string
@@ -72,12 +78,11 @@ export type UserState = {
       activeAt: string
     }
   }
-  sub?: {
-    level: number
-    type: AppSchema.SubscriptionType
-    tier: AppSchema.SubscriptionTier
-  }
+
+  sub?: SubscriberInfo
 }
+
+const CACHED_SUB_KEY = 'cached-sub'
 
 export const userStore = createStore<UserState>(
   'user',
@@ -253,6 +258,7 @@ export const userStore = createStore<UserState>(
       yield { billingLoading: true }
       const res = await api.post(`/admin/billing/subscribe/finish`, { sessionId, state })
       yield { billingLoading: false }
+
       if (res.result && state === 'success') {
         onSuccess?.()
         return {
@@ -569,8 +575,10 @@ export const userStore = createStore<UserState>(
     },
     async *logout() {
       clearAuth()
+      storage.localRemoveItem(CACHED_SUB_KEY)
       publish({ type: 'logout' })
-      const ui = await getUIsettings(true)
+      const ui = getUIsettings(true)
+
       yield {
         jwt: '',
         profile: undefined,
@@ -808,6 +816,14 @@ export const userStore = createStore<UserState>(
   }
 })
 
+userStore.subscribe((nextState) => {
+  if (!nextState.sub) {
+    return
+  }
+
+  storage.localSetItem(CACHED_SUB_KEY, JSON.stringify(nextState.sub))
+})
+
 function init(): UserState {
   const existing = getAuth()
 
@@ -840,6 +856,8 @@ function init(): UserState {
     }
   }
 
+  const cachedSub = storage.localGetItem(CACHED_SUB_KEY)
+
   return {
     userType: undefined,
     userLevel: 0,
@@ -856,6 +874,7 @@ function init(): UserState {
     tiers: [],
     billingLoading: false,
     subLoading: false,
+    sub: cachedSub ? JSON.parse(cachedSub) : undefined,
   }
 }
 
