@@ -43,10 +43,7 @@ export const createUserPreset = handle(async ({ userId, body, authed }) => {
   }
 
   if (body.chatId) {
-    const res = await store.chats.getChat(body.chatId)
-    if (res?.chat.userId !== userId) {
-      throw errors.Forbidden
-    }
+    delete body.chatId
   }
 
   const samplers = toSamplerOrder(body.service, body.order, body.disabledSamplers)
