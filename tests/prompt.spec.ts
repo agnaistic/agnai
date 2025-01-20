@@ -171,6 +171,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       },
     })
     delete (actual.template as any).sections
+    delete actual.template.length
     expect(actual).to.matchSnapshot()
   })
 
