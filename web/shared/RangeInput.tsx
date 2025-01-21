@@ -28,7 +28,7 @@ const RangeInput: Component<{
   function updateRangeSliders(evented: boolean, next?: string) {
     if (!input || !slider) return
 
-    if (!evented && next === undefined) {
+    if (!evented) {
       return
     }
 
