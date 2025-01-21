@@ -15,7 +15,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           min={1}
           max={2000}
           step={1}
-          value={props.state.memoryContextLimit || defaultPresets.basic.memoryContextLimit}
+          value={props.state.memoryContextLimit ?? defaultPresets.basic.memoryContextLimit}
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('memoryContextLimit', ev)}
         />
@@ -27,7 +27,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           min={1}
           max={10000}
           step={1}
-          value={props.state.memoryChatEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          value={props.state.memoryChatEmbedLimit ?? defaultPresets.basic.memoryContextLimit}
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('memoryChatEmbedLimit', ev)}
         />
@@ -39,7 +39,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           min={1}
           max={10000}
           step={1}
-          value={props.state.memoryUserEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          value={props.state.memoryUserEmbedLimit ?? defaultPresets.basic.memoryContextLimit}
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('memoryUserEmbedLimit', ev)}
         />

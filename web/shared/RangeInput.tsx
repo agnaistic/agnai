@@ -2,7 +2,6 @@ import { Component, Show, createEffect, createSignal, on } from 'solid-js'
 import type { JSX } from 'solid-js'
 import { PresetAISettings, samplerDisableValues } from '../../common/adapters'
 import { markdown } from './markdown'
-import { round } from '/common/util'
 
 const RangeInput: Component<{
   label: string | JSX.Element
@@ -26,21 +25,23 @@ const RangeInput: Component<{
 
   const [display, setDisplay] = createSignal(props.value.toString())
 
-  function updateRangeSliders(next?: string) {
+  function updateRangeSliders(evented: boolean, next?: string) {
     if (!input || !slider) return
 
-    if (next === undefined && props.value === +display()) {
+    if (!evented && next === undefined) {
       return
     }
 
-    const parsed = next !== undefined ? next || '0' : props.value.toString()
+    const parsed = next !== undefined ? next || '0' : '0'
+
     if (isNaN(+parsed)) {
       input.value = display()
       slider.value = display()
       return
     }
+
     input.value = parsed
-    slider.value = parsed
+    // slider.value = parsed
     setDisplay(parsed)
 
     const percent = Math.min(+parsed, +input.max)
@@ -64,14 +65,14 @@ const RangeInput: Component<{
   }
 
   const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
-    updateRangeSliders(event.currentTarget.value as any)
-    props.onChange(+event.currentTarget.value)
+    updateRangeSliders(true, event.currentTarget.value as any)
+    // props.onChange(+event.currentTarget.value)
   }
 
   createEffect(
     on(
       () => props.value,
-      () => updateRangeSliders()
+      () => updateRangeSliders(false, props.value.toString())
     )
   )
 
@@ -79,7 +80,7 @@ const RangeInput: Component<{
     if (!props.aiSetting) return
     const value = samplerDisableValues[props.aiSetting]
     if (value === undefined) return
-    updateRangeSliders(value.toString())
+    updateRangeSliders(true, value.toString())
   }
 
   return (
@@ -145,17 +146,16 @@ const RangeInput: Component<{
           max={props.max}
           step={props.step}
           onInput={onInput}
-          onKeyDown={(ev) => {
-            if (!props.step) return
-            if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return
+          // onKeyDown={(ev) => {
+          //   if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return
 
-            const places = (props.step.toString().split('.')[1] || '').length
-            const dir = ev.key === 'ArrowDown' ? -props.step : props.step
-            let value = round(props.value + dir, places)
-            if (props.max !== undefined) value = Math.min(value, props.max)
-            if (props.min !== undefined) value = Math.max(value, props.min)
-            updateRangeSliders(value.toString())
-          }}
+          //   const places = (props.step.toString().split('.')[1] || '').length
+          //   const dir = ev.key === 'ArrowDown' ? -props.step : props.step
+          //   let value = round(props.value + dir, places)
+          //   if (props.max !== undefined) value = Math.min(value, props.max)
+          //   if (props.min !== undefined) value = Math.max(value, props.min)
+          //   updateRangeSliders(value.toString())
+          // }}
           disabled={props.disabled}
         />
       </div>

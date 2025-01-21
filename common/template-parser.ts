@@ -263,6 +263,9 @@ export async function parseTemplate(
     }
   }
 
+  opts.isFinal = true
+  output = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+
   sections.sections.history = history
 
   // console.log(
