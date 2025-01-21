@@ -20,13 +20,13 @@ const RangeInput: Component<{
   aiSetting?: keyof PresetAISettings
   hide?: boolean
 }> = (props) => {
+  let range: HTMLInputElement | undefined
   let input: HTMLInputElement | undefined
-  let slider: HTMLInputElement | undefined
 
   const [display, setDisplay] = createSignal(props.value.toString())
 
-  function updateRangeSliders(evented: boolean, next?: string) {
-    if (!input || !slider) return
+  function updateRangeSliders(evented: boolean, source: 'slider' | 'input', next?: string) {
+    if (!range || !input) return
 
     if (!evented) {
       return
@@ -35,20 +35,24 @@ const RangeInput: Component<{
     const parsed = next !== undefined ? next || '0' : '0'
 
     if (isNaN(+parsed)) {
+      range.value = display()
       input.value = display()
-      slider.value = display()
       return
     }
 
-    input.value = parsed
-    // slider.value = parsed
+    range.value = parsed
+
+    if (source === 'slider') {
+      input.value = parsed
+    }
+
     setDisplay(parsed)
 
-    const percent = Math.min(+parsed, +input.max)
-    const nextSize = ((percent - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
-    input.style.backgroundSize = nextSize
+    const percent = Math.min(+parsed, +range.max)
+    const nextSize = ((percent - +range.min) * 100) / (+range.max - +range.min) + '% 100%'
+    range.style.backgroundSize = nextSize
 
-    if (!evented && next !== undefined) {
+    if (evented && next !== undefined) {
       props.onChange(+parsed)
     }
 
@@ -64,15 +68,18 @@ const RangeInput: Component<{
     // }
   }
 
-  const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
-    updateRangeSliders(true, event.currentTarget.value as any)
-    // props.onChange(+event.currentTarget.value)
+  const onInput = (source: 'slider' | 'input') => {
+    const callback: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
+      updateRangeSliders(true, source, event.currentTarget.value as any)
+      // props.onChange(+event.currentTarget.value)
+    }
+    return callback
   }
 
   createEffect(
     on(
       () => props.value,
-      () => updateRangeSliders(false, props.value.toString())
+      () => updateRangeSliders(false, 'input', props.value.toString())
     )
   )
 
@@ -80,7 +87,7 @@ const RangeInput: Component<{
     if (!props.aiSetting) return
     const value = samplerDisableValues[props.aiSetting]
     if (value === undefined) return
-    updateRangeSliders(true, value.toString())
+    updateRangeSliders(true, 'input', value.toString())
   }
 
   return (
@@ -114,7 +121,7 @@ const RangeInput: Component<{
       </Show>
       <div class="flex w-full items-center gap-2">
         <input
-          ref={input}
+          ref={range}
           type="range"
           class="
         form-field
@@ -131,12 +138,12 @@ const RangeInput: Component<{
           min={props.min}
           max={props.max}
           step={props.step}
-          onInput={onInput}
+          onInput={onInput('slider')}
           value={props.value}
           disabled={props.disabled}
         />
         <input
-          ref={slider}
+          ref={input}
           id={props.fieldName}
           name={props.fieldName}
           class="form-field focusable-field border-0.25 min-w-12 float-right box-border inline-block w-fit rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
@@ -145,7 +152,7 @@ const RangeInput: Component<{
           type="number"
           max={props.max}
           step={props.step}
-          onInput={onInput}
+          onInput={onInput('input')}
           // onKeyDown={(ev) => {
           //   if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return
 

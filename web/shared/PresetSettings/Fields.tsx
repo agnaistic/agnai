@@ -242,7 +242,9 @@ export const Temperature: Field = (props) => {
         disabled={props.state.disabled}
         aiSetting={'temp'}
         recommended={props.sub?.preset.temp}
-        onChange={(ev) => props.setter('temp', ev)}
+        onChange={(ev) => {
+          props.setter('temp', ev)
+        }}
       />
     </>
   )
