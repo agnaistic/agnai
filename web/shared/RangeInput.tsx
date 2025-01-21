@@ -48,7 +48,7 @@ const RangeInput: Component<{
     const nextSize = ((percent - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
     input.style.backgroundSize = nextSize
 
-    if (next !== undefined) {
+    if (!evented && next !== undefined) {
       props.onChange(+parsed)
     }
 
