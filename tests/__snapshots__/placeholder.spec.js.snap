@@ -22,6 +22,10 @@ MainChar's personality: MainCharacter talks a lot",
         "MainChar's personality: MainCharacter talks a lot",
       ],
     },
+    "warnings": Object {
+      "noHistory": true,
+      "noPost": true,
+    },
   },
 }
 `;
