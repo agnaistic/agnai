@@ -11,7 +11,7 @@ import {
 } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
-import { getUserSubscriptionTier, wait } from '/common/util'
+import { wait } from '/common/util'
 import { createDebounce } from './util'
 
 const win: any = window
@@ -123,15 +123,12 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   createEffect(() => {
-    if (!user.user) return
-    const subtier = getUserSubscriptionTier(user.user, user.tiers)
+    if (!user.sub) return
 
-    if (subtier?.tier.disableSlots) {
+    if (user.sub?.tier.disableSlots) {
       win.enableSticky = undefined
       localStorage.setItem('agnai-sticky', 'false')
     }
-
-    return subtier
   })
 
   const id = createMemo(() => {
