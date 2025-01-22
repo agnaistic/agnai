@@ -126,6 +126,12 @@ async function callApi<T = any>(
 
   const json = await res.json()
 
+  const msg = json?.message || ''
+  if (json.user_banned === true) {
+    events.emit(EVENTS.userBanned, msg)
+    return { result: undefined, status: res.status, error: msg }
+  }
+
   if (res.status === 401 && fullUrl.includes(baseUrl)) {
     events.emit(EVENTS.sessionExpired)
     return {

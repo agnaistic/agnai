@@ -4,6 +4,8 @@ import { encryptPassword } from './util'
 import { AppSchema } from '../../common/types/schema'
 import { domain } from '../domains'
 import { config } from '../config'
+import { StatusError } from '../api/wrap'
+import { getUser } from './user'
 
 type UsersOpts = {
   username?: string
@@ -104,6 +106,7 @@ export async function getUserInfo(userId: string) {
         patreon: 1,
         stripeSessions: 1,
         google: 1,
+        banned: 1,
       },
     }
   )
@@ -121,4 +124,39 @@ export async function getUserInfo(userId: string) {
     state,
     ...billing,
   }
+}
+
+export async function banUser(userId: string, reason: string) {
+  await db('user').updateOne(
+    { _id: userId },
+    {
+      $set: {
+        banned: {
+          at: new Date(),
+          reason: reason || 'No reason given',
+        },
+      },
+    }
+  )
+
+  const next = await getUserInfo(userId)
+  return next
+}
+
+export async function unbanUser(userId: string) {
+  const user = await db('user').findOne({ _id: userId })
+  if (!user) {
+    throw new StatusError(`User not found`, 404)
+  }
+
+  if (!user.banned) {
+    throw new StatusError(`User not banned`, 400)
+  }
+
+  const banHistory = user.banHistory || []
+  banHistory.push(user.banned)
+
+  await db('user').updateOne({ _id: userId }, { $set: { banHistory, banned: null as any } })
+  const next = await getUserInfo(userId)
+  return next
 }

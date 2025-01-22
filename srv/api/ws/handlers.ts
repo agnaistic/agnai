@@ -20,7 +20,7 @@ type Handlers = {
 }
 
 export const handlers: Handlers = {
-  login: (client: AppSocket, data: any) => {
+  login: async (client: AppSocket, data: any) => {
     assertValid({ token: 'string' }, data)
     try {
       if (client.userId) {
@@ -30,6 +30,12 @@ export const handlers: Handlers = {
       const payload = verifyJwt(data.token)
       client.token = data.token
       client.userId = payload.userId
+
+      const user = await store.users.getUser(payload.userId)
+      if (!user || user.banned) {
+        client.dispatch({ type: 'login', success: false })
+        return
+      }
 
       const sockets = userSockets.get(client.userId) || []
       sockets.push(client)

@@ -179,6 +179,10 @@ const Layout: Component<{ children?: any }> = (props) => {
                   <Maintenance />
                 </Match>
 
+                <Match when={!!state.banned}>
+                  <div class="flex h-[80vh] flex-col items-center justify-center gap-2"></div>
+                </Match>
+
                 <Match when={cfg.initLoading}>
                   <div class="flex h-[80vh] flex-col items-center justify-center gap-2">
                     <div>
@@ -211,6 +215,7 @@ const Layout: Component<{ children?: any }> = (props) => {
       />
       <InfoModal />
       <ProfileModal />
+      <BannedModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
       <Show when={cfg.showImgSettings}>
@@ -239,6 +244,22 @@ const InfoModal: Component = (props) => {
       <Show when={typeof state.info === 'string'} fallback={state.info}>
         <div class="markdown" innerHTML={markdown.makeHtml(state.info)} />
       </Show>
+    </Modal>
+  )
+}
+
+const BannedModal: Component = () => {
+  const state = userStore((u) => ({
+    banned: u.banned,
+  }))
+
+  return (
+    <Modal show={!!state.banned} close={() => userStore.logout()} title="Account Banned">
+      <div class="flex flex-col items-center">
+        <p class="">This account has been banned for the following reason:</p>
+        <p class="my-2 flex items-center font-bold">{state.banned}</p>
+        <p>If you believe this is an error, please contact support.</p>
+      </div>
     </Modal>
   )
 }

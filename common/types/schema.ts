@@ -209,6 +209,13 @@ export namespace AppSchema {
       lastChecked?: string
     }
     stripeSessions?: string[]
+
+    banned?: {
+      at: Date
+      reason: string
+    }
+
+    banHistory?: Array<{ at: Date; reason: string }>
   }
 
   export interface ApiKey {

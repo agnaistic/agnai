@@ -39,6 +39,10 @@ export type TemplateOpts = {
     flags: { [key in Section]?: boolean }
     sections: { [key in Section]: string[] }
     done: boolean
+    warnings: {
+      noHistory: boolean
+      noPost: boolean
+    }
   }
 
   /**
@@ -186,6 +190,10 @@ export async function parseTemplate(
     flags: {},
     sections: { system: [], history: [], post: [] },
     done: false,
+    warnings: {
+      noHistory: true,
+      noPost: true,
+    },
   }
 
   opts.sections = sections
@@ -643,6 +651,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     opts.limit.output[id] = { src: holder, lines: output }
     if (opts.sections) {
       opts.sections.flags.history = true
+      opts.sections.warnings.noHistory = false
     }
     return id
   }
@@ -713,10 +722,18 @@ function getPlaceholder(
       return opts.jsonValues?.[node.values] || ''
 
     case 'post': {
+      if (opts.sections) {
+        opts.sections.warnings.noPost = false
+      }
+
       return opts.parts?.post?.join('\n') || ''
     }
 
     case 'history': {
+      if (opts.sections) {
+        opts.sections.warnings.noHistory = false
+      }
+
       if (opts.limit) {
         const id = `__${v4()}__`
         opts.limit.output![id] = {

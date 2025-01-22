@@ -26,6 +26,23 @@ const searchUsers = handle(async (req) => {
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
+const banUser = handle(async (req) => {
+  const user = await store.users.getUser(req.params.userId)
+  assertValid({ reason: 'string' }, req.body)
+
+  if (!user) {
+    throw new StatusError('User not found', 404)
+  }
+
+  const next = await store.admin.banUser(req.params.userId, req.body.reason)
+  return next
+})
+
+const unbanUser = handle(async (req) => {
+  const next = await store.admin.unbanUser(req.params.userId)
+  return next
+})
+
 const impersonateUser = handle(async (req) => {
   const userId = req.params.userId
   const user = await store.users.getUser(userId)
@@ -138,5 +155,7 @@ router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)
 router.post('/notify', notifyAll)
 router.post('/configuration', updateConfiguration)
+router.post('/ban/:userId', banUser)
+router.post('/unban/:userId', unbanUser)
 
 export default router

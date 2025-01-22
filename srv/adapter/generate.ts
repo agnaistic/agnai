@@ -395,6 +395,21 @@ export async function createChatStream(
    */
 
   const prompt = await assemblePrompt(opts, opts.parts, opts.lines, encoder)
+
+  if (prompt.sections.warnings.noHistory) {
+    throw new StatusError(
+      `Your prompt template does not contain the 'chat history' placeholder. Please fix your prompt template.`,
+      400
+    )
+  }
+
+  // if (prompt.sections.warnings.noPost) {
+  //   throw new StatusError(
+  //     `Your prompt template does not contain the 'post' placeholder. Please fix your prompt template.`,
+  //     400
+  //   )
+  // }
+
   if (prompt.linesAddedCount === 0 && opts.linesCount) {
     throw new StatusError(
       `Could not fit any messages in prompt. Check your character definition, context size, and template`,

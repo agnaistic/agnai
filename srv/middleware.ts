@@ -134,6 +134,12 @@ export function logMiddleware() {
         return next(errors.Unauthorized)
       }
 
+      if (user.banned) {
+        // res.status(401)
+        res.json({ message: `${user.banned.reason}`, user_banned: true })
+        return
+      }
+
       const sub = getUserSubscriptionTier(user, getCachedTiers())
       req.authed = user
       req.tier = sub?.tier

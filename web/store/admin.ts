@@ -19,6 +19,10 @@ type UserInfo = {
   billing: AppSchema.User['billing']
   patreon: AppSchema.User['patreon']
   stripeSessions?: string[]
+  banned?: {
+    at: string
+    reason: string
+  }
 }
 
 type AdminState = {
@@ -61,6 +65,30 @@ export const adminStore = createStore<AdminState>('admin', {
     unimpersonate(state) {
       if (!state.impersonating) return
       revertAuth()
+    },
+
+    async *banUser(_, userId: string, reason: string) {
+      const res = await api.post(`/admin/ban/${userId}`, { reason })
+      if (res.result) {
+        toastStore.success('User successfully banned')
+        return { info: res.result }
+      }
+
+      if (res.error) {
+        toastStore.error(`Ban failed: ${res.error}`)
+      }
+    },
+
+    async *unbanUser(_, userId: string) {
+      const res = await api.post(`/admin/unban/${userId}`)
+      if (res.result) {
+        toastStore.success('User successfully unbanned')
+        return { info: res.result }
+      }
+
+      if (res.error) {
+        toastStore.error(`Unban failed: ${res.error}`)
+      }
     },
 
     async updateServerConfig(

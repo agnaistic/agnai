@@ -278,6 +278,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     ).catch((err) => ({ err }))
 
     if ('err' in chatStream) {
+      await releaseLock(chatId)
       throw chatStream.err
     }
 

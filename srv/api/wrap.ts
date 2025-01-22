@@ -31,6 +31,14 @@ export class StatusError extends Error {
   }
 }
 
+class BannedError extends StatusError {
+  public banned = true
+
+  constructor(public reason: string) {
+    super(reason, 401)
+  }
+}
+
 export type Handler = (req: AppRequest, res: express.Response, next: express.NextFunction) => any
 
 export type AppRequest = Omit<express.Request, 'log'> & {
@@ -49,4 +57,5 @@ export const errors = {
   Unauthorized: new StatusError('Unauthorized', 401),
   Forbidden: new StatusError('Forbidden', 403),
   BadRequest: new StatusError('Bad request', 400),
+  UserBanned: (reason: string) => new BannedError(reason || 'No reason given'),
 }

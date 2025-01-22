@@ -131,6 +131,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   const [session, setSession] = createSignal<Stripe.Checkout.Session>()
   const [manualId, setManualId] = createSignal(state.info?.manualSub?.tierId || '')
   const [expiry, setExpiry] = createSignal(new Date(state.info?.manualSub?.expiresAt || now()))
+  const [ban, setBan] = createSignal(false)
 
   const subTiers = createMemo(() => {
     const base = [{ label: '[-1] None', value: '-1' }]
@@ -153,181 +154,242 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   }
 
   return (
+    <>
+      <Modal
+        show={props.show}
+        close={props.close}
+        title={`${props.name}: ${state.info?.handle || '...'}`}
+        footer={<Button onClick={props.close}>Close</Button>}
+        maxWidth="half"
+      >
+        <div class="flex flex-col items-center gap-4">
+          <Show when={state.info?.avatar}>
+            <div class="flex w-full justify-center">
+              <img src={getAssetUrl(state.info?.avatar!)} class="h-[128px]" />
+            </div>
+          </Show>
+
+          <div class="flex gap-2">
+            <Button size="sm" onClick={() => adminStore.impersonate(state.info?.userId!)}>
+              Impersonate
+            </Button>
+            <Button disabled={!!state.info?.banned} size="sm" onClick={() => setBan(true)}>
+              Ban User
+            </Button>
+
+            <Button
+              disabled={!state.info?.banned}
+              size="sm"
+              onClick={() => adminStore.unbanUser(props.userId)}
+            >
+              Unban User
+            </Button>
+          </div>
+
+          <table class="w-full table-auto">
+            <tbody>
+              <tr>
+                <th>User ID</th>
+                <td>{state.info?.userId}</td>
+              </tr>
+
+              <Show when={state.info?.banned}>
+                <th>Banned</th>
+                <td>
+                  {new Date(state.info?.banned?.at!).toDateString()}:{' '}
+                  {state.info?.banned?.reason || 'No reason given'}
+                </td>
+              </Show>
+
+              <tr>
+                <th>Handle</th>
+                <td>{state.info?.handle}</td>
+              </tr>
+
+              <tr>
+                <th>Characters</th>
+                <td>{state.info?.characters}</td>
+              </tr>
+              <tr>
+                <th>Chats</th>
+                <td>{state.info?.chats}</td>
+              </tr>
+
+              <tr>
+                <td colSpan={2}>
+                  <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
+                </td>
+              </tr>
+              <tr>
+                <th>Gift</th>
+                <td>
+                  <div class="flex gap-1">
+                    <Select
+                      class="text-sm"
+                      fieldName="manualId"
+                      items={subTiers()}
+                      onChange={(ev) => setManualId(ev.value)}
+                      value={state.info?.manualSub?.tierId}
+                    />
+                    <TextInput
+                      parentClass="text-xs"
+                      fieldName="expiry"
+                      type="datetime-local"
+                      value={toLocalTime(expiry().toISOString())}
+                      onChange={(ev) => setExpiry(new Date(ev.currentTarget.value))}
+                    />
+                    <Button
+                      onClick={() => adminStore.assignGift(props.userId, manualId(), expiry())}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th>Assign Sub</th>
+                <td>
+                  <div class="flex gap-1">
+                    <TextInput
+                      ref={subId}
+                      parentClass="w-full"
+                      fieldName="subscriptionId"
+                      placeholder="Stripe Subscription ID"
+                    />
+                    <Button onClick={assignSub}>Assign</Button>
+                  </div>
+                </td>
+              </tr>
+              <Show when={state.info?.stripeSessions?.length}>
+                <tr>
+                  <th>Session IDs</th>
+                  <td>
+                    <For each={state.info?.stripeSessions}>
+                      {(id) => (
+                        <Button size="pill" onClick={() => adminStore.viewSession(id, setSession)}>
+                          {id.slice(8, 16)}...
+                        </Button>
+                      )}
+                    </For>
+                  </td>
+                </tr>
+              </Show>
+              <tr>
+                <th>Subscription Level</th>
+                <td>
+                  Native:{state.info?.sub?.level ?? '-1'} / Patreon:
+                  {state.info?.patreon?.sub?.level ?? '-1'} / Manual:
+                  {state.info?.manualSub?.level ?? '-1'}
+                </td>
+              </tr>
+
+              <Show when={state.info?.billing}>
+                <tr>
+                  <th>Customer ID</th>
+                  <td>{state.info?.billing?.customerId}</td>
+                </tr>
+
+                <tr>
+                  <th>Period Start</th>
+                  <td>{new Date(state.info?.billing?.lastRenewed!).toLocaleString()}</td>
+                </tr>
+
+                <tr>
+                  <th>
+                    {state.info?.state.downgrade
+                      ? 'Downgrading at'
+                      : state.info?.state.state === 'cancelled'
+                      ? 'Cancelled at'
+                      : state.info?.billing?.cancelling
+                      ? 'Cancels at'
+                      : 'Renews at'}
+                  </th>
+                  <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
+                </tr>
+              </Show>
+
+              <Show when={state.info?.state.history.length ?? 0 > 0}>
+                <tr>
+                  <th>State</th>
+                  <td>{state.info?.state.state}</td>
+                </tr>
+                <tr>
+                  <td colSpan={2}>
+                    <div class="bg-700 mt-4 flex justify-center">History</div>
+                  </td>
+                </tr>
+                <For each={state.info?.state.history}>
+                  {(item) => {
+                    const tier = item.tierId
+                      ? tiers.list.find((t) => t._id === item.tierId)
+                      : undefined
+                    return (
+                      <tr>
+                        <th>
+                          {new Date(item.time).toLocaleString()}{' '}
+                          <span class="text-500 text-xs">
+                            {elapsedSince(new Date(item.time!))} ago
+                          </span>
+                        </th>
+                        <td>
+                          {item.type}{' '}
+                          <span class="text-[var(--hl-700)]">
+                            {tier ? `(tier #${tier.level} ${tier.name})` : ''}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  }}
+                </For>
+              </Show>
+              <Show when={!!session()}>
+                <tr>
+                  <td colSpan={2}>
+                    <div class="bg-700 mt-4 flex justify-center">Session: {session()?.id}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={2}>
+                    <pre class="max-w-[800px] text-xs">{JSON.stringify(session(), null, 2)}</pre>
+                  </td>
+                </tr>
+              </Show>
+            </tbody>
+          </table>
+        </div>
+      </Modal>
+
+      <BanModal show={ban()} close={() => setBan(false)} userId={props.userId} />
+    </>
+  )
+}
+
+const BanModal: Component<{ userId: string; show: boolean; close: () => void }> = (props) => {
+  const [reason, setReason] = createSignal('')
+
+  const ban = () => {
+    if (!reason()) return
+
+    adminStore.banUser(props.userId, reason())
+    props.close()
+  }
+
+  return (
     <Modal
       show={props.show}
       close={props.close}
-      title={`${props.name}: ${state.info?.handle || '...'}`}
-      footer={<Button onClick={props.close}>Close</Button>}
-      maxWidth="half"
+      footer={
+        <>
+          <Button onClick={props.close} schema="secondary">
+            Cancel
+          </Button>
+          <Button schema="red" disabled={!reason().trim()} onClick={ban}>
+            Ban
+          </Button>
+        </>
+      }
     >
-      <div class="flex flex-col items-center gap-4">
-        <Show when={state.info?.avatar}>
-          <div class="flex w-full justify-center">
-            <img src={getAssetUrl(state.info?.avatar!)} class="h-[128px]" />
-          </div>
-        </Show>
-        <Button onClick={() => adminStore.impersonate(state.info?.userId!)}>Impersonate</Button>
-        <table class="w-full table-auto">
-          <tbody>
-            <tr>
-              <th>User ID</th>
-              <td>{state.info?.userId}</td>
-            </tr>
-
-            <tr>
-              <th>Handle</th>
-              <td>{state.info?.handle}</td>
-            </tr>
-
-            <tr>
-              <th>Characters</th>
-              <td>{state.info?.characters}</td>
-            </tr>
-            <tr>
-              <th>Chats</th>
-              <td>{state.info?.chats}</td>
-            </tr>
-
-            <tr>
-              <td colSpan={2}>
-                <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
-              </td>
-            </tr>
-            <tr>
-              <th>Gift</th>
-              <td>
-                <div class="flex gap-1">
-                  <Select
-                    class="text-sm"
-                    fieldName="manualId"
-                    items={subTiers()}
-                    onChange={(ev) => setManualId(ev.value)}
-                    value={state.info?.manualSub?.tierId}
-                  />
-                  <TextInput
-                    parentClass="text-xs"
-                    fieldName="expiry"
-                    type="datetime-local"
-                    value={toLocalTime(expiry().toISOString())}
-                    onChange={(ev) => setExpiry(new Date(ev.currentTarget.value))}
-                  />
-                  <Button onClick={() => adminStore.assignGift(props.userId, manualId(), expiry())}>
-                    Apply
-                  </Button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th>Assign Sub</th>
-              <td>
-                <div class="flex gap-1">
-                  <TextInput
-                    ref={subId}
-                    parentClass="w-full"
-                    fieldName="subscriptionId"
-                    placeholder="Stripe Subscription ID"
-                  />
-                  <Button onClick={assignSub}>Assign</Button>
-                </div>
-              </td>
-            </tr>
-            <Show when={state.info?.stripeSessions?.length}>
-              <tr>
-                <th>Session IDs</th>
-                <td>
-                  <For each={state.info?.stripeSessions}>
-                    {(id) => (
-                      <Button size="pill" onClick={() => adminStore.viewSession(id, setSession)}>
-                        {id.slice(8, 16)}...
-                      </Button>
-                    )}
-                  </For>
-                </td>
-              </tr>
-            </Show>
-            <tr>
-              <th>Subscription Level</th>
-              <td>
-                Native:{state.info?.sub?.level ?? '-1'} / Patreon:
-                {state.info?.patreon?.sub?.level ?? '-1'} / Manual:
-                {state.info?.manualSub?.level ?? '-1'}
-              </td>
-            </tr>
-
-            <Show when={state.info?.billing}>
-              <tr>
-                <th>Customer ID</th>
-                <td>{state.info?.billing?.customerId}</td>
-              </tr>
-
-              <tr>
-                <th>Period Start</th>
-                <td>{new Date(state.info?.billing?.lastRenewed!).toLocaleString()}</td>
-              </tr>
-
-              <tr>
-                <th>
-                  {state.info?.state.downgrade
-                    ? 'Downgrading at'
-                    : state.info?.state.state === 'cancelled'
-                    ? 'Cancelled at'
-                    : state.info?.billing?.cancelling
-                    ? 'Cancels at'
-                    : 'Renews at'}
-                </th>
-                <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
-              </tr>
-            </Show>
-
-            <Show when={state.info?.state.history.length ?? 0 > 0}>
-              <tr>
-                <th>State</th>
-                <td>{state.info?.state.state}</td>
-              </tr>
-              <tr>
-                <td colSpan={2}>
-                  <div class="bg-700 mt-4 flex justify-center">History</div>
-                </td>
-              </tr>
-              <For each={state.info?.state.history}>
-                {(item) => {
-                  const tier = item.tierId
-                    ? tiers.list.find((t) => t._id === item.tierId)
-                    : undefined
-                  return (
-                    <tr>
-                      <th>
-                        {new Date(item.time).toLocaleString()}{' '}
-                        <span class="text-500 text-xs">
-                          {elapsedSince(new Date(item.time!))} ago
-                        </span>
-                      </th>
-                      <td>
-                        {item.type}{' '}
-                        <span class="text-[var(--hl-700)]">
-                          {tier ? `(tier #${tier.level} ${tier.name})` : ''}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                }}
-              </For>
-            </Show>
-            <Show when={!!session()}>
-              <tr>
-                <td colSpan={2}>
-                  <div class="bg-700 mt-4 flex justify-center">Session: {session()?.id}</div>
-                </td>
-              </tr>
-              <tr>
-                <td colSpan={2}>
-                  <pre class="max-w-[800px] text-xs">{JSON.stringify(session(), null, 2)}</pre>
-                </td>
-              </tr>
-            </Show>
-          </tbody>
-        </table>
-      </div>
+      <TextInput label="Ban Reason" onChange={(ev) => setReason(ev.currentTarget.value)} />
     </Modal>
   )
 }

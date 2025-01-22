@@ -78,6 +78,10 @@ export async function authenticate(username: string, password: string) {
   const user = await db('user').findOne({ username: username.toLowerCase() })
   if (!user) return
 
+  if (user.banned) {
+    throw errors.UserBanned(user.banned.reason)
+  }
+
   const match = await bcrypt.compare(password, user.hash)
   if (!match) return
 

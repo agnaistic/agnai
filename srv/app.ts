@@ -23,15 +23,15 @@ export function createApp() {
   const app = express()
   const server = createServer(app)
 
-  app.use(express.urlencoded({ limit: `${config.limits.upload}mb`, extended: false }))
-  app.use(express.json({ limit: `${config.limits.payload}mb` }))
-  app.use(logMiddleware())
   app.use(
     cors({
       origin: true,
       optionsSuccessStatus: 200,
     })
   )
+  app.use(express.urlencoded({ limit: `${config.limits.upload}mb`, extended: false }))
+  app.use(express.json({ limit: `${config.limits.payload}mb` }))
+  app.use(logMiddleware())
   app.use(upload.any())
 
   const baseFolder = resolve(__dirname, '..')
@@ -94,6 +94,11 @@ export function createApp() {
     return res.sendFile(index)
   })
   app.use((err: any, _req: any, res: express.Response, _next: any) => {
+    if (err.banned) {
+      res.status(401)
+      res.json({ message: err.message, user_banned: true })
+      return
+    }
     if (err.status > 0) {
       res.status(err.status)
     } else {

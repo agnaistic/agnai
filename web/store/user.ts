@@ -45,6 +45,7 @@ type SubscriberInfo = {
 }
 
 export type UserState = {
+  banned?: string
   loading: boolean
   error?: string
   loggedIn: boolean
@@ -90,6 +91,10 @@ export const userStore = createStore<UserState>(
 )((get, set) => {
   events.on(EVENTS.sessionExpired, () => {
     userStore.logout()
+  })
+
+  events.on(EVENTS.userBanned, (reason) => {
+    userStore.setState({ banned: reason })
   })
 
   events.on(EVENTS.init, (init) => {
@@ -585,6 +590,7 @@ export const userStore = createStore<UserState>(
         user: undefined,
         loggedIn: false,
         showProfile: false,
+        banned: undefined,
         ui,
       }
       events.emit(EVENTS.loggedOut)
