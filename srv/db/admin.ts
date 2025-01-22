@@ -5,7 +5,6 @@ import { AppSchema } from '../../common/types/schema'
 import { domain } from '../domains'
 import { config } from '../config'
 import { StatusError } from '../api/wrap'
-import { getUser } from './user'
 
 type UsersOpts = {
   username?: string
