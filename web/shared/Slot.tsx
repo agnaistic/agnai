@@ -107,7 +107,6 @@ const Slot: Component<{
     return config
   })
   const user = userStore((s) => ({
-    user: s.user,
     sub: s.sub,
     tiers: s.tiers,
   }))
@@ -404,9 +403,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!cfg.ready || !user.user || !specs() || user.sub?.tier?.disableSlots}>
-          {null}
-        </Match>
+        <Match when={!cfg.ready || !specs() || user.sub?.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}
