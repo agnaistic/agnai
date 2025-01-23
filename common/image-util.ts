@@ -6,6 +6,7 @@ export function filterImageModels(
   models: ImageModel[],
   tier?: Pick<AppSchema.SubscriptionTier, 'imagesAccess'>
 ) {
+  if (!models) return []
   if (user?.admin) return models
 
   const list = models.map((m) => ({ ...m, override: '', host: '' }))

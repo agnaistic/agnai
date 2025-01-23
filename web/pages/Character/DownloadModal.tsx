@@ -79,6 +79,13 @@ export const DownloadModal: Component<{
     )
   )
 
+  const objectUrl = createMemo(() => {
+    const url = URL.createObjectURL(
+      new Blob([charToJson(props.char || char()!, format())], { type: 'text/json' })
+    )
+    return url
+  })
+
   return (
     <Modal
       show={props.show && !!char()}
@@ -91,12 +98,7 @@ export const DownloadModal: Component<{
           </Button>
           <Switch>
             <Match when={fileType() === 'json'}>
-              <a
-                href={`data:text/json:charset=utf-8,${encodeURIComponent(
-                  charToJson(props.char || char()!, format())
-                )}`}
-                download={`${char()!.name}.json`}
-              >
+              <a href={objectUrl()} download={`${char()!.name}.json`}>
                 <Button>
                   <Save /> Download (JSON)
                 </Button>
