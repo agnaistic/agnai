@@ -1,12 +1,15 @@
 import { Component, Match, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import { RootModal } from '../Modal'
-import { RefreshCcw } from 'lucide-solid'
+import { HelpCircle, RefreshCcw } from 'lucide-solid'
 import Button from '../Button'
 import { templates } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore, toastStore } from '/web/store'
 import { PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
+import { DefinitionsModal } from './Definitions'
+import { Interp, Placeholder, placeholders, v2placeholders } from './types'
+import { Pill } from '../Card'
 
 const builtinTemplates = Object.keys(templates).map((key) => ({
   label: `(Built-in) ${key}`,
@@ -30,6 +33,7 @@ export const SelectTemplate: Component<{
   const [builtin, setBuiltin] = createSignal(templates.Alpaca)
   const [filter, setFilter] = createSignal('')
   const [autoOpen, setAutoOpen] = createSignal(false)
+  const [help, showHelp] = createSignal(false)
 
   const templateOpts = createMemo(() => {
     const base = Object.entries(templates).reduce(
@@ -88,6 +92,14 @@ export const SelectTemplate: Component<{
 
     return opts.length
   }, builtinTemplates.length)
+
+  const usable = createMemo(() => {
+    type Entry = [Interp, Placeholder]
+    const all = Object.entries(placeholders) as Entry[]
+
+    all.push(...(Object.entries(v2placeholders) as Entry[]))
+    return all
+  })
 
   const Footer = (
     <>
@@ -173,69 +185,84 @@ export const SelectTemplate: Component<{
   )
 
   return (
-    <RootModal
-      title={'Prompt Templates'}
-      show={props.show}
-      close={props.close}
-      footer={Footer}
-      maxWidth="half"
-    >
-      <div class="relative flex flex-col gap-4 text-sm">
-        <div class="flex gap-1">
+    <>
+      <RootModal
+        title={
+          <div class="flex gap-1">
+            Prompt Templates{' '}
+            <Pill small onClick={() => showHelp(true)}>
+              Help <HelpCircle class="ml-1" size={16} />
+            </Pill>
+          </div>
+        }
+        show={props.show}
+        close={props.close}
+        footer={Footer}
+        maxWidth="half"
+      >
+        <div class="relative flex flex-col gap-4 text-sm">
+          <div class="flex gap-1">
+            <TextInput
+              fieldName="filter"
+              placeholder="Filter templates"
+              onChange={(ev) => setFilter(ev.currentTarget.value)}
+              parentClass="w-full"
+            />
+            <Button>
+              <RefreshCcw onClick={presetStore.getTemplates} />
+            </Button>
+          </div>
+          <div class="h-min-[6rem]">
+            <Select
+              fieldName="templateId"
+              items={options().filter((opt) => opt.label.toLowerCase().includes(filter()))}
+              value={opt()}
+              onChange={(ev) => {
+                setOpt(ev.value)
+
+                const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
+                const name = ev.label.startsWith('(Built-in)')
+                  ? matches.length > 0
+                    ? `Custom ${opt()} #${matches.length + 1}`
+                    : `Custom ${opt()}`
+                  : templateOpts()[ev.value].name
+                if (ev.label.startsWith('(Built-in)')) {
+                }
+
+                setName(name)
+                setTemplate(templateOpts()[ev.value].template)
+              }}
+            />
+          </div>
+          <PromptSuggestions
+            onComplete={(opt) => onPromptAutoComplete(ref, opt)}
+            open={autoOpen()}
+            close={() => setAutoOpen(false)}
+            jsonValues={{ example: '', 'another long example': '', response: '' }}
+          />
           <TextInput
-            fieldName="filter"
-            placeholder="Filter templates"
-            onChange={(ev) => setFilter(ev.currentTarget.value)}
-            parentClass="w-full"
+            fieldName="templateName"
+            value={templateName()}
+            onChange={(ev) => setName(ev.currentTarget.value)}
           />
-          <Button>
-            <RefreshCcw onClick={presetStore.getTemplates} />
-          </Button>
-        </div>
-        <div class="h-min-[6rem]">
-          <Select
-            fieldName="templateId"
-            items={options().filter((opt) => opt.label.toLowerCase().includes(filter()))}
-            value={opt()}
-            onChange={(ev) => {
-              setOpt(ev.value)
-
-              const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
-              const name = ev.label.startsWith('(Built-in)')
-                ? matches.length > 0
-                  ? `Custom ${opt()} #${matches.length + 1}`
-                  : `Custom ${opt()}`
-                : templateOpts()[ev.value].name
-              if (ev.label.startsWith('(Built-in)')) {
-              }
-
-              setName(name)
-              setTemplate(templateOpts()[ev.value].template)
-            }}
+          <TextInput
+            ref={(r) => (ref = r)}
+            fieldName="template"
+            value={template()}
+            isMultiline
+            onChange={(ev) => setTemplate(ev.currentTarget.value)}
+            class="font-mono text-xs"
+            onKeyDown={(ev) => onPromptKey(ev as any, () => setAutoOpen(true))}
           />
         </div>
-        <PromptSuggestions
-          onComplete={(opt) => onPromptAutoComplete(ref, opt)}
-          open={autoOpen()}
-          close={() => setAutoOpen(false)}
-          jsonValues={{ example: '', 'another long example': '', response: '' }}
-        />
-        <TextInput
-          fieldName="templateName"
-          value={templateName()}
-          onChange={(ev) => setName(ev.currentTarget.value)}
-        />
-        <TextInput
-          ref={(r) => (ref = r)}
-          fieldName="template"
-          value={template()}
-          isMultiline
-          onChange={(ev) => setTemplate(ev.currentTarget.value)}
-          class="font-mono text-xs"
-          onKeyDown={(ev) => onPromptKey(ev as any, () => setAutoOpen(true))}
-        />
-      </div>
-      <div class="flex justify-end gap-2"></div>
-    </RootModal>
+        <div class="flex justify-end gap-2"></div>
+      </RootModal>
+
+      <DefinitionsModal
+        interps={usable().map((item) => item[0])}
+        show={help()}
+        close={() => showHelp(false)}
+      />
+    </>
   )
 }

@@ -1,29 +1,14 @@
-import {
-  Component,
-  For,
-  JSX,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onMount,
-} from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { FormLabel } from '../FormLabel'
 import { AIAdapter } from '/common/adapters'
 import { toMap } from '../util'
-import { useEffect, useRootModal } from '../hooks'
-import Modal from '../Modal'
+import { useEffect } from '../hooks'
 import { HelpCircle } from 'lucide-solid'
-import { Card, TitleCard } from '../Card'
+import { Card, Pill } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
 import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
-import { AppSchema } from '/common/types/schema'
-import { v4 } from 'uuid'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
@@ -32,111 +17,8 @@ import { SelectTemplate } from './SelectTemplate'
 import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 import { PresetState, SetPresetState } from '../PresetSettings/types'
-
-type Placeholder = {
-  required: boolean
-  limit: number
-  inserted?: string
-}
-
-type Interp = keyof typeof placeholders
-type InterpV2 = keyof typeof v2placeholders
-type InterpAll = Interp | InterpV2
-
-const placeholders = {
-  char: { required: false, limit: Infinity },
-  user: { required: false, limit: Infinity },
-  chat_age: { required: false, limit: Infinity },
-  idle_duration: { required: false, limit: Infinity },
-  system_prompt: { required: false, limit: 1 },
-  history: { required: true, limit: 1 },
-  scenario: { required: true, limit: 1 },
-  memory: { required: false, limit: 1 },
-  personality: { required: true, limit: 1 },
-  ujb: { required: false, limit: 1 },
-  post: { required: true, limit: 1 },
-  example_dialogue: { required: true, limit: 1 },
-  all_personalities: { required: false, limit: 1 },
-  impersonating: { required: false, limit: 1 },
-  longterm_memory: { required: false, limit: 1 },
-  user_embed: { required: false, limit: 1 },
-} satisfies Record<string, Placeholder>
-
-const v2placeholders = {
-  roll: { required: false, limit: Infinity, inserted: 'roll 20' },
-  random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
-  insert: { required: false, limit: Infinity, inserted: `#insert 3}} {{/insert` },
-  'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
-  'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
-  'each chat_embed': { required: false, limit: 1, inserted: `#each chat_embed}} {{/each` },
-  lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
-} satisfies Record<string, Placeholder>
-
-const helpers: { [key in InterpAll | string]?: JSX.Element | string } = {
-  char: 'Character name',
-  user: `Your impersonated character's name. Your profile name if you aren't impersonating a character`,
-  scenario: `Your main character's scenario`,
-  personality: `The personality of the replying character`,
-  example_dialogue: `The example dialogue of the replying character`,
-
-  'json.variable name': 'A value from your JSON schema. E.g. `{{json.name of my value}}`',
-  system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
-  ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
-
-  impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
-  chat_age: `The age of your chat (time elapsed since chat created)`,
-  idle_duration: `The time elapsed since you last sent a message`,
-  all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
-  post: 'The "post-amble" text. This gives specific instructions on how the model should respond. E.g. Typically reads: `{{char}}:`',
-
-  insert:
-    "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
-
-  memory: `Text retrieved from your Memory Book(s)`,
-
-  longterm_memory:
-    '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',
-  user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
-  roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
-  random:
-    'Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`',
-  'each bot': (
-    <>
-      Supported properties: <code>{`{{.name}} {{.persona}}`}</code>
-      <br />
-      Example: <code>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</code>
-    </>
-  ),
-  'each message': (
-    <>
-      {' '}
-      Supported properties: <code>{`{{.msg}} {{.name}} {{.isuser}} {{.isbot}} {{.i}}`}</code> <br />
-      You can use <b>conditions</b> for isbot and isuser. E.g.{' '}
-      <code>{`{{#if .isuser}} ... {{/if}}`}</code>
-      <br />
-      Full example:{' '}
-      <code>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</code>
-    </>
-  ),
-  'each chat_embed': (
-    <>
-      Supported properties: <code>{`{{.name}} {{.text}}`}</code>
-      <br />
-      Example: <code>{`{{#each chat_embed}}{{.name}} said: {{.text}}{{/each}}`}</code>
-    </>
-  ),
-  lowpriority: (
-    <>
-      Text that is only inserted if there still is token budget remaining for it after inserting
-      conversation history.
-      <br />
-      Example:{' '}
-      <code>{`{{#if example_dialogue}}{{#lowpriority}}This is how {{char}} speaks: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</code>
-    </>
-  ),
-}
-
-type Optionals = { exclude: InterpAll[] } | { include: InterpAll[] } | {}
+import { Interp, Optionals, placeholders, v2placeholders, Placeholder } from './types'
+import { DefinitionsModal } from './Definitions'
 
 const PromptEditor: Component<
   {
@@ -284,11 +166,12 @@ const PromptEditor: Component<
         <FormLabel
           label={
             <>
-              <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
+              <div class="mb-1 flex cursor-pointer items-center gap-2">
                 Prompt Template{' '}
                 <div class="link flex items-center gap-1">
-                  <span class="link">Help</span>
-                  <HelpCircle size={14} />
+                  <Pill small class="link" onClick={() => showHelp(true)}>
+                    Help <HelpCircle class="ml-1" size={16} />
+                  </Pill>
                 </div>
               </div>
               <div class="flex gap-2">
@@ -361,12 +244,12 @@ const PromptEditor: Component<
       <div class="flex flex-wrap gap-2" classList={{ hidden: !!props.state?.promptTemplateId }}>
         <For each={usable()}>
           {([name, data]) => (
-            <Placeholder name={name} {...data} input={props.value} onClick={onPlaceholder} />
+            <PlaceholderPill name={name} {...data} input={props.value} onClick={onPlaceholder} />
           )}
         </For>
       </div>
 
-      <HelpModal
+      <DefinitionsModal
         interps={usable().map((item) => item[0])}
         show={help()}
         close={() => showHelp(false)}
@@ -454,7 +337,7 @@ export const BasicPromptTemplate: Component<{
   )
 }
 
-const Placeholder: Component<
+const PlaceholderPill: Component<
   {
     name: Interp
     input: string
@@ -485,52 +368,6 @@ const Placeholder: Component<
       {props.name}
     </div>
   )
-}
-
-const HelpModal: Component<{
-  show: boolean
-  close: () => void
-  interps: Interp[]
-  inherit?: Partial<AppSchema.GenSettings>
-}> = (props) => {
-  const [id] = createSignal(v4())
-  const items = createMemo(() => {
-    const all = Object.entries(helpers)
-    const entries = all.filter(([interp]) => props.interps.includes(interp as any))
-
-    return entries
-  })
-
-  useRootModal({
-    id: `prompt-editor-help-${id()}`,
-    element: (
-      <Modal
-        show={props.show}
-        close={props.close}
-        title={<div>Placeholder Definitions</div>}
-        maxWidth="half"
-      >
-        <div class="flex w-full flex-col gap-1 text-sm">
-          <For each={items()}>
-            {([interp, help]) => (
-              <TitleCard>
-                <Switch>
-                  <Match when={typeof help === 'string'}>
-                    <FormLabel label={<b>{interp}</b>} helperMarkdown={help as string} />
-                  </Match>
-                  <Match when>
-                    <FormLabel label={<b>{interp}</b>} helperText={help} />
-                  </Match>
-                </Switch>
-              </TitleCard>
-            )}
-          </For>
-        </div>
-      </Modal>
-    ),
-  })
-
-  return null
 }
 
 async function getExampleOpts(inherit?: PresetState) {
