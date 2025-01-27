@@ -1,13 +1,4 @@
-import {
-  Component,
-  Match,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onMount,
-} from 'solid-js'
+import { Component, Match, Switch, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { AppSchema } from '/common/types/schema'
 import Select from '/web/shared/Select'
 import Modal from '/web/shared/Modal'
