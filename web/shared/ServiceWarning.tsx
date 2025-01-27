@@ -59,15 +59,7 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
         </span>
       </Match>
 
-      <Match when={props.preset?.service === 'horde' && !user?.hordeName}>
-        <TitleCard type="orange">
-          Register at{' '}
-          <a class="link" href="https://aihorde.net/register" target="_blank">
-            AIHorde
-          </a>{' '}
-          for a better Horde experience.
-        </TitleCard>
-      </Match>
+      <Match when>{null}</Match>
     </Switch>
   )
 }
