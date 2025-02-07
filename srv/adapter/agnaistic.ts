@@ -128,9 +128,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const srv = await getServerConfiguration()
 
   /**
-   * Lock per user per model
+   * Lock per user
    */
-  const lockId = `${opts.user._id}-${opts.subscription.preset.name}`
+  const lockId = `${opts.user._id}`
   if (!opts.guidance && +srv.lockSeconds > 0) {
     await obtainLock(lockId, srv.lockSeconds)
   }
