@@ -291,6 +291,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
         mirostat: gen.mirostatToggle && gen.mirostatTau ? 2 : 0,
         mirostat_tau: gen.mirostatTau,
         mirostat_eta: gen.mirostatLR,
+        num_ctx: gen.maxContextLength,
         stop: getStoppingStrings(opts, stops),
 
         // ignore_eos: false,
