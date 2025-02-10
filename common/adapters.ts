@@ -287,7 +287,7 @@ export const GOOGLE_MODELS = {
     id: 'gemini-2.0-flash-thinking-exp-01-21',
     label: 'Gemini 2.0 Flash Thinking',
   },
-  GEMINI_20_PRO_0205: { id: 'gemini-2.0-pro-exp-02-05', labe: 'Gemini 2.0 02/05' },
+  GEMINI_20_PRO_0205: { id: 'gemini-2.0-pro-exp-02-05', label: 'Gemini 2.0 02/05' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {
