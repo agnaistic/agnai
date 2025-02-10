@@ -74,6 +74,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     }
 
     const body: any = {
+      request_id: opts.requestId,
       prompt,
       context_limit: gen.maxContextLength,
       max_new_tokens: gen.maxTokens,

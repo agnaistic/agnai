@@ -282,6 +282,12 @@ export const GOOGLE_MODELS = {
   GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
   GEMINI_EXP_1114: { id: 'gemini-exp-1114', label: 'Gemini Exp 1114' },
   GEMINI_20_FLASH: { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' },
+  GEMINI_20_FLASH_EXP: { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash Exp' },
+  GEMINI_20_FLASH_THINKING: {
+    id: 'gemini-2.0-flash-thinking-exp-01-21',
+    label: 'Gemini 2.0 Flash Thinking',
+  },
+  GEMINI_20_PRO_0205: { id: 'gemini-2.0-pro-exp-02-05', labe: 'Gemini 2.0 02/05' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {
