@@ -332,7 +332,14 @@ function useModelCategories() {
     }
 
     const categories = Array.from(cats.entries())
-      .sort((l, r) => l[1].tier - r[1].tier)
+      // Sort by the highest tier descending, grouping by tiers with available models
+      .sort((l, r) => {
+        const left = l[1].options.some((o) => !o.disabled)
+        const right = r[1].options.some((o) => !o.disabled)
+
+        if ((!left && !right) || (left && right)) return r[1].tier - l[1].tier
+        return !left ? -1 : 1
+      })
       .map(([name, item]) => ({
         name,
         options: item.options.sort((l, r) => l.title.localeCompare(r.title)),

@@ -23,6 +23,7 @@ import {
   Volume2,
   VolumeX,
   Wand2,
+  X,
 } from 'lucide-solid'
 import {
   Component,
@@ -266,10 +267,15 @@ const UserNavigation: Component = () => {
         <UserProfile />
 
         <Show when={menu.flags.chub}>
-          <Item href="/chub" ariaLabel="Character hub">
-            <ShoppingBag aria-hidden="true" />
-            CHUB
-          </Item>
+          <MultiItem>
+            <Item href="/chub" ariaLabel="Character hub">
+              <ShoppingBag aria-hidden="true" />
+              CharHub
+            </Item>
+            <a class="icon-button" onClick={() => window.flag('chub', false)}>
+              <X aria-hidden size={24} />
+            </a>
+          </MultiItem>
         </Show>
 
         <CharacterLink />

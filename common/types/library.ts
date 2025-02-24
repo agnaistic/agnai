@@ -75,3 +75,10 @@ export interface ResponseSchema {
   response: string
   history: string
 }
+
+type BaseLibaryItem = { _id: string; kind: 'library-item'; userId: string }
+export type LibraryItem = BaseLibaryItem &
+  (
+    | { subkind: 'json-schema'; data: ResponseSchema }
+    | { subkind: 'embedding'; data: { lines: string[] } }
+  )

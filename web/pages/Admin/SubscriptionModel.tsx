@@ -363,9 +363,16 @@ export const SubscriptionModel: Component = () => {
                   noSave
                 />
                 <div class="flex flex-row justify-end">
-                  <Button disabled={presets.saving} onClick={onSave}>
-                    <Save /> Save
-                  </Button>
+                  <Show when={state._id}>
+                    <Button disabled={presets.saving} onClick={onSave}>
+                      <Save /> Save
+                    </Button>
+                  </Show>
+                  <Show when={!state._id}>
+                    <Button disabled={presets.saving} onClick={onSave}>
+                      <Save /> Create
+                    </Button>
+                  </Show>
                 </div>
               </form>
             </div>

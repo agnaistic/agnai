@@ -405,8 +405,8 @@ export const CharacterSchema: Component<{
             >
               <SolidCard type="orange">
                 <b>Warning:</b> <code>{'{{response}}'}</code> is not included in your history or
-                response template. The <b>response</b> field is always generated and is highly
-                recommended to be used.
+                response template. The <b>{'{{response}}'}</b> field is always generated and is
+                highly recommended to be used.
               </SolidCard>
             </Show>
 

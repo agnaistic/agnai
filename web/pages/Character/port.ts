@@ -119,8 +119,8 @@ export function jsonToCharacter(json: any): NewCharacter {
    * causing the saved "Persona" data to be obsolete.
    */
   const isSavedPersonaMissingOrOutdated =
-    json.data.extensions.agnai?.persona === undefined ||
-    formatCharacter(json.data.name, json.data.extensions.agnai?.persona) !== json.data.description
+    json.data?.extensions.agnai?.persona === undefined ||
+    formatCharacter(json.data.name, json.data?.extensions?.agnai?.persona) !== json.data.description
 
   return {
     name: json.data.name,
@@ -134,7 +134,7 @@ export function jsonToCharacter(json: any): NewCharacter {
             ],
           },
         }
-      : json.data.extensions.agnai.persona,
+      : json.data.extensions?.agnai.persona,
     sampleChat: json.data.mes_example,
     scenario: json.data.scenario,
     originalAvatar: undefined,
@@ -149,9 +149,9 @@ export function jsonToCharacter(json: any): NewCharacter {
     characterVersion: json.data.character_version,
     tags: json.data.tags,
     description: json.data.creator_notes,
-    voice: json.data.extensions.agnai?.voice,
-    insert: json.data.extensions.depth_prompt,
-    json: json.data.extensions.agnai?.json,
+    voice: json.data.extensions?.agnai?.voice,
+    insert: json.data.extensions?.depth_prompt,
+    json: json.data.extensions?.agnai?.json,
   }
 }
 

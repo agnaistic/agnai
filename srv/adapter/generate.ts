@@ -313,7 +313,8 @@ export async function createChatStream(
   if (
     subscription?.preset?.jsonSchemaCapable &&
     opts.entities?.gen.jsonEnabled &&
-    opts.chatSchema
+    opts.chatSchema &&
+    opts.chatSchema.schema?.length
   ) {
     jsonSchema = opts.chatSchema.schema
   }
