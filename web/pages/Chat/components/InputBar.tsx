@@ -60,7 +60,7 @@ const InputBar: Component<{
   more: (msg: string) => void
   request: (charId: string) => void
 }> = (props) => {
-  let ref: HTMLTextAreaElement
+  let ref: HTMLTextAreaElement | undefined
 
   const [ctx] = useAppContext()
 
@@ -113,13 +113,13 @@ const InputBar: Component<{
   const onCompleteSelect = (opt: { label: string }) => {
     setComplete(false)
     let prev = text()
-    const before = prev.slice(0, ref.selectionStart - 1)
-    const after = prev.slice(ref.selectionStart)
+    const before = prev.slice(0, ref!.selectionStart - 1)
+    const after = prev.slice(ref!.selectionStart)
     const next = `${before}${opt.label}${after}`
     setText(next)
     saveDraft(next)
-    ref.focus()
-    ref.setSelectionRange(
+    ref!.focus()
+    ref!.setSelectionRange(
       before.length + opt.label.length,
       before.length + opt.label.length,
       'none'

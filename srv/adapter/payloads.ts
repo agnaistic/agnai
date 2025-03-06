@@ -85,6 +85,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       repetition_penalty: gen.repetitionPenalty,
       encoder_repetition_penalty: gen.encoderRepitionPenalty,
       repetition_penalty_range: gen.repetitionPenaltyRange,
+      repetition_penalty_slope: opts.subscription?.preset?.repetitionPenaltySlope,
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
       top_k: gen.topK,

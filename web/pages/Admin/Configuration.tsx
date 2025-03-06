@@ -57,7 +57,7 @@ const ServerConfiguration: Component = () => {
   })
 
   const submit = () => {
-    const body = getStrictForm(form, {
+    const body = getStrictForm(form!, {
       apiAccess: ['off', 'users', 'subscribers', 'admins'],
       ttsAccess: ['off', 'users', 'subscribers', 'admins'],
       slots: 'string',

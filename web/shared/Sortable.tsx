@@ -50,7 +50,7 @@ const Sortable: Component<{
   })
 
   onMount(() => {
-    const s = Sort.create(ref, {
+    const s = Sort.create(ref!, {
       animation: 150,
       ghostClass: `bg-500`,
       onUpdate: (evt) => {

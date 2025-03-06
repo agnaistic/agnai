@@ -9,7 +9,7 @@ gwo.workerSrc = PDFWorker
 
 export async function extractPdf(file: File) {
   const buffer = await getFileAsBuffer(file)
-  const data = await PDFDE.PdfData.extract(buffer, {})
+  const data = await PDFDE.PdfData.extract(buffer as any, {})
 
   return data
 }

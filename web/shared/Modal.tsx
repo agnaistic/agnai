@@ -136,16 +136,6 @@ const Modal: Component<Props> = (props) => {
 export default Modal
 
 export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
-  const width = createMemo(() => {
-    if (!props.maxWidth) return `sm:max-w-lg`
-
-    return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'
-  })
-
-  const minHeight = createMemo(() =>
-    props.fixedHeight ? `min-h-[calc(80vh-132px)] sm:min-h-[calc(90vh-132px)]` : ''
-  )
-
   const defaultSubmit = (ev: Event) => {
     ev.preventDefault()
   }
@@ -161,9 +151,14 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
         </div>
         <div class="modal-body">
           <form
+            classList={{
+              'sm:max-w-lg': !props.maxWidth,
+              'sm:w-[calc(100vw-64px)]': props.maxWidth === 'full',
+              'sm:w-[calc(50vw)]': props.maxWidth === 'half',
+            }}
             ref={autofocus}
             onSubmit={props.onSubmit || defaultSubmit}
-            class={`bg-900 my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
+            class={`bg-900 my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all sm:max-h-[90vh]`}
             role="dialog"
             aria-modal="true"
             aria-label={props.ariaLabel}
@@ -178,7 +173,10 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
 
             {/* 132px is the height of the title + footer*/}
             <div
-              class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto text-lg`}
+              classList={{
+                'min-h-[calc(80vh-132px)] sm:min-h-[calc(90vh-132px)]': props.fixedHeight,
+              }}
+              class={`max-h-[calc(80vh-132px)] overflow-y-auto text-lg sm:max-h-[calc(90vh-132px)]`}
             >
               {props.children}
             </div>

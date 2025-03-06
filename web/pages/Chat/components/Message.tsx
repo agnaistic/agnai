@@ -99,7 +99,7 @@ function getAnonName(entityId: string) {
 }
 
 const Message: Component<MessageProps> = (props) => {
-  let editRef: HTMLDivElement
+  let editRef: HTMLDivElement | undefined
   let avatarRef: any
 
   const [ctx] = useAppContext()

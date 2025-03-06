@@ -129,7 +129,7 @@ export const ModeButton: Component<{
     }
     const value = props.modes[index]
     setMode(value)
-    ref.value = value
+    ref!.value = value
     props.onChange?.(value)
   }
 

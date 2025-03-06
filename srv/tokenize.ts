@@ -9,12 +9,22 @@ import * as nai from 'nai-js-tokenizer'
 import { logger } from './middleware'
 import { AppSchema, Encoder, TokenCounter, Tokenizer } from '/common/types'
 
-const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
-const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
-const gpt2Json = readFileSync(resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json'))
-const cohereJson = readFileSync(resolve(__dirname, 'sp-models', 'cohere.json'))
-const qwen2Json = readFileSync(resolve(__dirname, 'sp-models', 'qwen2.json'))
-const llama3Json = readFileSync(resolve(__dirname, 'sp-models', 'llama3.json'))
+const claudeJson = readFileSync(
+  resolve(__dirname, 'sp-models', 'claude.json')
+) as any as ArrayBuffer
+const pileJson = readFileSync(
+  resolve(__dirname, 'sp-models', 'pile_tokenizer.json')
+) as any as ArrayBuffer
+const gpt2Json = readFileSync(
+  resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json')
+) as any as ArrayBuffer
+const cohereJson = readFileSync(
+  resolve(__dirname, 'sp-models', 'cohere.json')
+) as any as ArrayBuffer
+const qwen2Json = readFileSync(resolve(__dirname, 'sp-models', 'qwen2.json')) as any as ArrayBuffer
+const llama3Json = readFileSync(
+  resolve(__dirname, 'sp-models', 'llama3.json')
+) as any as ArrayBuffer
 
 let claudeEncoder: Tokenizer
 let cohereEncoder: Tokenizer
@@ -190,7 +200,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
 
 export async function prepareTokenizers() {
   try {
-    novel = createEncoder('mistral.model')
+    mistral = createEncoder('mistral.model')
     novel = createEncoder('novelai.model')
     novelModern = createEncoder('novelai_v2.model')
     llama = createEncoder('llama.model')

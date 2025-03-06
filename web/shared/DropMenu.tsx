@@ -53,7 +53,7 @@ export const DropMenu: Component<{
   customPosition?: string
   class?: string
 }> = (props) => {
-  let ref: HTMLDivElement
+  let ref: HTMLDivElement | undefined
   const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
   const [opened, setOpened] = createSignal(false)
   const [id, _setId] = createSignal('dropdown-' + v4())

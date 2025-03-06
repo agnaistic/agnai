@@ -27,10 +27,10 @@ export function encryptUserText(text: string, key: string) {
 
 export function encryptText(text: string) {
   const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv(ALGO, KEY, iv)
+  const cipher = crypto.createCipheriv(ALGO, KEY as any, iv as any)
   const encrypted = cipher.update(text, 'utf8', 'hex')
 
-  return [encrypted + cipher.final('hex'), Buffer.from(iv).toString('hex')].join('|')
+  return [encrypted + cipher.final('hex'), Buffer.from(iv as any).toString('hex')].join('|')
 }
 
 export function decryptText(text: string, noError?: boolean) {
@@ -38,12 +38,12 @@ export function decryptText(text: string, noError?: boolean) {
   if (!iv) throw new Error('IV not found')
 
   try {
-    const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(iv, 'hex'))
+    const decipher = crypto.createDecipheriv(ALGO, KEY as any, Buffer.from(iv, 'hex') as any)
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
   } catch (ex) {}
 
   try {
-    const decipher = crypto.createDecipheriv(ALGO, KEY_LB, Buffer.from(iv, 'hex'))
+    const decipher = crypto.createDecipheriv(ALGO, KEY_LB as any, Buffer.from(iv, 'hex') as any)
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
   } catch (ex) {}
 

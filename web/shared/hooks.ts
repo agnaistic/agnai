@@ -5,7 +5,7 @@ import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
-import { getAssetUrl } from './util'
+import { getAssetUrl, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
@@ -125,7 +125,30 @@ export function useCharacterBg(src: 'layout' | 'page') {
 
     const isBg = state.ui.viewMode?.startsWith('background')
     const char = chars.chars.map[chat.active?.char?._id!]
-    if (!isChat || !isBg || !char || char.visualType === 'sprite' || !char.avatar) {
+
+    const chatImage = chat.active?.chat.background
+      ? chat.active.chat.background
+      : isBg
+      ? char?.avatar
+      : undefined
+    if (isChat() && chatImage) {
+      const size =
+        state.ui.viewMode === 'background-contain'
+          ? 'contain'
+          : state.ui.viewMode === 'background-cover'
+          ? 'cover'
+          : mobile
+          ? 'contain'
+          : 'auto'
+
+      return {
+        ...base,
+        'background-image': `url(${getAssetUrl(chatImage)})`,
+        'background-size': size,
+      }
+    }
+
+    if (!isBg || !char || char.visualType === 'sprite') {
       return {
         ...base,
         'background-image': state.background ? `url(${state.background})` : undefined,
@@ -133,19 +156,7 @@ export function useCharacterBg(src: 'layout' | 'page') {
       }
     }
 
-    const size =
-      state.ui.viewMode === 'background-contain'
-        ? 'contain'
-        : state.ui.viewMode === 'background-cover'
-        ? 'cover'
-        : mobile
-        ? 'contain'
-        : 'auto'
-    return {
-      ...base,
-      'background-image': `url(${getAssetUrl(char.avatar)})`,
-      'background-size': size,
-    }
+    return { ...base }
   })
 
   return bg
@@ -323,6 +334,27 @@ export function useLocalStorage<T = any>(id: string, initialValue: T) {
   }
 
   return [value, update] as Signal<T>
+}
+
+export function useAsyncStorage<T = any>(id: string, initialValue: T) {
+  const [value, setValue] = createSignal<T>()
+
+  createEffect(async () => {
+    const next = await storage.getItem(id)
+    if (!next) {
+      await update(initialValue)
+      setValue(() => initialValue)
+      return
+    }
+
+    setValue(() => JSON.parse(next))
+  })
+
+  const update = async (value: T) => {
+    await storage.setItem(id, JSON.stringify(value))
+  }
+
+  return [value, update]
 }
 
 export function getStoredValue<T = any>(id: string, initialValue: T) {
