@@ -326,6 +326,8 @@ export const CLAUDE_MODELS = {
   ClaudeV35_Sonnet: 'claude-3-5-sonnet-20240620',
   ClaudeV35_Sonnet_Oct2024: 'claude-3-5-sonnet-20241022',
   ClaudeV35_Sonnet_Latest: 'claude-3-5-sonnet-latest',
+  ClaudeV37_Sonnet_Feb2025: 'claude-3-7-sonnet-20250219',
+  ClaudeV37_Sonnet_Latest: 'claude-3-7-sonnet-latest',
 } as const
 
 export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
@@ -337,6 +339,8 @@ export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV35_Sonnet_Latest]: true,
   [CLAUDE_MODELS.ClaudeV35_Haiku_Oct2024]: true,
   [CLAUDE_MODELS.ClaudeV35_Haiku_Latest]: true,
+  [CLAUDE_MODELS.ClaudeV37_Sonnet_Feb2025]: true,
+  [CLAUDE_MODELS.ClaudeV37_Sonnet_Latest]: true,
 }
 
 export const NOVEL_MODELS = {

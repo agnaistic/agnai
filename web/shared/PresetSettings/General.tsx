@@ -56,6 +56,8 @@ const CLAUDE_LABELS = {
   ClaudeV35_Haiku_Oct2024: 'Claude v3.5 Haiku (Oct 2024)',
   ClaudeV35_Sonnet_Latest: 'Claude v3.5 Sonnet (Latest)',
   ClaudeV35_Sonnet_Oct2024: `Claude v3.5 Sonnet (Oct 2024)`,
+  ClaudeV37_Sonnet_Latest: 'Claude v3.7 Sonnet (Latest)',
+  ClaudeV37_Sonnet_Feb2025: 'Claude v3.7 Sonnet (Feb 2025)',
 } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
 export const GeneralSettings: Component<PresetTabProps> = (props) => {
