@@ -17,13 +17,13 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18.4.0'
+          node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: '8.6.0'
+          version: '10.6.1'
 
       - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
