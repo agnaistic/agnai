@@ -22,6 +22,7 @@ import Divider from '/web/shared/Divider'
 import { Image, Wand } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
+import { editPartialCharacter } from '/web/store/data/chars'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -53,6 +54,10 @@ const ChatSettings: Component<{
     const [file] = files
 
     chatStore.editChatBackground(file.file)
+  }
+
+  const saveLocalSettings = (update: Partial<AppSchema.Chat['localSettings']>) => {
+    chatStore.editLocalChatSettings(update)
   }
 
   const personaFormats = createMemo(() => {
@@ -185,22 +190,34 @@ const ChatSettings: Component<{
       </Card>
 
       <Card>
-        <FileInput
-          fieldName="chatBackground"
-          label={
-            <div class="flex justify-between gap-1">
-              Background Image{' '}
-              <Show when={state.chat?.background}>
-                <Button size="sm" schema="red" onClick={() => chatStore.removeChatBackground()}>
-                  Remove BG
-                </Button>
-              </Show>
-            </div>
-          }
-          helperText="The image will be stored on your current device and not available on other devices"
-          onUpdate={saveBackgroundImage}
-          accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
-        />
+        <div class="flex gap-1">
+          <FileInput
+            fieldName="chatBackground"
+            label={
+              <div class="flex justify-between gap-1">
+                Background Image{' '}
+                <Show when={state.chat?.background}>
+                  <Button size="sm" schema="red" onClick={() => chatStore.removeChatBackground()}>
+                    Remove
+                  </Button>
+                </Show>
+              </div>
+            }
+            helperText="The image will be stored on your current device and not available on other devices"
+            onUpdate={saveBackgroundImage}
+            accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
+          />
+
+          <Select
+            parentClass="text-xs"
+            items={[
+              { label: 'Auto', value: 'auto' },
+              { label: 'Cover', value: 'cover' },
+              { label: 'Contain', value: 'contain' },
+            ]}
+            onChange={(next) => saveLocalSettings({ bgFormat: next.value as any })}
+          />
+        </div>
       </Card>
 
       <Show when={activePreset()?.service !== 'horde'}>

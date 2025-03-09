@@ -257,10 +257,15 @@ export const chatStore = createStore<ChatState>('chat', {
         )
 
         const background = await storage.getItem(`chat-background-${id}`)
+        const localSettings = await storage
+          .getItem(`chat-settings-${id}`)
+          .then((curr) => JSON.parse(curr || '{}'))
 
         if (background) {
           res.result.chat.background = background
         }
+
+        res.result.chat.localSettings = localSettings
 
         yield {
           lastChatId: id,
@@ -326,6 +331,19 @@ export const chatStore = createStore<ChatState>('chat', {
         },
       }
     },
+
+    async *editLocalChatSettings({ active }, settings: any) {
+      if (!active) return
+
+      const id = `chat-settings-${active.chat._id}`
+      const current = await storage.getItem(id).then((curr) => JSON.parse(curr || '{}'))
+
+      const next = { ...current, ...settings }
+      await storage.setItem(id, JSON.stringify(next))
+
+      return { active: { ...active, chat: { ...active.chat, localSettings: next } } }
+    },
+
     async *editChat(
       { char, allChats, active },
       id: string,

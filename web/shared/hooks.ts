@@ -131,7 +131,24 @@ export function useCharacterBg(src: 'layout' | 'page') {
       : isBg
       ? char?.avatar
       : undefined
-    if (isChat() && chatImage) {
+
+    if (isChat() && chat.active?.chat.background) {
+      const cfg = chat.active.chat.localSettings || {}
+      const size =
+        cfg.bgFormat === 'contain'
+          ? 'contain'
+          : cfg.bgFormat === 'cover'
+          ? 'cover'
+          : mobile
+          ? 'contain'
+          : 'auto'
+
+      return {
+        ...base,
+        'background-image': `url(${getAssetUrl(chat.active?.chat.background)})`,
+        'background-size': size,
+      }
+    } else if (isChat() && chatImage) {
       const size =
         state.ui.viewMode === 'background-contain'
           ? 'contain'

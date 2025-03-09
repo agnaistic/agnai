@@ -287,6 +287,7 @@ export namespace AppSchema {
     imageSettings?: ImageSettings
 
     background?: string
+    localSettings?: { bgFormat?: 'contain' | 'cover' | 'auto' }
   }
 
   export interface ChatMember {
