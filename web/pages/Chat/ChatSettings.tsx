@@ -4,14 +4,7 @@ import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import {
-  chatStore,
-  msgStore,
-  presetStore,
-  scenarioStore,
-  settingStore,
-  userStore,
-} from '../../store'
+import { chatStore, msgStore, presetStore, scenarioStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
