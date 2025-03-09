@@ -38,7 +38,6 @@ const ChatSettings: Component<{
   close: () => void
   footer: (children: any) => void
 }> = (props) => {
-  const cfg = settingStore()
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
   const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
   const user = userStore()
