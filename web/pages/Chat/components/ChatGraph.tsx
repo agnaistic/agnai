@@ -11,7 +11,7 @@ import { toShortDuration } from '/web/shared/util'
 
 export { ChatGraph as default }
 
-cyto.use(dagre)
+cyto.use(dagre as any)
 
 export type GraphState = {
   hovered: string

@@ -49,12 +49,12 @@ const handlers: {
       return
     }
     EMBED_INITED = true
-    Embedder = await pipeline('feature-extraction', msg.model, {
+    Embedder = (await pipeline('feature-extraction', msg.model, {
       // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
         post('progress', data)
       },
-    })
+    })) as Pipeline
     console.log(`[embed] ready`)
     post('embedLoaded', {})
   },

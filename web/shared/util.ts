@@ -909,5 +909,5 @@ export const sticky = {
       }
     }, 1000 / 30)
   },
-  clear: () => clearInterval(sticky.interval),
+  clear: () => clearInterval(sticky.interval as any),
 }

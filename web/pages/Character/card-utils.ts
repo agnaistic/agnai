@@ -55,7 +55,7 @@ export async function extractCardData(file: File) {
 
 async function extractExif(buffer: Buffer): Promise<string> {
   const exif = loadExif(buffer)
-  const data = exif.UserComment?.description
+  const data = (exif.UserComment as any)?.description
   if (!data) {
     throw new Error('No data found')
   }
