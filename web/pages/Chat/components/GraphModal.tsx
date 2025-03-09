@@ -59,7 +59,7 @@ export const ChatGraphModal: Component<{
       <div class="text-sm">
         Click a node to load the path. Click&Drag to move the graph. Pinch/Scroll to zoom.
       </div>
-      <div class="min-h-32 h-32 max-h-32 overflow-y-scroll">
+      <div class="h-32 max-h-32 min-h-32 overflow-y-scroll">
         <Show when={store.msg}>
           <Message
             msg={store.msg!}

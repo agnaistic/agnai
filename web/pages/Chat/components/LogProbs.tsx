@@ -39,7 +39,7 @@ export const LogProbs: Component<{ msg: AppSchema.ChatMessage }> = (props) => {
           </For>
         </div>
 
-        <div class="min-h-16 flex h-16 flex-wrap gap-1">
+        <div class="flex h-16 min-h-16 flex-wrap gap-1">
           <Show when={probs().length}>
             <For each={probs()}>
               {(item) => {
