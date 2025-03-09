@@ -245,29 +245,27 @@ const ChatSettings: Component<{
         </Card>
       </Show>
 
-      <Show when={cfg.flags.debug}>
-        <Card>
-          <TextInput
-            class="text-sm"
-            value={edit?.name || ''}
-            onChange={(ev) => setEdit('name', ev.currentTarget.value)}
-            label={
-              <>
-                Chat name{' '}
-                <div
-                  onClick={() =>
-                    msgStore.chatQuery('Generate a name for this conversation', (msg) =>
-                      setEdit('name', msg)
-                    )
-                  }
-                >
-                  <Wand />
-                </div>
-              </>
-            }
-          />
-        </Card>
-      </Show>
+      <Card>
+        <TextInput
+          class="text-sm"
+          value={edit?.name || ''}
+          onChange={(ev) => setEdit('name', ev.currentTarget.value)}
+          label={
+            <>
+              Chat name{' '}
+              <div
+                onClick={() =>
+                  msgStore.chatQuery('Generate a name for this conversation', (msg) =>
+                    setEdit('name', msg)
+                  )
+                }
+              >
+                <Wand />
+              </div>
+            </>
+          }
+        />
+      </Card>
 
       <Card>
         <Toggle
