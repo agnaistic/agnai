@@ -22,7 +22,6 @@ import Divider from '/web/shared/Divider'
 import { Image, Wand } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
-import { editPartialCharacter } from '/web/store/data/chars'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
