@@ -193,28 +193,29 @@ const ChatSettings: Component<{
           <FileInput
             fieldName="chatBackground"
             label={
-              <div class="flex justify-between gap-1">
+              <div class="flex items-center justify-between gap-1">
                 Background Image{' '}
-                <Show when={state.chat?.background}>
-                  <Button size="sm" schema="red" onClick={() => chatStore.removeChatBackground()}>
-                    Remove
-                  </Button>
-                </Show>
+                <div class="flex items-center gap-1">
+                  <Show when={state.chat?.background}>
+                    <Select
+                      parentClass="text-xs"
+                      items={[
+                        { label: 'Auto', value: 'auto' },
+                        { label: 'Cover', value: 'cover' },
+                        { label: 'Contain', value: 'contain' },
+                      ]}
+                      onChange={(next) => saveLocalSettings({ bgFormat: next.value as any })}
+                    />
+                    <Button size="sm" schema="red" onClick={() => chatStore.removeChatBackground()}>
+                      Remove
+                    </Button>
+                  </Show>
+                </div>
               </div>
             }
             helperText="The image will be stored on your current device and not available on other devices"
             onUpdate={saveBackgroundImage}
             accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
-          />
-
-          <Select
-            parentClass="text-xs"
-            items={[
-              { label: 'Auto', value: 'auto' },
-              { label: 'Cover', value: 'cover' },
-              { label: 'Contain', value: 'contain' },
-            ]}
-            onChange={(next) => saveLocalSettings({ bgFormat: next.value as any })}
           />
         </div>
       </Card>
