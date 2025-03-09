@@ -1,5 +1,5 @@
 import './Message.css'
-import * as Purify from 'dompurify'
+import Purify from 'dompurify'
 import {
   Check,
   DownloadCloud,

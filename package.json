@@ -71,7 +71,7 @@
     "check": "pnpm typecheck && pnpm test",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",
-    "deps": "npx --yes pnpm@8.6.2 install --lockfile",
+    "deps": "npx --yes pnpm@10 install --lockfile",
     "web": "parcel web/index.html --no-cache",
     "api": "tsc -p api.tsconfig.json --watch"
   },
@@ -122,11 +122,11 @@
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@melloware/coloris": "^0.20.0",
-    "@parcel/config-default": "^2.12.0",
-    "@parcel/core": "^2.12.0",
-    "@parcel/resolver-glob": "^2.12.0",
-    "@parcel/transformer-inline-string": "2.12.0",
-    "@parcel/transformer-sass": "2.12.0",
+    "@parcel/config-default": "^2.13.3",
+    "@parcel/core": "^2.13.3",
+    "@parcel/resolver-glob": "^2.13.3",
+    "@parcel/transformer-inline-string": "2.13.3",
+    "@parcel/transformer-sass": "2.13.3",
     "@solidjs/router": "^0.13.1",
     "@types/adm-zip": "^0.5.0",
     "@types/bcryptjs": "^2.4.2",
@@ -199,6 +199,7 @@
     "vite": "^5.3.3",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^4.3.2",
+    "vm-browserify": "^1.1.2",
     "zustand": "^4.5.2"
   },
   "@parcel/resolver-default": {
