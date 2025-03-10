@@ -244,14 +244,15 @@ export async function parseTemplate(
       const filled = await fillPromptWithLines({
         encoder: opts.limit.encoder,
         tokenLimit: opts.limit.context,
-        context: output,
+        context: result,
         lines,
         inserts: opts.inserts,
         optional: opts.lowpriority,
+        marker: id,
       })
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.slice().reverse()
-      output = output.replace(new RegExp(id, 'gi'), trimmed.join('\n'))
+      output = result.replace(new RegExp(id, 'gi'), trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
       history = trimmed
     }
@@ -289,10 +290,12 @@ export async function parseTemplate(
 
   output = output.replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
 
+  const length = await opts.limit?.encoder?.(output)
+
   return {
     parsed: output,
     inserts: opts.inserts ?? new Map(),
-    length: await opts.limit?.encoder?.(result),
+    length,
     linesAddedCount,
     sections,
   }

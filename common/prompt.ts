@@ -82,6 +82,7 @@ export type PromptOpts = {
   resolvedScenario: string
   modelFormat?: ModelFormat
   jsonValues: Record<string, any> | undefined
+  contextBuffer?: number
 }
 
 export type BuildPromptOpts = {
@@ -231,7 +232,6 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
   let template = getTemplate(opts)
-  const templateSize = await encoder(template)
 
   if (opts.modelFormat) {
     template = replaceTags(template, opts.modelFormat)
@@ -244,10 +244,9 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    * If we ambitiously include the entire history then embeddings will never be included.
    * The queryable embeddings are messages that are _NOT_ included in the context
    */
-  const maxContext = opts.settings
-    ? getContextLimit(opts.user, opts.settings) - templateSize - opts.settings.maxTokens!
-    : undefined
-  const lines = await getLinesForPrompt(opts, encoder, maxContext)
+  const contextBuffer = opts.contextBuffer ?? 0
+  const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
+  const lines = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
   const parts = await buildPromptParts(opts, lines, encoder)
 
   const prompt = await injectPlaceholders(template, {
@@ -697,6 +696,7 @@ export async function fillPromptWithLines(opts: {
   /** Nodes to be inserted at a particular depth in the `lines` */
   inserts?: Map<number, string>
   optional?: Array<{ id: string; content: string }>
+  marker?: string
 }) {
   const { encoder, tokenLimit, context, lines, inserts = new Map(), optional = [] } = opts
   const insertsCost = await encoder(Array.from(inserts.values()).join(' '))
@@ -706,7 +706,11 @@ export async function fillPromptWithLines(opts: {
    * Optional placeholders do not count towards token counts.
    * They are optional after everything else has been inserted therefore we remove them from the prompt
    */
-  const cleanContext = optional.reduce((amble, { id }) => amble.replace(id, ''), context)
+  let cleanContext = optional.reduce((amble, { id }) => amble.replace(id, ''), context)
+  if (opts.marker) {
+    cleanContext.replace(opts.marker, '')
+  }
+
   let count = await encoder(cleanContext)
   const adding: string[] = []
 

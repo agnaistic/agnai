@@ -275,6 +275,7 @@ async function createActiveChatPrompt(
       userEmbeds,
       resolvedScenario,
       jsonValues: props.json,
+      contextBuffer: entities.settings.maxTokens,
     },
     encoder
   )
