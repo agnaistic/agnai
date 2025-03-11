@@ -122,6 +122,10 @@ export const userStore = createStore<UserState>(
       userStore.saveUI(defaultUIsettings)
     } else {
       userStore.receiveUI(init.user.ui)
+
+      if (!init.user.disableLTM) {
+        embedApi.initSimiliary()
+      }
     }
   })
 
