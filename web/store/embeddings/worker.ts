@@ -287,23 +287,27 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
     documents[msg.documentId] = await reviveDocumentEmbeddings(msg.documentId)
 
     const doc = documents[msg.documentId]
+    const nextDoc: VectorizedDocument = []
 
     let pos = 0
     for (const item of msg.documents) {
       const exist = doc[pos]
       pos++
 
-      if (exist && exist.msg === item.msg) continue
+      if (exist && exist.msg === item.msg) {
+        nextDoc[pos] = exist
+        continue
+      }
 
       const embed = await vectorize(item.msg)
       embedded++
       const percent = ((embedded / msg.documents.length) * 100).toFixed(1)
       post('status', { id, kind: type, status: `loading (${percent}%)` })
-      doc.push({ msg: item.msg, embed, meta: item.meta })
+      nextDoc[pos] = { msg: item.msg, embed, meta: item.meta }
     }
 
-    documents[msg.documentId] = doc
-    await cacheDocumentEmbeddings(msg.documentId, doc)
+    documents[msg.documentId] = nextDoc
+    await cacheDocumentEmbeddings(msg.documentId, nextDoc)
     console.log(`[document] ${msg.documentId} embedded`)
   }
 
