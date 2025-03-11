@@ -1,3 +1,4 @@
+import * as lf from 'localforage'
 import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import {
   EmbedDocument,
@@ -14,9 +15,11 @@ env.allowLocalModels = false
 
 const encoder = getEncoding('cl100k_base')
 
-type TextEmbed = { msg: string; entityId: string; embed: Tensor; meta: any }
+type Vector = { data: number[] }
+
+type TextEmbed = { msg: string; entityId: string; embed: Vector; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
-type Tensor = { data: number[]; dims: number[]; size: number; type: string }
+// type Tensor = { data: number[]; dims: number[]; size: number; type: string }
 
 type Embeddings = {
   [chatId: string]: { [msgId: string]: TextEmbed }
@@ -30,7 +33,9 @@ let CAPTION_INITED = false
 let HttpCaptioner: (base64: string) => Promise<any>
 
 const embeddings: Embeddings = {}
-const documents: Record<string, Array<EmbedDocument & { embed: Tensor }>> = {}
+const documents: Record<string, VectorizedDocument> = {}
+
+type VectorizedDocument = Array<EmbedDocument & { embed: Vector }>
 
 const handlers: {
   [key in WorkerRequest['type']]: (msg: Extract<WorkerRequest, { type: key }>) => Promise<void>
@@ -121,10 +126,14 @@ const handlers: {
     if (!EMBED_INITED) return
     if (!Embedder) return
     if (!embeddings[msg.chatId]) {
-      embeddings[msg.chatId] = {}
+      const cached = await reviveChatEmbeddings(msg.chatId)
+      embeddings[msg.chatId] = cached
     }
 
     embed(msg)
+  },
+  deleteChatCache: async (msg) => {
+    await deleteChatCache(msg.chatId)
   },
   embedDocument: async (msg) => {
     if (!Embedder) return
@@ -229,9 +238,12 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
   EMBEDDING = true
   post('status', { id, kind: type, status: 'loading' })
   console.log(`[${type}] ${id} started`)
+  const now = Date.now()
   if (msg.type === 'embedChat') {
     const seen = new Set<string>()
     const cache = embeddings[msg.chatId]
+
+    console.log(`[${type}] cached: ${Object.keys(cache).length}`)
 
     const filtered = msg.messages.filter((msg) => {
       seen.add(msg._id)
@@ -243,7 +255,11 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
     for (const msg of filtered) {
       if (msg.adapter === 'image' || msg.ooc) continue
-      const embedding = await Embedder(msg.msg, { pooling: 'mean', normalize: true })
+      const original = cache[msg._id]
+      if (original && original.msg === msg.msg) continue
+
+      const embedding = await vectorize(msg.msg)
+
       cache[msg._id] = {
         entityId: msg.characterId || msg.userId || '',
         msg: msg.msg,
@@ -252,12 +268,15 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
       }
     }
 
-    let deleted = 0
-    for (const cachedId of Object.keys(cache)) {
-      if (seen.has(cachedId)) continue
-      delete cache[cachedId]
-      deleted++
-    }
+    // let deleted = 0
+    // for (const cachedId of Object.keys(cache)) {
+    //   if (seen.has(cachedId)) continue
+    //   delete cache[cachedId]
+    //   deleted++
+    // }
+
+    console.log(`[${type}] done ${(Date.now() - now) / 1000}s`)
+    await cacheChatEmbeddings(msg.chatId, cache)
 
     // const pre = deleted > 0 ? '+' : ''
     // console.log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
@@ -265,14 +284,26 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   if (msg.type === 'embedDocument') {
     let embedded = 0
-    documents[msg.documentId] = []
+    documents[msg.documentId] = await reviveDocumentEmbeddings(msg.documentId)
+
+    const doc = documents[msg.documentId]
+
+    let pos = 0
     for (const item of msg.documents) {
-      const embed = await Embedder(item.msg, { pooling: 'mean', normalize: true })
+      const exist = doc[pos]
+      pos++
+
+      if (exist && exist.msg === item.msg) continue
+
+      const embed = await vectorize(item.msg)
       embedded++
       const percent = ((embedded / msg.documents.length) * 100).toFixed(1)
       post('status', { id, kind: type, status: `loading (${percent}%)` })
-      documents[msg.documentId].push({ msg: item.msg, embed, meta: item.meta })
+      doc.push({ msg: item.msg, embed, meta: item.meta })
     }
+
+    documents[msg.documentId] = doc
+    await cacheDocumentEmbeddings(msg.documentId, doc)
     console.log(`[document] ${msg.documentId} embedded`)
   }
 
@@ -284,4 +315,41 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
     await new Promise((res) => setTimeout(res, 50))
     embed(next)
   }
+}
+
+async function vectorize(msg: string) {
+  const embed = await Embedder(msg, { pooling: 'mean', normalize: true })
+  return { data: embed.data as number[] }
+}
+
+async function cacheDocumentEmbeddings(docId: string, embeddings: VectorizedDocument) {
+  await lf.setItem(`document-embeddings-${docId}`, JSON.stringify(embeddings))
+  console.log('[embed] document cached', docId)
+}
+
+async function reviveDocumentEmbeddings(docId: string): Promise<VectorizedDocument> {
+  const existing = await lf.getItem(`document-embeddings-${docId}`)
+
+  console.log(`[embed] document revived`, docId, !!existing)
+
+  if (!existing) return []
+  return JSON.parse(existing as string)
+}
+
+async function cacheChatEmbeddings(chatId: string, embeddings: Record<string, TextEmbed>) {
+  await lf.setItem(`chat-embeddings-${chatId}`, JSON.stringify(embeddings))
+  console.log('[embed] chat cached', chatId)
+}
+
+async function reviveChatEmbeddings(chatId: string): Promise<Record<string, TextEmbed>> {
+  const existing = await lf.getItem(`chat-embeddings-${chatId}`)
+
+  console.log(`[embed] chat revived`, chatId, !!existing)
+
+  if (!existing) return {}
+  return JSON.parse(existing as string)
+}
+
+async function deleteChatCache(chatId: string) {
+  await lf.removeItem(`chat-embeddings-${chatId}`)
 }

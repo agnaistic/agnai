@@ -1,6 +1,6 @@
 import { AppSchema } from '/common/types'
 
-export type CacheDocument = Extract<WorkerRequest, { type: 'embedDocument' }>
+export type EmbeddedDocument = { documentId: string; name: string; documents: EmbedDocument[] }
 
 export type EmbedDocument = {
   msg: string
@@ -14,9 +14,7 @@ export type RequestChatEmbed = {
 }
 export type RequestDocEmbed = {
   type: 'embedDocument'
-  documentId: string
-  documents: EmbedDocument[]
-}
+} & EmbeddedDocument
 
 export type WorkerRequest =
   | { type: 'encode'; id: string; text: string }
@@ -33,6 +31,7 @@ export type WorkerRequest =
       path: string[]
     }
   | { type: 'query'; chatId: string; text: string; requestId: string; beforeDate?: string }
+  | { type: 'deleteChatCache'; chatId: string }
   | RequestChatEmbed
   | RequestDocEmbed
 

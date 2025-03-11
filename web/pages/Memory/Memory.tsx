@@ -131,7 +131,7 @@ export const EmbedsTab: Component = (props) => {
                 >
                   {each.state === 'loaded' ? <FileCheck /> : <FileX class="text-gray-500" />}
                 </div>
-                <div class="ellipsis font-bold">{each.id}</div>
+                <div class="ellipsis font-bold">{each.name}</div>
               </SolidCard>
 
               <div class="icon-button" onClick={() => setEditing(each.id)}>

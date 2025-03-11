@@ -11,6 +11,7 @@ import { AllChat as ChatData, chatsApi } from './data/chats'
 import { getPromptEntities } from './data/common'
 import { imageApi } from './data/image'
 import { usersApi } from './data/user'
+import { embedApi } from './embeddings'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -358,6 +359,9 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
+        res.result.background = active?.chat.background
+        res.result.localSettings = active?.chat.localSettings
+
         onSuccess?.()
         toastStore.success('Updated chat settings')
 
@@ -530,6 +534,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {
+        embedApi.deleteChatCache(chatId)
         toastStore.success('Successfully deleted chat')
         if (active?.chat._id === chatId) {
           yield { active: undefined }

@@ -12,6 +12,7 @@ import { EditEmbedModal } from '/web/shared/EditEmbedModal'
 import { Portal } from 'solid-js/web'
 import { createStore } from 'solid-js/store'
 import { emptyBook } from '/common/memory'
+import { embedApi } from '/web/store/embeddings'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat | undefined
@@ -91,7 +92,12 @@ const ChatMemoryModal: Component<{
 
   const useUserEmbed = () => {
     if (!props.chat?._id) return
-    chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
+    const id = embedId()
+    chatStore.editChat(props.chat._id, { userEmbedId: id }, undefined)
+
+    if (id) {
+      embedApi.loadDocument(id)
+    }
   }
 
   const Footer = (
@@ -108,7 +114,7 @@ const ChatMemoryModal: Component<{
 
   const embeds = createMemo(() => {
     return [{ label: 'None', value: '' }].concat(
-      books.embeds.map((em) => ({ label: `${em.id} [${em.state}]`, value: em.id }))
+      books.embeds.map((em) => ({ label: `${em.name} [${em.state}]`, value: em.id }))
     )
   })
 

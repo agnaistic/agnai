@@ -11,6 +11,7 @@ import { getStore } from '/web/store/create'
 import { SolidCard } from '/web/shared/Card'
 import { settingStore } from '/web/store'
 import { createStore } from 'solid-js/store'
+import { v4 } from 'uuid'
 
 export { EmbedContent as default }
 
@@ -49,14 +50,13 @@ const EmbedContent: Component = (props) => {
         return
       }
 
-      const slug = slugify(store.embedName)
       switch (store.type) {
         case 'PDF':
-          await embedApi.embedPdf(slug, doc!)
+          await embedApi.embedPdf(v4(), store.embedName, doc!)
           break
 
         case 'Text file':
-          await embedApi.embedFile(slug, doc!)
+          await embedApi.embedFile(v4(), store.embedName, doc!)
           break
 
         case 'Plain Text': {
@@ -64,11 +64,11 @@ const EmbedContent: Component = (props) => {
             toastStore.warn(`Embedding content is empty`)
             return
           }
-          await embedApi.embedPlainText(slug, store.embedText)
+          await embedApi.embedPlainText(v4(), store.embedName, store.embedText)
           break
         }
       }
-      toastStore.success(`Successfully created embedding: ${slug}`)
+      toastStore.success(`Successfully created embedding`)
     } finally {
       setLoading(false)
     }
@@ -125,7 +125,7 @@ const EmbedContent: Component = (props) => {
           <TextInput
             fieldName="embedName"
             label="Name"
-            helperText='(Optional) An identifier for your embedding. This will become a "slug". E.g. "Hello World" will become "hello-world"'
+            helperText="An identifier for your embedding."
             value={store.embedName}
             onChange={(ev) => setStore('embedName', ev.currentTarget.value)}
           />
@@ -181,7 +181,7 @@ const EmbedContent: Component = (props) => {
           />
 
           <Button class="mt-2 w-fit" onClick={embedFile}>
-            Embed Content
+            Embed Text
           </Button>
         </Match>
       </Switch>

@@ -14,7 +14,7 @@ export type MemoryState = {
   creating: boolean
   loadingAll: boolean
   updating: boolean
-  embeds: Array<{ id: string; state: string }>
+  embeds: Array<{ id: string; name: string; state: string }>
 }
 
 const initState: MemoryState = {
