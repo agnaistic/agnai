@@ -63,7 +63,15 @@ export const embedApi = {
     setter({ embeds })
   },
   initSimiliary: () => {
-    post('initSimilarity', { model: models.embedding })
+    const user = getStore('user').getState()
+    const chat = getStore('chat').getState().active?.chat
+    const disableLTM = user.user?.disableLTM ?? true
+    post('initSimilarity', { model: models.embedding, disableLTM })
+
+    // Load the document when embeddings are ready
+    if (chat?.userEmbedId) {
+      loadDocument(chat.userEmbedId)
+    }
   },
   encode,
   decode,
@@ -113,10 +121,16 @@ const handlers: {
   init: (type) => {
     try {
       const user = getStore('user').getState()
+      const chat = getStore('chat').getState().active?.chat
+
       const disableLTM = user.user?.disableLTM ?? true
       if (type === 'embed') {
-        if (disableLTM) return
-        post('initSimilarity', { model: models.embedding })
+        post('initSimilarity', { model: models.embedding, disableLTM })
+
+        // This will be loaded 'on embeds ready'
+        if (chat?.userEmbedId) {
+          loadDocument(chat.userEmbedId)
+        }
       }
 
       if (type === 'image' && window.flags.caption) {
@@ -378,7 +392,9 @@ async function embedArticle(wikipage: string) {
     }
   }
 
-  post('embedDocument', { documentId: v4(), name: wikipage, documents: embeds })
+  const id = v4()
+  upsertEmbeddingId(id, wikipage)
+  post('embedDocument', { documentId: id, name: wikipage, documents: embeds })
 }
 
 async function embedPdf(id: string, name: string, file: File) {

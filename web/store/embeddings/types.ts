@@ -19,7 +19,7 @@ export type RequestDocEmbed = {
 export type WorkerRequest =
   | { type: 'encode'; id: string; text: string }
   | { type: 'decode'; id: string; tokens: number[] }
-  | { type: 'initSimilarity'; model: string }
+  | { type: 'initSimilarity'; model: string; disableLTM: boolean; documentId?: string }
   | { type: 'initCaptioning'; model: string }
   | { type: 'captionImage'; image: string; requestId: string }
   | {

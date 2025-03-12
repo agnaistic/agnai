@@ -11,11 +11,11 @@ import { Toggle } from '../../../shared/Toggle'
 import { toArray } from '/common/util'
 import { Pill } from '/web/shared/Card'
 import { SetStoreFunction } from 'solid-js/store'
-import { AppSchema } from '/common/types'
+import { UserSettings } from '../util'
 
 const HordeAISettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   const state = userStore((s) => ({
     stats: s.metadata?.hordeStats,

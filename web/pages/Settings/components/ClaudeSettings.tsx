@@ -3,11 +3,11 @@ import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import { SetStoreFunction } from 'solid-js/store'
-import { AppSchema } from '/common/types/index'
+import { UserSettings } from '../util'
 
 const ClaudeSettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   return (
     <>

@@ -1,11 +1,11 @@
 import { Component } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
 import { SetStoreFunction } from 'solid-js/store'
-import { AppSchema } from '/common/types/index'
+import { UserSettings } from '../util'
 
 const OobaAISettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   return (
     <>

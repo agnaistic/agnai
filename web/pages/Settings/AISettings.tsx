@@ -29,12 +29,12 @@ import Button from '/web/shared/Button'
 import { neat } from '/common/util'
 import { HelpModal } from '/web/shared/Modal'
 import { Toggle } from '/web/shared/Toggle'
-import { AppSchema } from '/common/types/index'
 import { SetStoreFunction } from 'solid-js/store'
+import { UserSettings } from './util'
 
 const AISettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   const [query] = useSearchParams()
   const state = userStore()

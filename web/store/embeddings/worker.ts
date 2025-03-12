@@ -53,6 +53,9 @@ const handlers: {
       console.log('[embed] already inited')
       return
     }
+
+    if (msg.disableLTM) return
+
     EMBED_INITED = true
     Embedder = (await pipeline('feature-extraction', msg.model, {
       // quantized: true,
@@ -136,7 +139,6 @@ const handlers: {
     await deleteChatCache(msg.chatId)
   },
   embedDocument: async (msg) => {
-    if (!Embedder) return
     if (!documents[msg.documentId]) {
       documents[msg.documentId] = []
     }
@@ -224,7 +226,7 @@ const embedQueue: Array<RequestChatEmbed | RequestDocEmbed> = []
 
 let EMBEDDING = false
 async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
-  if (!EMBED_INITED) return
+  if (!EMBED_INITED || !Embedder) return
 
   const type = msg.type === 'embedChat' ? 'chat' : 'document'
   const id = msg.type === 'embedChat' ? msg.chatId : msg.documentId

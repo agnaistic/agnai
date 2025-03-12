@@ -8,9 +8,9 @@ import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
 import AgnaisticSettings from './AgnaisticSettings'
 import { isAgnaisticSpeechAllowed } from '/web/shared/Audio/speech'
-import { AppSchema } from '/common/types/index'
 import { SetStoreFunction } from 'solid-js/store'
 import { applyStoreProperty } from '/web/shared/util'
+import { UserSettings } from '../util'
 
 const ttsServiceTabs = {
   agnaistic: 'Agnaistic',
@@ -22,8 +22,8 @@ const ttsServiceTabs = {
 type Tab = keyof typeof ttsServiceTabs
 
 export const VoiceSettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   const canUseTts = createMemo(() => {
     return isAgnaisticSpeechAllowed()

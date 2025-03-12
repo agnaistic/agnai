@@ -2,12 +2,12 @@ import { Component } from 'solid-js'
 import { userStore } from '../../../store'
 import TextInput from '../../../shared/TextInput'
 import Button from '../../../shared/Button'
-import { AppSchema } from '/common/types/index'
 import { SetStoreFunction } from 'solid-js/store'
+import { UserSettings } from '../util'
 
 const ElevenLabsSettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   return (
     <>

@@ -111,6 +111,7 @@ export namespace AppSchema {
     oaiKey: string
     oaiKeySet?: boolean
 
+    userHordeKey?: string
     hordeKey: string
     hordeModel: string | string[]
     hordeName?: string

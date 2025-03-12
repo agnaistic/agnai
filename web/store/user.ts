@@ -98,6 +98,10 @@ export const userStore = createStore<UserState>(
   })
 
   events.on(EVENTS.init, (init) => {
+    if (init.user) {
+      init.user.userHordeKey = init.user.hordeKey
+      init.user.hordeKey = ''
+    }
     userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
 
     if (

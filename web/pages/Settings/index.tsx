@@ -14,6 +14,7 @@ import { RootModal } from '/web/shared/Modal'
 import { SubscriptionPage } from '../Profile/SubscriptionPage'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
+import { toUserStoreObject } from './util'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -63,7 +64,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   const [query, setQuery] = useSearchParams()
   const [tab, setTab] = createSignal<number>(+(query.tab ?? '0'))
 
-  const [store, setStore] = createStore(user.user!)
+  const [store, setStore] = createStore(toUserStoreObject(user.user!))
 
   createEffect(
     on(

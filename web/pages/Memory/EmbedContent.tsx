@@ -92,7 +92,7 @@ const EmbedContent: Component = (props) => {
     <form class="flex flex-col gap-2">
       <Show when={user.user?.disableLTM ?? true}>
         <SolidCard bg="premium-700">
-          You need need to enable{' '}
+          You need to enable{' '}
           <b class="underline hover:cursor-pointer" onClick={() => settingStore.modal(true)}>
             Embeddings/Long-Term Memory
           </b>{' '}

@@ -132,11 +132,11 @@ export async function generateImage(
   log?.debug({ ...payload, prompt: null }, 'Horde payload')
   log?.debug(`Prompt:\n${payload.prompt}`)
 
-  let key = user.hordeKey
+  let key = user.userHordeKey
   if (!key) {
     key = HORDE_GUEST_KEY
   } else {
-    key = decryptText(user.hordeKey)
+    key = decryptText(user.userHordeKey!)
   }
 
   const image = await generate({

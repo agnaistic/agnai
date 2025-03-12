@@ -5,11 +5,11 @@ import Button from '../../../shared/Button'
 import Select from '../../../shared/Select'
 import Divider from '/web/shared/Divider'
 import { SetStoreFunction } from 'solid-js/store/types/store'
-import { AppSchema } from '/common/types/index'
+import { UserSettings } from '../util'
 
 const NovelAISettings: Component<{
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   const novelVerified = createMemo(
     () => (props.state.novelApiKey || props.state.novelVerified ? 'API Key has been verified' : ''),

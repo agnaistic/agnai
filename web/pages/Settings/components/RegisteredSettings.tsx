@@ -4,13 +4,13 @@ import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
 import Select from '/web/shared/Select'
 import { userStore } from '/web/store'
-import { AppSchema } from '/common/types/index'
 import { SetStoreFunction } from 'solid-js/store'
+import { UserSettings } from '../util'
 
 const RegisteredSettings: Component<{
   service: RegisteredAdapter
-  state: AppSchema.User
-  setter: SetStoreFunction<AppSchema.User>
+  state: UserSettings
+  setter: SetStoreFunction<UserSettings>
 }> = (props) => {
   return (
     <>
