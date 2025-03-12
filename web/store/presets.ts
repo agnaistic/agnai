@@ -42,6 +42,13 @@ export const presetStore = createStore<PresetState>(
       const res = await presetApi.getPresets()
       if (res.error) toastStore.error('Failed to retrieve presets')
       if (res.result) {
+        if (Array.isArray(res.result.presets)) {
+          for (const preset of res.result.presets) {
+            if (!preset.thirdPartyKey) continue
+            preset.userThirdPartyKey = preset.thirdPartyKey
+            preset.thirdPartyKey = ''
+          }
+        }
         return { presets: res.result.presets }
       }
     },

@@ -68,6 +68,10 @@ export async function updateUser(userId: string, props: Partial<AppSchema.User>)
   try {
     await db('user').updateOne({ _id: userId }, { $set: { ...props, updatedAt: now() } })
   } catch (ex: any) {
+    /**
+     * A bug has caused specific API keys to be re-encrypted multiple times.
+     * If we get this error, we will need to remove the keys
+     */
     if (ex?.name !== 'MongoServerError') {
       throw ex
     }

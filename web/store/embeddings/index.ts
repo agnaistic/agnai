@@ -62,11 +62,11 @@ export const embedApi = {
     const embeds = ids.map((doc) => ({ id: doc._id, name: doc.name, state: 'not-loaded' }))
     setter({ embeds })
   },
-  initSimiliary: () => {
+  initSimiliary: (disableLTM?: boolean) => {
     const user = getStore('user').getState()
     const chat = getStore('chat').getState().active?.chat
-    const disableLTM = user.user?.disableLTM ?? true
-    post('initSimilarity', { model: models.embedding, disableLTM })
+    const disable = disableLTM ?? user.user?.disableLTM ?? true
+    post('initSimilarity', { model: models.embedding, disableLTM: disable })
 
     // Load the document when embeddings are ready
     if (chat?.userEmbedId) {

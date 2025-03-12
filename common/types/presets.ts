@@ -118,6 +118,8 @@ export interface GenSettings {
   numBeams?: number
 
   localRequests?: boolean
+  userThirdPartyKey?: string
+
   addBosToken?: boolean
   banEosToken?: boolean
   tokenHealing?: boolean

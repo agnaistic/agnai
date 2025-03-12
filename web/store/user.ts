@@ -128,7 +128,7 @@ export const userStore = createStore<UserState>(
       userStore.receiveUI(init.user.ui)
 
       if (!init.user.disableLTM) {
-        embedApi.initSimiliary()
+        embedApi.initSimiliary(false)
       }
     }
   })
@@ -415,7 +415,7 @@ export const userStore = createStore<UserState>(
 
         const prevLTM = prev?.disableLTM ?? true
         if (prevLTM && config.disableLTM === false) {
-          embedApi.initSimiliary()
+          embedApi.initSimiliary(false)
         }
 
         toastStore.success(`Updated settings`)

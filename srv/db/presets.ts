@@ -126,14 +126,29 @@ export async function updateUserPreset(
     }
   }
 
-  if (update.thirdPartyKey) {
+  // If the key is too long, it's a 're-encrypted' key -- remove it
+  if (update.thirdPartyKey && update.thirdPartyKey.length < 500) {
     update.thirdPartyKey = encryptText(update.thirdPartyKey)
   } else {
     delete update.thirdPartyKey
   }
 
   update.updatedAt = new Date().toISOString()
-  await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
+  try {
+    await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
+  } catch (ex: any) {
+    /**
+     * A bug has caused specific API keys to be re-encrypted multiple times.
+     * If we get this error, we will need to remove the keys
+     */
+    if (ex?.name !== 'MongoServerError') {
+      throw ex
+    }
+
+    await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: { thirdPartyKey: '' } })
+    await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
+  }
+
   const updated = await db('gen-setting').findOne({ _id: presetId })
 
   if (updated) {

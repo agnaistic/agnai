@@ -49,8 +49,8 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
     'Content-Type': 'application/json',
   }
 
-  if (gen.thirdPartyKey) {
-    headers.Authorization = `Bearer ${gen.thirdPartyKey}`
+  if (gen.userThirdPartyKey) {
+    headers.Authorization = `Bearer ${gen.userThirdPartyKey}`
   }
 
   const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'
