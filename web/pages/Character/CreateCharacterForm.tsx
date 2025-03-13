@@ -155,7 +155,7 @@ export const CreateCharacterForm: Component<{
       const { file, json } = await downloadCharacterHub(query.import)
       const imageData = await imageApi.getImageData(file)
       const char = jsonToCharacter(json)
-      editor.load(char)
+      await editor.load(char)
       editor.update({
         book: json.characterBook,
         alternateGreetings: json.alternateGreetings || [],
@@ -171,20 +171,21 @@ export const CreateCharacterForm: Component<{
     }
   })
 
-  createEffect(() => {
+  createEffect(async () => {
     // We know we're waiting for a character to edit, so let's just wait
     if (!state.edit && srcId()) return
 
     // If this is our first pass: load something no matter what
     if (!editor.original()) {
       if (!srcId()) {
+        await editor.loadCached()
         return
       }
 
       // We have a `srcId`, we need to wait to receive the character we're editing
       if (!state.edit) return
 
-      editor.load(state.edit)
+      await editor.load(state.edit)
       setImage(state.edit?.avatar)
       return
     }
@@ -195,7 +196,7 @@ export const CreateCharacterForm: Component<{
     if (!state.edit) return
     if (editor.state.editId !== state.edit._id && state.edit._id === srcId()) {
       editor.update('editId', srcId())
-      editor.load(state.edit)
+      await editor.load(state.edit)
       setImage(state.edit?.avatar)
       return
     }
@@ -240,6 +241,7 @@ export const CreateCharacterForm: Component<{
       })
     } else {
       characterStore.createCharacter(payload, (result) => {
+        editor.update('editId', result._id)
         setForceNew(false)
         if (isPage) nav(`/character/${result._id}/chats`)
       })
@@ -612,8 +614,8 @@ export const CreateCharacterForm: Component<{
       <ImportCharacterModal
         show={showImport()}
         close={() => setImport(false)}
-        onSave={(char, imgs) => {
-          editor.load(char[0])
+        onSave={async (char, imgs) => {
+          await editor.load(char[0])
           editor.receiveAvatar(imgs[0]!)
           setImage(imgs[0] as any)
           setImport(false)

@@ -74,7 +74,7 @@ const Modal: Component<Props> = (props) => {
                       select={props.tabs?.select!}
                       tabs={props.tabs?.tabs!}
                     />
-                    <div class="flex gap-2">
+                    <div class="flex items-center gap-2">
                       <a class="icon-button" classList={{ hidden: mobile() }} onClick={toggleFull}>
                         <FullscreenIcon />
                       </a>

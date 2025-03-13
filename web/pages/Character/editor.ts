@@ -21,8 +21,12 @@ import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
 import { ResponseSchema } from '/common/types/library'
+import { createDebounce, storage } from '/web/shared/util'
+
+const EDITOR_CACHE_KEY = `agnai-char-editor`
 
 export type EditorState = {
+  state: 'init' | 'loaded'
   editId?: string
   name: string
   personaKind: AppSchema.Character['persona']['kind']
@@ -63,6 +67,7 @@ export type EditorState = {
 export type SetEditor = SetStoreFunction<EditorState>
 
 const initState: EditorState = {
+  state: 'init',
   name: '',
   personaKind: 'text',
   personaAttrs: [],
@@ -127,6 +132,40 @@ const initState: EditorState = {
   imageOverride: '',
 }
 
+const [updateCache] = createDebounce(async (state: EditorState) => {
+  if (state.state === 'init') return
+  const id = state.editId || 'new'
+
+  if (id !== 'new') {
+    await storage.removeItem(EDITOR_CACHE_KEY)
+    return
+  }
+
+  const next = {
+    id,
+    name: state.name,
+    description: state.description,
+    tags: state.tags,
+    appearance: state.appearance,
+    scenario: state.scenario,
+    persona: state.persona,
+    personaKind: state.personaKind,
+    personaAttrs: state.personaAttrs,
+    systemPrompt: state.systemPrompt,
+    greeting: state.greeting,
+    alternateGreetings: state.alternateGreetings,
+    sampleChat: state.sampleChat,
+    json: state.json,
+    postHistoryInstructions: state.postHistoryInstructions,
+    creator: state.creator,
+    characterVersion: state.characterVersion,
+    insert: state.insert,
+  }
+
+  await storage.setItem(EDITOR_CACHE_KEY, JSON.stringify(next))
+  console.log('[editor] cache updated', id)
+}, 500)
+
 export type CharEditor = ReturnType<typeof useCharEditor>
 
 export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
@@ -139,7 +178,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditorState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
-  const [form, setForm] = createSignal<any>()
   const [generating, setGenerating] = createSignal(false)
   const [imageId, setImageId] = createSignal('')
 
@@ -292,7 +330,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const reset = async () => {
     batch(async () => {
       const char = original()
-      setState({ ...initState })
+      setState({ ...initState, state: 'loaded' })
 
       const personaKind = char?.persona.kind || state.personaKind
 
@@ -333,10 +371,21 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     load({ ...initState, originalAvatar: undefined })
   }
 
-  const load = (char: NewCharacter | AppSchema.Character) => {
+  const loadCached = async () => {
+    const cached = await storage
+      .getItem(EDITOR_CACHE_KEY)
+      .then((cached) => (cached ? JSON.parse(cached) : null))
+
+    if (!cached) return
+
+    setState({ ...cached, state: 'loaded' })
+  }
+
+  const load = async (char: NewCharacter | AppSchema.Character) => {
     batch(() => {
       if ('_id' in char) {
         const { avatar, ...incoming } = char
+
         setOriginal({ ...incoming, originalAvatar: avatar })
         reset()
         return
@@ -349,7 +398,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
   const payload = (submitting?: boolean) => {
     const imgId = imageId()
-    const data = getPayload(form(), state, original())
+    const data = getPayload(state, original())
 
     if (submitting) {
       if (imgId !== cache.state.imageId) {
@@ -364,7 +413,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   }
 
   const convert = (): AppSchema.Character => {
-    const payload = getPayload(form(), state, original())
+    const payload = getPayload(state, original())
 
     return {
       _id: '',
@@ -377,11 +426,17 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
+  const updateState: typeof setState = function (this: any, ...args: any[]) {
+    setState.apply(this, args as any)
+    updateCache(state)
+  }
+
   return {
     state,
-    update: setState,
+    update: updateState,
     reset,
     load,
+    loadCached,
     convert,
     payload,
     original,
@@ -395,12 +450,11 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     canGuidance: genOptions().length > 0,
     generateField: genField,
     generateAvatar,
-    prepare: setForm,
     imageCache: cache,
   }
 }
 
-function getPayload(ev: any, state: EditorState, original?: NewCharacter) {
+function getPayload(state: EditorState, original?: NewCharacter) {
   const payload = {
     name: state.name,
     description: state.description,
