@@ -227,6 +227,23 @@ const Layout: Component<{ children?: any }> = (props) => {
         classList={{ hidden: !cfg.showMenu }}
         onClick={() => settingStore.closeMenu()}
       ></div>
+      <Show when={!!cfg.confirm}>
+        <Modal
+          show={true}
+          title={cfg.confirm?.title || 'Confirm'}
+          close={() => settingStore.closeConfirm(false)}
+          footer={
+            <>
+              <Button onClick={() => settingStore.closeConfirm(false)}>Cancel</Button>
+              <Button schema="green" onClick={() => settingStore.closeConfirm(true)}>
+                Confirm
+              </Button>
+            </>
+          }
+        >
+          {cfg.confirm?.message}
+        </Modal>
+      </Show>
     </ContextProvider>
   )
 }

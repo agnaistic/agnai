@@ -16,6 +16,7 @@ import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
+import { JSX } from 'solid-js'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -57,6 +58,12 @@ export type SettingState = {
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
   overlay: boolean
+
+  confirm?: {
+    title?: string
+    message: string | JSX.Element
+    onConfirm: () => void
+  }
 }
 
 const HORDE_URL = `https://aihorde.net/api/v2`
@@ -126,6 +133,22 @@ export const settingStore = createStore<SettingState>(
   })
 
   return {
+    openConfirm(
+      {},
+      opts: { message: string | JSX.Element; title?: string; onConfirm: () => void }
+    ) {
+      return { confirm: { message: opts.message, title: opts.title, onConfirm: opts.onConfirm } }
+    },
+    closeConfirm({ confirm }, confirmed: boolean) {
+      if (!confirm) return
+
+      if (!confirmed) {
+        return { confirm: undefined }
+      }
+
+      confirm.onConfirm()
+      return { confirm: undefined }
+    },
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings
       return { showSettings: next }

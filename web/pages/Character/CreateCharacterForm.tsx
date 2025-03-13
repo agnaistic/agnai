@@ -117,6 +117,11 @@ export const CreateCharacterForm: Component<{
   const [converted, setConverted] = createSignal<AppSchema.Character>()
   const [showImport, setImport] = createSignal(false)
 
+  const clearEditor = () => {
+    setForceNew(true)
+    editor.clear()
+  }
+
   const personaFormats = createMemo(() => {
     const options = formatOptions.slice()
     if (editor.state.personaKind in backupFormats) {
@@ -342,6 +347,20 @@ export const CreateCharacterForm: Component<{
                 >
                   <Plus />
                   New
+                </Button>
+              </Show>
+
+              <Show when={!state.edit}>
+                <Button
+                  schema="warning"
+                  onClick={() => {
+                    settingStore.openConfirm({
+                      message: 'Are you sure you wish to clear the editor?',
+                      onConfirm: clearEditor,
+                    })
+                  }}
+                >
+                  <X /> Clear
                 </Button>
               </Show>
             </div>
