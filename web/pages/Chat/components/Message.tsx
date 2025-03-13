@@ -427,6 +427,29 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
                   </Show>
+                  <Show when={props.msg.extras?.length}>
+                    <div class="flex gap-1">
+                      <For each={props.msg.extras || []}>
+                        {(src, i) => (
+                          <img
+                            class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                            src={getAssetUrl(src)}
+                            onClick={() =>
+                              settingStore.showImage(src, [
+                                toImageDeleteButton(props.msg._id, i() + 1),
+                              ])
+                            }
+                          />
+                        )}
+                      </For>
+                      <div
+                        class="icon-button mx-2 flex items-center"
+                        onClick={() => msgStore.createImage(props.msg._id, true)}
+                      >
+                        <PlusCircle size={20} />
+                      </div>
+                    </div>
+                  </Show>
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>

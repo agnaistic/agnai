@@ -98,7 +98,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
       }
 
       if (!guestId && chatId) {
-        const msg = await createImageMessage({
+        const msg = await updateMessageImages({
           chatId,
           userId: user._id,
           filename: output,
@@ -272,7 +272,7 @@ function getImageSettings(
   return imageSettings
 }
 
-async function createImageMessage(opts: {
+async function updateMessageImages(opts: {
   chatId: string
   userId: string
   filename: string
@@ -289,50 +289,22 @@ async function createImageMessage(opts: {
   const char = await store.characters.getCharacter(chat.userId, chat.characterId)
   if (!char) return
 
-  if (opts.messageId && !opts.append) {
-    const msg = await store.msgs.editMessage(opts.messageId, {
-      msg: opts.filename,
-      adapter: 'image',
-      meta: opts.meta,
-    })
-    sendMany(opts.memberIds, {
-      type: 'message-retry',
-      chatId: opts.chatId,
-      messageId: opts.messageId,
-      message: opts.filename,
-      adapter: 'image',
-    })
-    return msg
-  } else if (opts.messageId && opts.append) {
-    const prev = await store.msgs.getMessage(opts.messageId)
-    const extras = prev?.extras || []
-    extras.push(opts.filename)
-    await store.msgs.editMessage(opts.messageId, { adapter: 'image', extras })
-    sendMany(opts.memberIds, {
-      type: 'message-retry',
-      chatId: opts.chatId,
-      messageId: opts.messageId,
-      message: prev?.msg || '',
-      extras,
-      adapter: 'image',
-    })
-    if (prev) prev.extras = extras
-    return prev
-  } else {
-    const msg = await store.msgs.createChatMessage({
-      chatId: opts.chatId!,
-      message: opts.filename,
-      characterId: char._id,
-      adapter: 'image',
-      ooc: false,
-      imagePrompt: opts.imagePrompt,
-      event: undefined,
-      meta: opts.meta,
-      parent: opts.parentId,
-      name: char.name,
-    })
+  const messageId = opts.parentId || (opts.messageId as string)
+  const original = await store.msgs.getMessage(messageId)
+  if (!original) return
 
-    sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })
-    return msg
-  }
+  const extras = (original?.extras || []).concat(opts.filename)
+
+  const msg = await store.msgs.editMessage(messageId, {
+    imagePrompt: opts.imagePrompt,
+    extras,
+    meta: opts.meta,
+  })
+  sendMany(opts.memberIds, {
+    type: 'message-edited',
+    chatId: opts.chatId,
+    messageId: opts.messageId,
+    extras,
+  })
+  return msg
 }

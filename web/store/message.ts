@@ -735,13 +735,19 @@ export const msgStore = createStore<MsgState>(
       if (waiting) return
 
       const onDone = (image: string) => handleImage(activeChatId, image)
-      yield {
-        hordeStatus: undefined,
-        waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId, image: true },
-      }
-
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
       const parent = prev ? prev.parent : msgs.slice(-1)[0]._id
+
+      yield {
+        hordeStatus: undefined,
+        waiting: {
+          chatId: activeChatId,
+          mode: 'send',
+          characterId: activeCharId,
+          image: true,
+          messageId: messageId || parent,
+        },
+      }
 
       const res = await imageApi.generateImage({
         messageId,
@@ -938,7 +944,7 @@ subscribe(
     json: 'any?',
   },
   async (body) => {
-    const { retrying, msgs, activeChatId, graph } = msgStore.getState()
+    const { msgs, activeChatId, graph } = msgStore.getState()
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
 
@@ -975,34 +981,16 @@ subscribe(
       json: body.json,
     }
 
-    let tree: ChatTree | undefined
+    if (!prev) return
+    const nextMsgs = replace(body.messageId, msgs, nextMsg)
+    const replacement = { ...prev, ...nextMsg }
 
-    if (retrying?._id === body.messageId) {
-      const next = msgs.map((msg) => {
-        if (msg._id === body.messageId) {
-          const replacement = { ...msg, ...nextMsg }
-          tree = updateChatTreeNode(graph.tree, replacement)
-          return replacement
-        }
+    msgStore.setState({
+      msgs: nextMsgs,
+      graph: { ...graph, tree: updateChatTreeNode(graph.tree, replacement) },
+    })
 
-        return msg
-      })
-      msgStore.setState({ msgs: next, graph: { ...graph, tree: tree || graph.tree } })
-    } else {
-      if (activeChatId !== body.chatId || !prev) return
-      const next = msgs.map((msg) => {
-        if (msg._id === body.messageId) {
-          const replacement = { ...msg, ...nextMsg }
-          tree = updateChatTreeNode(graph.tree, replacement)
-          return replacement
-        }
-        return msg
-      })
-      msgStore.setState({ msgs: next, graph: { ...graph, tree: tree || graph.tree } })
-    }
-
-    if (active.chat._id !== body.chatId || !prev || !char) return
-
+    if (active.chat._id !== body.chatId || !char) return
     const voice = char.voice
 
     if (body.adapter === 'image' || !voice || !user) return
@@ -1222,13 +1210,14 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 })
 
 const updateMsgSub = (body: {
+  chatId: string
   messageId: string
   message?: string
   retries?: string[]
   actions: any
   extras?: string[]
 }) => {
-  const { msgs, graph } = msgStore.getState()
+  const { msgs, graph, waiting } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 
   if (!prev) return
@@ -1243,8 +1232,12 @@ const updateMsgSub = (body: {
   }
   const nextMsgs = replace(body.messageId, msgs, next)
 
+  const wait =
+    waiting?.chatId === body.chatId || waiting?.messageId === body.messageId ? undefined : waiting
+
   msgStore.setState({
     msgs: nextMsgs,
+    waiting: wait,
     graph: {
       tree: updateChatTreeNode(graph.tree, next),
       root: graph.root,
@@ -1296,6 +1289,7 @@ function updateMsgParents(chatId: string, parents: Record<string, string>, delet
 subscribe(
   'message-edited',
   {
+    chatId: 'string',
     messageId: 'string',
     message: 'string?',
     imagePrompt: 'string?',
@@ -1309,6 +1303,7 @@ subscribe(
 subscribe(
   'message-swapped',
   {
+    chatId: 'string',
     messageId: 'string',
     message: 'string?',
     imagePrompt: 'string?',

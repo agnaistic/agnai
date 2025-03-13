@@ -264,7 +264,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
     console.log('Using', opts.settings?.service, 'to summarise')
 
     const summary = await getChatSummary(opts.settings, opts.user.images?.summaryPrompt)
-    console.log('Image caption: ', summary)
+    console.log('Image caption: ', summary.result?.response)
     return summary
   }
 

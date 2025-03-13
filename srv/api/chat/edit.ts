@@ -91,6 +91,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
+    chatId: prev.chat._id,
     messageId: params.id,
     message: body.message,
   })
@@ -123,6 +124,7 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-swapped',
+    chatId: prev.chat._id,
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     message: body.msg || prev.msg.msg,
@@ -164,6 +166,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
+    chatId: prev.chat._id,
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     message: body.msg || prev.msg.msg,
