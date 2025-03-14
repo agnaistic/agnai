@@ -376,7 +376,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       .getItem(EDITOR_CACHE_KEY)
       .then((cached) => (cached ? JSON.parse(cached) : null))
 
-    if (!cached) return
+    if (!cached) {
+      setState({ ...cached, state: 'loaded' })
+    }
 
     setState({ ...cached, state: 'loaded' })
   }
