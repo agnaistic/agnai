@@ -33,4 +33,14 @@ export const Spinner: Component<{ size?: number; class?: string }> = (props) => 
   )
 }
 
+export const RelativeSpinner: Component<{ size?: number; class?: string; full?: boolean }> = (
+  props
+) => {
+  return (
+    <div class="spinner">
+      <LoaderCircle size={props.size} />
+    </div>
+  )
+}
+
 export default Loading

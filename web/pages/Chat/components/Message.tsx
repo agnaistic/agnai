@@ -50,7 +50,7 @@ import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
-import { Spinner } from '/web/shared/Loading'
+import { RelativeSpinner } from '/web/shared/Loading'
 import { LogProbs } from './LogProbs'
 import { MessageImages } from './MessageImages'
 
@@ -374,18 +374,32 @@ const Message: Component<MessageProps> = (props) => {
             </span>
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
-                <Match when={props.msg.adapter === 'image'}>{null}</Match>
-                <Match when={!edit() && props.msg.adapter !== 'partial-response'}>
+                <Match when={props.msg.adapter === 'image'}>
+                  <MessageImages msg={props.msg} />
+                </Match>
+
+                <Match when={!edit()}>
                   <p
                     class={`rendered-markdown pr-1 ${content().class}`}
                     data-bot-message={!props.msg.userId}
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
-                  <Show when={props.msg.adapter === 'partial-response' && props.last}>
+                  <Show when={content().generating}>
                     <span class="flex h-8 w-12 items-center justify-center">
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
+                  </Show>
+                  <Show when={ctx.waiting?.image && ctx.waiting.messageId === props.msg._id}>
+                    <div class="flex w-full justify-center">
+                      <RelativeSpinner />{' '}
+                      <span
+                        class="text-500 text-xs italic"
+                        classList={{ hidden: !ctx.status?.wait_time }}
+                      >
+                        {ctx.status?.wait_time || '0'}s
+                      </span>
+                    </div>
                   </Show>
                   <MessageImages msg={props.msg} />
                   <Show when={!props.partial && props.last}>
@@ -404,31 +418,7 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
                 </Match>
-                <Match when={!edit() && content().type !== 'message'}>
-                  <p
-                    classList={{ hidden: content().type === 'waiting' }}
-                    class={`rendered-markdown pr-1 ${content().class}`}
-                    data-bot-message={!props.msg.userId}
-                    data-user-message={!!props.msg.userId}
-                    innerHTML={content().message}
-                  />
-                  <Show
-                    when={ctx.waiting?.image}
-                    fallback={
-                      <div class="flex h-8 w-12 items-center justify-center">
-                        <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                      </div>
-                    }
-                  >
-                    <Spinner />{' '}
-                    <span
-                      class="text-500 text-xs italic"
-                      classList={{ hidden: !ctx.status?.wait_time }}
-                    >
-                      {ctx.status?.wait_time || '0'}s
-                    </span>
-                  </Show>
-                </Match>
+
                 <Match when={edit() && props.msg.json}>
                   <JsonEdit msg={props.msg} update={(next) => setJsonValues(next)} />
                 </Match>
@@ -917,6 +907,7 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
         type: 'partial',
         message: renderMessage(ctx, props.partial!, false, 'partial'),
         class: 'streaming-markdown',
+        generating: true,
       }
     }
 
@@ -925,10 +916,11 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
         type: 'partial',
         message: renderMessage(ctx, props.msg.msg, false, 'partial'),
         class: 'streaming-markdown',
+        generating: true,
       }
     }
 
-    return { type: 'waiting', message: '', class: 'not-streaming' }
+    return { type: 'waiting', message: '', class: 'not-streaming', generating: true }
   }
 
   let message = props.msg.msg

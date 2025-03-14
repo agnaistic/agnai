@@ -37,24 +37,6 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage }> = (props) 
       next.push({ src: props.msg.msg, btn })
     }
 
-    let position = props.msg.adapter === 'image' ? 1 : 0
-    for (const extra of extras) {
-      const btn = toImageDeleteButton(props.msg._id, position)
-      if (extra.startsWith('cache:')) {
-        if (seen.has(extra)) continue
-        seen.add(extra)
-        const img = await storage.getItem(extra)
-        if (img) next.push({ src: img, btn })
-
-        position++
-        continue
-      }
-
-      next.push({ src: extra, btn })
-      position++
-      continue
-    }
-
     for (const extra of cached) {
       if (typeof extra !== 'string') continue
 
@@ -81,6 +63,24 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage }> = (props) 
         next.push({ src: extra })
         continue
       }
+    }
+
+    let position = props.msg.adapter === 'image' ? 1 : 0
+    for (const extra of extras) {
+      const btn = toImageDeleteButton(props.msg._id, position)
+      if (extra.startsWith('cache:')) {
+        if (seen.has(extra)) continue
+        seen.add(extra)
+        const img = await storage.getItem(extra)
+        if (img) next.push({ src: img, btn })
+
+        position++
+        continue
+      }
+
+      next.push({ src: extra, btn })
+      position++
+      continue
     }
 
     setImages(next)

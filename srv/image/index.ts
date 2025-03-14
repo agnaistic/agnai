@@ -79,6 +79,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
    * If the server is configured to save images: we will store the image, generate a message, then publish the message
    * Otherwise: We will broadcast the image content
    */
+
   if (image) {
     // Guest images do not get saved under any circumstances
 
@@ -114,6 +115,18 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     } else {
       output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))
     }
+  }
+
+  // If we are generating temporary images, persist the prompt to avoid re-generating the prompt for subsequent images
+  if (image && !guestId && messageId) {
+    const edited = await store.msgs.editMessage(messageId, { imagePrompt: opts.prompt })
+    sendMany(broadcastIds, {
+      type: 'message-edited',
+      chatId,
+      messageId,
+      message: edited?.msg,
+      imagePrompt: opts.prompt,
+    })
   }
 
   const message = image

@@ -22,7 +22,7 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { useEffect, usePaneManager } from '/web/shared/hooks'
-import { emptyMsg, LoadMore, insertImageMessages, SwipeMessage } from './helpers'
+import { emptyMsg, LoadMore, SwipeMessage } from './helpers'
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
@@ -140,7 +140,7 @@ const ChatDetail: Component = () => {
 
     if (!chats.chat || !chats.char) return []
     const doShowHiddenEvents = showHiddenEvents()
-    return insertImageMessages(messages, []).filter((msg) => {
+    return messages.filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
@@ -187,6 +187,7 @@ const ChatDetail: Component = () => {
   const waitingMsg = createMemo(() => {
     if (!msgs.waiting) return
     if (msgs.retrying) return
+    if (msgs.waiting.image) return
 
     const userId = msgs.waiting.userId
     const charId = msgs.waiting.characterId

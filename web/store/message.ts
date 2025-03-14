@@ -283,6 +283,7 @@ export const msgStore = createStore<MsgState>(
 
       // non-image messages only have images in `.extras`
       extras.splice(position, 1)
+
       msgStore.editMessageProp(msgId, { extras })
       return
     },
@@ -1252,6 +1253,7 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 const updateMsgSub = (body: {
   chatId: string
   messageId: string
+  imagePrompt?: string
   message?: string
   retries?: string[]
   actions: any
@@ -1265,6 +1267,7 @@ const updateMsgSub = (body: {
   const next: ChatMessageExt = {
     ...prev,
     msg: body.message || prev?.msg,
+    imagePrompt: body.imagePrompt || prev.imagePrompt,
     retries: body.retries || prev?.retries,
     actions: body.actions || prev?.actions,
     voiceUrl: undefined,
