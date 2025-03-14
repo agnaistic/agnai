@@ -103,11 +103,10 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
           userId: user._id,
           filename: output,
           memberIds: broadcastIds,
-          messageId,
+          messageId: messageId || opts.parentId!,
           imagePrompt: opts.prompt,
           append: opts.append,
           meta: { negative: imageSettings?.negative },
-          parentId: opts.parentId,
         })
 
         if (msg) return
@@ -121,6 +120,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     ? {
         type: 'image-generated',
         chatId,
+        messageId: messageId || opts.parentId,
         image: output,
         source: opts.source,
         requestId: opts.requestId,
@@ -276,12 +276,11 @@ async function updateMessageImages(opts: {
   chatId: string
   userId: string
   filename: string
-  messageId?: string
+  messageId: string
   memberIds: string[]
   imagePrompt: string
   append?: boolean
   meta?: any
-  parentId: string | undefined
 }) {
   const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
   if (!chat) return
@@ -289,7 +288,7 @@ async function updateMessageImages(opts: {
   const char = await store.characters.getCharacter(chat.userId, chat.characterId)
   if (!char) return
 
-  const messageId = opts.parentId || (opts.messageId as string)
+  const messageId = opts.messageId
   const original = await store.msgs.getMessage(messageId)
   if (!original) return
 
@@ -303,8 +302,9 @@ async function updateMessageImages(opts: {
   sendMany(opts.memberIds, {
     type: 'message-edited',
     chatId: opts.chatId,
-    messageId: opts.messageId,
+    messageId,
     extras,
+    imagePrompt: opts.imagePrompt,
   })
   return msg
 }

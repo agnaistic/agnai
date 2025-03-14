@@ -70,7 +70,6 @@ const ChatDetail: Component = () => {
 
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
-    images: s.images,
     partial: s.partial,
     waiting: s.waiting,
     speaking: s.speaking,
@@ -141,7 +140,7 @@ const ChatDetail: Component = () => {
 
     if (!chats.chat || !chats.char) return []
     const doShowHiddenEvents = showHiddenEvents()
-    return insertImageMessages(messages, msgs.images[params.id]).filter((msg) => {
+    return insertImageMessages(messages, []).filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true

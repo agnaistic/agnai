@@ -147,7 +147,7 @@ export async function generateImage(
   })
 
   if (!image.text.startsWith('data:') && typeof window !== 'undefined') {
-    image.text = `data:image/image;base64,${image.text}`
+    image.text = `data:image/png;base64,${image.text}`
   }
 
   return image

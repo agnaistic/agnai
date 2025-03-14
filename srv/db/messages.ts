@@ -3,6 +3,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { WithId } from 'mongodb'
+import { StatusError } from '../api/wrap'
 
 // let PAGE_SIZE = config.limits.msgPageSize
 // if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
@@ -111,6 +112,9 @@ export async function importMessages(userId: string, messages: NewMessage[]) {
 }
 
 export async function getMessage(messageId: string) {
+  if (!messageId) {
+    throw new StatusError(`Cannot retrieve message: No id provided`, 400)
+  }
   const msg = await db('chat-message').findOne({ _id: messageId, kind: 'chat-message' })
   return msg
 }

@@ -13,6 +13,7 @@ export const createImage = handle(async ({ body, userId, socketId, log, params }
       append: 'boolean?',
       source: 'string?',
       parent: 'string?',
+      requestId: 'string?',
     },
     body
   )
@@ -29,6 +30,7 @@ export const createImage = handle(async ({ body, userId, socketId, log, params }
       append: body.append,
       source: body.source || 'unknown',
       parentId: body.parent,
+      requestId: body.requestId,
     },
     log,
     guestId

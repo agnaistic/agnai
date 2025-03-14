@@ -6,7 +6,6 @@ import {
   Info,
   PauseCircle,
   Pencil,
-  PlusCircle,
   RefreshCw,
   Repeat1,
   Terminal,
@@ -35,16 +34,7 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { getAssetUrl } from '../../../shared/util'
-import {
-  chatStore,
-  userStore,
-  msgStore,
-  settingStore,
-  toastStore,
-  ChatState,
-  VoiceState,
-} from '../../../store'
+import { chatStore, userStore, msgStore, toastStore, ChatState, VoiceState } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
@@ -62,6 +52,7 @@ import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { Spinner } from '/web/shared/Loading'
 import { LogProbs } from './LogProbs'
+import { MessageImages } from './MessageImages'
 
 type MessageProps = {
   msg: SplitMessage
@@ -383,39 +374,8 @@ const Message: Component<MessageProps> = (props) => {
             </span>
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
-                <Match when={props.msg.adapter === 'image'}>
-                  <div class="flex flex-wrap gap-2">
-                    <img
-                      class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
-                      src={getAssetUrl(props.msg.msg)}
-                      onClick={() =>
-                        settingStore.showImage(props.msg.msg, [
-                          toImageDeleteButton(props.msg._id, 0),
-                        ])
-                      }
-                    />
-                    <For each={props.msg.extras || []}>
-                      {(src, i) => (
-                        <img
-                          class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
-                          src={getAssetUrl(src)}
-                          onClick={() =>
-                            settingStore.showImage(src, [
-                              toImageDeleteButton(props.msg._id, i() + 1),
-                            ])
-                          }
-                        />
-                      )}
-                    </For>
-                    <div
-                      class="icon-button mx-2 flex items-center"
-                      onClick={() => msgStore.createImage(props.msg._id, true)}
-                    >
-                      <PlusCircle size={20} />
-                    </div>
-                  </div>
-                </Match>
-                <Match when={!edit() && content().type === 'message'}>
+                <Match when={props.msg.adapter === 'image'}>{null}</Match>
+                <Match when={!edit() && props.msg.adapter !== 'partial-response'}>
                   <p
                     class={`rendered-markdown pr-1 ${content().class}`}
                     data-bot-message={!props.msg.userId}
@@ -427,29 +387,7 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
                   </Show>
-                  <Show when={props.msg.extras?.length}>
-                    <div class="flex gap-1">
-                      <For each={props.msg.extras || []}>
-                        {(src, i) => (
-                          <img
-                            class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
-                            src={getAssetUrl(src)}
-                            onClick={() =>
-                              settingStore.showImage(src, [
-                                toImageDeleteButton(props.msg._id, i() + 1),
-                              ])
-                            }
-                          />
-                        )}
-                      </For>
-                      <div
-                        class="icon-button mx-2 flex items-center"
-                        onClick={() => msgStore.createImage(props.msg._id, true)}
-                      >
-                        <PlusCircle size={20} />
-                      </div>
-                    </div>
-                  </Show>
+                  <MessageImages msg={props.msg} />
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>
@@ -967,17 +905,6 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
   if (msg._id === 'partial-response') return false
   return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
-}
-
-function toImageDeleteButton(msgId: string, position: number) {
-  return {
-    schema: 'red' as const,
-    text: 'Delete Image',
-    onClick: () => {
-      msgStore.removeMessageImage(msgId, position)
-      settingStore.clearImage()
-    },
-  }
 }
 
 function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
