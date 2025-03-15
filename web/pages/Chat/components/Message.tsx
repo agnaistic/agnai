@@ -541,7 +541,7 @@ const MessageOptions: Component<{
         label: 'Edit',
         class: 'edit-btn',
         outer: props.ui.msgOptsInline.edit,
-        show: props.msg.adapter !== 'image',
+        show: props.msg.adapter !== 'image' && !props.partial,
         onClick: props.startEdit,
         icon: Pencil,
       },

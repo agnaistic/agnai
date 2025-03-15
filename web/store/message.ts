@@ -236,12 +236,12 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *editMessageProp(
-      { msgs },
+      { msgs, graph },
       msgId: string,
       update: Partial<AppSchema.ChatMessage>,
       onSuccess?: Function
     ) {
-      const prev = msgs.find((m) => m._id === msgId)
+      const prev = findOne(msgId, msgs)
       if (!prev) return toastStore.error(`Cannot find message`)
 
       const res = await msgsApi.editMessageProps(prev, update)
@@ -250,8 +250,13 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (res.result) {
+        const next = { ...prev, ...update, voiceUrl: undefined }
+        const nextMsgs = replace(msgId, msgs, next)
+        const tree = updateChatTreeNode(graph.tree, next)
+
         yield {
-          msgs: msgs.map((m) => (m._id === msgId ? { ...m, ...update, voiceUrl: undefined } : m)),
+          msgs: nextMsgs,
+          graph: { ...graph, tree },
         }
         onSuccess?.()
       }
@@ -356,7 +361,7 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *editMessage({ msgs, graph }, msgId: string, msg: string, onSuccess?: Function) {
-      const prev = msgs.find((m) => m._id === msgId)
+      const prev = findOne(msgId, msgs)
       if (!prev) return toastStore.error(`Cannot find message`)
 
       const res = await msgsApi.editMessage(prev, msg)
@@ -364,9 +369,10 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to update message: ${res.error}`)
       }
       if (res.result) {
+        const nextMsgs = replace(msgId, msgs, { msg, voiceUrl: undefined })
         const tree = updateChatTreeNode(graph.tree, { ...prev, msg })
         yield {
-          msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)),
+          msgs: nextMsgs,
           graph: { tree, root: graph.root },
         }
         onSuccess?.()

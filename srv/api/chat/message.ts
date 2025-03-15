@@ -208,6 +208,10 @@ export const generateMessageV2 = handle(async (req, res) => {
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
+  if (userMsg) {
+    await store.chats.update(chatId, { treeLeafId: userMsg._id, updatedAt: userMsg.updatedAt })
+  }
+
   if (body.kind === 'ooc' || !replyAs) {
     return { success: true }
   }
