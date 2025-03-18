@@ -110,7 +110,10 @@ export async function editChat(
   update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
 ) {
   if (isLoggedIn()) {
-    const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
+    const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, {
+      ...update,
+      background: undefined,
+    })
     return res
   }
 
@@ -118,7 +121,7 @@ export async function editChat(
   const prev = chats.find((ch) => ch._id === id)
   if (!prev) return localApi.error(`Chat not found`)
 
-  const next = { ...prev, ...update, updatedAt: new Date().toISOString() }
+  const next = { ...prev, ...update, background: undefined, updatedAt: new Date().toISOString() }
 
   if (update.useOverrides === false) {
     delete next.overrides
