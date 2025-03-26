@@ -11,11 +11,11 @@ export type ImageAdapter = (typeof IMAGE_ADAPTERS)[number]
 export type NovelImageModel = (typeof NOVEL_IMAGE_MODEL)[keyof typeof NOVEL_IMAGE_MODEL]
 
 export const NOVEL_IMAGE_MODEL = {
-  Full: 'nai-diffusion',
-  Safe: 'safe-diffusion',
-  Furry: 'nai-diffusion-furry',
-  Anime_v2: 'nai-diffusion-2',
+  Anime_v4_Curated: 'nai-diffusion-4-curated-preview',
+  Anime_v4_Full: 'nai-diffusion-4-full',
   Anime_v3: 'nai-diffusion-3',
+  Furry: 'nai-diffusion-furry-3',
+  Anime_v2: 'nai-diffusion-2',
 } as const
 
 export const NOVEL_SAMPLER_REV = {
