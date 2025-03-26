@@ -911,6 +911,7 @@ export function getContextLimit(
     case 'horde':
       return configuredMax - genAmount
 
+    case 'third-party':
     case 'kobold': {
       if (!gen.useMaxContext) return configuredMax - genAmount
       switch (gen.thirdPartyFormat) {
