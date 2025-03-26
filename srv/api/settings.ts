@@ -219,12 +219,14 @@ async function updateImageLoras(url: string) {
           id: parseLoraName(lora.file),
           name: lora.metadata.name,
           tags: lora.metadata.tags,
+          enabled: lora.enabled,
         })
       } else {
         next.loras.push({
           id: parseLoraName(lora.file),
           name: lora.metadata.name,
           tags: lora.metadata.tags,
+          enabled: lora.enabled,
         })
       }
     }

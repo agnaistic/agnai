@@ -204,6 +204,7 @@ export const AgnaiSettings: Component<{
   const addLora = () => {
     const next = loras().concat({ id: '', clipStrength: 1.0, modelStrength: 1.0, enabled: true })
     props.setter(applyStoreProperty(props.cfg, 'agnai.loras', next))
+    setLoras(next)
   }
 
   const removeLora = (i: number) => {
