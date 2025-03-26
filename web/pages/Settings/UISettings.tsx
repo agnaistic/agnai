@@ -12,7 +12,7 @@ import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
-import { Save } from 'lucide-solid'
+import { Save, X } from 'lucide-solid'
 import { Card } from '/web/shared/Card'
 import Sortable, { SortItem } from '/web/shared/Sortable'
 import { defaultUIsettings } from '/common/types/ui'
@@ -126,6 +126,7 @@ const UISettings: Component<{}> = () => {
         <div class="flex items-center gap-2">
           <Select
             fieldName="themeBg"
+            inline
             label="Background Color"
             items={themeBgOptions()}
             value={state.ui.themeBg}
@@ -140,14 +141,19 @@ const UISettings: Component<{}> = () => {
         </div>
       </div>
 
-      <FileInput
-        fieldName="background"
-        label="Background Image"
-        onUpdate={onBackground}
-        accept="image/png,image/jpeg,image/jpg"
-      />
-      <div class="my-2 w-full justify-center">
-        <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
+      <div class="flex items-end gap-2">
+        <FileInput
+          fieldName="background"
+          label="Background Image"
+          onUpdate={onBackground}
+          accept="image/png,image/jpeg,image/jpg"
+        />
+        <div class="w-full justify-center">
+          <Button disabled={!state.background} onClick={() => userStore.setBackground(null)}>
+            <X size={16} />
+            Remove
+          </Button>
+        </div>
       </div>
 
       <Select
@@ -301,9 +307,6 @@ const UISettings: Component<{}> = () => {
             <span class="link" onClick={() => userStore.saveCustomUI({ botBackground: 'bg-800' })}>
               Reset to Default
             </span>
-            <span>
-              . This will override the <b>Message Background</b>.{' '}
-            </span>
           </>
         }
         onInput={(color) => tryCustomUI({ botBackground: color })}
@@ -356,6 +359,7 @@ const UISettings: Component<{}> = () => {
       <Select
         fieldName="chatWidth"
         label="Content Width"
+        inline
         items={[
           { label: 'Narrow', value: 'narrow' },
           { label: 'Large', value: 'full' },

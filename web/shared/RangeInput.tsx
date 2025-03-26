@@ -55,17 +55,6 @@ const RangeInput: Component<{
     if (evented && next !== undefined) {
       props.onChange(+parsed)
     }
-
-    // const value = next ?? props.value
-    // if (value === undefined) return
-    // if (!input || !slider) return
-
-    // input.value = value as any
-    // slider.value = value as any
-
-    // if (next !== undefined) {
-    //   props.onChange(next)
-    // }
   }
 
   const onInput = (source: 'slider' | 'input') => {
@@ -153,16 +142,6 @@ const RangeInput: Component<{
           max={props.max}
           step={props.step}
           onInput={onInput('input')}
-          // onKeyDown={(ev) => {
-          //   if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return
-
-          //   const places = (props.step.toString().split('.')[1] || '').length
-          //   const dir = ev.key === 'ArrowDown' ? -props.step : props.step
-          //   let value = round(props.value + dir, places)
-          //   if (props.max !== undefined) value = Math.min(value, props.max)
-          //   if (props.min !== undefined) value = Math.max(value, props.min)
-          //   updateRangeSliders(value.toString())
-          // }}
           disabled={props.disabled}
         />
       </div>
@@ -183,34 +162,55 @@ export const InlineRangeInput: Component<{
   label?: string
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
+  let range: HTMLInputElement | undefined
   let input: HTMLInputElement | undefined
-  let slider: HTMLInputElement | undefined
 
-  function updateRangeSliders(next?: number) {
-    const value = next ?? props.value
-    if (!input || !slider) return
+  const [display, setDisplay] = createSignal(props.value.toString())
 
-    input.value = value as any
-    slider.value = value as any
+  function updateRangeSliders(evented: boolean, source: 'slider' | 'input', next?: string) {
+    if (!range || !input) return
 
-    const percent = Math.min(+input.value, +input.max)
-    const nextSize = ((percent - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
-    input.style.backgroundSize = nextSize
+    if (!evented) {
+      return
+    }
 
-    if (next !== undefined) {
-      props.onChange(next)
+    const parsed = next !== undefined ? next || '0' : '0'
+
+    if (isNaN(+parsed)) {
+      range.value = display()
+      input.value = display()
+      return
+    }
+
+    range.value = parsed
+
+    if (source === 'slider') {
+      input.value = parsed
+    }
+
+    setDisplay(parsed)
+
+    const percent = Math.min(+parsed, +range.max)
+    const nextSize = ((percent - +range.min) * 100) / (+range.max - +range.min) + '% 100%'
+    range.style.backgroundSize = nextSize
+
+    if (evented && next !== undefined) {
+      props.onChange(+parsed)
     }
   }
 
-  const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
-    updateRangeSliders()
-    props.onChange?.(+event.currentTarget.value)
+  const onInput = (source: 'slider' | 'input') => {
+    const callback: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
+      updateRangeSliders(true, source, event.currentTarget.value as any)
+      // props.onChange(+event.currentTarget.value)
+    }
+    return callback
   }
 
   createEffect(
     on(
       () => props.value,
-      () => updateRangeSliders()
+      () => updateRangeSliders(false, 'input', props.value.toString())
     )
   )
 
@@ -218,7 +218,7 @@ export const InlineRangeInput: Component<{
     if (!props.aiSetting) return
     const value = samplerDisableValues[props.aiSetting]
     if (value === undefined) return
-    updateRangeSliders(value)
+    updateRangeSliders(true, 'input', value.toString())
   }
 
   return (
@@ -227,10 +227,10 @@ export const InlineRangeInput: Component<{
       classList={{ hidden: props.hide ?? false }}
     >
       <Show when={props.label}>
-        <div class="bold">{props.label}</div>
+        <div class="bold min-w-fit">{props.label}</div>
       </Show>
       <input
-        ref={input}
+        ref={range}
         type="range"
         class="
         form-field
@@ -247,21 +247,21 @@ export const InlineRangeInput: Component<{
         min={props.min}
         max={props.max}
         step={props.step}
-        onInput={onInput}
+        onInput={onInput('slider')}
         value={props.value}
         disabled={props.disabled}
       />
       <input
-        ref={slider}
+        ref={input}
         id={props.fieldName}
         name={props.fieldName}
-        class="form-field focusable-field float-right inline-block rounded-lg border border-white/5 p-1 hover:border-white/20"
+        class="form-field focusable-field border-0.25 float-right box-border inline-block w-fit min-w-12 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
         value={props.value}
-        type="number"
         min={props.min}
+        type="number"
         max={props.max}
         step={props.step}
-        onInput={onInput}
+        onInput={onInput('input')}
         disabled={props.disabled}
       />
 

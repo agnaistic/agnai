@@ -4,7 +4,7 @@ import Divider from '../../../shared/Divider'
 import RangeInput from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
-import { characterStore, chatStore, settingStore, userStore } from '../../../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
@@ -17,6 +17,8 @@ import { isChatPage } from '/web/shared/hooks'
 import { createStore } from 'solid-js/store'
 import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './ServiceSettings'
 import { FormLabel } from '/web/shared/FormLabel'
+import { PresetSelect } from '/web/shared/PresetSelect'
+import { getPresetOptions } from '/web/shared/adapter'
 
 const init: ImageSettings = {
   cfg: 7,
@@ -53,6 +55,10 @@ const init: ImageSettings = {
 export const ImageSettingsModal = () => {
   const user = userStore()
   const settings = settingStore()
+  const presets = presetStore((s) => ({
+    list: s.presets,
+    options: s.presets.map((pre) => ({ label: pre.name, value: pre._id })),
+  }))
 
   const entity = chatStore((s) => ({
     chat: s.active?.chat,
@@ -135,6 +141,10 @@ export const ImageSettingsModal = () => {
 
     return list
   })
+
+  const presetOptions = createMemo(() =>
+    getPresetOptions(presets.list, { builtin: true, base: true })
+  )
 
   createEffect(
     on(
@@ -222,6 +232,34 @@ export const ImageSettingsModal = () => {
         </Switch>
 
         <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
+
+        <PresetSelect
+          label="Summary Preset"
+          helperText="Choose which service and model is used for creating summaries for chat images"
+          options={presetOptions()}
+          setPresetId={(id) => setStore('summaryPresetId', id)}
+          selected={store.summaryPresetId}
+          fieldName="summaryPresetId"
+        />
+
+        <TextInput
+          fieldName="summaryPrompt"
+          label="Summary Prompt"
+          helperText='When summarising the chat to an image caption, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
+          placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
+          value={store.summaryPrompt}
+          onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
+        />
+
+        <Toggle
+          fieldName="summariseChat"
+          label="Summarise Chat"
+          helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (Agnai, NovelAI, OpenAI, Claude, etc)"
+          value={store.summariseChat}
+          onChange={(ev) => setStore('summariseChat', ev)}
+        />
+
+        <Divider />
 
         <Show when={canUseImages() && store.type === 'agnai'}>
           <FormLabel
@@ -398,23 +436,6 @@ export const ImageSettingsModal = () => {
           placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
           value={store.negative}
           onChange={(ev) => setStore('negative', ev.currentTarget.value)}
-        />
-
-        <TextInput
-          fieldName="summaryPrompt"
-          label="Summary Prompt"
-          helperText='When summarising the chat to an image caption, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
-          placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
-          value={store.summaryPrompt}
-          onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
-        />
-
-        <Toggle
-          fieldName="summariseChat"
-          label="Summarise Chat"
-          helperText="When available use your AI service to summarise the chat into an image prompt. Only available with services with Instruct capabilities (Agnai, NovelAI, OpenAI, Claude, etc)"
-          value={store.summariseChat}
-          onChange={(ev) => setStore('summariseChat', ev)}
         />
       </form>
     </RootModal>

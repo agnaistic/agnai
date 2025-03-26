@@ -129,6 +129,7 @@ export const THIRDPARTY_FORMATS = [
 
 export const AI_ADAPTERS = [
   'agnaistic',
+  'third-party',
   'kobold',
   'novel',
   'ooba',
@@ -409,6 +410,7 @@ export type HordeWorker = {
 
 export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   horde: 'Horde',
+  'third-party': 'Third-Party / Self-Host',
   kobold: 'Third-Party / Self-Host',
   novel: 'NovelAI',
   ooba: 'Textgen',

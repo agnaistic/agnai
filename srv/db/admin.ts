@@ -32,6 +32,7 @@ export async function getServerConfiguration() {
     imagesEnabled: false,
     imagesHost: '',
     imagesModels: [],
+    imagesLoraUrl: '',
     supportEmail: '',
     ttsAccess: 'off',
     ttsApiKey: '',

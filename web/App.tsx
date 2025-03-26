@@ -234,10 +234,16 @@ const Layout: Component<{ children?: any }> = (props) => {
           close={() => settingStore.closeConfirm(false)}
           footer={
             <>
-              <Button onClick={() => settingStore.closeConfirm(false)}>Cancel</Button>
-              <Button schema="green" onClick={() => settingStore.closeConfirm(true)}>
-                Confirm
-              </Button>
+              <Show
+                when={cfg.confirm?.onConfirm}
+                fallback={<Button onClick={() => settingStore.closeConfirm(false)}>Close</Button>}
+              >
+                <Button onClick={() => settingStore.closeConfirm(false)}>Cancel</Button>
+
+                <Button schema="green" onClick={() => settingStore.closeConfirm(true)}>
+                  Confirm
+                </Button>
+              </Show>
             </>
           }
         >

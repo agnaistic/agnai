@@ -126,6 +126,7 @@ export interface Configuration {
   imagesEnabled: boolean
   imagesHost: string
   imagesModels: ImageModel[]
+  imagesLoraUrl: string
 
   googleClientId: string
   googleEnabled: boolean

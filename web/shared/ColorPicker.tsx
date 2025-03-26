@@ -22,7 +22,17 @@ const ColorPicker: Component<{
   }
 
   return (
-    <div class="">
+    <div class="flex items-center gap-2">
+      <input
+        ref={ref}
+        type="color"
+        class="rounded-sm"
+        value={getSettingColor(props.value || '')}
+        onChange={onChange}
+        onInput={(ev) => props.onInput?.(ev.currentTarget.value)}
+        disabled={props.disabled}
+      />
+
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>
@@ -33,15 +43,6 @@ const ColorPicker: Component<{
           </Show>
         </label>
       </Show>
-      <input
-        ref={ref}
-        type="color"
-        class="rounded-sm"
-        value={getSettingColor(props.value || '')}
-        onChange={onChange}
-        onInput={(ev) => props.onInput?.(ev.currentTarget.value)}
-        disabled={props.disabled}
-      />
     </div>
   )
 }

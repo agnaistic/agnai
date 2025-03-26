@@ -47,6 +47,13 @@ export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (pr
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
       />
 
+      <TextInput
+        fieldName="imagesLoraUrl"
+        label="Images LoRA URL"
+        value={state.config?.imagesLoraUrl}
+        classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+      />
+
       <ImageModels signal={props.models} />
     </Card>
   )

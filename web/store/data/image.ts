@@ -13,7 +13,7 @@ import { subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
-import { getPromptEntities, PromptEntities } from './common'
+import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
 
 type GenerateOpts = {
@@ -261,9 +261,18 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
 
   const canUseService = handler?.(opts) ?? false
   if (canUseService && opts.user.images?.summariseChat) {
-    console.log('Using', opts.settings?.service, 'to summarise')
+    const imageEntities = await getImagePromptEntities(opts)
+    const settings = imageEntities.preset || opts.settings
 
-    const summary = await getChatSummary(opts.settings, opts.user.images?.summaryPrompt)
+    console.log(
+      'Using',
+      settings.service,
+      'to summarise:',
+      settings.name || '',
+      `\n${imageEntities.summary || ''}`
+    )
+    const summary = await getChatSummary(settings, imageEntities.summary)
+
     console.log('Image caption: ', summary.result?.response)
     return summary
   }

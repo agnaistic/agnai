@@ -4,6 +4,7 @@ export const ADAPTER_SETTINGS: {
   [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
 } = {
   temp: [
+    'third-party',
     'kobold',
     'novel',
     'ooba',

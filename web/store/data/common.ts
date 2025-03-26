@@ -48,6 +48,42 @@ export function getInferencePreset(
   return preset || fallback?.preset || {}
 }
 
+export async function getImagePromptEntities(entities: PromptEntities) {
+  const source = entities.chat.imageSource || 'settings'
+
+  let summary = ''
+  let presetId = ''
+
+  switch (source) {
+    case 'settings': {
+      summary = entities.user.images?.summaryPrompt || ''
+      presetId = entities.user.images?.summaryPresetId || ''
+      break
+    }
+
+    case 'last-character': // <-- Is this correct?
+    case 'main-character': {
+      summary = entities.char.imageSettings?.summaryPrompt || ''
+      presetId = entities.char.imageSettings?.summaryPresetId || ''
+      break
+    }
+
+    case 'chat': {
+      summary = entities.chat.imageSettings?.summaryPrompt || ''
+      presetId = entities.chat.imageSettings?.summaryPresetId || ''
+      break
+    }
+  }
+
+  if (!presetId) return { summary, preset: undefined }
+
+  const preset = getStore('presets')
+    .getState()
+    .presets.find((p) => p._id === presetId)
+
+  return { summary, preset }
+}
+
 export async function getPromptEntities(): Promise<PromptEntities> {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()

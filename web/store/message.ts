@@ -604,9 +604,12 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
+      const active = getStore('chat').getState().active
+      const replyingCharId = active?.replyAs || activeCharId
+
       let res: { result?: any; error?: string }
 
-      yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
+      yield { partial: '', waiting: { chatId, mode, characterId: replyingCharId } }
       let input = ''
 
       switch (mode) {
@@ -633,7 +636,7 @@ export const msgStore = createStore<MsgState>(
 
           input = res.result?.input
           if (input) {
-            yield { waiting: { chatId, mode, characterId: activeCharId, input } }
+            yield { waiting: { chatId, mode, characterId: replyingCharId, input } }
           }
           break
 
@@ -660,7 +663,7 @@ export const msgStore = createStore<MsgState>(
           waiting: {
             chatId,
             mode,
-            characterId: activeCharId,
+            characterId: replyingCharId,
             messageId: res.result.messageId,
             input,
           },
@@ -806,10 +809,11 @@ setInterval(() => {
 
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)
-}, 250)
+}, 500)
 
 msgStore.subscribe((state) => {
   if (state.partial) return
+  if (state.waiting) return
   if (!state.activeChatId) return
   if (!state.msgs.length) return
   debouncedEmbed(state.activeChatId, state.messageHistory.concat(state.msgs))

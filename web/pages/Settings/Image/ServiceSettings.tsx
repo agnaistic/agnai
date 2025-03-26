@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo } from 'solid-js'
+import { Component, For, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import {
   NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
@@ -12,6 +12,10 @@ import { ImageSettings } from '/common/types/image-schema'
 import { SetStoreFunction } from 'solid-js/store'
 import { applyStoreProperty } from '/web/shared/util'
 import { Toggle } from '/web/shared/Toggle'
+import Button, { ToggleButton } from '/web/shared/Button'
+import { Info, X } from 'lucide-solid'
+import { Card, Pill } from '/web/shared/Card'
+import { InlineRangeInput } from '/web/shared/RangeInput'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -83,6 +87,7 @@ export const HordeSettings: Component<{
 
   createEffect(() => {
     settingStore.getHordeImageWorkers()
+    settingStore.getImageLoras()
   })
 
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
@@ -149,9 +154,22 @@ export const AgnaiSettings: Component<{
   const settings = settingStore((s) => {
     const models = s.config.serverConfig?.imagesModels || []
     return {
+      loras: s.loras,
+      embeddings: s.embeddings,
       models,
       names: models.map((m) => ({ label: m.desc.trim(), value: m.id || m.name })),
     }
+  })
+
+  const [loras, setLoras] = createSignal(props.cfg.agnai.loras || [])
+  const loraList = createMemo(() => {
+    const list = loras().map((lora) => {
+      const tags = settings.loras.find((l) => l.id === lora.id)
+      if (!tags) return { ...lora, tags: undefined }
+      return { ...lora, tags: tags.tags }
+    })
+
+    return list
   })
 
   const model = createMemo(() => {
@@ -171,21 +189,152 @@ export const AgnaiSettings: Component<{
     }))
   })
 
+  const availableLoras = createMemo(() => {
+    const list = settings.loras
+      .filter((lora) => {
+        if (!props.cfg.agnai.loras?.length) return lora
+        return true
+        // if (used) return false
+      })
+      .map((lora) => ({ label: lora.name, value: lora.id }))
+
+    return [{ label: 'None', value: '' }].concat(list)
+  })
+
+  const addLora = () => {
+    const next = loras().concat({ id: '', clipStrength: 1.0, modelStrength: 1.0, enabled: true })
+    props.setter(applyStoreProperty(props.cfg, 'agnai.loras', next))
+  }
+
+  const removeLora = (i: number) => {
+    const next = loras().filter((_, index) => index !== i)
+    props.setter(applyStoreProperty(props.cfg, 'agnai.loras', next))
+    setLoras(next)
+  }
+
+  const updateLora = (
+    index: number,
+    update: Partial<{ id: string; clipStrength: number; modelStrength: number; enabled?: boolean }>
+  ) => {
+    const next = loras().map((lora, i) => {
+      if (i !== index) return lora
+      return { ...lora, ...update }
+    })
+
+    setLoras(next)
+    props.setter(applyStoreProperty(props.cfg, 'agnai.loras', next))
+  }
+
+  createEffect(
+    on(
+      () => props.cfg.agnai.loras,
+      () => {
+        const prev = loras()
+        if (prev.length !== props.cfg.agnai.loras?.length) return
+        setLoras(props.cfg.agnai.loras || [])
+      }
+    )
+  )
+
+  const loraHelp = (tags?: Record<string, number>) => {
+    if (!tags) return
+
+    const list = Object.entries(tags)
+      .map(([key, value]) => ({ tag: key, count: value }))
+      .sort((l, r) => r.count - l.count)
+
+    const content = (
+      <div class="flex flex-col">
+        <div class="bold">Tags / Keyword</div>
+        <div class="flex flex-wrap gap-1">
+          <For each={list}>
+            {(tag) => (
+              <Pill small>
+                <span class="bold">{tag.tag}</span>: <span>{tag.count}</span>
+              </Pill>
+            )}
+          </For>
+        </div>
+      </div>
+    )
+
+    settingStore.openConfirm({ message: content })
+  }
+
   return (
     <>
       <div class="text-xl">Agnaistic</div>
       <Show when={settings.models.length === 0}>
         <i>No additional options available</i>
       </Show>
-      <Select
-        fieldName="agnaiModel"
-        label="Image Model"
-        items={settings.names}
-        value={props.cfg.agnai?.model || settings.names[0]?.value}
-        disabled={settings.models.length <= 1}
-        classList={{ hidden: settings.models.length === 0 }}
-        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.model', ev.value))}
-      />
+      <div class="flex items-end gap-2">
+        <Select
+          fieldName="agnaiModel"
+          label="Image Model"
+          items={settings.names}
+          value={props.cfg.agnai?.model || settings.names[0]?.value}
+          disabled={settings.models.length <= 1}
+          classList={{ hidden: settings.models.length === 0 }}
+          onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'agnai.model', ev.value))}
+        />
+        <Show when={settings.loras.length}>
+          <Button onClick={addLora} disabled={availableLoras().length === 0}>
+            + Lora
+          </Button>
+        </Show>
+      </div>
+
+      <Show when={settings.loras.length}>
+        <Index each={loraList()}>
+          {(lora, i) => (
+            <Card class="flex flex-col gap-1">
+              <div class="flex items-center gap-1">
+                <div class="icon-button" onClick={() => removeLora(i)}>
+                  <X size={20} />
+                </div>
+                <Select
+                  class="max-w-48 text-sm"
+                  items={availableLoras()}
+                  value={lora().id}
+                  onChange={(ev) => updateLora(i, { id: ev.value })}
+                />
+
+                <Button size="sm" schema="hollow" onClick={() => loraHelp(lora().tags)}>
+                  Tags <Info size={16} />
+                </Button>
+
+                <ToggleButton
+                  size="sm"
+                  onChange={(ev) => updateLora(i, { enabled: ev })}
+                  value={lora().enabled}
+                >
+                  {lora().enabled ? 'On' : 'Off'}
+                </ToggleButton>
+              </div>
+              <InlineRangeInput
+                fieldName="modelStrength"
+                label="Model Strength"
+                min={0}
+                max={2}
+                parentClass="text-sm"
+                value={lora().modelStrength}
+                onChange={(ev) => updateLora(i, { modelStrength: +ev })}
+                step={0.05}
+              />
+              <InlineRangeInput
+                fieldName="clipStrength"
+                label="Clip Strength"
+                min={0}
+                max={2}
+                parentClass="text-sm"
+                value={lora().clipStrength}
+                onChange={(ev) => updateLora(i, { clipStrength: +ev })}
+                step={0.05}
+              />
+            </Card>
+          )}
+        </Index>
+      </Show>
 
       <Select
         fieldName="agnaiSampler"

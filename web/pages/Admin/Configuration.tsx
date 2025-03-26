@@ -68,6 +68,7 @@ const ServerConfiguration: Component = () => {
       policiesEnabled: 'boolean',
       imagesHost: 'string',
       imagesEnabled: 'boolean',
+      imagesLoraUrl: 'string',
       supportEmail: 'string',
       ttsEnabled: 'boolean',
       ttsApiKey: 'string',

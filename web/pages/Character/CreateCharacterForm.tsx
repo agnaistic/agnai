@@ -360,7 +360,7 @@ export const CreateCharacterForm: Component<{
                     })
                   }}
                 >
-                  <X /> Clear
+                  <X />
                 </Button>
               </Show>
             </div>

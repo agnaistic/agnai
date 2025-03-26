@@ -211,13 +211,13 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
       if (nextMsgs[i].userId) continue
-      nextMsgs[i] = { ...nextMsgs[i], msg: trimSentence(nextMsgs[i].msg) }
+      nextMsgs[i] = { ...nextMsgs[i], msg: trimSentence(nextMsgs[i].msg) || nextMsgs[i].msg }
     }
 
     opts.messages = nextMsgs
 
     if (opts.retry) {
-      opts.retry = { ...opts.retry, msg: trimSentence(opts.retry.msg) }
+      opts.retry = { ...opts.retry, msg: trimSentence(opts.retry.msg) || opts.retry.msg }
     }
   }
 

@@ -48,6 +48,9 @@ export type SettingState = {
     options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }>
   }
 
+  loras: Array<{ id: string; name: string; tags: Record<string, number> }>
+  embeddings: Array<{ id: string; name: string; tags: string[] }>
+
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
@@ -62,7 +65,7 @@ export type SettingState = {
   confirm?: {
     title?: string
     message: string | JSX.Element
-    onConfirm: () => void
+    onConfirm?: () => void
   }
 }
 
@@ -81,6 +84,8 @@ const initState: SettingState = {
   workers: [],
   imageWorkers: [],
   allImageModels: [],
+  loras: [],
+  embeddings: [],
   config: {
     serverConfig: {} as any,
     registered: [],
@@ -135,7 +140,7 @@ export const settingStore = createStore<SettingState>(
   return {
     openConfirm(
       {},
-      opts: { message: string | JSX.Element; title?: string; onConfirm: () => void }
+      opts: { message: string | JSX.Element; title?: string; onConfirm?: () => void }
     ) {
       return { confirm: { message: opts.message, title: opts.title, onConfirm: opts.onConfirm } }
     },
@@ -146,7 +151,7 @@ export const settingStore = createStore<SettingState>(
         return { confirm: undefined }
       }
 
-      confirm.onConfirm()
+      confirm.onConfirm?.()
       return { confirm: undefined }
     },
     modal({ showSettings }, show?: boolean) {
@@ -258,6 +263,15 @@ export const settingStore = createStore<SettingState>(
           res.result?.tier
         )
         return { config: { ...config, serverConfig } }
+      }
+    },
+    async *getImageLoras() {
+      const res = await api.get('/settings/image-loras')
+      if (res.result) {
+        return {
+          loras: res.result.loras,
+          embeddings: res.result.embeddings,
+        }
       }
     },
     async *getConfig({ cfg }) {

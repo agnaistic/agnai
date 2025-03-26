@@ -412,6 +412,7 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
     case 'horde':
       return deepClone(defaultPresets.horde)
 
+    case 'third-party':
     case 'kobold':
     case 'ooba':
       return deepClone(defaultPresets.basic)

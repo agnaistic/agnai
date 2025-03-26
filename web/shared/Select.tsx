@@ -10,6 +10,7 @@ export type Option<T extends string = string> = {
 const Select: Component<{
   fieldName?: string
   label?: JSX.Element | string
+  inline?: boolean
   helperText?: string | JSX.Element
   helperMarkdown?: string
   items: Option[]
@@ -56,6 +57,7 @@ const Select: Component<{
       classList={{
         ...props.classList,
         hidden: props.hide ?? false,
+        'flex gap-2 items-center': props.inline,
       }}
     >
       <FormLabel

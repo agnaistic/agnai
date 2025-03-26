@@ -17,12 +17,40 @@ import { getArliModels } from '../adapter/arli'
 
 const router = Router()
 
+let IMAGE_LORA_TTL = 0
+const IMAGE_LORAS = {
+  loras: [] as Array<{
+    id: string
+    name: string
+    tags: Record<string, number>
+    enabled?: boolean
+  }>,
+  embeddings: [] as Array<{ id: string; name: string; tags: string[]; enabled?: boolean }>,
+}
+
 let appConfig: AppSchema.AppConfig
 
 const getSettings = handle(async ({ userId }) => {
   const user = userId ? await store.users.getUser(userId) : undefined
   const config = await getAppConfig(user!)
   return config
+})
+
+const onlyEnabledLoras = (item: { enabled?: boolean }) => item.enabled !== false
+
+const getImageLoras = handle(async (req) => {
+  if (!IMAGE_LORAS_FETCHED) {
+    await cacheConfigs()
+  }
+
+  if (req.user?.admin) {
+    return IMAGE_LORAS
+  }
+
+  return {
+    loras: IMAGE_LORAS.loras.filter(onlyEnabledLoras),
+    embeddings: IMAGE_LORAS.embeddings.filter(onlyEnabledLoras),
+  }
 })
 
 export const getPublicSubscriptions = handle(async () => {
@@ -32,6 +60,7 @@ export const getPublicSubscriptions = handle(async () => {
 
 router.get('/subscriptions', getPublicSubscriptions)
 router.get('/', getSettings)
+router.get('/image-loras', getImageLoras)
 router.get('/featherless', (_, res) => {
   const { models, classes } = getFeatherModels()
   res.json({ models, classes })
@@ -56,6 +85,7 @@ export async function getAppConfig(user?: AppSchema.User) {
 
   if (!user?.admin && configuration) {
     configuration.imagesHost = ''
+    configuration.imagesLoraUrl = ''
     configuration.ttsHost = ''
     configuration.ttsApiKey = ''
 
@@ -144,21 +174,65 @@ export async function getAppConfig(user?: AppSchema.User) {
   return { ...appConfig, canAuth }
 }
 
-async function update() {
+async function cacheConfigs() {
   try {
     if (!config.db.host) return
     const cfg = await store.admin.getServerConfiguration()
+    updateImageLoras(cfg.imagesLoraUrl)
 
     appConfig.maintenance = cfg.maintenanceMessage || appConfig.maintenance
   } catch (ex) {}
 }
 
-setInterval(update, 15000)
+setInterval(cacheConfigs, 15000)
 
 function toRegisteredAdapter(adp: RegisteredAdapter) {
   return {
     name: adp.name,
     settings: adp.settings,
     options: adp.options,
+  }
+}
+
+function parseLoraName(name: string) {
+  return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name
+}
+
+let IMAGE_LORAS_FETCHED = false
+async function updateImageLoras(url: string) {
+  if (!url) return
+  if (Date.now() - IMAGE_LORA_TTL < 60000) return
+
+  IMAGE_LORAS_FETCHED = true
+
+  try {
+    const res = await fetch(url, { method: 'get' }).then((res) => res.json())
+
+    const next: typeof IMAGE_LORAS = {
+      loras: [],
+      embeddings: [],
+    }
+
+    for (const lora of res.loras) {
+      if (lora.type === 'embedding') {
+        next.embeddings.push({
+          id: parseLoraName(lora.file),
+          name: lora.metadata.name,
+          tags: lora.metadata.tags,
+        })
+      } else {
+        next.loras.push({
+          id: parseLoraName(lora.file),
+          name: lora.metadata.name,
+          tags: lora.metadata.tags,
+        })
+      }
+    }
+
+    IMAGE_LORAS.loras = next.loras
+    IMAGE_LORAS.embeddings = next.embeddings
+    IMAGE_LORA_TTL = Date.now()
+  } catch (ex) {
+    ex
   }
 }

@@ -39,6 +39,8 @@ export type SDRequest = {
   model_override?: string
   denoise?: number
   draft_mode?: boolean
+  loras?: string[]
+  lora_strengths?: Record<string, { model: number; clip: number }>
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
@@ -154,6 +156,19 @@ function getPayload(
     (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
     defaultSettings.sampler
 
+  const loras: string[] = []
+  const lora_strengths: NonNullable<SDRequest['lora_strengths']> = {}
+
+  if (kind === 'agnai' && opts.settings?.agnai.loras?.length) {
+    for (const lora of opts.settings?.agnai.loras) {
+      if (!lora.id) continue
+      if (!lora.enabled) continue
+
+      loras.push(lora.id)
+      lora_strengths[lora.id] = { model: lora.modelStrength, clip: lora.clipStrength }
+    }
+  }
+
   const payload: SDRequest = {
     prompt: opts.prompt,
     // enable_hr: true,
@@ -179,6 +194,8 @@ function getPayload(
     model_override: temp ? temp.override : model?.override,
     denoise: temp ? temp.init.denoise : model?.init.denoise,
     draft_mode: opts.settings?.agnai?.draftMode,
+    loras,
+    lora_strengths,
   }
 
   if (model) {

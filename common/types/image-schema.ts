@@ -3,6 +3,7 @@ type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings
 export type BaseImageSettings = {
   type: ImageType['type']
 
+  summaryPresetId?: string
   summaryPrompt?: string
   summariseChat?: boolean
 
@@ -49,4 +50,5 @@ export type AgnaiSettings = {
   model: string
   sampler: string
   draftMode: boolean
+  loras?: Array<{ id: string; clipStrength: number; modelStrength: number; enabled: boolean }>
 }
