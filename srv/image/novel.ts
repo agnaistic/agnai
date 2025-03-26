@@ -55,7 +55,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   const payload: NovelImageRequest = {
     action: 'generate',
     input,
-    model: settings.model ?? NOVEL_IMAGE_MODEL.Full,
+    model: settings.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
     parameters: {
       height: base?.height ?? 384,
       width: base?.width ?? 384,
