@@ -163,7 +163,7 @@ const SubscriptionList: Component = () => {
                   <div class="flex w-full items-center gap-2">
                     <A
                       href={`/admin/subscriptions/${sub._id}`}
-                      class="flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
+                      class="flex h-12 w-full items-center gap-2 rounded-xl hover:bg-[var(--bg-600)]"
                       classList={{
                         'bg-red-900': sub.subDisabled && !sub.isDefaultSub,
                         'text-500': sub.subDisabled && !sub.isDefaultSub,
@@ -172,7 +172,7 @@ const SubscriptionList: Component = () => {
                       }}
                     >
                       <div class="ml-4 flex w-full items-center">
-                        <div class="flex gap-1">
+                        <div class="flex items-center gap-1">
                           <span class="mr-1 text-xs italic text-[var(--text-600)]">
                             [Level: {sub.subLevel}] {getServiceName(sub.service)}
                           </span>

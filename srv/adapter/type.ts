@@ -68,6 +68,8 @@ export type GenerateRequestV2 = {
   continuing?: AppSchema.ChatMessage
   characters: Record<string, AppSchema.Character>
   impersonate?: AppSchema.Character
+  book?: AppSchema.MemoryBook
+  resolvedScenario?: string
 
   jsonSchema?: JsonField[]
   reschemaPrompt?: string

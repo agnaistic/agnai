@@ -41,7 +41,7 @@ class BannedError extends StatusError {
 
 export type Handler = (req: AppRequest, res: express.Response, next: express.NextFunction) => any
 
-export type AppRequest = Omit<express.Request, 'log'> & {
+export type AppRequest<T = any> = Omit<express.Request, 'log' | 'body'> & {
   user?: AppSchema.Token
   requestId: string
   userId: string
@@ -50,10 +50,13 @@ export type AppRequest = Omit<express.Request, 'log'> & {
   scopes?: string[]
   authed?: AppSchema.User
   tier?: AppSchema.SubscriptionTier
+  body: T
 }
 
 export const errors = {
   NotFound: new StatusError('Resource not found', 404),
+  CharacterNotFound: new StatusError('Character not found', 404),
+  ChatNotFound: new StatusError('Chat not found', 404),
   Unauthorized: new StatusError('Unauthorized', 401),
   Forbidden: new StatusError('Forbidden', 403),
   BadRequest: new StatusError('Bad request', 400),
