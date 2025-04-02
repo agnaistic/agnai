@@ -102,8 +102,24 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     : `${base.url}/completions`
 
   const iter = body.stream
-    ? streamCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
-    : requestFullCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
+    ? streamCompletion({
+        userId: opts.user._id,
+        url,
+        headers,
+        body,
+        service: 'OpenAI',
+        log: opts.log,
+        signal: opts.signal,
+      })
+    : requestFullCompletion({
+        userId: opts.user._id,
+        url,
+        headers,
+        body,
+        service: 'OpenAI',
+        log: opts.log,
+        signal: opts.signal,
+      })
   let accumulated = ''
   let response: Completion<Inference> | undefined
 

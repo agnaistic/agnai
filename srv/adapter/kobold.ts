@@ -2,11 +2,10 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
-import { AdapterProps, ModelAdapter } from './type'
+import { AdapterProps, CompletionGenerator, CompletionTick, ModelAdapter } from './type'
 import { requestStream } from './stream'
 import { llamaStream } from './dispatch'
 import { getStoppingStrings } from './prompt'
-import { ThirdPartyFormat } from '/common/adapters'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
 import * as oai from './stream'
@@ -133,6 +132,15 @@ async function dispatch(opts: AdapterProps, body: any) {
   const baseURL = normalizeUrl(opts.gen.thirdPartyUrl || opts.user.koboldUrl)
 
   const headers: any = await getHeaders(opts)
+  const base = {
+    signal: opts.signal,
+    service: '',
+    log: opts.log,
+    userId: opts.user._id,
+    body,
+    headers,
+  }
+
   await validateModel(opts, baseURL, body, headers)
 
   switch (opts.gen.thirdPartyFormat) {
@@ -146,8 +154,8 @@ async function dispatch(opts: AdapterProps, body: any) {
         ? `${baseURL}/v1/chat/completions`
         : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
-        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'ooba':
@@ -155,62 +163,59 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'tabby': {
       const url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
-        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'exllamav2': {
       return opts.gen.streamResponse
-        ? streamCompletion(baseURL, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(baseURL, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url: baseURL, service: opts.gen.thirdPartyFormat })
     }
 
     case 'mistral': {
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
-        ? oai.streamCompletion(opts.user._id, url, headers, body, 'mistral', opts.log)
-        : fullCompletion(url, body, headers, 'mistral', opts.log)
+        ? oai.streamCompletion({ ...base, url, format: 'mistral' })
+        : fullCompletion({ ...base, url, service: 'mistral' })
       return stream
     }
 
     case 'ollama': {
       const url = `${baseURL}/api/generate`
       return opts.gen.streamResponse
-        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'featherless': {
       const url = 'https://api.featherless.ai/v1/completions'
       return opts.gen.streamResponse
-        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'arli': {
       const url = 'https://api.arliai.com/v1/completions'
       return opts.gen.streamResponse
-        ? streamCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
-        : fullCompletion(url, body, headers, opts.gen.thirdPartyFormat, opts.log)
+        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     default:
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
+      const url =
+        opts.gen.streamResponse && isStreamSupported
+          ? `${baseURL}/api/extra/generate/stream`
+          : `${baseURL}/api/v1/generate`
+
       return opts.gen.streamResponse && isStreamSupported
-        ? streamCompletion(
-            `${baseURL}/api/extra/generate/stream`,
-            body,
-            'koboldcpp',
-            headers,
-            opts.log
-          )
-        : fullCompletion(
-            `${baseURL}/api/v1/generate`,
-            body,
-            headers,
-            opts.gen.thirdPartyFormat || opts.gen.service!,
-            opts.log
-          )
+        ? streamCompletion({ ...base, url, format: 'koboldcpp' })
+        : fullCompletion({
+            ...base,
+            url: `${baseURL}/api/v1/generate`,
+            service: opts.gen.thirdPartyFormat || opts.gen.service!,
+          })
   }
 }
 
@@ -316,14 +321,16 @@ async function checkStreamSupported(versioncheckURL: any) {
   return isSupportedVersion
 }
 
-const fullCompletion = async function* (
-  genURL: string,
-  body: any,
-  headers: any,
-  service: string,
-  log: AppLog
-) {
-  const resp = await needle('post', genURL, body, {
+const fullCompletion: CompletionGenerator<any> = async function* ({
+  url,
+  body,
+  headers,
+  service,
+  log,
+  signal,
+}) {
+  const resp = await needle('post', url, body, {
+    signal: signal.signal,
     headers: { 'Bypass-Tunnel-Reminder': 'true', ...headers },
     json: true,
   }).catch((err) => ({ error: err }))
@@ -365,15 +372,17 @@ const fullCompletion = async function* (
   }
 }
 
-const streamCompletion = async function* (
-  streamUrl: any,
-  body: any,
-  headers: any,
-  format: ThirdPartyFormat,
-  log: AppLog
-) {
-  const resp = needle.post(streamUrl, body, {
+const streamCompletion: CompletionGenerator<CompletionTick> = async function* ({
+  url,
+  body,
+  headers,
+  format,
+  log,
+  signal,
+}) {
+  const resp = needle.post(url, body, {
     parse: false,
+    signal: signal.signal,
     json: true,
     headers: {
       Accept: format === 'featherless' ? 'application/json' : `text/event-stream`,
@@ -435,6 +444,7 @@ const streamCompletion = async function* (
     }
   } catch (err: any) {
     yield { error: `${format} streaming request failed: ${err.message || err}` }
+    signal.abort()
     return
   }
 

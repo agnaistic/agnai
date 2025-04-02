@@ -5,6 +5,7 @@ import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { notify, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
+import { tryParseConcat } from '../util'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -23,6 +24,7 @@ type Completion<T = Inference> = {
 }
 
 type LocalGenerator = (
+  signal: AbortController,
   url: string,
   headers: Record<string, string | string[] | number>,
   body: any,
@@ -32,7 +34,7 @@ type LocalGenerator = (
   Completion | undefined
 >
 
-export async function* handleOAI(opts: PayloadOpts, payload: any) {
+export async function* handleOAI(opts: PayloadOpts, signal: AbortController, payload: any) {
   const gen = opts.settings!
   const options = { ...opts, gen }
 
@@ -60,7 +62,7 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
   const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
 
   if (!gen.streamResponse) {
-    const result = await requestFullCompletion(fullUrl, headers, payload)
+    const result = await requestFullCompletion(fullUrl, headers, payload, signal)
     if ('error' in result) {
       yield result
       return
@@ -81,7 +83,7 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
     return
   }
 
-  const iter = streamCompletion(fullUrl, headers, payload, gen.thirdPartyFormat!)
+  const iter = streamCompletion(signal, fullUrl, headers, payload, gen.thirdPartyFormat!)
 
   let accumulated = ''
   let response: Completion<Inference> | undefined
@@ -138,9 +140,16 @@ export async function* handleOAI(opts: PayloadOpts, payload: any) {
  * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
  * once the stream is finished.
  */
-export const streamCompletion: LocalGenerator = async function* (url, headers, body, format) {
+export const streamCompletion: LocalGenerator = async function* (
+  signal,
+  url,
+  headers,
+  body,
+  format
+) {
   const resp = needle.post(url, JSON.stringify(body), {
     parse: false,
+    signal: signal.signal,
     headers: {
       ...headers,
       Accept: 'text/event-stream',
@@ -176,7 +185,7 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
       // If we fail to parse we might need to parse with this bad data and the next event's data...
       // So we'll keep it and try again next iteration
       // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
-      const parsed = tryParse<Completion<AsyncDelta>>(event.data, prev)
+      const parsed = tryParseConcat<Completion<AsyncDelta>>(event.data, prev)
       if (!parsed) continue
 
       // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don'ttoastStoredangling data
@@ -233,10 +242,16 @@ export const streamCompletion: LocalGenerator = async function* (url, headers, b
   }
 }
 
-export async function requestFullCompletion(url: string, headers: any, body: any) {
+export async function requestFullCompletion(
+  url: string,
+  headers: any,
+  body: any,
+  signal: AbortController
+) {
   try {
     const resp = await needle('post', url, JSON.stringify(body), {
       json: true,
+      signal: signal.signal,
       response_timeout: 0,
       read_timeout: 0,
       open_timeout: 90000,
@@ -258,20 +273,6 @@ export async function requestFullCompletion(url: string, headers: any, body: any
   } catch (ex: any) {
     return { error: ex?.message || ex }
   }
-}
-
-function tryParse<T = any>(value: string, prev?: string): T | undefined {
-  try {
-    const parsed = JSON.parse(value)
-    return parsed
-  } catch (ex) {}
-
-  try {
-    const parsed = JSON.parse(prev + value)
-    return parsed
-  } catch (ex) {}
-
-  return
 }
 
 function getCompletionContent(completion: Completion<Inference> | undefined) {

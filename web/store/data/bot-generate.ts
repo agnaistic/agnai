@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { api } from '../api'
+import { api, getAuthHeaders } from '../api'
 import { getStore } from '../create'
 import { genApi } from './inference'
 import { localApi } from './storage'
@@ -32,10 +32,9 @@ export const botGen = {
   getActivePromptOptions,
 }
 
-export type GenerateOpts =
-  /**
-   * A user sending a new message
-   */
+export type GenerateOpts = { signal: AbortController } & /**
+ * A user sending a new message
+ */ (
   | { kind: 'send'; text: string }
   | { kind: EventKind; text: string }
   | { kind: 'send-noreply'; text: string }
@@ -60,6 +59,7 @@ export type GenerateOpts =
   | { kind: 'self' }
   | { kind: 'summary' }
   | { kind: 'chat-query'; text: string; schema?: JsonField[] }
+)
 
 export async function generateResponse(
   opts: GenerateOpts,
@@ -138,7 +138,7 @@ export async function generateResponse(
   }
 
   if (useLocalRequest(entities.settings, entities.user._id)) {
-    localRequest(request, prompt.template.parsed).then(() => {
+    localRequest(request, opts.signal, prompt.template.parsed).then(() => {
       console.log('[done]')
     })
 
@@ -146,20 +146,36 @@ export async function generateResponse(
     return localApi.result({ generating: true, input, requestId: request.requestId })
   }
 
-  const res = await api.post<{ requestId: string; messageId?: string }>(
+  request.eventStream = true
+  const stream = api.fetchSSE(
     `/chat/${entities.chat._id}/generate`,
-    request
+    getAuthHeaders(),
+    request,
+    opts.signal
   )
 
-  if (res.result && onTick) {
-    genApi.callbacks.set(request.requestId, onTick)
+  for await (const tick of stream) {
+    if (tick.error) {
+      return { result: undefined, error: tick.error }
+    }
+
+    if (!tick.generating) continue
+
+    if (onTick) {
+      genApi.callbacks.set(request.requestId, onTick)
+    }
+
+    return {
+      result: tick,
+      error: undefined,
+    }
   }
 
-  return res
+  return localApi.error(`unexpected error occurred`)
 }
 
-async function localRequest(request: GenerateRequestV2, prompt: string) {
-  const res = await handleLocalRequest(request, prompt)
+async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
+  const res = await handleLocalRequest(request, signal, prompt)
   if (res.result) {
     request.response = res.result.response
   }
@@ -219,7 +235,9 @@ type EventKind =
   | 'send-event:hidden'
   | 'send-event:ooc'
 
-function isEventOpts(opts: GenerateOpts): opts is { kind: EventKind; text: string } {
+function isEventOpts(
+  opts: GenerateOpts
+): opts is { signal: AbortController; kind: EventKind; text: string } {
   return (
     opts.kind.startsWith('send-event:') &&
     ['world', 'character', 'hidden', 'ooc'].includes(opts.kind.split(':')[1])

@@ -37,13 +37,14 @@ type ClaudeCompletion = {
   log_id: string
 }
 
-type CompletionGenerator = (
-  url: string,
-  body: Record<string, any>,
-  headers: Record<string, string | string[] | number>,
-  userId: string,
+type CompletionGenerator = (opts: {
+  url: string
+  body: Record<string, any>
+  headers: Record<string, any>
+  signal: AbortController
+  userId: string
   log: AppLog
-) => AsyncGenerator<{ error: string } | { token: string }, ClaudeCompletion | undefined>
+}) => AsyncGenerator<{ error: string } | { token: string }, ClaudeCompletion | undefined>
 
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = () => getTokenCounter('claude', '')
@@ -111,8 +112,22 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   yield { prompt: payload.prompt }
 
   const iterator = payload.stream
-    ? streamCompletion(base.url, payload, headers, opts.user._id, log)
-    : requestFullCompletion(base.url, payload, headers, opts.user._id, log)
+    ? streamCompletion({
+        url: base.url,
+        body: payload,
+        headers,
+        signal: opts.signal,
+        log,
+        userId: opts.user._id,
+      })
+    : requestFullCompletion({
+        url: base.url,
+        body: payload,
+        headers,
+        signal: opts.signal,
+        log,
+        userId: opts.user._id,
+      })
 
   let acc = ''
   let resp: ClaudeCompletion | undefined
@@ -171,15 +186,16 @@ function getBaseUrl(
   return { url: TEXT_URL, changed: false }
 }
 
-const requestFullCompletion: CompletionGenerator = async function* (
+const requestFullCompletion: CompletionGenerator = async function* ({
   url,
   body,
+  signal,
   headers,
-  _userId,
-  log
-) {
+  log,
+}) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
+    signal: signal.signal,
     headers,
   }).catch((err) => ({ error: err }))
 
@@ -198,9 +214,17 @@ const requestFullCompletion: CompletionGenerator = async function* (
   return resp.body
 }
 
-const streamCompletion: CompletionGenerator = async function* (url, body, headers, userId, log) {
+const streamCompletion: CompletionGenerator = async function* ({
+  url,
+  body,
+  headers,
+  signal,
+  log,
+  userId,
+}) {
   const resp = needle.post(url, JSON.stringify(body), {
     parse: false,
+    signal: signal.signal,
     headers: {
       ...headers,
       Accept: 'text/event-stream',

@@ -94,8 +94,26 @@ export const handleMancer: ModelAdapter = async function* (opts) {
   let response: Completion<Inference> | undefined
 
   const iter = opts.gen.streamResponse
-    ? streamCompletion(opts.user._id, url, headers, body, 'mancer', opts.log, 'openai')
-    : requestFullCompletion(opts.user._id, url, headers, body, 'mancer', opts.log)
+    ? streamCompletion({
+        userId: opts.user._id,
+        url,
+        headers,
+        body,
+        service: 'mancer',
+        log: opts.log,
+        format: 'openai',
+        signal: opts.signal,
+      })
+    : requestFullCompletion({
+        userId: opts.user._id,
+        url,
+        headers,
+        body,
+        service: 'mancer',
+        log: opts.log,
+        format: 'openai',
+        signal: opts.signal,
+      })
 
   while (true) {
     let generated = await iter.next()

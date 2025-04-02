@@ -109,7 +109,7 @@ export const generateImageApi = wrap(async ({ authed, userId, log, body }) => {
   return { output: result.output }
 })
 
-export const guidance = wrap(async ({ userId, log, body, socketId }) => {
+export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
   assertValid(
     {
       ...validInference,
@@ -150,6 +150,11 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     }
   }
 
+  const signal = new AbortController()
+
+  const listener = () => signal.abort()
+  res.addListener('close', listener)
+
   const props: InferenceRequest = {
     user: body.user,
     log,
@@ -163,9 +168,11 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     reguidance: body.reguidance,
     requestId: body.requestId,
     jsonSchema: body.jsonSchema,
+    signal,
   }
 
   const result = await guidanceAsync(props)
+  res.removeListener('close', listener)
   return result
 })
 
@@ -284,6 +291,7 @@ export const inferenceApi = wrap(async (req, res) => {
     ? renderMessagesToPrompt(subPreset || preset!, body.messages)
     : undefined
 
+  const signal = new AbortController()
   const request: InferenceRequest = {
     prompt: body.prompt
       ? replaceTags(body.prompt, subPreset?.modelFormat || preset?.modelFormat || 'ChatML')
@@ -297,6 +305,7 @@ export const inferenceApi = wrap(async (req, res) => {
     previous: body.previous,
     lists: body.lists,
     stop: rendered ? [rendered.stop, ...(body.stop || [])] : undefined,
+    signal,
   }
 
   if (!request.prompt) {
@@ -385,6 +394,10 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
     body.user = user
   }
 
+  const signal = new AbortController()
+  const listener = () => signal.abort()
+  res.addListener('close', listener)
+
   const inference = await inferenceAsync({
     user: body.user,
     log,
@@ -393,7 +406,10 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
+    signal,
   })
+
+  res.removeListener('close', listener)
 
   return { response: inference.generated, meta: inference.meta }
 })
@@ -406,6 +422,8 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
     body.user = req.authed
   }
 
+  /** @todo convert to event-stream hybrid */
+
   const { stream, service } = await createInferenceStream({
     user: body.user!,
     log,
@@ -414,6 +432,7 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
+    signal: new AbortController(),
   })
 
   const requestId = body.requestId || v4()

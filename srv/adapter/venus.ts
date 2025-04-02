@@ -45,7 +45,17 @@ export const handleVenus: ModelAdapter = async function* (opts) {
     Authorization: `Bearer ${apiKey}`,
   }
 
-  const iter = streamCompletion(opts.user._id, url, headers, body, 'Venus', opts.log, 'openai')
+  const iter = streamCompletion({
+    userId: opts.user._id,
+    url,
+    headers,
+    body,
+    service: 'Venus',
+    log: opts.log,
+    format: 'openai',
+    signal: opts.signal,
+  })
+
   let accumulated = ''
 
   while (true) {

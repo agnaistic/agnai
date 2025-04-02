@@ -83,6 +83,7 @@ export type InferenceRequest = {
 
   jsonSchema?: any
   jsonValues?: Record<string, any>
+  signal: AbortController
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -235,6 +236,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     jsonSchema: opts.jsonSchema,
     imageData: opts.imageData,
     jsonValues: opts.jsonValues,
+    signal: opts.signal,
   })
 
   return { stream, service: settings.service || '' }
@@ -283,7 +285,7 @@ async function getRequestPreset(opts: InferenceRequest) {
 }
 
 export async function createChatStream(
-  opts: GenerateRequestV2 & { chatSchema?: ResponseSchema },
+  opts: GenerateRequestV2 & { chatSchema?: ResponseSchema; signal: AbortController },
   log: AppLog,
   guestSocketId?: string
 ) {
@@ -456,6 +458,7 @@ export async function createChatStream(
     encoder,
     jsonValues: opts.jsonValues,
     contextSize: prompt.length,
+    signal: opts.signal,
   })
 
   return {

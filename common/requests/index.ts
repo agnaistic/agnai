@@ -4,12 +4,16 @@ import { PayloadOpts } from './types'
 import { emit } from './util'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 
-export async function handleLocalRequest(body: GenerateRequestV2, prompt: string) {
+export async function handleLocalRequest(
+  body: GenerateRequestV2,
+  signal: AbortController,
+  prompt: string
+) {
   if (body.settings?.service !== 'kobold') {
     throw new Error(`Cannot run local request: Preset is not a third-party preset`)
   }
 
-  const stream = startRequest(body, prompt)
+  const stream = startRequest(body, signal, prompt)
   let response = ''
 
   for await (const gen of stream) {
@@ -53,7 +57,7 @@ export async function handleLocalRequest(body: GenerateRequestV2, prompt: string
   return { result: { response, requestId: body.requestId }, error: undefined }
 }
 
-function startRequest(request: GenerateRequestV2, prompt: string) {
+function startRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
   const opts: PayloadOpts = { ...request, prompt }
   const payload = getLocalPayload(opts)
 
@@ -61,7 +65,7 @@ function startRequest(request: GenerateRequestV2, prompt: string) {
     case 'openai':
     case 'openai-chat':
     case 'openai-chatv2':
-      return handleOAI(opts, payload)
+      return handleOAI(opts, signal, payload)
 
     case 'aphrodite':
     case 'exllamav2':

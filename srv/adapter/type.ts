@@ -15,18 +15,18 @@ export type Completion<T = Inference> = {
   error?: { message: string }
 }
 
-export type CompletionGenerator = (
-  userId: string,
-  url: string,
-  headers: Record<string, string | string[] | number>,
-  body: any,
-  service: string,
-  log: AppLog,
+export type CompletionTick = { token: string } | { tokens: string; gens?: string[] }
+
+export type CompletionGenerator<T = Completion> = (opts: {
+  userId: string
+  url: string
+  headers: Record<string, string | string[] | number>
+  body: any
+  service: string
+  signal: AbortController
+  log: AppLog
   format?: ThirdPartyFormat | 'openrouter'
-) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string } | Completion,
-  Completion | undefined
->
+}) => AsyncGenerator<{ error: string } | { error?: undefined; token: string } | T, T | undefined>
 
 export type CompletionItem = { role: ChatRole; content: string; name?: string }
 
@@ -93,6 +93,7 @@ export type GenerateRequestV2 = {
    * then pass the whole payload to the same endpoint, but skip the generation to re-use the same message creation logic
    */
   response?: string
+  eventStream?: boolean
 }
 
 export type GenerateOptions = {
@@ -150,6 +151,7 @@ export type AdapterProps = {
   isThirdParty?: boolean
   inserts?: Map<number, string>
   contextSize?: number
+  signal: AbortController
 }
 
 export type ModelAdapter = (

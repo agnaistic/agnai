@@ -18,17 +18,18 @@ export type ServerSentEvent = {
  * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
  * once the stream is finished.
  */
-export const streamCompletion: CompletionGenerator = async function* (
-  userId,
+export const streamCompletion: CompletionGenerator = async function* ({
+  signal,
   url,
   headers,
   body,
   service,
   log,
-  format
-) {
+  format,
+}) {
   const resp = needle.post(url, JSON.stringify(body), {
     parse: false,
+    signal: signal.signal,
     headers: {
       ...headers,
       Accept: 'text/event-stream',
@@ -410,8 +411,18 @@ function parseEvent(msg: string) {
   return event
 }
 
-export async function websocketStream(opts: { url: string; body: any }, timeoutMs?: number) {
+export async function websocketStream(
+  opts: { url: string; body: any; signal?: AbortController },
+  timeoutMs?: number
+) {
   const socket = new WebSocket(opts.url.replace('https:', 'wss:').replace('http:', 'ws:'))
+
+  if (opts.signal) {
+    opts.signal.signal.onabort = () => {
+      if (socket.readyState !== socket.OPEN) return
+      socket.send(JSON.stringify({ type: 'user-cancel' }))
+    }
+  }
 
   const emitter = eventGenerator()
   let accum = ''

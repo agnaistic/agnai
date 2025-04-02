@@ -6,6 +6,7 @@ import {
   MoreHorizontal,
   PlusCircle,
   Send,
+  StopCircle,
   Zap,
 } from 'lucide-solid'
 import {
@@ -248,6 +249,17 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
+      <Show when={ctx.waiting?.signal}>
+        <div
+          class="animate-pulse cursor-pointer p-2"
+          onClick={() => {
+            ctx.waiting?.signal?.abort?.()
+            console.log('Cancel clicked')
+          }}
+        >
+          <StopCircle />
+        </div>
+      </Show>
       <Show when={props.showOocToggle}>
         <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
           <Show when={!props.ooc}>

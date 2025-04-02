@@ -41,6 +41,7 @@ export function distinct<T extends { _id: string }>(values: T[]) {
 
   return next
 }
+
 export function wait(secs: number) {
   return new Promise((res) => setTimeout(res, secs * 1000))
 }
@@ -462,6 +463,20 @@ function getHighestTier(
 ): { source: AppSchema.SubscriptionType; tier: AppSchema.SubscriptionTier } {
   const sorted = tiers.filter((t) => !!t.tier).sort((l, r) => r.tier!.level - l.tier!.level)
   return sorted[0] as any
+}
+
+export function tryParseConcat<T = any>(value: string, prev?: string): T | undefined {
+  try {
+    const parsed = JSON.parse(value)
+    return parsed
+  } catch (ex) {}
+
+  try {
+    const parsed = JSON.parse(prev + value)
+    return parsed
+  } catch (ex) {}
+
+  return
 }
 
 export function tryParse<T = any>(value?: any): T | undefined {

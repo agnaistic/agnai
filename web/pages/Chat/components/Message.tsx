@@ -206,7 +206,7 @@ const Message: Component<MessageProps> = (props) => {
 
                 <Match when={props.voice === 'playing'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                    <AvatarIcon format={format()} Icon={PauseCircle} />
+                    <AvatarIcon format={format()} Icon={PauseCircle} bot />
                   </div>
                 </Match>
 

@@ -63,7 +63,16 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   const res = opts.gen.streamResponse
-    ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log, 'openrouter')
+    ? streamCompletion({
+        userId: user._id,
+        url: chatUrl,
+        headers,
+        body: payload,
+        service: 'OpenRouter',
+        log: opts.log,
+        format: 'openrouter',
+        signal: opts.signal,
+      })
     : getCompletion(payload, headers)
 
   let accum = ''

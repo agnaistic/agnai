@@ -307,16 +307,15 @@ function getCharLooks(char: AppSchema.Character) {
   return `${char.name}'s appearance: ${visuals.join(', ')}`
 }
 
-export const requestFullCompletion: CompletionGenerator = async function* (
-  _userId,
+export const requestFullCompletion: CompletionGenerator = async function* ({
   url,
   headers,
   body,
-  _service,
-  _log
-) {
+  signal,
+}) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
+    signal: signal.signal,
     headers,
   }).catch((err) => ({ error: err }))
 

@@ -79,6 +79,7 @@ const genValidator = {
   jsonSchema: 'any?',
   jsonValues: 'any?',
   response: 'string?',
+  eventStream: 'boolean?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {
@@ -208,6 +209,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   // If body.response is defined, it's a "local request" which means the browser handled the generation.
   // When undefined, we'll generate the response
+  let signal: AbortController | null = new AbortController()
   if (body.response === undefined) {
     const chatStream = await createChatStream(
       {
@@ -220,6 +222,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         book: ents.book,
         resolvedScenario: ents.resolvedScenario,
         chatSchema: schema,
+        signal,
       },
       log,
       isGuest(req) ? req.socketId : undefined
@@ -230,14 +233,28 @@ export const generateMessageV2 = handle(async (req, res) => {
       throw chatStream.err
     }
 
-    res.json({
+    const success = {
       requestId,
       success: true,
       generating: true,
       message: 'Generating message',
       messageId,
       created: userMsg,
-    })
+    }
+    if (body.eventStream) {
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('Content-Type', 'text/event-stream')
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Connection', 'keep-alive')
+      res.flushHeaders()
+      res.write(`data: ${JSON.stringify(success)}`)
+      res.on('close', () => {
+        if (!signal) return
+        signal.abort()
+      })
+    } else {
+      res.json(success)
+    }
 
     const { stream, ...metadata } = chatStream
 
@@ -310,7 +327,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
       if (ex instanceof StatusError) {
         log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
-        sendMany(members, {
+        sendMsg(ents, {
           type: 'message-error',
           requestId,
           error: `[${ex.status}] Message failed: ${ex?.message || ex}`,
@@ -319,7 +336,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
       } else {
         log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
-        sendMany(members, {
+        sendMsg(ents, {
           type: 'message-error',
           requestId,
           error: `Unhandled exception: ${ex?.message || ex}`,
@@ -328,6 +345,8 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
       }
     }
+
+    signal = null
 
     if (!ents.guest) {
       await releaseLock(chatId)
@@ -350,6 +369,12 @@ export const generateMessageV2 = handle(async (req, res) => {
     responseText = hydration.response
   }
 
+  if (body.eventStream) {
+    res.write('data: [DONE]')
+    res.end()
+  }
+
+  signal = null
   const payload = { req, ents, meta, probs, responseText, parent, hydration, adapter, retries }
   if (ents.guest) {
     await handleGuestResponse(payload)

@@ -55,6 +55,7 @@ export type MsgState = {
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: {
+    signal?: AbortController
     chatId: string
     mode?: GenerateOpts['kind']
     input?: string
@@ -395,10 +396,13 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
+      const signal = new AbortController()
+
       const [_, replace] = msgs.slice(-2)
       yield {
         partial: '',
         waiting: {
+          signal,
           chatId,
           mode: 'continue',
           characterId: replace.characterId!,
@@ -412,6 +416,7 @@ export const msgStore = createStore<MsgState>(
         : replace.msg
       const res = await botGen
         .generate({
+          signal,
           kind: 'continue',
           retry: retryLatestGenMoreOutput,
         })
@@ -434,10 +439,12 @@ export const msgStore = createStore<MsgState>(
         yield { partial: undefined }
         return
       }
-      yield { partial: undefined, waiting: { chatId, mode: 'request', characterId } }
+
+      const signal = new AbortController()
+      yield { partial: undefined, waiting: { signal, chatId, mode: 'request', characterId } }
 
       const res = await botGen
-        .generate({ kind: 'request', characterId })
+        .generate({ signal, kind: 'request', characterId })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -479,14 +486,15 @@ export const msgStore = createStore<MsgState>(
       const msg = messageId ? msgs.find((msg) => msg._id === messageId)! : msgs[msgs.length - 1]
       const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
       const characterId = replace?.characterId || activeCharId
+      const signal = new AbortController()
       yield {
         partial: '',
-        waiting: { chatId, mode: 'retry', characterId },
+        waiting: { signal, chatId, mode: 'retry', characterId },
         retrying: replace,
       }
 
       const res = await botGen
-        .generate({ kind: 'retry', messageId })
+        .generate({ signal, kind: 'retry', messageId })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -516,14 +524,15 @@ export const msgStore = createStore<MsgState>(
 
       const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
       const characterId = replace?.characterId || activeCharId
+      const signal = new AbortController()
       yield {
         partial: '',
-        waiting: { chatId, mode: 'retry', characterId },
+        waiting: { signal, chatId, mode: 'retry', characterId },
         retrying: replace,
       }
 
       const res = await botGen
-        .generate({ kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
+        .generate({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -560,8 +569,10 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
+      const signal = new AbortController()
+
       const res = await botGen
-        .generate({ kind: 'chat-query', text: message }, onTick)
+        .generate({ signal, kind: 'chat-query', text: message }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -581,8 +592,9 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
+      const signal = new AbortController()
       const res = await botGen
-        .generate({ kind: 'chat-query', text: message, schema }, onTick)
+        .generate({ signal, kind: 'chat-query', text: message, schema }, onTick)
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -606,17 +618,18 @@ export const msgStore = createStore<MsgState>(
 
       const active = getStore('chat').getState().active
       const replyingCharId = active?.replyAs || activeCharId
+      const signal = new AbortController()
 
       let res: { result?: any; error?: string }
 
-      yield { partial: '', waiting: { chatId, mode, characterId: replyingCharId } }
+      yield { partial: '', waiting: { signal, chatId, mode, characterId: replyingCharId } }
       let input = ''
 
       switch (mode) {
         case 'self':
         case 'retry':
           res = await botGen
-            .generate({ kind: mode })
+            .generate({ signal, kind: mode })
             .catch((err) => ({ error: err.message, result: undefined }))
           break
 
@@ -628,7 +641,7 @@ export const msgStore = createStore<MsgState>(
         case 'send-noreply':
         case 'send-event:ooc':
           res = await botGen
-            .generate({ kind: mode, text: message })
+            .generate({ signal, kind: mode, text: message })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result.generating) {
             yield { partial: undefined, waiting: undefined }
@@ -636,7 +649,7 @@ export const msgStore = createStore<MsgState>(
 
           input = res.result?.input
           if (input) {
-            yield { waiting: { chatId, mode, characterId: replyingCharId, input } }
+            yield { waiting: { signal, chatId, mode, characterId: replyingCharId, input } }
           }
           break
 
@@ -661,6 +674,7 @@ export const msgStore = createStore<MsgState>(
         yield {
           partial: '',
           waiting: {
+            signal,
             chatId,
             mode,
             characterId: replyingCharId,
@@ -1235,7 +1249,11 @@ subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   const { activeChatId } = msgStore.getState()
 
   if (activeChatId !== body.chatId) return
-  toastStore.error(`Failed to generate response: ${body.error}`)
+  if (body.error === 'inference cancelled by user') {
+    toastStore.warn(`Response cancelled`)
+  } else {
+    toastStore.error(`Failed to generate response: ${body.error}`)
+  }
 
   msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
 })
@@ -1388,7 +1406,7 @@ subscribe(
 )
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
-  const { msgs, activeChatId, retrying } = msgStore.getState()
+  const { msgs, activeChatId, retrying, waiting } = msgStore.getState()
 
   const replace = msgs.find((msg) => msg._id === body.messageId)
 
@@ -1399,7 +1417,7 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
   msgStore.setState({
     partial: '',
     retrying: replace,
-    waiting: { chatId: body.chatId, mode: 'retry', characterId: '' },
+    waiting: { signal: waiting?.signal, chatId: body.chatId, mode: 'retry', characterId: '' },
     lastInference: undefined,
   })
 })
@@ -1408,11 +1426,12 @@ subscribe(
   'message-creating',
   { chatId: 'string', senderId: 'string?', mode: 'string?', characterId: 'string' },
   (body) => {
-    const { activeChatId } = msgStore.getState()
+    const { activeChatId, waiting } = msgStore.getState()
     if (body.chatId !== activeChatId) return
 
     msgStore.setState({
       waiting: {
+        signal: waiting?.signal,
         chatId: activeChatId,
         mode: body.mode as any,
         userId: body.senderId,

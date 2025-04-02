@@ -161,6 +161,7 @@ async function testChat(prompt: string) {
     sender: profile1,
     user: user.user,
     characters,
+    signal: new AbortController(),
   }
 
   const payload = await toChatCompletionPayload(

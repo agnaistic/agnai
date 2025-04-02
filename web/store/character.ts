@@ -192,11 +192,16 @@ export const characterStore = createStore<CharacterState>(
     },
 
     async impersonate({ activeChatId }, char?: AppSchema.Character) {
-      if (!activeChatId) {
+      const hasDefault = storage.localGetItem(IMPERSONATE_KEY)
+
+      if (char && (!hasDefault || !activeChatId)) {
         storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
-      } else {
+      }
+
+      if (activeChatId) {
         setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
       }
+
       return { impersonating: char || undefined }
     },
 

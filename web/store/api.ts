@@ -1,6 +1,9 @@
 import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
+import needle from 'needle'
+import { requestStream } from '/common/requests/stream'
+import { tryParseConcat } from '/common/util'
 
 let socketId = ''
 
@@ -33,6 +36,8 @@ export const api = {
   upload,
   streamGet,
   streamPost,
+  toApiUrl,
+  fetchSSE,
 }
 
 type Query = { [key: string]: string | number }
@@ -100,6 +105,12 @@ async function streamPost<T = any>(path: string, body: any) {
   })
 }
 
+function toApiUrl(path: string) {
+  const prefix = path.startsWith('/') ? '/api' : '/api'
+  const fullUrl = path.startsWith('http') ? path : `${baseUrl}${prefix}${path}`
+  return fullUrl
+}
+
 async function callApi<T = any>(
   path: string,
   opts: RequestInit & { noAuth?: boolean }
@@ -146,6 +157,73 @@ async function callApi<T = any>(
   }
 
   return { result: json, status: res.status, error: res.status >= 400 ? res.statusText : undefined }
+}
+
+export async function* fetchSSE(
+  path: string,
+  headers: any,
+  body: any,
+  signal?: AbortController
+): AsyncGenerator<any, any | undefined> {
+  const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
+    parse: false,
+    signal: signal?.signal,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream',
+      'Content-Type': 'application/json',
+    },
+  })
+
+  try {
+    const events = requestStream(resp)
+    let prev = ''
+    for await (const event of events) {
+      if (event.error) {
+        yield { error: event.error }
+        return
+      }
+
+      if (!event.data) {
+        continue
+      }
+
+      if (event.type === 'ping') {
+        continue
+      }
+
+      if (event.data === '[DONE]') {
+        break
+      }
+
+      prev += event.data
+
+      // If we fail to parse we might need to parse with this bad data and the next event's data...
+      // So we'll keep it and try again next iteration
+      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
+      const parsed = tryParseConcat(event.data, prev)
+      if (!parsed) continue
+
+      prev = ''
+      yield parsed
+      continue
+    }
+  } catch (err: any) {
+    yield { error: `local streaming request failed: ${err.message}` }
+    return
+  }
+}
+
+export function getAuthHeaders() {
+  const jwt = getAuth()
+
+  const headers: any = { 'Socket-ID': socketId }
+
+  if (jwt) {
+    headers.Authorization = `Bearer ${jwt}`
+  }
+
+  return headers
 }
 
 function headers(noAuth?: boolean) {
