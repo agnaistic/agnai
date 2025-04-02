@@ -13,17 +13,17 @@
     //   "isBackground": true,
     //   "label": "tsc: watch - tsconfig.json"
     // },
-    {
-      "type": "typescript",
-      "tsconfig": "srv.tsconfig.json",
-      "option": "watch",
-      "problemMatcher": ["$tsc-watch"],
-      "group": {
-        "kind": "build"
-      },
-      "isBackground": true,
-      "label": "build server"
-    },
+    // {
+    //   "type": "typescript",
+    //   "tsconfig": "tsconfig.json",
+    //   "option": "watch",
+    //   "problemMatcher": ["$tsc-watch"],
+    //   "group": {
+    //     "kind": "build"
+    //   },
+    //   "isBackground": true,
+    //   "label": "build server"
+    // },
     {
       "type": "shell",
       "command": "pnpm",

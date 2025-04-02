@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
-import { AppLog, logger } from '../middleware'
+import { logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, CompletionTick, ModelAdapter } from './type'
 import { requestStream } from './stream'
