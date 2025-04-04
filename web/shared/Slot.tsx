@@ -69,6 +69,7 @@ export function useCanSlot() {
   const cfg = settingStore((s) => {
     const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
     return {
+      flags: s.flags,
       ready: !s.slots.provider && s.slotsLoaded && s.initLoading === false,
       provider: s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,
@@ -76,12 +77,13 @@ export function useCanSlot() {
   })
 
   const user = userStore((s) => ({
+    disableSlots: cfg.flags.forceAds ? false : !!s.user?.admin || !!s.sub?.tier?.disableSlots,
     sub: s.sub,
   }))
 
   const canSlot = createMemo(() => {
     if (cfg.provider === 'google' && !cfg.publisherId) return false
-    return !!cfg.provider && !!cfg.ready && !user.sub?.tier.disableSlots
+    return !!cfg.provider && !!cfg.ready && !user.disableSlots
   })
 
   return canSlot
@@ -107,6 +109,7 @@ const Slot: Component<{
     return config
   })
   const user = userStore((s) => ({
+    disableSlots: cfg.flags.forceAds ? false : !!s.user?.admin || !!s.sub?.tier?.disableSlots,
     sub: s.sub,
     tiers: s.tiers,
   }))
@@ -124,7 +127,7 @@ const Slot: Component<{
   createEffect(() => {
     if (!user.sub) return
 
-    if (user.sub?.tier.disableSlots) {
+    if (user.disableSlots) {
       win.enableSticky = undefined
       localStorage.setItem('agnai-sticky', 'false')
     }
@@ -306,7 +309,7 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
-    if (user.sub?.tier.disableSlots) {
+    if (user.disableSlots) {
       props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
@@ -403,7 +406,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!cfg.ready || !specs() || user.sub?.tier?.disableSlots}>{null}</Match>
+        <Match when={!cfg.ready || !specs() || user.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}

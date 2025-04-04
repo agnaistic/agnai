@@ -14,4 +14,5 @@ export const defaultFlags = {
   sounds: false,
   google: false,
   reschema: false,
+  forceAds: false,
 } satisfies { [key: string]: boolean }
