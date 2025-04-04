@@ -250,14 +250,15 @@ const InputBar: Component<{
   return (
     <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
       <Show when={ctx.waiting?.signal}>
-        <div
+        <button
           class="animate-pulse cursor-pointer p-2"
           onClick={() => {
+            console.log('Cancel clicked', !!ctx.waiting?.signal)
             ctx.waiting?.signal?.abort?.()
           }}
         >
           <StopCircle />
-        </div>
+        </button>
       </Show>
       <Show when={props.showOocToggle}>
         <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
