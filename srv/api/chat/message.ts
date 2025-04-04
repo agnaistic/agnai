@@ -219,6 +219,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         replyAs,
         impersonate,
         requestId,
+        settings: ents.preset,
         book: ents.book,
         resolvedScenario: ents.resolvedScenario,
         chatSchema: schema,
