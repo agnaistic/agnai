@@ -147,6 +147,7 @@ export async function generateResponse(
   }
 
   request.eventStream = true
+
   const stream = api.fetchSSE(
     `/chat/${entities.chat._id}/generate`,
     getAuthHeaders(),
