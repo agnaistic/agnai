@@ -254,7 +254,6 @@ const InputBar: Component<{
           class="animate-pulse cursor-pointer p-2"
           onClick={() => {
             ctx.waiting?.signal?.abort?.()
-            console.log('Cancel clicked')
           }}
         >
           <StopCircle />
