@@ -31,7 +31,7 @@ export const Spinner: Component<{ size?: number; class?: string; speed?: number 
   })
   return (
     <div
-      class={`absolute bottom-1/2 left-1/2 ${props.class || ''}`}
+      class={`absolute bottom-1/2 left-1/2 animate-spin ${props.class || ''}`}
       style={{
         'animation-duration': speed(),
         'animation-timing-function': 'linear',

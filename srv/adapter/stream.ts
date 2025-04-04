@@ -412,7 +412,7 @@ function parseEvent(msg: string) {
 }
 
 export async function websocketStream(
-  opts: { url: string; body: any; signal?: AbortController },
+  opts: { url: string; body: any; signal: AbortController },
   timeoutMs?: number
 ) {
   const socket = new WebSocket(opts.url.replace('https:', 'wss:').replace('http:', 'ws:'))

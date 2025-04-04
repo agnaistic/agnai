@@ -16,7 +16,7 @@ export type ServerSentEvent = {
  **/
 export function requestStream(
   stream: NodeJS.ReadableStream,
-  format?: ThirdPartyFormat | 'openrouter' | 'raw'
+  format?: ThirdPartyFormat | 'openrouter'
 ) {
   const emitter = eventGenerator<ServerSentEvent>()
 

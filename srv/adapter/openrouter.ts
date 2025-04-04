@@ -73,7 +73,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
         format: 'openrouter',
         signal: opts.signal,
       })
-    : getCompletion(payload, headers)
+    : getCompletion(opts.signal, payload, headers)
 
   let accum = ''
   let response: any
@@ -119,8 +119,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
 }
 
-async function* getCompletion(payload: any, headers: any): AsyncGenerator<any> {
+async function* getCompletion(
+  signal: AbortController,
+  payload: any,
+  headers: any
+): AsyncGenerator<any> {
   const resp = await needle('post', chatUrl, JSON.stringify(payload), {
+    signal: signal.signal,
     json: true,
     headers: Object.assign(headers, { Accept: 'application/json' }),
   }).catch((err) => ({ err }))
