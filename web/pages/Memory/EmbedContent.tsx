@@ -90,7 +90,7 @@ const EmbedContent: Component = (props) => {
 
   return (
     <form class="flex flex-col gap-2">
-      <Show when={user.user?.disableLTM ?? true}>
+      <Show when={user.user?.disableLTM ?? false}>
         <SolidCard bg="premium-700">
           You need to enable{' '}
           <b class="underline hover:cursor-pointer" onClick={() => settingStore.modal(true)}>
