@@ -163,6 +163,11 @@ const Message: Component<MessageProps> = (props) => {
     }
   })
 
+  const imageSpeed = createMemo(() => {
+    const next = ctx.waiting?.image ?? 1
+    return next
+  })
+
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
@@ -392,7 +397,7 @@ const Message: Component<MessageProps> = (props) => {
                   </Show>
                   <Show when={ctx.waiting?.image && ctx.waiting.messageId === props.msg._id}>
                     <div class="flex w-full justify-center">
-                      <RelativeSpinner speed={(ctx.waiting?.image || 1) * 1.3} />{' '}
+                      <RelativeSpinner speed={imageSpeed()} />{' '}
                       <span
                         class="text-500 text-xs italic"
                         classList={{ hidden: !ctx.status?.wait_time }}
@@ -401,6 +406,7 @@ const Message: Component<MessageProps> = (props) => {
                       </span>
                     </div>
                   </Show>
+
                   <MessageImages msg={props.msg} />
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">

@@ -778,7 +778,7 @@ export const msgStore = createStore<MsgState>(
       }
     },
     async *createImage(
-      { msgs, activeChatId, activeCharId, waiting, graph },
+      { msgs, activeChatId, activeCharId, waiting },
       sourceMessageId?: string,
       append?: boolean
     ) {
@@ -807,7 +807,8 @@ export const msgStore = createStore<MsgState>(
         },
         () => {
           const { waiting } = msgStore.getState()
-          msgStore.setState({ waiting: { ...waiting!, image: 2 } })
+          const next = (waiting?.image || 1) + 1
+          msgStore.setState({ waiting: { ...waiting!, image: next } })
         }
       )
       if (res.error) {
