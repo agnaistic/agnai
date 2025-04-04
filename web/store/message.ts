@@ -62,7 +62,7 @@ export type MsgState = {
     userId?: string
     characterId: string
     messageId?: string
-    image?: boolean
+    image?: number
   }
   nextLoading: boolean
   imagesSaved: boolean
@@ -793,17 +793,23 @@ export const msgStore = createStore<MsgState>(
           chatId: activeChatId,
           mode: 'send',
           characterId: activeCharId,
-          image: true,
+          image: 1,
           messageId,
         },
       }
 
-      const res = await imageApi.generateImage({
-        messageId,
-        prompt: prev?.imagePrompt,
-        append,
-        source: 'summary',
-      })
+      const res = await imageApi.generateImage(
+        {
+          messageId,
+          prompt: prev?.imagePrompt,
+          append,
+          source: 'summary',
+        },
+        () => {
+          const { waiting } = msgStore.getState()
+          msgStore.setState({ waiting: { ...waiting!, image: 2 } })
+        }
+      )
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
@@ -1246,11 +1252,13 @@ subscribe(
 )
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
-  const { activeChatId } = msgStore.getState()
+  const { activeChatId, waiting } = msgStore.getState()
 
   if (activeChatId !== body.chatId) return
+  if (!waiting) return
+
   if (body.error === 'inference cancelled by user') {
-    toastStore.warn(`Response cancelled`)
+    toastStore.warn(`Message cancelled`)
   } else {
     toastStore.error(`Failed to generate response: ${body.error}`)
   }

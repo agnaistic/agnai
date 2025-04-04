@@ -46,7 +46,10 @@ export const imageApi = {
   ALLOWED_TYPES,
 }
 
-export async function generateImage({ chatId, messageId, ...opts }: GenerateOpts) {
+export async function generateImage(
+  { chatId, messageId, ...opts }: GenerateOpts,
+  onSummary?: (summary: string) => void
+) {
   const entities = await getPromptEntities()
   const summary = opts.prompt
     ? await localApi.result({ response: opts.prompt })
@@ -57,6 +60,7 @@ export async function generateImage({ chatId, messageId, ...opts }: GenerateOpts
   }
 
   const prompt = summary.result.response
+  onSummary?.(prompt)
 
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 

@@ -22,7 +22,6 @@ import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { parseStops } from '/common/util'
-import { getTextgenCompletion } from './dispatch'
 import { handleVenus } from './venus'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
@@ -265,18 +264,11 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   body.model_override = override
 
-  const resp = gen.streamResponse
-    ? await websocketStream({
-        url: `${subPreset.subServiceUrl || subPreset.thirdPartyUrl}/api/v1/stream?${params}`,
-        body,
-        signal: opts.signal,
-      })
-    : getTextgenCompletion(
-        'Agnastic',
-        `${subPreset.subServiceUrl || subPreset.thirdPartyUrl}/api/v1/generate?${params}`,
-        body,
-        {}
-      )
+  const resp = await websocketStream({
+    url: `${subPreset.subServiceUrl || subPreset.thirdPartyUrl}/api/v1/stream?${params}`,
+    body,
+    signal: opts.signal,
+  })
 
   let accumulated = ''
   let result = ''
@@ -306,7 +298,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     if (generated.token) {
       if (opts.guidance) accumulated = generated.token
       else accumulated += generated.token
-      yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+
+      if (gen.streamResponse) {
+        yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+      }
     }
 
     if (typeof generated === 'string') {

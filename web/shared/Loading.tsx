@@ -25,19 +25,25 @@ const Loading: Component<{ type?: Dot }> = (props) => {
   )
 }
 
-export const Spinner: Component<{ size?: number; class?: string }> = (props) => {
+export const Spinner: Component<{ size?: number; class?: string; speed?: number }> = (props) => {
   return (
-    <div class={`spinner absolute bottom-1/2 left-1/2 ${props.class || ''}`}>
+    <div
+      class={`absolute bottom-1/2 left-1/2 ${props.class || ''}`}
+      style={{ animation: `spin ${props.speed || '1.3'}s linear infinite` }}
+    >
       <LoaderCircle size={props.size} />
     </div>
   )
 }
 
-export const RelativeSpinner: Component<{ size?: number; class?: string; full?: boolean }> = (
-  props
-) => {
+export const RelativeSpinner: Component<{
+  size?: number
+  class?: string
+  speed?: number
+  full?: boolean
+}> = (props) => {
   return (
-    <div class="spinner">
+    <div style={{ animation: `spin ${props.speed || '1.3'}s linear infinite` }}>
       <LoaderCircle size={props.size} />
     </div>
   )

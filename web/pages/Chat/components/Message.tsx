@@ -392,7 +392,7 @@ const Message: Component<MessageProps> = (props) => {
                   </Show>
                   <Show when={ctx.waiting?.image && ctx.waiting.messageId === props.msg._id}>
                     <div class="flex w-full justify-center">
-                      <RelativeSpinner />{' '}
+                      <RelativeSpinner speed={(ctx.waiting?.image || 1) * 1.3} />{' '}
                       <span
                         class="text-500 text-xs italic"
                         classList={{ hidden: !ctx.status?.wait_time }}

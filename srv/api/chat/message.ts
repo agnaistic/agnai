@@ -251,6 +251,16 @@ export const generateMessageV2 = handle(async (req, res) => {
       res.on('close', () => {
         if (!signal) return
         signal.abort()
+
+        sendMsg(ents, {
+          type: 'message-error',
+          error: 'inference cancelled by user',
+          adapter,
+          chatId,
+          requestId,
+        })
+
+        res.status(499).end()
       })
     } else {
       res.json(success)
@@ -269,6 +279,12 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     try {
       for await (const gen of stream) {
+        if (!signal || signal.signal.aborted) {
+          log.warn(`Breaking due to aborted signal`)
+          error = true
+          break
+        }
+
         if (typeof gen === 'string') {
           generated = gen
           continue
