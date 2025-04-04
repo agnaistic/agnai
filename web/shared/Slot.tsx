@@ -376,7 +376,7 @@ const Slot: Component<{
 
         window.fusetag.registerZone(id())
         FuseIds.set(id(), false)
-        invokeFuse()
+        invokeFuse(user.disableSlots)
       })
     }
 
@@ -727,7 +727,7 @@ const [invokeEz] = createDebounce((log: (typeof console)['log'], self: number) =
   })
 }, 1000)
 
-const [invokeFuse] = createDebounce(() => {
+const [invokeFuse] = createDebounce((disableSlots: boolean) => {
   fuseReady.then((status) => {
     if (!status) return
     const ids: string[] = []
@@ -738,8 +738,11 @@ const [invokeFuse] = createDebounce(() => {
     }
     console.log(`[fuse] init ${ids}`)
     const win: any = window
-    win.enableSticky = true
-    localStorage.setItem('agnai-sticky', 'true')
+
+    const previous = JSON.parse(localStorage.getItem('agnai-sticky') || 'true')
+
+    win.enableSticky = !previous || disableSlots ? undefined : true
+    localStorage.setItem('agnai-sticky', !previous || disableSlots ? 'false' : 'true')
     window.fusetag.que.push(() => {
       window.fusetag.pageInit({ blockingFuseIds: ids })
     })
