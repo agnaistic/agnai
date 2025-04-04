@@ -14,6 +14,7 @@
       property="og:description"
       content="AI chat with seamless integration to your favorite AI services"
     />
+    <link rel="manifest" href="manifest.json" />
     <link href="./tailwind.css" rel="stylesheet" />
     <link
       href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=block"
@@ -22,7 +23,7 @@
     <title>Agnaistic</title>
   </head>
   <body>
-    <div id="root"><!-- TODO(11b): Fallback when no JS. --></div>
+    <div id="root"></div>
     <script src="https://accounts.google.com/gsi/client"></script>
     <script type="module" src="./index.tsx"></script>
     <script>

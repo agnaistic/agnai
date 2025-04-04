@@ -1,0 +1,12 @@
+{
+  "name": "Agnaistic",
+  "start_url": ".",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icons/agnai_bg-circle_2.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
