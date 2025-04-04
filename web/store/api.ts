@@ -24,7 +24,7 @@ export const baseUrl = API_OVERRIDE
   : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
   ? `${PROTO}//edge-api.agnai.chat`
   : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-  ? `${PROTO}//alb.agnai.chat`
+  ? `${PROTO}//prd-api.agnai.chat`
   : HOST === 'stg.agnai.chat'
   ? `${PROTO}//stg-api.agnai.chat`
   : location.origin
