@@ -125,12 +125,10 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   createEffect(() => {
-    if (!user.sub) return
+    if (!user.disableSlots) return
 
-    if (user.disableSlots) {
-      win.enableSticky = undefined
-      localStorage.setItem('agnai-sticky', 'false')
-    }
+    win.enableSticky = undefined
+    localStorage.setItem('agnai-sticky', 'false')
   })
 
   const id = createMemo(() => {
