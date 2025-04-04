@@ -165,15 +165,6 @@ export async function* fetchSSE(
   body: any,
   signal?: AbortController
 ): AsyncGenerator<any, any | undefined> {
-  if (signal) {
-    const win: any = window
-    win.abort = signal.signal
-
-    console.log('Cancellabled')
-    signal.signal.onabort = () => {
-      console.log('SSE aborted')
-    }
-  }
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
