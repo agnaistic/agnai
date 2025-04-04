@@ -176,10 +176,8 @@ export async function generateResponse(
 }
 
 async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
-  const res = await handleLocalRequest(request, signal, prompt)
-  if (res.result) {
-    request.response = res.result.response
-  }
+  await handleLocalRequest(request, signal, prompt)
+  return
 
   await api.post<{ requestId: string; messageId?: string }>(
     `/chat/${request.chat._id}/generate`,

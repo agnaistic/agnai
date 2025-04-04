@@ -30,6 +30,14 @@ export const presetStore = createStore<PresetState>(
   initState
 )((_) => {
   events.on(EVENTS.init, (init) => {
+    if (Array.isArray(init.presets)) {
+      for (const preset of init.presets) {
+        if (!preset.thirdPartyKey) continue
+        preset.userThirdPartyKey = preset.thirdPartyKey
+        preset.thirdPartyKey = ''
+      }
+    }
+
     presetStore.setState({ presets: init.presets })
   })
 
