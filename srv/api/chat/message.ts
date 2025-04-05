@@ -272,7 +272,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     try {
       for await (const gen of stream) {
         if (signal.signal.aborted) {
-          log.warn(`Breaking due to aborted signal`)
+          log.warn(`Message aborted by user`)
           error = true
           break
         }
