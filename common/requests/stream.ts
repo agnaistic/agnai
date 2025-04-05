@@ -20,11 +20,12 @@ export function requestStream(
 ) {
   const emitter = eventGenerator<ServerSentEvent>()
 
+  let error: string | null = null
+
   stream.on('header', (statusCode, headers) => {
     const contentType = headers['content-type'] || ''
     if (statusCode > 201) {
-      emitter.push({ error: `SSE request failed with status code ${statusCode}` })
-      emitter.done()
+      error = `SSE request failed with status code ${statusCode}`
     } else if (format === 'openrouter') {
       if (
         contentType.startsWith('application/json') ||
@@ -32,21 +33,13 @@ export function requestStream(
       ) {
         return
       }
-      emitter.push({
-        error: `SSE request received unexpected content-type ${headers['content-type']}`,
-      })
+      error = `SSE request received unexpected content-type ${headers['content-type']}`
     } else if (format === 'ollama') {
       if (contentType.startsWith('application/x-ndjson')) return
 
-      emitter.push({
-        error: `SSE request received unexpected content-type ${headers['content-type']}`,
-      })
-      emitter.done()
+      error = `SSE request received unexpected content-type ${headers['content-type']}`
     } else if (!contentType.startsWith('text/event-stream')) {
-      emitter.push({
-        error: `SSE request received unexpected content-type ${headers['content-type']}`,
-      })
-      emitter.done()
+      error = `SSE request received unexpected content-type ${headers['content-type']}`
     }
   })
 
@@ -63,6 +56,26 @@ export function requestStream(
     const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
     for (const msg of messages) {
+      if (error) {
+        const event = tryParse(msg)
+
+        if (!event) {
+          emitter.push({ error })
+        } else if (typeof event === 'string') {
+          emitter.push({ error: `Local request failed: ${event}` })
+        } else if (event.error) {
+          if (typeof event.error === 'string') {
+            emitter.push({ error: `Local request failed: ${event.error}` })
+          } else if (event.error?.message) {
+            emitter.push({ error: `Local request failed: ${event.error.message}` })
+          }
+        } else {
+          emitter.push({ error })
+        }
+        emitter.done()
+        return
+      }
+
       if (format === 'vllm') {
         const event = parseVLLM(incomplete + msg)
         if (!event) continue

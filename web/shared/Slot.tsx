@@ -738,9 +738,10 @@ const [invokeFuse] = createDebounce((disableSlots: boolean) => {
     const win: any = window
 
     const previous = JSON.parse(localStorage.getItem('agnai-sticky') || 'true')
+    const disabled = !previous || disableSlots
 
-    win.enableSticky = !previous || disableSlots ? undefined : true
-    localStorage.setItem('agnai-sticky', !previous || disableSlots ? 'false' : 'true')
+    win.enableSticky = disabled ? undefined : true
+    localStorage.setItem('agnai-sticky', disabled ? 'false' : 'true')
     window.fusetag.que.push(() => {
       window.fusetag.pageInit({ blockingFuseIds: ids })
     })

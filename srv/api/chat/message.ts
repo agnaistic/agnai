@@ -11,6 +11,7 @@ import { HydratedJson, jsonHydrator, parsePartialJson } from '/common/util'
 import { getAdapter, resolveScenario } from '/common/prompt'
 import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
+import { Response } from 'express'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 type MsgEntities = Awaited<ReturnType<typeof getMessageEntities>>
@@ -211,6 +212,26 @@ export const generateMessageV2 = handle(async (req, res) => {
   // When undefined, we'll generate the response
   let signal: AbortController | null = new AbortController()
   if (body.response === undefined) {
+    const listener = () => {
+      req.log.warn({ destroyed: req.destroyed, aborted: req.aborted }, 'RES CLOSE - LISTENER')
+      if (!signal) return
+      signal.abort()
+
+      sendMsg(ents, {
+        type: 'message-error',
+        error: 'inference cancelled by user',
+        adapter,
+        chatId,
+        requestId,
+      })
+
+      res.status(499).end()
+    }
+
+    req.socket.on('end', listener)
+
+    setTextStreamHeaders(res, ents, body, userMsg)
+
     const chatStream = await createChatStream(
       {
         ...body,
@@ -232,39 +253,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     if ('err' in chatStream) {
       await releaseLock(chatId)
       throw chatStream.err
-    }
-
-    const success = {
-      requestId,
-      success: true,
-      generating: true,
-      message: 'Generating message',
-      messageId,
-      created: userMsg,
-    }
-    if (body.eventStream) {
-      res.setHeader('Cache-Control', 'no-cache')
-      res.setHeader('Content-Type', 'text/event-stream')
-      res.setHeader('Access-Control-Allow-Origin', '*')
-      res.setHeader('Connection', 'keep-alive')
-      res.flushHeaders()
-      res.write(`data: ${JSON.stringify(success)}`)
-      res.on('close', () => {
-        if (!signal) return
-        signal.abort()
-
-        sendMsg(ents, {
-          type: 'message-error',
-          error: 'inference cancelled by user',
-          adapter,
-          chatId,
-          requestId,
-        })
-
-        res.status(499).end()
-      })
-    } else {
-      res.json(success)
     }
 
     const { stream, ...metadata } = chatStream
@@ -363,15 +351,22 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
     }
 
+    req.socket.removeAllListeners()
+    req.log.warn('SIGNAL OBSERVERS REMOVED')
     signal = null
+
+    if (body.eventStream) {
+      res.write('data: [DONE]')
+      res.end()
+    }
 
     if (!ents.guest) {
       await releaseLock(chatId)
     }
+  }
 
-    if (error) {
-      return
-    }
+  if (error) {
+    return
   }
 
   if (meta.probs) {
@@ -386,12 +381,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     responseText = hydration.response
   }
 
-  if (body.eventStream) {
-    res.write('data: [DONE]')
-    res.end()
-  }
-
-  signal = null
   const payload = { req, ents, meta, probs, responseText, parent, hydration, adapter, retries }
   if (ents.guest) {
     await handleGuestResponse(payload)
@@ -911,4 +900,27 @@ async function sendMsgOne<T extends { type: string }>(req: AppRequest, payload: 
 
 function isGuest(req: AppRequest) {
   return !req.userId
+}
+
+function setTextStreamHeaders(res: Response, ents: MsgEntities, body: GenRequest, userMsg?: any) {
+  const success = {
+    requestId: ents.requestId,
+    success: true,
+    generating: true,
+    message: 'Generating message',
+    messageId: ents.messageId,
+    created: userMsg,
+  }
+
+  if (!body.eventStream) {
+    res.json(success)
+    return
+  }
+
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  res.write(`data: ${JSON.stringify(success)}`)
 }

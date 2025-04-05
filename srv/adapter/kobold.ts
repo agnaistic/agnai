@@ -444,7 +444,6 @@ const streamCompletion: CompletionGenerator<CompletionTick> = async function* ({
     }
   } catch (err: any) {
     yield { error: `${format} streaming request failed: ${err.message || err}` }
-    signal.abort()
     return
   }
 
