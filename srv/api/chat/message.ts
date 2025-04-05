@@ -214,6 +214,8 @@ export const generateMessageV2 = handle(async (req, res) => {
   if (body.response === undefined) {
     const listener = () => {
       if (!signal) return
+      if (generated) return
+
       signal.abort()
 
       sendMsg(ents, {
@@ -272,6 +274,10 @@ export const generateMessageV2 = handle(async (req, res) => {
         if (signal.signal.aborted) {
           log.warn(`Breaking due to aborted signal`)
           error = true
+          break
+        }
+
+        if (!signal) {
           break
         }
 
@@ -352,7 +358,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
     }
 
-    req.socket.removeAllListeners()
+    req.socket.removeAllListeners('end')
     signal = null
 
     if (body.eventStream) {
