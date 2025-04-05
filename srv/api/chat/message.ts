@@ -213,7 +213,6 @@ export const generateMessageV2 = handle(async (req, res) => {
   let signal: AbortController | null = new AbortController()
   if (body.response === undefined) {
     const listener = () => {
-      req.log.warn({ destroyed: req.destroyed, aborted: req.aborted }, 'RES CLOSE - LISTENER')
       if (!signal) return
       signal.abort()
 
@@ -228,7 +227,9 @@ export const generateMessageV2 = handle(async (req, res) => {
       res.status(499).end()
     }
 
-    req.socket.on('end', listener)
+    if (body.eventStream) {
+      req.socket.on('end', listener)
+    }
 
     setTextStreamHeaders(res, ents, body, userMsg)
 
@@ -352,7 +353,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     req.socket.removeAllListeners()
-    req.log.warn('SIGNAL OBSERVERS REMOVED')
     signal = null
 
     if (body.eventStream) {

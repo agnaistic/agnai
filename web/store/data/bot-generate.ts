@@ -172,7 +172,7 @@ export async function generateResponse(
     }
   }
 
-  return localApi.error(`unexpected error occurred`)
+  return localApi.result({ requestId: request.requestId, generating: true, success: true })
 }
 
 async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {

@@ -19,7 +19,7 @@ const API_OVERRIDE = localStorage.getItem('api_url')
 
 export const baseUrl = API_OVERRIDE
   ? `${PROTO}//${API_OVERRIDE}`
-  : PORT === '1234' || PORT === '3001' || HOST === 'localhost' || HOST === '127.0.0.1'
+  : PORT === '1234' || PORT === '3001' // || HOST === 'localhost' || HOST === '127.0.0.1'
   ? `${PROTO}//${HOST}:3001`
   : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
   ? `${PROTO}//prd-api.agnai.chat`
