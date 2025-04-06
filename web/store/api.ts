@@ -2,8 +2,8 @@ import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
-import { requestStream } from '/common/requests/stream'
-import { tryParseConcat } from '/common/util'
+import { incompleteJson, parseEvent } from '/common/requests/stream'
+import { tryParse } from '/common/util'
 
 let socketId = ''
 
@@ -159,12 +159,17 @@ async function callApi<T = any>(
   return { result: json, status: res.status, error: res.status >= 400 ? res.statusText : undefined }
 }
 
-export async function* fetchSSE(
-  path: string,
-  headers: any,
-  body: any,
+export async function fetchSSE(opts: {
+  path: string
+  headers: any
+  body: any
   signal?: AbortController
-): AsyncGenerator<any, any | undefined> {
+
+  onData?: (event: any) => void
+  onDone?: () => void
+  onError?: (err: any) => void
+}) {
+  const { path, headers, body, signal } = opts
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
@@ -175,43 +180,64 @@ export async function* fetchSSE(
     },
   })
 
-  try {
-    const events = requestStream(resp)
-    let prev = ''
-    for await (const event of events) {
-      if (event.error) {
-        yield { error: event.error }
+  let error = ''
+  let incomplete = ''
+
+  resp.on('header', (statusCode, headers) => {
+    // const contentType = headers['content-type'] || ''
+    if (statusCode > 201) {
+      error = `SSE request failed with status code ${statusCode}`
+    }
+  })
+
+  resp.on('data', (chunk: Buffer) => {
+    const data = incomplete + chunk.toString()
+    incomplete = ''
+
+    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+
+    for (const msg of messages) {
+      if (error) {
+        const event = tryParse(msg)
+
+        if (!event) {
+          opts.onError?.(error)
+        } else if (typeof event === 'string') {
+          opts.onError?.(`Local request failed: ${event}`)
+        } else if (event.error) {
+          if (typeof event.error === 'string') {
+            opts.onError?.(`Local request failed: ${event.error}`)
+          } else if (event.error?.message) {
+            opts.onError?.(`Local request failed: ${event.error.message}`)
+          }
+        } else {
+          opts.onError?.(error)
+        }
         return
       }
+
+      const event: any = parseEvent(msg)
 
       if (!event.data) {
         continue
       }
 
-      if (event.type === 'ping') {
+      const data: string = event.data
+      if (typeof data === 'string' && incompleteJson(data)) {
+        incomplete = msg
         continue
       }
 
-      if (event.data === '[DONE]') {
-        break
+      if (event.event) {
+        event.type = event.event
       }
-
-      prev += event.data
-
-      // If we fail to parse we might need to parse with this bad data and the next event's data...
-      // So we'll keep it and try again next iteration
-      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
-      const parsed = tryParseConcat(event.data, prev)
-      if (!parsed) continue
-
-      prev = ''
-      yield parsed
-      continue
+      opts.onData?.(event)
     }
-  } catch (err: any) {
-    yield { error: `local streaming request failed: ${err.message}` }
-    return
-  }
+  })
+
+  resp.on('done', () => {
+    opts.onDone?.()
+  })
 }
 
 export function getAuthHeaders() {

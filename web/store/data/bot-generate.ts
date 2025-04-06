@@ -148,11 +148,17 @@ export async function generateResponse(
 
   request.eventStream = true
 
-  api.fetchSSE(`/chat/${entities.chat._id}/generate`, getAuthHeaders(), request, opts.signal)
+  api.fetchSSE({
+    path: `/chat/${entities.chat._id}/generate`,
+    headers: getAuthHeaders(),
+    body: request,
+    signal: opts.signal,
+  })
 
   if (onTick) {
     genApi.callbacks.set(request.requestId, onTick)
   }
+
   return localApi.result({ requestId: request.requestId, generating: true, success: true })
 }
 

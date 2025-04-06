@@ -148,7 +148,7 @@ export function requestStream(
 }
 
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
-function incompleteJson(data: string) {
+export function incompleteJson(data: string) {
   if (data.startsWith('{') && !data.endsWith('}')) return true
   try {
     const parsed = JSON.parse(data)
@@ -219,7 +219,7 @@ function tryParse(value: any) {
   }
 }
 
-function parseEvent(msg: string) {
+export function parseEvent(msg: string) {
   const event: any = {}
   for (const line of msg.split(/\r?\n/)) {
     const pos = line.indexOf(':')
