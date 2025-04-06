@@ -1,7 +1,6 @@
 import { v4 } from 'uuid'
 import { api, getAuthHeaders } from '../api'
 import { getStore } from '../create'
-import { genApi } from './inference'
 import { localApi } from './storage'
 import {
   buildPromptParts,
@@ -24,6 +23,7 @@ import { replaceTags } from '/common/presets/templates'
 import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
 import iconv from 'iconv-lite'
+import { genApi } from './inference'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -148,30 +148,11 @@ export async function generateResponse(
 
   request.eventStream = true
 
-  const stream = api.fetchSSE(
-    `/chat/${entities.chat._id}/generate`,
-    getAuthHeaders(),
-    request,
-    opts.signal
-  )
+  api.fetchSSE(`/chat/${entities.chat._id}/generate`, getAuthHeaders(), request, opts.signal)
 
-  for await (const tick of stream) {
-    if (tick.error) {
-      return { result: undefined, error: tick.error }
-    }
-
-    if (!tick.generating) continue
-
-    if (onTick) {
-      genApi.callbacks.set(request.requestId, onTick)
-    }
-
-    return {
-      result: tick,
-      error: undefined,
-    }
+  if (onTick) {
+    genApi.callbacks.set(request.requestId, onTick)
   }
-
   return localApi.result({ requestId: request.requestId, generating: true, success: true })
 }
 
