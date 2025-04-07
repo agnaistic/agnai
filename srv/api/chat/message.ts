@@ -152,7 +152,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   const ents = await getMessageEntities(req)
   const { requestId, messageId, chat, replyAs, impersonate, members } = ents
 
-  if (body.kind === 'request' && chat.userId !== userId) {
+  if (!ents.guest && body.kind === 'request' && chat.userId !== userId) {
     throw errors.Forbidden
   }
 
@@ -254,8 +254,24 @@ export const generateMessageV2 = handle(async (req, res) => {
     ).catch((err) => ({ err }))
 
     if ('err' in chatStream) {
+      req.log.error({ err: chatStream.err, chatId }, 'Chat stream failed to start')
       await releaseLock(chatId)
-      throw chatStream.err
+
+      if (body.eventStream) {
+        const msg =
+          chatStream.err?.message || 'Unexpected error occurred when initiating chat response'
+
+        sendMsg(ents, {
+          type: 'message-error',
+          requestId,
+          chatId,
+          adapter,
+          error: msg,
+        })
+        return
+      } else {
+        throw chatStream.err
+      }
     }
 
     const { stream, ...metadata } = chatStream
@@ -717,7 +733,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
   if (isGuest(req)) {
     const replyAs = body.replyAs || body.char
     const chat = body.chat
-    if (!chat) throw errors.NotFound
+    if (!chat) throw errors.ChatNotFound
     const impersonate = body.impersonate
 
     return {
@@ -829,7 +845,8 @@ async function createUserMessage(req: AppRequest<GenRequest>, ents: MsgEntities)
   const { body } = req
   const { chatId, replyAs, impersonate } = ents
   let userMsg: AppSchema.ChatMessage | undefined
-  if (isGuest(req)) {
+
+  if (ents.guest) {
     if (req.body.kind === 'send' || req.body.kind === 'ooc') {
       userMsg = newMessage(v4(), chatId, req.body.text!, {
         userId: 'anon',
