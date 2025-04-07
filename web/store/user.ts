@@ -1053,6 +1053,7 @@ async function checkout(sessionUrl: string) {
 }
 
 function getUserType(user: AppSchema.User): UserType {
+  if (!user) return 'guests'
   if (user.admin) return 'admins'
   if (user.role === 'admin') return 'admins'
   if (user.role === 'moderator') return 'moderators'
