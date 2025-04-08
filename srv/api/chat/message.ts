@@ -287,27 +287,29 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     try {
       for await (const gen of stream) {
+        if (!signal) {
+          break
+        }
+
         if (signal.signal.aborted) {
           log.warn(`Message aborted by user`)
           error = true
           break
         }
 
-        if (!signal) {
-          break
-        }
-
         if (typeof gen === 'string') {
+          signal = null
           generated = gen
           continue
         }
 
-        if ('tokens' in gen) {
-          generated = gen.tokens as string
-        }
-
         if ('gens' in gen) {
           retries = gen.gens
+        }
+
+        if ('tokens' in gen) {
+          signal = null
+          generated = gen.tokens as string
           break
         }
 
