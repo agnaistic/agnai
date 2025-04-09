@@ -95,6 +95,7 @@ export async function createIndexes() {
   await db('user').createIndex({ username: 1 }, { name: 'user_username' })
   await db('user').createIndex({ kind: 1, username: 1 }, { name: 'user_kind_username' })
   await db('user').createIndex({ apiKey: 1 }, { name: 'user_apiKey' })
+  await db('user').createIndex({ resetCode: 1 }, { name: 'user_resetCode' })
   await db('user').createIndex({ patreonUserId: 1 }, { name: 'user_patreonUserId' })
   await db('user').createIndex(
     { 'patreon.user.attributes.email': 1 },

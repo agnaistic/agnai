@@ -217,6 +217,8 @@ export namespace AppSchema {
     }
 
     banHistory?: Array<{ at: Date; reason: string }>
+
+    resetCode?: string
   }
 
   export interface ApiKey {

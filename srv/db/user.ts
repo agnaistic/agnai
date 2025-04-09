@@ -56,12 +56,23 @@ export async function getUser(userId: string) {
   return user
 }
 
+export async function getUserByCode(code: string) {
+  const user = await db('user').findOne({ resetCode: code }, { projection: { hash: 0 } })
+  return user
+}
+
 export async function updateUserUI(userId: string, props: Partial<AppSchema.User['ui']>) {
   const prev = await getUser(userId)
   if (!prev) throw errors.Unauthorized
 
   const next: AppSchema.User['ui'] = { ...prev.ui!, ...props }
   await db('user').updateOne({ _id: userId }, { $set: { ui: next, updatedAt: now() } })
+}
+
+export async function resetPassword(userId: string, password: string) {
+  const hash = await encryptPassword(password)
+
+  await db('user').updateOne({ _id: userId }, { $set: { hash, resetCode: '' } })
 }
 
 export async function updateUser(userId: string, props: Partial<AppSchema.User>) {
@@ -529,6 +540,8 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
       if (user.adapterConfig[svc.name]![secret.field]) {
         user.adapterConfig[svc.name]![secret.field] = ''
         user.adapterConfig[svc.name]![secret.field + 'Set'] = true
+      } else {
+        user.adapterConfig[svc.name]![secret.field + 'Set'] = false
       }
     }
   }

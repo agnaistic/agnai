@@ -195,6 +195,24 @@ export const userStore = createStore<UserState>(
       toastStore.error(`Could not unlinked Google: ${res.error}`)
     },
 
+    async *resetPassword(
+      _,
+      code: string,
+      username: string,
+      password: string,
+      confirm: string,
+      onSuccess: () => void
+    ) {
+      const res = await api.post(`/user/reset-password`, { code, username, password, confirm })
+
+      if (res.result) {
+        toastStore.success('Your password has been changed. You can now login.')
+        onSuccess()
+      } else {
+        toastStore.error(`Could not reset password: ${res.error}`)
+      }
+    },
+
     async *handleGoogleCallback(
       _,
       action: 'login' | 'link',

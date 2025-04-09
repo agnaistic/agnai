@@ -27,6 +27,33 @@ export const login = handle(async (req) => {
   return result
 })
 
+export const resetPassword = handle(async (req) => {
+  const { body } = req
+  assertValid({ code: 'string', username: 'string', password: 'string', confirm: 'string' }, body)
+
+  if (body.password !== body.confirm) {
+    throw new StatusError('Passwords do not match', 400)
+  }
+
+  if (!body.code.trim()) {
+    throw errors.BadRequest
+  }
+
+  const user = await store.users.getUserByCode(body.code)
+
+  if (!user) {
+    throw errors.BadRequest
+  }
+
+  if (user.username.toLowerCase() !== body.username.toLowerCase().trim()) {
+    throw errors.BadRequest
+  }
+
+  await store.users.resetPassword(user._id, body.password)
+
+  return { success: true }
+})
+
 export const oathGoogleLogin = handle(async ({ log, body }) => {
   assertValid({ token: 'string' }, body)
 

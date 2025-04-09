@@ -70,6 +70,7 @@ const UISettings: Component<{}> = () => {
     }
 
     userStore.saveUI({ msgOptsInline: next })
+    setInline(toInlineList(next))
   }
 
   createEffect(
@@ -78,13 +79,7 @@ const UISettings: Component<{}> = () => {
       (opts) => {
         if (inline().length) return
 
-        const next = Object.entries(opts).map(([key, item], i) => ({
-          id: i,
-          value: key,
-          label: msgInlineLabels[key as UI.MessageOption],
-          enabled: item.outer,
-        }))
-        setInline(next)
+        setInline(toInlineList(opts))
       }
     )
   )
@@ -430,3 +425,14 @@ const UISettings: Component<{}> = () => {
 }
 
 export default UISettings
+
+function toInlineList(opts: UI.UISettings['msgOptsInline']) {
+  const next = Object.entries(opts).map(([key, item], i) => ({
+    id: i,
+    value: key,
+    label: msgInlineLabels[key as UI.MessageOption],
+    enabled: item.outer,
+  }))
+
+  return next
+}

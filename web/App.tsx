@@ -43,6 +43,7 @@ import PatreonOauth from './pages/Settings/PatreonOauth'
 import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
 import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
+import { ResetPasswordPage } from './pages/Login/ResetPassword'
 
 const App: Component = () => {
   const state = userStore()
@@ -114,6 +115,7 @@ const App: Component = () => {
       </Show>
       <Show when={cfg.config.canAuth}>
         <Route path={['/login', '/login/remember']} component={LoginPage} />
+        <Route path="/recovery" component={ResetPasswordPage} />
       </Show>
       <Route path="/faq" component={FAQ} />
       <Route path="*" component={HomePage} />
