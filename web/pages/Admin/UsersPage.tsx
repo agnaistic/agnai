@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-solid'
+import { X } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -6,13 +6,14 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, setComponentPageTitle, toLocalTime } from '../../shared/util'
 import { adminStore, presetStore, toastStore, userStore } from '../../store'
-import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 import { A } from '@solidjs/router'
 import { elapsedSince, getUserSubscriptionTier, now } from '/common/util'
 import type Stripe from 'stripe'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
+import { Copy } from '/web/shared/Copy'
+import { AppSchema } from '/common/types'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -20,7 +21,7 @@ const UsersPage: Component = () => {
   const state = adminStore()
   const config = userStore()
 
-  const [pw, setPw] = createSignal<AppSchema.User>()
+  const [code, setCode] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
   const [store, setStore] = createStore({ username: '', subscribed: false, customerId: '' })
 
@@ -98,8 +99,8 @@ const UsersPage: Component = () => {
                     adminStore.changeUserTier(user._id, ev.value)
                   }}
                 />
-                <Button size="sm" onClick={() => setPw(user)}>
-                  Set Password
+                <Button size="sm" onClick={() => setCode(user)}>
+                  Reset
                 </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
@@ -108,7 +109,7 @@ const UsersPage: Component = () => {
             </div>
           )}
         </For>
-        <PasswordModal show={!!pw()} user={pw()!} close={() => setPw(undefined)} />
+        <PasswordModal show={!!code()} close={() => setCode(undefined)} user={code()} />
         <InfoModel
           show={!!info()}
           close={() => setInfo()}
@@ -394,13 +395,19 @@ const BanModal: Component<{ userId: string; show: boolean; close: () => void }> 
   )
 }
 
-const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (
+const PasswordModal: Component<{ user?: AppSchema.User; show: boolean; close: () => void }> = (
   props
 ) => {
-  const [password, setPassword] = createSignal('')
+  const [code, setCode] = createSignal('')
 
-  const save = () => {
-    adminStore.setPassword(props.user._id, password(), props.close)
+  const url = createMemo(() => `${location.origin}/recovery?code=${code()}`)
+
+  const resetPassword = () => {
+    if (!props.user) return
+
+    adminStore.generateResetCode(props.user._id, (code) => {
+      setCode(code)
+    })
   }
 
   return (
@@ -411,27 +418,35 @@ const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () 
       footer={
         <>
           {' '}
-          <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+          <Button
+            schema="secondary"
+            onClick={() => {
+              setCode('')
+              props.close()
+            }}
+          >
+            <X /> Close
           </Button>
-          <Button onClick={save}>
-            <Save /> Update
+          <Button schema="warning" onClick={resetPassword}>
+            Reset
           </Button>
         </>
       }
     >
-      <div>
-        Update password for: <b>{props.user.username}</b>
-      </div>
-      <div>
-        <form>
-          <TextInput
-            type="password"
-            value={password()}
-            onChange={(ev) => setPassword(ev.currentTarget.value)}
-            required
-          />
-        </form>
+      <div class="flex flex-col items-center gap-2">
+        <div>Reset Link: {props.user?.username}</div>
+
+        <Show when={!code()}>
+          <div class="link" onClick={resetPassword}>
+            Generate Link
+          </div>
+        </Show>
+
+        <Show when={code()}>
+          <div class="flex cursor-pointer gap-2 font-bold">
+            {url()} <Copy text={url()} />
+          </div>
+        </Show>
       </div>
     </Modal>
   )

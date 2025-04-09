@@ -5,6 +5,7 @@ import { AppSchema } from '../../common/types/schema'
 import { domain } from '../domains'
 import { config } from '../config'
 import { StatusError } from '../api/wrap'
+import { v4 } from 'uuid'
 
 type UsersOpts = {
   username?: string
@@ -54,6 +55,14 @@ export async function updateServerConfiguration(update: Partial<AppSchema.Config
   await db('configuration').updateOne({ kind: 'configuration' }, { $set: update }, { upsert: true })
   const cfg = await getServerConfiguration()
   return cfg
+}
+
+export async function setPasswordResetCode(userId: string) {
+  const code = v4()
+
+  await db('user').updateOne({ _id: userId }, { $set: { resetCode: code } })
+
+  return { code }
 }
 
 export async function getUsers(opts: UsersOpts = {}) {

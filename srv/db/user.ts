@@ -52,7 +52,7 @@ export async function getProfile(userId: string) {
 }
 
 export async function getUser(userId: string) {
-  const user = await db('user').findOne({ _id: userId, kind: 'user' }, { projection: { hash: 0 } })
+  const user = await db('user').findOne({ _id: userId }, { projection: { hash: 0 } })
   return user
 }
 

@@ -67,6 +67,19 @@ export const adminStore = createStore<AdminState>('admin', {
       revertAuth()
     },
 
+    async generateResetCode(_, userId: string, onSuccess: (code: string) => void) {
+      const res = await api.post(`/admin/password-reset/${userId}`)
+      if (res.result) {
+        onSuccess(res.result.code)
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(res.error)
+        return
+      }
+    },
+
     async *banUser(_, userId: string, reason: string) {
       const res = await api.post(`/admin/ban/${userId}`, { reason })
       if (res.result) {

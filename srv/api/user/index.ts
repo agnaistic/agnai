@@ -8,6 +8,7 @@ import {
   oathGoogleLogin,
   register,
   remoteLogin,
+  resetPassword,
   resyncPatreon,
   unlinkGoogleAccount,
   unlinkPatreon,
@@ -56,6 +57,7 @@ router.post('/login/google', oathGoogleLogin)
 router.post('/link-google', loggedIn, linkGoogleAccount)
 router.post('/unlink-google', loggedIn, unlinkGoogleAccount)
 router.post('/login', login)
+router.post('/reset-password', resetPassword)
 router.post('/register', register)
 router.post('/services/novel', novelLogin)
 router.post('/services/horde-stats', hordeStats)

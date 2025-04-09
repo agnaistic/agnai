@@ -26,6 +26,22 @@ const searchUsers = handle(async (req) => {
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
+const generatePasswordReset = handle(async (req) => {
+  const userId = req.params.userId
+
+  const user = await store.users.getUser(userId)
+  if (!user) {
+    throw new StatusError(`User ID does not exist`, 400)
+  }
+
+  if (user._id !== userId) {
+    throw new StatusError(`User ID does not match`, 400)
+  }
+
+  const result = await store.admin.setPasswordResetCode(userId)
+  return { success: true, code: result.code }
+})
+
 const banUser = handle(async (req) => {
   const user = await store.users.getUser(req.params.userId)
   assertValid({ reason: 'string' }, req.body)
@@ -157,5 +173,6 @@ router.post('/notify', notifyAll)
 router.post('/configuration', updateConfiguration)
 router.post('/ban/:userId', banUser)
 router.post('/unban/:userId', unbanUser)
+router.post('/password-reset/:userId', generatePasswordReset)
 
 export default router

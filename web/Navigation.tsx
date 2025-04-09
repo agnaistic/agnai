@@ -600,7 +600,9 @@ const Item: Component<{
   )
 }
 
-const SubMenu: Component<{ children: any }> = (props) => <div class="bg-900">{props.children}</div>
+const SubMenu: Component<{ children: any }> = (props) => (
+  <div class="bg-900 rounded-md p-1">{props.children}</div>
+)
 
 const SubItem: Component<{
   parent: string
