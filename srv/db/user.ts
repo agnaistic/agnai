@@ -61,6 +61,11 @@ export async function getUserByCode(code: string) {
   return user
 }
 
+export async function getUserByCode(code: string) {
+  const user = await db('user').findOne({ resetCode: code }, { projection: { hash: 0 } })
+  return user
+}
+
 export async function updateUserUI(userId: string, props: Partial<AppSchema.User['ui']>) {
   const prev = await getUser(userId)
   if (!prev) throw errors.Unauthorized
