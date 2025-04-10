@@ -55,17 +55,10 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   const ucNegative = UC_PRESETS[ucPreset] || ''
 
   const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
-  const input = [formatImagePrompt(prompt)]
+  let input = [formatImagePrompt(prompt)]
 
   if (settings.qualityTags ?? true) {
     input.push(QUALITY_TAGS)
-  }
-
-  if (base?.template) {
-    input = base.template.replace(/\{\{prompt\}\}/g, prompt)
-    if (!input.includes(prompt)) {
-      input = prompt + ' ' + input
-    }
   }
 
   const finalPrompt = joinImagePrompts(input)
