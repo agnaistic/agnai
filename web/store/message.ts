@@ -1259,7 +1259,8 @@ subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   if (!waiting) return
 
   if (body.error === 'inference cancelled by user') {
-    toastStore.warn(`Message cancelled`)
+    /** intentional noop */
+    // toastStore.warn(`Message cancelled`)
   } else {
     toastStore.error(`Failed to generate response: ${body.error}`)
   }
