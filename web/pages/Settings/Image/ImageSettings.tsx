@@ -27,7 +27,7 @@ const init: ImageSettings = {
   steps: 28,
   clipSkip: 2,
   negative: '',
-  suffix: 'no text, best quality, very aesthetic, absurdres',
+  suffix: '',
   summariseChat: true,
   summaryPrompt: '',
   template: '',
@@ -49,6 +49,7 @@ const init: ImageSettings = {
     model: '',
     sampler: SD_SAMPLER['Euler a'],
     ucPreset: '0',
+    qualityTags: true,
   },
 }
 
