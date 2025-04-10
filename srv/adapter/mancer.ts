@@ -124,7 +124,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
       break
     }
 
-    if (generated.value.error) {
+    if ('error' in generated.value) {
       yield { error: generated.value.error }
       return
     }
