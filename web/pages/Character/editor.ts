@@ -122,6 +122,8 @@ const initState: EditorState = {
     novel: {
       model: '',
       sampler: '',
+      qualityTags: true,
+      ucPreset: '0',
     },
 
     sd: {
