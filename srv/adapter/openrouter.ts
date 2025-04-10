@@ -7,7 +7,7 @@ import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
-import { streamCompletion } from './stream'
+import { streamGenerator } from './stream'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -63,7 +63,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   const res = opts.gen.streamResponse
-    ? streamCompletion({
+    ? streamGenerator({
         userId: user._id,
         url: chatUrl,
         headers,
@@ -142,8 +142,7 @@ async function* getCompletion(
     return
   }
 
-  yield resp.body
-  return
+  return resp.body
 }
 
 registerAdapter('openrouter', handleOpenRouter, {

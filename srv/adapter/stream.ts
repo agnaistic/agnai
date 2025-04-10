@@ -18,7 +18,7 @@ export type ServerSentEvent = {
  * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
  * once the stream is finished.
  */
-export const streamCompletion: CompletionGenerator = async function* ({
+export const streamGenerator: CompletionGenerator = async function* ({
   signal,
   url,
   headers,
@@ -108,6 +108,8 @@ export const streamCompletion: CompletionGenerator = async function* ({
     yield { error: `${service} streaming request failed: ${err.message}` }
     return
   }
+
+  yield { tokens: tokens.join('') }
 
   return {
     id: meta.id,

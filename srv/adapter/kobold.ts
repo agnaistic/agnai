@@ -174,7 +174,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'mistral': {
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
-        ? oai.streamCompletion({ ...base, url, format: 'mistral' })
+        ? oai.streamGenerator({ ...base, url, format: 'mistral' })
         : fullCompletion({ ...base, url, service: 'mistral' })
       return stream
     }

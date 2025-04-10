@@ -6,7 +6,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
-import { streamCompletion } from './stream'
+import { streamGenerator } from './stream'
 import { getTokenCounter } from '../tokenize'
 
 const baseUrl = `https://api.openai.com`
@@ -102,7 +102,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     : `${base.url}/completions`
 
   const iter = body.stream
-    ? streamCompletion({
+    ? streamGenerator({
         userId: opts.user._id,
         url,
         headers,
@@ -194,6 +194,10 @@ export function getCompletionContent(completion: Completion<Inference> | undefin
   if (completion.error?.message) {
     log.warn({ completion }, 'OpenAI returned an error')
     return new Error(completion.error.message)
+  }
+
+  if (typeof completion === 'string') {
+    return completion
   }
 
   if ('text' in completion.choices[0]) {

@@ -3,7 +3,7 @@ import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
-import { streamCompletion } from './stream'
+import { streamGenerator } from './stream'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',
@@ -45,7 +45,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
     Authorization: `Bearer ${apiKey}`,
   }
 
-  const iter = streamCompletion({
+  const iter = streamGenerator({
     userId: opts.user._id,
     url,
     headers,
