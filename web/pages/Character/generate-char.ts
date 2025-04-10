@@ -76,6 +76,7 @@ export async function generateField(opts: {
 
       switch (field) {
         case 'appearance':
+        // return ''
         case 'scenario':
         case 'greeting':
         case 'sampleChat':

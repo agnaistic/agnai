@@ -207,6 +207,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   let adapter = 'local'
   let meta: Record<string, any> = {}
   let probs: any
+  let partial = ''
 
   // If body.response is defined, it's a "local request" which means the browser handled the generation.
   // When undefined, we'll generate the response
@@ -289,7 +290,8 @@ export const generateMessageV2 = handle(async (req, res) => {
       for await (const gen of stream) {
         if (signal.signal.aborted) {
           log.warn(`Message aborted by user`)
-          error = true
+          generated = partial
+          // error = true
           break
         }
 
@@ -317,6 +319,8 @@ export const generateMessageV2 = handle(async (req, res) => {
             jsonPartial = parsePartialJson(gen.partial) || jsonPartial
             hydration = hydrator(jsonPartial || {})
           }
+
+          partial = `${prefix}${gen.partial}`
 
           sendMsg(ents, {
             requestId: body.requestId,
