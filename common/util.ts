@@ -18,6 +18,11 @@ export function findOne<T extends { _id: string }>(id: string, list: T[]): T | v
   }
 }
 
+export function joinImagePrompts(prompts: string[]) {
+  const joined = prompts.filter((v) => !!v?.trim()).join(', ')
+  return formatImagePrompt(joined)
+}
+
 export function formatImagePrompt(text: string) {
   return text
     .split(',')

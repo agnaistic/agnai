@@ -4,7 +4,7 @@ import { ImageAdapter } from './types'
 import { decryptText } from '../db/util'
 import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
 import { NovelSettings } from '../../common/types/image-schema'
-import { formatImagePrompt } from '/common/util'
+import { formatImagePrompt, joinImagePrompts } from '/common/util'
 
 const baseUrl = `https://image.novelai.net/ai`
 
@@ -13,6 +13,7 @@ const defaultSettings: NovelSettings = {
   model: NOVEL_IMAGE_MODEL.Anime_v4_Curated,
   sampler: NOVEL_SAMPLER['DPM++ 2M'],
   ucPreset: '0',
+  qualityTags: true,
 }
 
 const UC_PRESETS: Record<number, string> = {
@@ -20,6 +21,8 @@ const UC_PRESETS: Record<number, string> = {
   1: 'blurry, lowres, error, worst quality, bad quality, jpeg artifacts, very displeasing, white blank page, blank page',
   2: '',
 }
+
+const QUALITY_TAGS = 'no text, best quality, very aesthetic, absurdres'
 
 type NovelImageRequest = {
   action: 'generate'
@@ -52,7 +55,11 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   const ucNegative = UC_PRESETS[ucPreset] || ''
 
   const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
-  let input = formatImagePrompt(prompt)
+  const input = [formatImagePrompt(prompt)]
+
+  if (settings.qualityTags ?? true) {
+    input.push(QUALITY_TAGS)
+  }
 
   if (base?.template) {
     input = base.template.replace(/\{\{prompt\}\}/g, prompt)
@@ -61,13 +68,12 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
     }
   }
 
-  const finalNegative = formatImagePrompt(
-    [negative, ucNegative].filter((v) => !!v?.trim()).join(', ')
-  )
+  const finalPrompt = joinImagePrompts(input)
+  const finalNegative = joinImagePrompts([negative, ucNegative])
 
   const payload: NovelImageRequest = {
     action: 'generate',
-    input,
+    input: finalPrompt,
     model: settings.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
     parameters: {
       autoSmea: false,
@@ -99,7 +105,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
         caption: { base_caption: finalNegative, char_captions: [] },
       },
       v4_prompt: {
-        caption: { base_caption: input, char_captions: [] },
+        caption: { base_caption: finalPrompt, char_captions: [] },
         use_coords: false,
         use_order: true,
       },

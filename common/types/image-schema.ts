@@ -32,6 +32,7 @@ export type NovelSettings = {
   model: string
   sampler: string
   ucPreset: string
+  qualityTags: boolean
 }
 
 export type HordeSettings = {
