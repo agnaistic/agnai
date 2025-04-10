@@ -191,7 +191,14 @@ const CreateChatForm: Component<{
 
   return (
     <Page>
-      <PageHeader title={`Create Chat with ${chars.char?.name}`} />
+      <PageHeader
+        title={`Create Chat with ${chars.char?.name}`}
+        subtitle={
+          <Button onClick={onCreate} size="sm">
+            Create
+          </Button>
+        }
+      />
       <form ref={ref}>
         <div class="mb-2 text-sm">
           Optionally modify some of the conversation context. You can override other aspects of the
