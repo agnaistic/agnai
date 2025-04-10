@@ -32,6 +32,7 @@ type NovelImageRequest = {
     steps: number
     /** CFG scale */
     scale: number
+    [key: string]: any
   }
 }
 
@@ -57,17 +58,39 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
     input,
     model: settings.model ?? NOVEL_IMAGE_MODEL.Anime_v4_Curated,
     parameters: {
+      autoSmea: false,
+      add_original_image: false,
       height: base?.height ?? 384,
       width: base?.width ?? 384,
+      characterPrompts: [],
+      dynamic_thresholding: false,
+      // noise_schedule: 'karras',
+      controlnet_strength: 1,
+      cfg_rescale: 0,
+      uc: '',
       n_samples: 1,
       negative_prompt: negative,
+      params_version: 3,
       sampler: settings.sampler ?? NOVEL_SAMPLER['DPM++ 2M'],
       scale: base?.cfg ?? 9,
       seed: Math.trunc(Math.random() * 1_000_000_000),
       steps: base?.steps ?? 28,
       // Unsure what to do with these two values
-      ucPreset: 0,
-      qualityToggle: false,
+      ucPreset: 2,
+      legacy: false,
+      legacy_uc: false,
+      legacy_v3_extend: false,
+      qualityToggle: true,
+
+      v4_negative_prompt: {
+        legacy_uc: false,
+        caption: { base_caption: negative, char_captions: [] },
+      },
+      v4_prompt: {
+        caption: { base_caption: input, char_captions: [] },
+        use_coords: false,
+        use_order: true,
+      },
     },
   }
   const result = await needle('post', `${baseUrl}/generate-image`, payload, {

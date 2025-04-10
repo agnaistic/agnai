@@ -87,33 +87,31 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   let accum = ''
 
-  while (true) {
-    const generated = await stream.next()
+  for await (const generated of stream) {
+    if (!generated) break
 
-    if (!generated || !generated.value) break
-
-    if (typeof generated.value === 'string') {
-      accum = generated.value
+    if (typeof generated === 'string') {
+      accum = generated
       break
     }
 
-    if ('error' in generated.value) {
-      yield { error: generated.value.error }
+    if ('error' in generated) {
+      yield { error: generated.error }
       return
     }
 
-    if ('token' in generated.value) {
-      accum += generated.value.token
+    if ('token' in generated) {
+      accum += generated.token
       yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
     }
 
-    if ('tokens' in generated.value) {
-      const gens = 'gens' in generated.value ? generated.value.gens : undefined
+    if ('tokens' in generated) {
+      const gens = 'gens' in generated ? generated.gens : undefined
       if (gens) {
-        yield { gens, tokens: generated.value.tokens }
+        yield { gens, tokens: generated.tokens }
       }
 
-      accum = generated.value.tokens
+      accum = generated.tokens
       break
     }
   }

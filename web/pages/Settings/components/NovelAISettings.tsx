@@ -26,7 +26,7 @@ const NovelAISettings: Component<{
           { label: 'Kayra', value: 'kayra-v1' },
           { label: 'Clio', value: 'clio-v1' },
         ]}
-        value={props.state.novelModel}
+        value={props.state.novelModel || 'kayra-v1'}
         onChange={(ev) => props.setter('novelModel', ev.value)}
       />
 
