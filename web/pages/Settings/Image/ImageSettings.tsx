@@ -49,6 +49,7 @@ const init: ImageSettings = {
   novel: {
     model: '',
     sampler: SD_SAMPLER['Euler a'],
+    ucPreset: '0',
   },
 }
 
@@ -393,6 +394,7 @@ export const ImageSettingsModal = () => {
           fieldName="imageCfg"
           value={store.cfg ?? agnaiModel()?.init.cfg ?? 9}
           label="Guidance Scale"
+          type="number"
           helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
           onChange={(ev) => setStore('cfg', +ev.currentTarget.value)}
         />

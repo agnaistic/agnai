@@ -31,6 +31,7 @@ export type NovelSettings = {
   type: 'novel'
   model: string
   sampler: string
+  ucPreset: string
 }
 
 export type HordeSettings = {

@@ -39,6 +39,19 @@ export const NovelSettings: Component<{
       </Show>
 
       <Select
+        fieldName="novelUndesiredContent"
+        label="Undesired Content"
+        helperMarkdown="Add `nsfw` to your negative prompt to omit NSFW content"
+        items={[
+          { label: 'Heavy', value: '0' },
+          { label: 'Light', value: '1' },
+          { label: 'None', value: '2' },
+        ]}
+        value={props.cfg.novel.ucPreset || '0'}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.ucPreset', ev.value))}
+      />
+
+      <Select
         fieldName="novelImageModel"
         items={models}
         label="Model"
