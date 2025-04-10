@@ -38,6 +38,13 @@ export const NovelSettings: Component<{
         </div>
       </Show>
 
+      <Toggle
+        fieldName="novelQualityTags"
+        label="Add Quality Tags"
+        value={props.cfg.novel.qualityTags}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.qualityTags', ev))}
+      />
+
       <Select
         fieldName="novelUndesiredContent"
         label="Undesired Content"
