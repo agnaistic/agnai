@@ -338,6 +338,7 @@ const ChatDetail: Component = () => {
 
   useEffect(() => {
     function keyboardShortcuts(ev: KeyboardEvent) {
+      // console.log({ alt: ev.altKey, ctrl: ev.ctrlKey, meta: ev.metaKey, key: ev.key, code: ev.code })
       if (!ev.altKey) return
 
       const num = +ev.key
@@ -350,7 +351,7 @@ const ChatDetail: Component = () => {
         requestMessage(pill._id)
       }
 
-      if (ev.key === 'r') {
+      if (ev.key === 'r' || ev.code === 'KeyR') {
         ev.preventDefault()
         if (msgs.retrying || msgs.partial) return
         const last = indexOfLastRPMessage()
@@ -365,12 +366,12 @@ const ChatDetail: Component = () => {
         }
       }
 
-      if (ev.key === 'i') {
+      if (ev.key === 'i' || ev.code === 'KeyI') {
         ev.preventDefault()
         settingStore.toggleImpersonate(true)
       }
 
-      if (ev.key === 'a') {
+      if (ev.key === 'a' || ev.code == 'KeyA') {
         ev.preventDefault()
         const last = indexOfLastRPMessage()
         const msg = msgs.msgs[last]
@@ -379,12 +380,12 @@ const ChatDetail: Component = () => {
         msgStore.request(msg.chatId, msg.characterId)
       }
 
-      if (ev.key === 'g') {
+      if (ev.key === 'g' || ev.key === 'KeyG') {
         ev.preventDefault()
         chatStore.option({ options: false, modal: 'graph' })
       }
 
-      if (ev.key === 'p') {
+      if (ev.key === 'p' || ev.key === 'KeyP') {
         ev.preventDefault()
         msgStore.createImage()
       }
