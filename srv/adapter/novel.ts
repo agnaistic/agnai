@@ -250,7 +250,8 @@ const streamCompletion = async function* (headers: any, body: any, _log: AppLog)
     return
   }
 
-  return { text: tokens.join('') }
+  yield { text: tokens.join('') }
+  return
 }
 
 async function* fullCompletion(headers: any, body: any, log: AppLog) {
@@ -292,7 +293,8 @@ async function* fullCompletion(headers: any, body: any, log: AppLog) {
     return
   }
 
-  return { tokens: res.body.output }
+  yield { tokens: res.body.output }
+  return
 }
 
 function processNovelAIPrompt(prompt: string) {

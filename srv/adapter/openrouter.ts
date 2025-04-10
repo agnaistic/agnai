@@ -142,7 +142,8 @@ async function* getCompletion(
     return
   }
 
-  return resp.body
+  yield resp.body
+  return
 }
 
 registerAdapter('openrouter', handleOpenRouter, {

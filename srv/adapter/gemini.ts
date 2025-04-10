@@ -197,7 +197,8 @@ async function* fullCompletion(url: string, body: any, log: AppLog) {
     return
   }
 
-  return { tokens }
+  yield { tokens }
+  return
 }
 
 const safetySettings = [

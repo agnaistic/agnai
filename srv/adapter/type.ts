@@ -15,7 +15,11 @@ export type Completion<T = Inference> = {
   error?: { message: string }
 }
 
-export type CompletionTick = { token: string } | { tokens: string; gens?: string[] }
+export type CompletionTick =
+  | { token: string }
+  | { tokens: string; gens?: string[] }
+  | { tokens: string }
+  | void
 
 export type CompletionGenerator<T = Completion> = (opts: {
   userId: string

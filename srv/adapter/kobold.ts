@@ -356,13 +356,19 @@ const fullCompletion: CompletionGenerator<any> = async function* ({
       gens.push(text)
     }
 
-    return gens.length ? { tokens: text, gens } : { tokens: text }
+    if (gens.length) {
+      yield { tokens: text, gens }
+    } else {
+      yield { tokens: text }
+    }
+    return
   }
 
   const text = resp.body.results?.[0]?.text as string
 
   if (text) {
-    return { tokens: text }
+    yield { tokens: text }
+    return
   } else {
     log.error({ err: resp.body }, `Failed to generate text using ${service} adapter`)
     yield { error: `${service} failed to generate a response: ${resp.body}` }
@@ -451,7 +457,12 @@ const streamCompletion: CompletionGenerator<CompletionTick> = async function* ({
     gens.push(text)
   }
 
-  return gens.length ? { tokens: tokens.join(''), gens } : { tokens: tokens.join('') }
+  if (gens.length) {
+    yield { tokens: tokens.join(''), gens }
+  } else {
+    yield { tokens: tokens.join('') }
+  }
+  return
 }
 
 async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {

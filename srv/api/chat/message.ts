@@ -294,6 +294,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
         if (signal.signal.aborted) {
           log.warn(`Message aborted by user`)
+
           generated = partial
           // error = true
           break

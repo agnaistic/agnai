@@ -38,7 +38,8 @@ export async function* getTextgenCompletion(
       return
     }
     yield { token: text }
-    return text
+    yield text
+    return
   } catch (ex: any) {
     yield { error: `${service} request failed: ${ex.message || ex}` }
   }
