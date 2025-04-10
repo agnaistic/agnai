@@ -30,7 +30,10 @@ export type CompletionGenerator<T = Completion> = (opts: {
   signal: AbortController
   log: AppLog
   format?: ThirdPartyFormat | 'openrouter'
-}) => AsyncGenerator<{ error: string } | { error?: undefined; token: string } | T, T | undefined>
+}) => AsyncGenerator<
+  { error: string } | { tokens: string } | { error?: undefined; token: string } | T,
+  T | undefined
+>
 
 export type CompletionItem = { role: ChatRole; content: string; name?: string }
 
