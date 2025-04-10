@@ -82,7 +82,7 @@ export const presetValidator = {
   novelModel: 'string?',
   novelModelOverride: 'string?',
 
-  claudeModel: 'string',
+  claudeModel: 'string?',
   mistralModel: 'string?',
   streamResponse: 'boolean?',
   ultimeJailbreak: 'string?',
