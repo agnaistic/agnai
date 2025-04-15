@@ -1,10 +1,10 @@
-import { Component, Show, createEffect, createMemo, on, onMount } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { chatStore, msgStore, presetStore, scenarioStore, userStore } from '../../store'
+import { chatStore, msgStore, presetStore, scenarioStore, toastStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
@@ -12,9 +12,11 @@ import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
-import { Image, Wand } from 'lucide-solid'
+import { Image, Sparkles, Wand } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
+import { StreamCallback } from '/web/store/data/messages'
+import { generateField, MinCharacter } from '../Character/generate-char'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -27,11 +29,34 @@ const backupFormats: any = {
   boostyle: { value: 'boostyle', label: 'Boostyle' },
 }
 
+function genOverrideField(opts: {
+  prop: string
+  trait?: string
+  char: MinCharacter
+  tick: StreamCallback
+}) {
+  if (!opts.char) return
+
+  const min: MinCharacter = {
+    name: opts.char.name,
+    description: opts.char.description,
+    appearance: opts.char.appearance,
+
+    greeting: opts.char.greeting || '',
+    persona: opts.char.persona,
+    sampleChat: opts.char.sampleChat || '',
+    scenario: opts.char.scenario || '',
+  }
+
+  generateField({ char: min, prop: opts.prop, trait: opts.trait, tick: opts.tick })
+}
+
 const ChatSettings: Component<{
   close: () => void
   footer: (children: any) => void
 }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+  const [generating, setGenerating] = createSignal(false)
   const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
   const user = userStore()
   const presets = presetStore((s) => s.presets)
@@ -107,6 +132,56 @@ const ChatSettings: Component<{
       )
     }
   })
+
+  const genField = (prop: string, trait?: string) => {
+    if (generating()) {
+      toastStore.warn(`Cannot generator: Already generating`)
+      return
+    }
+
+    setGenerating(true)
+
+    const index = trait
+      ? edit.personaAttrs.findIndex((a) => a.key === trait)
+      : edit.personaAttrs.findIndex((a) => a.key === 'text')
+
+    genOverrideField({
+      char: {
+        name: edit.name,
+        appearance: state.char?.appearance || '',
+        description: edit.description || '',
+
+        greeting: edit.greeting,
+        persona: {
+          kind: edit.personaKind === 'text' ? 'text' : 'attributes',
+          attributes: edit.personaAttrs.reduce(
+            (prev, curr) => Object.assign(prev, { [curr.key]: [curr.values] }),
+            {} as any
+          ),
+        },
+        sampleChat: edit.sampleChat,
+        scenario: edit.scenario,
+      },
+      prop,
+      trait,
+      tick: (res, st) => {
+        if (st === 'done' || st === 'error') {
+          setGenerating(false)
+        }
+
+        if (prop === 'persona') {
+          const next = [...edit.personaAttrs]
+          next[index] = { key: trait || 'text', values: res }
+          setEdit('personaAttrs', next)
+          return
+        }
+
+        if (prop in edit) {
+          setEdit(prop as keyof typeof edit, res)
+        }
+      },
+    })
+  }
 
   const onSave = () => {
     const payload = {
@@ -295,7 +370,7 @@ const ChatSettings: Component<{
           <TextInput
             class="text-sm"
             isMultiline
-            label="Greeting"
+            label={<GenLabel label="Greeting" prop="greeting" gen={genField} />}
             value={edit.greeting}
             onChange={(ev) => setEdit('greeting', ev.currentTarget.value)}
           />
@@ -303,15 +378,23 @@ const ChatSettings: Component<{
           <TextInput
             class="text-sm"
             isMultiline
-            value={edit.scenario}
-            onChange={(ev) => setEdit('scenario', ev.currentTarget.value)}
-            label="Scenario"
+            value={edit.description}
+            onChange={(ev) => setEdit('description', ev.currentTarget.value)}
+            label="Description"
           />
 
           <TextInput
             class="text-sm"
             isMultiline
-            label="Sample Chat"
+            value={edit.scenario}
+            onChange={(ev) => setEdit('scenario', ev.currentTarget.value)}
+            label={<GenLabel label="Scenario" prop="scenario" gen={genField} />}
+          />
+
+          <TextInput
+            class="text-sm"
+            isMultiline
+            label={<GenLabel label="Sample Chat" prop="sampleChat" gen={genField} />}
             value={edit.sampleChat}
             onChange={(ev) => setEdit('sampleChat', ev.currentTarget.value)}
           />
@@ -343,6 +426,7 @@ const ChatSettings: Component<{
               setter={(next) => setEdit('personaAttrs', next)}
               hideLabel
               schema={edit.personaKind}
+              generate={genField}
             />
           </div>
         </Card>
@@ -365,6 +449,7 @@ const ChatSettings: Component<{
 function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
   return {
     name: chat?.name || '',
+    description: char?.description || '',
     imageSource: chat?.imageSource || 'settings',
     mode: chat?.mode || 'standard',
     useOverrides: !!chat?.overrides,
@@ -380,6 +465,21 @@ function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
     personaKind: chat?.overrides?.kind || char?.persona.kind || 'text',
     personaAttrs: toAttrs(chat?.overrides?.attributes || char?.persona.attributes),
   }
+}
+
+const GenLabel: Component<{
+  label: string
+  prop: string
+  gen: (prop: string, trait?: string) => void
+}> = (props) => {
+  return (
+    <div class="flex gap-2">
+      <Button size="sm" onClick={() => props.gen(props.prop)}>
+        <Sparkles size={16} />
+      </Button>
+      {props.label}
+    </div>
+  )
 }
 
 export default ChatSettings

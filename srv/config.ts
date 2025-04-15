@@ -146,6 +146,7 @@ export const config = {
 
   inference: {
     flatChatCompletion: !!env('SIMPLE_COMPLETION', ''),
+    skipModelLists: env('SKIP_MODEL_LISTS', '0') === '1',
   },
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),

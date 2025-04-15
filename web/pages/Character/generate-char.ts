@@ -5,7 +5,7 @@ import { toastStore, userStore } from '/web/store'
 import { genApi } from '/web/store/data/inference'
 import { StreamCallback } from '/web/store/data/messages'
 
-type MinCharacter = Pick<
+export type MinCharacter = Pick<
   AppSchema.Character,
   'appearance' | 'scenario' | 'persona' | 'greeting' | 'sampleChat' | 'name' | 'description'
 >

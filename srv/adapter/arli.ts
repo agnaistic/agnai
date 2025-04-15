@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { logger } from '../middleware'
 
 type V1Model = {
@@ -29,14 +30,16 @@ export function getArliModels() {
 
 async function getModelList() {
   try {
+    const next: ArliModel[] = []
+
+    if (config.inference.skipModelLists) return next
+
     const models = await fetch('https://api.arliai.com/model/all', {
       headers: {
         accept: '*/*',
       },
       method: 'GET',
     })
-
-    const next: ArliModel[] = []
 
     if (models.status && models.status > 200) {
       const body = await models.json()
@@ -75,7 +78,7 @@ async function getModelList() {
 
     return map
   } catch (ex) {
-    logger.error({ err: ex }, `Featherless model list failed`)
+    logger.error({ err: ex }, `ArliAI model list failed`)
   }
 }
 

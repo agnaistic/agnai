@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { logger } from '../middleware'
 
 type V1Model = {
@@ -37,6 +38,8 @@ export function getFeatherModels() {
 }
 
 async function getModelList() {
+  if (config.inference.skipModelLists) return []
+
   try {
     const models = await fetch('https://api.featherless.ai/v1/models', {
       headers: {

@@ -500,7 +500,7 @@ export const CreateCharacterForm: Component<{
                 <PersonaAttributes
                   schema={editor.state.personaKind}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  editor={editor}
+                  generate={editor.generateField}
                   state={editor.state.personaAttrs}
                   setter={(next) => editor.update('personaAttrs', next)}
                 />
