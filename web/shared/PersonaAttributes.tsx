@@ -1,4 +1,4 @@
-import { Plus, Trash, WandSparkles } from 'lucide-solid'
+import { Plus, Sparkles, Trash, WandSparkles } from 'lucide-solid'
 import {
   Component,
   createEffect,
@@ -228,8 +228,12 @@ const Attribute: Component<{
           onChange={(ev) => props.update(props.attr, props.index, 'key', ev.currentTarget.value)}
         />
         <Show when={props.generate}>
-          <Button schema="secondary" onClick={() => props.generate?.('persona', props.attr.key)}>
-            <WandSparkles size={20} />
+          <Button
+            schema="secondary"
+            onClick={() => props.generate?.('persona', props.attr.key)}
+            disabled={props.disabled}
+          >
+            <Sparkles size={20} />
           </Button>
         </Show>
         <Button schema="red" onClick={() => props.remove(props.index)}>

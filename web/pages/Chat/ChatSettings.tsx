@@ -1,4 +1,14 @@
-import { Component, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
+import {
+  Component,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
@@ -17,6 +27,7 @@ import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
 import { generateField, MinCharacter } from '../Character/generate-char'
+import { RelativeSpinner } from '/web/shared/Loading'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -56,7 +67,7 @@ const ChatSettings: Component<{
   footer: (children: any) => void
 }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
-  const [generating, setGenerating] = createSignal(false)
+  const [generating, setGenerating] = createSignal('')
   const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
   const user = userStore()
   const presets = presetStore((s) => s.presets)
@@ -139,7 +150,7 @@ const ChatSettings: Component<{
       return
     }
 
-    setGenerating(true)
+    setGenerating(prop)
 
     const index = trait
       ? edit.personaAttrs.findIndex((a) => a.key === trait)
@@ -166,7 +177,7 @@ const ChatSettings: Component<{
       trait,
       tick: (res, st) => {
         if (st === 'done' || st === 'error') {
-          setGenerating(false)
+          setGenerating('')
         }
 
         if (prop === 'persona') {
@@ -379,7 +390,9 @@ const ChatSettings: Component<{
           <TextInput
             class="text-sm"
             isMultiline
-            label={<GenLabel label="Greeting" prop="greeting" gen={genField} />}
+            label={
+              <GenLabel generating={generating()} label="Greeting" prop="greeting" gen={genField} />
+            }
             value={edit.greeting}
             onChange={(ev) => setEdit('greeting', ev.currentTarget.value)}
           />
@@ -389,13 +402,22 @@ const ChatSettings: Component<{
             isMultiline
             value={edit.scenario}
             onChange={(ev) => setEdit('scenario', ev.currentTarget.value)}
-            label={<GenLabel label="Scenario" prop="scenario" gen={genField} />}
+            label={
+              <GenLabel generating={generating()} label="Scenario" prop="scenario" gen={genField} />
+            }
           />
 
           <TextInput
             class="text-sm"
             isMultiline
-            label={<GenLabel label="Sample Chat" prop="sampleChat" gen={genField} />}
+            label={
+              <GenLabel
+                generating={generating()}
+                label="Sample Chat"
+                prop="sampleChat"
+                gen={genField}
+              />
+            }
             value={edit.sampleChat}
             onChange={(ev) => setEdit('sampleChat', ev.currentTarget.value)}
           />
@@ -428,6 +450,7 @@ const ChatSettings: Component<{
               hideLabel
               schema={edit.personaKind}
               generate={genField}
+              disabled={!!generating()}
             />
           </div>
         </Card>
@@ -471,15 +494,28 @@ function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
 const GenLabel: Component<{
   label: string
   prop: string
+  generating: string
   gen: (prop: string, trait?: string) => void
 }> = (props) => {
   return (
-    <div class="flex gap-2">
-      <Button size="sm" onClick={() => props.gen(props.prop)}>
-        <Sparkles size={16} />
-      </Button>
-      {props.label}
-    </div>
+    <Switch>
+      <Match when={props.prop === props.generating}>
+        <div class="flex gap-2">
+          <Button size="sm" onClick={() => props.gen(props.prop)} disabled>
+            <RelativeSpinner size={16} />
+          </Button>
+          {props.label}
+        </div>
+      </Match>
+      <Match when>
+        <div class="flex gap-2">
+          <Button size="sm" onClick={() => props.gen(props.prop)} disabled={!!props.generating}>
+            <Sparkles size={16} />
+          </Button>
+          {props.label}
+        </div>
+      </Match>
+    </Switch>
   )
 }
 
