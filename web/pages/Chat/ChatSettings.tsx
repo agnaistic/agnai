@@ -370,17 +370,18 @@ const ChatSettings: Component<{
           <TextInput
             class="text-sm"
             isMultiline
-            label={<GenLabel label="Greeting" prop="greeting" gen={genField} />}
-            value={edit.greeting}
-            onChange={(ev) => setEdit('greeting', ev.currentTarget.value)}
+            value={edit.description}
+            helperText="A description, label, or notes for your character: Used for AI field generation. Does not change your character's behavior."
+            onChange={(ev) => setEdit('description', ev.currentTarget.value)}
+            label="Description"
           />
 
           <TextInput
             class="text-sm"
             isMultiline
-            value={edit.description}
-            onChange={(ev) => setEdit('description', ev.currentTarget.value)}
-            label="Description"
+            label={<GenLabel label="Greeting" prop="greeting" gen={genField} />}
+            value={edit.greeting}
+            onChange={(ev) => setEdit('greeting', ev.currentTarget.value)}
           />
 
           <TextInput
