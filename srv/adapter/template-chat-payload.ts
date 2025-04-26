@@ -58,7 +58,9 @@ export async function toChatMessages(
   const { system, post, history } = sections.sections
 
   const prefill = await parse(opts, counter, opts.settings?.prefill || '')
-  const messages = [{ role: 'system', content: system.join('') }]
+  const messages: Array<{ role: string; content: any }> = [
+    { role: 'system', content: system.join('') },
+  ]
 
   const sender = (opts.impersonate?.name || opts.sender.handle) + ':'
   for (let i = 0; i < history.length; i++) {
@@ -72,6 +74,7 @@ export async function toChatMessages(
     role: 'assistant',
     content: (post.join('') + (prefill.parsed.length ? ` ${prefill.parsed}` : '')).trim(),
   })
+
   return messages
 }
 

@@ -171,7 +171,6 @@ export function requestStream(
       })
     } else if (format === 'ollama') {
       if (contentType.startsWith('application/x-ndjson')) return
-
       emitter.push({
         error: `SSE request received unexpected content-type ${headers['content-type']}`,
       })

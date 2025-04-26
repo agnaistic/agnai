@@ -62,7 +62,21 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           )
 
     body.messages = messages
+
     yield { prompt: messages }
+
+    // If we have image data, add it to the last user message
+    if (opts.imageData) {
+      for (let i = body.messages.length - 1; i >= 0; i--) {
+        const msg = body.messages[i]
+        if (msg.role !== 'user') continue
+        msg.content = [
+          { type: 'text', text: msg.content },
+          { type: 'image_url', image_url: { url: opts.imageData } },
+        ]
+        break
+      }
+    }
   } else {
     body.prompt = prompt
     yield { prompt }

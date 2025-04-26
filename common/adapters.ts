@@ -289,7 +289,12 @@ export const GOOGLE_MODELS = {
     label: 'Gemini 2.0 Flash Thinking',
   },
   GEMINI_20_PRO_0205: { id: 'gemini-2.0-pro-exp-02-05', label: 'Gemini 2.0 02/05' },
-  GEMINI_25_PRO_0325: { id: 'gemini-2.5-pro-exp-03-25', label: 'Gemini 2.5 03/25' },
+  GEMINI_25_PRO_0325: { id: 'gemini-2.5-pro-exp-03-25', label: 'Gemini 2.5 Pro Exp 03/25' },
+  GEMINI_25_PRO_PREVIEW_0325: {
+    id: 'gemini-2.5-pro-preview-03-25',
+    label: 'Gemini 2.5 Pro Preview 03/25',
+  },
+  GEMINI_25_FLASH_0417: { id: 'gemini-2.5-flash-preview-04-17', label: 'Gemini 2.5 Flash 04/17' },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {
@@ -299,6 +304,7 @@ export const GOOGLE_LIMITS: Record<string, number> = {
   'gemini-1.5-flash-8b': 1048576,
   'gemini-2.0-flash-exp': 1048576,
   'gemini-2.5-pro-exp-03-25': 1000000,
+  fallback: 1048576,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point

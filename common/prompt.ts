@@ -916,7 +916,7 @@ export function getContextLimit(
       if (!gen.useMaxContext) return configuredMax - genAmount
       switch (gen.thirdPartyFormat) {
         case 'gemini': {
-          const max = GOOGLE_LIMITS[gen.googleModel!]
+          const max = GOOGLE_LIMITS[gen.googleModel!] || GOOGLE_LIMITS.fallback
           return max ? max - genAmount : configuredMax - genAmount
         }
 

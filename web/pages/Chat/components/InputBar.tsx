@@ -223,6 +223,7 @@ const InputBar: Component<{
   })
 
   const onFile = async (files: FileInputResult[]) => {
+    setDragging(false)
     const [file] = files
     if (!file) return
 
@@ -230,7 +231,7 @@ const InputBar: Component<{
   }
 
   const attach = async (file: File) => {
-    const ext = file.name.split('.').slice(-1)[0]
+    const ext = file.name.split('.').slice(-1)[0].toLowerCase()
     const isAllowed = ALLOWED_TYPES.has(ext)
     if (!isAllowed) {
       toastStore.warn(`Invalid file type: Must be an image`)
@@ -320,16 +321,29 @@ const InputBar: Component<{
         }}
         onChange={updateText}
         textarea={{
-          onDragOver: () => setDragging(true),
-          onDragExit: () => setDragging(false),
-          onDragEnd: () => setDragging(false),
+          onDragOver: (ev) => {
+            console.log('on-drag-over', ev.dataTransfer?.files?.[0]?.size)
+            setDragging(true)
+          },
+          onDragExit: () => {
+            console.log('on-drag-exit')
+            setDragging(false)
+          },
+          onDragEnd: (ev) => {
+            console.log('drag-end', ev.dataTransfer?.files?.[0]?.size)
+            setDragging(false)
+          },
           onDrop: (ev) => {
             ev.preventDefault()
+            console.log('onDrop', ev.dataTransfer?.files?.[0]?.size)
             setDragging(false)
             const file = ev.dataTransfer?.files[0]
             if (!file) return
 
             attach(file)
+          },
+          ondrop: (ev) => {
+            console.log('ondrop', ev.dataTransfer?.files?.[0]?.size)
           },
         }}
       />
@@ -412,7 +426,14 @@ const InputBar: Component<{
               </Button>
             </Show>
           </Show>
-          <Show when={state.canCaption}>
+          <Show
+            when={
+              ctx.preset?.thirdPartyFormat === 'ollama' ||
+              ctx.preset?.thirdPartyFormat === 'vllm' ||
+              ctx.preset?.thirdPartyFormat === 'openai-chat' ||
+              ctx.preset?.thirdPartyFormat === 'openai-chatv2'
+            }
+          >
             <FileInput
               fieldName="imageCaption"
               parentClass="hidden"
