@@ -1,10 +1,11 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
-import { clamp, neat } from '/common/util'
+import { clamp, neat, tryParse } from '/common/util'
 import { JsonSchema, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { getEncoderByName } from '../tokenize'
 import { decryptText } from '../db/util'
+import { insertImageContent } from './template-chat-payload'
 
 const chat_template = neat`
 {%- if messages[0]['role'] == 'system' -%}
@@ -183,16 +184,9 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     }
 
     if (opts.imageData) {
-      body.chat_template = chat_template
-      body.messages = [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: opts.imageData } },
-          ],
-        },
-      ]
+      body.chat_template = tryParse(gen.jinjaTemplate || chat_template)
+      insertImageContent(opts, opts.messages!)
+      body.messages = opts.messages
     } else {
       body.prompt = prompt
     }

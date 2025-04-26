@@ -54,6 +54,7 @@ export const presetValidator = {
   ignoreCharacterSystemPrompt: 'boolean?',
   ignoreCharacterUjb: 'boolean?',
   gaslight: 'string?',
+  jinjaTemplate: 'string?',
   oaiModel: 'string',
   openRouterModel: 'any?',
   featherlessModel: 'string?',

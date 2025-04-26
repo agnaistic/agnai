@@ -9,7 +9,7 @@ import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
-import { Jailbreak, ReasoningTags, SystemPrompt } from './Fields'
+import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
 import { PresetTabProps } from './types'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
@@ -100,6 +100,8 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
           <SystemPrompt {...props} />
 
           <Jailbreak {...props} />
+
+          <JinjaTemplate {...props} />
 
           <Toggle
             label="Append name of replying character to very end of the prompt"

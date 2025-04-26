@@ -56,8 +56,8 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
     closeUser: `[/INST]\n`,
     openBot: '',
     closeBot: ' </s>\n',
-    openSystem: '[INST] ',
-    closeSystem: ' [/INST]\n',
+    openSystem: '[SYSTEM_PROMPT] ',
+    closeSystem: ' [/SYSTEM_PROMPT]\n',
   },
   Llama3: {
     openSystem: `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n`,

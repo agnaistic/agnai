@@ -79,7 +79,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
     }
 
     if (opts.imageData) {
-      body.chat_template = chat_template
+      body.chat_template = gen.jinjaTemplate || chat_template
       body.messages = [
         {
           role: 'user',

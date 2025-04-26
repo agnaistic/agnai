@@ -3,7 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
 import { incompleteJson, parseEvent } from '/common/requests/stream'
-import { tryParse } from '/common/util'
+import { parseSearchQuery, tryParse } from '/common/util'
 
 let socketId = ''
 
@@ -15,16 +15,27 @@ const PROTO = location.protocol
 const HOST = location.hostname.toLowerCase()
 const PORT = location.port
 
+// Sometimes a user has DNS issues with a particular API url.
+// We can provide them a `?api_url=...` url to try alternate API urls
+if (location.search) {
+  const search = parseSearchQuery(location.search)
+  if (search.api_url && search.api_url.endsWith('.agnai.chat')) {
+    localStorage.setItem('api_url', search.api_url)
+  }
+}
+
 const API_OVERRIDE = localStorage.getItem('api_url')
 
 export const baseUrl = API_OVERRIDE
   ? `${PROTO}//${API_OVERRIDE}`
   : PORT === '1234' || PORT === '3001' // || HOST === 'localhost' || HOST === '127.0.0.1'
   ? `${PROTO}//${HOST}:3001`
-  : HOST === 'agnai.chat' || HOST === 'prd-assets.agnai.chat'
+  : HOST === 'agnai.chat'
   ? `${PROTO}//prd-api.agnai.chat`
+  : HOST === 'prd-assets.agnai.chat'
+  ? `${PROTO}//edge-api.agnai.chat`
   : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-  ? `${PROTO}//prd-api.agnai.chat`
+  ? `${PROTO}//api.agnai.chat`
   : HOST === 'stg.agnai.chat'
   ? `${PROTO}//stg-api.agnai.chat`
   : location.origin
@@ -38,9 +49,14 @@ export const api = {
   streamPost,
   toApiUrl,
   fetchSSE,
+  isCdnApi,
 }
 
 type Query = { [key: string]: string | number }
+
+function isCdnApi() {
+  return baseUrl.includes('edge-api.agnai.chat')
+}
 
 async function method<T = any>(
   method: 'get' | 'post' | 'delete' | 'put',

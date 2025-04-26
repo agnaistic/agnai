@@ -44,6 +44,29 @@ export function renderMessagesToPrompt(
   return { prompt, stop: replaceTags('</bot>', preset.modelFormat || 'ChatML') }
 }
 
+/**
+ * @destructive
+ * mutates the messages list: adds the image data (base64) to the last user message
+ */
+export function insertImageContent(
+  opts: GenerateRequestV2,
+  messages: Array<{ role: string; content: any }>
+) {
+  if (!opts.imageData) return messages
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]
+    if (msg.role !== 'user') continue
+    msg.content = [
+      { type: 'text', text: msg.content },
+      { type: 'image_url', image_url: { url: opts.imageData } },
+    ]
+    break
+  }
+
+  return messages
+}
+
 export async function toChatMessages(
   opts: GenerateRequestV2,
   assembled: AssembledPrompt,
@@ -71,7 +94,7 @@ export async function toChatMessages(
   }
 
   messages.push({
-    role: 'assistant',
+    role: 'user',
     content: (post.join('') + (prefill.parsed.length ? ` ${prefill.parsed}` : '')).trim(),
   })
 

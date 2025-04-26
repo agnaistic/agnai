@@ -8,6 +8,7 @@ import { requestFullCompletion, toChatCompletionPayload } from './chat-completio
 import { decryptText } from '../db/util'
 import { streamGenerator } from './stream'
 import { getTokenCounter } from '../tokenize'
+import { insertImageContent } from './template-chat-payload'
 
 const baseUrl = `https://api.openai.com`
 
@@ -48,6 +49,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
+  if (gen.jinjaTemplate) {
+    body.chat_template = gen.jinjaTemplate
+  }
+
   const isChatFormat =
     gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
   const useChat = (isThirdParty && isChatFormat) || !!OPENAI_CHAT_MODELS[oaiModel]
@@ -66,17 +71,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { prompt: messages }
 
     // If we have image data, add it to the last user message
-    if (opts.imageData) {
-      for (let i = body.messages.length - 1; i >= 0; i--) {
-        const msg = body.messages[i]
-        if (msg.role !== 'user') continue
-        msg.content = [
-          { type: 'text', text: msg.content },
-          { type: 'image_url', image_url: { url: opts.imageData } },
-        ]
-        break
-      }
-    }
+    insertImageContent(opts, body.messages)
   } else {
     body.prompt = prompt
     yield { prompt }

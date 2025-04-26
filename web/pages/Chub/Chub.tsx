@@ -14,6 +14,7 @@ import { Page } from '/web/Layout'
 import { ListFilter } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Modal from '/web/shared/Modal'
+import { chubStore } from '/web/store/chub'
 
 const chubTabs = {
   characters: 'Characters',
@@ -40,6 +41,7 @@ const Chub: Component = () => {
 
   onMount(() => {
     window.flag('chub', true)
+    chubStore.initTags()
   })
 
   const currentTab = createMemo(() => tabs[tab()])

@@ -143,6 +143,7 @@ export interface GenSettings {
   cfgScale?: number
   cfgOppose?: string
 
+  jinjaTemplate?: string
   systemPrompt?: string
   ignoreCharacterSystemPrompt?: boolean
   gaslight?: string

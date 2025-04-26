@@ -199,6 +199,21 @@ export const Jailbreak: Field = (props) => {
   )
 }
 
+export const JinjaTemplate: Field = (props) => {
+  return (
+    <TextInput
+      fieldName="jinjaTemplate"
+      label="Jinja Template"
+      helperText="For overriding third-party chat completion templates"
+      value={props.state.jinjaTemplate || ''}
+      disabled={props.state.disabled}
+      hide={props.hides.thirdPartyUrl}
+      onChange={(ev) => props.setter('jinjaTemplate', ev.currentTarget.value)}
+      isMultiline
+    />
+  )
+}
+
 export const ThirdPartyUrl: Field = (props) => {
   return (
     <TextInput

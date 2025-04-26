@@ -234,14 +234,18 @@ export const settingStore = createStore<SettingState>(
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }
     },
-    async getFeatherless() {
+    async getFeatherless(state) {
+      if (state.featherless.models.length) return
+
       const res = await api.get('/settings/featherless')
 
       if (res.result?.models?.length) {
         return { featherless: res.result }
       }
     },
-    async getArliAI() {
+    async getArliAI(state) {
+      if (state.arliai.models.length) return
+
       const res = await api.get('/settings/arli')
 
       if (res.result?.models?.length) {

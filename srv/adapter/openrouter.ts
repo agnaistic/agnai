@@ -199,7 +199,13 @@ async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
   try {
     const res = await needle('get', 'https://openrouter.ai/api/v1/models', {}, { json: true })
     if (res.body) {
-      modelCache = res.body.data
+      const models = Array.isArray(res.body.data) ? res.body.data : []
+
+      modelCache = models.map((m: OpenRouterModel) => ({
+        id: m.id,
+        context_length: m.context_length,
+        pricing: { prompt: m.pricing.prompt, completion: m.pricing.completion },
+      }))
     }
 
     return modelCache

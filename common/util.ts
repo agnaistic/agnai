@@ -656,3 +656,12 @@ export function getSubscriptionModelLimits(
 
   return match
 }
+
+export function parseSearchQuery<T = any>(search: string) {
+  const parts = search.startsWith('?') ? search.slice(1).split('&') : search.split('&')
+  return parts.reduce((prev, curr) => {
+    const [key, value] = curr.split('=')
+    prev[key] = value
+    return prev
+  }, {} as any) as T
+}

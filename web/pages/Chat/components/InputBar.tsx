@@ -47,6 +47,7 @@ import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { ALLOWED_TYPES } from '/web/store/data/image'
+import { api } from '/web/store/api'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -250,12 +251,12 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
-      <Show when={ctx.waiting?.signal}>
+      <Show when={ctx.waiting?.signal && !api.isCdnApi()}>
         <button
           class="animate-pulse cursor-pointer p-2"
           onClick={() => {
             console.log('Cancel clicked', !!ctx.waiting?.signal)
-            ctx.waiting?.signal?.abort?.()
+            msgStore.abortMessage()
           }}
         >
           <StopCircle />
