@@ -79,7 +79,7 @@ export const ChubItem: Component<{
           <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
             {props.description}
           </div>
-          <div class="flex h-10 flex-wrap justify-center gap-1 overflow-hidden px-1">
+          <div class="flex max-h-14 flex-wrap justify-center gap-1 overflow-hidden px-1">
             <For each={props.entity?.topics || []}>
               {(tag) => (
                 <Pill inverse small type="hl" class="h-[16px] max-w-[80px] text-[10px]">

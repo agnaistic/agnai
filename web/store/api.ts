@@ -50,9 +50,20 @@ export const api = {
   toApiUrl,
   fetchSSE,
   isCdnApi,
+  getFallbackApiUrl,
 }
 
 type Query = { [key: string]: string | number }
+
+function getFallbackApiUrl() {
+  if (baseUrl.includes('prd-api.agnai.chat')) {
+    return 'api.agnai.chat'
+  }
+
+  if (baseUrl.includes('/api.agnai.chat')) {
+    return 'edge-api.agnai.chat'
+  }
+}
 
 function isCdnApi() {
   return baseUrl.includes('edge-api.agnai.chat')

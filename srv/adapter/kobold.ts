@@ -75,7 +75,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
   }
 
-  yield { prompt: body.prompt }
+  yield { prompt: body.prompt || stripImageContent(body.messages) }
 
   logger.debug(`Prompt:\n${body.prompt}`)
   logger.debug(
@@ -515,4 +515,22 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       return
     }
   }
+}
+
+function stripImageContent(messages: any[]) {
+  if (!messages) return []
+  if (!Array.isArray(messages)) return messages
+
+  const last = messages.slice(-1)[0]
+  if (!Array.isArray(last.content)) return messages
+
+  const next = messages.slice(0, -1).concat({
+    role: 'user',
+    content: last.content.map((c: any) => {
+      if (c.type !== 'image_url') return c
+      return { type: 'image_url', image_url: '[REDACTED]' }
+    }),
+  })
+
+  return next
 }

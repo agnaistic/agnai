@@ -58,8 +58,8 @@ export function insertImageContent(
     const msg = messages[i]
     if (msg.role !== 'user') continue
     msg.content = [
-      { type: 'text', text: msg.content },
       { type: 'image_url', image_url: { url: opts.imageData } },
+      { type: 'text', text: msg.content },
     ]
     break
   }

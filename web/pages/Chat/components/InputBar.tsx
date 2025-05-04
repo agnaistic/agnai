@@ -343,9 +343,6 @@ const InputBar: Component<{
 
             attach(file)
           },
-          ondrop: (ev) => {
-            console.log('ondrop', ev.dataTransfer?.files?.[0]?.size)
-          },
         }}
       />
       <Button

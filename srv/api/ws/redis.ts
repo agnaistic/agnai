@@ -123,6 +123,7 @@ export async function initMessageBus() {
 
     CLIENT_INTERVAL = setInterval(() => {
       if (!CONNECTED) return
+
       const count = getAllCount()
       clients.pub.publish(
         COUNT_EVENT,

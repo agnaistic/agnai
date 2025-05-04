@@ -218,6 +218,13 @@ export const settingStore = createStore<SettingState>(
           yield { initLoading: false }
           return
         }
+
+        if (res.status >= 400) {
+          toastStore.info(`Your session has expired. Please login again.`)
+          getStore('user').logout()
+          return
+        }
+
         setTimeout(() => settingStore.init(), 2500)
       }
     },

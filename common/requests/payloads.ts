@@ -84,8 +84,8 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
         {
           role: 'user',
           content: [
-            { type: 'text', text: prompt },
             { type: 'image_url', image_url: { url: opts.imageData } },
+            { type: 'text', text: prompt },
           ],
         },
       ]

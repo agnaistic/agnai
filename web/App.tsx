@@ -44,6 +44,7 @@ import { SagaDetail } from './pages/Saga/Detail'
 import { SagaList } from './pages/Saga/List'
 import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 import { ResetPasswordPage } from './pages/Login/ResetPassword'
+import { api } from './store/api'
 
 const App: Component = () => {
   const state = userStore()
@@ -194,9 +195,23 @@ const Layout: Component<{ children?: any }> = (props) => {
                       </a>{' '}
                       then log back in.
                     </div>
+
+                    <Show when={api.getFallbackApiUrl()}>
+                      <div>
+                        Page loading issues? Try{' '}
+                        <a
+                          class="link"
+                          href={`https://agnai.chat?api_url=${api.getFallbackApiUrl()}`}
+                        >
+                          clicking here
+                        </a>
+                      </div>
+                    </Show>
+
                     <Loading />
                   </div>
                 </Match>
+
                 <Match when>
                   <div class="flex flex-col items-center gap-2">
                     <div>Agnaistic failed to load</div>
