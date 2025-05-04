@@ -6,12 +6,14 @@ import {
   BOT_REPLACE,
   SAMPLE_CHAT_MARKER,
   SELF_REPLACE,
+  assemblePrompt,
   ensureValidTemplate,
   injectPlaceholders,
   insertsDeeperThanConvoHistory,
 } from '/common/prompt'
 import { AppSchema, TokenCounter } from '/common/types'
 import { escapeRegex } from '/common/util'
+import { ensureUserMessageFirst, toChatMessages } from './template-chat-payload'
 
 type SplitSampleChatProps = {
   sampleChat: string
@@ -42,6 +44,12 @@ export async function toChatCompletionPayload(
 ): Promise<CompletionItem[]> {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
+  }
+
+  if (opts.gen.thirdPartyFormat === 'openai-chatv2') {
+    const prompt = await assemblePrompt(opts, opts.parts, opts.lines, counter)
+    const messages = await toChatMessages(opts, prompt, counter)
+    return messages
   }
 
   const { lines, gen, replyAs } = opts
@@ -166,7 +174,9 @@ export async function toChatCompletionPayload(
   if (!addedAllInserts) {
     await addRemainingInserts()
   }
-  return messages.concat(history.reverse())
+
+  const allMessages = messages.concat(history.reverse())
+  return allMessages
 }
 
 export async function splitSampleChat(opts: SplitSampleChatProps, counter: TokenCounter) {

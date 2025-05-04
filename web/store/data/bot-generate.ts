@@ -577,7 +577,7 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, userId: str
   if (settings.service !== 'kobold') return false
 
   const format = settings.thirdPartyFormat
-  if (format !== 'openai' && format !== 'openai-chat') {
+  if (format !== 'openai' && format !== 'openai-chat' && format !== 'openai-chatv2') {
     return false
   }
 

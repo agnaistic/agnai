@@ -43,11 +43,8 @@ const MESSAGE_EVENT = 'agnaistic-message'
 const COUNT_EVENT = 'agnaistic-users'
 
 export const clients = {
-  pub: redis.createClient({ url: getUri() }),
-  sub: redis.createClient({ url: getUri() }),
-
-  bpub: redis.createClient({ url: getBroadcastUri() }),
-  bsub: redis.createClient({ url: getBroadcastUri() }),
+  pub: redis.createClient({ url: getUri(), socket: { reconnectStrategy: 250 } }),
+  sub: redis.createClient({ url: getUri(), socket: { reconnectStrategy: 250 } }),
 }
 
 let nonBusMaxCount = 0
@@ -98,11 +95,18 @@ export function isConnected() {
   return CONNECTED
 }
 
+let CLIENT_INTERVAL: NodeJS.Timeout | null = null
+
 export async function initMessageBus() {
   if (!config.redis.host) {
     logger.info(
       `No Redis host provided - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
     )
+    return
+  }
+
+  if (CONNECTED) {
+    logger.info(`Redis already connected - Ignoring`)
     return
   }
 
@@ -113,7 +117,12 @@ export async function initMessageBus() {
     logger.info('Connected to message bus')
     handleErrors()
 
-    setInterval(() => {
+    if (CLIENT_INTERVAL) {
+      clearInterval(CLIENT_INTERVAL)
+    }
+
+    CLIENT_INTERVAL = setInterval(() => {
+      if (!CONNECTED) return
       const count = getAllCount()
       clients.pub.publish(
         COUNT_EVENT,
@@ -140,7 +149,11 @@ export async function initMessageBus() {
 
     CONNECTED = true
   } catch (ex) {
-    setInterval(() => {
+    if (CLIENT_INTERVAL) {
+      clearInterval(CLIENT_INTERVAL)
+    }
+
+    CLIENT_INTERVAL = setInterval(() => {
       nonBusMaxCount = Math.max(getAllCount().count, nonBusMaxCount)
     }, 5000)
     logger.warn(
@@ -150,9 +163,13 @@ export async function initMessageBus() {
 }
 
 function handleErrors() {
-  clients.pub.on('error', (error) => {})
+  clients.pub.on('error', (error) => {
+    logger.error({ err: error }, `Redis publish client error`)
+  })
 
-  clients.sub.on('error', (error) => {})
+  clients.sub.on('error', (error) => {
+    logger.error({ err: error }, `Redis subscribe client error`)
+  })
 }
 
 function getUri() {
@@ -161,14 +178,6 @@ function getUri() {
   if (creds) creds += '@'
 
   return `redis://${creds}${config.redis.host}:${config.redis.port}`
-}
-
-function getBroadcastUri() {
-  let creds = config.broadcast.user || ''
-  if (creds && config.broadcast.pass) creds += `:${config.broadcast.pass}`
-  if (creds) creds += '@'
-
-  return `redis://${creds}${config.broadcast.host}:${config.broadcast.port}`
 }
 
 type BusMessage<T extends { type: string } = { type: string }> =

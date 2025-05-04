@@ -1,4 +1,4 @@
-import { GenerateRequestV2 } from './type'
+import { CompletionItem, GenerateRequestV2 } from './type'
 import { replaceTags } from '/common/presets/templates'
 import { AssembledPrompt } from '/common/prompt'
 import { parseTemplate } from '/common/template-parser'
@@ -58,7 +58,7 @@ export async function toChatMessages(
   const { system, post, history } = sections.sections
 
   const prefill = await parse(opts, counter, opts.settings?.prefill || '')
-  const messages: Array<{ role: string; content: any }> = [
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = [
     { role: 'system', content: system.join('') },
   ]
 
@@ -74,6 +74,33 @@ export async function toChatMessages(
     role: 'assistant',
     content: (post.join('') + (prefill.parsed.length ? ` ${prefill.parsed}` : '')).trim(),
   })
+
+  return messages
+}
+
+/** Currently unused, intended to work with awful inflexible jinja templates */
+export function ensureUserMessageFirst(messages: CompletionItem[]): CompletionItem[] {
+  if (!messages.length) return messages
+
+  const [first, second, ...rest] = messages
+  if (first.role === 'user') return messages
+
+  if (first.role === 'assistant') {
+    messages.unshift({ role: 'user', content: '' })
+    return messages
+  }
+
+  if (first.role === 'system') {
+    if (!second) {
+      messages.push({ role: 'user', content: '...' })
+      return messages
+    }
+
+    if (second.role === 'user') return messages
+
+    const next: CompletionItem[] = [first, { role: 'user', content: '' }, second, ...rest]
+    return next
+  }
 
   return messages
 }

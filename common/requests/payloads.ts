@@ -344,7 +344,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
     return body
   }
 
-  if (format === 'openai' || format === 'openai-chat') {
+  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
     const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
     const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
