@@ -9,7 +9,7 @@ import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
-import { Jailbreak, SystemPrompt } from './Fields'
+import { Jailbreak, ReasoningTags, SystemPrompt } from './Fields'
 import { PresetTabProps } from './types'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
@@ -68,6 +68,13 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             value={props.state.useAdvancedPrompt}
             onChange={(ev) => props.setter('useAdvancedPrompt', ev.value as any)}
             hide={props.state.presetMode === 'simple'}
+          />
+
+          <ReasoningTags
+            state={props.state}
+            setter={props.setter}
+            hides={props.hides}
+            sub={props.sub}
           />
 
           <BasicPromptTemplate

@@ -111,6 +111,44 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
   )
 }
 
+export const ReasoningTags: Field = (props) => {
+  return (
+    <div class="flex flex-col gap-1">
+      <FormLabel
+        label="Reasoning Tags"
+        helperText="For parsing reasoning sections for reasoning models: "
+      />
+
+      <div class="flex gap-2">
+        <TextInput
+          prelabel="Start"
+          parentClass="w-1/2"
+          fieldName="reasoning.start"
+          placeholder="<think>"
+          onChange={(ev) =>
+            props.setter('reasoning', {
+              start: ev.currentTarget.value,
+              end: props.state.reasoning?.end || '',
+            })
+          }
+        />
+        <TextInput
+          prelabel="End"
+          parentClass="w-1/2"
+          fieldName="reasoning.end"
+          placeholder="</think>"
+          onChange={(ev) =>
+            props.setter('reasoning', {
+              end: ev.currentTarget.value,
+              start: props.state.reasoning?.start || '',
+            })
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
 export const SystemPrompt: Field = (props) => {
   return (
     <Card classList={{ hidden: props.hides.systemPrompt ?? false }}>
