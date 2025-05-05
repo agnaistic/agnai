@@ -5,7 +5,6 @@ import { StatusError, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
 import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
-import { assessValid } from '/common/valid/validate'
 
 const createPreset = {
   ...presetValidator,
