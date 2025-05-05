@@ -420,11 +420,13 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleAuthedResponse(payload)
   }
 
-  if (body.eventStream) {
-    res.write('data: [DONE]')
-    res.send()
-  } else {
-    return { success: true }
+  if (!res.closed) {
+    if (body.eventStream) {
+      res.write('data: [DONE]')
+      res.send()
+    } else {
+      return { success: true }
+    }
   }
 })
 
