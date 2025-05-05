@@ -213,15 +213,15 @@ export const settingStore = createStore<SettingState>(
       }
 
       if (res.error) {
-        if (res.status === 500) {
-          toastStore.error(`Could not get settings from server.`)
-          yield { initLoading: false }
+        if (res.status === 401) {
+          toastStore.info(`Your session has expired. Please login again.`)
+          getStore('user').logout()
           return
         }
 
         if (res.status >= 400) {
-          toastStore.info(`Your session has expired. Please login again.`)
-          getStore('user').logout()
+          toastStore.error(`Could not get settings from server.`)
+          yield { initLoading: false }
           return
         }
 
