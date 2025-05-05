@@ -135,7 +135,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
 
     if (!body.settings) {
       if (body.presetId) {
-        const preset = await store.presets.getUserPreset(body.presetId)
+        const preset = await store.presets.getUserPresetInternal(body.presetId)
         if (!preset) {
           throw new StatusError(`Preset not found - ${body.presetId}`, 400)
         }
@@ -143,7 +143,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
         body.settings = preset
       } else if (!body.service) {
         if (!user.defaultPreset) throw errors.BadRequest
-        const preset = await store.presets.getUserPreset(user.defaultPreset)
+        const preset = await store.presets.getUserPresetInternal(user.defaultPreset)
         body.service = preset?.service!
         body.settings = preset
       }
@@ -181,7 +181,7 @@ export const inferenceModels = wrap(async (req) => {
     throw new StatusError(`No default preset configured - Check your Agnai user settings`, 400)
   }
 
-  const preset = await store.presets.getUserPreset(req.authed?.defaultPreset!)
+  const preset = await store.presets.getUserPresetInternal(req.authed?.defaultPreset!)
   if (!preset) {
     throw new StatusError(`Default preset not found - Check your Agnai user settings`, 400)
   }
@@ -236,10 +236,10 @@ export const inferenceApi = wrap(async (req, res) => {
     ? getCachedSubscriptionModels().find((m) => m._id === body.model)
     : undefined
   const bodyPreset =
-    !bodySubPreset && body.model ? await store.presets.getUserPreset(body.model) : null
+    !bodySubPreset && body.model ? await store.presets.getUserPresetInternal(body.model) : null
 
   const subPreset = bodySubPreset || getCachedSubscriptionModels().find((m) => m._id === presetId)
-  const preset = bodyPreset || (await store.presets.getUserPreset(presetId))
+  const preset = bodyPreset || (await store.presets.getUserPresetInternal(presetId))
 
   if (!subPreset && !preset) {
     throw new StatusError('Invalid preset ID', 400)

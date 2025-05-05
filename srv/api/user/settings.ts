@@ -220,7 +220,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
   const update: Partial<AppSchema.User> = {}
 
   if (body.defaultPreset) {
-    const preset = await store.presets.getUserPreset(body.defaultPreset)
+    const preset = await store.presets.getUserPresetInternal(body.defaultPreset)
     if (!preset || preset.userId !== userId) {
       throw new StatusError(`Invalid preset`, 403)
     }
@@ -236,7 +236,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
   }
 
   if (body.chargenPreset) {
-    const preset = await store.presets.getUserPreset(body.chargenPreset)
+    const preset = await store.presets.getUserPresetInternal(body.chargenPreset)
     if (!preset || preset.userId !== userId) {
       throw new StatusError(`Invalid preset`, 403)
     }

@@ -173,6 +173,10 @@ export const ModeGenSettings: Component<{
             label="Preset Name"
             onChange={(ev) => setStore('name', ev.currentTarget.value)}
           />
+
+          <Show when={store._id}>
+            <TextInput prelabel="ID" value={store._id} disabled />
+          </Show>
         </Card>
 
         <PresetSettings

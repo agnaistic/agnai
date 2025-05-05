@@ -257,7 +257,7 @@ async function getRequestPreset(opts: InferenceRequest) {
       preset = deepClone(defaultPresets[opts.user.defaultPreset])
     }
 
-    const user = await store.presets.getUserPreset(opts.user.defaultPreset)
+    const user = await store.presets.getUserPresetInternal(opts.user.defaultPreset)
     if (user) {
       preset = user
     }
@@ -488,7 +488,7 @@ export async function getGenerationSettings(
       return { ...getFallbackPreset(adapter), src: 'guest-fallback' }
     }
 
-    const preset = await store.presets.getUserPreset(chat.genPreset)
+    const preset = await store.presets.getUserPresetInternal(chat.genPreset)
     if (preset) {
       preset.src = 'user-chat-genpreset-custom'
       return preset
@@ -505,7 +505,7 @@ export async function getGenerationSettings(
       return { ...defaultPresets[user.defaultPreset], src: 'user-settings-genpreset-default' }
     }
 
-    const preset = await store.presets.getUserPreset(user.defaultPreset)
+    const preset = await store.presets.getUserPresetInternal(user.defaultPreset)
     if (preset) {
       preset.src = 'user-settings-genpreset-custom'
       return preset
@@ -527,7 +527,7 @@ export async function getGenerationSettings(
       return { ...getFallbackPreset(adapter), src: 'guest-fallback' }
     }
 
-    const preset = await store.presets.getUserPreset(servicePreset)
+    const preset = await store.presets.getUserPresetInternal(servicePreset)
     if (preset) {
       preset.src = 'user-service-custom'
       return preset

@@ -125,6 +125,7 @@ export const ReasoningTags: Field = (props) => {
           parentClass="w-1/2"
           fieldName="reasoning.start"
           placeholder="<think>"
+          value={props.state.reasoning?.start || ''}
           onChange={(ev) =>
             props.setter('reasoning', {
               start: ev.currentTarget.value,
@@ -137,6 +138,7 @@ export const ReasoningTags: Field = (props) => {
           parentClass="w-1/2"
           fieldName="reasoning.end"
           placeholder="</think>"
+          value={props.state.reasoning?.end || ''}
           onChange={(ev) =>
             props.setter('reasoning', {
               end: ev.currentTarget.value,

@@ -27,6 +27,15 @@ export function assertValid<T extends Validator>(
   }
 }
 
+export function assessValid<T extends Validator>(type: T, compare: any, partial?: boolean) {
+  const result = validateBody(type, compare, { notThrow: true, partial })
+  if (result.errors.length) {
+    throw new Error(`Request body is invalid: ${result.errors.join(', ')}`)
+  }
+
+  return result
+}
+
 /**
  * @destructive
  * Removes top-level properties from the object that aren't in the validator
@@ -64,22 +73,29 @@ export function validateBody<T extends Validator>(
   guard: T,
   compare: any,
   opts: { partial?: boolean; prefix?: string; notThrow?: boolean } = {}
-): { errors: string[]; actual: UnwrapBody<T>; original: UnwrapBody<T> } {
+): { errors: string[]; actual: UnwrapBody<T>; original: UnwrapBody<T>; omits: string[] } {
   const prefix = opts.prefix ? `${opts.prefix}.` : ''
   const errors: string[] = []
   const actual: any = {}
+  const omits: string[] = []
 
   if (!compare && '?' in guard && (guard as any)['?'] === '?') {
-    return { errors, actual, original: compare }
+    return { errors, actual, original: compare, omits }
   }
 
   start: for (const key in guard) {
+    if (key in compare === false) {
+      omits.push(key)
+    }
+
     const prop = `${prefix}${key}`
     const bodyType = guard[key]
     let value
     try {
       value = compare?.[key]
-      actual[key] = value
+      if (key !== '?' && value !== '?' && value !== undefined) {
+        actual[key] = value
+      }
     } catch (ex: any) {
       throw new Error(`${ex.message}: ${prop}`)
     }
@@ -246,5 +262,5 @@ export function validateBody<T extends Validator>(
     throw new Error(`Object does not match type: ${errors.join(', ')}`)
   }
 
-  return { errors, actual, original: compare }
+  return { errors, actual, original: compare, omits }
 }

@@ -78,11 +78,9 @@ export async function createUserPreset(userId: string, settings: AppSchema.GenSe
   await db('gen-setting').insertOne(preset)
 
   if (preset.localRequests && originalKey) {
-    preset.thirdPartyKey = originalKey
-  } else {
-    preset.thirdPartyKey = ''
+    preset.userThirdPartyKey = originalKey
   }
-
+  preset.thirdPartyKey = ''
   return preset
 }
 
@@ -104,7 +102,7 @@ export async function getUserPresets(userId: string) {
 
 export async function deleteUserPresetKey(userId: string, presetId: string) {
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: { thirdPartyKey: '' } })
-  const preset = await getUserPreset(presetId, userId)
+  const preset = await getSafeUserPreset(presetId, userId)
   return preset
 }
 
@@ -118,7 +116,7 @@ export async function updateUserPreset(
   }
 
   if (update.registered) {
-    const prev = await getUserPreset(presetId)
+    const prev = await getUserPresetInternal(presetId)
     update.registered = {
       ...prev?.registered,
       ...update.registered,
@@ -135,6 +133,7 @@ export async function updateUserPreset(
     delete update.thirdPartyKey
   }
 
+  delete update.userThirdPartyKey
   update.updatedAt = new Date().toISOString()
   try {
     await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
@@ -170,15 +169,23 @@ export async function updateUserPreset(
  * @param presetId
  * @returns
  */
-export async function getUserPreset(presetId: string, userId?: string) {
+export async function getUserPresetInternal(presetId: string) {
+  const preset = await db('gen-setting').findOne({ _id: presetId })
+
+  return mergeModelFormats(preset)
+}
+
+export async function getSafeUserPreset(presetId: string, userId: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
   if (preset?.localRequests && preset.thirdPartyKey && userId === preset.userId) {
     preset.userThirdPartyKey = decryptText(preset.thirdPartyKey)
   }
+
   if (preset?.thirdPartyKey) {
     preset.thirdPartyKey = ''
   }
-  return mergeModelFormats(preset)
+
+  return preset
 }
 
 function mergeModelFormats(gen: AppSchema.UserGenPreset | null) {

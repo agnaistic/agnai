@@ -103,6 +103,11 @@ export const presetValidator = {
   epsilonCutoff: 'number?',
   etaCutoff: 'number?',
   mirostatToggle: 'boolean?',
+  reasoning: {
+    '?': '?',
+    start: 'string?',
+    end: 'string?',
+  },
   presetMode: ['simple', 'advanced', null],
 } as const
 
