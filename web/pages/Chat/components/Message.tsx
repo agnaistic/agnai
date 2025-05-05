@@ -384,10 +384,22 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={!edit()}>
-                  <Show when={content().generating && content().thoughts.length > 0}>
+                  <Show
+                    when={
+                      content().generating &&
+                      content().thoughts.length > 0 &&
+                      !content().message.length
+                    }
+                  >
                     <div class="text-500 text-sm italic">Thinking...</div>
                   </Show>
-                  <Show when={ctx.ui.expandReasoning ? true : !content().generating}>
+                  <Show
+                    when={
+                      ctx.ui.expandReasoning
+                        ? true
+                        : !content().generating || content().message.length > 0
+                    }
+                  >
                     <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
                   </Show>
                   <p

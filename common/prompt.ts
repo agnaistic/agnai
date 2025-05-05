@@ -654,7 +654,9 @@ export async function getLinesForPrompt(
       opts.impersonate
     )
 
-    return fillPlaceholders({ msg, author, char, user: sender }).trim()
+    msg.msg = removeReasoning(msg.msg, settings?.reasoning)
+    const filled = fillPlaceholders({ msg, author, char, user: sender }).trim()
+    return filled
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
@@ -1226,4 +1228,36 @@ export function onJsonTickHandler(
   }
 
   return parser
+}
+
+function removeReasoning(msg: string, reasoning: AppSchema.GenSettings['reasoning']) {
+  const start = (reasoning?.start || '<think>').trim()
+  const end = (reasoning?.end || '</think>').trim()
+
+  if (!start || !end) return msg
+
+  while (true) {
+    let startIndex = msg.indexOf(start)
+    const endIndex = msg.indexOf(end)
+    if (startIndex < 0) {
+      if (endIndex >= 0) {
+        startIndex = 0
+      } else {
+        break
+      }
+    }
+
+    if (endIndex > startIndex) {
+      const thought = msg.slice(startIndex, endIndex + end.length)
+      msg = msg.replace(thought, '')
+      continue
+    }
+
+    const thought = msg.slice(startIndex)
+    if (thought) {
+      msg = msg.replace(thought, '')
+    }
+  }
+
+  return msg.trim()
 }
