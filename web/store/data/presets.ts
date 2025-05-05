@@ -18,6 +18,7 @@ export const presetApi = {
   updateTemplate,
   deleteTemplate,
   deleteUserPresetKey,
+  getLocalModelList,
 }
 
 export async function getPresets() {
@@ -86,6 +87,29 @@ export async function deleteUserPresetKey(presetId: string) {
   const next = presets.map((pre) => (pre._id === presetId ? { ...pre, thirdPartyKey: '' } : pre))
   await localApi.savePresets(next)
   return localApi.result({ success: true })
+}
+
+async function getLocalModelList(baseUrl: string, key?: string): Promise<string[]> {
+  try {
+    const headers: any = {}
+
+    if (key) {
+      headers.Authorization = `Bearer ${key}`
+    }
+
+    const res = await fetch(api.joinUrl(baseUrl, '/models'), { headers }).then((res) => res.json())
+    if (!Array.isArray(res.data)) return []
+    const models: string[] = []
+
+    for (const model of res.data) {
+      if (!model || typeof model.id !== 'string') continue
+      models.push(model.id)
+    }
+
+    return models
+  } catch (ex: any) {
+    return []
+  }
 }
 
 async function getTemplates() {

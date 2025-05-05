@@ -171,7 +171,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   if (!isGuest(req)) {
     // @todo consider locking for guests?
     try {
-      await obtainLock(chatId)
+      // Do not obtain locks for local requests
+      if (!body.response) {
+        await obtainLock(chatId)
+      }
     } catch (ex) {
       if (members.length <= 1) throw ex
       return res.json({
@@ -415,6 +418,13 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleGuestResponse(payload)
   } else {
     await handleAuthedResponse(payload)
+  }
+
+  if (body.eventStream) {
+    res.write('data: [DONE]')
+    res.send()
+  } else {
+    return { success: true }
   }
 })
 

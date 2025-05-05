@@ -5,7 +5,8 @@ import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { notify, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { tryParseConcat } from '../util'
+import { tryParse, tryParseConcat } from '../util'
+import { insertImageContent } from '/srv/adapter/template-chat-payload'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -44,8 +45,9 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     opts.settings?.maxTokens!
   )
 
-  payload.messages = messages
-  payload.prompt = opts.prompt
+  if (opts.imageData && gen.jinjaTemplate) {
+    payload.chat_template = tryParse(gen.jinjaTemplate) || gen.jinjaTemplate
+  }
 
   const headers: any = {
     'Content-Type': 'application/json',
@@ -56,9 +58,18 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   }
 
   const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'
-  const urlPath = gen.thirdPartyFormat?.startsWith('openai-chat')
-    ? `${suffix}chat/completions`
-    : `${suffix}completions`
+  const urlPath =
+    gen.thirdPartyFormat === 'openai' ? `${suffix}completions` : `${suffix}chat/completions`
+
+  if (gen.thirdPartyFormat === 'openai') {
+    payload.prompt = opts.prompt
+    console.log(`Prompt:${opts.prompt}`)
+  } else {
+    payload.messages = messages
+    console.log(`Prompt:\n`, JSON.stringify(messages, null, 2))
+  }
+
+  insertImageContent(opts, messages)
   const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
 
   if (!gen.streamResponse) {
@@ -160,7 +171,7 @@ export const streamCompletion: LocalGenerator = async function* (
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
 
   try {
-    const events = requestStream(resp, format)
+    const events = requestStream(resp, signal, format)
     let prev = ''
     for await (const event of events) {
       if (event.error) {

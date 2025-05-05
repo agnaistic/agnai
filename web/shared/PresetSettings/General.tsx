@@ -11,7 +11,7 @@ import {
   MISTRAL_MODELS,
 } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { settingStore, userStore } from '../../store'
+import { presetStore, settingStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
@@ -30,6 +30,9 @@ import {
   ArliModels,
 } from './Fields'
 import { PresetTabProps } from './types'
+import { FormLabel } from '../FormLabel'
+import { RefreshCcw } from 'lucide-solid'
+import Button from '../Button'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -63,6 +66,11 @@ const CLAUDE_LABELS = {
 export const GeneralSettings: Component<PresetTabProps> = (props) => {
   const cfg = settingStore()
   const user = userStore()
+  const localModels = presetStore((p) => ({
+    models: [{ label: '', value: '' }].concat(
+      p.localModels.map((value) => ({ label: value, value }))
+    ),
+  }))
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.userLevel
@@ -223,15 +231,38 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
 
-        <TextInput
-          fieldName="thirdPartyModel"
-          label="Model Override"
-          helperText="Model Override (typically for 3rd party APIs)"
-          value={props.state.thirdPartyModel ?? ''}
-          disabled={props.state.disabled}
-          onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
-          hide={props.hides.thirdPartyModel}
-        />
+        <div class="flex w-full flex-col gap-1">
+          <FormLabel
+            label="Model Override"
+            helperText="Model Override (typically for 3rd party APIs)"
+          />
+
+          <div class="flex w-full gap-1">
+            <TextInput
+              parentClass="w-full"
+              fieldName="thirdPartyModel"
+              value={props.state.thirdPartyModel ?? ''}
+              disabled={props.state.disabled}
+              onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
+              hide={props.hides.thirdPartyModel}
+            />
+
+            <Select
+              parentClass="w-full"
+              class="w-full"
+              items={localModels.models}
+              value={props.state.thirdPartyModel}
+              onChange={(ev) => props.setter('thirdPartyModel', ev.value)}
+              disabled={localModels.models.length === 0}
+            />
+
+            <Show when={localModels.models.length > 0}>
+              <Button onClick={() => presetStore.getLocalModels(props.state)}>
+                <RefreshCcw size={16} />
+              </Button>
+            </Show>
+          </div>
+        </div>
 
         <Select
           fieldName="openRouterModel"

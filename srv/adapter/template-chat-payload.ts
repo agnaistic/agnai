@@ -49,7 +49,7 @@ export function renderMessagesToPrompt(
  * mutates the messages list: adds the image data (base64) to the last user message
  */
 export function insertImageContent(
-  opts: GenerateRequestV2,
+  opts: { imageData?: string },
   messages: Array<{ role: string; content: any }>
 ) {
   if (!opts.imageData) return messages
@@ -85,11 +85,13 @@ export async function toChatMessages(
     { role: 'system', content: system.join('') },
   ]
 
+  let offset = history.length > opts.lines.length ? -1 : 0
   const sender = (opts.impersonate?.name || opts.sender.handle) + ':'
   for (let i = 0; i < history.length; i++) {
+    const isPreHistory = offset !== 0 && i === 0
     const line = history[i]
-    const original = opts.lines[i]
-    const role = original?.startsWith(sender) ? 'user' : 'assistant'
+    const original = opts.lines[i + offset]
+    const role = isPreHistory ? 'user' : original?.startsWith(sender) ? 'user' : 'assistant'
     messages.push({ role, content: line })
   }
 

@@ -15,11 +15,13 @@ type PresetState = {
   presets: AppSchema.UserGenPreset[]
   templates: AppSchema.PromptTemplate[]
   subs: AppSchema.SubscriptionModel[]
+  localModels: string[]
   saving: boolean
 }
 
 const initState: PresetState = {
   presets: [],
+  localModels: [],
   templates: [],
   subs: [],
   saving: false,
@@ -59,6 +61,17 @@ export const presetStore = createStore<PresetState>(
         }
         return { presets: res.result.presets }
       }
+    },
+    async getLocalModels(_, preset: Partial<AppSchema.UserGenPreset>) {
+      if (preset.service !== 'kobold' || !preset.localRequests || !preset.thirdPartyUrl) {
+        return { localModels: [] }
+      }
+
+      const models = await presetApi.getLocalModelList(
+        preset.thirdPartyUrl,
+        preset.userThirdPartyKey
+      )
+      return { localModels: models }
     },
     setImportPreset(_, preset?: AppSchema.UserGenPreset) {
       return { importing: preset }

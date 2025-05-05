@@ -13,7 +13,7 @@ import {
 } from '/common/prompt'
 import { AppSchema, TokenCounter } from '/common/types'
 import { escapeRegex } from '/common/util'
-import { ensureUserMessageFirst, toChatMessages } from './template-chat-payload'
+import { toChatMessages } from './template-chat-payload'
 
 type SplitSampleChatProps = {
   sampleChat: string

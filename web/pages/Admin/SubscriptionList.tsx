@@ -35,7 +35,8 @@ const SubscriptionList: Component = () => {
     const cats = new Map<number, Array<SubscriptionModel & { label: string }>>()
 
     for (const sub of state.enabled) {
-      let level = sub.levels.reduce<number | null>(
+      const levels = sub.levels || []
+      let level = levels.reduce<number | null>(
         (prev, curr) => (prev === null ? curr.level : curr.level < prev ? curr.level : prev),
         null
       )

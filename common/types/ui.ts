@@ -71,6 +71,7 @@ export type UISettings = {
   trimSentences?: boolean
   logPromptsToBrowserConsole: boolean
   contextWindowLine: boolean
+  expandReasoning?: boolean
 
   dark: CustomUI
   light: CustomUI

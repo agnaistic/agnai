@@ -16,6 +16,7 @@ export type ServerSentEvent = {
  **/
 export function requestStream(
   stream: NodeJS.ReadableStream,
+  signal: AbortController,
   format?: ThirdPartyFormat | 'openrouter'
 ) {
   const emitter = eventGenerator<ServerSentEvent>()
@@ -46,6 +47,11 @@ export function requestStream(
   stream.on('done', () => {
     emitter.done()
   })
+
+  signal.signal.onabort = () => {
+    emitter.done()
+    console.log('[local] message cancelled')
+  }
 
   let incomplete = ''
 

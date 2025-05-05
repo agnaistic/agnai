@@ -95,10 +95,9 @@ export async function getUserPresets(userId: string) {
   const presets = await db('gen-setting').find({ userId }).toArray()
   return presets.map((pre) => {
     if (pre.localRequests && pre.thirdPartyKey) {
-      pre.thirdPartyKey = decryptText(pre.thirdPartyKey, true)
-    } else {
-      pre.thirdPartyKey = ''
+      pre.userThirdPartyKey = decryptText(pre.thirdPartyKey, true)
     }
+    pre.thirdPartyKey = ''
     return mergeModelFormats(pre)
   })
 }
@@ -126,9 +125,12 @@ export async function updateUserPreset(
     }
   }
 
-  // If the key is too long, it's a 're-encrypted' key -- remove it
-  if (update.thirdPartyKey && update.thirdPartyKey.length < 500) {
-    update.thirdPartyKey = encryptText(update.thirdPartyKey)
+  // Detect if the key is already encrypted - if it is, do not proceed with encrypting it
+  if (update.thirdPartyKey) {
+    const [, iv] = update.thirdPartyKey.split('|')
+    if (!iv || iv.length !== 32) {
+      update.thirdPartyKey = encryptText(update.thirdPartyKey)
+    }
   } else {
     delete update.thirdPartyKey
   }
@@ -153,10 +155,9 @@ export async function updateUserPreset(
 
   if (updated) {
     if (updated.localRequests && updated.thirdPartyKey) {
-      updated.thirdPartyKey = decryptText(updated.thirdPartyKey, true)
-    } else {
-      updated.thirdPartyKey = ''
+      updated.userThirdPartyKey = decryptText(updated.thirdPartyKey, true)
     }
+    updated.thirdPartyKey = ''
   }
 
   return updated
@@ -172,7 +173,10 @@ export async function updateUserPreset(
 export async function getUserPreset(presetId: string, userId?: string) {
   const preset = await db('gen-setting').findOne({ _id: presetId })
   if (preset?.localRequests && preset.thirdPartyKey && userId === preset.userId) {
-    preset.thirdPartyKey = decryptText(preset.thirdPartyKey)
+    preset.userThirdPartyKey = decryptText(preset.thirdPartyKey)
+  }
+  if (preset?.thirdPartyKey) {
+    preset.thirdPartyKey = ''
   }
   return mergeModelFormats(preset)
 }

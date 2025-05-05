@@ -61,6 +61,7 @@ export const ModeGenSettings: Component<{
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
           setStore(preset)
+          presetStore.getLocalModels(preset)
         }
       }
     )

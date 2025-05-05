@@ -183,6 +183,14 @@ const UISettings: Component<{}> = () => {
       />
 
       <Toggle
+        label="Expand Reasoning by Default"
+        helperText="Reasoning thoughts are collapsed by default. Enable this to expand them by default."
+        fieldName="expandReasoning"
+        value={state.ui.expandReasoning ?? false}
+        onChange={(next) => userStore.saveUI({ expandReasoning: next })}
+      />
+
+      <Toggle
         value={settings.anonymize}
         label="Anonymize Chat"
         helperText="Hide profile name in conversations. Typically for screenshots."

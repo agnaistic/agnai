@@ -384,6 +384,12 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={!edit()}>
+                  <Show when={content().generating && content().thoughts.length > 0}>
+                    <div class="text-500 text-sm italic">Thinking...</div>
+                  </Show>
+                  <Show when={ctx.ui.expandReasoning ? true : !content().generating}>
+                    <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
+                  </Show>
                   <p
                     class={`rendered-markdown pr-1 ${content().class}`}
                     data-bot-message={!props.msg.userId}
@@ -908,10 +914,15 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
   const isPartial = props.msg._id === 'partial-response'
 
   if (isRetry || isPartial) {
+    const { thoughts, content } = extractReasoning(
+      props.partial ? props.partial : props.msg.msg,
+      ctx.preset?.reasoning
+    )
     if (props.partial) {
       return {
-        type: 'partial',
-        message: renderMessage(ctx, props.partial!, false, 'partial'),
+        type: 'partial' as const,
+        message: renderMessage(ctx, content, false, 'partial'),
+        thoughts,
         class: 'streaming-markdown',
         generating: true,
       }
@@ -919,17 +930,25 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
 
     if (isPartial && props.msg.msg) {
       return {
-        type: 'partial',
-        message: renderMessage(ctx, props.msg.msg, false, 'partial'),
+        type: 'partial' as const,
+        message: renderMessage(ctx, content, false, 'partial'),
+        thoughts,
         class: 'streaming-markdown',
         generating: true,
       }
     }
 
-    return { type: 'waiting', message: '', class: 'not-streaming', generating: true }
+    return {
+      type: 'waiting' as const,
+      message: '',
+      thoughts,
+      class: 'not-streaming',
+      generating: true,
+    }
   }
 
-  let message = props.msg.msg
+  const { thoughts, content } = extractReasoning(props.msg.msg, ctx.preset?.reasoning)
+  let message = content
 
   if (props.last && props.swipe) message = props.swipe
   if (props.msg.event && !props.showHiddenEvents) {
@@ -945,8 +964,9 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
   }
 
   return {
-    type: 'message',
+    type: 'message' as const,
     message: renderMessage(ctx, message, !!props.msg.userId, props.msg.adapter),
+    thoughts,
     class: 'not-streaming',
   }
 }
@@ -959,4 +979,66 @@ function getJsonUpdate(def: AppSchema.Character['json'], json: any) {
     json: hydration,
     msg: hydration.response,
   }
+}
+
+function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reasoning']) {
+  const open = tags?.start || '<think>'
+  const close = tags?.end || '</think>'
+
+  if (!open || !close) return { thoughts: [], content }
+
+  const len = {
+    open: open.length,
+    close: close.length,
+  }
+
+  const thoughts: string[] = []
+
+  if (!content) return { thoughts, content }
+
+  while (true) {
+    const start = content.indexOf(open)
+    if (start < 0) break
+
+    const end = content.indexOf(close)
+    if (end > start) {
+      const thought = content.slice(start + len.open, end)
+      thoughts.push(thought)
+      content = content.slice(end + len.close)
+      continue
+    }
+
+    const thought = content.slice(start + len.open)
+    thoughts.push(thought)
+    content = ''
+    break
+  }
+
+  return { thoughts, content }
+}
+
+const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {
+  return (
+    <For each={props.thoughts}>
+      {(thought) => <Thought expanded={props.expanded}>{thought}</Thought>}
+    </For>
+  )
+}
+
+const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
+  const [open, setOpen] = createSignal(props.expanded ?? false)
+
+  return (
+    <div class="flex flex-col gap-1">
+      <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
+        Thought{' '}
+        <Show when={open()} fallback={'+'}>
+          -
+        </Show>
+      </div>
+      <Show when={open()}>
+        <span class="text-600">{props.children}</span>
+      </Show>
+    </div>
+  )
 }
