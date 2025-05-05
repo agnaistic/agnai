@@ -104,12 +104,14 @@ export const userStore = createStore<UserState>(
     }
     userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
 
-    if (
-      init.user?.patreonUserId ||
-      init.user?.billing ||
-      init.user?.manualSub ||
-      init.user?.stripeSessions?.length
-    ) {
+    const canCheckSub =
+      (init.user?.patreonUserId ||
+        init.user?.billing ||
+        init.user?.manualSub ||
+        init.user?.stripeSessions?.length) &&
+      init.user?._id !== 'anon'
+
+    if (canCheckSub) {
       userStore.retrieveSubscription(true)
     }
 
