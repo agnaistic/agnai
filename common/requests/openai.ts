@@ -53,9 +53,9 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     'Content-Type': 'application/json',
   }
 
-  // if (gen.userThirdPartyKey) {
-  //   headers.Authorization = `Bearer ${gen.userThirdPartyKey}`
-  // }
+  if (gen.userThirdPartyKey) {
+    headers.Authorization = `Bearer ${gen.userThirdPartyKey}`
+  }
 
   const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'
   const urlPath =
