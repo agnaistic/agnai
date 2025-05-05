@@ -1,4 +1,4 @@
-import { Component, createMemo, Show } from 'solid-js'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select, { Option } from '../Select'
@@ -33,6 +33,7 @@ import { PresetTabProps } from './types'
 import { FormLabel } from '../FormLabel'
 import { RefreshCcw } from 'lucide-solid'
 import Button from '../Button'
+import { CustomSelect } from '../CustomSelect'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -72,6 +73,8 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
     ),
   }))
 
+  const [orfilter, setOrfilter] = createSignal('')
+
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.userLevel
     const match = getSubscriptionModelLimits(props.sub?.preset, level)
@@ -94,7 +97,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
     options.unshift({ label: 'Default', value: '' })
 
-    return options
+    return options.sort((l, r) => l.label.localeCompare(r.label))
   })
 
   const replicateModels = createMemo(() => {
@@ -231,7 +234,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
 
-        <div class="flex w-full flex-col gap-1">
+        <div class="flex w-full flex-col gap-1" classList={{ hidden: props.hides.thirdPartyModel }}>
           <FormLabel
             label="Model Override"
             helperText="Model Override (typically for 3rd party APIs)"
@@ -247,38 +250,49 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
               hide={props.hides.thirdPartyModel}
             />
 
-            <Select
-              parentClass="w-full"
-              class="w-full"
-              items={localModels.models}
-              value={props.state.thirdPartyModel}
-              onChange={(ev) => props.setter('thirdPartyModel', ev.value)}
-              disabled={localModels.models.length === 0}
-            />
-
             <Show when={localModels.models.length > 0}>
+              <CustomSelect
+                parentClass="flex w-full justify-end"
+                value={props.state.thirdPartyModel}
+                selected={props.state.thirdPartyModel}
+                options={localModels.models}
+                onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
+                search={(v, i) => v.toLowerCase().includes(i.toLowerCase())}
+                buttonLabel="Select Model"
+                hide={localModels.models.length === 0}
+              />
+
               <Button onClick={() => presetStore.getLocalModels(props.state)}>
-                <RefreshCcw size={16} />
+                <RefreshCcw size={20} />
               </Button>
             </Show>
           </div>
         </div>
 
-        <Select
-          fieldName="openRouterModel"
-          label="OpenRouter Model"
-          items={openRouterModels()}
-          helperText="Which OpenRouter model to use"
-          value={props.state.openRouterModel?.id || ''}
-          hide={props.state.service !== 'openrouter'}
-          disabled={props.state.disabled}
-          onChange={(ev) =>
-            props.setter(
-              'openRouterModel',
-              cfg.config.openRouter.models?.find((m) => m.id === ev.value)
-            )
-          }
-        />
+        <div class="flex w-full items-end gap-1">
+          <Select
+            fieldName="openRouterModel"
+            label="OpenRouter Model"
+            items={openRouterModels().filter((item) =>
+              orfilter() ? item.label.includes(orfilter()) : true
+            )}
+            helperText="Which OpenRouter model to use"
+            value={props.state.openRouterModel?.id || ''}
+            hide={props.state.service !== 'openrouter'}
+            disabled={props.state.disabled}
+            onChange={(ev) =>
+              props.setter(
+                'openRouterModel',
+                cfg.config.openRouter.models?.find((m) => m.id === ev.value)
+              )
+            }
+          />
+          <TextInput
+            placeholder="Filter..."
+            onChange={(ev) => setOrfilter(ev.currentTarget.value)}
+            hide={props.state.service !== 'openrouter'}
+          />
+        </div>
         <div
           class="flex flex-wrap gap-2"
           classList={{ hidden: !isValidServiceSetting(props.state, 'novelModel') }}

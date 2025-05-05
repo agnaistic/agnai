@@ -26,7 +26,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   const payload: any = {
-    prompt: opts.prompt,
     stream: opts.gen.streamResponse,
     // 256 is the OpenRouter default. We will use this.
     temperature: opts.gen.temp,
@@ -46,12 +45,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  const useChat = (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
-  if (useChat) {
+  const useAnthropic = (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
+  if (useAnthropic) {
     const { messages, system } = await createClaudeChatCompletion(opts)
     payload.messages = messages
     payload.system = system
-    delete payload.prompt
+  } else {
+    payload.messages = opts.messages
   }
 
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
