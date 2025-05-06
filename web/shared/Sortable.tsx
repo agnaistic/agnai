@@ -49,6 +49,10 @@ const Sortable: Component<{
     }, {} as Record<number, SortItem>)
   })
 
+  const sortables = createMemo(() => {
+    return props.items.concat({ id: -1, label: '', value: '', enabled: false })
+  })
+
   onMount(() => {
     const s = Sort.create(ref!, {
       animation: 150,
@@ -60,6 +64,7 @@ const Sortable: Component<{
         const moving = props.items[evt.oldIndex!]
 
         const next = props.items.filter((i) => i.id !== moving.id)
+
         next.splice(evt.newIndex!, 0, moving)
 
         props.onChange(next)
@@ -79,8 +84,16 @@ const Sortable: Component<{
 
         <div class="flex gap-1">
           <ul class="w-full" ref={ref!}>
-            <For each={props.items}>
+            <For each={sortables()}>
               {(item) => {
+                if (item.id === -1) {
+                  return (
+                    <li class="hidden" data-id={item.id}>
+                      Pseudo
+                    </li>
+                  )
+                }
+
                 const match = items()[item.id]
                 if (!match) return null
 
