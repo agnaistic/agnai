@@ -117,6 +117,9 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               <Toggle
                 label="Exclude Reasoning Tokens"
                 value={props.state.reasoning?.exclude ?? true}
+                onChange={(ev) =>
+                  props.setter('reasoning', { ...props.state.reasoning, exclude: ev })
+                }
               />
 
               <ReasoningTags
