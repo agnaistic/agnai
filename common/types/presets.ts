@@ -157,7 +157,14 @@ export interface GenSettings {
   prefill?: string
   ignoreCharacterUjb?: boolean
   antiBond?: boolean
-  reasoning?: { start: string; end: string }
+  reasoning?: {
+    start: string
+    end: string
+    effort: string
+    enabled: boolean
+    exclude: boolean
+    // maxTokens: number
+  }
 
   frequencyPenalty?: number
   presencePenalty?: number

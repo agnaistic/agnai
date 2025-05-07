@@ -30,6 +30,13 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     body.dynatemp_exponent = gen.dynatemp_exponent
   }
 
+  if (gen.reasoning?.enabled) {
+    body.reasoning = {
+      effort: gen.reasoning.effort ?? 'medium',
+      exclude: gen.reasoning.exclude ?? false,
+    }
+  }
+
   if (opts.kind === 'continue') {
     gen.tokenHealing = true
   }

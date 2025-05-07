@@ -70,12 +70,63 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             hide={props.state.presetMode === 'simple'}
           />
 
-          <ReasoningTags
-            state={props.state}
-            setter={props.setter}
-            hides={props.hides}
-            sub={props.sub}
-          />
+          <Card border class="flex flex-col gap-1">
+            <div class="flex w-full justify-between font-bold">
+              <div>Reasoning</div>
+              <Toggle
+                value={props.state.reasoning?.enabled ?? false}
+                onChange={(ev) =>
+                  props.setter('reasoning', { ...props.state.reasoning, enabled: ev })
+                }
+              />
+            </div>
+
+            <div
+              class="flex flex-col gap-1"
+              classList={{ hidden: !props.state.reasoning?.enabled }}
+            >
+              <div class="flex w-full justify-start gap-1">
+                <Select
+                  inline
+                  label="Reasoning Effort"
+                  items={[
+                    { label: 'Low', value: 'low' },
+                    { label: 'Medium', value: 'medium' },
+                    { label: 'High', value: 'high' },
+                  ]}
+                  value={props.state.reasoning?.effort || 'medium'}
+                  onChange={(ev) =>
+                    props.setter('reasoning', { ...props.state.reasoning, effort: ev.value })
+                  }
+                />
+              </div>
+
+              {/* <div class="flex w-full justify-start gap-1">
+                <TextInput
+                  type="number"
+                  prelabel="Max Tokens"
+                  value={props.state.reasoning?.maxTokens ?? 0}
+                  onChange={(ev) =>
+                    props.setter('reasoning', {
+                      ...props.state.reasoning,
+                      maxTokens: +ev.currentTarget.value,
+                    })
+                  }
+                />
+              </div> */}
+              <Toggle
+                label="Exclude Reasoning Tokens"
+                value={props.state.reasoning?.exclude ?? true}
+              />
+
+              <ReasoningTags
+                state={props.state}
+                setter={props.setter}
+                hides={props.hides}
+                sub={props.sub}
+              />
+            </div>
+          </Card>
 
           <BasicPromptTemplate
             state={props.state}

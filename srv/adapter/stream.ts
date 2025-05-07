@@ -199,7 +199,7 @@ export function requestStream(
   stream.on('data', (chunk: Buffer) => {
     try {
       if (failed && !emitter.isDone()) {
-        const result = tryParse(chunk.toString())
+        const result = tryParse(incomplete + chunk.toString())
         const error = result?.error?.message || result?.message
         if (error) {
           emitter.push({ error: `SSE request failed: ${error}` })

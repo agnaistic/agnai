@@ -295,6 +295,10 @@ export const GOOGLE_MODELS = {
     label: 'Gemini 2.5 Pro Preview 03/25',
   },
   GEMINI_25_FLASH_0417: { id: 'gemini-2.5-flash-preview-04-17', label: 'Gemini 2.5 Flash 04/17' },
+  GEMINI_25_PRO_PREVIEW_0506: {
+    id: 'gemini-2.5-pro-preview-05-06',
+    label: 'Gemini 2.5 Pro Preview 05-06',
+  },
 }
 
 export const GOOGLE_LIMITS: Record<string, number> = {

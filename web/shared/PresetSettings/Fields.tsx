@@ -116,7 +116,7 @@ export const ReasoningTags: Field = (props) => {
     <div class="flex flex-col gap-1">
       <FormLabel
         label="Reasoning Tags"
-        helperText="For parsing reasoning sections for reasoning models: "
+        helperText="For collapsing reasoning sections in the UI: "
       />
 
       <div class="flex gap-2">
@@ -128,8 +128,8 @@ export const ReasoningTags: Field = (props) => {
           value={props.state.reasoning?.start || ''}
           onChange={(ev) =>
             props.setter('reasoning', {
+              ...props.state.reasoning,
               start: ev.currentTarget.value,
-              end: props.state.reasoning?.end || '',
             })
           }
         />
@@ -141,8 +141,8 @@ export const ReasoningTags: Field = (props) => {
           value={props.state.reasoning?.end || ''}
           onChange={(ev) =>
             props.setter('reasoning', {
+              ...props.state.reasoning,
               end: ev.currentTarget.value,
-              start: props.state.reasoning?.start || '',
             })
           }
         />

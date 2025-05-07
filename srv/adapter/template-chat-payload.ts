@@ -58,8 +58,8 @@ export function insertImageContent(
     const msg = messages[i]
     if (msg.role !== 'user') continue
     msg.content = [
-      { type: 'image_url', image_url: { url: opts.imageData } },
       { type: 'text', text: msg.content },
+      { type: 'image_url', image_url: { url: opts.imageData } },
     ]
     break
   }
@@ -87,18 +87,27 @@ export async function toChatMessages(
 
   let offset = history.length > opts.lines.length ? -1 : 0
   const sender = (opts.impersonate?.name || opts.sender.handle) + ':'
+  let lastRole = ''
   for (let i = 0; i < history.length; i++) {
     const isPreHistory = offset !== 0 && i === 0
     const line = history[i]
     const original = opts.lines[i + offset]
     const role = isPreHistory ? 'user' : original?.startsWith(sender) ? 'user' : 'assistant'
     messages.push({ role, content: line })
+    lastRole = role
   }
 
-  messages.push({
-    role: 'user',
-    content: (post.join('') + (prefill.parsed.length ? ` ${prefill.parsed}` : '')).trim(),
-  })
+  const postContent = (post.join('') + (prefill.parsed.length ? ` ${prefill.parsed}` : '')).trim()
+
+  if (lastRole === 'user') {
+    const lastMsg = messages[messages.length - 1]
+    lastMsg.content += `\n\n${postContent}`
+  } else {
+    messages.push({
+      role: 'user',
+      content: postContent,
+    })
+  }
 
   return messages
 }

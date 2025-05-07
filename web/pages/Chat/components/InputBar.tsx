@@ -426,10 +426,12 @@ const InputBar: Component<{
           </Show>
           <Show
             when={
+              ctx.preset?.service === 'openrouter' ||
               ctx.preset?.thirdPartyFormat === 'ollama' ||
               ctx.preset?.thirdPartyFormat === 'vllm' ||
               ctx.preset?.thirdPartyFormat === 'openai-chat' ||
-              ctx.preset?.thirdPartyFormat === 'openai-chatv2'
+              ctx.preset?.thirdPartyFormat === 'openai-chatv2' ||
+              ctx.preset?.thirdPartyFormat === 'gemini'
             }
           >
             <FileInput
