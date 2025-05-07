@@ -8,6 +8,7 @@ import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
 import { streamGenerator } from './stream'
+import { insertImageContent, logPayload } from './template-chat-payload'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -57,6 +58,8 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
   yield { prompt: payload.messages ? JSON.stringify(payload.messages, null, 2) : payload.prompt }
 
+  insertImageContent(opts, payload.messages)
+
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
     'HTTP-Referer': 'https://agnai.chat',
@@ -78,7 +81,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   let accum = ''
   let response: any
 
-  opts.log.debug(payload, 'OpenRouter payload')
+  logPayload(opts.log, payload)
 
   while (true) {
     const gen = await res.next()

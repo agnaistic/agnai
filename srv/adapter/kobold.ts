@@ -11,6 +11,7 @@ import { getThirdPartyPayload } from './payloads'
 import * as oai from './stream'
 import { toSamplerOrder } from '/common/sampler-order'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { stripImageContent } from './template-chat-payload'
 
 /**
  * Sampler order
@@ -515,22 +516,4 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       return
     }
   }
-}
-
-function stripImageContent(messages: any[]) {
-  if (!messages) return []
-  if (!Array.isArray(messages)) return messages
-
-  const last = messages.slice(-1)[0]
-  if (!Array.isArray(last.content)) return messages
-
-  const next = messages.slice(0, -1).concat({
-    role: 'user',
-    content: last.content.map((c: any) => {
-      if (c.type !== 'image_url') return c
-      return { type: 'image_url', image_url: '[REDACTED]' }
-    }),
-  })
-
-  return next
 }

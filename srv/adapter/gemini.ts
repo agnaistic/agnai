@@ -37,11 +37,14 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     topP: opts.gen.topP,
     topK: opts.gen.topK,
     stopSequences: getStoppingStrings(opts),
+    presencePenalty: opts.gen.presencePenalty,
+    frequencyPenalty: opts.gen.frequencyPenalty,
+    abortSignal: opts.signal.signal,
   }
 
   if (opts.gen.reasoning?.enabled) {
     const effort = opts.gen.reasoning.effort || 'medium'
-    const max = Math.min(opts.gen.maxTokens ?? 2048, 2048)
+    const max = Math.max(opts.gen.maxTokens ?? 2048, 2048)
     generationConfig.maxOutputTokens = max
 
     let tokens = 0
@@ -167,7 +170,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   yield trimmed || parsed
 }
 
-const safetySettings = [
+const safetySettings: SafetySetting[] = [
   {
     category: HarmCategory.HARM_CATEGORY_HARASSMENT,
     threshold: HarmBlockThreshold.BLOCK_NONE,
@@ -185,10 +188,14 @@ const safetySettings = [
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
   {
-    category: 'HARM_CATEGORY_CIVIC_INTEGRITY',
+    category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
-] as SafetySetting[]
+  // {
+  //   category: HarmCategory.HARM_CATEGORY_UNSPECIFIED,
+  //   threshold: HarmBlockThreshold.BLOCK_NONE,
+  // },
+]
 
 function fallbackSystemMessage(opts: AdapterProps) {
   const message = injectPlaceholders(

@@ -1,3 +1,4 @@
+import { AppLog } from '../middleware'
 import { CompletionItem, GenerateRequestV2 } from './type'
 import { replaceTags } from '/common/presets/templates'
 import { AssembledPrompt } from '/common/prompt'
@@ -110,6 +111,33 @@ export async function toChatMessages(
   }
 
   return messages
+}
+
+export function stripImageContent(messages: any[]) {
+  if (!messages) return []
+  if (!Array.isArray(messages)) return messages
+
+  const last = messages.slice(-1)[0]
+  if (!Array.isArray(last.content)) return messages
+
+  const next = messages.slice(0, -1).concat({
+    role: 'user',
+    content: last.content.map((c: any) => {
+      if (c.type !== 'image_url') return c
+      return { type: 'image_url', image_url: '[REDACTED]' }
+    }),
+  })
+
+  return next
+}
+
+export function logPayload(logger: AppLog, payload: any) {
+  if (!payload.messages) {
+    logger.debug({ ...payload, prompt: null }, 'Payload')
+    return
+  }
+
+  logger.debug({ ...payload, messages: null }, 'Payload')
 }
 
 /** Currently unused, intended to work with awful inflexible jinja templates */
