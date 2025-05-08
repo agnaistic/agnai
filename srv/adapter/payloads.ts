@@ -32,7 +32,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
-      effort: gen.reasoning.effort ?? 'medium',
+      effort: gen.reasoning.effort ?? 'low',
       exclude: gen.reasoning.exclude ?? false,
     }
   }

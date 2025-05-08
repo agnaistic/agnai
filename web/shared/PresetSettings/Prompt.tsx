@@ -94,7 +94,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                     { label: 'Medium', value: 'medium' },
                     { label: 'High', value: 'high' },
                   ]}
-                  value={props.state.reasoning?.effort || 'medium'}
+                  value={props.state.reasoning?.effort || 'low'}
                   onChange={(ev) =>
                     props.setter('reasoning', { ...props.state.reasoning, effort: ev.value })
                   }

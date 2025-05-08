@@ -46,6 +46,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
+  if (gen.reasoning?.enabled) {
+    body.reasoning = {
+      effort: gen.reasoning.effort || 'low',
+      exclude: !!gen.reasoning.exclude,
+    }
+  }
+
   body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
@@ -156,13 +163,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   try {
     let text = getCompletionContent(response, log)
     if (text instanceof Error) {
-      yield { error: `OpenAI returned an error: ${text.message}` }
+      yield { error: `[Chat] Request returned an error: ${text.message}` }
       return
     }
 
     if (!text?.length) {
-      log.error({ body: response }, 'OpenAI request failed: Empty response')
-      yield { error: `OpenAI request failed: Received empty response. Try again.` }
+      log.error({ body: response }, '[Chat] Request failed: Empty response')
+      yield { error: `[Chat] Request failed: Received empty response. Try again.` }
       return
     }
 

@@ -43,7 +43,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   }
 
   if (opts.gen.reasoning?.enabled) {
-    const effort = opts.gen.reasoning.effort || 'medium'
+    const effort = opts.gen.reasoning.effort || 'low'
     const max = Math.max(opts.gen.maxTokens ?? 2048, 2048)
     generationConfig.maxOutputTokens = max
 
