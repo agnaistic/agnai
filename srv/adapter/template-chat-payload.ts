@@ -23,7 +23,7 @@ export function renderMessagesToPrompt(
     }
 
     if (systems.length && tag !== 'system') {
-      output.push(`<system>${systems.join('\n\n')}</system>`)
+      output.push(`<system>${systems.join('\n\n').replace(/\n\n+/g, '\n\n')}</system>`)
       systems.length = 0
     }
 
@@ -33,16 +33,16 @@ export function renderMessagesToPrompt(
   }
 
   if (systems.length) {
-    output.push(`<system>${systems.join('\n\n')}</system>`)
+    output.push(`<system>${systems.join('\n\n').replace(/\n\n+/g, '\n\n')}</system>`)
   }
 
   if (lastTag !== 'bot') {
     output.push(`<bot>`)
   }
 
-  const template = output.join('\n\n')
-  const prompt = replaceTags(template, preset.modelFormat || 'ChatML')
-  return { prompt, stop: replaceTags('</bot>', preset.modelFormat || 'ChatML') }
+  const template = output.filter((o) => !!o.trim()).join('\n\n')
+  const prompt = replaceTags(template, preset.modelFormat || 'None')
+  return { prompt, stop: replaceTags('</bot>', preset.modelFormat || 'None') }
 }
 
 /**
@@ -83,7 +83,7 @@ export async function toChatMessages(
 
   const prefill = await parse(opts, counter, opts.settings?.prefill || '')
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = [
-    { role: 'system', content: system.join('') },
+    { role: 'system', content: system.join('').trim().replace(/\n\n+/g, '\n\n') },
   ]
 
   let offset = history.length > opts.lines.length ? -1 : 0

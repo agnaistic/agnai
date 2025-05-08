@@ -14,6 +14,7 @@ import {
   SafetySetting,
 } from '@google/genai'
 import { defaultSystemPrompt } from '/common/prompt-order'
+import { stripImageContent } from './template-chat-payload'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -79,10 +80,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const contents: Content[] = []
 
   for (const msg of messages) {
-    if (msg.role === 'system') {
-      contents.push({ role: 'user', parts: [{ text: msg.content }] })
-      continue
-    }
+    if (msg.role === 'system') continue
 
     contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })
     continue
@@ -134,6 +132,8 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
   const client = new GoogleGenAI({ apiKey: key! })
   let accum = ''
+
+  yield { prompt: stripImageContent(contents) }
 
   if (!opts.gen.streamResponse) {
     const ai = await client.models
