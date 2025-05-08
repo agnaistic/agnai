@@ -156,7 +156,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
-    const text = ai.candidates?.[0].content?.parts?.[0]?.text || ai.text
+    const text = ai.candidates?.[0].content?.parts?.[0]?.text || ai.text || ''
     accum += text
   } else {
     const ai = await client.models
@@ -181,7 +181,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       }
 
       const text = tick.candidates?.[0].content?.parts?.[0]?.text || tick.text
-      accum += text
+      accum += text || ''
       yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
     }
   }
