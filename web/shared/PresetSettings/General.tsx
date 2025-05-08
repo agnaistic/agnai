@@ -95,9 +95,25 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
       label: model.id,
     }))
 
-    options.unshift({ label: 'Default', value: '' })
+    const search = orfilter().trim().toLowerCase()
+    const filtered = (
+      search ? options.filter((opt) => opt.value.toLowerCase().includes(search)) : options
+    ).sort((l, r) => l.label.localeCompare(r.label))
 
-    return options.sort((l, r) => l.label.localeCompare(r.label))
+    const includesCurrent = props.state.openRouterModel?.id
+      ? filtered.some((v) => v.value === props.state.openRouterModel?.id)
+      : true
+
+    if (!includesCurrent) {
+      filtered.unshift({
+        value: props.state.openRouterModel?.id!,
+        label: props.state.openRouterModel?.id!,
+      })
+    }
+
+    filtered.unshift({ label: 'Default', value: '' })
+
+    return filtered
   })
 
   const replicateModels = createMemo(() => {
@@ -273,9 +289,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           <Select
             fieldName="openRouterModel"
             label="OpenRouter Model"
-            items={openRouterModels().filter((item) =>
-              orfilter() ? item.label.includes(orfilter()) : true
-            )}
+            items={openRouterModels()}
             helperText="Which OpenRouter model to use"
             value={props.state.openRouterModel?.id || ''}
             hide={props.state.service !== 'openrouter'}
