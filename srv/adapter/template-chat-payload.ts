@@ -118,12 +118,13 @@ export function stripImageContent(messages: any[]) {
   if (!Array.isArray(messages)) return messages
 
   const last = messages.slice(-1)[0]
-  if (!Array.isArray(last.content)) return messages
+  const content = last?.content || last?.parts
+  if (!content) return messages
 
   const next = messages.slice(0, -1).concat({
     role: 'user',
-    content: last.content.map((c: any) => {
-      if (c.type !== 'image_url') return c
+    content: content.map((c: any) => {
+      if (c.type !== 'image_url' && !c.inlineData) return c
       return { type: 'image_url', image_url: '[REDACTED]' }
     }),
   })

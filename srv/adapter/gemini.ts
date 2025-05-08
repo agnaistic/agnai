@@ -13,8 +13,8 @@ import {
   HarmCategory,
   SafetySetting,
 } from '@google/genai'
-import { defaultSystemPrompt } from '/common/prompt-order'
 import { stripImageContent } from './template-chat-payload'
+import { defaultSystemPrompt } from '/common/presets/templates'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -79,17 +79,27 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const systems: string[] = [opts.parts.systemPrompt || fallback.parsed]
   const contents: Content[] = []
 
+  const canUseSystemInstruct = !SYSTEM_INCAPABLE[opts.gen.googleModel]
+  const systemInstruction = systems.join('\n').replace(/\n\n+/g, '\n\n')
+
   for (const msg of messages) {
-    if (msg.role === 'system') continue
+    if (msg.role === 'system') {
+      contents.unshift({
+        role: 'user',
+        parts: [{ text: msg.content.replace(systemInstruction, '').trim() }],
+      })
+
+      continue
+    }
 
     contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })
     continue
   }
 
   if (systems.length) {
-    if (!SYSTEM_INCAPABLE[opts.gen.googleModel]) {
+    if (canUseSystemInstruct) {
       generationConfig.systemInstruction = {
-        parts: [{ text: systems.join('\n').replace(/\n\n+/g, '\n\n') }],
+        parts: [{ text: systemInstruction }],
       }
     } else {
       contents.unshift({ role: 'user', parts: [{ text: systems.join('\n') }] })
@@ -133,7 +143,14 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const client = new GoogleGenAI({ apiKey: key! })
   let accum = ''
 
-  yield { prompt: stripImageContent(contents) }
+  yield {
+    prompt: [
+      {
+        role: 'system',
+        parts: (generationConfig.systemInstruction as Content)?.parts,
+      },
+    ].concat(...stripImageContent(contents)),
+  }
 
   if (!opts.gen.streamResponse) {
     const ai = await client.models
