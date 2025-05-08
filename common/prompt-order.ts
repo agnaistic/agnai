@@ -121,7 +121,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     post: `ASSISTANT: {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Mistral: {
-    system_prompt: neat`[SYSTEM] {{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}} [/SYSTEM]`,
+    system_prompt: neat`[SYSTEM_PROMPT] {{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}} [/SYSTEM_PROMPT]`,
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}[INST] {{.name}}: {{.msg}} [/INST]{{/if}}
