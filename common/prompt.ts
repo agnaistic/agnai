@@ -818,6 +818,15 @@ export function getChatPreset(
   return getFallbackPreset(adapter || 'horde')
 }
 
+export function isThirdPartyPreset(preset: Partial<AppSchema.GenSettings>) {
+  let adapter = preset?.service!
+  const thirdPartyFormat = preset?.thirdPartyFormat
+  const isThirdParty =
+    thirdPartyFormat && thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
+
+  return !!isThirdParty
+}
+
 /**
  * Order of Precedence:
  * 1. chat.genPreset -> service
@@ -831,9 +840,7 @@ export function getAdapter(
   preset: Partial<AppSchema.GenSettings> | undefined
 ) {
   let adapter = preset?.service!
-
-  const thirdPartyFormat = preset?.thirdPartyFormat || user.thirdPartyFormat
-  const isThirdParty = thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
+  const isThirdParty = isThirdPartyPreset(preset || {})
 
   if (adapter === 'kobold') {
     adapter = THIRDPARTY_HANDLERS[user.thirdPartyFormat]

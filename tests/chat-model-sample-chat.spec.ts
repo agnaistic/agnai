@@ -162,6 +162,7 @@ async function testChat(prompt: string) {
     user: user.user,
     characters,
     signal: new AbortController(),
+    isThirdParty: true,
   }
 
   const payload = await toChatCompletionPayload(

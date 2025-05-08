@@ -155,7 +155,7 @@ export type AdapterProps = {
   mappedSettings: any
   guest?: string
   log: AppLog
-  isThirdParty?: boolean
+  isThirdParty: boolean
   inserts?: Map<number, string>
   contextSize?: number
   signal: AbortController

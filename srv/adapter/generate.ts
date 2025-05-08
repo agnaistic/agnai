@@ -16,6 +16,7 @@ import {
   buildPromptParts,
   JsonField,
   getContextLimit,
+  isThirdPartyPreset,
 } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
@@ -210,6 +211,8 @@ export async function createInferenceStream(opts: InferenceRequest) {
     settings.stopSequences = opts.stop
   }
 
+  const isThirdParty = isThirdPartyPreset(settings)
+
   const handler = getHandlers(settings)
   const stream = handler({
     kind: 'plain',
@@ -237,6 +240,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     imageData: opts.imageData,
     jsonValues: opts.jsonValues,
     signal: opts.signal,
+    isThirdParty,
   })
 
   return { stream, service: settings.service || '' }
