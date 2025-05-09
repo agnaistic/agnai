@@ -125,7 +125,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   if (response && 'model' in response) {
-    yield { meta: { model: response.model } }
+    yield { meta: { model: response.model, provider: response.provider, ...response.usage } }
   }
 
   const text = getResponseText(response, opts.log)
