@@ -292,7 +292,10 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             items={openRouterModels()}
             helperText="Which OpenRouter model to use"
             value={props.state.openRouterModel?.id || ''}
-            hide={props.state.service !== 'openrouter'}
+            hide={
+              props.state.service !== 'openrouter' &&
+              props.state.service !== 'openrouter-completion'
+            }
             disabled={props.state.disabled}
             onChange={(ev) =>
               props.setter(
