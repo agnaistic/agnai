@@ -131,7 +131,7 @@ const Navigation: Component = () => {
       ? ''
       : `/ ${window.agnai_version.slice(0, 4)}`
 
-    return `${apiSha} ${webSha}`
+    return `ui.${webSha} api.${apiSha}`
   })
 
   return (
