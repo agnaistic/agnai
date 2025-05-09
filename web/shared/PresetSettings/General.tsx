@@ -307,7 +307,10 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           <TextInput
             placeholder="Filter..."
             onChange={(ev) => setOrfilter(ev.currentTarget.value)}
-            hide={props.state.service !== 'openrouter'}
+            hide={
+              props.state.service !== 'openrouter' &&
+              props.state.service !== 'openrouter-completion'
+            }
           />
         </div>
         <div
