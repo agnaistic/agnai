@@ -76,11 +76,6 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       thinkingBudget: Math.floor(tokens),
       includeThoughts: !opts.gen.reasoning.exclude,
     }
-  } else {
-    generationConfig.thinkingConfig = {
-      thinkingBudget: 0,
-      includeThoughts: false,
-    }
   }
 
   const systems = opts.messages?.find((m) => m.role === 'system')
