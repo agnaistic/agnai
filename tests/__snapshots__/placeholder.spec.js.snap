@@ -14,6 +14,14 @@ MainChar's personality: MainCharacter talks a lot",
     "sections": Object {
       "history": Array [],
       "post": Array [],
+      "post_system": Array [],
+      "pre_system": Array [
+        "OtherBot replies a lot",
+        "
+
+",
+        "MainChar's personality: MainCharacter talks a lot",
+      ],
       "system": Array [
         "OtherBot replies a lot",
         "
@@ -22,6 +30,13 @@ MainChar's personality: MainCharacter talks a lot",
         "MainChar's personality: MainCharacter talks a lot",
       ],
     },
+    "strictSystem": Array [
+      "OtherBot replies a lot",
+      "
+
+",
+      "MainChar's personality: MainCharacter talks a lot",
+    ],
     "warnings": Object {
       "noHistory": true,
       "noPost": true,
