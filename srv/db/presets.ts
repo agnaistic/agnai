@@ -46,21 +46,6 @@ export async function getTemplate(id: string) {
   return template
 }
 
-export async function getTemplateForPreset(preset: UserGenPreset, chat: AppSchema.Chat) {
-  if (!preset.promptTemplateId) {
-    const template = getChatTemplate({ settings: preset, chat })
-    return template
-  }
-
-  const template = await getTemplate(preset.promptTemplateId)
-
-  if (template) {
-    return template.template
-  }
-
-  return getChatTemplate({ settings: preset, chat })
-}
-
 export async function getUserTemplates(userId: string) {
   const templates = await db('prompt-template').find({ userId }).toArray()
   return templates

@@ -81,7 +81,6 @@ const genValidator = {
   jsonValues: 'any?',
   response: 'string?',
   eventStream: 'boolean?',
-  template: 'string?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {
@@ -240,10 +239,6 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     setTextStreamHeaders(res, ents, body, userMsg)
 
-    if (!body.template) {
-      body.template = await store.presets.getTemplateForPreset(ents.preset, chat)
-    }
-
     const chatStream = await createChatStream(
       {
         ...body,
@@ -257,7 +252,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         resolvedScenario: ents.resolvedScenario,
         chatSchema: schema,
         signal,
-        template: body.template,
       },
       log,
       isGuest(req) ? req.socketId : undefined

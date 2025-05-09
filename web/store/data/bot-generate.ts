@@ -125,7 +125,6 @@ export async function generateResponse(
     userEmbeds,
     jsonValues: props.json,
     reschemaPrompt: props.reschemaPrompt,
-    template: activePrompt.template,
   }
 
   if (

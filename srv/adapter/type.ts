@@ -68,7 +68,6 @@ export type GenerateRequestV2 = {
 
   parts: PromptParts
   lines: string[]
-  template: string
   linesCount?: number
   text?: string
   settings?: Partial<AppSchema.GenSettings>
@@ -123,7 +122,6 @@ export type AdapterProps = {
   sender: AppSchema.Profile
 
   prompt: string
-  template: string
   messages?: Array<{ role: string; content: string }>
   assembled: AssembledPrompt | undefined
 

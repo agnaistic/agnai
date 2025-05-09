@@ -163,7 +163,6 @@ async function testChat(prompt: string) {
     characters,
     signal: new AbortController(),
     isThirdParty: true,
-    template: '',
     assembled: undefined,
   }
 

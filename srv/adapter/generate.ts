@@ -58,7 +58,6 @@ configure(async (opts) => {
 export type InferenceRequest = {
   requestId?: string
   prompt: string
-  template: string
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
@@ -229,7 +228,6 @@ export async function createInferenceStream(opts: InferenceRequest) {
     replyAs: {} as any,
     parts: { persona: '', post: [], allPersonas: [], chatEmbeds: [], userEmbeds: [] },
     prompt: opts.prompt,
-    template: opts.template,
     sender: {} as any,
     mappedSettings: mapPresetsToAdapter(settings, settings.service!),
     impersonate: undefined,
@@ -466,7 +464,6 @@ export async function createChatStream(
     jsonValues: opts.jsonValues,
     contextSize: prompt.length,
     signal: opts.signal,
-    template: opts.template,
     assembled: prompt,
   })
 

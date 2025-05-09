@@ -239,18 +239,6 @@ const safetySettings: SafetySetting[] = [
   },
 ]
 
-// function fallbackSystemMessage(opts: AdapterProps) {
-//   const message = injectPlaceholders(defaultSystemPrompt, {
-//     characters: opts.characters,
-//     encoder: getEncoder('main').count,
-//     jsonValues: {},
-//     parts: opts.parts,
-//     opts,
-//   })
-
-//   return message
-// }
-
 function getMimeTypeBase64(base64: string) {
   const [start, encode] = base64.split(';')
   if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
