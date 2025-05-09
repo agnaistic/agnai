@@ -4,8 +4,6 @@ import { AppSchema } from '../../common/types/schema'
 import { decryptText, encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
-import { UserGenPreset } from '/common/types/presets'
-import { getTemplate as getChatTemplate } from '/common/prompt'
 
 export async function createTemplate(
   userId: string,
