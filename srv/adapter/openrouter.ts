@@ -44,6 +44,18 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     repetition_penalty: opts.gen.repetitionPenalty,
   }
 
+  if (opts.gen.reasoning?.enabled) {
+    payload.reasoning = {
+      exclude: opts.gen.reasoning.exclude ?? false,
+    }
+
+    if (opts.gen.reasoning.effort === 'custom') {
+      payload.reasoning.max_tokens = opts.gen.reasoning.maxTokens ?? 0
+    } else {
+      payload.reasoning.effort = opts.gen.reasoning.effort ?? 'low'
+    }
+  }
+
   if (opts.gen.openRouterModel?.id) {
     payload.model = opts.gen.openRouterModel.id
   }
