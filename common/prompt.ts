@@ -366,7 +366,9 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
 
     const svc = opts.settings?.service
     const postSample =
-      svc === 'openai' || svc === 'openrouter' || svc === 'scale' ? SAMPLE_CHAT_MARKER : '<START>'
+      svc === 'openai' || svc === 'openrouter' || svc === 'scale' || svc === 'openrouter-completion'
+        ? SAMPLE_CHAT_MARKER
+        : '<START>'
 
     const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
       .replace(BOT_REPLACE, opts.replyAs.name)

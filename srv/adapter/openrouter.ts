@@ -70,8 +70,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     const { messages, system } = await createClaudeChatCompletion(opts)
     payload.messages = messages
     payload.system = system
-  } else {
+  } else if (opts.messages) {
     payload.messages = opts.messages
+  } else {
+    payload.prompt = opts.prompt
   }
 
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)

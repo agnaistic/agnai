@@ -63,6 +63,7 @@ export const ADAPTER_SETTINGS: {
     'gemini',
     'openai-chatv2',
     'agnaistic',
+    'openrouter-completion',
   ],
 
   topP: [
@@ -80,6 +81,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'mistral',
     'openrouter',
+    'openrouter-completion',
   ],
   localRequests: ['openai', 'openai-chat', 'openai-chatv2'],
   repetitionPenalty: [
@@ -93,6 +95,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'ollama',
     'openrouter',
+    'openrouter-completion',
   ],
   repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'tabby', 'ollama'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
@@ -108,8 +111,19 @@ export const ADAPTER_SETTINGS: {
     'aphrodite',
     'tabby',
     'openrouter',
+    'openrouter-completion',
   ],
-  topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'aphrodite', 'tabby', 'openrouter'],
+  topA: [
+    'horde',
+    'novel',
+    'kobold',
+    'ooba',
+    'agnaistic',
+    'aphrodite',
+    'tabby',
+    'openrouter',
+    'openrouter-completion',
+  ],
   topK: [
     'horde',
     'novel',
@@ -179,6 +193,7 @@ export const ADAPTER_SETTINGS: {
     'aphrodite',
     'tabby',
     'openrouter',
+    'openrouter-completion',
     'arli',
   ],
   presencePenalty: [
@@ -191,6 +206,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'ollama',
     'openrouter',
+    'openrouter-completion',
     'arli',
   ],
   streamResponse: [
@@ -207,6 +223,7 @@ export const ADAPTER_SETTINGS: {
     'mistral',
     'ollama',
     'openrouter',
+    'openrouter-completion',
     'gemini',
     'arli',
   ],
@@ -224,6 +241,7 @@ export const ADAPTER_SETTINGS: {
     'tabby',
     'ollama',
     'openrouter',
+    'openrouter-completion',
     'arli',
   ],
   trimStop: ['koboldcpp'],
