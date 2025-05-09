@@ -446,6 +446,7 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
 
     /** TODO: Create default preset for OpenRouter... */
     case 'openrouter':
+    case 'openrouter-completion':
       return deepClone(defaultPresets.openai)
 
     case 'mancer':

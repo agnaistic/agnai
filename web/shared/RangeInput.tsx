@@ -135,7 +135,7 @@ const RangeInput: Component<{
           ref={input}
           id={props.fieldName}
           name={props.fieldName}
-          class="form-field focusable-field border-0.25 float-right box-border inline-block w-fit min-w-12 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
+          class="form-field focusable-field border-0.25 float-right box-border inline-block min-w-24 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
           value={props.value}
           min={props.min}
           type="number"
@@ -159,6 +159,7 @@ export const InlineRangeInput: Component<{
   onChange: (value: number) => void
   hide?: boolean
   parentClass?: string
+  inputClass?: string
   label?: string
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
@@ -255,7 +256,7 @@ export const InlineRangeInput: Component<{
         ref={input}
         id={props.fieldName}
         name={props.fieldName}
-        class="form-field focusable-field border-0.25 float-right box-border inline-block w-fit min-w-12 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
+        class="form-field focusable-field border-0.25 float-right box-border inline-block w-32 rounded-lg border border-[var(--bg-600)] p-1 hover:border-white/20"
         value={props.value}
         min={props.min}
         type="number"

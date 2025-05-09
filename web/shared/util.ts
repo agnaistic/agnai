@@ -751,6 +751,7 @@ export function isUsableService(
       return !!user?.oaiKeySet || !!user?.oaiKey
     }
 
+    case 'openrouter-completion':
     case 'openrouter': {
       return (
         !!user?.adapterConfig?.openrouter?.apiKeySet || !!user?.adapterConfig?.openrouter?.apiKey

@@ -961,6 +961,7 @@ export function getContextLimit(
     case 'goose':
       return Math.min(configuredMax, 2048) - genAmount
 
+    case 'openrouter-completion':
     case 'openrouter':
       if (gen?.openRouterModel) {
         if (gen.useMaxContext) return gen.openRouterModel.context_length - genAmount

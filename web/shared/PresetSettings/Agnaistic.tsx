@@ -369,12 +369,7 @@ const ModelLabel: Component<{
 
   const maxes = createMemo(() => {
     const pills: any[] = []
-    if (!props.sub.preset.levels?.length) {
-      pills.push(<>{tokens()} tokens</>)
-      return pills
-    }
-
-    const levels = props.sub.preset.levels.slice()
+    const levels = (props.sub.preset.levels || []).slice()
     const baseIncluded = props.sub.preset.levels.find((l) => l.level === props.sub.preset.subLevel)
     if (!baseIncluded) {
       levels.push({
@@ -382,6 +377,15 @@ const ModelLabel: Component<{
         maxContextLength: props.sub.preset.maxContextLength!,
         maxTokens: props.sub.preset.maxTokens,
       })
+    }
+
+    if (!levels.length) {
+      pills.push(
+        <>
+          {tokens()} tokens, {tokens()} tokens
+        </>
+      )
+      return pills
     }
 
     levels.sort((l, r) => l.level - r.level)
@@ -395,8 +399,15 @@ const ModelLabel: Component<{
         return curr.level < prev.level ? curr : prev
       }, null)
 
-      if (!required && props.sub.preset.subLevel > -1) continue
-      const name = required ? required.name : level.level === 0 ? 'User' : 'Guest'
+      if (!required && props.sub.preset.subLevel > -1) {
+        pills.push(
+          <Pill small class="text-xs" inverse>
+            All {Math.floor(level.maxContextLength / 1000)}K
+          </Pill>
+        )
+        continue
+      }
+      const name = required ? required.name : level.level === 0 ? 'User' : 'All'
 
       pills.push(
         <Pill small class="text-xs" inverse>
@@ -413,20 +424,15 @@ const ModelLabel: Component<{
       <div class="flex items-center justify-between gap-1">
         <div class="min-w-fit font-bold">{props.sub.name}</div>
         <div class="text-700 flex flex-wrap gap-1 text-xs">
-          <Show
-            when={maxes().length}
-            fallback={
-              <>
-                {Math.floor(context() / 1000)}K, {tokens()} tokens
-              </>
-            }
-          >
+          <Show when={maxes().length} fallback={<>{Math.floor(context() / 1000)}K</>}>
             <For each={maxes()}>{(max) => <>{max}</>}</For>
           </Show>
         </div>
       </div>
       <Show when={!props.disabled && !props.nodesc}>
-        <div class="text-700 text-xs">{props.sub.preset.description}</div>
+        <div class="text-700 text-xs">
+          {tokens()} tokens{props.sub.preset.description ? `, ${props.sub.preset.description}` : ''}
+        </div>
       </Show>
       <Show when={props.disabled}>
         <div class="text-700 text-xs">Requires {props.requires}</div>

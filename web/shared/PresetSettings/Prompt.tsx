@@ -11,6 +11,8 @@ import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
 import { PresetTabProps } from './types'
+import { InlineRangeInput } from '../RangeInput'
+import { FormLabel } from '../FormLabel'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)
@@ -22,6 +24,21 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
     if (!isChat()) return
 
     return character?._id
+  })
+
+  const reasonWarning = createMemo(() => {
+    if (props.state.reasoning?.effort !== 'custom') return
+    if (!props.state.reasoning.maxTokens) return
+    const threshold = props.state.maxTokens * 0.8
+    if (props.state.reasoning.maxTokens > threshold) {
+      return (
+        <div class="italic text-red-500">
+          Warning: Your reasoning tokens exceeds 80% of your response length.
+        </div>
+      )
+    }
+
+    return null
   })
 
   return (
@@ -85,21 +102,41 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               class="flex flex-col gap-1"
               classList={{ hidden: !props.state.reasoning?.enabled }}
             >
+              <FormLabel
+                label="Reasoning Effort"
+                helperText="Typically the amount of your response length to use for reasoning"
+              />
               <div class="flex w-full justify-start gap-1">
                 <Select
                   inline
-                  label="Reasoning Effort"
                   items={[
-                    { label: 'Low', value: 'low' },
-                    { label: 'Medium', value: 'medium' },
-                    { label: 'High', value: 'high' },
+                    { label: 'Low (20%)', value: 'low' },
+                    { label: 'Medium (50%)', value: 'medium' },
+                    { label: 'High (80%)', value: 'high' },
+                    { label: 'Custom', value: 'custom' },
                   ]}
                   value={props.state.reasoning?.effort || 'low'}
                   onChange={(ev) =>
                     props.setter('reasoning', { ...props.state.reasoning, effort: ev.value })
                   }
                 />
+                <Show when={props.state.reasoning?.effort === 'custom'}>
+                  <InlineRangeInput
+                    fieldName="reasoning.maxTokens"
+                    label="Tokens"
+                    value={props.state.reasoning?.maxTokens ?? props.state.maxTokens * 0.2}
+                    onChange={(ev) =>
+                      props.setter('reasoning', { ...props.state.reasoning, maxTokens: ev })
+                    }
+                    parentClass="w-full"
+                    min={0}
+                    max={props.state.maxTokens}
+                    step={16}
+                  />
+                </Show>
               </div>
+
+              {reasonWarning()}
 
               {/* <div class="flex w-full justify-start gap-1">
                 <TextInput

@@ -360,7 +360,7 @@ setContextLimitStrategy((user, gen) => {
   const tier = subs.find((sub) => sub._id === gen.registered?.agnaistic?.subscriptionId || '')
   if (!tier) return
 
-  const level = sub?.level ?? -1
+  const level = user.admin ? Infinity : sub?.level ?? -1
 
   const limits = getSubscriptionModelLimits(tier.preset, level)
   if (!limits) return

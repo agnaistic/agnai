@@ -632,7 +632,7 @@ export function getSubscriptionModelLimits(
     | Pick<AppSchema.SubscriptionModel, 'subLevel' | 'levels' | 'maxContextLength' | 'maxTokens'>
     | undefined,
   level: number
-) {
+): AppSchema.SubscriptionModelLevel | undefined {
   if (!model) return
 
   const levels = Array.isArray(model.levels) ? model.levels.slice() : []

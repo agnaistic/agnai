@@ -38,7 +38,7 @@ const [debouceUI] = createDebounce((update: UI.UISettings) => {
   updateTheme(update)
 }, 50)
 
-type SubscriberInfo = {
+export type SubscriberInfo = {
   level: number
   type: AppSchema.SubscriptionType
   tier: AppSchema.SubscriptionTier

@@ -155,6 +155,11 @@ export const config = {
   publicTunnel: !!env('PUBLIC_TUNNEL', ''),
 }
 
+if (config.adapters.includes('openrouter')) {
+  const i = config.adapters.findIndex((o) => o === 'openrouter')
+  config.adapters.splice(i + 1, 0, 'openrouter-completion')
+}
+
 insertInject()
 
 if (config.ui.inject) {

@@ -163,7 +163,7 @@ export interface GenSettings {
     effort: string
     enabled: boolean
     exclude: boolean
-    // maxTokens: number
+    maxTokens: number
   }
 
   frequencyPenalty?: number

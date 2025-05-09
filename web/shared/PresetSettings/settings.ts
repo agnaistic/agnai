@@ -210,7 +210,7 @@ export const ADAPTER_SETTINGS: {
     'gemini',
     'arli',
   ],
-  openRouterModel: ['openrouter'],
+  openRouterModel: ['openrouter', 'openrouter-completion'],
   stopSequences: [
     'ooba',
     'agnaistic',

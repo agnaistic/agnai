@@ -401,13 +401,14 @@ export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   goose: handleGooseAI,
   replicate: handleReplicate,
   openrouter: handleOpenRouter,
+  'openrouter-completion': handleOpenRouter,
   mancer: handleMancer,
   petals: handlePetals,
   agnaistic: handleAgnaistic,
   venus: handleVenus,
 }
 
-export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
+export function getHandlers(settings: Partial<AppSchema.GenSettings>): ModelAdapter {
   switch (settings.service!) {
     case 'agnaistic':
     case 'claude':
@@ -416,6 +417,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
     case 'horde':
     case 'ooba':
     case 'openrouter':
+    case 'openrouter-completion':
     case 'openai':
     case 'scale':
     case 'petals':

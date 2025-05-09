@@ -12,6 +12,8 @@ import { insertImageContent, logPayload } from './template-chat-payload'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
+const completionUrl = `${baseUrl}/completions`
+
 let modelCache: OpenRouterModel[]
 
 export const handleOpenRouter: ModelAdapter = async function* (opts) {
@@ -46,8 +48,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  const useAnthropic = (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
-  if (useAnthropic) {
+  const useAnthropic =
+    opts.gen.service !== 'openrouter-completion' &&
+    (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
+
+  if (opts.gen.service === 'openrouter-completion') {
+    payload.prompt = opts.prompt
+  } else if (useAnthropic) {
     const { messages, system } = await createClaudeChatCompletion(opts)
     payload.messages = messages
     payload.system = system
@@ -58,7 +65,9 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
   yield { prompt: payload.messages ? JSON.stringify(payload.messages, null, 2) : payload.prompt }
 
-  insertImageContent(opts, payload.messages)
+  if (payload.messages) {
+    insertImageContent(opts, payload.messages)
+  }
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
@@ -68,7 +77,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   const res = opts.gen.streamResponse
     ? streamGenerator({
         userId: user._id,
-        url: chatUrl,
+        url: payload.prompt ? completionUrl : chatUrl,
         headers,
         body: payload,
         service: 'OpenRouter',

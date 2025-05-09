@@ -52,6 +52,11 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
     let tokens = 0
     switch (effort) {
+      case 'custom': {
+        tokens = opts.gen.reasoning.maxTokens ?? 0
+        break
+      }
+
       case 'high': {
         tokens = max * 0.8
         break

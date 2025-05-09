@@ -60,7 +60,7 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
 } = {
   _id: '',
   ...agnaiPresets.agnai,
-  reasoning: { enabled: false, effort: 'medium', exclude: true, start: '', end: '' },
+  reasoning: { enabled: false, effort: 'medium', exclude: true, start: '', end: '', maxTokens: 0 },
   stopSequences: [],
   description: '',
   name: '',
