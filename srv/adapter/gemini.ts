@@ -1,10 +1,9 @@
 import { decryptText } from '../db/util'
-import { getEncoder, getEncoderByName } from '../tokenize'
+import { getEncoderByName } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { getStoppingStrings } from './prompt'
-import { AdapterProps, ModelAdapter } from './type'
+import { ModelAdapter } from './type'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
-import { injectPlaceholders } from '/common/prompt'
 import {
   Content,
   GenerateContentConfig,
@@ -14,7 +13,6 @@ import {
   SafetySetting,
 } from '@google/genai'
 import { stripImageContent } from './template-chat-payload'
-import { defaultSystemPrompt } from '/common/presets/templates'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -78,22 +76,20 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       thinkingBudget: Math.floor(tokens),
       includeThoughts: !opts.gen.reasoning.exclude,
     }
+  } else {
+    generationConfig.thinkingConfig = {
+      thinkingBudget: 0,
+      includeThoughts: false,
+    }
   }
 
-  const fallback = await fallbackSystemMessage(opts)
-  const systems: string[] = [opts.parts.systemPrompt || fallback.parsed]
+  const systems = opts.messages?.find((m) => m.role === 'system')
   const contents: Content[] = []
 
   const canUseSystemInstruct = !SYSTEM_INCAPABLE[opts.gen.googleModel]
-  const systemInstruction = systems.join('\n').replace(/\n\n+/g, '\n\n')
 
   for (const msg of messages) {
     if (msg.role === 'system') {
-      contents.unshift({
-        role: 'user',
-        parts: [{ text: msg.content.replace(systemInstruction, '').trim() }],
-      })
-
       continue
     }
 
@@ -101,13 +97,13 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     continue
   }
 
-  if (systems.length) {
+  if (systems) {
     if (canUseSystemInstruct) {
       generationConfig.systemInstruction = {
-        parts: [{ text: systemInstruction }],
+        parts: [{ text: systems.content }],
       }
     } else {
-      contents.unshift({ role: 'user', parts: [{ text: systems.join('\n') }] })
+      contents.unshift({ role: 'user', parts: [{ text: systems.content }] })
     }
   }
 
@@ -243,17 +239,17 @@ const safetySettings: SafetySetting[] = [
   },
 ]
 
-function fallbackSystemMessage(opts: AdapterProps) {
-  const message = injectPlaceholders(defaultSystemPrompt, {
-    characters: opts.characters,
-    encoder: getEncoder('main').count,
-    jsonValues: {},
-    parts: opts.parts,
-    opts,
-  })
+// function fallbackSystemMessage(opts: AdapterProps) {
+//   const message = injectPlaceholders(defaultSystemPrompt, {
+//     characters: opts.characters,
+//     encoder: getEncoder('main').count,
+//     jsonValues: {},
+//     parts: opts.parts,
+//     opts,
+//   })
 
-  return message
-}
+//   return message
+// }
 
 function getMimeTypeBase64(base64: string) {
   const [start, encode] = base64.split(';')

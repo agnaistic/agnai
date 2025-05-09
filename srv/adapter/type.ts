@@ -1,4 +1,4 @@
-import type { JsonField, PromptParts } from '../../common/prompt'
+import type { AssembledPrompt, JsonField, PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { ThirdPartyFormat } from '/common/adapters'
@@ -68,6 +68,7 @@ export type GenerateRequestV2 = {
 
   parts: PromptParts
   lines: string[]
+  template: string
   linesCount?: number
   text?: string
   settings?: Partial<AppSchema.GenSettings>
@@ -122,7 +123,9 @@ export type AdapterProps = {
   sender: AppSchema.Profile
 
   prompt: string
+  template: string
   messages?: Array<{ role: string; content: string }>
+  assembled: AssembledPrompt | undefined
 
   parts: PromptParts
   lines: string[]

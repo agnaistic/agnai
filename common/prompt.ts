@@ -16,6 +16,7 @@ import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceTags } from './presets/templates'
+import { PromptTemplate } from './types/presets'
 
 export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
 
@@ -304,7 +305,15 @@ export async function assemblePrompt(
   }
 }
 
-export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
+export function getTemplate(
+  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
+  templates?: PromptTemplate[]
+) {
+  if (opts.settings?.promptTemplateId && templates) {
+    const template = templates.find((t) => t._id === opts.settings?.promptTemplateId)
+    if (template) return template.template
+  }
+
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (opts.settings?.useAdvancedPrompt === 'basic' || opts.settings?.presetMode === 'simple') {
     if (opts.settings.presetMode === 'simple') {

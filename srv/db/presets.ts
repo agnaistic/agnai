@@ -4,6 +4,8 @@ import { AppSchema } from '../../common/types/schema'
 import { decryptText, encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
+import { UserGenPreset } from '/common/types/presets'
+import { getTemplate as getChatTemplate } from '/common/prompt'
 
 export async function createTemplate(
   userId: string,
@@ -42,6 +44,21 @@ export async function deleteTemplate(userId: string, id: string) {
 export async function getTemplate(id: string) {
   const template = await db('prompt-template').findOne({ _id: id })
   return template
+}
+
+export async function getTemplateForPreset(preset: UserGenPreset, chat: AppSchema.Chat) {
+  if (!preset.promptTemplateId) {
+    const template = getChatTemplate({ settings: preset, chat })
+    return template
+  }
+
+  const template = await getTemplate(preset.promptTemplateId)
+
+  if (template) {
+    return template.template
+  }
+
+  return getChatTemplate({ settings: preset, chat })
 }
 
 export async function getUserTemplates(userId: string) {

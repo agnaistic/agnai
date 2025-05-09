@@ -33,6 +33,7 @@ const validImage = {
 
 const validInference = {
   prompt: 'string',
+  template: 'string?',
   settings: 'any?',
   user: 'any',
   presetId: 'string?',
@@ -168,6 +169,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
     reguidance: body.reguidance,
     requestId: body.requestId,
     jsonSchema: body.jsonSchema,
+    template: '',
     signal,
   }
 
@@ -306,6 +308,7 @@ export const inferenceApi = wrap(async (req, res) => {
     lists: body.lists,
     stop: rendered ? [rendered.stop, ...(body.stop || [])] : undefined,
     signal,
+    template: '',
   }
 
   if (!request.prompt) {
@@ -406,6 +409,7 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
+    template: '',
     signal,
   })
 
@@ -433,6 +437,7 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
     signal: new AbortController(),
+    template: '',
   })
 
   const requestId = body.requestId || v4()

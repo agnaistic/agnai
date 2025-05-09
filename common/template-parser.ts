@@ -6,7 +6,7 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
-type Section = 'system' | 'history' | 'post'
+type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
 export type TemplateOpts = {
   continue?: boolean
@@ -38,6 +38,7 @@ export type TemplateOpts = {
   sections?: {
     flags: { [key in Section]?: boolean }
     sections: { [key in Section]: string[] }
+    strictSystem: string[]
     done: boolean
     warnings: {
       noHistory: boolean
@@ -188,7 +189,8 @@ export async function parseTemplate(
 
   const sections: TemplateOpts['sections'] = {
     flags: {},
-    sections: { system: [], history: [], post: [] },
+    strictSystem: [],
+    sections: { pre_system: [], system: [], post_system: [], history: [], post: [] },
     done: false,
     warnings: {
       noHistory: true,
@@ -355,7 +357,7 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
     }
 
     const output: string[] = []
-    let prevMarker: Section = 'system'
+    let prevMarker: Section = 'pre_system'
 
     for (let i = 0; i < ast.length; i++) {
       const parent = ast[i]
@@ -363,10 +365,18 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
       const result = renderNode(parent, opts)
 
       const marker = getMarker(opts, parent, prevMarker)
-      prevMarker = marker
+
+      // Nested ifs to correctly narrow types
+      if (marker === 'fallback') {
+        if (prevMarker === 'system') {
+          prevMarker = 'post_system'
+        }
+      } else {
+        prevMarker = marker
+      }
 
       if (!opts.sections?.done) {
-        fillSection(opts, marker, result)
+        fillSection(opts, prevMarker, result)
       }
 
       if (result) {
@@ -829,8 +839,23 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
   const flags = opts.sections.flags
   const sections = opts.sections.sections
 
-  if (!flags.system && marker === 'system') {
+  const isSystem = marker?.includes('system')
+  if (!flags.system && isSystem) {
     sections.system.push(result)
+
+    if (marker === 'system') {
+      opts.sections.strictSystem.push(result)
+    }
+
+    if (marker === 'pre_system') {
+      opts.sections.strictSystem.push(result)
+      sections.pre_system.push(result)
+    }
+
+    if (marker === 'post_system') {
+      sections.post_system.push(result)
+    }
+
     return
   }
 
@@ -842,27 +867,29 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
   sections.post.push(result)
 }
 
-function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section {
-  if (!opts.sections) return previous
+function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section | 'fallback' {
+  if (!opts.sections) return 'fallback'
   if (opts.sections.flags.history) return 'post'
 
-  if (typeof node === 'string') return previous
+  if (typeof node === 'string') {
+    return 'fallback'
+  }
 
   switch (node.kind) {
     case 'placeholder': {
       if (node.value === 'history') return 'history'
       if (node.value === 'system_prompt') return 'system'
-      return previous
+      return 'fallback'
     }
 
     case 'each':
       if (node.value === 'history') return 'history'
-      return previous
+      return 'fallback'
 
     case 'if':
       if (node.value === 'system_prompt') return 'system'
-      return previous
+      return 'fallback'
   }
 
-  return previous
+  return 'fallback'
 }

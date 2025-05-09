@@ -200,7 +200,7 @@ export const msgStore = createStore<MsgState>(
     abortMessage(state) {
       if (!state.waiting) return
       state.waiting.signal?.abort?.()
-      return { waiting: undefined, partial: undefined }
+      return { waiting: undefined, partial: undefined, retrying: undefined }
     },
     setAttachment({ attachments }, chatId: string, base64: string) {
       return { attachments: { ...attachments, [chatId]: { image: base64 } } }
