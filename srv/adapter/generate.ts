@@ -250,6 +250,13 @@ export async function createInferenceStream(opts: InferenceRequest) {
 async function getRequestPreset(opts: InferenceRequest) {
   let preset: Partial<AppSchema.GenSettings> | undefined
 
+  if (opts.settings?._id && opts.user && !isDefaultPreset(opts.settings._id)) {
+    const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
+    if (userPreset && userPreset.userId === opts.user._id) {
+      opts.settings = userPreset
+    }
+  }
+
   if (opts.settings) {
     const model = getCachedSubscriptionModels().find((m) => m._id === opts.settings?._id)
     if (model) {
