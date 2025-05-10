@@ -255,7 +255,7 @@ export const ImageSettingsModal = () => {
         <Toggle
           fieldName="summariseChat"
           label="Summarise Chat"
-          helperText="When available use your AI service to summarise the chat into an image prompt."
+          helperText="Use your AI service to summarise the chat into an image prompt."
           value={store.summariseChat}
           onChange={(ev) => setStore('summariseChat', ev)}
         />
@@ -265,7 +265,7 @@ export const ImageSettingsModal = () => {
         <Show when={canUseImages() && store.type === 'agnai'}>
           <FormLabel
             label="Use Recommended Settings"
-            helperText="When available use the image model's recommended settings."
+            helperText="Use the image model's recommended settings when available."
           />
           <div class="flex flex-wrap justify-center gap-2">
             <ToggleButton size="sm" value={isAllEnabled()} onChange={(ev) => toggleDefaults(ev)}>
