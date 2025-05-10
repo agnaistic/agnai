@@ -217,7 +217,8 @@ export const JinjaTemplate: Field = (props) => {
           />
         </div>
       }
-      helperMarkdown="For overriding third-party chat completion templates. Only sent when **Enabled**."
+      helperMarkdown="For overriding third-party chat completion templates. Only sent when **Enabled**.
+      If left blank, one will be generated for you."
       value={props.state.jinjaTemplate || ''}
       disabled={props.state.disabled}
       hide={props.hides.thirdPartyUrl}
