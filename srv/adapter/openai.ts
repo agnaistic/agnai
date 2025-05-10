@@ -9,6 +9,7 @@ import { decryptText } from '../db/util'
 import { streamGenerator } from './stream'
 import { getTokenCounter } from '../tokenize'
 import { insertImageContent } from './template-chat-payload'
+import { tryParse } from '/common/util'
 
 const baseUrl = `https://api.openai.com`
 
@@ -57,7 +58,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
   if (gen.jinjaTemplate) {
-    body.chat_template = gen.jinjaTemplate
+    body.chat_template = tryParse(gen.jinjaTemplate) || gen.jinjaTemplate
   }
 
   const isChatFormat =
