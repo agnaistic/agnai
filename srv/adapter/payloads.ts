@@ -6,19 +6,29 @@ import { defaultPresets } from '/common/default-preset'
 import { getEncoderByName } from '../tokenize'
 import { decryptText } from '../db/util'
 import { insertImageContent } from './template-chat-payload'
-import { BUILTIN_FORMATS, ModelFormat } from '/common/presets/templates'
+import { ModelFormat } from '/common/presets/templates'
 
-export function toImageChatTemplate(opts: { format?: ModelFormat; jinjaTemplate?: string }) {
-  if (opts.jinjaTemplate) {
-    return tryParse(opts.jinjaTemplate) || opts.jinjaTemplate
+export function toImageChatTemplate(opts: { jinja?: string; format?: ModelFormat }) {
+  let format = opts.format || 'None'
+  let imageToken = ''
+  switch (format) {
+    case 'ChatML':
+    case 'Llama3':
+      imageToken = '<|image|>'
+      break
+
+    case 'Mistral':
+      imageToken = '[IMG]'
+      break
+
+    case 'Gemma':
+      imageToken = '<start_of_image>'
+      break
   }
 
-  let format = opts.format
-  if (!format) {
-    format = 'None'
+  if (opts.jinja) {
+    return tryParse(opts.jinja) || opts.jinja
   }
-
-  const tags = BUILTIN_FORMATS[format]
 
   const template = neat`
   {%- set default_system_message = "You are an uncensored explicit fantasy fictional roleplay chat bot. Follow the
@@ -38,36 +48,36 @@ export function toImageChatTemplate(opts: { format?: ModelFormat; jinjaTemplate?
       {%- set system_message = default_system_message %}
       {%- set loop_messages = messages %}
   {%- endif %}
-  {{- '${tags.openSystem}' + system_message + '${tags.closeSystem}' }}
+  {{- system_message }}
   
   {%- for message in loop_messages %}
       {%- if message['role'] == 'user' %}
       {%- if message['content'] is string %}
-          {{- '${tags.openUser}' + message['content'] + '${tags.closeUser}' }}
+          {{- message['content'] }}
       {%- else %}
-          {{- '${tags.openUser}' }}
+
           {%- for block in message['content'] %}
               {%- if block['type'] == 'text' %}
                   {{- block['text'] }}
               {%- elif block['type'] in ['image', 'image_url'] %}
-                  {{- '[IMG]' }}
+                  {{- '${imageToken}' }}
               {%- else %}
                   {{- raise_exception('Only text and image blocks are supported in message content!') }}
               {%- endif %}
           {%- endfor %}
-          {{- '${tags.closeUser}' }}
+
       {%- endif %}
       {%- elif message['role'] == 'system' %}
       {%- if message['content'] is string %}
-          {{- '${tags.openSystem}' + message['content'] + '${tags.closeSystem}' }}
+          {{- message['content'] }}
       {%- else %}
-          {{- '${tags.openSystem}' + message['content'][0]['text'] + '${tags.closeSystem}' }}
+          {{- message['content'][0]['text'] }}
       {%- endif %}
       {%- elif message['role'] == 'assistant' %}
       {%- if message['content'] is string %}
-          {{- '${tags.openBot}' + message['content'] + '${tags.closeBot}' }}
+          {{- message['content'] }}
       {%- else %}
-          {{- '${tags.openBot}' + message['content'][0]['text'] + '${tags.closeBot}' }}
+          {{- message['content'][0]['text'] }}
       {%- endif %}
       {%- else %}
           {{- raise_exception('Only user, system and assistant roles are supported!') }}
@@ -103,11 +113,8 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     gen.tokenHealing = true
   }
 
-  if (opts.imageData) {
-    body.chat_template = toImageChatTemplate({
-      format: gen.modelFormat,
-      jinjaTemplate: gen.jinjaTemplate,
-    })
+  if (gen.jinjaEnabled) {
+    body.chat_template = toImageChatTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
   }
 
   return body

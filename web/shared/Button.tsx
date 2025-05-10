@@ -154,7 +154,7 @@ export const ModeButton: Component<{
 
 export const ToggleButton: Component<{
   fieldName?: string
-  children: JSX.Element
+  children?: JSX.Element
   onChange: (value: boolean) => void
   size?: 'sm' | 'md' | 'lg' | 'xs'
   disabled?: boolean
@@ -187,7 +187,8 @@ export const ToggleButton: Component<{
         disabled={props.disabled}
         onClick={onClick}
       >
-        {props.children} <Show when={props.value && props.onText}>{props.onText}</Show>
+        <Show when={props.children}>{props.children}</Show>
+        <Show when={props.value && props.onText}>{props.onText}</Show>
         <Show when={!props.value && props.offText}>{props.offText}</Show>
       </button>
     </>

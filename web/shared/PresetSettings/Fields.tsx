@@ -205,8 +205,19 @@ export const JinjaTemplate: Field = (props) => {
   return (
     <TextInput
       fieldName="jinjaTemplate"
-      label="Jinja Template"
-      helperText="For overriding third-party chat completion templates"
+      label={
+        <div class="flex w-full justify-between">
+          <div>Jinja Template</div>
+          <ToggleButton
+            size="sm"
+            onText="Enabled"
+            offText="Disabled"
+            value={props.state.jinjaEnabled ?? false}
+            onChange={(ev) => props.setter('jinjaEnabled', ev)}
+          />
+        </div>
+      }
+      helperMarkdown="For overriding third-party chat completion templates. Only sent when **Enabled**."
       value={props.state.jinjaTemplate || ''}
       disabled={props.state.disabled}
       hide={props.hides.thirdPartyUrl}

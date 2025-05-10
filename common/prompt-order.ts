@@ -87,14 +87,14 @@ export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
 
 export const formatHolders: Record<string, Record<string, string>> = {
   Universal: {
-    system_prompt: neat`<system>{{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}`,
+    system_prompt: neat`<system>{{#if system_prompt}}{{value}}</system>{{#else}}${defaultSystemPrompt}</system>{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,
     impersonating: neat`{{#if impersonating}}{{user}}'s personality:\n{{impersonating}}\n{{/if}}`,
     chat_embed: neat`{{#if chat_embed}}Relevant past conversation history:\n{{chat_embed}}\n{{/if}}`,
     example_dialogue: neat`{{#if example_dialogue}}How "{{char}}" speaks:\n{{example_dialogue}}\n{{/if}}`,
-    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.</system>
+    history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
     {{#each msg}}{{#if .isbot}}<bot>{{/if}}{{#if .isuser}}<user>{{/if}}{{.name}}: {{.msg}}{{#if .isbot}}</bot>{{/if}}{{#if .isuser}}</user>{{/if}}{{/each}}`,
     post: neat`<bot>{{#if ujb}}({{value}}) {{/if}}{{post}}`,
@@ -116,7 +116,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     post: `ASSISTANT: {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Mistral: {
-    system_prompt: neat`[SYSTEM_PROMPT] {{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}} [/SYSTEM_PROMPT]`,
+    system_prompt: neat`[SYSTEM_PROMPT] {{#if system_prompt}}{{value}}[/SYSTEM_PROMPT]{{#else}}${defaultSystemPrompt}[/SYSTEM_PROMPT]{{/else}}{{/if}}`,
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}[INST] {{.name}}: {{.msg}} [/INST]{{/if}}
@@ -133,7 +133,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
   },
   ChatML: {
     system_prompt: neat`<|im_start|>system
-    {{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}<|im_end|>`,
+    {{#if system_prompt}}{{value}}<|im_end|>{{#else}}${defaultSystemPrompt}<|im_end|>{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,
@@ -148,7 +148,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
   },
   Llama3: {
     system_prompt: neat`<|begin_of_text|><|start_header_id|>system
-    {{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}<|eot_id|>`,
+    {{#if system_prompt}}{{value}}<|eot_id|>{{#else}}${defaultSystemPrompt}<|eot_id|>{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}"{{char}}'s" personality:\n{{personality}}\n{{/if}}`,
