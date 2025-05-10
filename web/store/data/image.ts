@@ -247,24 +247,8 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
-  openai: () => true,
-  novel: () => true,
-  ooba: () => true,
-  kobold: () => true,
-  openrouter: () => true,
-  claude: () => true,
-  mancer: () => true,
-  agnaistic: () => true,
-}
-
 async function createSummarizedImagePrompt(opts: PromptEntities) {
-  const handler = opts.settings?.service
-    ? SUMMARY_BACKENDS[opts.settings?.service]
-    : (_opts: any) => false
-
-  const canUseService = handler?.(opts) ?? false
-  if (canUseService && opts.user.images?.summariseChat) {
+  if (opts.user.images?.summariseChat) {
     const imageEntities = await getImagePromptEntities(opts)
     const settings = imageEntities.preset || opts.settings
 
