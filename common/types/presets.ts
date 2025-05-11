@@ -37,7 +37,14 @@ export interface SubscriptionModelOption {
   preset: GenSettings &
     Pick<
       SubscriptionModel,
-      'allowGuestUsage' | 'isDefaultSub' | '_id' | 'service' | 'levels' | 'subLevel' | 'subDisabled'
+      | 'allowGuestUsage'
+      | 'isDefaultSub'
+      | '_id'
+      | 'service'
+      | 'levels'
+      | 'subLevel'
+      | 'subDisabled'
+      | 'subVisionModel'
     > & {
       kind: 'submodel'
     }
@@ -57,6 +64,7 @@ export interface SubscriptionModel extends GenSettings {
   subApiKey: string
   subApiKeySet?: boolean
   subServiceUrl?: string
+  subVisionModel?: boolean
   subDisabled: boolean
   allowGuestUsage?: boolean
   isDefaultSub?: boolean

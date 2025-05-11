@@ -69,7 +69,6 @@ export const SubscriptionModel: Component = () => {
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
-  const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
   const [replacing, setReplacing] = createSignal(false)
   const [state, setState, hides] = getPresetEditor()
 
@@ -181,11 +180,6 @@ export const SubscriptionModel: Component = () => {
       body.openRouterModel = actual || undefined
     }
 
-    if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
-      setMissingPlaceholder(true)
-      return
-    }
-
     if (state._id) {
       presetStore.updateSubscription(state._id, body as any)
     } else {
@@ -193,7 +187,6 @@ export const SubscriptionModel: Component = () => {
         nav(`/admin/subscriptions/${newPreset._id}`)
       })
     }
-    setMissingPlaceholder(false)
   }
 
   return (
@@ -316,6 +309,14 @@ export const SubscriptionModel: Component = () => {
                       value={state.guidanceCapable}
                       onChange={(ev) => setState('guidanceCapable', ev)}
                     />
+
+                    <Toggle
+                      fieldName="subVisionModel"
+                      label="Vision Model"
+                      helperText="Agnaistic service only"
+                      value={state.subVisionModel}
+                      onChange={(ev) => setState('subVisionModel', ev)}
+                    />
                   </Card>
 
                   <Card class="mt-4 flex flex-col gap-2">
@@ -387,23 +388,6 @@ export const SubscriptionModel: Component = () => {
         close={() => setDeleting(false)}
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
-      />
-      <ConfirmModal
-        show={!!missingPlaceholder()}
-        close={() => setMissingPlaceholder(false)}
-        confirm={() => onSave(ref, true)}
-        message={
-          <div class="flex flex-col items-center gap-2 text-sm">
-            <div>
-              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
-              almost never what you want. It is recommended for your gaslight to contain the
-              placeholders:
-              <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
-            </div>
-
-            <p>Are you sure you wish to proceed?</p>
-          </div>
-        }
       />
     </Page>
   )

@@ -27,6 +27,7 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
+import { insertImageContent } from './template-chat-payload'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -242,15 +243,20 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getThirdPartyPayload(opts, allStops)
+  body.messages = opts.messages
   body.api_key = key
 
-  yield { prompt }
+  yield { prompt: body.messages || prompt }
 
-  log.debug({ ...body, prompt: null, imageData: null }, 'Agnaistic payload')
+  log.debug({ ...body, prompt: null, messages: null, imageData: null }, 'Agnaistic payload')
 
-  log.debug(`Prompt:\n${prompt}`)
+  log.debug(`Prompt:\n${body.messages ? JSON.stringify(body.messages, null, 2) : prompt}`)
 
   const [submodel, override = ''] = subPreset.subModel.split(',')
+
+  if (body.messages) {
+    insertImageContent(opts, body.messages)
+  }
 
   let params = [
     `type=text`,

@@ -145,6 +145,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       tempLast: sub.tempLast,
       levels: sub.levels || [],
       subLevel: sub.subLevel,
+      subVisionModel: sub.subVisionModel,
     },
   }
 }

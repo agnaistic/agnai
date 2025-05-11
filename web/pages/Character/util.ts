@@ -229,7 +229,7 @@ function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
   return { type: 'url', ext: 'unknown' }
 }
 
-async function getImageBase64(image: string) {
+export async function getImageBase64(image: string) {
   if (image.startsWith('data:')) return image
 
   if (!image.startsWith('http')) {
@@ -240,7 +240,7 @@ async function getImageBase64(image: string) {
   return base64!
 }
 
-function asyncImage(src: string) {
+export function asyncImage(src: string) {
   return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
     const data = await getImageBase64(src)
     const image = new Image()

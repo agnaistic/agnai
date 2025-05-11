@@ -55,6 +55,7 @@ export type ContextState = {
   waiting?: MsgState['waiting']
   status?: MsgState['hordeStatus']
   preset?: AppSchema.UserGenPreset
+  subPreset?: AppSchema.SubscriptionModelOption
   ui: UI.UISettings
 }
 
@@ -147,6 +148,16 @@ export function ContextProvider(props: { children: any }) {
     return match
   })
 
+  const subModel = createMemo(() => {
+    const p = preset()
+    if (!p?.registered?.agnaistic?.subscriptionId) return
+
+    const subModel = cfg.config.subs.find((s) => s._id === p.registered?.agnaistic?.subscriptionId)
+    if (!subModel) return
+
+    return subModel
+  })
+
   createEffect(() => {
     const next: Partial<ContextState> = {
       bg: visuals(),
@@ -173,6 +184,7 @@ export function ContextProvider(props: { children: any }) {
       waiting: msgs.waiting,
       status: msgs.hordeStatus,
       preset: preset(),
+      subPreset: subModel(),
       ui: users.ui,
     }
 
