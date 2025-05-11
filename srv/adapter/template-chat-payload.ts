@@ -135,6 +135,7 @@ export function stripImageContent(messages: any[]) {
   const last = messages.slice(-1)[0]
   const content = last?.content || last?.parts
   if (!content) return messages
+  if (!Array.isArray(content)) return messages
 
   const next = messages.slice(0, -1).concat({
     role: 'user',
