@@ -1,4 +1,3 @@
-import { OPENAI_MODELS } from '../adapters'
 import { AppSchema } from '../types/schema'
 
 export const koboldPresets = {
@@ -29,7 +28,7 @@ export const koboldPresets = {
     presencePenalty: 0,
     gaslight: '',
     ultimeJailbreak: '',
-    oaiModel: OPENAI_MODELS.Turbo,
+    oaiModel: '',
     streamResponse: true,
     memoryDepth: 50,
     memoryContextLimit: 500,

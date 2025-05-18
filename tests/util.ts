@@ -11,7 +11,7 @@ import {
 } from '../common/dummy'
 import { getTokenCounter } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
-import { createPromptParts, buildPromptParts } from '/common/prompt'
+import { createPromptParts, buildPromptPlaceholders } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 
 export * from '../common/dummy'
@@ -152,7 +152,7 @@ async function getParseOpts(
   const characters = toMap([overChar, replyAs])
   const parts =
     overrides.parts ||
-    (await buildPromptParts(
+    (await buildPromptPlaceholders(
       {
         char: overChar,
         sender: profile,

@@ -1,4 +1,3 @@
-import { OPENAI_MODELS } from '../adapters'
 import { AppSchema } from '../types/schema'
 
 export const hordePresets = {
@@ -21,7 +20,7 @@ export const hordePresets = {
     presencePenalty: 0.7,
     gaslight: '',
     ultimeJailbreak: '',
-    oaiModel: OPENAI_MODELS.Turbo,
+    oaiModel: '',
     streamResponse: true,
     memoryDepth: 50,
     memoryContextLimit: 256,

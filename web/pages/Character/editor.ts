@@ -14,7 +14,7 @@ import {
   userStore,
 } from '/web/store'
 import { Option } from '/web/shared/Select'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { defaultPresets } from '/common/presets'
 import { generateField } from './generate-char'
 import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
@@ -22,6 +22,7 @@ import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
 import { ResponseSchema } from '/common/types/library'
 import { createDebounce, storage } from '/web/shared/util'
+import { isDefaultPreset } from '/common/default-preset'
 
 const EDITOR_CACHE_KEY = `agnai-char-editor`
 

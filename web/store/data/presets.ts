@@ -98,7 +98,6 @@ async function getLocalModelList(baseUrl: string, key?: string): Promise<string[
     }
 
     const res = await fetch(api.joinUrl(baseUrl, '/models'), { headers }).then((res) => res.json())
-    if (!Array.isArray(res.data)) return []
     const models: string[] = []
 
     for (const model of res.data) {

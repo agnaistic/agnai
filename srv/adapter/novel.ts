@@ -4,12 +4,12 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util
 import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
-import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/adapters'
 import { requestStream } from './stream'
 import { AppLog } from '../middleware'
 import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 import { getStoppingStrings } from './prompt'
+import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/presets/novel'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.

@@ -10,7 +10,7 @@ import {
 import { ChevronDown } from 'lucide-solid'
 import { SubCTA } from '/web/Navigation'
 import { applyStoreProperty, createEmitter } from '../util'
-import { isDefaultPreset } from '/common/presets'
+import { isDefaultPreset } from '/common/default-preset'
 import { Field } from './Fields'
 import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'

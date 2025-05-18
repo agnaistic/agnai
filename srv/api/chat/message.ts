@@ -8,10 +8,11 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
 import { HydratedJson, jsonHydrator, parsePartialJson } from '/common/util'
-import { getAdapter, resolveScenario } from '/common/prompt'
+import { resolveScenario } from '/common/prompt'
 import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { Response } from 'express'
+import { getAdapter } from '/common/adapters'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 type MsgEntities = Awaited<ReturnType<typeof getMessageEntities>>

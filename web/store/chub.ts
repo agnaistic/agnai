@@ -3,6 +3,7 @@ import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { createStore } from './create'
 
 export type ChubEntity = {
+  id: number
   name: string
   description: string
   fullPath: string
@@ -38,7 +39,7 @@ type ChubTag = {
   title: string
 }
 
-export const CHUB_URL = `https://api.chub.ai/api`
+export const CHUB_URL = `https://api.chub.ai`
 
 const initState: ChubState = {
   nsfw: getStoredValue('chub-nsfw', false),
@@ -98,14 +99,16 @@ export const chubStore = createStore<ChubState>(
       const { nsfw, tags, sort, excludeTags, search, page } = state
       yield { booksLoading: true }
       const res = await fetch(
-        `${CHUB_URL}/lorebooks/search?&search=${search}&first=${
+        `${CHUB_URL}/search?&search=${search}&first=${
           48 * page
-        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(sort)}`
+        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(
+          sort
+        )}&namespace=lorebooks`
       )
       yield { booksLoading: false }
 
       const json = await res.json()
-      yield { books: json.nodes }
+      yield { books: json.data?.nodes }
     },
     async *getChars(state) {
       if (state.charsLoading) return
@@ -113,14 +116,14 @@ export const chubStore = createStore<ChubState>(
       const { search, page, tags, excludeTags, nsfw, sort } = state
       yield { charsLoading: true }
       const res = await fetch(
-        `${CHUB_URL}/characters/search?&search=${search}&first=${
+        `${CHUB_URL}/search?&search=${search}&first=${
           48 * page
         }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(sort)}`
       )
       yield { charsLoading: false }
 
       const json = await res.json()
-      yield { chars: json.nodes }
+      yield { chars: json.data?.nodes }
     },
   }
 })

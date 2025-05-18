@@ -7,7 +7,7 @@ import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './dat
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { replace } from '/common/util'
 
 type PresetState = {
@@ -80,7 +80,7 @@ export const presetStore = createStore<PresetState>(
       { presets },
       presetId: string,
       preset: Partial<PresetUpdate>,
-      opts?: { onSuccess?: () => void; quiet?: boolean }
+      opts?: { onSuccess?: (preest: AppSchema.UserGenPreset) => void; quiet?: boolean }
     ) {
       yield { saving: true }
       const res = await presetApi.editPreset(presetId, preset)
@@ -89,7 +89,7 @@ export const presetStore = createStore<PresetState>(
       if (res.result) {
         if (!opts?.quiet) toastStore.success('Successfully updated preset')
         yield { presets: presets.map((p) => (p._id === presetId ? res.result! : p)) }
-        opts?.onSuccess?.()
+        opts?.onSuccess?.(res.result)
       }
     },
     async *deleteUserPresetKey({ presets }, presetId: string, onSuccess?: () => void) {

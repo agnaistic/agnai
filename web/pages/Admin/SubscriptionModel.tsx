@@ -11,7 +11,6 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -28,6 +27,7 @@ import { Page } from '/web/Layout'
 import PresetSettings from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { getPresetEditor, getSubPresetForm } from '/web/shared/PresetSettings/types'
+import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,

@@ -3,11 +3,14 @@ import * as mlc from '@agnai/web-tokenizers'
 import fs, { readFileSync } from 'fs'
 import { init } from '@dqbd/tiktoken/lite/init'
 import { encoding_for_model } from '@dqbd/tiktoken'
-import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
+import { AIAdapter, getAdapter } from '../common/adapters'
 import { resolve } from 'path'
 import * as nai from 'nai-js-tokenizer'
 import { logger } from './middleware'
 import { AppSchema, Encoder, TokenCounter, Tokenizer } from '/common/types'
+import { GenerateRequestV2 } from './adapter/type'
+import { OPENAI_MODELS } from '/common/presets/openai'
+import { NOVEL_MODELS } from '/common/presets/novel'
 
 const claudeJson = readFileSync(
   resolve(__dirname, 'sp-models', 'claude.json')
@@ -34,8 +37,7 @@ let krake: Encoder
 let euterpe: Encoder
 let gemma: Encoder
 
-const davinciEncoder = encoding_for_model('text-davinci-003')
-const turboEncoder = encoding_for_model('gpt-3.5-turbo')
+const oaiEncoder = encoding_for_model('gpt-4o')
 
 const wasm = getWasm()
 
@@ -43,7 +45,6 @@ let novel: Encoder
 let novelModern: Encoder
 let llama: Encoder
 let claude: Encoder
-let davinci: Encoder
 let turbo: Encoder
 let mistral: Encoder
 let yi: Encoder
@@ -52,9 +53,9 @@ let llama3: Encoder
 let qwen2: Encoder
 
 const main: Encoder = {
-  encode: (value: string) => Array.from(turboEncoder.encode(value)),
-  decode: (tokens) => turboEncoder.decode(Uint32Array.from(tokens)).toString(),
-  count: (value: string) => turboEncoder.encode(value).length,
+  encode: (value: string) => Array.from(oaiEncoder.encode(value)),
+  decode: (tokens) => oaiEncoder.decode(Uint32Array.from(tokens)).toString(),
+  count: (value: string) => oaiEncoder.encode(value).length,
 }
 
 export type EncoderType =
@@ -63,7 +64,6 @@ export type EncoderType =
   | 'llama'
   | 'llama3'
   | 'claude'
-  | 'davinci'
   | 'turbo'
   | 'mistral'
   | 'yi'
@@ -79,6 +79,13 @@ const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo_Instruct,
   OPENAI_MODELS.Turbo_Intruct914,
 ])
+
+export function getRequestEncoder(opts: GenerateRequestV2) {
+  const adapter = getAdapter(opts.chat, opts.user, opts.settings)
+  const counter = getTokenCounter(adapter.adapter, adapter.model, opts.subscription?.preset)
+
+  return counter
+}
 
 export function getTokenCounter(
   adapter: AIAdapter | 'main',
@@ -103,9 +110,6 @@ export function getEncoderByName(type: EncoderType) {
 
     case 'claude':
       return claude
-
-    case 'davinci':
-      return davinci
 
     case 'llama':
       return llama
@@ -135,6 +139,15 @@ export function getEncoderByName(type: EncoderType) {
 }
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder {
+  if (model && (adapter === 'openrouter' || adapter === 'openrouter-completion')) {
+    if (model.includes('llama')) return llama
+    if (model.includes('qwen')) return qwen2
+    if (model.includes('gemini') || model.includes('gemma')) return gemma
+    if (model.includes('cohere')) return cohere
+    if (model.includes('claude')) return claude
+    if (model.includes('mistral')) return mistral
+  }
+
   if (
     adapter === 'agnaistic' ||
     adapter === 'replicate' ||
@@ -155,10 +168,6 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
     if (model === NOVEL_MODELS.clio_v1) return novel
     if (model === NOVEL_MODELS.krake) return krake
     return euterpe
-  }
-
-  if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? main
   }
 
   if (model && TURBO_MODELS.has(model)) {
@@ -209,27 +218,14 @@ export async function prepareTokenizers() {
 
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
     {
-      davinci = {
-        decode: (tokens) => davinciEncoder.decode(Uint32Array.from(tokens)).toString(),
-        encode: (value) => {
-          const tokens = Array.from(davinciEncoder.encode(value))
-          return tokens
-        },
-        count: (value) => {
-          const tokens = davinciEncoder.encode(value).length + 4
-          return tokens
-        },
-      }
-    }
-    {
       turbo = {
-        decode: (tokens) => turboEncoder.decode(Uint32Array.from(tokens)).toString(),
+        decode: (tokens) => oaiEncoder.decode(Uint32Array.from(tokens)).toString(),
         encode: (value) => {
-          const tokens = Array.from(turboEncoder.encode(value))
+          const tokens = Array.from(oaiEncoder.encode(value))
           return tokens
         },
         count: (value) => {
-          const tokens = turboEncoder.encode(value).length + 6
+          const tokens = oaiEncoder.encode(value).length + 6
           return tokens
         },
       }

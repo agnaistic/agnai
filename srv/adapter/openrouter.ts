@@ -8,7 +8,11 @@ import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
 import { streamGenerator } from './stream'
-import { insertImageContent, logPayload } from './template-chat-payload'
+import {
+  validateChatMessagesWithImage,
+  logPayload,
+  stripImageContent,
+} from './template-chat-payload'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -76,11 +80,14 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.prompt = opts.prompt
   }
 
-  // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
-  yield { prompt: payload.messages ? JSON.stringify(payload.messages, null, 2) : payload.prompt }
-
   if (payload.messages) {
-    insertImageContent(opts, payload.messages)
+    payload.messages = validateChatMessagesWithImage(opts, payload.messages)
+  }
+
+  yield {
+    prompt: payload.messages
+      ? JSON.stringify(stripImageContent(payload.messages), null, 2)
+      : payload.prompt,
   }
 
   const headers = {
@@ -195,6 +202,8 @@ function getResponseText(resp: any, log: AppLog) {
     const buffer = Buffer.from(resp.data).toString()
     return getResponseText(buffer, log)
   }
+
+  log.debug({ resp }, 'Get response text')
 
   if (!resp.choices || !Array.isArray(resp.choices) || resp.choices.length === 0) {
     log.warn({ resp }, 'OpenRouter response was empty (No choices)')

@@ -1,7 +1,6 @@
 import { sanitiseAndTrim } from '/common/requests/util'
 import { ChatRole, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
@@ -10,6 +9,7 @@ import { streamGenerator } from './stream'
 import { getTokenCounter } from '../tokenize'
 import { insertImageContent } from './template-chat-payload'
 import { toImageJinjaTemplate } from './payloads'
+import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 
 const baseUrl = `https://api.openai.com`
 

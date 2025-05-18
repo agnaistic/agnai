@@ -243,7 +243,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getThirdPartyPayload(opts, allStops)
-  body.messages = opts.messages
+  if (opts.imageData) {
+    body.messages = opts.messages
+  }
+
   body.api_key = key
 
   yield { prompt: body.messages || prompt }

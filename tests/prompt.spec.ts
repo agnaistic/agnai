@@ -1,9 +1,9 @@
 import './init'
 import { expect } from 'chai'
-import { OPENAI_MODELS } from '../common/adapters'
 import { BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
 import { toChat, build, botMsg, toMsg, entities, reset, toBook, toEntry } from './util'
 import { getTokenCounter } from '../srv/tokenize'
+import { OPENAI_MODELS } from '/common/presets/openai'
 
 const { chat, replyAs, main } = entities
 

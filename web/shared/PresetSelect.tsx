@@ -8,7 +8,7 @@ import { FormLabel } from './FormLabel'
 import { exportPreset, presetStore, settingStore, userStore } from '../store'
 import { isUsableService } from './util'
 import { defaultPresets } from '/common/default-preset'
-import { isDefaultPreset } from '/common/presets'
+import { isDefaultPreset } from '/common/default-preset'
 import { DownloadIcon } from 'lucide-solid'
 
 export const PresetSelect: Component<{

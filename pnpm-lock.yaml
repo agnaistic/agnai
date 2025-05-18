@@ -21,8 +21,8 @@ importers:
         specifier: ^1.0.1
         version: 1.8.2(solid-js@1.8.17)
       '@dqbd/tiktoken':
-        specifier: ^1.0.2
-        version: 1.0.20
+        specifier: ^1.0.21
+        version: 1.0.21
       '@google/genai':
         specifier: ^0.12.0
         version: 0.12.0
@@ -38,6 +38,9 @@ importers:
       chance:
         specifier: ^1.1.11
         version: 1.1.12
+      colors:
+        specifier: ^1.4.0
+        version: 1.4.0
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -47,6 +50,9 @@ importers:
       cytoscape-dagre:
         specifier: ^2.5.0
         version: 2.5.0(cytoscape@3.31.1)
+      diff:
+        specifier: ^8.0.1
+        version: 8.0.1
       dotenv:
         specifier: ^16.0.3
         version: 16.4.7
@@ -300,6 +306,9 @@ importers:
       nodemon:
         specifier: ^3.0.1
         version: 3.1.9
+      os-browserify:
+        specifier: ^0.3.0
+        version: 0.3.0
       parcel:
         specifier: ^2.12.0
         version: 2.13.3(@swc/helpers@0.5.15)(postcss@8.5.3)(svgo@3.3.2)(terser@5.39.0)(typescript@5.8.2)
@@ -732,8 +741,8 @@ packages:
     peerDependencies:
       solid-js: '>=1.0.0 <2.0.0'
 
-  '@dqbd/tiktoken@1.0.20':
-    resolution: {integrity: sha512-WsLzNYO1uzYOvIXunvwRcQObD4UsebirRnGzOuZc/x4oJ+0haEjdNxeeCfFaQami+Bai3u06QTt0/FWyYRsIhw==}
+  '@dqbd/tiktoken@1.0.21':
+    resolution: {integrity: sha512-grBxRSY9+/iBM205EWjbMm5ySeXQrhJyXWMP38VJd+pO2DRGraDAbi4n8J8T9M4XY1M/FHgonMcmu3J+KjcX0Q==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -2444,6 +2453,10 @@ packages:
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
 
+  colors@1.4.0:
+    resolution: {integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==}
+    engines: {node: '>=0.1.90'}
+
   commander@10.0.1:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
@@ -2666,6 +2679,10 @@ packages:
 
   diff@5.2.0:
     resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+    engines: {node: '>=0.3.1'}
+
+  diff@8.0.1:
+    resolution: {integrity: sha512-rEaM3KmVm78zE3dFZaop3aCQa2MTm+T4kcigUFLVU/KbOYdiY6JnL2g2puOYnct3QFw9pjZadaCbCZ1O8ArMlQ==}
     engines: {node: '>=0.3.1'}
 
   diffie-hellman@5.0.3:
@@ -3871,6 +3888,9 @@ packages:
 
   ordered-binary@1.5.3:
     resolution: {integrity: sha512-oGFr3T+pYdTGJ+YFEILMpS3es+GiIbs9h/XQrclBXUtd44ey7XwfsMzM31f64I1SQOawDoDr/D823kNCADI8TA==}
+
+  os-browserify@0.3.0:
+    resolution: {integrity: sha512-gjcpUc3clBf9+210TRaDWbf+rZZZEshZ+DlXMRCeAjp0xhTrnQsKHypIy1J3d5hKdUzj69t708EHtU8P6bUn0A==}
 
   p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
@@ -5743,7 +5763,7 @@ snapshots:
       solid-js: 1.8.17
       ts-toolbelt: 9.6.0
 
-  '@dqbd/tiktoken@1.0.20': {}
+  '@dqbd/tiktoken@1.0.21': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -7858,6 +7878,8 @@ snapshots:
 
   colorette@2.0.20: {}
 
+  colors@1.4.0: {}
+
   commander@10.0.1: {}
 
   commander@12.1.0: {}
@@ -8084,6 +8106,8 @@ snapshots:
   diff-sequences@29.6.3: {}
 
   diff@5.2.0: {}
+
+  diff@8.0.1: {}
 
   diffie-hellman@5.0.3:
     dependencies:
@@ -9366,6 +9390,8 @@ snapshots:
   openurl@1.1.1: {}
 
   ordered-binary@1.5.3: {}
+
+  os-browserify@0.3.0: {}
 
   p-limit@2.3.0:
     dependencies:

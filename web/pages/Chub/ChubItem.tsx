@@ -24,8 +24,9 @@ export const ChubItem: Component<{
   const loadEntity = async () => {
     props.loading?.()
     if (props.book) {
-      const book = await processBook(props.fullPath)
+      const book = await processBook(props.entity)
       setMemoryBook(book)
+
       props.setBook?.(
         {
           _id: '',
@@ -33,7 +34,7 @@ export const ChubItem: Component<{
           name: memorybook().name == 'Exported' ? props.name : memorybook().name,
           description: memorybook().description,
           userId: '',
-          entries: memorybook().entries,
+          entries: convertEntries(book),
         },
         props.fullPath
       )
@@ -99,3 +100,20 @@ const TinyPill: Component<{ children: any }> = (props) => (
     {props.children}
   </Pill>
 )
+
+function convertEntries(book: any) {
+  const original: any[] = Array.isArray(book.entries)
+    ? book.entries
+    : Array.from(Object.values(book.entries))
+
+  const entries = original.map((o) => {
+    return {
+      ...o,
+      keywords: o.keys,
+      weight: o.insertion_order ?? 0,
+      entry: o.content || '',
+    }
+  })
+
+  return entries
+}

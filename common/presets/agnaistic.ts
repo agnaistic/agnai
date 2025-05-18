@@ -1,5 +1,5 @@
-import { OPENAI_MODELS } from '../adapters'
 import { AppSchema } from '../types'
+import { OPENAI_MODELS } from './openai'
 import { templates } from './templates'
 
 export const agnaiPresets = {

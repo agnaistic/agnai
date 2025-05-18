@@ -1,22 +1,19 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import {
-  AIAdapter,
-  GOOGLE_LIMITS,
-  NOVEL_MODELS,
-  OPENAI_CONTEXTS,
-  THIRDPARTY_HANDLERS,
-} from './adapters'
+import { AIAdapter, getAdapter, GOOGLE_LIMITS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
-import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
+import { defaultPresets, getFallbackPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
+import { isDefaultPreset } from './default-preset'
+import { OPENAI_CONTEXTS } from './presets/openai'
+import { NOVEL_MODELS } from './presets/novel'
 
 export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
 
@@ -25,7 +22,7 @@ export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
 
-export type PromptParts = {
+export type PromptPlaceholders = {
   scenario?: string
   greeting?: string
   sampleChat?: string[]
@@ -50,7 +47,7 @@ export type Prompt = {
     linesAddedCount: number
   }
   lines: string[]
-  parts: PromptParts
+  parts: PromptPlaceholders
   shown: boolean
 }
 
@@ -248,7 +245,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   const contextBuffer = opts.contextBuffer ?? 0
   const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
   const lines = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
-  const parts = await buildPromptParts(opts, lines, encoder)
+  const parts = await buildPromptPlaceholders(opts, lines, encoder)
 
   const prompt = await injectPlaceholders(template, {
     opts,
@@ -273,35 +270,47 @@ export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export async function assemblePrompt(
-  opts: GenerateRequestV2,
-  parts: PromptParts,
-  lines: string[],
-  encoder: TokenCounter
-) {
+export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCounter) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
-  const history = { lines, order: 'asc' } as const
+  const history = { lines: opts.lines, order: 'asc' } as const
   let { parsed, inserts, length, sections, linesAddedCount } = await injectPlaceholders(template, {
     opts,
-    parts,
+    parts: opts.parts,
     history,
     characters: opts.characters,
     lastMessage: opts.lastMessage,
     encoder,
     jsonValues: opts.jsonValues,
+    format: getFormatOverride(opts),
   })
 
   return {
     lines: history.lines,
     prompt: parsed,
     inserts,
-    parts,
+    parts: opts.parts,
     post,
     length,
     sections,
     linesAddedCount,
+  }
+}
+
+function getFormatOverride(opts: GenerateRequestV2): ModelFormat | undefined {
+  switch (opts.settings?.service) {
+    case 'agnaistic':
+      return opts.subscription?.preset?.modelFormat || opts.settings.modelFormat
+
+    case 'openai':
+    case 'third-party':
+    case 'openrouter':
+    case 'openrouter-completion':
+      return 'None'
+
+    case 'kobold':
+      return opts.settings.modelFormat
   }
 }
 
@@ -339,18 +348,19 @@ export function getTemplate(
 
 type InjectOpts = {
   opts: BuildPromptOpts
-  parts: PromptParts
+  parts: PromptPlaceholders
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
   jsonValues: Record<string, any> | undefined
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: TokenCounter
+  format?: ModelFormat
 }
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  template = replaceTags(template, opts.settings?.modelFormat || 'Alpaca')
+  template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'Alpaca')
 
   // Basic templates can exclude example dialogue
   const validate =
@@ -444,7 +454,7 @@ type PromptPartsOptions = Pick<
   | 'resolvedScenario'
 >
 
-export async function buildPromptParts(
+export async function buildPromptPlaceholders(
   opts: PromptPartsOptions,
   lines: string[],
   encoder: TokenCounter
@@ -454,7 +464,7 @@ export async function buildPromptParts(
 
   const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
 
-  const parts: PromptParts = {
+  const parts: PromptPlaceholders = {
     systemPrompt: opts.settings?.systemPrompt || '',
     persona: formatCharacter(
       replyAs.name,
@@ -721,7 +731,7 @@ export async function fillPromptWithLines(opts: {
    */
   let cleanContext = optional.reduce((amble, { id }) => amble.replace(id, ''), context)
   if (opts.marker) {
-    cleanContext.replace(opts.marker, '')
+    cleanContext = cleanContext.replace(opts.marker, '')
   }
 
   let count = await encoder(cleanContext)
@@ -787,10 +797,9 @@ export function getChatPreset(
   /**
    * Order of precedence:
    * 1. chat.genPreset
-   * 2. chat.genSettings (Deprecated)
-   * 3. user.defaultPreset
-   * 4. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
-   * 5. built-in fallback preset (horde)
+   * 2. user.defaultPreset
+   * 3. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
+   * 4. built-in fallback preset (horde)
    */
 
   // #1
@@ -803,11 +812,6 @@ export function getChatPreset(
   }
 
   // #2
-  if (chat.genSettings) {
-    return chat.genSettings
-  }
-
-  // #3
   const defaultId = user.defaultPreset
   if (defaultId) {
     if (isDefaultPreset(defaultId)) return { _id: defaultId, ...defaultPresets[defaultId] }
@@ -815,7 +819,7 @@ export function getChatPreset(
     if (preset) return preset
   }
 
-  // #4
+  // #3
   const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
@@ -825,69 +829,8 @@ export function getChatPreset(
     if (preset) return preset
   }
 
-  // #5
+  // #4
   return getFallbackPreset(adapter || 'horde')
-}
-
-export function isThirdPartyPreset(preset: Partial<AppSchema.GenSettings>) {
-  let adapter = preset?.service!
-  const thirdPartyFormat = preset?.thirdPartyFormat
-  const isThirdParty =
-    thirdPartyFormat && thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
-
-  return !!isThirdParty
-}
-
-/**
- * Order of Precedence:
- * 1. chat.genPreset -> service
- * 2. chat.genSettings -> service
- * 3. chat.adapter
- * 4. user.defaultAdapter
- */
-export function getAdapter(
-  chat: AppSchema.Chat,
-  user: AppSchema.User,
-  preset: Partial<AppSchema.GenSettings> | undefined
-) {
-  let adapter = preset?.service!
-  const isThirdParty = isThirdPartyPreset(preset || {})
-
-  if (adapter === 'kobold') {
-    adapter = THIRDPARTY_HANDLERS[user.thirdPartyFormat]
-  }
-
-  let model = ''
-  let presetName = 'Fallback Preset'
-
-  if (adapter === 'replicate') {
-    model = preset?.replicateModelType || 'llama'
-  }
-
-  if (adapter === 'novel') {
-    model = user.novelModel
-  }
-
-  if (adapter === 'openai') {
-    model = preset?.thirdPartyModel || preset?.oaiModel || defaultPresets.openai.oaiModel
-  }
-
-  if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset)) {
-      presetName = 'Built-in Preset'
-    } else presetName = 'User Preset'
-  } else if (chat.genSettings) {
-    presetName = 'Chat Settings'
-  } else if (user.defaultPresets) {
-    const servicePreset = user.defaultPresets[adapter]
-    if (servicePreset) {
-      presetName = `Service Preset`
-    }
-  }
-
-  const contextLimit = getContextLimit(user, preset)
-
-  return { adapter, model, preset: presetName, contextLimit, isThirdParty }
 }
 
 type LimitStrategy = (

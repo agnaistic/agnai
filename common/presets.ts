@@ -143,39 +143,6 @@ export function mapPresetsToAdapter(presets: Partial<AppSchema.GenSettings>, ada
   return body
 }
 
-export function getGenSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
-  const map = serviceGenMap[adapter]
-  const presetValues = getPresetValues(chat)
-
-  const body: any = {}
-  for (const [keyStr, value] of Object.entries(map || {})) {
-    const key = keyStr as keyof GenMap
-    if (!value) continue
-
-    const presetValue = presetValues[key]
-    const disabledValue = disabledValues[key]
-
-    if (presetValue === undefined) continue
-
-    // Remove disabled values from generation settings
-    if (disabledValue !== undefined && presetValue === disabledValue) continue
-
-    body[value] = presetValue
-  }
-
-  return body
-}
-
-function getPresetValues(chat: AppSchema.Chat): Partial<AppSchema.GenSettings> {
-  if (chat.genPreset && isDefaultPreset(chat.genPreset)) {
-    return defaultPresets[chat.genPreset]
-  }
-
-  if (chat.genSettings) return chat.genSettings
-
-  return defaultPresets.basic
-}
-
 export const serviceGenMap: { [key in ChatAdapter]?: GenMap } = {
   kobold: {
     maxTokens: 'max_length',
@@ -405,11 +372,6 @@ export const serviceGenMap: { [key in ChatAdapter]?: GenMap } = {
     gaslight: '',
     minP: '',
   },
-}
-
-export function isDefaultPreset(value?: string): value is GenerationPreset {
-  if (!value) return false
-  return value in defaultPresets
 }
 
 export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSettings> {

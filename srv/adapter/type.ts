@@ -1,6 +1,7 @@
-import type { AssembledPrompt, JsonField, PromptParts } from '../../common/prompt'
+import type { AssembledPrompt, JsonField, PromptPlaceholders } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
+import { SubscriptionPreset } from './agnaistic'
 import { ThirdPartyFormat } from '/common/adapters'
 import { Memory, TokenCounter } from '/common/types'
 
@@ -66,7 +67,7 @@ export type GenerateRequestV2 = {
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
 
-  parts: PromptParts
+  parts: PromptPlaceholders
   lines: string[]
   linesCount?: number
   text?: string
@@ -101,6 +102,7 @@ export type GenerateRequestV2 = {
    */
   response?: string
   eventStream?: boolean
+  subscription?: SubscriptionPreset
 }
 
 export type GenerateOptions = {
@@ -125,7 +127,7 @@ export type AdapterProps = {
   messages?: Array<{ role: string; content: string }>
   assembled: AssembledPrompt | undefined
 
-  parts: PromptParts
+  parts: PromptPlaceholders
   lines: string[]
   retries?: string[]
   characters: Record<string, AppSchema.Character>
@@ -144,12 +146,7 @@ export type AdapterProps = {
   lists?: Record<string, string[]>
   previous?: Record<string, string>
 
-  subscription?: {
-    level: number
-    preset?: AppSchema.SubscriptionModel
-    error?: string
-    warning?: string
-  }
+  subscription?: SubscriptionPreset
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

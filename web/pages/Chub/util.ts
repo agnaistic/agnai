@@ -1,31 +1,24 @@
-import { CHUB_URL } from '/web/store/chub'
+import { ChubEntity } from '/web/store/chub'
 
-const headers = {
-  'Content-Type': 'application/json',
-  accept: '/',
-}
+export async function processBook(entity: ChubEntity) {
+  const url = `https://api.chub.ai/api/v4/projects/${entity.id}/repository/files/raw%252Fsillytavern_raw.json/raw?ref=main&response_type=blob`
 
-export async function processBook(fullPath: string) {
-  const body = { format: 'AGNAI', fullPath, version: 'main' }
-  const res = await fetch(`${CHUB_URL}/lorebooks/download`, {
-    headers,
-    body: JSON.stringify(body),
-    method: 'post',
+  const blob = await fetch(url, { headers: { accept: '*/*' } }).then((res) => {
+    const result = res.json()
+    return result
   })
 
-  const json = await res.json()
-  return json
+  return blob
 }
 
 export async function processChar(fullPath: string) {
-  const body = { format: 'tavern', fullPath, version: 'main' }
-  const res = await fetch(`${CHUB_URL}/characters/download`, {
-    headers,
-    body: JSON.stringify(body),
-    method: 'post',
+  const avatar = await fetch(`https://avatars.charhub.io/avatars/${fullPath}/chara_card_v2.png`, {
+    headers: { accept: '*/*' },
+  }).then((res) => {
+    const blob = res.blob()
+    return blob
   })
 
-  const blob = await res.blob()
-  const file = new File([blob], `main_${fullPath}.png`, { type: 'image/png' })
+  const file = new File([avatar], `main_${fullPath}.png`, { type: 'image/png' })
   return file
 }

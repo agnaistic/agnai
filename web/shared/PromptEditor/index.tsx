@@ -8,7 +8,7 @@ import { Card, Pill } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
+import { ensureValidTemplate, buildPromptPlaceholders } from '/common/prompt'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
@@ -393,7 +393,7 @@ async function getExampleOpts(inherit?: PresetState) {
     return `${name}: ${hist.msg}`
   })
 
-  const parts = await buildPromptParts(
+  const parts = await buildPromptPlaceholders(
     {
       char,
       characters,

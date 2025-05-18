@@ -1,23 +1,11 @@
-import { AIAdapter, MODE_SETTINGS } from '../../common/adapters'
-import {
-  mapPresetsToAdapter,
-  defaultPresets,
-  isDefaultPreset,
-  getFallbackPreset,
-} from '/common/presets'
+import { AIAdapter, getAdapter, isThirdPartyPreset, MODE_SETTINGS } from '../../common/adapters'
+import { mapPresetsToAdapter, defaultPresets, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../middleware'
 import { StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import {
-  assemblePrompt,
-  getAdapter,
-  buildPromptParts,
-  JsonField,
-  getContextLimit,
-  isThirdPartyPreset,
-} from '../../common/prompt'
+import { buildPromptPlaceholders, JsonField, getContextLimit } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -34,6 +22,7 @@ import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
 import { toChatMessages } from './template-chat-payload'
+import { isDefaultPreset } from '/common/default-preset'
 
 let version = ''
 
@@ -302,6 +291,7 @@ export async function createChatStream(
   guestSocketId?: string
 ) {
   const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
+  opts.subscription = subscription
 
   /**
    * Only use a JSON schema if:
@@ -349,7 +339,7 @@ export async function createChatStream(
     const encoder = getTokenCounter(adapter, model)
     const nextSettings = simplifyPreset(opts.user, opts.settings, subscription)
     opts.settings = nextSettings
-    opts.parts = await buildPromptParts(
+    opts.parts = await buildPromptPlaceholders(
       {
         sender: opts.sender,
         kind: opts.kind,
@@ -398,9 +388,9 @@ export async function createChatStream(
    * We never need to use the users context length here as the subscription should contain the maximum possible context length.
    */
 
-  const prompt = await assemblePrompt(opts, opts.parts, opts.lines, encoder)
+  const { messages, assembled } = await toChatMessages(opts, encoder)
 
-  if (prompt.sections.warnings.noHistory) {
+  if (assembled.sections.warnings.noHistory) {
     throw new StatusError(
       `Your prompt template does not contain the 'chat history' placeholder. Please fix your prompt template.`,
       400
@@ -414,14 +404,12 @@ export async function createChatStream(
   //   )
   // }
 
-  if (prompt.linesAddedCount === 0 && opts.linesCount) {
+  if (assembled.linesAddedCount === 0 && opts.linesCount) {
     throw new StatusError(
       `Could not fit any messages in prompt. Check your character definition, context size, and template`,
       400
     )
   }
-
-  const messages = await toChatMessages(opts, prompt, encoder)
 
   const size = encoder(
     [
@@ -450,14 +438,14 @@ export async function createChatStream(
     gen: opts.settings || {},
     log,
     members: opts.members.concat(opts.sender),
-    prompt: prompt.prompt,
+    prompt: assembled.prompt,
     messages,
-    parts: prompt.parts,
+    parts: assembled.parts,
     sender: opts.sender,
     mappedSettings,
     user: opts.user,
     guest: guestSocketId,
-    lines: prompt.lines,
+    lines: assembled.lines,
     isThirdParty,
     replyAs: opts.replyAs,
     characters: opts.characters,
@@ -469,9 +457,9 @@ export async function createChatStream(
     subscription,
     encoder,
     jsonValues: opts.jsonValues,
-    contextSize: prompt.length,
+    contextSize: assembled.length,
     signal: opts.signal,
-    assembled: prompt,
+    assembled,
   })
 
   return {
@@ -480,7 +468,7 @@ export async function createChatStream(
     settings: gen,
     user: opts.user,
     size,
-    length: prompt.length,
+    length: assembled.length,
     json: !!jsonSchema || !!opts.jsonSchema,
   }
 }

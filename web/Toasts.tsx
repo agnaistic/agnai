@@ -174,7 +174,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
   const onClick = () => toastStore.remove(props.toast.id)
   return (
     <div class="flex flex-row justify-end">
-      <div class={`${bg} w-2 rounded-l-md`}></div>
+      <div class={`${bg} w-1 rounded-l-md`}></div>
       <div class={`bg-700 cursor-pointer rounded-r-md p-2`} onClick={onClick}>
         <div class="flex flex-col gap-1">
           <Show when={props.toast.type === 'admin'}>

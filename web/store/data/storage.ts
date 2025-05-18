@@ -1,11 +1,11 @@
 import { v4 } from 'uuid'
-import { NOVEL_MODELS } from '../../../common/adapters'
 import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
 import { storage } from '/web/shared/util'
 import { replace } from '/common/util'
+import { NOVEL_MODELS } from '/common/presets/novel'
 
 type StorageKey = keyof typeof KEYS
 
@@ -89,7 +89,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     username: '',
     novelApiKey: '',
     oaiKey: '',
-    novelModel: NOVEL_MODELS.euterpe,
+    novelModel: NOVEL_MODELS.clio_v1,
     hordeKey: '',
     hordeModel: 'any',
     defaultAdapter: 'horde',

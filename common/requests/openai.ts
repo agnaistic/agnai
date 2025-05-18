@@ -6,7 +6,7 @@ import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { notify, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { tryParse, tryParseConcat } from '../util'
-import { insertImageContent } from '/srv/adapter/template-chat-payload'
+import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -69,7 +69,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     console.log(`Prompt:\n`, JSON.stringify(messages, null, 2))
   }
 
-  insertImageContent(opts, messages)
+  payload.messages = validateChatMessagesWithImage(opts, messages)
   const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
 
   if (!gen.streamResponse) {

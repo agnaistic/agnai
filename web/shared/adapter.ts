@@ -1,9 +1,9 @@
-import { getAdapter, getChatPreset } from '../../common/prompt'
+import { getChatPreset, getContextLimit } from '../../common/prompt'
 import { presetStore, userStore } from '../store'
 import { AppSchema } from '../../common/types/schema'
-import { defaultPresets, isDefaultPreset } from '../../common/presets'
+import { defaultPresets, isDefaultPreset } from '../../common/default-preset'
 import { Option } from './Select'
-import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../common/adapters'
+import { ADAPTER_LABELS, AIAdapter, AdapterSetting, getAdapter } from '../../common/adapters'
 import { storage } from './util'
 
 const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
@@ -67,13 +67,8 @@ export function getClientPreset(chat?: AppSchema.Chat): PresetInfo | undefined {
   if (!chat || !user.user) return
 
   const preset = getChatPreset(chat, user.user, presets)
-  const {
-    adapter,
-    isThirdParty,
-    model,
-    contextLimit,
-    preset: presetLabel,
-  } = getAdapter(chat, user.user, preset)
+  const { adapter, isThirdParty, model, preset: presetLabel } = getAdapter(chat, user.user, preset)
+  const contextLimit = getContextLimit(user.user, preset)
 
   const name = preset && 'name' in preset ? preset.name : ''
   return { preset, adapter, model, isThirdParty, contextLimit, presetLabel, name }

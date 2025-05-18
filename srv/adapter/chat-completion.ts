@@ -6,7 +6,6 @@ import {
   BOT_REPLACE,
   SAMPLE_CHAT_MARKER,
   SELF_REPLACE,
-  assemblePrompt,
   ensureValidTemplate,
   injectPlaceholders,
   insertsDeeperThanConvoHistory,
@@ -47,8 +46,7 @@ export async function toChatCompletionPayload(
   }
 
   if (opts.gen.thirdPartyFormat === 'openai-chatv2' || opts.gen.thirdPartyFormat === 'gemini') {
-    const prompt = await assemblePrompt(opts, opts.parts, opts.lines, counter)
-    const messages = await toChatMessages(opts, prompt, counter)
+    const { messages } = await toChatMessages(opts, counter)
     return messages
   }
 

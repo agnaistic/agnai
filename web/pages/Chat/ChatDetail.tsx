@@ -339,7 +339,8 @@ const ChatDetail: Component = () => {
   useEffect(() => {
     function keyboardShortcuts(ev: KeyboardEvent) {
       // console.log({ alt: ev.altKey, ctrl: ev.ctrlKey, meta: ev.metaKey, key: ev.key, code: ev.code })
-      if (!ev.altKey) return
+      const isModifier = ev.altKey && !ev.shiftKey
+      if (!isModifier) return
 
       const num = +ev.key
       if (num >= 1) {

@@ -3,13 +3,7 @@ import RangeInput from '../RangeInput'
 import TextInput from '../TextInput'
 import Select, { Option } from '../Select'
 import { defaultPresets } from '../../../common/presets'
-import {
-  OPENAI_MODELS,
-  CLAUDE_MODELS,
-  NOVEL_MODELS,
-  REPLICATE_MODEL_TYPES,
-  MISTRAL_MODELS,
-} from '../../../common/adapters'
+import { REPLICATE_MODEL_TYPES, MISTRAL_MODELS } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
 import { presetStore, settingStore, userStore } from '../../store'
 import { Card } from '../Card'
@@ -34,6 +28,9 @@ import { FormLabel } from '../FormLabel'
 import { RefreshCcw } from 'lucide-solid'
 import Button from '../Button'
 import { CustomSelect } from '../CustomSelect'
+import { CLAUDE_MODELS } from '/common/presets/claude'
+import { OPENAI_MODELS } from '/common/presets/openai'
+import { NOVEL_MODELS } from '/common/presets/novel'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 

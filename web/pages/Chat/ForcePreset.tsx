@@ -2,7 +2,7 @@ import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { chatStore, presetStore, toastStore } from '../../store'
-import { isDefaultPreset } from '../../../common/presets'
+import { isDefaultPreset } from '../../../common/default-preset'
 import { isEligible } from './util'
 
 const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: () => void }> = (

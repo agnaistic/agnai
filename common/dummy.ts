@@ -1,4 +1,4 @@
-import { NOVEL_MODELS } from '../common/adapters'
+import { NOVEL_MODELS } from './presets/novel'
 import { AppSchema } from './types/schema'
 
 let counter = Date.now()

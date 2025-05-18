@@ -5,7 +5,7 @@ import { build, reset, toBotMsg, toChar, toChat, toProfile, toUser } from './uti
 import { neat } from '/common/util'
 import { AdapterProps } from '/srv/adapter/type'
 import { getTokenCounter } from '/srv/tokenize'
-import { OPENAI_MODELS } from '/common/adapters'
+import { OPENAI_MODELS } from '/common/presets/openai'
 
 describe('Chat Completion Example Dialogue::', () => {
   before(reset)

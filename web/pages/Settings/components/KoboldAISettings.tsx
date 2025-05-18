@@ -27,10 +27,10 @@ const KoboldAISettings: Component<{
         items={[
           { label: 'None', value: '' },
           { label: 'Kobold', value: 'kobold' },
-          { label: 'OpenAI', value: 'openai' },
           { label: 'Aphrodite', value: 'aphrodite' },
-          { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
-          { label: 'OpenAI (Chat w/ Template)', value: 'openai-chatv2' },
+          { label: 'OpenAI (Completion)', value: 'openai' },
+          { label: 'OpenAI (Chat)', value: 'openai-chatv2' },
+          { label: 'OpenAI (Chat - Legacy)', value: 'openai-chat' },
           { label: 'Claude', value: 'claude' },
           { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'Llama.cpp', value: 'llamacpp' },

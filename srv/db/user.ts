@@ -4,7 +4,6 @@ import { v4 } from 'uuid'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
-import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../middleware'
 import { errors, StatusError } from '../api/wrap'
 import { decryptText, encryptPassword, encryptUserText, now } from './util'
@@ -16,6 +15,7 @@ import { patreon } from '../api/user/patreon'
 import { getUserSubscriptionTier } from '/common/util'
 import { command } from '../domains'
 import { getRegisteredAdapters } from '../adapter/register'
+import { NOVEL_MODELS } from '/common/presets/novel'
 
 export type NewUser = {
   username: string

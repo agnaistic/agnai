@@ -1,6 +1,8 @@
+import colors from 'colors'
 import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
 import { setEmitter } from '/common/requests/util'
+import { diffChars } from 'diff'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
@@ -98,13 +100,25 @@ function onMessage(msg: MessageEvent<any>) {
 
     if (!squelched.has(payload.type)) {
       if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
-        console.log(
-          `Prompt\n${
-            typeof payload.prompt === 'string'
-              ? payload.prompt
-              : JSON.stringify(payload.prompt, null, 2)
-          }`
-        )
+        const win: any = window
+        if (win.lastPrompt && typeof payload.prompt === 'string') {
+          colors.enable()
+          const diff = diffChars(win.lastPrompt, payload.prompt)
+          const text: any[] = []
+          for (const part of diff) {
+            const color = part.added ? colors.green : part.removed ? colors.red : colors.strip
+            text.push(color(part.value))
+          }
+          console.log(`Diff Prompt\n${text.join('')}`)
+        } else {
+          console.log(
+            `Prompt\n${
+              typeof payload.prompt === 'string'
+                ? payload.prompt
+                : JSON.stringify(payload.prompt, null, 2)
+            }`
+          )
+        }
       } else if (payload.type !== 'image-generated') {
         console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
       } else {

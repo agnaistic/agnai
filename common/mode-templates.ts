@@ -1,6 +1,7 @@
 import { classifyEmotes } from './types/sprite'
-import { AIAdapter, INSTRUCT_SERVICES, OPENAI_MODELS } from './adapters'
+import { AIAdapter, INSTRUCT_SERVICES } from './adapters'
 import { neat } from './util'
+import { OPENAI_MODELS } from './presets/openai'
 
 export const defaultTemplate = `
 {{char}}'s Persona: {{personality}}

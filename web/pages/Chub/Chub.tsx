@@ -1,7 +1,6 @@
 import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
-import Tabs from '../../shared/Tabs'
 import FilterSettings from './FilterSettings'
 import CharList from './CharList'
 import BookList from './BookList'
@@ -15,6 +14,7 @@ import { ListFilter } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Modal from '/web/shared/Modal'
 import { chubStore } from '/web/store/chub'
+import Tabs from '/web/shared/Tabs'
 
 const chubTabs = {
   characters: 'Characters',
@@ -26,6 +26,7 @@ type Tab = keyof typeof chubTabs
 const Chub: Component = () => {
   const params = useParams()
   const nav = useNavigate()
+
   const tabs: Tab[] = ['characters', 'lorebooks']
 
   const [tab, setTab] = createSignal(0)

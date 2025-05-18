@@ -9,6 +9,7 @@ import { replicatePresets } from './presets/replicate'
 import { scalePresets } from './presets/scale'
 import { openRouterPresets } from './presets/openrouter'
 import { agnaiPresets } from './presets/agnaistic'
+import type { GenerationPreset } from './presets'
 
 const builtinPresets = {
   ...agnaiPresets,
@@ -27,3 +28,8 @@ export const defaultPresets = {
   ...builtinPresets,
   goose: { ...builtinPresets.basic, service: 'goose' },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
+
+export function isDefaultPreset(value?: string): value is GenerationPreset {
+  if (!value) return false
+  return value in defaultPresets
+}

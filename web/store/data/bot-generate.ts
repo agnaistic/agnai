@@ -3,7 +3,7 @@ import { api, getAuthHeaders } from '../api'
 import { getStore } from '../create'
 import { localApi } from './storage'
 import {
-  buildPromptParts,
+  buildPromptPlaceholders,
   createPromptParts,
   getLinesForPrompt,
   getTemplate,
@@ -127,6 +127,9 @@ export async function generateResponse(
     reschemaPrompt: props.reschemaPrompt,
   }
 
+  const win: any = window
+  win.lastPrompt = prompt.template.parsed
+
   if (
     opts.kind === 'send' ||
     opts.kind === 'request' ||
@@ -212,7 +215,7 @@ async function getActivePromptOptions(
   }
 
   const lines = await getLinesForPrompt(promptOpts, encoder)
-  const parts = await buildPromptParts(promptOpts, lines, encoder)
+  const parts = await buildPromptPlaceholders(promptOpts, lines, encoder)
 
   return { lines, parts, entities, props }
 }

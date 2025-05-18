@@ -15,7 +15,7 @@ import {
 } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { defaultPresets } from '/common/presets'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
@@ -27,6 +27,7 @@ import { AppSchema } from '/common/types'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
+import { isDefaultPreset } from '/common/default-preset'
 
 const options = [{ value: 'attributes', label: 'Attributes' }]
 

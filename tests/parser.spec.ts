@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import './init'
 import { reset, setRand, toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg } from './util'
-import { buildPromptParts } from '/common/prompt'
+import { buildPromptPlaceholders } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
 import { getTokenCounter } from '/srv/tokenize'
@@ -149,7 +149,7 @@ async function getParseOpts(
 ) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...char, ...charOverrides }
-  const parts = await buildPromptParts(
+  const parts = await buildPromptPlaceholders(
     {
       char: overChar,
       characters,

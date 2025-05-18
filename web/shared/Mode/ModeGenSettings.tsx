@@ -1,6 +1,6 @@
 import { Save, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Show } from 'solid-js'
-import { defaultPresets, isDefaultPreset } from '../../../common/presets'
+import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
 import { toastStore, userStore } from '../../store'
@@ -121,7 +121,8 @@ export const ModeGenSettings: Component<{
       }
 
       presetStore.updatePreset(presetId, update as any, {
-        onSuccess: () => {
+        onSuccess: (next) => {
+          setStore(next)
           if (pane() === 'popup') {
             props.close?.()
           }

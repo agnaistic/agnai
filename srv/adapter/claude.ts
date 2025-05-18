@@ -15,11 +15,12 @@ import {
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
-import { CLAUDE_CHAT_MODELS, OPENAI_MODELS } from '/common/adapters'
 import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
+import { OPENAI_MODELS } from '/common/presets/openai'
+import { CLAUDE_CHAT_MODELS } from '/common/presets/claude'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`

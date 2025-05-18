@@ -112,6 +112,20 @@ export const ImageSettingsModal = () => {
       : 0
   )
 
+  const currentImgSource = createMemo(() => {
+    switch (tab.current()) {
+      case 'App':
+        return 'settings'
+
+      case 'Chat':
+        return 'chat'
+
+      case 'Character':
+      default:
+        return 'main-character'
+    }
+  })
+
   const canUseImages = createMemo(() => {
     const access = user.sub?.tier.imagesAccess || user.user?.admin
     return (
@@ -221,7 +235,7 @@ export const ImageSettingsModal = () => {
           <Match when={tab.current() === 'Character'}>
             <SolidCard type="hl">
               <div>Character Settings</div>
-              <div class="text-500 text-sm italic">Editing: {entity.char?.name}</div>
+              <div class="text-500 text-sm italic">Character: {entity.char?.name}</div>
             </SolidCard>
           </Match>
           <Match when={tab.current() === 'Chat'}>
@@ -233,6 +247,28 @@ export const ImageSettingsModal = () => {
         </Switch>
 
         <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
+
+        <Show when={isChat()}>
+          <div class="flex flex-col gap-1">
+            <FormLabel
+              label={`Current Chat Image Settings Source`}
+              helperText='Control which image settings are used when generating "Chat Images"'
+            />
+            <Button
+              size="sm"
+              class="w-fit"
+              onClick={() =>
+                chatStore.editChat(
+                  entity.chat?._id!,
+                  { imageSource: currentImgSource() },
+                  undefined
+                )
+              }
+            >
+              Use to {tab.current()} Settings
+            </Button>
+          </div>
+        </Show>
 
         <PresetSelect
           label="Summary Preset"

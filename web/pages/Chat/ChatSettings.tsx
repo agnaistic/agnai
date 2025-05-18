@@ -16,7 +16,7 @@ import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttri
 import TextInput from '../../shared/TextInput'
 import { chatStore, msgStore, presetStore, scenarioStore, toastStore, userStore } from '../../store'
 import { FormLabel } from '../../shared/FormLabel'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { defaultPresets } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
@@ -28,6 +28,7 @@ import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
 import { generateField, MinCharacter } from '../Character/generate-char'
 import { RelativeSpinner } from '/web/shared/Loading'
+import { isDefaultPreset } from '/common/default-preset'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },

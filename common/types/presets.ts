@@ -69,7 +69,6 @@ export interface SubscriptionModel extends GenSettings {
   allowGuestUsage?: boolean
   isDefaultSub?: boolean
   deletedAt?: string
-  tokenizer?: string
   guidanceCapable?: boolean
   jsonSchemaCapable?: boolean
   levels: SubscriptionModelLevel[]
@@ -87,6 +86,7 @@ export interface GenSettings {
   presetMode?: 'simple' | 'advanced' | undefined
 
   service?: AIAdapter
+  tokenizer?: string
 
   temp: number
   tempLast?: boolean
