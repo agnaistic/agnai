@@ -269,7 +269,7 @@ export async function parseTemplate(
         marker: id,
       })
       unusedTokens = filled.unusedTokens
-      const trimmed = filled.adding.slice().reverse()
+      const trimmed = filled.adding.slice()
       output = result.replace(new RegExp(id, 'gi'), trimmed.join('\n'))
       linesAddedCount += filled.linesAddedCount
       history = trimmed
@@ -279,8 +279,9 @@ export async function parseTemplate(
 
     // Adding the low priority blocks if we still have the budget for them,
     // now that we inserted the conversation history.
-    // We start from the bottom (somewhat arbitrary design choice),
-    // hence the reverse().
+    // We start from the bottom (somewhat arbitrary design choice), hence the reverse().
+    // This is based on the idea that the template author knows that 'the bottom of the prompt is more important'
+    // Therefore we will prioritise low-priority blocks at the bottom of the prompt higher than the top of the prompt.
     for (const { id, content } of (opts.lowpriority ?? []).reverse()) {
       const contentLength = await opts.limit.encoder(content)
       if (contentLength > unusedTokens) {
@@ -293,6 +294,10 @@ export async function parseTemplate(
 
     if (opts.lowpriority?.length) {
       await addCount('low-priority', output)
+    }
+  } else {
+    for (const { id, content } of (opts.lowpriority ?? []).reverse()) {
+      output = output.replace(id, content)
     }
   }
 
@@ -609,33 +614,15 @@ function renderCondition(
   }
 
   if (node.value === 'example_dialogue') {
+    const sample = opts.parts?.sampleChat?.join('\n').trim()
+    if (!sample) {
+      return
+    }
     return renderLowPriority({ kind: 'lowpriority', children: [output.join('')] }, opts)
   }
 
   return output.join('')
 }
-
-// function containsNode(kind: Holder, children: (PNode | ElseNode)[]) {
-//   for (const child of children) {
-//     if (typeof child === 'string') continue
-//     if (child.kind === 'placeholder') {
-//       if (child.value === kind) return true
-//       continue
-//     }
-
-//     if (child.kind === 'else' || child.kind === 'each') {
-//       continue
-//     }
-
-//     if (Array.isArray(child.children)) {
-//       const nested = containsNode(kind, child.children)
-//       if (nested) return true
-//       continue
-//     }
-//   }
-
-//   return false
-// }
 
 function getEntities(holder: IterableHolder, opts: TemplateOpts) {
   switch (holder) {
@@ -669,8 +656,9 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   const entities = getEntities(holder, opts)
 
-  let idx = entities.length
+  let idx = 0
   for (const entity of entities) {
+    idx++
     let curr = ''
     for (const child of children) {
       if (typeof child === 'string') {
@@ -712,7 +700,6 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
       }
     }
     if (curr) output.push(curr)
-    idx--
   }
 
   if (isHistory && opts.limit?.output) {

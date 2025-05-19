@@ -219,15 +219,12 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     }
   }
 
-  const sortedMsgs = opts.messages
-    .filter((msg) => msg.adapter !== 'image')
-    .slice()
-    .sort(sortMessagesDesc)
+  const sortedMsgs = opts.messages.filter((msg) => msg.adapter !== 'image')
 
   opts.messages = sortedMsgs
 
   /**
-   * The lines from `getLinesForPrompt` are returned in time-descending order
+   * The lines from `getLinesForPrompt` are returned in time-ascending order
    */
   let template = getTemplate(opts)
 
@@ -257,7 +254,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     jsonValues: opts.jsonValues,
   })
 
-  return { lines: lines.reverse(), parts, template: prompt }
+  return { lines, parts, template: prompt }
 }
 
 export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
@@ -362,38 +359,42 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
 
   template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'Alpaca')
 
+  /**
+   * This is currently disabled:
+   * Models behave far too differently to insert sample chat using this method.
+   * The formatting used here is far too opinionated.
+   * Simple and Basic prompting w/ Prompt Formatting should have already solved this issue.
+   * Advanced users authoring their own templates do so at their own peril.
+   */
   // Basic templates can exclude example dialogue
-  const validate =
-    opts.settings?.useAdvancedPrompt !== 'no-validation' &&
-    opts.settings?.useAdvancedPrompt !== 'basic'
+  // const validate =
+  //   opts.settings?.useAdvancedPrompt !== 'no-validation' &&
+  //   opts.settings?.useAdvancedPrompt !== 'basic'
 
   // Automatically inject example conversation if not included in the prompt
   /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
-  const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
-  const sampleChat = parts.sampleChat?.join('\n')
-  if (!template.match(HOLDERS.sampleChat) && sampleChat && hist && validate) {
-    const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
+  // const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
+  // const sampleChat = parts.sampleChat?.join('\n')
+  // if (!template.match(HOLDERS.sampleChat) && sampleChat && hist && validate) {
+  //   const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
-    const svc = opts.settings?.service
-    const postSample =
-      svc === 'openai' || svc === 'openrouter' || svc === 'scale' || svc === 'openrouter-completion'
-        ? SAMPLE_CHAT_MARKER
-        : '<START>'
+  //   const svc = opts.settings?.service
+  //   const postSample =
+  //     svc === 'openai' || svc === 'openrouter' || svc === 'scale' || svc === 'openrouter-completion'
+  //       ? SAMPLE_CHAT_MARKER
+  //       : '<START>'
 
-    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
-      .replace(BOT_REPLACE, opts.replyAs.name)
-      .replace(SELF_REPLACE, sender)
-    if (hist.order === 'asc') next.unshift(msg)
-    else next.push(msg)
+  //   const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
+  //     .replace(BOT_REPLACE, opts.replyAs.name)
+  //     .replace(SELF_REPLACE, sender)
+  //   if (hist.order === 'asc') next.unshift(msg)
+  //   else next.push(msg)
 
-    hist.lines = next
-  }
+  //   hist.lines = next
+  // }
 
-  const lines = !hist
-    ? []
-    : hist.order === 'desc'
-    ? hist.lines.slice()
-    : hist.lines.slice().reverse()
+  /** @todo @fixme try to remove any history re-ordering */
+  const lines = !hist ? [] : hist.lines
 
   const result = await parseTemplate(template, {
     ...opts,
@@ -530,12 +531,11 @@ export async function buildPromptPlaceholders(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  const linesForMemory = [...lines].reverse()
   const books: AppSchema.MemoryBook[] = []
   if (replyAs.characterBook) books.push(replyAs.characterBook)
   if (opts.book) books.push(opts.book)
 
-  parts.memory = await buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
+  parts.memory = await buildMemoryPrompt({ ...opts, books, lines }, encoder)
 
   const supplementary = getSupplementaryParts(opts, replyAs)
   parts.ujb = supplementary.ujb
@@ -680,7 +680,7 @@ export async function getLinesForPrompt(
     return filled
   }
 
-  const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
+  const history = messages.map(formatMsg)
 
   const { adding: lines } = await fillPromptWithLines({
     encoder,
@@ -783,10 +783,6 @@ function fillPlaceholders(opts: {
   const msg = text.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
-}
-
-function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
-  return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
 }
 
 export function getChatPreset(
@@ -946,27 +942,6 @@ export type TrimOpts = {
   start: 'top' | 'bottom'
   encoder: TokenCounter
   tokenLimit: number
-}
-
-/**
- * Remove lines from a body of text that contains line breaks
- */
-export async function trimTokens(opts: TrimOpts) {
-  const text = Array.isArray(opts.input) ? opts.input.slice() : opts.input.split('\n')
-  if (opts.start === 'bottom') text.reverse()
-
-  let tokens = 0
-  let output: string[] = []
-
-  for (const line of text) {
-    tokens += await opts.encoder(line)
-    if (tokens > opts.tokenLimit) break
-
-    if (opts.start === 'top') output.push(line)
-    else output.unshift(line)
-  }
-
-  return output
 }
 
 /**

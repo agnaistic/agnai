@@ -356,7 +356,7 @@ export async function createChatStream(
         book: opts.book,
         resolvedScenario: opts.resolvedScenario || '',
       },
-      [...opts.lines].reverse(),
+      opts.lines,
       encoder
     )
   }
