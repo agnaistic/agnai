@@ -29,9 +29,9 @@ Robot:"
 
 exports[`Template parser tests will iterate over messages 1`] = `
 "Scenario: SCENARIO
-0 First message
-1 User response
-2 Multibot message"
+1 First message
+2 User response
+3 Multibot message"
 `;
 
 exports[`Template parser tests will not render missing conditional 1`] = `"Persona: PERSONA"`;
