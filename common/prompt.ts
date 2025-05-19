@@ -393,15 +393,12 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
   //   hist.lines = next
   // }
 
-  /** @todo @fixme try to remove any history re-ordering */
-  const lines = !hist ? [] : hist.lines
-
   const result = await parseTemplate(template, {
     ...opts,
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
-    lines,
+    lines: hist?.lines || [],
     ...rest,
     limit: {
       context: getContextLimit(opts.user, opts.settings),
