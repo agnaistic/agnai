@@ -1,5 +1,4 @@
 import needle from 'needle'
-import { requestStream } from './stream'
 import { ModelAdapter, AdapterProps, CompletionItem } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -21,6 +20,7 @@ import { sanitiseAndTrim } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_CHAT_MODELS } from '/common/presets/claude'
+import { fetchStream } from '/common/requests/stream'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -223,8 +223,8 @@ const streamCompletion: CompletionGenerator = async function* ({
   log,
   userId,
 }) {
-  const resp = needle.post(url, JSON.stringify(body), {
-    parse: false,
+  const response = await fetch(url, {
+    body: JSON.stringify(body),
     signal: signal.signal,
     headers: {
       ...headers,
@@ -241,7 +241,7 @@ const streamCompletion: CompletionGenerator = async function* ({
   }
 
   try {
-    const events = requestStream(resp)
+    const events = fetchStream(response)
 
     // https://docs.anthropic.com/claude/reference/streaming
     for await (const event of events) {

@@ -364,7 +364,9 @@ export const generateMessageV2 = handle(async (req, res) => {
     } catch (ex: any) {
       error = true
 
-      if (ex instanceof StatusError) {
+      if (ex?.name === 'AbortError') {
+        // Intentional NOOP - This is a user cancellation or request interruption
+      } else if (ex instanceof StatusError) {
         log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
         sendMsg(ents, {
           type: 'message-error',
@@ -386,12 +388,13 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     req.socket.removeAllListeners('end')
-    signal = null
 
-    if (body.eventStream) {
+    if (body.eventStream && res.writable && !signal?.signal.aborted) {
       res.write('data: [DONE]')
       res.end()
     }
+
+    signal = null
 
     if (!ents.guest) {
       await releaseLock(chatId)
@@ -421,10 +424,10 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleAuthedResponse(payload)
   }
 
-  if (!res.closed) {
+  if (res.writable) {
     if (body.eventStream) {
       res.write('data: [DONE]')
-      res.send()
+      res.end()
     } else {
       return { success: true }
     }

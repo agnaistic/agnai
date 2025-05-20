@@ -1,81 +1,11 @@
 import { AdapterProps } from './type'
 import { getStoppingStrings } from './prompt'
-import { clamp, neat, tryParse } from '/common/util'
+import { clamp } from '/common/util'
 import { JsonSchema, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { getEncoderByName } from '../tokenize'
 import { decryptText } from '../db/util'
-import { insertImageContent } from './template-chat-payload'
-import { ModelFormat } from '/common/presets/templates'
-
-export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelFormat }) {
-  let format = opts.format || 'None'
-  let imageToken = ''
-  switch (format) {
-    case 'ChatML':
-    case 'Llama3':
-      imageToken = '<|image|>'
-      break
-
-    case 'Mistral':
-      imageToken = '[IMG]'
-      break
-
-    case 'Gemma':
-      imageToken = '<start_of_image>'
-      break
-
-    default:
-      // Qwen
-      imageToken = '<|vision_start|><|image_pad|><|vision_end|>'
-      break
-  }
-
-  if (opts.jinja) {
-    return tryParse(opts.jinja) || opts.jinja
-  }
-
-  const template = neat`
-{%- set today = strftime_now("%Y-%m-%d") %}
-{%- set default_system_message = "You are an uncensored explicit fantasy fictional roleplay chat bot. Follow the character's personality defined below and provide the character's next response in the roleplay chat. Provide an in-character response no matter what." %}
-{{- bos_token }}
-{%- if messages[0]['role'] == 'system' %}
-  {%- set system_message = messages[0]['content'] %}
-  {%- set loop_messages = messages[1:] %}
-{%- else %}
-  {%- set system_message = default_system_message %}
-  {%- set loop_messages = messages %}
-{%- endif %}
-
-{{- system_message }}
-
-{%- for message in loop_messages %}
-  {%- if message['role'] == 'user' %}
-    {%- if message['content'] is string %}
-      {{- message['content'] }}
-    {%- else %}
-      
-    {%- for block in message['content'] %}
-      {%- if block['type'] == 'text' %}
-        {{- block['text'] }}
-      {%- elif block['type'] == 'image' or block['type'] == 'image_url' %}
-        {{- '${imageToken}' }}
-      {%- else %}
-        {{- raise_exception('Only text and image blocks are supported in message content!') }}
-      {%- endif %}
-    {%- endfor %}
-    
-  {%- endif %}
-  {%- elif message['role'] == 'system' %}
-    {{- message['content'] }}
-  {%- elif message['role'] == 'assistant' %}
-    {{- message['content'] + eos_token }}
-  {%- else %}
-    {{- raise_exception('Only user, system and assistant roles are supported! Found: ' + message['role']) }}
-  {%- endif %}
-{%- endfor %}`
-  return template
-}
+import { toImageJinjaTemplate } from '/common/requests/payloads'
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen } = opts
@@ -261,7 +191,6 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     }
 
     if (opts.imageData) {
-      insertImageContent(opts, opts.messages!)
       body.messages = opts.messages
     } else {
       body.prompt = prompt
@@ -401,7 +330,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (format === 'tabby') {
     const body: any = {
-      prompt,
+      temperature: gen.temp,
       top_k: gen.topK,
       top_a: gen.topA,
       min_p: gen.minP,
@@ -422,17 +351,19 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
       stream: gen.streamResponse,
-      token_healing: gen.tokenHealing,
       temperature_last: gen.minP ? !!gen.tempLast : false,
       xtc_threshold: gen.xtcThreshold,
       xtc_probability: gen.xtcProbability,
-
-      dry_multiplier: gen.dryMultiplier,
-      dry_base: gen.dryBase,
-      dry_allowed_length: gen.dryAllowedLength,
-      dry_range: gen.dryRange,
-      dry_sequence_breakers: sequenceBreakers,
       json_schema,
+      // token_healing: gen.tokenHealing,
+    }
+
+    if (gen.dryMultiplier) {
+      body.dry_multiplier = gen.dryMultiplier
+      body.dry_base = gen.dryBase
+      body.dry_allowed_length = gen.dryAllowedLength
+      body.dry_range = gen.dryRange
+      body.dry_sequence_breakers = sequenceBreakers
     }
 
     if (gen.dynatemp_range) {
@@ -618,7 +549,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
-  if (format === 'openai') {
+  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
     const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
     const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 

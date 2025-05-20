@@ -53,7 +53,7 @@ export function insertImageContent(
   opts: { imageData?: string },
   messages: Array<{ role: string; content: any }>
 ) {
-  if (!opts.imageData) return messages
+  if (!opts.imageData || !messages) return messages
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
@@ -164,7 +164,7 @@ export function stripImageContent(messages: any[]) {
   const next = messages.map((msg) => {
     if (!Array.isArray(msg.content)) return msg
     const text = msg.content.find((m: any) => m.type === 'text')
-    return { ...msg, content: [text] }
+    return { ...msg, content: [text, { type: 'image_url', content: '[REDACTED]' }] }
   })
 
   return next

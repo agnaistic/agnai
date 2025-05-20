@@ -2,14 +2,14 @@ import needle from 'needle'
 import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
-import { ModelAdapter } from './type'
+import { AdapterProps, ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
-import { requestStream } from './stream'
 import { AppLog } from '../middleware'
 import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 import { getStoppingStrings } from './prompt'
 import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/presets/novel'
+import { fetchStream } from '/common/requests/stream'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.
@@ -141,7 +141,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
 
   const stream =
     opts.kind !== 'summary' && opts.gen.streamResponse
-      ? streamCompletion(headers, body, log)
+      ? streamCompletion(opts, headers, body, log)
       : fullCompletion(headers, body, log)
 
   let accum = ''
@@ -207,10 +207,15 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
   return payload
 }
 
-const streamCompletion = async function* (headers: any, body: any, _log: AppLog) {
-  const resp = needle.post(streamUrl(body.model), body, {
-    parse: false,
-    json: true,
+const streamCompletion = async function* (
+  opts: AdapterProps,
+  headers: any,
+  body: any,
+  _log: AppLog
+) {
+  const resp = await fetch(streamUrl(body.model), {
+    method: 'POST',
+    body: JSON.stringify(body),
     headers: {
       ...headers,
       Accept: `text/event-stream`,
@@ -220,30 +225,30 @@ const streamCompletion = async function* (headers: any, body: any, _log: AppLog)
   const tokens = []
 
   try {
-    const events = requestStream(resp)
-    for await (const event of events) {
+    const stream = fetchStream(resp, {
+      format: 'raw',
+      marker: /^event: \w+\nid: [0-9]+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
+    })
+
+    // const events = requestStream(resp)
+    for await (const event of stream) {
+      opts.log.info({ event }, 'novelai event')
       if (event.error) {
         yield { error: `NovelAI streaming request failed: ${event.error}` }
         return
       }
 
-      if (event.type !== 'newToken') {
+      const token = event.token
+      if (token) {
+        tokens.push(event.token)
+        yield { token }
         continue
       }
 
-      const data = JSON.parse(event.data) as {
-        token: string
-        final: boolean
-        ptr: number
-        error?: string
-      }
-
-      if (data.error) {
-        yield { error: `NovelAI streaming request failed: ${data.error}` }
+      if (event.error) {
+        yield { error: `NovelAI streaming request failed: ${event.error}` }
         return
       }
-      tokens.push(data.token)
-      yield { token: data.token }
     }
   } catch (err: any) {
     yield { error: `NovelAI streaming request failed: ${err.message || err}` }

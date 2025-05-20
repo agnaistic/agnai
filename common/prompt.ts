@@ -844,9 +844,9 @@ export function getContextLimit(
   user: AppSchema.User,
   gen: Partial<AppSchema.GenSettings> | undefined
 ): number {
-  const genAmount = gen?.maxTokens || getFallbackPreset(gen?.service || 'horde')?.maxTokens || 80
+  const genAmount = gen?.maxTokens || getFallbackPreset(gen?.service || 'horde')?.maxTokens || 300
   const configuredMax =
-    gen?.maxContextLength || getFallbackPreset(gen?.service || 'horde')?.maxContextLength || 4096
+    gen?.maxContextLength || getFallbackPreset(gen?.service || 'horde')?.maxContextLength || 8192
 
   if (!gen?.service) return configuredMax - genAmount
 
@@ -916,7 +916,7 @@ export function getContextLimit(
         return Math.min(gen.openRouterModel.context_length, configuredMax) - genAmount
       }
 
-      return Math.min(configuredMax, 4096) - genAmount
+      return Math.min(configuredMax, 16 * 1024) - genAmount
 
     case 'mancer':
       return Math.min(configuredMax, 8000) - genAmount

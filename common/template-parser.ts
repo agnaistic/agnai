@@ -8,6 +8,8 @@ import { v4 } from 'uuid'
 
 type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
+let DEBUG = false
+
 export type TemplateOpts = {
   continue?: boolean
   parts?: Partial<PromptPlaceholders>
@@ -242,16 +244,18 @@ export async function parseTemplate(
   let history: string[] = []
 
   let sizes: string[] = []
+  let tally = 0
 
   const addCount = async (label: string, prompt: string) => {
-    if (!opts.limit) return
+    if (!opts.limit || !DEBUG) return
     if (!sizes.length) {
       const words = prompt.split(' ').filter((p) => !!p.trim()).length
       sizes.push(`limit: ${opts.limit.context}, words: ${words}`)
     }
 
     const tokens = await opts.limit.encoder(prompt)
-    sizes.push(`${label}: ${tokens}`)
+    tally += tokens
+    sizes.push(`${label}: ${tokens}/${tally}`)
   }
 
   await addCount('init', result)

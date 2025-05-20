@@ -7,12 +7,12 @@ import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
-import { streamGenerator } from './stream'
 import {
   validateChatMessagesWithImage,
   logPayload,
   stripImageContent,
 } from './template-chat-payload'
+import { streamGenerator } from '/common/requests/stream'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`

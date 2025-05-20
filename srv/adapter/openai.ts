@@ -5,11 +5,11 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
-import { streamGenerator } from './stream'
 import { getTokenCounter } from '../tokenize'
-import { insertImageContent } from './template-chat-payload'
-import { toImageJinjaTemplate } from './payloads'
+import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
+import { streamGenerator } from '/common/requests/stream'
+import { toImageJinjaTemplate } from '/common/requests/payloads'
 
 const baseUrl = `https://api.openai.com`
 
@@ -35,7 +35,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+  const oaiModel =
+    opts.gen.service === 'openai'
+      ? gen.oaiModel || defaultPresets.openai.oaiModel
+      : gen.thirdPartyModel || ''
+
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const body: any = {
@@ -45,6 +49,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     max_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
+    min_p: gen.minP,
+    top_k: gen.topK,
+    top_a: gen.topA,
+    ignore_eos: !gen.banEosToken,
+    skip_special_tokens: gen.skipSpecialTokens,
+    repetition_penalty: gen.repetitionPenalty,
   }
 
   if (gen.reasoning?.enabled) {
@@ -76,7 +86,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     body.messages = messages
 
-    yield { prompt: messages }
+    yield { prompt: stripImageContent(messages) }
 
     // If we have image data, add it to the last user message
     insertImageContent(opts, body.messages)
@@ -105,7 +115,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     headers['X-RapidAPI-Key'] = apiKey
   }
 
-  log.debug(body, 'OpenAI payload')
+  if (body.messages) {
+    log.debug(
+      { ...body, messages: stripImageContent(body.messages), prompt: undefined },
+      'OpenAI payload'
+    )
+  } else {
+    log.debug(body, 'OpenAI payload')
+  }
 
   const url = gen.thirdPartyUrlNoSuffix
     ? base.url
@@ -132,6 +149,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         log: opts.log,
         signal: opts.signal,
       })
+
   let accumulated = ''
   let response: Completion<Inference> | undefined
 
@@ -154,10 +172,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       accumulated += generated.value.token
       yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
+
+    if ('meta' in generated.value) {
+      yield { meta: generated.value.meta }
+    }
+
+    if ('tokens' in generated.value && typeof generated.value.tokens === 'string') {
+      accumulated = generated.value.tokens
+    }
   }
 
   try {
-    let text = getCompletionContent(response, log)
+    let text = accumulated ? accumulated : getCompletionContent(response, log)
     if (text instanceof Error) {
       yield { error: `[Chat] Request returned an error: ${text.message}` }
       return

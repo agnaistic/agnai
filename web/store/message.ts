@@ -986,7 +986,8 @@ subscribe(
   'message-partial',
   { partial: 'string', chatId: 'string', kind: 'string?', json: 'any?' },
   (body) => {
-    const { activeChatId } = msgStore.getState()
+    const { activeChatId, waiting } = msgStore.getState()
+    if (!waiting) return
     if (body.chatId !== activeChatId) return
 
     if (body.kind !== 'chat-query') {

@@ -4,8 +4,8 @@ import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
-import { streamGenerator } from './stream'
 import { requestFullCompletion } from './chat-completion'
+import { streamGenerator } from '/common/requests/stream'
 import { getCompletionContent } from './openai'
 
 const mancerOptions: Record<string, string> = {}

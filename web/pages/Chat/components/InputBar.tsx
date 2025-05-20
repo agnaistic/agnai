@@ -247,8 +247,9 @@ const InputBar: Component<{
       return
     }
 
-    if (ctx.preset?.service === 'agnaistic') {
-      const resized = await resizeImage(buffer, { type: 'fit', max: 1024 })
+    const win: any = window
+    if (shouldShrinkImage(ctx.preset) || win.shrink) {
+      const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
       msgStore.setAttachment(props.chat._id, resized.content)
     } else {
       msgStore.setAttachment(props.chat._id, buffer.content)
@@ -472,6 +473,14 @@ const InputBar: Component<{
 
 export default InputBar
 
+function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined) {
+  if (!preset) return false
+  if (preset.service === 'agnaistic') return true
+  if (preset.service !== 'kobold') return false
+  if (preset.thirdPartyFormat === 'tabby') return true
+  return false
+}
+
 function canAttachImage(
   preset: AppSchema.UserGenPreset | undefined,
   subModel: AppSchema.SubscriptionModelOption | undefined
@@ -492,6 +501,7 @@ function canAttachImage(
     vllm: true,
     aphrodite: true,
     tabby: true,
+    featherless: true,
   }
 
   return !!preset.thirdPartyFormat && !!supportedFormats[preset.thirdPartyFormat]

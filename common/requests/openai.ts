@@ -1,12 +1,12 @@
 import needle from 'needle'
-import { ThirdPartyFormat } from '../adapters'
-import { requestStream } from './stream'
+import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
-import { notify, sanitiseAndTrim } from './util'
+import { sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { tryParse, tryParseConcat } from '../util'
+import { tryParse } from '../util'
 import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
+import { logger } from '../logger'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -23,17 +23,6 @@ type Completion<T = Inference> = {
   choices: CompletionContent<T>
   error?: { message: string }
 }
-
-type LocalGenerator = (
-  signal: AbortController,
-  url: string,
-  headers: Record<string, string | string[] | number>,
-  body: any,
-  format?: ThirdPartyFormat | 'openrouter'
-) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string } | Completion,
-  Completion | undefined
->
 
 export async function* handleOAI(opts: PayloadOpts, signal: AbortController, payload: any) {
   const gen = opts.settings!
@@ -94,13 +83,29 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     return
   }
 
-  const iter = streamCompletion(signal, fullUrl, headers, payload, gen.thirdPartyFormat!)
+  const stream = streamGenerator({
+    userId: opts.user._id,
+    body: payload,
+    headers,
+    log: logger,
+    service: 'kobold',
+    signal,
+    url: fullUrl,
+    format: gen.thirdPartyFormat,
+  })
 
   let accumulated = ''
   let response: Completion<Inference> | undefined
 
+  /**
+   * @todo @fixme
+   * - add 'tokens' check
+   * - add 'gens' check
+   * - how to handle metadata? (generated.value.meta)
+   * - replace `if (generated.done)` logic
+   */
   while (true) {
-    let generated = await iter.next()
+    let generated = await stream.next()
 
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     if (generated.done) {
@@ -147,112 +152,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   }
 }
 
-/**
- * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
- * once the stream is finished.
- */
-export const streamCompletion: LocalGenerator = async function* (
-  signal,
-  url,
-  headers,
-  body,
-  format
-) {
-  const resp = needle.post(url, JSON.stringify(body), {
-    parse: false,
-    signal: signal.signal,
-    headers: {
-      ...headers,
-      Accept: 'text/event-stream',
-    },
-  })
-
-  const tokens = []
-  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
-
-  try {
-    const events = requestStream(resp, signal, format)
-    let prev = ''
-    for await (const event of events) {
-      if (event.error) {
-        yield { error: event.error }
-        return
-      }
-
-      if (!event.data) {
-        continue
-      }
-
-      if (event.type === 'ping') {
-        continue
-      }
-
-      if (event.data === '[DONE]') {
-        break
-      }
-
-      prev += event.data
-
-      // If we fail to parse we might need to parse with this bad data and the next event's data...
-      // So we'll keep it and try again next iteration
-      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
-      const parsed = tryParseConcat<Completion<AsyncDelta>>(event.data, prev)
-      if (!parsed) continue
-
-      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don'ttoastStoredangling data
-      prev = ''
-
-      const { choices, ...evt } = parsed
-      if (!choices || !choices[0]) {
-        notify().warn(`[local] Received invalid SSE during stream`)
-
-        const message = evt.error?.message
-          ? `local interrupted the response: ${evt.error.message}`
-          : `local interrupted the response`
-
-        if (!tokens.length) {
-          yield { error: message }
-          return
-        }
-
-        break
-      }
-
-      const { finish_reason, index, ...choice } = choices[0]
-
-      meta = { ...evt, finish_reason, index }
-
-      if ('text' in choice) {
-        const token = choice.text
-        tokens.push(token)
-        yield { token }
-      } else if ('delta' in choice && choice.delta.content) {
-        const token = choice.delta.content
-        tokens.push(token)
-        yield { token }
-      }
-    }
-  } catch (err: any) {
-    notify().error(`local streaming request failed`)
-    yield { error: `local streaming request failed: ${err.message}` }
-    return
-  }
-
-  return {
-    id: meta.id,
-    created: meta.created,
-    model: meta.model,
-    object: meta.object,
-    choices: [
-      {
-        finish_reason: meta.finish_reason,
-        index: meta.index,
-        text: tokens.join(''),
-      },
-    ],
-  }
-}
-
 export async function requestFullCompletion(
   url: string,
   headers: any,
@@ -295,9 +194,11 @@ function getCompletionContent(completion: Completion<Inference> | undefined) {
     return new Error(completion.error.message)
   }
 
-  if ('text' in completion.choices[0]) {
-    return completion.choices[0].text
+  const choice = completion?.choices?.[0] || {}
+
+  if ('text' in choice) {
+    return choice.text
   } else {
-    return completion.choices[0].message.content
+    return choice.message?.content
   }
 }

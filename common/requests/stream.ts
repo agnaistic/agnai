@@ -1,5 +1,6 @@
 import { ThirdPartyFormat } from '../adapters'
-import { eventGenerator } from '../util'
+import { logger } from '../logger'
+import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
   id?: string
@@ -9,148 +10,234 @@ export type ServerSentEvent = {
   index?: number
 }
 
-/**
- * Converts a Needle readable stream to an async generator which yields server-sent events.
- * Operates on Needle events, not NodeJS ReadableStream events.
- * https://github.com/tomas/needle#events
- **/
-export function requestStream(
-  stream: NodeJS.ReadableStream,
-  signal: AbortController,
-  format?: ThirdPartyFormat | 'openrouter'
-) {
-  const emitter = eventGenerator<ServerSentEvent>()
+const DEBUG = typeof window !== 'undefined' ? false : true
 
-  let error: string | null = null
+export const streamGenerator: CompletionGenerator = async function* ({
+  signal,
+  url,
+  headers,
+  body,
+  format,
+}) {
+  const tokens = []
+  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+  // let current: any = {}
 
-  stream.on('header', (statusCode, headers) => {
-    const contentType = headers['content-type'] || ''
-    if (statusCode > 201) {
-      error = `SSE request failed with status code ${statusCode}`
-    } else if (format === 'openrouter') {
-      if (
-        contentType.startsWith('application/json') ||
-        contentType.startsWith('text/event-stream')
-      ) {
-        return
-      }
-      error = `SSE request received unexpected content-type ${headers['content-type']}`
-    } else if (format === 'ollama') {
-      if (contentType.startsWith('application/x-ndjson')) return
-
-      error = `SSE request received unexpected content-type ${headers['content-type']}`
-    } else if (!contentType.startsWith('text/event-stream')) {
-      error = `SSE request received unexpected content-type ${headers['content-type']}`
+  headers['Content-Type'] = 'application/json'
+  switch (format) {
+    case 'featherless': {
+      headers.Accept = 'application/json'
+      break
     }
-  })
 
-  stream.on('done', () => {
-    emitter.done()
-  })
+    case 'tabby':
+      break
 
-  signal.signal.onabort = () => {
-    emitter.done()
-    console.log('[local] message cancelled')
+    default: {
+      headers.Accept = 'text/event-stream'
+      break
+    }
   }
 
-  let incomplete = ''
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers as any,
+    body: JSON.stringify(body),
+    signal: signal.signal,
+  })
 
-  stream.on('data', (chunk: Buffer) => {
-    const data = incomplete + chunk.toString()
-    incomplete = ''
+  const stream = fetchStream(response, { format })
+  let sentTokens = false
 
-    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+  for await (const data of stream) {
+    if (!data) continue
 
-    for (const msg of messages) {
-      if (error) {
-        const event = tryParse(msg)
+    if (data.token) {
+      const token = data.token as string
+      tokens.push(data.token)
+      yield { token }
+    }
 
-        if (!event) {
-          emitter.push({ error })
-        } else if (typeof event === 'string') {
-          emitter.push({ error: `Local request failed: ${event}` })
-        } else if (event.error) {
-          if (typeof event.error === 'string') {
-            emitter.push({ error: `Local request failed: ${event.error}` })
-          } else if (event.error?.message) {
-            emitter.push({ error: `Local request failed: ${event.error.message}` })
-          }
-        } else {
-          emitter.push({ error })
+    if (data.meta) {
+      Object.assign(meta, data.meta)
+    }
+
+    if (data.errorObj) {
+      logger.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
+    }
+
+    if (data.error) {
+      yield { error: data.error }
+    }
+
+    if (data.tokens) {
+      sentTokens = true
+      yield data
+    }
+  }
+
+  if (!sentTokens) {
+    yield { tokens: tokens.join('') }
+  }
+  yield { meta }
+
+  return {
+    id: meta.id,
+    created: meta.created,
+    model: meta.model,
+    object: meta.object,
+    choices: [
+      {
+        finish_reason: meta.finish_reason,
+        index: meta.index ?? 0,
+        text: tokens.join(''),
+      },
+    ],
+  }
+}
+
+export async function* fetchStream(
+  response: Response,
+  opts?: {
+    format?: ThirdPartyFormat | 'openrouter' | 'raw'
+    marker?: RegExp
+    prechunk?: (chunk: string) => string
+  }
+) {
+  const isErrorCode = response.status > 201
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder('utf-8')
+  const sseMarker = opts?.marker || /^data: (.*)(?:\n\n|\r\r|\r\n\r\n)/
+  const format = opts?.format
+
+  let buffer = ''
+  const gens: string[] = []
+  let accum = ''
+
+  if (!reader) {
+    yield { error: 'Response body is empty' }
+    return
+  }
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        if (buffer.trim().length > 0) {
+          yield { warn: 'End of request contained incomplete data' }
+          logger.debug({ buffer }, 'incomplete buffer')
+          return
         }
-        emitter.done()
+
+        if (format === 'raw') {
+          return
+        }
+
+        const swipes = gens.filter((g) => !!(g || '').trim())
+        if (swipes.length) {
+          yield { tokens: accum, gens: swipes }
+        }
+
+        yield { tokens: accum }
         return
       }
 
-      if (format === 'vllm') {
-        const event = parseVLLM(incomplete + msg)
-        if (!event) continue
+      let chunk = decoder.decode(value)
+      if (DEBUG) {
+        logger.debug({ chunk, buffer }, `[fetch] chunk - ${response.url}`)
+      }
+      if (chunk.includes(': OPENROUTER PROCESSING\n')) {
+        chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
+      }
 
-        const choice = event.choices?.[0]
-        if (!choice) {
-          continue
+      if (chunk.includes(': FEATHERLESS PROCESSING\n')) {
+        chunk = chunk.replace(/: FEATHERLESS PROCESSING/g, '').trimStart()
+      }
+
+      if (opts?.prechunk) {
+        chunk = opts.prechunk(chunk)
+      }
+
+      try {
+        const error = tryParse(chunk)
+        const isError = isErrorCode || !!error?.error
+        if (isError && error) {
+          logger.error(
+            { err: error, chunk: error ? undefined : chunk, url: response.url },
+            `[fetch] request failed with error ${response.status}`
+          )
+          yield {
+            error: `inferencer returned an error ${response.status}`,
+            errorObj: error ? error : chunk,
+          }
+          return
+        }
+      } catch (ex) {}
+
+      buffer += chunk
+      let match = buffer.match(sseMarker)
+
+      while (match) {
+        const data = match[1]
+        const json = tryParse(data)
+        if (json) {
+          if (format === 'raw') {
+            yield json
+          } else {
+            const token: string =
+              getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response || ''
+            const index = +(getChoiceProp<string>(json, 'index') || '0')
+
+            if (token !== undefined) {
+              if (index > 0) {
+                if (!gens[index]) gens[index] = ''
+                gens[index] += token
+              } else {
+                accum += token
+                yield { token, index }
+              }
+            } else {
+              logger.info({ json }, `[${format || 'fetch'}] cannot get token`)
+            }
+
+            const meta: any = {}
+
+            getChoiceProp(json, 'id')
+            getChoiceProp(json, 'created', meta)
+            getChoiceProp(json, 'model', meta)
+            getChoiceProp(json, 'object')
+            getChoiceProp(json, 'finish_reason', meta)
+
+            yield { meta }
+          }
+        } else {
+          logger.info({ chunk }, `[${format || 'fetch'}] cannot parse chunk`)
         }
 
-        const token = choice.delta?.content || choice.text
-        if (!token) continue
-
-        const data = JSON.stringify({ token })
-        emitter.push({ data })
-        continue
-      }
-
-      if (format === 'ollama') {
-        const event = parseOllama(incomplete + msg)
-
-        if (event.error) {
-          const data = JSON.stringify({ error: event.error })
-          emitter.push({ data })
-          continue
+        try {
+          buffer = buffer.slice(match[0].length)
+          match = buffer.match(sseMarker)
+        } catch (e) {
+          yield { error: `Exception occurred while parsing response stream`, errorObj: e }
+          return
         }
-
-        const token = event?.response
-        if (!token) continue
-
-        const data = JSON.stringify({ token })
-        emitter.push({ data })
-        continue
       }
-
-      if (format === 'aphrodite') {
-        const event = parseAphrodite(incomplete + msg)
-        if (!event?.data) {
-          incomplete += msg
-          continue
-        }
-
-        const token = getAphroditeToken(event.data)
-        if (!token) continue
-
-        const data = JSON.stringify({ index: token.index, token: token.token })
-        emitter.push({ data })
-        continue
-      }
-
-      const event: any = parseEvent(msg)
-
-      if (!event.data) {
-        continue
-      }
-
-      const data: string = event.data
-      if (typeof data === 'string' && incompleteJson(data)) {
-        incomplete = msg
-        continue
-      }
-
-      if (event.event) {
-        event.type = event.event
-      }
-      emitter.push(event)
     }
-  })
+  } finally {
+    reader.releaseLock()
+  }
+}
 
-  return emitter.stream
+function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
+  const choice = json?.choices?.[0]
+  const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+
+  if (assign && value) {
+    assign[prop] = value
+  }
+
+  return value as T
 }
 
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
@@ -165,55 +252,6 @@ export function incompleteJson(data: string) {
     return true
   }
   return false
-}
-
-function getAphroditeToken(data: any) {
-  const choice = data.choices?.[0]
-  if (!choice) return
-
-  const token = choice.text
-
-  return { token, index: choice.index }
-}
-
-function parseVLLM(msg: string) {
-  if (msg.startsWith('data')) {
-    msg = msg.slice(6)
-  }
-  try {
-    const json = JSON.parse(msg.trim())
-    return json
-  } catch (ex) {}
-}
-
-function parseAphrodite(msg: string) {
-  const event: any = {}
-  for (const line of msg.split(/\r?\n/)) {
-    const pos = line.indexOf(':')
-    if (pos === -1) {
-      continue
-    }
-
-    const toParse = line.substring(line.indexOf('{'))
-
-    if (incompleteJson(toParse)) {
-      event['data'] = toParse
-      return event
-    }
-
-    event['data'] = JSON.parse(toParse)
-  }
-
-  return event
-}
-
-function parseOllama(msg: string) {
-  const event: any = {}
-  const data = tryParse(msg)
-  if (!data) return event
-
-  Object.assign(event, data)
-  return event
 }
 
 function tryParse(value: any) {

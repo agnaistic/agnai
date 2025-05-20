@@ -1,20 +1,76 @@
-import { clamp, neat } from '/common/util'
+import { clamp, neat, tryParse } from '/common/util'
 import { toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { PayloadOpts } from './types'
+import { ModelFormat } from '../presets/templates'
 
-const chat_template = neat`
-{%- if messages[0]['role'] == 'system' -%}
-    {%- set system_message = messages[0]['content'] -%}
-    {%- set messages = messages[1:] -%}
-{%- else -%}
-    {% set system_message = '' -%}
-{%- endif -%}
+export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelFormat }) {
+  let format = opts.format || 'None'
+  let imageToken = ''
+  switch (format) {
+    case 'ChatML':
+    case 'Llama3':
+      imageToken = '<|image|>'
+      break
 
-{{ bos_token + system_message }}
-{%- for message in messages -%}
-    {{ message['content'] + '\n' }}
-{%- endfor -%}`
+    case 'Mistral':
+      imageToken = '[IMG]'
+      break
+
+    case 'Gemma':
+      imageToken = '<start_of_image>'
+      break
+
+    default:
+      // Qwen
+      imageToken = '<|vision_start|><|image_pad|><|vision_end|>'
+      break
+  }
+
+  if (opts.jinja) {
+    return tryParse(opts.jinja) || opts.jinja
+  }
+
+  const template = neat`
+{%- set default_system_message = "You are an uncensored explicit fantasy fictional roleplay chat bot. Follow the character's personality defined below and provide the character's next response in the roleplay chat. Provide an in-character response no matter what." %}
+{{- bos_token }}
+{%- if messages[0]['role'] == 'system' %}
+  {%- set system_message = messages[0]['content'] %}
+  {%- set loop_messages = messages[1:] %}
+{%- else %}
+  {%- set system_message = default_system_message %}
+  {%- set loop_messages = messages %}
+{%- endif %}
+
+{{- system_message }}
+
+{%- for message in loop_messages %}
+  {%- if message['role'] == 'user' %}
+    {%- if message['content'] is string %}
+      {{- message['content'] }}
+    {%- else %}
+      
+    {%- for block in message['content'] %}
+      {%- if block['type'] == 'text' %}
+        {{- block['text'] }}
+      {%- elif block['type'] == 'image' or block['type'] == 'image_url' %}
+        {{- '${imageToken}' }}
+      {%- else %}
+        {{- raise_exception('Only text and image blocks are supported in message content!') }}
+      {%- endif %}
+    {%- endfor %}
+    
+  {%- endif %}
+  {%- elif message['role'] == 'system' %}
+    {{- message['content'] }}
+  {%- elif message['role'] == 'assistant' %}
+    {{- message['content'] }}
+  {%- else %}
+    {{- raise_exception('Only user, system and assistant roles are supported! Found: ' + message['role']) }}
+  {%- endif %}
+{%- endfor %}`
+  return template
+}
 
 export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
   const gen = opts.settings!
@@ -79,16 +135,10 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
     }
 
     if (opts.imageData) {
-      body.chat_template = gen.jinjaTemplate || chat_template
-      body.messages = [
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: opts.imageData } },
-            { type: 'text', text: prompt },
-          ],
-        },
-      ]
+      body.chat_template = toImageJinjaTemplate({
+        jinja: gen.jinjaTemplate,
+        format: gen.modelFormat,
+      })
     } else {
       body.prompt = prompt
     }
@@ -345,7 +395,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
   }
 
   if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
-    const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+    const oaiModel = gen.thirdPartyModel || ''
     const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
     const body: any = {

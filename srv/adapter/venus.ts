@@ -3,7 +3,7 @@ import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
 import { getStoppingStrings } from './prompt'
-import { streamGenerator } from './stream'
+import { streamGenerator } from '/common/requests/stream'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',

@@ -103,7 +103,7 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
         min={16}
         max={props.state.service === 'claude' ? 200000 : 32000}
         step={1}
-        value={props.state.maxContextLength || 4096}
+        value={props.state.maxContextLength || 8192}
         disabled={props.state.disabled}
         onChange={(ev) => props.setter('maxContextLength', ev)}
       />
@@ -340,6 +340,7 @@ export const FeatherlessModels: Field = (props) => {
   const options = createMemo(() => {
     return state.models
       .filter((s) => {
+        if (s.status === 'not_deployed') return false
         const mclass = modelclass()
         if (!mclass) return true
         return s.model_class === mclass
@@ -358,6 +359,7 @@ export const FeatherlessModels: Field = (props) => {
         ),
         value: s.id,
       }))
+      .sort((l, r) => l.value.localeCompare(r.value))
   })
 
   onMount(() => {

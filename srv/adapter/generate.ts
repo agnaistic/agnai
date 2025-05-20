@@ -321,7 +321,7 @@ export async function createChatStream(
   if (subContextLimit) {
     opts.settings.maxContextLength = Math.min(
       subContextLimit,
-      opts.settings.maxContextLength ?? 4096
+      opts.settings.maxContextLength ?? 8192
     )
   }
 

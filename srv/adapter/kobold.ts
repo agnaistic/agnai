@@ -2,16 +2,14 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
-import { AdapterProps, CompletionGenerator, CompletionTick, ModelAdapter } from './type'
-import { requestStream } from './stream'
-import { llamaStream } from './dispatch'
+import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
 import { getStoppingStrings } from './prompt'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
-import * as oai from './stream'
 import { toSamplerOrder } from '/common/sampler-order'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
-import { stripImageContent } from './template-chat-payload'
+import { insertImageContent, stripImageContent } from './template-chat-payload'
+import { streamGenerator } from '/common/requests/stream'
 
 /**
  * Sampler order
@@ -54,8 +52,9 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
-  const stop_sequence = getStoppingStrings(opts).concat('END_OF_DIALOG')
+  const stop_sequence = getStoppingStrings(opts)
   if (opts.gen.thirdPartyFormat === 'kobold' || opts.gen.thirdPartyFormat === 'koboldcpp') {
+    stop_sequence.push('END_OF_DIALOG')
     body.stop_sequence = stop_sequence
 
     // Kobold sampler order parameter must contain all 6 samplers to be valid
@@ -76,15 +75,15 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
   }
 
-  yield { prompt: body.prompt || stripImageContent(body.messages) }
-
   logger.debug(`Prompt:\n${body.prompt}`)
   logger.debug(
     { ...body, prompt: null, images: null, messages: null },
     `3rd-party payload ${opts.gen.thirdPartyFormat}`
   )
 
+  insertImageContent(opts, opts.messages || [])
   const stream = await dispatch(opts, body)
+  yield { prompt: body.messages ? stripImageContent(body.messages) : body.prompt }
 
   let accum = ''
 
@@ -129,6 +128,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
 async function dispatch(opts: AdapterProps, body: any) {
   const baseURL = normalizeUrl(opts.gen.thirdPartyUrl || opts.user.koboldUrl)
+  const useChat = !!opts.imageData
 
   const headers: any = await getHeaders(opts)
   const base = {
@@ -144,64 +144,75 @@ async function dispatch(opts: AdapterProps, body: any) {
 
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
-      return llamaStream(baseURL, body)
-
     case 'vllm': {
+      body.messages = opts.imageData ? opts.messages : undefined
       const url = opts.gen.thirdPartyUrlNoSuffix
         ? baseURL
         : body.messages
         ? `${baseURL}/v1/chat/completions`
         : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'ooba':
     case 'aphrodite':
     case 'tabby': {
-      const url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/completions`
+      body.messages = opts.imageData ? opts.messages : undefined
+      let url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/`
+      if (useChat) {
+        url += 'chat/completions'
+      } else {
+        url += 'completions'
+      }
+
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'exllamav2': {
+      body.messages = opts.imageData ? opts.messages : undefined
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url: baseURL, service: opts.gen.thirdPartyFormat })
     }
 
     case 'mistral': {
+      body.messages = opts.imageData ? opts.messages : undefined
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
-        ? oai.streamGenerator({ ...base, url, format: 'mistral' })
+        ? streamGenerator({ ...base, url, format: 'mistral' })
         : fullCompletion({ ...base, url, service: 'mistral' })
       return stream
     }
 
     case 'ollama': {
+      body.messages = opts.imageData ? opts.messages : undefined
       const url = `${baseURL}/api/generate`
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'featherless': {
-      const url = 'https://api.featherless.ai/v1/completions'
+      body.messages = opts.imageData ? opts.messages : undefined
+      let suffix = useChat ? 'chat/completions' : 'completions'
+      const url = `https://api.featherless.ai/v1/${suffix}`
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
     case 'arli': {
       const url = 'https://api.arliai.com/v1/completions'
       return opts.gen.streamResponse
-        ? streamCompletion({ ...base, url, format: opts.gen.thirdPartyFormat })
+        ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
-    default:
+    default: {
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       const url =
         opts.gen.streamResponse && isStreamSupported
@@ -209,12 +220,13 @@ async function dispatch(opts: AdapterProps, body: any) {
           : `${baseURL}/api/v1/generate`
 
       return opts.gen.streamResponse && isStreamSupported
-        ? streamCompletion({ ...base, url, format: 'koboldcpp' })
+        ? streamGenerator({ ...base, url, format: 'koboldcpp' })
         : fullCompletion({
             ...base,
             url: `${baseURL}/api/v1/generate`,
             service: opts.gen.thirdPartyFormat || opts.gen.service!,
           })
+    }
   }
 }
 
@@ -375,95 +387,6 @@ const fullCompletion: CompletionGenerator<any> = async function* ({
     yield { error: `${service} failed to generate a response: ${resp.body}` }
     return
   }
-}
-
-const streamCompletion: CompletionGenerator<CompletionTick> = async function* ({
-  url,
-  body,
-  headers,
-  format,
-  log,
-  signal,
-}) {
-  const resp = needle.post(url, body, {
-    parse: false,
-    signal: signal.signal,
-    json: true,
-    headers: {
-      Accept: format === 'featherless' ? 'application/json' : `text/event-stream`,
-      ...headers,
-    },
-  })
-
-  const tokens = []
-
-  const responses: Record<number, string> = {}
-
-  try {
-    const events = requestStream(resp, format)
-
-    for await (const event of events) {
-      if (event?.error) {
-        yield { error: event.error }
-        return
-      }
-
-      if (!event.data) continue
-      const data = JSON.parse(event.data) as {
-        index?: number
-        token: string
-        final: boolean
-        ptr: number
-        error?: string
-        choices?: Array<{ index: number; finish_reason: string; logprobs: any; text: string }>
-      }
-
-      if (data.error) {
-        yield { error: `${format} streaming request failed: ${data.error}` }
-        log.error({ error: data.error }, `${format} streaming request failed`)
-        return
-      }
-
-      const res = data.choices ? data.choices[0] : data
-      const token = 'text' in res ? res.text : res.token
-
-      /** Handle batch generations */
-      if (res.index !== undefined) {
-        const index = res.index
-        if (!responses[index]) {
-          responses[index] = ''
-        }
-
-        responses[index] += token
-
-        if (index === 0) {
-          tokens.push(token)
-          yield { token: token }
-        }
-
-        continue
-      }
-
-      tokens.push(token)
-      yield { token }
-    }
-  } catch (err: any) {
-    yield { error: `${format} streaming request failed: ${err.message || err}` }
-    return
-  }
-
-  const gens: string[] = []
-  for (const [id, text] of Object.entries(responses)) {
-    if (+id === 0) continue
-    gens.push(text)
-  }
-
-  if (gens.length) {
-    yield { tokens: tokens.join(''), gens }
-  } else {
-    yield { tokens: tokens.join('') }
-  }
-  return
 }
 
 async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {

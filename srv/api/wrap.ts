@@ -12,7 +12,7 @@ export function handle(handler: Handler): express.RequestHandler {
 
     try {
       const result = await handler(req as any, res, wrappedNext)
-      if (!res.headersSent && !nextCalled && !!result) {
+      if (!res.headersSent && !nextCalled && !!result && res.writable) {
         res.json(result)
       }
     } catch (ex) {
