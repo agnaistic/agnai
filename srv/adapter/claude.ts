@@ -337,7 +337,7 @@ const streamCompletion: CompletionGenerator = async function* ({
       if (event.error !== undefined) {
         log.warn({ error: event.error }, '[Claude] Received SSE error event')
         const message = event.error
-          ? `Anthropic interrupted the response: ${event.error}`
+          ? `Anthropic interrupted the response: ${event.error?.message || event.error}`
           : `Anthropic interrupted the response.`
         if (!tokens.length) {
           yield { error: message }

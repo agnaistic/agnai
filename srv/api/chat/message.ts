@@ -207,6 +207,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = body.response || ''
   let retries: string[] = []
+  let aborted = false
   let error = false
   let adapter = 'local'
   let meta: Record<string, any> = {}
@@ -366,6 +367,8 @@ export const generateMessageV2 = handle(async (req, res) => {
       generated = partial
 
       if (ex?.name === 'AbortError') {
+        aborted = true
+        signal = null
         error = false
         // Intentional NOOP - This is a user cancellation or request interruption
       } else if (ex instanceof StatusError) {
@@ -392,7 +395,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     req.socket.removeAllListeners('end')
 
-    if (body.eventStream && res.writable && !signal?.signal.aborted) {
+    if (body.eventStream && res.writable && signal && !signal?.signal.aborted) {
       res.write('data: [DONE]')
       res.end()
     }
@@ -427,7 +430,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleAuthedResponse(payload)
   }
 
-  if (res.writable) {
+  if (!aborted && res.writable) {
     if (body.eventStream) {
       res.write('data: [DONE]')
       res.end()
