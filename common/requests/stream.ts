@@ -107,7 +107,7 @@ export async function* fetchStream(
   const isErrorCode = response.status > 201
   const reader = response.body?.getReader()
   const decoder = new TextDecoder('utf-8')
-  const sseMarker = opts?.marker || /^data: (.*)(?:\n\n|\r\r|\r\n\r\n)/
+  const sseMarker = opts?.marker || /data: (.*)(?:\n\n|\r\r|\r\n\r\n)/
   const format = opts?.format
 
   let buffer = ''
