@@ -744,7 +744,7 @@ export async function fillPromptWithLines(opts: {
       break
     }
     const insert = inserts.get(linesAddedCount)
-    if (insert) adding.push(formatInsert(insert))
+    if (insert) adding.unshift(formatInsert(insert))
 
     count += tokens
     adding.unshift(line)
