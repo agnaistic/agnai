@@ -117,7 +117,6 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   return (
     <Page>
       <PageHeader
-        title="Settings"
         subtitle={
           <Show when={!!version}>
             <em>v.{version}</em>

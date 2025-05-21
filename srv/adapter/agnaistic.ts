@@ -407,6 +407,7 @@ export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   openai: handleOAI,
   scale: handleScale,
   claude: handleClaude,
+  'claude-v2': handleClaude,
   goose: handleGooseAI,
   replicate: handleReplicate,
   openrouter: handleOpenRouter,
@@ -421,6 +422,7 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>): ModelAdap
   switch (settings.service!) {
     case 'agnaistic':
     case 'claude':
+    case 'claude-v2':
     case 'goose':
     case 'replicate':
     case 'horde':

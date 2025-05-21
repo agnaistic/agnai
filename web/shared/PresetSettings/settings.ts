@@ -179,7 +179,7 @@ export const ADAPTER_SETTINGS: {
     'openai-chatv2',
   ],
 
-  claudeModel: ['claude'],
+  claudeModel: ['claude', 'claude-v2'],
   novelModel: ['novel'],
   mistralModel: ['mistral'],
   oaiModel: ['openai', 'openai-chat'],

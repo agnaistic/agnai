@@ -230,7 +230,6 @@ const streamCompletion = async function* (
       marker: /^event: \w+\nid: [0-9]+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
     })
 
-    // const events = requestStream(resp)
     for await (const event of stream) {
       opts.log.info({ event }, 'novelai event')
       if (event.error) {
@@ -248,6 +247,10 @@ const streamCompletion = async function* (
       if (event.error) {
         yield { error: `NovelAI streaming request failed: ${event.error}` }
         return
+      }
+
+      if (event.meta) {
+        yield { meta: event.meta }
       }
     }
   } catch (err: any) {

@@ -487,6 +487,7 @@ function canAttachImage(
 ) {
   if (!preset) return false
   if (preset.service === 'openrouter') return true
+  if (preset.service === 'claude-v2') return true
   if (preset.service === 'agnaistic') {
     if (!subModel) return false
     return !!subModel.preset.subVisionModel

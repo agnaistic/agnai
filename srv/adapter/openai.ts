@@ -113,6 +113,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (apiKey) {
     headers.Authorization = bearer
     headers['X-RapidAPI-Key'] = apiKey
+    headers['x-api-key'] = apiKey
   }
 
   if (body.messages) {

@@ -61,6 +61,8 @@ const AISettings: Component<{
     const tabs = cfg.config.adapters
       .filter((adp) => {
         if (adp === 'ooba') return false
+        if (adp === 'openrouter-completion') return false
+        if (adp === 'claude-v2') return false
         const reg = cfg.config.registered.find((r) => r.name === adp)
         if (!reg) return true
         for (const opt of reg.settings) {
@@ -71,6 +73,7 @@ const AISettings: Component<{
       .map((a) => ADAPTER_LABELS[a] || a)
 
     setTabs(tabs)
+    console.log(tabs, cfg.config.adapters)
 
     if (!ready() && cfg.config.adapters?.length) {
       const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)

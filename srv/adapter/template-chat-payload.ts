@@ -51,7 +51,8 @@ export function renderMessagesToPrompt(
  */
 export function insertImageContent(
   opts: { imageData?: string },
-  messages: Array<{ role: string; content: any }>
+  messages: Array<{ role: string; content: any }>,
+  block?: {}
 ) {
   if (!opts.imageData || !messages) return messages
 
@@ -60,7 +61,7 @@ export function insertImageContent(
     if (msg.role !== 'user') continue
     msg.content = [
       { type: 'text', text: msg.content },
-      { type: 'image_url', image_url: { url: opts.imageData } },
+      block || { type: 'image_url', image_url: { url: opts.imageData } },
     ]
     break
   }

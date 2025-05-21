@@ -119,7 +119,7 @@ const PresetSettings: Component<
             { label: 'OpenAI (Completion)', value: 'openai' },
             { label: 'OpenAI (Chat)', value: 'openai-chatv2' },
             { label: 'OpenAI (Chat - Legacy)', value: 'openai-chat' },
-            { label: 'Claude', value: 'claude' },
+            { label: 'Claude (Legacy)', value: 'claude' },
             { label: 'Textgen (Ooba)', value: 'ooba' },
             { label: 'Llama.cpp', value: 'llamacpp' },
             { label: 'Ollama', value: 'ollama' },

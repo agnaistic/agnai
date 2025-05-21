@@ -903,6 +903,7 @@ export function getContextLimit(
       return configuredMax - genAmount
 
     case 'claude':
+    case 'claude-v2':
       return configuredMax - genAmount
 
     case 'goose':

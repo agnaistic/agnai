@@ -13,6 +13,7 @@ import {
   SafetySetting,
 } from '@google/genai'
 import { stripImageContent } from './template-chat-payload'
+import { getMimeTypeBase64 } from '/common/util'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -233,10 +234,3 @@ const safetySettings: SafetySetting[] = [
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
 ]
-
-function getMimeTypeBase64(base64: string) {
-  const [start, encode] = base64.split(';')
-  if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
-
-  return { mimeType: start.slice(5), data: encode.replace('base64,', '') }
-}

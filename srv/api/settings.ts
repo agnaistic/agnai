@@ -89,11 +89,13 @@ export async function getAppConfig(user?: AppSchema.User) {
     configuration.ttsHost = ''
     configuration.ttsApiKey = ''
 
-    configuration.imagesModels = filterImageModels(
-      user!,
-      configuration.imagesModels,
-      userTier?.tier
-    )
+    if (configuration.imagesModels) {
+      configuration.imagesModels = filterImageModels(
+        user!,
+        configuration.imagesModels,
+        userTier?.tier
+      )
+    }
   }
 
   if (!appConfig) {

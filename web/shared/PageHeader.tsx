@@ -4,7 +4,7 @@ import Slot from './Slot'
 import { useRef } from './hooks'
 
 type Props = {
-  title: string | JSX.Element
+  title?: string | JSX.Element
   subtitle?: string | JSX.Element
   noDivider?: boolean
   noslot?: boolean

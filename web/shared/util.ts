@@ -731,6 +731,7 @@ export function isUsableService(
       return match
     }
 
+    case 'claude-v2':
     case 'claude': {
       return !!user?.claudeApiKeySet || !!user?.claudeApiKey
     }

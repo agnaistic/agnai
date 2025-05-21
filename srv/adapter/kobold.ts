@@ -296,7 +296,7 @@ async function getHeaders(opts: AdapterProps) {
     }
 
     case 'mistral': {
-      const key = opts.user.mistralKey
+      const key = opts.gen.thirdPartyKey || opts.user.mistralKey
       if (!key)
         throw new Error(`Mistral API key not set. Check your Settings->AI->Third-party settings`)
 
@@ -305,6 +305,10 @@ async function getHeaders(opts: AdapterProps) {
       headers['Content-Type'] = 'application/json'
       break
     }
+  }
+
+  if (headers.Authorization) {
+    headers['x-api-key'] = headers.Authorization.replace('Bearer ', '')
   }
 
   return headers

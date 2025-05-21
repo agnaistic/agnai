@@ -287,7 +287,7 @@ export const ModelFormat: Field = (props) => {
         helperMarkdown={`Which formatting method to use if using "universal tags" in your prompt template
       (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={MODEL_FORMATS}
-        value={props.state.modelFormat || 'Alpaca'}
+        value={props.state.modelFormat || 'None'}
         recommend={props.sub?.preset.modelFormat}
         onChange={(ev) => props.setter('modelFormat', ev.value as any)}
       />

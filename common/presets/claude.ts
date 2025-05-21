@@ -7,19 +7,22 @@ import { AppSchema } from '../types/schema'
  */
 export const CLAUDE_MODELS = {
   ClaudeV1: 'claude-v1',
-  ClaudeV2: 'claude-2',
-  ClaudeV2_0: 'claude-2.0',
-  ClaudeV2_1: 'claude-2.1',
-  ClaudeV1_100k: 'claude-v1-100k',
   ClaudeV1_0: 'claude-v1.0',
   ClaudeV1_2: 'claude-v1.2',
   ClaudeV1_3: 'claude-v1.3',
+  ClaudeV1_100k: 'claude-v1-100k',
   ClaudeV1_3_100k: 'claude-v1.3-100k',
+
   ClaudeInstantV1: 'claude-instant-v1',
-  ClaudeInstantV1_100k: 'claude-instant-v1-100k',
   ClaudeInstantV1_0: 'claude-instant-v1.0',
   ClaudeInstantV1_1: 'claude-instant-v1.1',
+  ClaudeInstantV1_100k: 'claude-instant-v1-100k',
   ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
+
+  ClaudeV2: 'claude-2',
+  ClaudeV2_0: 'claude-2.0',
+  ClaudeV2_1: 'claude-2.1',
+
   ClaudeV3_Opus: 'claude-3-opus-20240229',
   ClaudeV3_Sonnet: 'claude-3-sonnet-20240229',
   ClaudeV3_Haiku: 'claude-3-haiku-20240307',
@@ -32,27 +35,33 @@ export const CLAUDE_MODELS = {
   ClaudeV37_Sonnet_Latest: 'claude-3-7-sonnet-latest',
 } as const
 
-export const CLAUDE_CHAT_MODELS: Record<string, boolean> = {
-  [CLAUDE_MODELS.ClaudeV3_Opus]: true,
-  [CLAUDE_MODELS.ClaudeV3_Sonnet]: true,
-  [CLAUDE_MODELS.ClaudeV3_Haiku]: true,
-  [CLAUDE_MODELS.ClaudeV35_Sonnet]: true,
-  [CLAUDE_MODELS.ClaudeV35_Sonnet_Oct2024]: true,
-  [CLAUDE_MODELS.ClaudeV35_Sonnet_Latest]: true,
-  [CLAUDE_MODELS.ClaudeV35_Haiku_Oct2024]: true,
-  [CLAUDE_MODELS.ClaudeV35_Haiku_Latest]: true,
-  [CLAUDE_MODELS.ClaudeV37_Sonnet_Feb2025]: true,
-  [CLAUDE_MODELS.ClaudeV37_Sonnet_Latest]: true,
+export const CLAUDE_TEXT_MODELS: Record<string, boolean> = {
+  [CLAUDE_MODELS.ClaudeV1]: true,
+  [CLAUDE_MODELS.ClaudeV1_0]: true,
+  [CLAUDE_MODELS.ClaudeV1_2]: true,
+  [CLAUDE_MODELS.ClaudeV1_3]: true,
+  [CLAUDE_MODELS.ClaudeV1_100k]: true,
+  [CLAUDE_MODELS.ClaudeV1_3_100k]: true,
+
+  [CLAUDE_MODELS.ClaudeInstantV1]: true,
+  [CLAUDE_MODELS.ClaudeInstantV1_0]: true,
+  [CLAUDE_MODELS.ClaudeInstantV1_1]: true,
+  [CLAUDE_MODELS.ClaudeInstantV1_100k]: true,
+  [CLAUDE_MODELS.ClaudeInstantV1_1_100k]: true,
+
+  [CLAUDE_MODELS.ClaudeV2]: true,
+  [CLAUDE_MODELS.ClaudeV2_0]: true,
+  [CLAUDE_MODELS.ClaudeV2_1]: true,
 }
 
 export const claudePresets = {
   claude: {
-    name: 'Claude V1',
+    name: 'Claude V3.7 Sonnet',
     service: 'claude',
     temp: 1,
     topP: 1,
     topK: 0,
-    claudeModel: 'claude-v1',
+    claudeModel: 'claude-3-7-sonnet-latest',
     streamResponse: true,
     maxTokens: 500,
     maxContextLength: 7600,

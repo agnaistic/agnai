@@ -44,6 +44,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
 
   if (gen.userThirdPartyKey) {
     headers.Authorization = `Bearer ${gen.userThirdPartyKey}`
+    headers['x-api-key'] = `${gen.userThirdPartyKey}`
   }
 
   const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'

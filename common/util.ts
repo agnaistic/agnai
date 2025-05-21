@@ -3,6 +3,13 @@ import { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 
+export function getMimeTypeBase64(base64: string) {
+  const [start, encode] = base64.split(';')
+  if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
+
+  return { mimeType: start.slice(5), data: encode.replace('base64,', '') }
+}
+
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }

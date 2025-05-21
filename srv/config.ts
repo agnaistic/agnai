@@ -160,6 +160,11 @@ if (config.adapters.includes('openrouter')) {
   config.adapters.splice(i + 1, 0, 'openrouter-completion')
 }
 
+if (config.adapters.includes('claude')) {
+  const i = config.adapters.findIndex((o) => o === 'claude')
+  config.adapters.splice(i + 1, 0, 'claude-v2')
+}
+
 insertInject()
 
 if (config.ui.inject) {
