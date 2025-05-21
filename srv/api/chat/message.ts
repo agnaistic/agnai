@@ -363,10 +363,13 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
     } catch (ex: any) {
       error = true
+      generated = partial
 
       if (ex?.name === 'AbortError') {
+        error = false
         // Intentional NOOP - This is a user cancellation or request interruption
       } else if (ex instanceof StatusError) {
+        error = true
         log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
         sendMsg(ents, {
           type: 'message-error',

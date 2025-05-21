@@ -90,7 +90,11 @@ export const ChatFooter: Component<{
       <Show when={!!chats.chat}>
         <Show when={!!attachment()}>
           <div class="flex h-[40x] items-center gap-2 pl-4">
-            <img src={attachment()} class="h-[40px] rounded-md" />
+            <img
+              src={attachment()}
+              class="h-[40px] cursor-pointer rounded-md"
+              onClick={() => settingStore.showImage(attachment()!)}
+            />
             <div class="icon-button">
               <CircleX size={16} onClick={() => msgStore.removeAttachment(props.ctx?.chat?._id!)} />
             </div>

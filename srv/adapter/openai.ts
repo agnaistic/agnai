@@ -49,10 +49,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     max_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
-    min_p: gen.minP,
-    top_k: gen.topK,
-    top_a: gen.topA,
-    repetition_penalty: gen.repetitionPenalty,
+  }
+
+  if (gen.service !== 'openai') {
+    body.min_p = gen.minP
+    body.top_k = gen.topK
+    body.top_a = gen.topA
+    body.repetition_penalty = gen.repetitionPenalty
   }
 
   if (gen.reasoning?.enabled) {
