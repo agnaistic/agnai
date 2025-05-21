@@ -75,6 +75,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const isChatFormat =
     gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
   const useChat = (isThirdParty && isChatFormat) || !!OPENAI_CHAT_MODELS[oaiModel]
+
   if (useChat) {
     const messages =
       gen.thirdPartyFormat === 'openai-chatv2' && opts.messages

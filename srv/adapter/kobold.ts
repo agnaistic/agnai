@@ -180,7 +180,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'mistral': {
-      body.messages = opts.imageData ? opts.messages : undefined
+      body.messages = opts.imageData ? opts.messages : body.messages
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: 'mistral' })
