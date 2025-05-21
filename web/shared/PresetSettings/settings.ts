@@ -159,6 +159,7 @@ export const ADAPTER_SETTINGS: {
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
   thirdPartyModel: [
+    'kobold',
     'openai',
     'openai-chat',
     'aphrodite',

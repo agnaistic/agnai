@@ -263,7 +263,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
               hide={props.hides.thirdPartyModel}
             />
 
-            <Show when={localModels.models.length > 0}>
+            <Show when={localModels.models.length > 1}>
               <CustomSelect
                 parentClass="flex w-full justify-end"
                 value={props.state.thirdPartyModel}
@@ -272,7 +272,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                 onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
                 search={(v, i) => v.toLowerCase().includes(i.toLowerCase())}
                 buttonLabel="Select Model"
-                hide={localModels.models.length === 0}
+                hide={localModels.models.length <= 1}
               />
 
               <Button onClick={() => presetStore.getLocalModels(props.state)}>

@@ -18,7 +18,7 @@ import { sendOne } from '../api/ws'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
-import { CLAUDE_TEXT_MODELS } from '/common/presets/claude'
+import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
@@ -53,8 +53,12 @@ const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { members, user, log, guest, gen, isThirdParty } = opts
-  const claudeModel = gen.claudeModel ?? defaultPresets.claude.claudeModel
-  const base = getBaseUrl(gen, claudeModel, isThirdParty)
+  const claudeModel =
+    gen.service === 'kobold'
+      ? gen.thirdPartyModel || gen.claudeModel
+      : gen.claudeModel || CLAUDE_MODELS.ClaudeV37_Sonnet_Latest
+
+  const base = getBaseUrl(gen, claudeModel || defaultPresets.claude.claudeModel, isThirdParty)
 
   if (!base.url) {
     yield { error: `Claude request failed: Your 'Third Party URL' is not set in your preset` }
@@ -70,7 +74,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     return
   }
 
-  const formatting = CLAUDE_TEXT_MODELS[claudeModel]
+  const formatting = CLAUDE_TEXT_MODELS[claudeModel || '']
     ? 'text'
     : gen.service === 'claude-v2'
     ? 'v2'
@@ -124,7 +128,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
    * Claude specifies that the budget must be GTE 1024, but less than MAX_TOKENS
    * Reasoning is not supported in any text (old) models
    */
-  if (formatting !== 'text' && gen.reasoning?.enabled) {
+  if (formatting === 'v2' && gen.reasoning?.enabled) {
     const effort = gen.reasoning.effort || 'low'
     const max = Math.max(opts.gen.maxTokens ?? 1024, 1024)
 
@@ -182,6 +186,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : null
   if (key) {
     headers['x-api-key'] = key
+    headers.Authorization = `Bearer ${key}`
   }
 
   log.debug({ ...payload, prompt: null, messages: null }, 'Claude payload')
@@ -314,9 +319,10 @@ const streamCompletion: CompletionGenerator = async function* ({
   let meta: any = {}
 
   try {
+    const local = url !== TEXT_URL && url !== CHAT_URL
     const events = fetchStream(response, {
       format: 'raw',
-      marker: /^event: \w+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
+      marker: local ? undefined : /^event: \w+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
     })
 
     // https://docs.anthropic.com/claude/reference/streaming
@@ -345,6 +351,29 @@ const streamCompletion: CompletionGenerator = async function* ({
         }
         sendOne(userId, { type: 'notification', level: 'warn', message })
         break
+      }
+
+      if (local) {
+        const choice = event.choices?.[0]
+        const delta: any = event.delta || choice || {}
+        const token =
+          delta.completion ||
+          delta.delta?.text ||
+          delta.text ||
+          delta.delta?.content ||
+          delta.content ||
+          ''
+
+        if (token) {
+          tokens.push(token)
+          yield { token }
+        }
+
+        if (delta.finish_reason) {
+          meta.stop_reason = delta.finish_reason
+        }
+
+        continue
       }
 
       switch (event.type) {
