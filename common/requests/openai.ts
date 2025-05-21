@@ -132,25 +132,42 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
         ),
       }
     }
-  }
 
-  try {
-    let text = getCompletionContent(response)
-    if (text instanceof Error) {
-      yield { error: `request returned an error: ${text.message}` }
-      return
+    if ('gens' in generated.value) {
+      yield { gens: generated.value.gens }
     }
 
-    if (!text?.length) {
-      yield { error: `request failed: Received empty response. Try again.` }
-      return
+    if ('tokens' in generated.value && generated.value.tokens) {
+      yield { tokens: generated.value.tokens }
+      accumulated = generated.value.tokens
     }
 
-    yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
-  } catch (ex: any) {
-    yield { error: `request failed: ${ex.message}` }
-    return
+    if ('meta' in generated.value) {
+      yield { meta: generated.value.meta }
+    }
   }
+
+  if (!accumulated) {
+    try {
+      let text = getCompletionContent(response)
+      if (text instanceof Error) {
+        yield { error: `request returned an error: ${text.message}` }
+        return
+      }
+
+      if (!text?.length) {
+        yield { error: `request failed: Received empty response. Try again.` }
+        return
+      }
+
+      accumulated = text
+    } catch (ex: any) {
+      yield { error: `request failed: ${ex.message}` }
+      return
+    }
+  }
+
+  yield sanitiseAndTrim(accumulated, opts.prompt, opts.replyAs, opts.characters, opts.members)
 }
 
 export async function requestFullCompletion(

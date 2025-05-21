@@ -298,7 +298,7 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
 function getFormatOverride(opts: GenerateRequestV2): ModelFormat | undefined {
   switch (opts.settings?.service) {
     case 'agnaistic':
-      return opts.subscription?.preset?.modelFormat || opts.settings.modelFormat
+      return opts.settings.modelFormat || opts.subscription?.preset?.modelFormat
 
     case 'openai':
     case 'third-party':
