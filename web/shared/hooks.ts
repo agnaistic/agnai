@@ -9,6 +9,7 @@ import { getAssetUrl, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
+import { tryParse } from '/common/util'
 
 const PANE_BREAKPOINT = 1280
 
@@ -377,7 +378,7 @@ export function useAsyncStorage<T = any>(id: string, initialValue: T) {
 export function getStoredValue<T = any>(id: string, initialValue: T) {
   const key = `agnaistic-ls-${id}`
   const init = localStorage.getItem(key) || JSON.stringify(initialValue)
-  const value = JSON.parse(init)
+  const value = tryParse(init) || initialValue
   return value
 }
 
