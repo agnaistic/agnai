@@ -52,8 +52,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     min_p: gen.minP,
     top_k: gen.topK,
     top_a: gen.topA,
-    ignore_eos: !gen.banEosToken,
-    skip_special_tokens: gen.skipSpecialTokens,
     repetition_penalty: gen.repetitionPenalty,
   }
 
