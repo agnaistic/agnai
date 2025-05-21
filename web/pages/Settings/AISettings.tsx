@@ -73,7 +73,6 @@ const AISettings: Component<{
       .map((a) => ADAPTER_LABELS[a] || a)
 
     setTabs(tabs)
-    console.log(tabs, cfg.config.adapters)
 
     if (!ready() && cfg.config.adapters?.length) {
       const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)

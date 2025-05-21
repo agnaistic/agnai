@@ -735,7 +735,10 @@ export async function fillPromptWithLines(opts: {
   const adding: string[] = []
 
   let linesAddedCount = 0
-  for (const line of lines) {
+
+  // We count from the bottom as lines are in natural order
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i]
     const tokens = await encoder(line)
     if (tokens + count > tokenLimitMinusInserts) {
       break
