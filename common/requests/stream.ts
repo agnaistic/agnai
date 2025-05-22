@@ -12,13 +12,8 @@ export type ServerSentEvent = {
 
 // const DEBUG = typeof window !== 'undefined' ? false : false
 
-export const streamGenerator: CompletionGenerator = async function* ({
-  signal,
-  url,
-  headers,
-  body,
-  format,
-}) {
+export const streamGenerator: CompletionGenerator = async function* (opts) {
+  const { signal, url, headers, body, format } = opts
   const tokens = []
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
   // let current: any = {}
