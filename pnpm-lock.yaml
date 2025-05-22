@@ -303,9 +303,6 @@ importers:
       nodemon:
         specifier: ^3.0.1
         version: 3.1.9
-      os-browserify:
-        specifier: ^0.3.0
-        version: 0.3.0
       parcel:
         specifier: ^2.15.1
         version: 2.15.1
@@ -369,9 +366,6 @@ importers:
       tailwindcss:
         specifier: ^3.3.2
         version: 3.4.17
-      tty-browserify:
-        specifier: ^0.0.1
-        version: 0.0.1
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -4025,9 +4019,6 @@ packages:
   ordered-binary@1.5.3:
     resolution: {integrity: sha512-oGFr3T+pYdTGJ+YFEILMpS3es+GiIbs9h/XQrclBXUtd44ey7XwfsMzM31f64I1SQOawDoDr/D823kNCADI8TA==}
 
-  os-browserify@0.3.0:
-    resolution: {integrity: sha512-gjcpUc3clBf9+210TRaDWbf+rZZZEshZ+DlXMRCeAjp0xhTrnQsKHypIy1J3d5hKdUzj69t708EHtU8P6bUn0A==}
-
   p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
     engines: {node: '>=6'}
@@ -4895,9 +4886,6 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
-
-  tty-browserify@0.0.1:
-    resolution: {integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==}
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
@@ -9685,8 +9673,6 @@ snapshots:
 
   ordered-binary@1.5.3: {}
 
-  os-browserify@0.3.0: {}
-
   p-limit@2.3.0:
     dependencies:
       p-try: 2.2.0
@@ -10660,8 +10646,6 @@ snapshots:
       typescript: 5.8.2
 
   tslib@2.8.1: {}
-
-  tty-browserify@0.0.1: {}
 
   tunnel-agent@0.6.0:
     dependencies:
