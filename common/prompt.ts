@@ -637,10 +637,11 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export async function getLinesForPrompt(
-  { settings, members, messages, continue: cont, book, ...opts }: PromptOpts,
+  opts: PromptOpts,
   encoder: TokenCounter,
   maxContext?: number
 ) {
+  const { settings, members, messages } = opts
   maxContext = maxContext || getContextLimit(opts.user, settings)
 
   const profiles = new Map<string, AppSchema.Profile>()

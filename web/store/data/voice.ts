@@ -43,7 +43,8 @@ async function modelsList(ttsService: TTSService) {
   return res
 }
 
-async function chatTextToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
+async function chatTextToSpeech(opts: GenerateOpts) {
+  const { chatId, messageId, text, voice, culture } = opts
   const user = getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,

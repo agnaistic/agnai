@@ -799,8 +799,8 @@ function wrapCaptureGroups(
   }
 }
 
-function sendAction(_send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
-  events.emit(EVENTS.setInputText, action)
+function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAction) {
+  events.emit(EVENTS.setInputText, action.action)
 }
 
 function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {

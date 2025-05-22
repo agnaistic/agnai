@@ -309,7 +309,6 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
     const local = opts.url !== TEXT_URL && opts.url !== CHAT_URL
     const events = fetchStream(response, {
       format: 'raw',
-      marker: local ? undefined : /^event: \w+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
     })
 
     // https://docs.anthropic.com/claude/reference/streaming

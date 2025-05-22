@@ -169,7 +169,7 @@ export async function editPartialCharacter(charId: string, update: Partial<AppSc
 
 export async function editCharacter(
   charId: string,
-  { avatar: file, ...char }: UpdateCharacter,
+  char: UpdateCharacter,
   previous?: AppSchema.Character
 ) {
   if (isLoggedIn()) {
@@ -186,8 +186,8 @@ export async function editCharacter(
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
     appendFormOptional(form, 'json', JSON.stringify(char.json))
 
-    if (file) {
-      appendFormOptional(form, 'avatar', file)
+    if (char.avatar) {
+      appendFormOptional(form, 'avatar', char.avatar)
     }
 
     appendFormOptional(form, 'visualType', char.visualType)
@@ -209,7 +209,7 @@ export async function editCharacter(
     return res
   }
 
-  const avatar = file ? await getImageData(file) : undefined
+  const avatar = char.avatar ? await getImageData(char.avatar) : undefined
   const chars = await loadItem('characters')
   const prev = chars.find((ch) => ch._id === charId)
 

@@ -221,7 +221,8 @@ function canColor(attr: SpriteAttr, file: string) {
   return file.includes('base.')
 }
 
-function getHash({ body, attr, type }: Pick<CanvasProps, 'body' | 'attr' | 'type'>) {
+function getHash(props: Pick<CanvasProps, 'body' | 'attr' | 'type'>) {
+  const { body, attr, type } = props
   const prop = getColorProp(attr)
   const color = prop ? body[prop] : 'none'
 

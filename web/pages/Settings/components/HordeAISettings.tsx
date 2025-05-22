@@ -336,8 +336,8 @@ function toItem(model: HordeModel) {
   }
 }
 
-function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
-  return l[0] > r[0] ? 1 : l[0] === r[0] ? 0 : -1
+function sortWorkers(l: HordeWorker, r: HordeWorker) {
+  return l.models[0] > r.models[0] ? 1 : l.models[0] === r.models[0] ? 0 : -1
 }
 
 function toWorkerItem(wkr: HordeWorker): Option {

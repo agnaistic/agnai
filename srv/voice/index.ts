@@ -21,10 +21,11 @@ import { AppSchema } from '../../common/types/schema'
 import { agnaiTtsHandler } from './agnai'
 
 export async function getVoicesList(
-  { user, ttsService }: VoicesListRequest,
+  opts: VoicesListRequest,
   log: AppLog,
   guestId?: string
 ): Promise<VoiceListResponse> {
+  const { user, ttsService } = opts
   const service = getVoiceService(ttsService)
   if (!service) return { voices: [] }
 
@@ -37,10 +38,11 @@ export async function getVoicesList(
 }
 
 export async function getModelsList(
-  { user, ttsService }: VoiceModelsListRequest,
+  opts: VoiceModelsListRequest,
   log: AppLog,
   guestId?: string
 ): Promise<VoiceModelListResponse> {
+  const { user, ttsService } = opts
   const service = getVoiceService(ttsService)
   if (!service) return { models: [] }
 
@@ -91,11 +93,8 @@ export async function generateTextToSpeech(
   return { output }
 }
 
-export async function generateVoice(
-  { user, chatId, messageId, voice, culture, ...opts }: TextToSpeechRequest,
-  log: AppLog,
-  guestId?: string
-) {
+export async function generateVoice(opts: TextToSpeechRequest, log: AppLog, guestId?: string) {
+  const { user, chatId, messageId, voice } = opts
   const service = getVoiceService(voice.service)
   if (!service) return { output: undefined }
 

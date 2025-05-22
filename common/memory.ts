@@ -209,25 +209,19 @@ async function getMatchesWithinBudget(matches: Match[], ctx: MemoryPromptContext
   return allowed
 }
 
-function byPriorityThenAge(
-  { messageAge: lAge, entry: l }: Match,
-  { messageAge: rAge, entry: r }: Match
-) {
+function byPriorityThenAge(l: Match, r: Match) {
   // higher priority first
-  if (l.priority !== r.priority) return l.priority > r.priority ? -1 : 1
+  if (l.entry.priority !== r.entry.priority) return l.entry.priority > r.entry.priority ? -1 : 1
   // lower age first
-  if (lAge !== rAge) return lAge < rAge ? -1 : 1
+  if (l.messageAge !== r.messageAge) return l.messageAge < r.messageAge ? -1 : 1
   return 0
 }
 
-function byWeightThenAge(
-  { messageAge: lAge, entry: l }: Match,
-  { messageAge: rAge, entry: r }: Match
-) {
+function byWeightThenAge(l: Match, r: Match) {
   // higher weight first
-  if (l.weight !== r.weight) return l.weight > r.weight ? -1 : 1
+  if (l.entry.weight !== r.entry.weight) return l.entry.weight > r.entry.weight ? -1 : 1
   // lower age first
-  if (lAge !== rAge) return lAge < rAge ? -1 : 1
+  if (l.messageAge !== r.messageAge) return l.messageAge < r.messageAge ? -1 : 1
   return 0
 }
 

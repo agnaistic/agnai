@@ -11,7 +11,8 @@ const baseUrl = `https://aihorde.net/api/v2`
 
 export const PY_URL = 'http://localhost:5001'
 
-export async function post<T = any>({ url, apikey, body, ...opts }: PostReq): Result<T> {
+export async function post<T = any>(opts: PostReq): Result<T> {
+  const { url, apikey, body } = opts
   const headers: any = {}
   if (apikey) {
     headers.apikey = apikey
@@ -34,7 +35,8 @@ export async function post<T = any>({ url, apikey, body, ...opts }: PostReq): Re
   return { result: res.body as T }
 }
 
-export async function get<T = any>({ url, apikey, ...opts }: Omit<PostReq, 'body'>): Result<T> {
+export async function get<T = any>(opts: Omit<PostReq, 'body'>): Result<T> {
+  const { url, apikey } = opts
   const headers: any = { 'Bypass-Tunnel-Reminder': 'true' }
   if (apikey) {
     headers.apikey = apikey

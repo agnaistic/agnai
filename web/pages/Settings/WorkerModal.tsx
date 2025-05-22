@@ -70,8 +70,8 @@ const WorkerModal: Component<{
 
 export default WorkerModal
 
-function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
-  return l[0] > r[0] ? 1 : l[0] === r[0] ? 0 : -1
+function sortWorkers(left: HordeWorker, right: HordeWorker) {
+  return left.models[0] > right.models[0] ? 1 : left.models[0] === right.models[0] ? 0 : -1
 }
 
 function toWorkerItem(wkr: HordeWorker): Option {

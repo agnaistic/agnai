@@ -46,10 +46,7 @@ export const imageApi = {
   ALLOWED_TYPES,
 }
 
-export async function generateImage(
-  { chatId, messageId, ...opts }: GenerateOpts,
-  onSummary?: (summary: string) => void
-) {
+export async function generateImage(opts: GenerateOpts, onSummary?: (summary: string) => void) {
   const entities = await getPromptEntities()
   const summary = opts.prompt
     ? await localApi.result({ response: opts.prompt })
@@ -69,18 +66,21 @@ export async function generateImage(
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
-  const res = await api.post<{ success: boolean }>(`/chat/${chatId || entities.chat._id}/image`, {
-    prompt: trimmed,
-    user: entities.user,
-    messageId,
-    ephemeral: opts.ephemeral,
-    append: opts.append,
-    source: opts.source,
-    chatId,
-    characterId,
-    parent: opts.parent,
-    requestId: v4(),
-  })
+  const res = await api.post<{ success: boolean }>(
+    `/chat/${opts.chatId || entities.chat._id}/image`,
+    {
+      prompt: trimmed,
+      user: entities.user,
+      messageId: opts.messageId,
+      ephemeral: opts.ephemeral,
+      append: opts.append,
+      source: opts.source,
+      chatId: opts.chatId,
+      characterId,
+      parent: opts.parent,
+      requestId: v4(),
+    }
+  )
   return res
 }
 

@@ -86,13 +86,14 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   return { ext: 'png', content: buffer }
 }
 
-async function getConfig({ user, settings, override }: ImageRequestOpts): Promise<{
+async function getConfig(opts: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
   params?: string
   model?: AppSchema.ImageModel
   temp?: AppSchema.ImageModel
 }> {
+  const { user, settings, override } = opts
   const type = settings?.type || user.images?.type
 
   // Stable Diffusion URL always comes from user settings

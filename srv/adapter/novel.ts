@@ -227,7 +227,6 @@ const streamCompletion = async function* (
   try {
     const stream = fetchStream(resp, {
       format: 'raw',
-      marker: /^event: \w+\nid: [0-9]+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
     })
 
     for await (const event of stream) {

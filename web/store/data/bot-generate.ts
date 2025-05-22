@@ -325,10 +325,11 @@ async function createActiveChatPrompt(
 
 async function getRetrievalBreakpoint(
   text: string | undefined,
-  { settings, chat }: PromptEntities,
+  ents: PromptEntities,
   messages: AppSchema.ChatMessage[],
   lines: string[]
 ) {
+  const { settings, chat } = ents
   if (!text) return { users: undefined, chats: undefined }
 
   const encoder = await getEncoder()
