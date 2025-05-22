@@ -336,29 +336,22 @@ async function checkStreamSupported(versioncheckURL: any) {
   return isSupportedVersion
 }
 
-const fullCompletion: CompletionGenerator<any> = async function* ({
-  url,
-  body,
-  headers,
-  service,
-  log,
-  signal,
-}) {
-  const resp = await needle('post', url, body, {
-    signal: signal.signal,
-    headers: { 'Bypass-Tunnel-Reminder': 'true', ...headers },
+const fullCompletion: CompletionGenerator<any> = async function* (opts) {
+  const resp = await needle('post', opts.url, opts.body, {
+    signal: opts.signal.signal,
+    headers: { 'Bypass-Tunnel-Reminder': 'true', ...opts.headers },
     json: true,
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    yield { error: `${service} request failed: ${resp.error?.message || resp.error}` }
-    log.error({ error: resp.error }, `${service} request failed`)
+    yield { error: `${opts.service} request failed: ${resp.error?.message || resp.error}` }
+    opts.log.error({ error: resp.error }, `${opts.service} request failed`)
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `${service} request failed: ${resp.statusMessage}` }
-    log.error({ error: resp.body }, `${service} request failed`)
+    yield { error: `${opts.service} request failed: ${resp.statusMessage}` }
+    opts.log.error({ error: resp.body }, `${opts.service} request failed`)
     return
   }
 
@@ -387,8 +380,8 @@ const fullCompletion: CompletionGenerator<any> = async function* ({
     yield { tokens: text }
     return
   } else {
-    log.error({ err: resp.body }, `Failed to generate text using ${service} adapter`)
-    yield { error: `${service} failed to generate a response: ${resp.body}` }
+    opts.log.error({ err: resp.body }, `Failed to generate text using ${opts.service} adapter`)
+    yield { error: `${opts.service} failed to generate a response: ${resp.body}` }
     return
   }
 }
