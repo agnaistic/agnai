@@ -1,6 +1,7 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
 import type { CompletionGenerator } from '/srv/adapter/type'
+import { testTestBuffer } from './test'
 
 export type ServerSentEvent = {
   id?: string
@@ -240,13 +241,26 @@ function processBuffer(buffer: string) {
   let sub = buffer.slice(start)
 
   const end = sub.search(terminator)
-  if (end < 0 || end < start) return
+  if (end < 0) return
 
   const match = sub.slice(0, end).replace('data: ', '').trim()
   const next = sub.slice(end).trimStart()
 
   return { match, next }
 }
+
+// function testBuffer() {
+//   let buffer = ``
+
+//   while (true) {
+//     const match = processBuffer(buffer)
+//     if (!match) break
+
+//     console.log(match.match)
+//     buffer = match.next
+//   }
+// }
+// testBuffer()
 
 function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   const choice = json?.choices?.[0]
