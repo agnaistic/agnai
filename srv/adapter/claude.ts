@@ -130,46 +130,41 @@ export const handleClaude: ModelAdapter = async function* (opts) {
    */
   if (formatting === 'v2' && gen.reasoning?.enabled) {
     const effort = gen.reasoning.effort || 'low'
-    const max = Math.max(opts.gen.maxTokens ?? 1024, 1024)
+    const max = opts.gen.maxTokens ?? 1024
 
-    let tokens = 0
+    let budget = 0
     switch (effort) {
       case 'custom': {
-        tokens = gen.reasoning.maxTokens ?? 0
+        budget = gen.reasoning.maxTokens ?? 0
         break
       }
 
       case 'high': {
-        tokens = max * 0.8
+        budget = max * 0.8
         break
       }
 
       case 'medium': {
-        tokens = max * 0.5
+        budget = max * 0.5
         break
       }
 
       case 'low':
       default: {
-        tokens = max * 0.2
+        budget = max * 0.2
         break
       }
     }
 
     // Claude specifies that the thinking budget must be at least 1024 tokens
-    if (tokens < 1024) {
-      payload.max_tokens += 1024
-      tokens = 1024
+    if (budget < 1024) {
+      budget = 1024
     }
 
+    payload.max_tokens = budget + max
     payload.thinking = {
       type: 'enabled',
-      budget_tokens: Math.floor(tokens),
-    }
-
-    // max_tokens must be above thinking budget
-    if (gen.maxTokens! <= tokens) {
-      payload.max_tokens = tokens + gen.maxTokens!
+      budget_tokens: Math.floor(budget),
     }
 
     // Temperature must be 1 when thinking is enabled
