@@ -161,11 +161,19 @@ export async function* fetchStream(
         const error = tryParse(chunk)
         const isError = isErrorCode || !!error?.error
         if (isError && error) {
+          // OpenRouter provider errors
+          const suberror = tryParse(error?.error?.metadata?.raw)
+
+          const msg =
+            suberror?.detail ||
+            error?.error?.message ||
+            error?.message ||
+            `status code ${response.status}`
+
           opts?.log?.error(
             { err: error, chunk: error ? undefined : chunk, url: response.url },
             `[fetch] request failed with error ${response.status}`
           )
-          const msg = error?.error?.message || error?.message || `status code ${response.status}`
 
           yield {
             error: `inferencer returned an error: ${msg}`,
