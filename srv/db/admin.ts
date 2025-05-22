@@ -98,7 +98,7 @@ export async function getUsers(opts: UsersOpts = {}) {
   if (!list.length && opts.username) {
     const char = await db('character').findOne({ _id: opts.username })
     const preset = await db('gen-setting').findOne({ _id: opts.username })
-    const chat = await db('gen-setting').findOne({ _id: opts.username })
+    const chat = await db('chat').findOne({ _id: opts.username })
 
     const userId = char?.userId || preset?.userId || chat?.userId
     if (!userId) {
