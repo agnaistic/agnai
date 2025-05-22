@@ -1,5 +1,5 @@
 import { ThirdPartyFormat } from '../adapters'
-import { logger } from '../logger'
+import { AppLog } from '../logger'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -41,7 +41,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     signal: signal.signal,
   })
 
-  const stream = fetchStream(response, { format })
+  const stream = fetchStream(response, { format, log: opts.log })
   let sentTokens = false
 
   for await (const data of stream) {
@@ -58,7 +58,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     }
 
     if (data.errorObj) {
-      logger.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
+      opts.log.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
     }
 
     if (data.error) {
@@ -94,6 +94,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
 export async function* fetchStream(
   response: Response,
   opts?: {
+    log?: AppLog
     format?: ThirdPartyFormat | 'openrouter' | 'raw'
     marker?: RegExp
     prechunk?: (chunk: string) => string
@@ -120,7 +121,7 @@ export async function* fetchStream(
       if (done) {
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
-          logger.debug({ buffer }, 'incomplete buffer')
+          opts?.log?.debug({ buffer }, 'incomplete buffer')
           return
         }
 
@@ -157,7 +158,7 @@ export async function* fetchStream(
         const error = tryParse(chunk)
         const isError = isErrorCode || !!error?.error
         if (isError && error) {
-          logger.error(
+          opts?.log?.error(
             { err: error, chunk: error ? undefined : chunk, url: response.url },
             `[fetch] request failed with error ${response.status}`
           )
@@ -193,7 +194,7 @@ export async function* fetchStream(
                 yield { token, index }
               }
             } else {
-              logger.info({ json }, `[${format || 'fetch'}] cannot get token`)
+              opts?.log?.info({ json }, `[${format || 'fetch'}] cannot get token`)
             }
 
             const meta: any = {}
@@ -207,7 +208,7 @@ export async function* fetchStream(
             yield { meta }
           }
         } else {
-          logger.info({ chunk }, `[${format || 'fetch'}] cannot parse chunk`)
+          opts?.log?.info({ chunk }, `[${format || 'fetch'}] cannot parse chunk`)
         }
 
         try {

@@ -55,13 +55,19 @@ export function parseHex(hex: string) {
 }
 
 export function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
-  return result
+  const bare = hex.replaceAll('#', '')
+  const r = parseInt(bare.slice(0, 2), 16)
+  const g = parseInt(bare.slice(2, 4), 16)
+  const b = parseInt(bare.slice(4, 6), 16)
+
+  const valid = !isNaN(r) && !isNaN(g) && !isNaN(b)
+
+  return valid
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-        rgb: `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`,
+        r,
+        g,
+        b,
+        rgb: `${r}, ${g}, ${b}`,
       }
     : null
 }
