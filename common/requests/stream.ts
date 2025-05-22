@@ -39,7 +39,31 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     headers: headers as any,
     body: JSON.stringify(body),
     signal: signal.signal,
-  })
+  }).catch((err) => ({ err }))
+
+  if ('err' in response) {
+    const err = response.err
+    const message = err?.message || err
+    yield {
+      error: `[local] Request failed: ${message || 'unexpect error occurred'}`,
+      errorObj: err,
+    }
+    return
+  }
+
+  if (response.status === 404) {
+    yield {
+      error: `[local] Request failed with 404 Not Found: Check your URL`,
+    }
+    return
+  }
+
+  if (response.status >= 400) {
+    yield {
+      error: `[local] Request failed: ${response.status} ${response.statusText}`,
+    }
+    return
+  }
 
   const stream = fetchStream(response, { format, log: opts.log })
   let sentTokens = false

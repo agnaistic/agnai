@@ -28,7 +28,7 @@ export type Completion<T = Inference> = {
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
-  const base = getBaseUrl(user, !!gen.thirdPartyUrlNoSuffix, isThirdParty)
+  const base = getBaseUrl(gen, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
@@ -208,14 +208,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User, noSuffix: boolean, isThirdParty?: boolean) {
-  if (isThirdParty && user.koboldUrl) {
-    if (noSuffix) return { url: user.koboldUrl, changed: true }
+function getBaseUrl(gen: Partial<AppSchema.GenSettings>, isThirdParty?: boolean) {
+  if (isThirdParty && gen.thirdPartyUrl) {
+    if (gen.thirdPartyUrlNoSuffix) return { url: gen.thirdPartyUrl, changed: true }
 
     // If the user provides a versioned API URL for their third-party API, use that. Otherwise
     // fall back to the standard /v1 URL.
-    const version = user.koboldUrl.match(/\/v\d+$/) ? '' : '/v1'
-    return { url: user.koboldUrl + version, changed: true }
+    const version = gen.thirdPartyUrl.match(/\/v\d+$/) ? '' : '/v1'
+    return { url: gen.thirdPartyUrl + version, changed: true }
   }
 
   return { url: `${baseUrl}/v1`, changed: false }

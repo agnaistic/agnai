@@ -144,6 +144,11 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     if ('meta' in generated.value) {
       yield { meta: generated.value.meta }
     }
+
+    if ('error' in generated.value) {
+      yield { error: generated.value.error }
+      return
+    }
   }
 
   if (!accumulated) {
