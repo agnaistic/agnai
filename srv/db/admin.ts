@@ -106,7 +106,7 @@ export async function getUsers(opts: UsersOpts = {}) {
     }
 
     const user = await db('user').findOne({ _id: userId })
-    return user ? [user] : user
+    return user ? [user] : []
   }
 
   return list
