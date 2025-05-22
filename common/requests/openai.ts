@@ -75,7 +75,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     }
 
     if (!text?.length) {
-      yield { error: `request failed: Received empty response. Try again.` }
+      yield { error: `[local] request failed: Received empty response. Try again.` }
       return
     }
 
@@ -150,18 +150,18 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     try {
       let text = getCompletionContent(response)
       if (text instanceof Error) {
-        yield { error: `request returned an error: ${text.message}` }
+        yield { error: `Request returned an error: ${text.message}` }
         return
       }
 
       if (!text?.length) {
-        yield { error: `request failed: Received empty response. Try again.` }
+        yield { error: `[local] Received empty response. Try again.` }
         return
       }
 
       accumulated = text
     } catch (ex: any) {
-      yield { error: `request failed: ${ex.message}` }
+      yield { error: `Request failed: ${ex.message}` }
       return
     }
   }

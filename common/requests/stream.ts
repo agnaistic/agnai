@@ -232,15 +232,18 @@ export async function* fetchStream(
 
 const marker = /data: /
 const terminator = /\n\n|\r\r|\r\n\r\n/
+
 function processBuffer(buffer: string) {
   const start = buffer.search(marker)
   if (start < 0) return
 
-  const end = buffer.search(terminator)
+  let sub = buffer.slice(start)
+
+  const end = sub.search(terminator)
   if (end < 0 || end < start) return
 
-  const match = buffer.slice(start, end).replace('data: ', '').trim()
-  const next = buffer.slice(end).trimStart()
+  const match = sub.slice(0, end).replace('data: ', '').trim()
+  const next = sub.slice(end).trimStart()
 
   return { match, next }
 }
