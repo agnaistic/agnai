@@ -47,7 +47,7 @@ jobs:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
           pnpm run build:server
-          NODE_ENV=production pnpm parcel build web/index.html --detailed-report
+          pnpm run build:prod
           cp dist/index.html dist/original.html
           node .github/inject.js
 
