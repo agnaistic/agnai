@@ -269,27 +269,21 @@ function getBaseUrl(gen: Partial<GenSettings>, model: string, isThirdParty?: boo
   return { url: CHAT_URL, changed: false }
 }
 
-const requestFullCompletion: CompletionGenerator = async function* ({
-  url,
-  body,
-  signal,
-  headers,
-  log,
-}) {
-  const resp = await needle('post', url, JSON.stringify(body), {
+const requestFullCompletion: CompletionGenerator = async function* (params) {
+  const resp = await needle('post', params.url, JSON.stringify(params.body), {
     json: true,
-    signal: signal.signal,
-    headers,
+    signal: params.signal.signal,
+    headers: params.headers,
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    log.error({ error: resp.error }, 'Claude request failed to send')
+    params.log.error({ error: resp.error }, 'Claude request failed to send')
     yield { error: `Claude request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    log.error({ body: resp.body }, `Claude request failed (${resp.statusCode})`)
+    params.log.error({ body: resp.body }, `Claude request failed (${resp.statusCode})`)
     yield { error: `Claude request failed: ${resp.statusMessage}` }
     return
   }
@@ -297,20 +291,13 @@ const requestFullCompletion: CompletionGenerator = async function* ({
   return resp.body
 }
 
-const streamCompletion: CompletionGenerator = async function* ({
-  url,
-  body,
-  headers,
-  signal,
-  log,
-  userId,
-}) {
-  const response = await fetch(url, {
-    body: JSON.stringify(body),
-    signal: signal.signal,
+const streamCompletion: CompletionGenerator = async function* (opts) {
+  const response = await fetch(opts.url, {
+    body: JSON.stringify(opts.body),
+    signal: opts.signal.signal,
     method: 'POST',
     headers: {
-      ...headers,
+      ...opts.headers,
       Accept: 'text/event-stream',
     },
   })
@@ -319,7 +306,7 @@ const streamCompletion: CompletionGenerator = async function* ({
   let meta: any = {}
 
   try {
-    const local = url !== TEXT_URL && url !== CHAT_URL
+    const local = opts.url !== TEXT_URL && opts.url !== CHAT_URL
     const events = fetchStream(response, {
       format: 'raw',
       marker: local ? undefined : /^event: \w+\ndata: (.*)(?:\n\n|\r\r|\r\n\r\n)/,
@@ -341,7 +328,7 @@ const streamCompletion: CompletionGenerator = async function* ({
       }
 
       if (event.error !== undefined) {
-        log.warn({ error: event.error }, '[Claude] Received SSE error event')
+        opts.log.warn({ error: event.error }, '[Claude] Received SSE error event')
         const message = event.error
           ? `Anthropic interrupted the response: ${event.error?.message || event.error}`
           : `Anthropic interrupted the response.`
@@ -349,7 +336,7 @@ const streamCompletion: CompletionGenerator = async function* ({
           yield { error: message }
           return
         }
-        sendOne(userId, { type: 'notification', level: 'warn', message })
+        sendOne(opts.userId, { type: 'notification', level: 'warn', message })
         break
       }
 
@@ -386,7 +373,7 @@ const streamCompletion: CompletionGenerator = async function* ({
           break
 
         case 'error':
-          log.warn({ error: event }, '[Claude] Received SSE error event')
+          opts.log.warn({ error: event }, '[Claude] Received SSE error event')
           const message = event.error?.message
             ? `Anthropic interrupted the response: ${event.error.message}`
             : `Anthropic interrupted the response.`
@@ -396,19 +383,19 @@ const streamCompletion: CompletionGenerator = async function* ({
             return
           }
 
-          sendOne(userId, { type: 'notification', level: 'warn', message })
+          sendOne(opts.userId, { type: 'notification', level: 'warn', message })
           break
         case 'message_start':
         case 'ping':
           break
 
         default:
-          log.warn({ event }, '[Claude] Received unrecognized SSE event')
+          opts.log.warn({ event }, '[Claude] Received unrecognized SSE event')
           break
       }
     }
   } catch (err: any) {
-    log.error({ err }, '[Claude] SSE stream failed')
+    opts.log.error({ err }, '[Claude] SSE stream failed')
     yield { error: `Claude streaming request failed: ${err.message}` }
     return undefined
   }
