@@ -22,9 +22,9 @@ export const SoundpackPicker: Component<{
     ]
   })
 
-  const selectSoundpack = ({ value: id }: { value: string }) => {
-    setSelectedId(id)
-    audioStore.selectSoundpack(props.level, id === __none_soundpack__ ? undefined : id)
+  const selectSoundpack = (opts: { value: string }) => {
+    setSelectedId(opts.value)
+    audioStore.selectSoundpack(props.level, opts.value === __none_soundpack__ ? undefined : id)
   }
 
   createEffect(() => setSelectedId(audio.selectedSoundpacks[props.level] || __none_soundpack__))

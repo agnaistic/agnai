@@ -5,16 +5,13 @@ import { decryptText, encryptText, now } from './util'
 import { StatusError } from '../api/wrap'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 
-export async function createTemplate(
-  userId: string,
-  { template, name }: { name: string; template: string }
-) {
+export async function createTemplate(userId: string, opts: { name: string; template: string }) {
   const row: AppSchema.PromptTemplate = {
     _id: v4(),
     kind: 'prompt-template',
     userId,
-    name,
-    template,
+    name: opts.name,
+    template: opts.template,
     createdAt: now(),
     updatedAt: now(),
   }
