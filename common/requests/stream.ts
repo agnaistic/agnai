@@ -1,5 +1,5 @@
 import { ThirdPartyFormat } from '../adapters'
-import { AppLog } from '../logger'
+import type { AppLog } from '../logger'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -58,7 +58,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     }
 
     if (data.errorObj) {
-      opts.log.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
+      opts.log?.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
     }
 
     if (data.error) {

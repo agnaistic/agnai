@@ -366,6 +366,9 @@ importers:
       tailwindcss:
         specifier: ^3.3.2
         version: 3.4.17
+      tty-browserify:
+        specifier: ^0.0.1
+        version: 0.0.1
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -4886,6 +4889,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tty-browserify@0.0.1:
+    resolution: {integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==}
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
@@ -10646,6 +10652,8 @@ snapshots:
       typescript: 5.8.2
 
   tslib@2.8.1: {}
+
+  tty-browserify@0.0.1: {}
 
   tunnel-agent@0.6.0:
     dependencies:

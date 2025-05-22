@@ -345,13 +345,13 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
 
   if ('error' in resp) {
     yield { error: `${opts.service} request failed: ${resp.error?.message || resp.error}` }
-    opts.log.error({ error: resp.error }, `${opts.service} request failed`)
+    opts.log?.error({ error: resp.error }, `${opts.service} request failed`)
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
     yield { error: `${opts.service} request failed: ${resp.statusMessage}` }
-    opts.log.error({ error: resp.body }, `${opts.service} request failed`)
+    opts.log?.error({ error: resp.body }, `${opts.service} request failed`)
     return
   }
 
@@ -380,7 +380,7 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
     yield { tokens: text }
     return
   } else {
-    opts.log.error({ err: resp.body }, `Failed to generate text using ${opts.service} adapter`)
+    opts.log?.error({ err: resp.body }, `Failed to generate text using ${opts.service} adapter`)
     yield { error: `${opts.service} failed to generate a response: ${resp.body}` }
     return
   }

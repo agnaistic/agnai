@@ -6,7 +6,6 @@ import { sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { tryParse } from '../util'
 import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
-import { logger } from '../logger'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -88,7 +87,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     userId: opts.user._id,
     body: payload,
     headers,
-    log: logger,
     service: 'kobold',
     signal,
     url: fullUrl,
