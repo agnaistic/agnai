@@ -1,6 +1,5 @@
 import { ThirdPartyFormat } from '../adapters'
 import { logger } from '../logger'
-import { wait } from '../util'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -123,7 +122,6 @@ export async function* fetchStream(
   try {
     while (true) {
       const { done, value } = await reader.read()
-      await wait(0.001)
 
       if (done) {
         if (buffer.trim().length > 0) {
