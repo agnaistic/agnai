@@ -90,6 +90,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     service: 'kobold',
     signal,
     url: fullUrl,
+    log: undefined,
     format: gen.thirdPartyFormat,
   })
 

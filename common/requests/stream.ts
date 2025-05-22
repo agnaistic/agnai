@@ -57,12 +57,15 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       Object.assign(meta, data.meta)
     }
 
-    if (data.errorObj) {
-      opts.log?.error({ err: data.errorObj }, `Exception occurred parsing fetch stream`)
-    }
-
     if (data.error) {
       yield { error: data.error }
+    }
+
+    if (data.error || data.errorObj) {
+      opts.log?.error(
+        { err: data.error, obj: data.errorObj },
+        `Exception occurred parsing fetch stream`
+      )
     }
 
     if (data.tokens) {
@@ -162,8 +165,10 @@ export async function* fetchStream(
             { err: error, chunk: error ? undefined : chunk, url: response.url },
             `[fetch] request failed with error ${response.status}`
           )
+          const msg = error?.error?.message || error?.message || `status code ${response.status}`
+
           yield {
-            error: `inferencer returned an error ${response.status}`,
+            error: `inferencer returned an error: ${msg}`,
             errorObj: error ? error : chunk,
           }
           return

@@ -29,7 +29,7 @@ export type CompletionGenerator<T = Completion> = (opts: {
   body: any
   service: string
   signal: AbortController
-  log?: AppLog
+  log: AppLog | undefined
   format?: ThirdPartyFormat | 'openrouter' | 'raw'
 }) => AsyncGenerator<
   { error?: string; tokens?: string; token?: string; index?: any } | T,

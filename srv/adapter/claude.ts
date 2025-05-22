@@ -156,13 +156,31 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       }
     }
 
-    payload.thinking = {
-      type: 'enabled',
-      budget_tokens: tokens,
+    // Claude specifies that the thinking budget must be at least 1024 tokens
+    if (tokens < 1024) {
+      payload.max_tokens += 1024
+      tokens = 1024
     }
 
+    payload.thinking = {
+      type: 'enabled',
+      budget_tokens: Math.floor(tokens),
+    }
+
+    // max_tokens must be above thinking budget
     if (gen.maxTokens! <= tokens) {
-      payload.max_tokens = tokens + 1
+      payload.max_tokens = tokens + gen.maxTokens!
+    }
+
+    // Temperature must be 1 when thinking is enabled
+    // Top K must be unset when thinking is enabled
+    payload.temperature = 1
+    payload.top_k = undefined
+
+    // Last message must be 'thinking' block or role 'user'
+    const lastMsg = payload.messages?.slice(-1)?.[0]
+    if (lastMsg?.role === 'assistant') {
+      lastMsg.role = 'user'
     }
   }
 
@@ -384,6 +402,8 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
 
           sendOne(opts.userId, { type: 'notification', level: 'warn', message })
           break
+
+        case 'message_delta':
         case 'message_start':
         case 'ping':
           break
