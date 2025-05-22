@@ -398,8 +398,11 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
           sendOne(opts.userId, { type: 'notification', level: 'warn', message })
           break
 
+        case 'content_block_start':
+        case 'content_block_stop':
         case 'message_delta':
         case 'message_start':
+        case 'message_stop':
         case 'ping':
           break
 

@@ -297,7 +297,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
 
     if (generated.error) {
-      opts.log.error({ err: generated.error, model: submodel, level }, 'Agnaistic request failed')
+      if (generated.error !== 'inference cancelled by user') {
+        opts.log.error({ err: generated.error, model: submodel, level }, 'Agnaistic request failed')
+      }
+
       yield generated
       await releaseLock(lockId)
       return
