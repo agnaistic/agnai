@@ -1,6 +1,7 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
 import type { CompletionGenerator } from '/srv/adapter/type'
+import { testTestBuffer } from './test'
 
 export type ServerSentEvent = {
   id?: string
