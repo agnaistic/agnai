@@ -10,7 +10,7 @@ export type ServerSentEvent = {
   index?: number
 }
 
-const DEBUG = typeof window !== 'undefined' ? false : false
+// const DEBUG = typeof window !== 'undefined' ? false : false
 
 export const streamGenerator: CompletionGenerator = async function* ({
   signal,
