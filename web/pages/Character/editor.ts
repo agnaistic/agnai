@@ -224,7 +224,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
     }
 
-    if (preset?.service === 'kobold' || user.user.koboldUrl) {
+    if (preset?.service === 'kobold') {
       opts.push({ label: 'Third Party', value: 'kobold' })
     }
 

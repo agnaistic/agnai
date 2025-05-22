@@ -327,7 +327,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   const validatedThirdPartyUrl =
     body.thirdPartyFormat === 'kobold'
-      ? await verifyKobldUrl(prevUser, body.koboldUrl)
+      ? await verifyThirdPartyURL(prevUser, body.koboldUrl)
       : body.koboldUrl
 
   if (validatedThirdPartyUrl) {
@@ -466,14 +466,18 @@ export const updateProfile = handle(async (req) => {
   return profile
 })
 
-async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
+/**
+ * @deprecated
+ * We no longer support third-party URLs in user settings
+ */
+async function verifyThirdPartyURL(user: AppSchema.User, incomingUrl?: string) {
   if (!incomingUrl) return incomingUrl
   if (user.koboldUrl === incomingUrl) return incomingUrl
 
   const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
   if (!url || !url[0]) {
     throw new StatusError(
-      `Kobold URL provided could not be verified: Invalid URL format. Use a fully qualified URL. E.g.: https://local-tunnel-url-10-20-30-40.loca.lt`,
+      `Third-Party URL provided could not be verified: Invalid URL format. Use a fully qualified URL. E.g.: https://local-tunnel-url-10-20-30-40.loca.lt`,
       400
     )
   }
