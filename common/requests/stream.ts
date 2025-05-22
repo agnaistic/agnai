@@ -102,7 +102,6 @@ export async function* fetchStream(
   const isErrorCode = response.status > 201
   const reader = response.body?.getReader()
   const decoder = new TextDecoder('utf-8')
-  const sseMarker = opts?.marker || /data: (.*)(?:\n\n|\r\r|\r\n\r\n)/
   const format = opts?.format
 
   let buffer = ''
@@ -171,10 +170,11 @@ export async function* fetchStream(
       } catch (ex) {}
 
       buffer += chunk
-      let match = buffer.match(sseMarker)
+
+      let match = processBuffer(buffer)
 
       while (match) {
-        const data = match[1]
+        const data = match.match
         const json = tryParse(data)
         if (json) {
           if (format === 'raw') {
@@ -211,8 +211,8 @@ export async function* fetchStream(
         }
 
         try {
-          buffer = buffer.slice(match[0].length)
-          match = buffer.match(sseMarker)
+          buffer = match.next
+          match = processBuffer(buffer)
         } catch (e) {
           yield { error: `Exception occurred while parsing response stream`, errorObj: e }
           return
@@ -222,6 +222,21 @@ export async function* fetchStream(
   } finally {
     reader.releaseLock()
   }
+}
+
+const marker = /data: /
+const terminator = /\n\n|\r\r|\r\n\r\n/
+function processBuffer(buffer: string) {
+  const start = buffer.search(marker)
+  if (start < 0) return
+
+  const end = buffer.search(terminator)
+  if (end < 0 || end < start) return
+
+  const match = buffer.slice(start, end).replace('data: ', '').trim()
+  const next = buffer.slice(end).trimStart()
+
+  return { match, next }
 }
 
 function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
