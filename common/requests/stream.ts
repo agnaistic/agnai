@@ -124,7 +124,7 @@ export async function* fetchStream(
       if (done) {
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
-          opts?.log?.debug({ buffer }, 'incomplete buffer')
+          opts?.log?.warn({ buffer }, '[fetch] incomplete buffer')
           return
         }
 
