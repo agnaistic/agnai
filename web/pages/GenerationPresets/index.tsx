@@ -1,7 +1,7 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createSignal, onMount, Show } from 'solid-js'
-import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
+import { defaultPresets, isDefaultPreset, presetDefaults } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -198,7 +198,7 @@ export const GenerationPresetsPage: Component = () => {
 export default GenerationPresetsPage
 
 const emptyPreset: AppSchema.GenSettings = {
-  ...defaultPresets.basic,
+  ...presetDefaults,
   gaslight: templates.Universal,
   service: '' as any,
   name: '',

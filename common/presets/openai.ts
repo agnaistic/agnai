@@ -127,26 +127,4 @@ Facts: {{memory}}
 Relevant Information: {{user_embed}}
 `,
   },
-  openaiTurbo: {
-    name: 'DaVinci',
-    service: 'openai',
-    temp: 0.8,
-    topP: 1,
-    oaiModel: OPENAI_MODELS.DaVinci,
-    streamResponse: true,
-    maxTokens: 300,
-    maxContextLength: 4095,
-    frequencyPenalty: 0.5,
-    presencePenalty: 0.5,
-    ignoreCharacterSystemPrompt: false,
-    ignoreCharacterUjb: false,
-    systemPrompt: `Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)`,
-    prefixNameAppend: true,
-    gaslight: `{{system_prompt}}
-Description of {{char}}: {{personality}}
-
-Circumstances and context of the dialogue: {{scenario}}
-
-Facts: {{memory}}`,
-  },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

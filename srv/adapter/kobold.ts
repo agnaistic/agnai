@@ -1,5 +1,4 @@
 import needle from 'needle'
-import { defaultPresets } from '../../common/presets'
 import { logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
@@ -10,6 +9,7 @@ import { toSamplerOrder } from '/common/sampler-order'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
+import { presetDefaults } from '/common/default-preset'
 
 /**
  * Sampler order
@@ -23,7 +23,7 @@ import { streamGenerator } from '/common/requests/stream'
  */
 
 const MIN_STREAMING_KCPPVERSION = '1.30'
-const REQUIRED_SAMPLERS = defaultPresets.basic.order
+const REQUIRED_SAMPLERS = presetDefaults.order!
 
 const base = {
   use_story: false,

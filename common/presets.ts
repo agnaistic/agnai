@@ -1,6 +1,6 @@
 import { AppSchema } from './types/schema'
 import { AIAdapter, AI_ADAPTERS, ChatAdapter, THIRDPARTY_FORMATS } from './adapters'
-import { defaultPresets } from './default-preset'
+import { defaultPresets, presetDefaults } from './default-preset'
 import { deepClone } from './util'
 
 export { defaultPresets }
@@ -383,7 +383,7 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
     case 'third-party':
     case 'kobold':
     case 'ooba':
-      return deepClone(defaultPresets.basic)
+      return deepClone(presetDefaults)
 
     case 'agnaistic':
       return deepClone(defaultPresets.agnai)
@@ -402,7 +402,7 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
       return deepClone(defaultPresets.claude)
 
     case 'goose':
-      return deepClone({ ...defaultPresets.basic, service: 'goose' })
+      return deepClone({ ...presetDefaults, service: 'goose' })
 
     case 'replicate':
       return deepClone(defaultPresets.replicate_vicuna_13b)

@@ -16,7 +16,7 @@ export const chatsApi = {
   getAllChats,
   getChat,
   getBotChats,
-  editChatGenPreset,
+  assignChatPreset: editChatGenPreset,
   importChat,
   deleteChat,
   addCharacter,

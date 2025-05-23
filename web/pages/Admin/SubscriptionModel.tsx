@@ -27,10 +27,10 @@ import { Page } from '/web/Layout'
 import PresetSettings from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { getPresetEditor, getSubPresetForm } from '/web/shared/PresetSettings/types'
-import { defaultPresets, isDefaultPreset } from '/common/default-preset'
+import { defaultPresets, isDefaultPreset, presetDefaults } from '/common/default-preset'
 
 const emptyPreset: AppSchema.GenSettings = {
-  ...defaultPresets.basic,
+  ...presetDefaults,
   ...defaultPresets.agnai,
   name: '',
   temp: 0.85,

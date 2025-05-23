@@ -26,7 +26,7 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
       return
     }
 
-    chatStore.editChatGenPreset(props.chat._id, id, props.close)
+    chatStore.assignChatPreset(props.chat._id, id, props.close)
 
     const userPreset = preset()
     const svc = service()

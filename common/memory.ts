@@ -1,6 +1,6 @@
 import { TokenCounter, AppSchema } from './types'
-import { defaultPresets } from './presets'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
+import { presetDefaults } from './default-preset'
 
 export const BUNDLED_CHARACTER_BOOK_ID = '__bundled__characterbook__'
 
@@ -97,10 +97,10 @@ function getMemoryPromptContext(
   opts: MemoryOpts,
   encoder: TokenCounter
 ): MemoryPromptContext | undefined {
-  const depth = opts.settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
+  const depth = opts.settings?.memoryDepth || presetDefaults.memoryDepth || Infinity
   if (isNaN(depth) || depth <= 0) return
 
-  const budget = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
+  const budget = opts.settings?.memoryContextLimit || 500
 
   const bot = opts.char.name
   const sender =

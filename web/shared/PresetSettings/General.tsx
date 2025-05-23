@@ -230,7 +230,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           label="OpenAI Model"
           items={modelsToItems(OPENAI_MODELS)}
           helperText="Which OpenAI model to use"
-          value={props.state.oaiModel ?? defaultPresets.basic.oaiModel}
+          value={props.state.oaiModel ?? OPENAI_MODELS.GPT4_Omni}
           disabled={props.state.disabled}
           hide={props.state.service !== 'openai'}
           onChange={(ev) => props.setter('oaiModel', ev.value)}

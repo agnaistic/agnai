@@ -6,6 +6,7 @@ import { A } from '@solidjs/router'
 import { PresetTabProps } from './types'
 import { HelpModal } from '../Modal'
 import { ListInput } from '../ListInput'
+import { presetDefaults } from '/common/default-preset'
 
 export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (
@@ -198,7 +199,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={1}
           step={0.01}
-          value={props.state.topP ?? defaultPresets.basic.topP}
+          value={props.state.topP ?? presetDefaults.topP}
           disabled={props.state.disabled}
           aiSetting={'topP'}
           recommended={props.sub?.preset.topP}
@@ -213,7 +214,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={100}
           step={1}
-          value={props.state.topK ?? defaultPresets.basic.topK}
+          value={props.state.topK ?? presetDefaults.topK}
           disabled={props.state.disabled}
           aiSetting={'topK'}
           recommended={props.sub?.preset.topK}
@@ -268,7 +269,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={1}
           step={0.001}
-          value={props.state.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
+          value={props.state.tailFreeSampling ?? presetDefaults.tailFreeSampling}
           disabled={props.state.disabled}
           aiSetting={'tailFreeSampling'}
           recommended={props.sub?.preset.tailFreeSampling}
@@ -282,7 +283,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={1}
           step={0.01}
-          value={props.state.typicalP ?? defaultPresets.basic.typicalP}
+          value={props.state.typicalP ?? presetDefaults.typicalP}
           disabled={props.state.disabled}
           aiSetting={'typicalP'}
           recommended={props.sub?.preset.typicalP}
@@ -296,7 +297,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={3}
           step={0.01}
-          value={props.state.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
+          value={props.state.repetitionPenalty ?? presetDefaults.repetitionPenalty}
           disabled={props.state.disabled}
           aiSetting={'repetitionPenalty'}
           recommended={props.sub?.preset.repetitionPenalty}
@@ -310,7 +311,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={2048}
           step={1}
-          value={props.state.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
+          value={props.state.repetitionPenaltyRange ?? presetDefaults.repetitionPenaltyRange}
           disabled={props.state.disabled}
           aiSetting={'repetitionPenaltyRange'}
           recommended={props.sub?.preset.repetitionPenaltyRange}
@@ -324,7 +325,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={10}
           step={0.01}
-          value={props.state.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
+          value={props.state.repetitionPenaltySlope ?? presetDefaults.repetitionPenaltySlope}
           disabled={props.state.disabled}
           aiSetting={'repetitionPenaltySlope'}
           recommended={props.sub?.preset.repetitionPenaltySlope}
@@ -401,7 +402,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0.8}
           max={1.5}
           step={0.01}
-          value={props.state.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
+          value={props.state.encoderRepitionPenalty ?? presetDefaults.encoderRepitionPenalty}
           disabled={props.state.disabled}
           aiSetting={'encoderRepitionPenalty'}
           recommended={props.sub?.preset.encoderRepitionPenalty}
@@ -416,7 +417,7 @@ export const SliderSettings: Component<PresetTabProps> = (props) => {
           min={0}
           max={5}
           step={0.01}
-          value={props.state.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
+          value={props.state.penaltyAlpha ?? presetDefaults.penaltyAlpha}
           disabled={props.state.disabled}
           aiSetting={'penaltyAlpha'}
           recommended={props.sub?.preset.penaltyAlpha}

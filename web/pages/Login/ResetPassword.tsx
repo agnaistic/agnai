@@ -49,6 +49,7 @@ export const ResetPasswordPage: Component = () => {
             />
 
             <TextInput
+              type="password"
               parentClass="w-full"
               placeholder="Password"
               value={state.password}
@@ -56,6 +57,7 @@ export const ResetPasswordPage: Component = () => {
             />
 
             <TextInput
+              type="password"
               parentClass="w-full"
               placeholder="Confirm Password"
               value={state.confirm}
