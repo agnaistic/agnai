@@ -43,7 +43,7 @@ export const koboldPresets = {
   ollama: {
     ...localDefault,
     name: 'Local Ollama',
-    thirdPartyUrl: 'http://localhost:11343/v1',
+    thirdPartyUrl: 'http://localhost:11434/v1',
   },
   lm_studio: {
     ...localDefault,

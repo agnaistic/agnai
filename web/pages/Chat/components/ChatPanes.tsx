@@ -138,7 +138,7 @@ const ChatPanes: Component<{}> = (props) => {
   const onPresetChanged = (presetId: string) => {
     if (!chats.chat) return
     chatStore.assignChatPreset(chats.chat._id, presetId, () => {
-      toastStore.success('Chat preset changed')
+      console.log(`Chat preset changed - ${presetId}`)
     })
   }
 

@@ -25,6 +25,8 @@ import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
 import iconv from 'iconv-lite'
 import { genApi } from './inference'
+import { isDefaultPreset } from '/common/default-preset'
+import { ThirdPartyFormat } from '/common/adapters'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -584,17 +586,47 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, userId: str
   if (settings.service !== 'kobold') return false
 
   const format = settings.thirdPartyFormat
-  if (format !== 'openai' && format !== 'openai-chat' && format !== 'openai-chatv2') {
-    return false
-  }
+  if (!isSupportedLocalRequestFormat(format)) return false
 
-  if (settings.localRequests && settings.userId !== userId) {
-    throw new Error(
-      `Multiplayer not available for this chat: Chat is configured for local requests`
-    )
+  if (settings.localRequests) {
+    if (isDefaultPreset(settings._id)) return true
+
+    if (settings.userId !== userId) {
+      throw new Error(
+        `Multiplayer not available for this chat: Chat is configured for local requests`
+      )
+    }
   }
 
   return true
+}
+
+function isSupportedLocalRequestFormat(format: ThirdPartyFormat | undefined) {
+  if (!format) return false
+
+  switch (format) {
+    case 'openai':
+    case 'openai-chat':
+    case 'openai-chatv2':
+    // For these formats we will use openai-chatv2
+    case 'aphrodite':
+    case 'ollama':
+    case 'koboldcpp':
+    case 'llamacpp':
+    case 'tabby':
+    case 'vllm':
+    case 'kobold':
+    case 'ooba':
+      return true
+
+    case 'arli':
+    case 'claude':
+    case 'exllamav2':
+    case 'featherless':
+    case 'gemini':
+    case 'mistral':
+      return false
+  }
 }
 
 function getMessageParent(

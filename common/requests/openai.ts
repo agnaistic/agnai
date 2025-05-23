@@ -50,6 +50,8 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   const urlPath =
     gen.thirdPartyFormat === 'openai' ? `${suffix}completions` : `${suffix}chat/completions`
 
+  await validateModel(urlPath, payload, headers)
+
   if (gen.thirdPartyFormat === 'openai') {
     payload.prompt = opts.prompt
     console.log(`Prompt:${opts.prompt}`)
@@ -97,13 +99,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   let accumulated = ''
   let response: Completion<Inference> | undefined
 
-  /**
-   * @todo @fixme
-   * - add 'tokens' check
-   * - add 'gens' check
-   * - how to handle metadata? (generated.value.meta)
-   * - replace `if (generated.done)` logic
-   */
   while (true) {
     let generated = await stream.next()
 
@@ -222,5 +217,23 @@ function getCompletionContent(completion: Completion<Inference> | undefined) {
     return choice.text
   } else {
     return choice.message?.content
+  }
+}
+
+async function validateModel(baseURL: string, payload: any, headers: any) {
+  const res = await needle('get', `${baseURL}/v1/models`, { headers, json: true }).catch(() => null)
+
+  if (!res) return
+
+  const code = res.statusCode ?? 400
+  if (code >= 400) {
+    return
+  }
+
+  if (!Array.isArray(res.body.data)) return
+  const names = res.body.data.map((data: any) => data.id) as string[]
+
+  if (!payload.model || !names.includes(payload.model)) {
+    payload.model = names[0]
   }
 }

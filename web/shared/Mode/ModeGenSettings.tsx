@@ -14,6 +14,7 @@ import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { getPresetEditor, getPresetForm, PresetTab } from '../PresetSettings/types'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
+import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -58,10 +59,19 @@ export const ModeGenSettings: Component<{
       () => selected(),
       (id) => {
         if (!id) return
+
+        if (isDefaultPreset(id)) {
+          const clone = deepClone(defaultPresets[id])
+          presetStore.getLocalModels(clone)
+          setStore(clone)
+          return
+        }
+
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
           setStore(preset)
           presetStore.getLocalModels(preset)
+          return
         }
       }
     )

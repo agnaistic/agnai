@@ -65,8 +65,6 @@ function startRequest(request: GenerateRequestV2, signal: AbortController, promp
     case 'openai':
     case 'openai-chat':
     case 'openai-chatv2':
-      return handleOAI(opts, signal, payload)
-
     case 'aphrodite':
     case 'exllamav2':
     case 'llamacpp':
@@ -76,6 +74,8 @@ function startRequest(request: GenerateRequestV2, signal: AbortController, promp
     case 'ollama':
     case 'koboldcpp':
     case 'kobold':
+      return handleOAI(opts, signal, payload)
+
     case 'mistral':
     case 'claude':
     default: {
