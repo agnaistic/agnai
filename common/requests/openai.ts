@@ -6,6 +6,7 @@ import { sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { tryParse } from '../util'
 import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
+import { api } from '/web/store/api'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -46,11 +47,9 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     headers['x-api-key'] = `${gen.userThirdPartyKey}`
   }
 
-  const suffix = gen.thirdPartyUrl?.endsWith('/') ? '' : '/'
-  const urlPath =
-    gen.thirdPartyFormat === 'openai' ? `${suffix}completions` : `${suffix}chat/completions`
+  const urlPath = gen.thirdPartyFormat === 'openai' ? `/completions` : `/chat/completions`
 
-  await validateModel(urlPath, payload, headers)
+  await validateModel(gen.thirdPartyUrl || '', payload, headers)
 
   if (gen.thirdPartyFormat === 'openai') {
     payload.prompt = opts.prompt
@@ -61,7 +60,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   }
 
   payload.messages = validateChatMessagesWithImage(opts, messages)
-  const fullUrl = `${gen.thirdPartyUrl}${urlPath}`
+  const fullUrl = api.joinUrl(gen.thirdPartyUrl || '', urlPath)
 
   if (!gen.streamResponse) {
     const result = await requestFullCompletion(fullUrl, headers, payload, signal)
@@ -221,7 +220,10 @@ function getCompletionContent(completion: Completion<Inference> | undefined) {
 }
 
 async function validateModel(baseURL: string, payload: any, headers: any) {
-  const res = await needle('get', `${baseURL}/v1/models`, { headers, json: true }).catch(() => null)
+  const res = await needle('get', api.joinUrl(baseURL, '/models'), {
+    headers,
+    json: true,
+  }).catch(() => null)
 
   if (!res) return
 

@@ -306,20 +306,6 @@ function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   return value as T
 }
 
-// this is an edited and inverted ver of https://stackoverflow.com/a/70385497
-export function incompleteJson(data: string) {
-  if (data.startsWith('{') && !data.endsWith('}')) return true
-  try {
-    const parsed = JSON.parse(data)
-    if (parsed && typeof parsed === 'object') {
-      return false
-    }
-  } catch {
-    return true
-  }
-  return false
-}
-
 function tryParse(value: any) {
   try {
     const obj = JSON.parse(value)
@@ -327,20 +313,4 @@ function tryParse(value: any) {
   } catch (ex) {
     return {}
   }
-}
-
-export function parseEvent(msg: string) {
-  const event: any = {}
-  for (const line of msg.split(/\r?\n/)) {
-    const pos = line.indexOf(':')
-    if (pos === -1) {
-      continue
-    }
-
-    const prop = line.slice(0, pos)
-    const value = line.slice(pos + 1).trim()
-    event[prop] = prop === 'data' ? value.trimStart() : value.trim()
-  }
-
-  return event
 }

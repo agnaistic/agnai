@@ -204,10 +204,10 @@ export const ModeGenSettings: Component<{
 
 function isPresetDirty(
   original: AppSchema.GenSettings,
-  compare: Omit<AppSchema.GenSettings, 'service'>
+  update: Omit<AppSchema.GenSettings, 'service'>
 ) {
   const svc = original.service
-  for (const key in compare) {
+  for (const key in update) {
     const prop = key as keyof AppSchema.GenSettings
 
     switch (prop) {
@@ -215,13 +215,13 @@ function isPresetDirty(
         continue
     }
 
-    if (compare[prop] === undefined || original[prop] === undefined) continue
+    if (update[prop] === undefined && original[prop] === undefined) continue
 
     const usable: string[] | undefined = (ADAPTER_SETTINGS as any)[prop]
 
     if (svc && usable && !usable.includes(svc)) continue
 
-    if (original[prop] !== compare[prop]) {
+    if (original[prop] !== update[prop]) {
       return true
     }
   }

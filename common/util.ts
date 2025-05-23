@@ -3,6 +3,36 @@ import { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 
+// this is an edited and inverted ver of https://stackoverflow.com/a/70385497
+export function incompleteJson(data: string) {
+  if (data.startsWith('{') && !data.endsWith('}')) return true
+  try {
+    const parsed = JSON.parse(data)
+    if (parsed && typeof parsed === 'object') {
+      return false
+    }
+  } catch {
+    return true
+  }
+  return false
+}
+
+export function parseEvent(msg: string) {
+  const event: any = {}
+  for (const line of msg.split(/\r?\n/)) {
+    const pos = line.indexOf(':')
+    if (pos === -1) {
+      continue
+    }
+
+    const prop = line.slice(0, pos)
+    const value = line.slice(pos + 1).trim()
+    event[prop] = prop === 'data' ? value.trimStart() : value.trim()
+  }
+
+  return event
+}
+
 export function getMimeTypeBase64(base64: string) {
   const [start, encode] = base64.split(';')
   if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }

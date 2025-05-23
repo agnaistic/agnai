@@ -2,8 +2,7 @@ import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
-import { incompleteJson, parseEvent } from '/common/requests/stream'
-import { parseSearchQuery, tryParse } from '/common/util'
+import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 
 let socketId = ''
 

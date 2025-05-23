@@ -48,6 +48,6 @@ export const koboldPresets = {
   lm_studio: {
     ...localDefault,
     name: 'Local LM Studio',
-    thirdPartyUrl: 'http://localhost:1234/v1',
+    thirdPartyUrl: 'http://localhost:1235/v1',
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
