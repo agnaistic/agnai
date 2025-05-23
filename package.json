@@ -8,7 +8,7 @@
     "agnaistic": "./srv/bin.js",
     "agnai": "./srv/bin.js"
   },
-  "browserslist": "> 1%, not ie 11, ios >= 15.0",
+  "browserslist": "> 0.1%, not ie 11",
   "homepage": "https://github.com/agnaistic/agnai/issues",
   "files": [
     "poetry.lock",
