@@ -107,7 +107,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
 export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
   if (!format) {
     const preset = getInferencePreset()
-    format = preset.modelFormat || 'Alpaca'
+    format = preset.modelFormat || 'None'
   }
 
   return replaceTags(prompt, format)

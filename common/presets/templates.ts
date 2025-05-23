@@ -94,11 +94,11 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
 
 export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
   if (!format) {
-    format = 'Alpaca'
+    format = 'None'
   }
 
   if (typeof format === 'string' && format in BUILTIN_FORMATS === false) {
-    format = 'Alpaca'
+    format = 'None'
   }
 
   const tags = typeof format === 'string' ? BUILTIN_FORMATS[format] : format

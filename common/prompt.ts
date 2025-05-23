@@ -357,7 +357,7 @@ type InjectOpts = {
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'Alpaca')
+  template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'None')
 
   /**
    * This is currently disabled:
