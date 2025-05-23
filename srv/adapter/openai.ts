@@ -51,12 +51,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
-  if (gen.service !== 'openai') {
-    body.min_p = gen.minP
-    body.top_k = gen.topK! < 1 ? undefined : gen.topK
-    body.top_a = gen.topA
-    body.repetition_penalty = gen.repetitionPenalty
-  }
+  // if (gen.service !== 'openai') {
+  //   body.min_p = gen.minP
+  //   body.top_k = gen.topK! < 1 ? undefined : gen.topK
+  //   body.top_a = gen.topA
+  //   body.repetition_penalty = gen.repetitionPenalty
+  //   body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
+  //   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
+  // }
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
@@ -64,9 +66,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       exclude: !!gen.reasoning.exclude,
     }
   }
-
-  body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
-  body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
 
   if (isThirdParty && gen.jinjaEnabled) {
     body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
