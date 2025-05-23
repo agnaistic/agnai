@@ -889,21 +889,23 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
   const flags = opts.sections.flags
   const sections = opts.sections.sections
 
+  const cleaned = result.replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
+
   const isSystem = marker?.includes('system')
   if (!flags.system && isSystem) {
-    sections.system.push(result)
+    sections.system.push(cleaned)
 
     if (marker === 'system') {
-      opts.sections.strictSystem.push(result)
+      opts.sections.strictSystem.push(cleaned)
     }
 
     if (marker === 'pre_system') {
-      opts.sections.strictSystem.push(result)
-      sections.pre_system.push(result)
+      opts.sections.strictSystem.push(cleaned)
+      sections.pre_system.push(cleaned)
     }
 
     if (marker === 'post_system') {
-      sections.post_system.push(result)
+      sections.post_system.push(cleaned)
     }
 
     return
@@ -914,7 +916,7 @@ function fillSection(opts: TemplateOpts, marker: Section | undefined, result: st
     return
   }
 
-  sections.post.push(result)
+  sections.post.push(cleaned)
 }
 
 function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section | 'fallback' {
