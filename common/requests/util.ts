@@ -115,3 +115,15 @@ export function getEndTokens(
   const uniqueTokens = Array.from(new Set(baseEndTokens))
   return uniqueTokens
 }
+
+export function joinUrl(base: string, path: string) {
+  if (base.endsWith('/')) {
+    base = base.slice(0, -1)
+  }
+
+  if (path.startsWith('/')) {
+    path = path.slice(1)
+  }
+
+  return `${base}/${path}`
+}

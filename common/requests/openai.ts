@@ -2,11 +2,10 @@ import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
-import { sanitiseAndTrim } from './util'
+import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { tryParse } from '../util'
 import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
-import { api } from '/web/store/api'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -60,7 +59,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   }
 
   payload.messages = validateChatMessagesWithImage(opts, messages)
-  const fullUrl = api.joinUrl(gen.thirdPartyUrl || '', urlPath)
+  const fullUrl = joinUrl(gen.thirdPartyUrl || '', urlPath)
 
   if (!gen.streamResponse) {
     const result = await requestFullCompletion(fullUrl, headers, payload, signal)
@@ -220,7 +219,7 @@ function getCompletionContent(completion: Completion<Inference> | undefined) {
 }
 
 async function validateModel(baseURL: string, payload: any, headers: any) {
-  const res = await needle('get', api.joinUrl(baseURL, '/models'), {
+  const res = await needle('get', joinUrl(baseURL, '/models'), {
     headers,
     json: true,
   }).catch(() => null)

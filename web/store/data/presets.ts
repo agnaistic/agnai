@@ -3,6 +3,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
 import { now, replace } from '/common/util'
+import { joinUrl } from '/common/requests/util'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -97,7 +98,7 @@ async function getLocalModelList(baseUrl: string, key?: string): Promise<string[
       headers.Authorization = `Bearer ${key}`
     }
 
-    const res = await fetch(api.joinUrl(baseUrl, '/models'), { headers }).then((res) => res.json())
+    const res = await fetch(joinUrl(baseUrl, '/models'), { headers }).then((res) => res.json())
     const models: string[] = []
 
     for (const model of res.data) {
