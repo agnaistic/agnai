@@ -149,13 +149,15 @@ export const characterStore = createStore<CharacterState>(
     clearCharacter() {
       return { editing: undefined }
     },
-    async *getCharacter(_, characterId: string, chat?: AppSchema.Chat) {
+    async *getCharacter({ characters }, characterId: string, chat?: AppSchema.Chat) {
       if (chat?.tempCharacters && characterId.startsWith('temp-')) {
         const char = chat.tempCharacters[characterId]
         if (!char) return toastStore.error(`Temp character not found`)
         return { editing: char }
       }
-      yield { editing: undefined }
+
+      const previous = characters.list.find((c) => c._id === characterId)
+      yield { editing: previous }
       const res = await charsApi.getCharacterDetail(characterId)
       if (res.result) {
         return { editing: res.result }
