@@ -127,3 +127,32 @@ export function joinUrl(base: string, path: string) {
 
   return `${base}/${path}`
 }
+
+export async function getThirdPartyModels(url: string, key: string) {
+  const headers: any = { Accept: 'application/json' }
+
+  if (key) {
+    headers.Authorization = `Bearer ${key}`
+    headers['x-api-key'] = key
+  }
+
+  {
+    const res = await fetch(joinUrl(url, 'models'), { headers, method: 'GET' })
+      .then((res) => res.json())
+      .catch((res) => null)
+
+    if (Array.isArray(res?.data)) {
+      return res
+    }
+  }
+
+  const res = await fetch(joinUrl(url, 'v1/models'), { headers, method: 'GET' })
+    .then((res) => res.json())
+    .catch((res) => null)
+
+  if (Array.isArray(res?.data)) {
+    return res
+  }
+
+  return
+}

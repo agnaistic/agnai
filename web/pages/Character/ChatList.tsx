@@ -152,7 +152,7 @@ const CharacterChats: Component = () => {
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={() => nav(`/chats/create/${params.id || ''}`)}
+        onClick={() => chatStore.quickCreateChat(params.id, (id) => nav(`/chat/${id}`))}
       >
         <Plus /> <span class="hidden sm:inline">New</span>
       </button>

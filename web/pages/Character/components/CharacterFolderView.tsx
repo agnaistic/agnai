@@ -30,6 +30,7 @@ import { characterStore, chatStore } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
+import { getStore } from '/web/store/create'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -390,7 +391,13 @@ const CharacterListOptions: Component<{
               <Star /> Favorite
             </Show>
           </Button>
-          <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
+          <Button
+            onClick={() =>
+              getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
+            }
+            alignLeft
+            size="sm"
+          >
             <MessageCircle /> Chat
           </Button>
           <Button alignLeft onClick={props.download} size="sm">

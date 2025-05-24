@@ -232,8 +232,8 @@ export const ThirdPartyUrl: Field = (props) => {
   return (
     <TextInput
       fieldName="thirdPartyUrl"
-      label="Third Party URL"
-      helperText="API URL for third-party or self-hosted service"
+      label="URL"
+      helperMarkdown="API URL for **third-party** or **self-hosted** services"
       placeholder="E.g. https://some-tunnel-url.loca.lt"
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
@@ -256,7 +256,7 @@ export const ThirdPartyKey: Field = (props) => {
         fieldName="thirdPartyKey"
         label={
           <div class="mt-1 flex gap-4">
-            <div>Third Party API Key</div>
+            <div>API Key</div>
             <Show when={props.state._id}>
               <Button
                 size="pill"

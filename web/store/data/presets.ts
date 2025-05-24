@@ -4,6 +4,7 @@ import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
 import { now, replace } from '/common/util'
 import { joinUrl } from '/common/requests/util'
+import { toastStore } from '../toasts'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -20,6 +21,7 @@ export const presetApi = {
   deleteTemplate,
   deleteUserPresetKey,
   getLocalModelList,
+  getPresetModelList,
 }
 
 export async function getPresets() {
@@ -110,6 +112,25 @@ async function getLocalModelList(baseUrl: string, key?: string): Promise<string[
   } catch (ex: any) {
     return []
   }
+}
+
+async function getPresetModelList(id: string, baseUrl: string, key?: string): Promise<string[]> {
+  const res = await api.post<{ data: any[] }>(`/user/preset-models`, { id, url: baseUrl })
+  const models: string[] = []
+
+  if (res.error) {
+    toastStore.error(`Could not get models: ${res.error}`)
+    return []
+  }
+
+  if (res.result) {
+    for (const model of res.result.data) {
+      if (!model || typeof model.id !== 'string') continue
+      models.push(model.id)
+    }
+  }
+
+  return models
 }
 
 async function getTemplates() {

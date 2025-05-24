@@ -17,6 +17,7 @@ import {
 } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
+import { getStore } from '/web/store/create'
 
 export const CharacterCardView: Component<ViewProps> = (props) => {
   return (
@@ -172,7 +173,13 @@ const Character: Component<CardProps> = (props) => {
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button alignLeft onClick={() => nav(`/chats/create/${props.char._id}`)} size="sm">
+              <Button
+                alignLeft
+                onClick={() =>
+                  getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
+                }
+                size="sm"
+              >
                 <MessageCirclePlus size={size} /> New Chat
               </Button>
 

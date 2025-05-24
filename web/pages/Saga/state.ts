@@ -113,7 +113,7 @@ export const sagaStore = createStore<SagaState>(
         state: {
           _id: 'new',
           userId: '',
-          format: state.format || 'Alpaca',
+          format: state.format || 'None',
           overrides: {},
           templateId: template._id,
           responses: [],

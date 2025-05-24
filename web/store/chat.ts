@@ -459,6 +459,27 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async *quickCreateChat(
+      { allChats, char },
+      characterId: string,
+      onDone: (newChatId: string) => void
+    ) {
+      const res = await chatsApi.createChat(characterId, {
+        name: new Date().toLocaleString(),
+        useOverrides: false,
+      })
+      if (res.error) toastStore.error(`Failed to create conversation: ${res.error}`)
+      if (res.result) {
+        yield { allChats: [res.result, ...allChats] }
+
+        if (char?.char._id === characterId) {
+          yield { char: { ...char, chats: [res.result, ...char.chats] } }
+        }
+
+        onDone(res.result._id)
+      }
+    },
+
     async inviteUser(_, chatId: string, userId: string, onSuccess?: () => void) {
       const res = await api.post(`/chat/${chatId}/invite`, { userId })
       if (res.error) return toastStore.error(`Failed to invite user: ${res.error}`)

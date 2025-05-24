@@ -5,6 +5,8 @@ import { StatusError, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
 import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
+import { decryptText } from '/srv/db/util'
+import { getThirdPartyModels } from '/common/requests/util'
 
 const createPreset = {
   ...presetValidator,
@@ -17,6 +19,44 @@ export const getUserPresets = handle(async ({ userId }) => {
     store.presets.getUserTemplates(userId),
   ])
   return { presets, templates }
+})
+
+export const getThirdPartyPresetModels = handle(async ({ userId, body }) => {
+  assertValid(
+    {
+      id: 'string?',
+      key: 'string?',
+      url: 'string',
+    },
+    body
+  )
+
+  if (!body.url) {
+    throw new StatusError(`Third Party URL not provided`, 400)
+  }
+
+  // Guests or new presets
+  if (body.url && body.key) {
+    const models = await getThirdPartyModels(body.url, body.key)
+    return models?.data ? models : { data: [] }
+  }
+
+  if (!body.id) {
+    throw new StatusError(`Preset ID not provided`, 400)
+  }
+
+  const preset = await store.presets.getUserPresetInternal(body.id)
+  if (!preset) {
+    throw new StatusError(`Preset not found`, 404)
+  }
+
+  if (preset.userId !== userId) {
+    throw new StatusError(`Invalid preset ID`, 403)
+  }
+
+  const key = preset.thirdPartyKey ? decryptText(preset.thirdPartyKey, true) : ''
+  const models = await getThirdPartyModels(body.url, key)
+  return models?.data ? models : { data: [] }
 })
 
 export const getUserPreset = handle(async ({ userId, params }) => {

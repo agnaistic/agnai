@@ -477,8 +477,7 @@ function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined) {
   if (!preset) return false
   if (preset.service === 'agnaistic') return true
   if (preset.service !== 'kobold') return false
-  if (preset.thirdPartyFormat === 'tabby') return true
-  return false
+  return true
 }
 
 function canAttachImage(

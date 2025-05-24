@@ -7,6 +7,7 @@ import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { Copy, Download, Edit, MessageCircle, MoreHorizontal, Star, Trash } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
+import { getStore } from '/web/store/create'
 
 export const CharacterListView: Component<ViewProps> = (props) => {
   return (
@@ -105,13 +106,16 @@ const CharacterListOptions: Component<{
             <Star class="icon-button" />
           </a>
         </Show>
-        <A
-          href={`/chats/create/${props.char._id}`}
+        <a
+          // href={`/chats/create/${props.char._id}`}
+          onClick={() =>
+            getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
+          }
           role="button"
           aria-label={`Create new chat with ${props.char.name}`}
         >
           <MessageCircle class="icon-button" />
-        </A>
+        </a>
         <a
           href="#"
           onClick={props.download}

@@ -65,7 +65,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
   const cfg = settingStore()
   const user = userStore()
   const localModels = presetStore((p) => ({
-    models: [{ label: '', value: '' }].concat(
+    models: [{ label: 'None', value: '' }].concat(
       p.localModels.map((value) => ({ label: value, value }))
     ),
   }))
@@ -249,7 +249,32 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
         <div class="flex w-full flex-col gap-1" classList={{ hidden: props.hides.thirdPartyModel }}>
           <FormLabel
-            label="Model Override"
+            label={
+              <div class="flex justify-between">
+                <div>Model</div>
+                <div class="flex gap-2">
+                  <Show when={localModels.models.length > 1}>
+                    <CustomSelect
+                      parentClass="flex w-full justify-end"
+                      size="sm"
+                      value={props.state.thirdPartyModel}
+                      selected={props.state.thirdPartyModel}
+                      options={localModels.models}
+                      onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
+                      search={(v, i) => v.toLowerCase().includes(i.toLowerCase())}
+                      buttonLabel="Select Model"
+                      hide={localModels.models.length <= 1}
+                    />
+                  </Show>
+
+                  <Show when={props.state.thirdPartyUrl}>
+                    <Button size="sm" onClick={() => presetStore.getLocalModels(props.state)}>
+                      <RefreshCcw size={20} />
+                    </Button>
+                  </Show>
+                </div>
+              </div>
+            }
             helperText="Model Override (typically for 3rd party APIs)"
           />
 
@@ -262,23 +287,6 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
               onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
               hide={props.hides.thirdPartyModel}
             />
-
-            <Show when={localModels.models.length > 1}>
-              <CustomSelect
-                parentClass="flex w-full justify-end"
-                value={props.state.thirdPartyModel}
-                selected={props.state.thirdPartyModel}
-                options={localModels.models}
-                onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
-                search={(v, i) => v.toLowerCase().includes(i.toLowerCase())}
-                buttonLabel="Select Model"
-                hide={localModels.models.length <= 1}
-              />
-
-              <Button onClick={() => presetStore.getLocalModels(props.state)}>
-                <RefreshCcw size={20} />
-              </Button>
-            </Show>
           </div>
         </div>
 
