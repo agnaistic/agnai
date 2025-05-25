@@ -261,7 +261,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                       selected={props.state.thirdPartyModel}
                       options={localModels.models}
                       onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
-                      search={(v, i) => v.toLowerCase().includes(i.toLowerCase())}
+                      search={tokenizedSearch}
                       buttonLabel="Select Model"
                       hide={localModels.models.length <= 1}
                     />
@@ -468,4 +468,15 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 function modelsToItems(models: Record<string, string>): Option<string>[] {
   const pairs = Object.entries(models).map(([label, value]) => ({ label, value }))
   return pairs
+}
+
+function tokenizedSearch(compare: string, input: string) {
+  compare = compare.toLowerCase()
+  const words = input.split(' ').map((w) => w.toLocaleLowerCase())
+
+  for (const word of words) {
+    if (!compare.includes(word)) return false
+  }
+
+  return true
 }

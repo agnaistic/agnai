@@ -61,12 +61,19 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     return
   }
 
-  if (response.status >= 400) {
-    errored = true
+  if (response.status === 401) {
     yield {
-      error: `[local] Request failed: ${response.status} ${response.statusText}`,
+      error: `[local] Request failed with 401 Unauthorized: Check your API key`,
     }
     return
+  }
+
+  if (response.status >= 400) {
+    errored = true
+    // yield {
+    //   error: `[local] Request failed: ${response.status} ${response.statusText}`,
+    // }
+    // return
   }
 
   const stream = fetchStream(response, { format, log: opts.log })
