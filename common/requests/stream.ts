@@ -51,6 +51,9 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     return
   }
 
+  let errored = false
+  let sentError = false
+
   if (response.status === 404) {
     yield {
       error: `[local] Request failed with 404 Not Found: Check your URL`,
@@ -59,6 +62,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
   }
 
   if (response.status >= 400) {
+    errored = true
     yield {
       error: `[local] Request failed: ${response.status} ${response.statusText}`,
     }
@@ -82,6 +86,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     }
 
     if (data.error) {
+      sentError = true
       yield { error: data.error }
     }
 
@@ -96,6 +101,13 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       sentTokens = true
       yield data
     }
+  }
+
+  if (errored && !sentError) {
+    yield {
+      error: `[local] Request failed: ${response.status} ${response.statusText}`,
+    }
+    return
   }
 
   if (!sentTokens) {

@@ -335,7 +335,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       const char = original()
       setState({ ...initState, state: 'loaded' })
 
-      const personaKind = char?.persona.kind || state.personaKind
+      const personaKind = char?.persona?.kind || state.personaKind || 'text'
 
       setState('personaKind', personaKind)
 
@@ -357,7 +357,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setState({
         ...char,
         personaKind,
-        personaAttrs: toAttrs(char?.persona.attributes),
+        personaAttrs: toAttrs(char?.persona?.attributes),
         alternateGreetings: char?.alternateGreetings || [],
         book: char?.characterBook,
         voice: char?.voice || { service: undefined },

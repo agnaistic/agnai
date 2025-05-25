@@ -378,7 +378,7 @@ export function useAsyncStorage<T = any>(id: string, initialValue: T) {
 export function getStoredValue<T = any>(id: string, initialValue: T) {
   const key = `agnaistic-ls-${id}`
   const init = localStorage.getItem(key) || JSON.stringify(initialValue)
-  const value = tryParse(init) || initialValue
+  const value = tryParse(init) ?? initialValue
   return value
 }
 
