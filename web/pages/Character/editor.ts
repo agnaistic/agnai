@@ -27,6 +27,7 @@ import { isDefaultPreset } from '/common/default-preset'
 const EDITOR_CACHE_KEY = `agnai-char-editor`
 
 export type EditorState = {
+  __type?: string
   state: 'init' | 'loaded'
   editId?: string
   name: string
@@ -171,7 +172,7 @@ const [updateCache] = createDebounce(async (state: EditorState) => {
 
 export type CharEditor = ReturnType<typeof useCharEditor>
 
-export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
+export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: string }) {
   const user = userStore()
   const presets = presetStore()
   const settings = settingStore()
@@ -335,7 +336,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       const char = original()
       setState({ ...initState, state: 'loaded' })
 
-      const personaKind = char?.persona?.kind || state.personaKind || 'text'
+      const personaKind = char?.persona?.kind || state.personaKind || ''
 
       setState('personaKind', personaKind)
 

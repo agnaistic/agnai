@@ -149,18 +149,24 @@ export const characterStore = createStore<CharacterState>(
     clearCharacter() {
       return { editing: undefined }
     },
-    async *getCharacter({ characters }, characterId: string, chat?: AppSchema.Chat) {
-      if (chat?.tempCharacters && characterId.startsWith('temp-')) {
-        const char = chat.tempCharacters[characterId]
+    async *getCharacter(
+      { characters },
+      characterId: string,
+      opts?: { chat?: AppSchema.Chat; cb?: (char: AppSchema.Character) => void }
+    ) {
+      if (opts?.chat?.tempCharacters && characterId.startsWith('temp-')) {
+        const char = opts.chat.tempCharacters[characterId]
         if (!char) return toastStore.error(`Temp character not found`)
         return { editing: char }
       }
 
       const previous = characters.list.find((c) => c._id === characterId)
       yield { editing: previous }
+
       const res = await charsApi.getCharacterDetail(characterId)
       if (res.result) {
-        return { editing: res.result }
+        yield { editing: res.result }
+        opts?.cb?.(res.result)
       }
 
       if (res.error) {
@@ -182,10 +188,12 @@ export const characterStore = createStore<CharacterState>(
       }
 
       if (res.result) {
+        const chars = res.result.characters.map((c: any) => ({ __type: 'list_character', ...c }))
+
         return {
           characters: {
-            list: res.result.characters,
-            map: toMap(res.result.characters),
+            list: chars,
+            map: toMap(chars),
             loaded: Date.now(),
           },
           loading: false,

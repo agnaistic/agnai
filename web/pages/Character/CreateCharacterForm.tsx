@@ -151,7 +151,7 @@ export const CreateCharacterForm: Component<{
     startTour('char')
 
     if (srcId()) {
-      characterStore.getCharacter(srcId(), props.chat)
+      characterStore.getCharacter(srcId(), { chat: props.chat })
     }
 
     /* Character importing from CharacterHub */
@@ -190,6 +190,7 @@ export const CreateCharacterForm: Component<{
       // We have a `srcId`, we need to wait to receive the character we're editing
       if (!state.edit) return
 
+      editor.update('editId', srcId())
       await editor.load(state.edit)
       setImage(state.edit?.avatar)
       return
@@ -199,8 +200,17 @@ export const CreateCharacterForm: Component<{
     // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
 
     if (!state.edit) return
-    if (editor.state.editId !== state.edit._id && state.edit._id === srcId()) {
+    const diffCharLoaded = editor.state.editId !== state.edit._id && state.edit._id === srcId()
+    if (diffCharLoaded) {
       editor.update('editId', srcId())
+      await editor.load(state.edit)
+      setImage(state.edit?.avatar)
+      return
+    }
+
+    if ('__type' in state.edit) return
+    const orig = editor.original()
+    if (orig?.__type === 'list_character' && state.edit._id === editor.state.editId) {
       await editor.load(state.edit)
       setImage(state.edit?.avatar)
       return

@@ -414,10 +414,11 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        events.emit(EVENTS.allChars, res.result.characters)
+        const chars = res.result.characters.map((c) => ({ __type: 'list_character', ...c }))
+        events.emit(EVENTS.allChars, chars)
         const allChars = {
-          map: toMap(res.result.characters),
-          list: res.result.characters,
+          map: toMap(chars),
+          list: chars,
         }
         return {
           allChats: res.result.chats.sort(sortDesc),
