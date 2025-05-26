@@ -62,8 +62,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
-      effort: gen.reasoning.effort || 'low',
       exclude: !!gen.reasoning.exclude,
+    }
+
+    if (gen.reasoning.effort === 'custom') {
+      body.reasoning.max_tokens = gen.reasoning.maxTokens
+    } else {
+      body.reasoning.effort = gen.reasoning.effort || 'low'
     }
   }
 

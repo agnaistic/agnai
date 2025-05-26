@@ -185,9 +185,9 @@ export async function* fetchStream(
       }
 
       let chunk = decoder.decode(value)
-      // if (DEBUG) {
-      //   logger.trace({ chunk, buffer }, `[fetch] chunk - ${response.url}`)
-      // }
+
+      // console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`)
+
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
       }
