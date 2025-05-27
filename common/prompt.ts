@@ -30,6 +30,7 @@ export type PromptPlaceholders = {
   allPersonas: string[]
   ujb?: string
   post: string[]
+  prefill?: string
   memory?: string
   systemPrompt?: string
 
@@ -295,7 +296,9 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
   }
 }
 
-function getFormatOverride(opts: GenerateRequestV2): ModelFormat | undefined {
+function getFormatOverride(
+  opts: Pick<GenerateRequestV2, 'settings' | 'subscription'>
+): ModelFormat | undefined {
   switch (opts.settings?.service) {
     case 'agnaistic':
       return opts.settings.modelFormat || opts.subscription?.preset?.modelFormat
@@ -393,13 +396,21 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
   //   hist.lines = next
   // }
 
-  const result = await parseTemplate(template, {
+  const templateOpts = {
     ...opts,
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
     lines: hist?.lines || [],
     ...rest,
+  }
+
+  if (parts.prefill) {
+    parts.prefill = await parseTemplate(parts.prefill, { ...templateOpts }).then((t) => t.parsed)
+  }
+
+  const result = await parseTemplate(template, {
+    ...templateOpts,
     limit: {
       context: getContextLimit(opts.user, opts.settings),
       encoder,

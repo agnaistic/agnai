@@ -4,8 +4,8 @@ import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { tryParse } from '../util'
 import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
+import { toImageJinjaTemplate } from './payloads'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -33,8 +33,11 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     opts.settings?.maxTokens!
   )
 
-  if (opts.imageData && gen.jinjaTemplate) {
-    payload.chat_template = tryParse(gen.jinjaTemplate) || gen.jinjaTemplate
+  if (opts.imageData && gen.jinjaEnabled) {
+    payload.chat_template = toImageJinjaTemplate({
+      format: gen.modelFormat,
+      jinja: gen.jinjaTemplate,
+    })
   }
 
   const headers: any = {

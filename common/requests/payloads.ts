@@ -16,15 +16,22 @@ export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
   body.stream ??=
     (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse
 
-  if (body.dynamic_temperature) {
-    body.dynatemp_low = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
-    body.dynatemp_high = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
-    body.dynatemp_exponent = gen.dynatemp_exponent
+  if (gen.reasoning?.enabled) {
+    body.reasoning = {
+      exclude: !!gen.reasoning.exclude,
+      summary: gen.reasoning.exclude ? 'None' : 'auto',
+    }
+
+    if (gen.reasoning.effort === 'custom') {
+      body.reasoning.max_tokens = gen.reasoning.maxTokens
+    } else {
+      body.reasoning.effort = gen.reasoning.effort || 'low'
+    }
   }
 
-  if (opts.kind === 'continue') {
-    gen.tokenHealing = true
-  }
+  // if (opts.kind === 'continue') {
+  //   gen.tokenHealing = true
+  // }
 
   return body
 }
@@ -39,6 +46,33 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
 
   if (!gen.temp) {
     gen.temp = 0.75
+  }
+
+  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
+    const model =
+      gen.service === 'openai'
+        ? gen.oaiModel || defaultPresets.openai.oaiModel
+        : gen.thirdPartyModel || ''
+
+    const body: any = {
+      model: model,
+      stream:
+        (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse,
+      temperature: gen.temp ?? defaultPresets.openai.temp,
+      max_tokens: gen.maxTokens,
+      top_p: gen.topP ?? 1,
+      stop: getStoppingStrings(opts, stops),
+    }
+
+    if (gen.presencePenalty) {
+      body.presence_penalty = gen.presencePenalty
+    }
+
+    if (gen.frequencyPenalty) {
+      body.frequency_penalty = gen.frequencyPenalty
+    }
+
+    return body
   }
 
   if (format === 'vllm') {
@@ -331,26 +365,6 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       rep_pen_range: gen.repetitionPenaltyRange,
       rep_pen_slope: gen.repetitionPenaltySlope,
     }
-    return body
-  }
-
-  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
-    const oaiModel = gen.thirdPartyModel || ''
-    const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
-
-    const body: any = {
-      model: oaiModel,
-      stream:
-        (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse,
-      temperature: gen.temp ?? defaultPresets.openai.temp,
-      max_tokens: maxResponseLength,
-      top_p: gen.topP ?? 1,
-      stop: getStoppingStrings(opts),
-    }
-
-    body.presence_penalty = gen.presencePenalty ?? defaultPresets.openai.presencePenalty
-    body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
-
     return body
   }
 }

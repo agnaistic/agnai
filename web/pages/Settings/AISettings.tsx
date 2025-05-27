@@ -15,7 +15,7 @@ import {
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
-import KoboldAISettings from './components/KoboldAISettings'
+import ThirdPartySettings from './components/ThirdPartySettings'
 import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
@@ -198,7 +198,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>
-        <KoboldAISettings state={props.state} setter={props.setter} />
+        <ThirdPartySettings state={props.state} setter={props.setter} />
       </div>
 
       <div class={currentTab() === ADAPTER_LABELS.ooba ? tabClass : 'hidden'}>

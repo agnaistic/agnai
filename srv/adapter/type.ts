@@ -1,4 +1,4 @@
-import type { AssembledPrompt, JsonField, PromptPlaceholders } from '../../common/prompt'
+import type { JsonField, PromptPlaceholders } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { SubscriptionPreset } from './agnaistic'
@@ -60,12 +60,13 @@ export type GenerateRequestV2 = {
     | 'request'
     | 'plain'
     | 'chat-query'
+
   chat: AppSchema.Chat
-  user: AppSchema.User
   char: AppSchema.Character
   replyAs: AppSchema.Character
-  sender: AppSchema.Profile
+  user: AppSchema.User
   members: AppSchema.Profile[]
+  sender: AppSchema.Profile
 
   parts: PromptPlaceholders
   lines: string[]
@@ -125,11 +126,10 @@ export type AdapterProps = {
 
   prompt: string
   messages?: Array<{ role: string; content: string }>
-  assembled: AssembledPrompt | undefined
 
   parts: PromptPlaceholders
   lines: string[]
-  retries?: string[]
+
   characters: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
   lastMessage?: string

@@ -176,6 +176,49 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         <ThirdPartyUrl {...props} />
         <ThirdPartyKey {...props} />
 
+        <div class="flex w-full flex-col gap-1" classList={{ hidden: props.hides.thirdPartyModel }}>
+          <FormLabel
+            label={
+              <div class="flex justify-between">
+                <div>Model</div>
+                <div class="flex gap-2">
+                  <Show when={localModels.models.length > 1}>
+                    <CustomSelect
+                      parentClass="flex w-full justify-end"
+                      size="sm"
+                      value={props.state.thirdPartyModel}
+                      selected={props.state.thirdPartyModel}
+                      options={localModels.models}
+                      onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
+                      search={tokenizedSearch}
+                      buttonLabel="Select Model"
+                      hide={localModels.models.length <= 1}
+                    />
+                  </Show>
+
+                  <Show when={props.state.thirdPartyUrl}>
+                    <Button size="sm" onClick={() => presetStore.getLocalModels(props.state)}>
+                      <RefreshCcw size={20} />
+                    </Button>
+                  </Show>
+                </div>
+              </div>
+            }
+            helperText="Model Override (typically for 3rd party APIs)"
+          />
+
+          <div class="flex w-full gap-1">
+            <TextInput
+              parentClass="w-full"
+              fieldName="thirdPartyModel"
+              value={props.state.thirdPartyModel ?? ''}
+              disabled={props.state.disabled}
+              onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
+              hide={props.hides.thirdPartyModel}
+            />
+          </div>
+        </div>
+
         <div class="flex flex-wrap items-start gap-2">
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"
@@ -246,49 +289,6 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           hide={props.hides.mistralModel}
           onChange={(ev) => props.setter('mistralModel', ev.value)}
         />
-
-        <div class="flex w-full flex-col gap-1" classList={{ hidden: props.hides.thirdPartyModel }}>
-          <FormLabel
-            label={
-              <div class="flex justify-between">
-                <div>Model</div>
-                <div class="flex gap-2">
-                  <Show when={localModels.models.length > 1}>
-                    <CustomSelect
-                      parentClass="flex w-full justify-end"
-                      size="sm"
-                      value={props.state.thirdPartyModel}
-                      selected={props.state.thirdPartyModel}
-                      options={localModels.models}
-                      onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
-                      search={tokenizedSearch}
-                      buttonLabel="Select Model"
-                      hide={localModels.models.length <= 1}
-                    />
-                  </Show>
-
-                  <Show when={props.state.thirdPartyUrl}>
-                    <Button size="sm" onClick={() => presetStore.getLocalModels(props.state)}>
-                      <RefreshCcw size={20} />
-                    </Button>
-                  </Show>
-                </div>
-              </div>
-            }
-            helperText="Model Override (typically for 3rd party APIs)"
-          />
-
-          <div class="flex w-full gap-1">
-            <TextInput
-              parentClass="w-full"
-              fieldName="thirdPartyModel"
-              value={props.state.thirdPartyModel ?? ''}
-              disabled={props.state.disabled}
-              onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
-              hide={props.hides.thirdPartyModel}
-            />
-          </div>
-        </div>
 
         <div class="flex w-full items-end gap-1">
           <Select

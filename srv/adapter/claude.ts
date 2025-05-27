@@ -513,7 +513,7 @@ async function createClaudePrompt(opts: AdapterProps) {
 
   const ujb = parsed ? processLine('system', parsed) : ''
 
-  const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
+  const prefill = opts.parts.prefill ? opts.parts.prefill + '\n' : ''
   const prefillCost = await enc(prefill)
 
   const maxBudget =

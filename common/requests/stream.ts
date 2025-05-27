@@ -10,7 +10,12 @@ export type ServerSentEvent = {
   index?: number
 }
 
-// const DEBUG = typeof window !== 'undefined' ? false : false
+const DEBUG =
+  typeof window !== 'undefined'
+    ? false
+    : typeof process !== 'undefined'
+    ? process.env.LOG_LEVEL === 'debug'
+    : false
 
 export const streamGenerator: CompletionGenerator = async function* (opts) {
   const { signal, url, headers, body, format } = opts
@@ -186,7 +191,11 @@ export async function* fetchStream(
 
       let chunk = decoder.decode(value)
 
-      // console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`)
+      if (DEBUG) {
+        console.log(
+          `[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`
+        )
+      }
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()

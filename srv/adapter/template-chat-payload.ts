@@ -2,7 +2,6 @@ import { AppLog } from '../middleware'
 import { CompletionItem, GenerateRequestV2 } from './type'
 import { replaceTags } from '/common/presets/templates'
 import { assemblePrompt } from '/common/prompt'
-import { parseTemplate } from '/common/template-parser'
 import { AppSchema, TokenCounter } from '/common/types'
 
 export function renderMessagesToPrompt(
@@ -78,7 +77,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     sections: { post, history, post_system },
   } = sections
 
-  const prefill = await parse(req, counter, req.settings?.prefill || '')
+  const prefill = (req.parts.prefill || '').trim()
 
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = []
   const systemPrompt = strictSystem.join('').trim().replace(/\n\n+/g, '\n\n')
@@ -119,8 +118,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   //   })
   // }
 
-  const prefillText = prefill.parsed.length ? ` ${prefill.parsed.trim()}` : ''
-  messages.push({ role: 'assistant', content: `${postContent}${prefillText}` })
+  messages.push({ role: 'assistant', content: `${postContent}${prefill}` })
 
   return { messages, assembled }
 }
@@ -205,21 +203,4 @@ export function ensureUserMessageFirst(messages: CompletionItem[]): CompletionIt
   }
 
   return messages
-}
-
-async function parse(opts: GenerateRequestV2, counter: TokenCounter, text: string, limit?: number) {
-  const template = replaceTags(text, 'None')
-  const { parsed, sections } = await parseTemplate(template, {
-    char: opts.char,
-    chat: opts.chat,
-    jsonValues: {},
-    sender: opts.sender,
-    impersonate: opts.impersonate,
-    lines: opts.lines,
-    limit: limit ? { context: limit, encoder: counter } : undefined,
-  })
-
-  const count = await counter(parsed)
-
-  return { parsed, count, sections }
 }

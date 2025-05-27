@@ -5,7 +5,7 @@ import Button from '../../../shared/Button'
 import { SetStoreFunction } from 'solid-js/store'
 import { UserSettings } from '../util'
 
-const KoboldAISettings: Component<{
+const ThirdPartySettings: Component<{
   state: UserSettings
   setter: SetStoreFunction<UserSettings>
 }> = (props) => {
@@ -114,4 +114,4 @@ const KoboldAISettings: Component<{
   )
 }
 
-export default KoboldAISettings
+export default ThirdPartySettings

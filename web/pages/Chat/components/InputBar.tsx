@@ -227,6 +227,7 @@ const InputBar: Component<{
 
   const onFile = async (files: FileInputResult[]) => {
     setDragging(false)
+    setMenu(false)
     const [file] = files
     if (!file) return
 

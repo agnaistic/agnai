@@ -289,7 +289,7 @@ async function getPostInstruction(
         },
         {
           role: 'assistant',
-          content: `${opts.gen.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
+          content: `${opts.parts.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
         },
       ]
 
