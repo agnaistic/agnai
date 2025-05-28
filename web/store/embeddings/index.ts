@@ -1,6 +1,6 @@
 import wiki from 'wikijs'
 import { EmbedDocument, WorkerRequest, WorkerResponse } from './types'
-import { env } from '@xenova/transformers'
+// import { env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1'
 import { AppSchema } from '/common/types'
 import { v4 } from 'uuid'
 import { toastStore } from '../toasts'
@@ -18,18 +18,27 @@ type WikiItem = {
   items?: WikiItem[]
 }
 
+export const DEFAULT_EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2'
+
+export const EMBED_MODELS = [
+  { label: 'Disabled', value: '' },
+  { label: 'Small', value: 'Xenova/all-MiniLM-L6-v2' }, // // 23MB quantized, 90MB full
+  { label: 'Medium', value: 'Xenova/all-mpnet-base-v2' }, // 110MB quantized, 436MB full
+  { label: 'Large - Multi-lingual', value: 'Xenova/bge-base-en-v1.5' }, // 110MB quantized, 436M full
+  { label: 'Large - English', value: 'nomic-ai/nomic-embed-text-v1.5' }, // 96MB quantized, 374 MB full
+]
+
 const models = {
-  // embedding: 'Xenova/all-mpnet-base-v2',
-  // embedding: 'Xenova/bge-base-en-v1.5',
-  embedding: 'Xenova/all-MiniLM-L6-v2',
+  embedding: DEFAULT_EMBED_MODEL,
   // captioning: 'Xenova/vit-gpt2-image-captioning',
   // WIP
   captioning: 'http://localhost:5000/api/caption',
 }
 
 // @ts-ignore
-env.allowLocalModels = false
+// env.allowLocalModels = false
 
+let EMBED_ALLOWED = false
 let EMBED_READY = false
 let CAPTION_READY = false
 let MEMORY_SET: (state: Partial<MemoryState>) => void
@@ -62,11 +71,11 @@ export const embedApi = {
     const embeds = ids.map((doc) => ({ id: doc._id, name: doc.name, state: 'not-loaded' }))
     setter({ embeds })
   },
-  initSimiliary: (disableLTM?: boolean) => {
-    const user = getStore('user').getState()
+  initSimiliary: (model: string) => {
     const chat = getStore('chat').getState().active?.chat
-    const disable = disableLTM ?? user.user?.disableLTM ?? true
-    post('initSimilarity', { model: models.embedding, disableLTM: disable })
+    post('initSimilarity', { model })
+
+    EMBED_ALLOWED = !!model
 
     // Load the document when embeddings are ready
     if (chat?.userEmbedId) {
@@ -123,9 +132,8 @@ const handlers: {
       const user = getStore('user').getState()
       const chat = getStore('chat').getState().active?.chat
 
-      const disableLTM = user.user?.disableLTM ?? true
       if (type === 'embed') {
-        post('initSimilarity', { model: models.embedding, disableLTM })
+        post('initSimilarity', { model: user.ui.embeddingModel || '' })
 
         // This will be loaded 'on embeds ready'
         if (chat?.userEmbedId) {
@@ -135,7 +143,7 @@ const handlers: {
 
       if (type === 'image' && window.flags.caption) {
         const httpCaptioning = models.captioning.startsWith('http')
-        if (disableLTM && !httpCaptioning) return
+        if (!httpCaptioning) return
         post('initCaptioning', { model: models.captioning })
       }
     } catch (ex) {}
@@ -172,7 +180,11 @@ const handlers: {
     if (msg.kind === 'chat') return
     toastStore.info(`Embeddeding ready`)
   },
-  progress: (_, msg) => {},
+  progress: (_, msg) => {
+    if (msg.status === 'done') {
+      console.log(`loaded: ${msg.name}`)
+    }
+  },
   result: (_, msg) => {
     const listener = embedCallbacks.get(msg.requestId)
     if (!listener) return
@@ -339,6 +351,8 @@ async function decode(tokens: number[]): Promise<string> {
 }
 
 async function loadDocument(documentId: string) {
+  if (!EMBED_ALLOWED) return
+
   if (!EMBED_READY) {
     if (documentQueue.includes(documentId)) return
     documentQueue.push(documentId)

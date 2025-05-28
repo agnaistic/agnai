@@ -236,6 +236,7 @@ const TextInput: Component<Props> = (props) => {
             lang={props.lang}
             onKeyUp={(ev) => props.onKeyUp?.(ev)}
             onKeyDown={(ev) => props.onKeyDown?.(ev)}
+            onPaste={handleInput}
             onchange={handleInput}
             onInput={handleInput}
             {...props.textarea}
@@ -271,6 +272,7 @@ const TextInput: Component<Props> = (props) => {
             onKeyDown={(ev) => props.onKeyDown?.(ev)}
             onChange={handleInput}
             onInput={handleInput}
+            onPaste={handleInput}
             disabled={props.disabled}
             pattern={props.pattern}
             spellcheck={props.spellcheck}
@@ -304,6 +306,7 @@ const TextInput: Component<Props> = (props) => {
               onKeyDown={(ev) => props.onKeyDown?.(ev)}
               onChange={handleInput}
               onInput={handleInput}
+              onPaste={handleInput}
               disabled={props.disabled}
               pattern={props.pattern}
               spellcheck={props.spellcheck}

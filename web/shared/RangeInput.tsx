@@ -32,11 +32,11 @@ const RangeInput: Component<{
       return
     }
 
-    const parsed = next !== undefined ? next || '0' : '0'
+    const parsed = next !== undefined ? next ?? '' : ''
 
     if (isNaN(+parsed)) {
-      range.value = display()
-      input.value = display()
+      range.value = parsed
+      input.value = parsed
       return
     }
 
@@ -175,11 +175,11 @@ export const InlineRangeInput: Component<{
       return
     }
 
-    const parsed = next !== undefined ? next || '0' : '0'
+    const parsed = next !== undefined ? next ?? '' : ''
 
     if (isNaN(+parsed)) {
-      range.value = display()
-      input.value = display()
+      range.value = parsed
+      input.value = parsed
       return
     }
 

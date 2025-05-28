@@ -332,7 +332,7 @@ async function getRetrievalBreakpoint(
   lines: string[]
 ) {
   const { settings, chat } = ents
-  if (!text) return { users: undefined, chats: undefined }
+  if (!text?.trim()) return { users: undefined, chats: undefined }
 
   const encoder = await getEncoder()
   let removed = 0

@@ -1,3 +1,10 @@
+declare module 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1' {
+  import * as api from '@huggingface/transformers'
+  const mod: typeof api
+
+  export = mod
+}
+
 declare module 'libsodium-wrappers-sumo' {
   const mod: any
 

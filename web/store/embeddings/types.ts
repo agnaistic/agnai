@@ -19,7 +19,7 @@ export type RequestDocEmbed = {
 export type WorkerRequest =
   | { type: 'encode'; id: string; text: string }
   | { type: 'decode'; id: string; tokens: number[] }
-  | { type: 'initSimilarity'; model: string; disableLTM: boolean; documentId?: string }
+  | { type: 'initSimilarity'; model: string }
   | { type: 'initCaptioning'; model: string }
   | { type: 'captionImage'; image: string; requestId: string }
   | {
@@ -45,7 +45,14 @@ export type WorkerResponse =
     }
   | { type: 'embedLoaded' }
   | { type: 'captionLoaded' }
-  | { type: 'progress'; progress: number }
+  | {
+      type: 'progress'
+      status?: 'initiate' | 'progress' | 'done' | 'ready'
+      progress: number
+      total?: number
+      file?: string
+      name?: string
+    }
   | { type: 'init' }
   | { type: 'embedded'; kind: 'chat' | 'document'; id: string }
   | { type: 'caption'; requestId: string; caption: string }

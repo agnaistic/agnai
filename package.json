@@ -24,6 +24,9 @@
     "dist/*.css",
     "dist/*.map"
   ],
+  "parcelIgnore": [
+    "https://.+"
+  ],
   "_moduleAliases": {
     "srv": "./srv",
     "/srv": "./srv",
@@ -123,6 +126,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
+    "@huggingface/transformers": "^3.5.1",
     "@melloware/coloris": "^0.20.0",
     "@parcel/config-default": "^2.13.3",
     "@parcel/core": "^2.13.3",
@@ -176,6 +180,7 @@
     "mocha-chai-jest-snapshot": "^1.1.4",
     "nodemon": "^3.0.1",
     "parcel": "^2.13.3",
+    "parcel-resolver-ignore": "^2.2.0",
     "path-browserify": "^1.0.0",
     "pdfdataextract": "^3.2.0",
     "pdfjs-dist": "2.10.377",

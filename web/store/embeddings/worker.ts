@@ -1,5 +1,6 @@
 import * as lf from 'localforage'
-import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
+// import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
+import type * as HF from '@huggingface/transformers'
 import {
   EmbedDocument,
   RequestChatEmbed,
@@ -9,11 +10,12 @@ import {
 } from './types'
 import { docCache } from './cache'
 import { getEncoding } from 'js-tiktoken'
-
-// @ts-ignore
-env.allowLocalModels = false
+import { AllTasks, TaskType } from '@huggingface/transformers'
 
 const encoder = getEncoding('cl100k_base')
+
+// Absolutely awful workaround due to Parcel.js being extremely sucky
+const dynamicImport = new Function('a', 'b', 'return import(a, b);')
 
 type Vector = { data: number[] }
 
@@ -26,10 +28,12 @@ type Embeddings = {
 }
 
 // let Tokenizer: PreTrainedTokenizer
-let Embedder: Pipeline
-let Captioner: Pipeline
+let Embedder: HF.FeatureExtractionPipeline | undefined
+let Captioner: HF.Pipeline | undefined
 let EMBED_INITED = false
 let CAPTION_INITED = false
+let EMBED_MODEL = ''
+
 let HttpCaptioner: (base64: string) => Promise<any>
 
 const embeddings: Embeddings = {}
@@ -49,20 +53,31 @@ const handlers: {
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {
-    if (EMBED_INITED) {
+    if (!msg.model) {
+      if (EMBED_INITED) {
+        console.log('[embed] unloaded')
+      }
+
+      EMBED_MODEL = ''
+      Embedder = undefined
+      EMBED_INITED = false
+      return
+    }
+    if (EMBED_INITED && msg.model === EMBED_MODEL) {
       console.log('[embed] already inited')
       return
     }
 
-    if (msg.disableLTM) return
+    if (!msg.model) return
 
     EMBED_INITED = true
-    Embedder = (await pipeline('feature-extraction', msg.model, {
-      // quantized: true,
-      progress_callback: (data: { status: string; file: string; progress: number }) => {
-        post('progress', data)
-      },
-    })) as Pipeline
+    EMBED_MODEL = msg.model
+
+    const embedder = await pipeline('feature-extraction', msg.model, (data) => {
+      post('progress', data)
+    })
+    Embedder = embedder
+
     console.log(`[embed] ready`)
     post('embedLoaded', {})
   },
@@ -87,12 +102,11 @@ const handlers: {
       console.log('[caption] http ready')
       return
     }
-    Captioner = await pipeline('image-to-text', msg.model, {
-      // quantized: true,
-      progress_callback: (data: { status: string; file: string; progress: number }) => {
-        post('progress', data)
-      },
+
+    const captioner = await pipeline('image-to-text', msg.model, (data) => {
+      post('progress', data)
     })
+    Captioner = captioner
     console.log(`[caption] ready`)
     post('captionLoaded', {})
   },
@@ -112,7 +126,7 @@ const handlers: {
 
     const buffer = Buffer.from(base64, 'base64')
     const blob = new Blob([new Uint8Array(buffer)])
-    const image = await RawImage.fromBlob(blob)
+    const image = await hf().then((api) => api.RawImage.fromBlob(blob))
 
     console.log(`[caption] starting`)
     try {
@@ -147,6 +161,7 @@ const handlers: {
     embed(msg)
   },
   queryChat: async (query) => {
+    if (!Embedder) return
     if (!embeddings[query.chatId]) return
     const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
 
@@ -159,7 +174,7 @@ const handlers: {
         return msg.msg !== query.text && isBefore
       })
       .map((msg) => {
-        const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
+        const similarity = calculateCosineSimilarity(embed.data as number[], msg.embed.data)
         return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
       })
       .sort(rank)
@@ -178,7 +193,7 @@ const handlers: {
       const embeds = documents[query.chatId]
         .filter((msg) => msg.msg !== query.text)
         .map((msg) => {
-          const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
+          const similarity = calculateCosineSimilarity(embed.data as number[], msg.embed.data)
           return { msg: msg.msg, entityId: '', similarity, meta: msg.meta }
         })
         .sort(rank)
@@ -208,12 +223,15 @@ function calculateCosineSimilarity(input: number[], compare: number[]) {
   let queryMagnitude = 0
   let embeddingMagnitude = 0
 
-  for (let i = 0; i < compare.length; i++) {
+  const compares = toVectorArray(compare)
+
+  for (let i = 0; i < compares.length; i++) {
     dotProduct += compare[i] * input[i]
     queryMagnitude += compare[i] ** 2
     embeddingMagnitude += input[i] ** 2
   }
-  return dotProduct / (Math.sqrt(queryMagnitude) * Math.sqrt(embeddingMagnitude))
+  const similarity = dotProduct / (Math.sqrt(queryMagnitude) * Math.sqrt(embeddingMagnitude))
+  return similarity
 }
 
 function rank(left: RankedMsg, right: RankedMsg) {
@@ -324,7 +342,9 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 }
 
 async function vectorize(msg: string) {
-  const embed = await Embedder(msg, { pooling: 'mean', normalize: true })
+  console.log('vectorizing', msg)
+  const embed = await Embedder!(msg, { pooling: 'mean', normalize: true })
+  console.log('vectorized')
   return { data: embed.data as number[] }
 }
 
@@ -358,4 +378,40 @@ async function reviveChatEmbeddings(chatId: string): Promise<Record<string, Text
 
 async function deleteChatCache(chatId: string) {
   await lf.removeItem(`chat-embeddings-${chatId}`)
+}
+
+async function hf() {
+  // We use the CDN version to avoid run-time errors relating to accessing the `import` object
+  const hf = await dynamicImport('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1')
+  hf.env.allowLocalModels = false
+  return hf as typeof HF
+}
+
+async function pipeline<T extends TaskType>(
+  task: T,
+  model: string,
+  callback: (data: any) => void
+): Promise<AllTasks[T]> {
+  const api = await hf()
+
+  const p = api.pipeline(task, model, {
+    dtype: 'fp16',
+    progress_callback: callback,
+  })
+
+  return p
+}
+
+function toVectorArray(vectors: any) {
+  if (Array.isArray(vectors) || vectors?.length) return vectors
+
+  const list: number[] = []
+
+  for (const key of Object.keys(vectors)) {
+    const id = +key
+    if (isNaN(id)) continue
+    list[id] = vectors[key]
+  }
+
+  return list
 }

@@ -129,9 +129,7 @@ export const userStore = createStore<UserState>(
     } else {
       userStore.receiveUI(init.user.ui)
 
-      if (!init.user.disableLTM) {
-        embedApi.initSimiliary(false)
-      }
+      embedApi.initSimiliary(init.user.ui.embeddingModel || '')
     }
   })
 
@@ -143,6 +141,12 @@ export const userStore = createStore<UserState>(
   return {
     modal({ showProfile }, show?: boolean) {
       return { showProfile: show ?? !showProfile }
+    },
+    async updateEmbeddingModel(_, model: string) {
+      userStore.saveUI({ embeddingModel: model })
+      if (model) {
+        embedApi.initSimiliary(model)
+      }
     },
     async revealApiKey(_, cb: (key: string) => void) {
       const res = await api.post('/user/config/reveal-key')
@@ -427,16 +431,11 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig({ user: prev }, config: ConfigUpdate) {
+    async updateConfig(_, config: ConfigUpdate) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
-
-        const prevLTM = prev?.disableLTM ?? true
-        if (prevLTM && config.disableLTM === false) {
-          embedApi.initSimiliary(false)
-        }
 
         toastStore.success(`Updated settings`)
         return { user: res.result }
