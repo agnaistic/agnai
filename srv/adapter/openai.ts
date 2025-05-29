@@ -1,4 +1,4 @@
-import { sanitiseAndTrim } from '/common/requests/util'
+import { joinUrl, sanitiseAndTrim } from '/common/requests/util'
 import { ChatRole, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppSchema } from '../../common/types/schema'
@@ -132,8 +132,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const url = gen.thirdPartyUrlNoSuffix
     ? base.url
     : useChat
-    ? `${base.url}/chat/completions`
-    : `${base.url}/completions`
+    ? joinUrl(base.url, 'chat/completions')
+    : joinUrl(base.url, 'completions')
 
   const iter = body.stream
     ? streamGenerator({
@@ -216,11 +216,11 @@ function getBaseUrl(gen: Partial<AppSchema.GenSettings>, isThirdParty?: boolean)
 
     // If the user provides a versioned API URL for their third-party API, use that. Otherwise
     // fall back to the standard /v1 URL.
-    const version = gen.thirdPartyUrl.match(/\/v\d+$/) ? '' : '/v1'
+    const version = gen.thirdPartyUrl.match(/\/v\d+/) ? '' : '/v1'
     return { url: gen.thirdPartyUrl + version, changed: true }
   }
 
-  return { url: `${baseUrl}/v1`, changed: false }
+  return { url: baseUrl.includes('/v1') ? baseUrl : `${baseUrl}/v1`, changed: false }
 }
 
 export type OAIUsage = {

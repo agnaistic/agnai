@@ -78,6 +78,7 @@ export const presetStore = createStore<PresetState>(
       const models = await presetApi.getPresetModelList({
         id: preset._id || '',
         url: preset.thirdPartyUrl,
+        // We pass this for presets that are un-saved
         key: preset.thirdPartyKey,
         useCache,
       })

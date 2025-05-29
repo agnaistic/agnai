@@ -110,7 +110,7 @@ async function getLocalModelList(opts: { url: string; key?: string }): Promise<s
       models.push(model.id)
     }
 
-    return models
+    return models.sort((l, r) => l.localeCompare(r))
   } catch (ex: any) {
     return []
   }
@@ -141,6 +141,7 @@ async function getPresetModelList(opts: {
     }
   }
 
+  models.sort((l, r) => l.localeCompare(r))
   MODEL_LIST_CACHE.set(opts.url, models)
 
   return models

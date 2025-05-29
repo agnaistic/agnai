@@ -50,7 +50,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     const err = response.err
     const message = err?.message || err
     yield {
-      error: `[local] Request failed: ${message || 'unexpect error occurred'}`,
+      error: `Request failed: ${message || 'unexpect error occurred'}`,
       errorObj: err,
     }
     return
@@ -60,25 +60,18 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
   let sentError = false
 
   if (response.status === 404) {
-    yield {
-      error: `[local] Request failed with 404 Not Found: Check your URL`,
-    }
-    return
+    errored = true
   }
 
   if (response.status === 401) {
     yield {
-      error: `[local] Request failed with 401 Unauthorized: Check your API key`,
+      error: `Request failed with 401 Unauthorized: Check your API key`,
     }
     return
   }
 
   if (response.status >= 400) {
     errored = true
-    // yield {
-    //   error: `[local] Request failed: ${response.status} ${response.statusText}`,
-    // }
-    // return
   }
 
   const stream = fetchStream(response, { format, log: opts.log })
@@ -116,9 +109,22 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
   }
 
   if (errored && !sentError) {
-    yield {
-      error: `[local] Request failed: ${response.status} ${response.statusText}`,
+    switch (response.status) {
+      case 404: {
+        yield {
+          error: `Request failed with 404 Not Found: Check your URL`,
+        }
+        break
+      }
+
+      default: {
+        yield {
+          error: `Request failed: ${response.status} ${response.statusText}`,
+        }
+        break
+      }
     }
+
     return
   }
 
