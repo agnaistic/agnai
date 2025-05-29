@@ -46,7 +46,7 @@ export const ResponseLength: Field<{
       label="Response Length"
       helperText="Maximum length of the response. Measured in 'tokens'"
       min={16}
-      max={1024}
+      max={2048}
       step={1}
       value={props.state.maxTokens}
       disabled={props.state.disabled}

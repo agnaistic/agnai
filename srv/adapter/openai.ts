@@ -112,6 +112,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const headers: any = {
     'Content-Type': 'application/json',
+    'HTTP-Referer': 'https://agnai.chat',
+    'X-Title': 'Agnai.Chat',
   }
 
   if (apiKey) {
