@@ -32,7 +32,7 @@ import { SetStoreFunction } from 'solid-js/store'
 import { UserSettings } from './util'
 import { FormLabel } from '/web/shared/FormLabel'
 import Select from '/web/shared/Select'
-import { EMBED_MODELS } from '/web/store/embeddings'
+import { EMBED_MODELS_OPTS } from '/web/store/embeddings'
 
 const AISettings: Component<{
   state: UserSettings
@@ -125,7 +125,7 @@ const AISettings: Component<{
               <div>Enable Embeddings/Long-Term Memory</div>
               <Select
                 parentClass="text-sm py-1 px-2"
-                items={EMBED_MODELS}
+                items={EMBED_MODELS_OPTS}
                 value={state.ui.embeddingModel || ''}
                 onChange={(ev) => userStore.updateEmbeddingModel(ev.value)}
               />

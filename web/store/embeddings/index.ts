@@ -20,13 +20,18 @@ type WikiItem = {
 
 export const DEFAULT_EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2'
 
-export const EMBED_MODELS = [
-  { label: 'Disabled', value: '' },
-  { label: 'Small', value: 'Xenova/all-MiniLM-L6-v2' }, // // 23MB quantized, 90MB full
-  { label: 'Medium', value: 'Xenova/all-mpnet-base-v2' }, // 110MB quantized, 436MB full
-  { label: 'Large - Multi-lingual', value: 'Xenova/bge-base-en-v1.5' }, // 110MB quantized, 436M full
-  { label: 'Large - English', value: 'nomic-ai/nomic-embed-text-v1.5' }, // 96MB quantized, 374 MB full
-]
+export const EMBED_MODELS = {
+  Disabled: '',
+  Small: 'Xenova/all-MiniLM-L6-v2', // 23MB quantized, 90MB full
+  Medium: 'Xenova/all-MiniLM-L6-v2', // 110MB quantized, 436MB full
+  'Large - Multi-lingual': 'Xenova/bge-base-en-v1.5', // 110MB quantized, 436M full
+  'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 374 MB full
+} as const
+
+export const EMBED_MODELS_OPTS = Object.entries(EMBED_MODELS).map(([label, value]) => ({
+  value,
+  label,
+}))
 
 const models = {
   embedding: DEFAULT_EMBED_MODEL,
