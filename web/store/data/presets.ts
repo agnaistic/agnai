@@ -92,15 +92,17 @@ export async function deleteUserPresetKey(presetId: string) {
   return localApi.result({ success: true })
 }
 
-async function getLocalModelList(baseUrl: string, key?: string): Promise<string[]> {
+const MODEL_LIST_CACHE = new Map<string, string[]>()
+
+async function getLocalModelList(opts: { url: string; key?: string }): Promise<string[]> {
   try {
     const headers: any = {}
 
-    if (key) {
-      headers.Authorization = `Bearer ${key}`
+    if (opts.key) {
+      headers.Authorization = `Bearer ${opts.key}`
     }
 
-    const res = await fetch(joinUrl(baseUrl, '/models'), { headers }).then((res) => res.json())
+    const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
     const models: string[] = []
 
     for (const model of res.data) {
@@ -114,8 +116,17 @@ async function getLocalModelList(baseUrl: string, key?: string): Promise<string[
   }
 }
 
-async function getPresetModelList(id: string, baseUrl: string, key?: string): Promise<string[]> {
-  const res = await api.post<{ data: any[] }>(`/user/preset-models`, { id, url: baseUrl })
+async function getPresetModelList(opts: {
+  id: string
+  url: string
+  key?: string
+  useCache?: boolean
+}): Promise<string[]> {
+  if (opts.useCache) {
+    const cache = MODEL_LIST_CACHE.get(opts.url)
+    if (cache) return cache
+  }
+  const res = await api.post<{ data: any[] }>(`/user/preset-models`, { id: opts.id, url: opts.url })
   const models: string[] = []
 
   if (res.error) {
@@ -129,6 +140,8 @@ async function getPresetModelList(id: string, baseUrl: string, key?: string): Pr
       models.push(model.id)
     }
   }
+
+  MODEL_LIST_CACHE.set(opts.url, models)
 
   return models
 }

@@ -197,7 +197,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                   </Show>
 
                   <Show when={props.state.thirdPartyUrl}>
-                    <Button size="sm" onClick={() => presetStore.getLocalModels(props.state)}>
+                    <Button size="sm" onClick={() => presetStore.getPresetModelList(props.state)}>
                       <RefreshCcw size={20} />
                     </Button>
                   </Show>

@@ -62,7 +62,7 @@ export const ModeGenSettings: Component<{
 
         if (isDefaultPreset(id)) {
           const clone = deepClone(defaultPresets[id])
-          presetStore.getLocalModels(clone)
+          presetStore.getPresetModelList(clone, true)
           setStore(clone)
           return
         }
@@ -70,7 +70,7 @@ export const ModeGenSettings: Component<{
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
           setStore(preset)
-          presetStore.getLocalModels(preset)
+          presetStore.getPresetModelList(preset, true)
           return
         }
       }
