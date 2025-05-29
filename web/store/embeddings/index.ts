@@ -28,17 +28,22 @@ export const EMBED_MODELS = {
   'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 374 MB full
 } as const
 
+export const CAPTION_MODELS = {
+  Disabled: '',
+  'Vit Gpt-2 (Tiny)': 'Xenova/vit-gpt2-image-captioning',
+  'Phi 3.5 (LG)': 'onnx-community/Phi-3.5-vision-instruct',
+  'MGP Str Base (XL)': 'onnx-community/mgp-str-base',
+} as const
+
 export const EMBED_MODELS_OPTS = Object.entries(EMBED_MODELS).map(([label, value]) => ({
   value,
   label,
 }))
 
-const models = {
-  embedding: DEFAULT_EMBED_MODEL,
-  // captioning: 'Xenova/vit-gpt2-image-captioning',
-  // WIP
-  captioning: 'http://localhost:5000/api/caption',
-}
+export const CAPTION_MODELS_OPTS = Object.entries(CAPTION_MODELS).map(([label, value]) => ({
+  value,
+  label,
+}))
 
 // @ts-ignore
 // env.allowLocalModels = false
@@ -78,7 +83,7 @@ export const embedApi = {
   },
   initSimiliary: (model: string) => {
     const chat = getStore('chat').getState().active?.chat
-    post('initSimilarity', { model })
+    post('initSimilarity', { model, dtype: getLocalModelDtype() })
 
     EMBED_ALLOWED = !!model
 
@@ -86,6 +91,9 @@ export const embedApi = {
     if (chat?.userEmbedId) {
       loadDocument(chat.userEmbedId)
     }
+  },
+  initCaption: (model: string) => {
+    post('initCaptioning', { model, dtype: getLocalModelDtype() })
   },
   encode,
   decode,
@@ -138,7 +146,10 @@ const handlers: {
       const chat = getStore('chat').getState().active?.chat
 
       if (type === 'embed') {
-        post('initSimilarity', { model: user.ui.embeddingModel || '' })
+        post('initSimilarity', {
+          model: user.ui.embeddingModel || '',
+          dtype: getLocalModelDtype(),
+        })
 
         // This will be loaded 'on embeds ready'
         if (chat?.userEmbedId) {
@@ -146,10 +157,8 @@ const handlers: {
         }
       }
 
-      if (type === 'image' && window.flags.caption) {
-        const httpCaptioning = models.captioning.startsWith('http')
-        if (!httpCaptioning) return
-        post('initCaptioning', { model: models.captioning })
+      if (type === 'image' && user.ui.captionModel) {
+        post('initCaptioning', { model: user.ui.captionModel, dtype: getLocalModelDtype() })
       }
     } catch (ex) {}
   },
@@ -512,4 +521,11 @@ function upsertEmbeddingId(id: string, name: string) {
 
   const next = prev.map((p) => (p.id === id ? { id, name, state: p.state } : p))
   MEMORY_SET({ embeds: next })
+}
+
+function getLocalModelDtype() {
+  const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+  if (mobile) return 'fp8'
+  return 'fp16'
 }

@@ -150,6 +150,12 @@ export const userStore = createStore<UserState>(
         embedApi.initSimiliary(model)
       }
     },
+    async updateCaptionModel(_, model: string) {
+      userStore.saveUI({ captionModel: model })
+      if (model) {
+        embedApi.initCaption(model)
+      }
+    },
     async revealApiKey(_, cb: (key: string) => void) {
       const res = await api.post('/user/config/reveal-key')
       if (res.result) {

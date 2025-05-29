@@ -43,6 +43,7 @@ const AISettings: Component<{
   const cfg = settingStore((s) => ({
     config: s.config,
     server: s.config.serverConfig,
+    flags: s.flags,
   }))
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
@@ -133,6 +134,23 @@ const AISettings: Component<{
           }
           helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
         />
+
+        {/* <Show when={cfg.flags.caption}>
+          <FormLabel
+            label={
+              <div class="flex flex-wrap items-center gap-1">
+                <div>Enable Embeddings/Long-Term Memory</div>
+                <Select
+                  parentClass="text-sm py-1 px-2"
+                  items={CAPTION_MODELS_OPTS}
+                  value={state.ui.captionModel || ''}
+                  onChange={(ev) => userStore.updateCaptionModel(ev.value)}
+                />
+              </div>
+            }
+            helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
+          />
+        </Show> */}
 
         <Show when={!canUseApi()}>
           <PresetSelect

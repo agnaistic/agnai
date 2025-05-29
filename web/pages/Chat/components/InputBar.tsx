@@ -50,6 +50,7 @@ import { ALLOWED_TYPES } from '/web/store/data/image'
 import { api } from '/web/store/api'
 import { ThirdPartyFormat } from '/common/adapters'
 import { resizeImage } from '/web/shared/image-resize'
+import { embedApi } from '/web/store/embeddings'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -252,8 +253,10 @@ const InputBar: Component<{
     if (shouldShrinkImage(ctx.preset) || win.shrink) {
       const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
       msgStore.setAttachment(props.chat._id, resized.content)
+      embedApi.captionImage(resized.content)
     } else {
       msgStore.setAttachment(props.chat._id, buffer.content)
+      embedApi.captionImage(buffer.content)
     }
 
     setMenu(false)

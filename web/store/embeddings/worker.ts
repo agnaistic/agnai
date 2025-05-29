@@ -13,6 +13,7 @@ import { getEncoding } from 'js-tiktoken'
 import { AllTasks, TaskType } from '@huggingface/transformers'
 
 const encoder = getEncoding('cl100k_base')
+const DEVICE = undefined
 
 // Absolutely awful workaround due to Parcel.js being extremely sucky
 const dynamicImport = new Function('a', 'b', 'return import(a, b);')
@@ -28,13 +29,19 @@ type Embeddings = {
 }
 
 // let Tokenizer: PreTrainedTokenizer
-let Embedder: HF.FeatureExtractionPipeline | undefined
-let Captioner: HF.Pipeline | undefined
-let EMBED_INITED = false
-let CAPTION_INITED = false
-let EMBED_MODEL = ''
 
-let HttpCaptioner: (base64: string) => Promise<any>
+const EMBED = {
+  inited: false,
+  model: '',
+  pipeline: null as HF.FeatureExtractionPipeline | null,
+}
+
+const CAPTION = {
+  inited: false,
+  model: '',
+  proc: null as HF.Processor | null,
+  pipeline: null as HF.PreTrainedModel | null,
+}
 
 const embeddings: Embeddings = {}
 const documents: Record<string, VectorizedDocument> = {}
@@ -54,83 +61,96 @@ const handlers: {
   },
   initSimilarity: async (msg) => {
     if (!msg.model) {
-      if (EMBED_INITED) {
+      if (EMBED.inited) {
         console.log('[embed] unloaded')
       }
 
-      EMBED_MODEL = ''
-      Embedder = undefined
-      EMBED_INITED = false
+      EMBED.model = ''
+      EMBED.pipeline = null
+      EMBED.inited = false
       return
     }
-    if (EMBED_INITED && msg.model === EMBED_MODEL) {
+    if (EMBED.inited && msg.model === EMBED.model) {
       console.log('[embed] already inited')
       return
     }
 
     if (!msg.model) return
 
-    EMBED_INITED = true
-    EMBED_MODEL = msg.model
+    EMBED.inited = true
+    EMBED.model = msg.model
 
     const embedder = await pipeline('feature-extraction', msg.model, (data) => {
       post('progress', data)
     })
-    Embedder = embedder
+    EMBED.pipeline = embedder
 
     console.log(`[embed] ready`)
     post('embedLoaded', {})
   },
   initCaptioning: async (msg) => {
-    if (CAPTION_INITED) {
+    if (!msg.model && CAPTION.inited) {
+      CAPTION.inited = false
+      CAPTION.pipeline = null
+      CAPTION.model = ''
+      console.log('[caption] model unloaded')
       return
     }
 
-    CAPTION_INITED = true
-    console.log(`[caption] loading`)
+    if (msg.model === CAPTION.model) return
+
+    CAPTION.inited = true
+    CAPTION.model = msg.model
 
     if (msg.model.startsWith('http')) {
-      HttpCaptioner = (base64: string) =>
-        fetch(msg.model, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
-        })
-          .then((r) => r.json())
-          .then((res) => res.caption.trim())
-      post('captionLoaded', {})
-      console.log('[caption] http ready')
+      console.log('[caption] http captioner not supported', msg.model)
       return
     }
 
-    const captioner = await pipeline('image-to-text', msg.model, (data) => {
-      post('progress', data)
-    })
-    Captioner = captioner
+    console.log(`[caption] loading: ${msg.model} using device:${DEVICE}`)
+    await initCaptioner(msg.model)
+
     console.log(`[caption] ready`)
     post('captionLoaded', {})
   },
   captionImage: async (msg) => {
-    if (!CAPTION_INITED && !HttpCaptioner) return
-
-    const base64 = msg.image.includes(',') ? msg.image.split(',')[1] : msg.image
-
-    if (HttpCaptioner) {
-      const caption = await HttpCaptioner(base64)
-      console.log(`[caption] done`, caption)
-      post('caption', { requestId: msg.requestId, caption })
+    if (!CAPTION.inited || !CAPTION.pipeline || !CAPTION.proc) {
+      console.log('[caption] no model loaded', CAPTION.inited, !!CAPTION.pipeline, !!CAPTION.proc)
       return
     }
 
-    if (!Captioner) return
+    const base64 = msg.image.includes(',') ? msg.image.split(',')[1] : msg.image
 
+    const api = await hf()
     const buffer = Buffer.from(base64, 'base64')
     const blob = new Blob([new Uint8Array(buffer)])
     const image = await hf().then((api) => api.RawImage.fromBlob(blob))
 
+    const messages = [{ role: 'user', content: "<|image_1|>What's funny about this image?" }]
+
+    const prompt = CAPTION.proc.tokenizer!.apply_chat_template(messages, {
+      tokenize: false,
+      add_generation_prompt: true,
+    })
+
+    const inputs = await CAPTION.proc(prompt, image, { num_crops: 4 })
+
     console.log(`[caption] starting`)
     try {
-      const result = await Captioner(image)
+      const streamer = new api.TextStreamer(CAPTION.proc.tokenizer!, {
+        skip_prompt: true,
+        skip_special_tokens: true,
+      })
+      // Generate response
+      const output = await CAPTION.pipeline.generate({
+        ...inputs,
+        streamer,
+        max_new_tokens: 512,
+      })
+
+      console.log(output)
+
+      const result = await CAPTION.pipeline(image)
       const text = result[0].generated_text
       console.log(`[caption] done: ${text}`)
       post('caption', { requestId: msg.requestId, caption: text })
@@ -140,8 +160,8 @@ const handlers: {
     }
   },
   embedChat: async (msg) => {
-    if (!EMBED_INITED) return
-    if (!Embedder) return
+    if (!EMBED.inited) return
+    if (!EMBED.pipeline) return
     if (!embeddings[msg.chatId]) {
       const cached = await reviveChatEmbeddings(msg.chatId)
       embeddings[msg.chatId] = cached
@@ -161,9 +181,9 @@ const handlers: {
     embed(msg)
   },
   queryChat: async (query) => {
-    if (!Embedder) return
+    if (!EMBED.pipeline) return
     if (!embeddings[query.chatId]) return
-    const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
+    const embed = await EMBED.pipeline(query.text, { pooling: 'mean', normalize: true })
 
     const path = new Set(query.path)
 
@@ -181,12 +201,12 @@ const handlers: {
     post('result', { messages: embeds, requestId: query.requestId })
   },
   query: async (query) => {
-    if (!Embedder) {
+    if (!EMBED.pipeline) {
       post('result', { messages: [], requestId: query.requestId })
       return
     }
 
-    const embed = await Embedder(query.text, { pooling: 'mean', normalize: true })
+    const embed = await EMBED.pipeline(query.text, { pooling: 'mean', normalize: true })
     const start = Date.now()
 
     if (documents[query.chatId]) {
@@ -244,7 +264,7 @@ const embedQueue: Array<RequestChatEmbed | RequestDocEmbed> = []
 
 let EMBEDDING = false
 async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
-  if (!EMBED_INITED || !Embedder) return
+  if (!EMBED.inited || !EMBED.pipeline) return
 
   const type = msg.type === 'embedChat' ? 'chat' : 'document'
   const id = msg.type === 'embedChat' ? msg.chatId : msg.documentId
@@ -343,7 +363,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
 async function vectorize(msg: string) {
   console.log('vectorizing', msg)
-  const embed = await Embedder!(msg, { pooling: 'mean', normalize: true })
+  const embed = await EMBED.pipeline!(msg, { pooling: 'mean', normalize: true })
   console.log('vectorized')
   return { data: embed.data as number[] }
 }
@@ -387,6 +407,19 @@ async function hf() {
   return hf as typeof HF
 }
 
+async function initCaptioner(model: string) {
+  const api = await hf()
+  console.log(`[caption] loading processor: ${model}`)
+  CAPTION.proc = await api.AutoProcessor.from_pretrained(model, {})
+  console.log(`[caption] loading model: ${model}`)
+  CAPTION.pipeline = await api.AutoModelForCausalLM.from_pretrained(model, {
+    device: DEVICE,
+    // use_external_data_format: true,
+    dtype: 'q4f16',
+  })
+  console.log(`[caption] ${model} loaded`)
+}
+
 async function pipeline<T extends TaskType>(
   task: T,
   model: string,
@@ -395,8 +428,9 @@ async function pipeline<T extends TaskType>(
   const api = await hf()
 
   const p = api.pipeline(task, model, {
-    dtype: 'fp16',
+    dtype: 'q4',
     progress_callback: callback,
+    device: DEVICE,
   })
 
   return p

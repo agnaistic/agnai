@@ -72,7 +72,9 @@ export type UISettings = {
   logPromptsToBrowserConsole: boolean
   contextWindowLine: boolean
   expandReasoning?: boolean
+
   embeddingModel?: string
+  captionModel?: string
 
   dark: CustomUI
   light: CustomUI
