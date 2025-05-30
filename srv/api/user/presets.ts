@@ -36,8 +36,8 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body }) => {
   }
 
   // Guests or new presets
-  if (body.url && body.key) {
-    const models = await getThirdPartyModels(body.url, body.key)
+  if ((!body.id || body.id === 'new') && body.url) {
+    const models = await getThirdPartyModels(body.url, body.key || '')
     return models?.data ? models : { data: [] }
   }
 

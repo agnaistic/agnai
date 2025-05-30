@@ -296,26 +296,11 @@ export const SubscriptionModel: Component = () => {
                     />
 
                     <Toggle
-                      fieldName="jsonSchemaCapable"
-                      label="JSON Schema Capable"
-                      value={state.jsonSchemaCapable}
-                      onChange={(ev) => setState('jsonSchemaCapable', ev)}
-                    />
-
-                    <Toggle
                       fieldName="guidanceCapable"
                       label="Guidance Capable"
                       helperText="Agnaistic service only"
                       value={state.guidanceCapable}
                       onChange={(ev) => setState('guidanceCapable', ev)}
-                    />
-
-                    <Toggle
-                      fieldName="subVisionModel"
-                      label="Vision Model"
-                      helperText="Agnaistic service only"
-                      value={state.subVisionModel}
-                      onChange={(ev) => setState('subVisionModel', ev)}
                     />
                   </Card>
 
@@ -333,6 +318,21 @@ export const SubscriptionModel: Component = () => {
                       helperText="Is chosen as fallback when no subscription is provided with a request"
                       value={state.isDefaultSub ?? false}
                       onChange={(ev) => setState('isDefaultSub', ev)}
+                    />
+
+                    <Toggle
+                      fieldName="jsonSchemaCapable"
+                      label="JSON Schema Capable (Structured Responses)"
+                      value={state.jsonSchemaCapable}
+                      onChange={(ev) => setState('jsonSchemaCapable', ev)}
+                    />
+
+                    <Toggle
+                      fieldName="subVisionModel"
+                      label="Vision Model"
+                      helperText="Agnaistic service only"
+                      value={state.subVisionModel}
+                      onChange={(ev) => setState('subVisionModel', ev)}
                     />
 
                     <Toggle

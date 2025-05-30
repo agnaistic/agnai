@@ -33,6 +33,7 @@ export const CustomSelect: Component<{
   search?: (value: string, search: string) => boolean
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
+  const [filter, setFilter] = createSignal('')
 
   onMount(() => {
     if (props.emitter) {
@@ -55,6 +56,36 @@ export const CustomSelect: Component<{
     return props.buttonLabel(opt)
   })
 
+  const filteredOpts = createMemo(() => {
+    if (!props.options) return
+
+    const input = filter().trim()
+    if (!input) return props.options
+
+    return props.options.filter((opt) =>
+      typeof opt.label === 'string'
+        ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
+        : props.search?.(opt.value, input)
+    )
+  })
+
+  const filteredCats = createMemo(() => {
+    if (!props.categories) return
+
+    const input = filter().trim()
+    if (!input) return props.categories
+
+    return props.categories.map((cat) => {
+      const options = cat.options.filter((opt) =>
+        typeof opt.label === 'string'
+          ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
+          : props.search?.(opt.value, input)
+      )
+
+      return { name: cat.name, options }
+    })
+  })
+
   return (
     <div
       class={`max-w-full ${props.parentClass || ''}`}
@@ -75,8 +106,17 @@ export const CustomSelect: Component<{
       </div>
       <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>
         <div class="flex flex-col gap-4">
+          <Show when={props.search}>
+            <TextInput
+              parentClass="text-sm"
+              fieldName="options-filter"
+              placeholder="Filter..."
+              onChange={(ev) => setFilter(ev.currentTarget.value)}
+            />
+          </Show>
+
           <Show when={props.categories}>
-            <For each={props.categories}>
+            <For each={filteredCats()}>
               {(category) => (
                 <div class="flex flex-wrap gap-2 pr-3">
                   <div class="bold text-md">{category.name}</div>
@@ -85,20 +125,18 @@ export const CustomSelect: Component<{
                     options={category.options}
                     onSelect={onSelect}
                     selected={props.selected}
-                    search={props.search}
                   />
                 </div>
               )}
             </For>
           </Show>
-          <Show when={props.options}>
+          <Show when={filteredOpts()}>
             <div class="flex flex-wrap gap-2 pr-3">
               <OptionList
                 header={props.header}
-                options={props.options!}
+                options={filteredOpts()!}
                 onSelect={onSelect}
                 selected={props.selected}
-                search={props.search}
               />
             </div>
           </Show>
@@ -109,28 +147,12 @@ export const CustomSelect: Component<{
 }
 
 const OptionList: Component<{
-  search?: (text: string, search: string) => boolean
   options: CustomOption[]
   onSelect: (opt: CustomOption) => void
   title?: string
   selected?: string
   header?: JSX.Element
 }> = (props) => {
-  const [filter, setFilter] = createSignal('')
-
-  const filtered = createMemo(() => {
-    if (!props.search) return props.options
-
-    const input = filter().trim()
-    if (!input) return props.options
-
-    return props.options.filter((opt) =>
-      typeof opt.label === 'string'
-        ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
-        : props.search?.(opt.value, input)
-    )
-  })
-
   return (
     <div class={`flex w-full flex-col gap-2`}>
       <Show when={props.title}>
@@ -139,17 +161,8 @@ const OptionList: Component<{
 
       <Show when={props.header}>{props.header}</Show>
 
-      <Show when={props.search}>
-        <TextInput
-          parentClass="text-sm"
-          fieldName="options-filter"
-          placeholder="Filter..."
-          onChange={(ev) => setFilter(ev.currentTarget.value)}
-        />
-      </Show>
-
       <div class={`flex flex-col gap-2 p-2`}>
-        <For each={filtered()}>
+        <For each={props.options}>
           {(option) => (
             <div
               classList={{

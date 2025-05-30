@@ -503,14 +503,14 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     xl: {
       size: '970x90',
       id: 'agn-leaderboard-xl',
-      fuseId: '',
+      fuseId: '23195816384',
       fallbacks: ['970x66', '960x90', '950x90'],
     },
     ez: [112, 113, 114],
   },
   pane_leaderboard: {
     platform: 'container',
-    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '' },
+    sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '23195816384' },
     ez: [108, 109],
   },
   header: {

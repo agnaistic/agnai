@@ -17,6 +17,8 @@ import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
 
+const MODEL_NAMES = new Map<string, string>()
+
 export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const state = userStore((s) => ({ tiers: s.tiers }))
 
@@ -67,6 +69,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
     if (!opt) {
       return <div>None</div>
     }
+
     return (
       <ModelLabel
         sub={opt?.sub!}
@@ -99,6 +102,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
           </>
         }
         // options={opts()}
+        search={isFoundModel}
         categories={cats().categories}
         onSelect={(ev) => onSave(ev.value)}
         value={props.state.registered?.agnaistic?.subscriptionId}
@@ -241,9 +245,17 @@ export const AgnaisticModel: Component = (props) => {
         value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
         emitter={emitter.on}
+        search={isFoundModel}
       />
     </Show>
   )
+}
+
+function isFoundModel(value: string, search: string) {
+  const name = MODEL_NAMES.get(value)?.toLowerCase()
+  if (!name) return true
+  if (name.includes(search.toLowerCase())) return true
+  return false
 }
 
 type ModelOption = {
@@ -302,6 +314,7 @@ function useModelCategories() {
       const tierName = tier || 'Staff'
 
       const category = cats.get(tierName) || { tier: sub.level, options: [] }
+      MODEL_NAMES.set(sub._id, sub.name)
       const base = {
         value: sub._id,
         level: sub.level,

@@ -126,7 +126,11 @@ async function getPresetModelList(opts: {
     const cache = MODEL_LIST_CACHE.get(opts.url)
     if (cache) return cache
   }
-  const res = await api.post<{ data: any[] }>(`/user/preset-models`, { id: opts.id, url: opts.url })
+  const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
+    id: opts.id,
+    url: opts.url,
+    key: opts.key,
+  })
   const models: string[] = []
 
   if (res.error) {
