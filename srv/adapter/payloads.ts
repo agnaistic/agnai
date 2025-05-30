@@ -568,6 +568,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
     return body
   }
+
+  return { ...opts.mappedSettings, prompt: opts.prompt }
 }
 
 function ensureSafeSchema(schema: JsonSchema | undefined) {

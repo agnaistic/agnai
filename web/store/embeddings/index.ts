@@ -1,6 +1,5 @@
 import wiki from 'wikijs'
 import { EmbedDocument, WorkerRequest, WorkerResponse } from './types'
-// import { env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1'
 import { AppSchema } from '/common/types'
 import { v4 } from 'uuid'
 import { toastStore } from '../toasts'

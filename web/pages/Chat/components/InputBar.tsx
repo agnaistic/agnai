@@ -50,7 +50,6 @@ import { ALLOWED_TYPES } from '/web/store/data/image'
 import { api } from '/web/store/api'
 import { ThirdPartyFormat } from '/common/adapters'
 import { resizeImage } from '/web/shared/image-resize'
-import { embedApi } from '/web/store/embeddings'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -250,13 +249,11 @@ const InputBar: Component<{
     }
 
     const win: any = window
-    if (shouldShrinkImage(ctx.preset) || win.shrink) {
+    if (shouldShrinkImage(ctx.preset, buffer.file.size) || win.shrink) {
       const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
       msgStore.setAttachment(props.chat._id, resized.content)
-      embedApi.captionImage(resized.content)
     } else {
       msgStore.setAttachment(props.chat._id, buffer.content)
-      embedApi.captionImage(buffer.content)
     }
 
     setMenu(false)
@@ -477,7 +474,9 @@ const InputBar: Component<{
 
 export default InputBar
 
-function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined) {
+function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined, size: number) {
+  //
+  if (size > Math.pow(1024, 3)) return true
   if (!preset) return false
   if (preset.service === 'agnaistic') return true
   if (preset.service !== 'kobold') return false

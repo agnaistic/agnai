@@ -1,5 +1,4 @@
 import * as lf from 'localforage'
-// import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import type * as HF from '@huggingface/transformers'
 import {
   EmbedDocument,

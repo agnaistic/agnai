@@ -36,6 +36,7 @@ export function encryptText(text: string) {
 export function decryptText(text: string, noError?: boolean) {
   const [encrypted, iv] = text.split('|')
   if (!iv) {
+    // If there is no IV it's likely to already be decrypted
     if (noError) return text
     throw new Error('IV not found')
   }

@@ -187,10 +187,18 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     const userKey = subPreset.subApiKey
 
     opts.user.oaiKey = userKey
+
+    // Use either the 'sub api key' or fall-through to the sub model third-party key
     opts.gen.thirdPartyKey = userKey || subPreset.thirdPartyKey
-    opts.gen.reasoning = subPreset.reasoning
+
+    // If 'reasoning' is enabled in the subscription model, allow users to pass-through reasoning settings
+    opts.gen.reasoning = subPreset.reasoning?.enabled ? opts.gen.reasoning : undefined
+
+    // Use the sub-model Jinja config?
     opts.gen.jinjaEnabled = subPreset.jinjaEnabled
     opts.gen.jinjaTemplate = subPreset.jinjaTemplate
+
+    // Use sub-model third-party config for 'third-party' setups
     opts.gen.thirdPartyUrlNoSuffix = subPreset.thirdPartyUrlNoSuffix
     opts.gen.thirdPartyUrl = subPreset.thirdPartyUrl
     opts.gen.thirdPartyModel = subPreset.thirdPartyModel

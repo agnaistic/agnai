@@ -128,7 +128,6 @@ export const defaultUIsettings: UISettings = {
   logPromptsToBrowserConsole: false,
   contextWindowLine: false,
   imageWrap: false,
-  embeddingModel: '',
 
   light: {
     msgBackground: '--bg-800',

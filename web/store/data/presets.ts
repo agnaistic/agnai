@@ -100,6 +100,7 @@ async function getLocalModelList(opts: { url: string; key?: string }): Promise<s
 
     if (opts.key) {
       headers.Authorization = `Bearer ${opts.key}`
+      headers['x-api-key'] = opts.key
     }
 
     const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
