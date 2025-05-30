@@ -212,8 +212,13 @@ export async function fetchSSE(opts: {
   resp.on('header', (statusCode, headers) => {
     // const contentType = headers['content-type'] || ''
     if (statusCode > 201) {
-      error = `SSE request failed with status code ${statusCode}`
+      error = `Streaming request failed with status code ${statusCode}`
     }
+  })
+
+  resp.on('error', (err) => {
+    error = `Streaing request failed: ${err?.message || err}`
+    opts.onError?.(error)
   })
 
   resp.on('data', (chunk: Buffer) => {

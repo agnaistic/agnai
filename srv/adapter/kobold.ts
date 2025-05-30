@@ -6,7 +6,13 @@ import { getStoppingStrings } from './prompt'
 import { decryptText } from '../db/util'
 import { getThirdPartyPayload } from './payloads'
 import { toSamplerOrder } from '/common/sampler-order'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import {
+  getOaiCompatibleUrl,
+  joinUrl,
+  sanitise,
+  sanitiseAndTrim,
+  trimResponseV2,
+} from '/common/requests/util'
 import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
@@ -25,30 +31,17 @@ import { presetDefaults } from '/common/default-preset'
 const MIN_STREAMING_KCPPVERSION = '1.30'
 const REQUIRED_SAMPLERS = presetDefaults.order!
 
-const base = {
-  use_story: false,
-  use_memory: false,
-  use_authors_note: false,
-  use_world_info: false,
-}
+// const base = {
+//   use_story: false,
+//   use_memory: false,
+//   use_authors_note: false,
+//   use_world_info: false,
+// }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members, characters, prompt, mappedSettings } = opts
+  const { members, characters, prompt } = opts
 
-  const body =
-    opts.gen.thirdPartyFormat === 'vllm' ||
-    opts.gen.thirdPartyFormat === 'ollama' ||
-    opts.gen.thirdPartyFormat === 'ooba' ||
-    opts.gen.thirdPartyFormat === 'mistral' ||
-    opts.gen.thirdPartyFormat === 'tabby' ||
-    opts.gen.thirdPartyFormat === 'aphrodite' ||
-    opts.gen.thirdPartyFormat === 'llamacpp' ||
-    opts.gen.thirdPartyFormat === 'exllamav2' ||
-    opts.gen.thirdPartyFormat === 'koboldcpp' ||
-    opts.gen.thirdPartyFormat === 'featherless' ||
-    opts.gen.thirdPartyFormat === 'arli'
-      ? getThirdPartyPayload(opts)
-      : { ...base, ...mappedSettings, prompt }
+  const body = getThirdPartyPayload(opts)
 
   // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
@@ -212,6 +205,27 @@ async function dispatch(opts: AdapterProps, body: any) {
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
     }
 
+    case 'openai':
+    case 'openai-chat':
+    case 'openai-chatv2': {
+      if (opts.gen.thirdPartyFormat === 'openai') {
+        body.prompt = opts.prompt
+      } else {
+        body.messages = opts.messages
+      }
+      const url = getOaiCompatibleUrl(opts.gen, true)
+      const fullUrl = opts.gen.thirdPartyUrlNoSuffix
+        ? url.url
+        : joinUrl(
+            url.url,
+            opts.gen.thirdPartyFormat === 'openai' ? 'completions' : 'chat/completions'
+          )
+
+      return opts.gen.streamResponse
+        ? streamGenerator({ ...base, url: fullUrl, format: opts.gen.thirdPartyFormat })
+        : fullCompletion({ ...base, url: fullUrl, service: opts.gen.thirdPartyFormat })
+    }
+
     default: {
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       const url =
@@ -232,12 +246,15 @@ async function dispatch(opts: AdapterProps, body: any) {
 
 async function getHeaders(opts: AdapterProps) {
   const password = opts.gen.thirdPartyUrl ? opts.gen.thirdPartyKey : opts.user.thirdPartyPassword
-  const headers: any = {}
+  const headers: any = {
+    'HTTP-Referer': 'https://agnai.chat',
+    'X-Title': 'Agnai.Chat',
+  }
 
   switch (opts.gen.thirdPartyFormat) {
     case 'aphrodite': {
       if (!password) return headers
-      const apiKey = opts.guest ? password : decryptText(password)
+      const apiKey = opts.guest ? password : decryptText(password, true)
       headers['x-api-key'] = apiKey
       headers['Authorization'] = `Bearer ${apiKey}`
       break
@@ -245,14 +262,14 @@ async function getHeaders(opts: AdapterProps) {
 
     case 'vllm': {
       if (!password) return headers
-      const apiKey = opts.guest ? password : decryptText(password)
+      const apiKey = opts.guest ? password : decryptText(password, true)
       headers['Authorization'] = `Bearer ${apiKey}`
       headers['Accept'] = 'application/json'
       break
     }
     case 'tabby': {
       if (!password) return headers
-      const apiKey = opts.guest ? password : decryptText(password)
+      const apiKey = opts.guest ? password : decryptText(password, true)
       headers['Authorization'] = `Bearer ${apiKey}`
       break
     }
@@ -269,7 +286,7 @@ async function getHeaders(opts: AdapterProps) {
         )
       }
 
-      const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
+      const apiKey = key ? (opts.guest ? key : decryptText(key, true)) : ''
       if (apiKey) {
         headers['Authorization'] = `Bearer ${apiKey}`
       }
@@ -287,7 +304,7 @@ async function getHeaders(opts: AdapterProps) {
         throw new Error(`ArliAI API key not set. Check your Settings->AI->Third-party settings`)
       }
 
-      const apiKey = key ? (opts.guest ? key : decryptText(key)) : ''
+      const apiKey = key ? (opts.guest ? key : decryptText(key, true)) : ''
       if (apiKey) {
         headers['Authorization'] = `Bearer ${apiKey}`
       }
@@ -300,10 +317,21 @@ async function getHeaders(opts: AdapterProps) {
       if (!key)
         throw new Error(`Mistral API key not set. Check your Settings->AI->Third-party settings`)
 
-      const apiKey = opts.guest ? key : decryptText(key)
+      const apiKey = opts.guest ? key : decryptText(key, true)
       headers['Authorization'] = `Bearer ${apiKey}`
       headers['Content-Type'] = 'application/json'
       break
+    }
+
+    case 'openai':
+    case 'openai-chat':
+    case 'openai-chatv2': {
+      const key = opts.gen.thirdPartyKey
+      if (!key) break
+
+      const apiKey = opts.guest ? key : decryptText(key, true)
+      headers['x-api-key'] = apiKey
+      headers['Authorization'] = `Bearer ${apiKey}`
     }
   }
 

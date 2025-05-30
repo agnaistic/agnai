@@ -1,7 +1,6 @@
-import { joinUrl, sanitiseAndTrim } from '/common/requests/util'
+import { getOaiCompatibleUrl, joinUrl, sanitiseAndTrim } from '/common/requests/util'
 import { ChatRole, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
-import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
@@ -10,8 +9,6 @@ import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { toImageJinjaTemplate } from '/common/requests/payloads'
-
-const baseUrl = `https://api.openai.com`
 
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
 
@@ -28,7 +25,7 @@ export type Completion<T = Inference> = {
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
-  const base = getBaseUrl(gen, isThirdParty)
+  const base = getOaiCompatibleUrl(gen, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
@@ -210,19 +207,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
-}
-
-function getBaseUrl(gen: Partial<AppSchema.GenSettings>, isThirdParty?: boolean) {
-  if (isThirdParty && gen.thirdPartyUrl) {
-    if (gen.thirdPartyUrlNoSuffix) return { url: gen.thirdPartyUrl, changed: true }
-
-    // If the user provides a versioned API URL for their third-party API, use that. Otherwise
-    // fall back to the standard /v1 URL.
-    const version = gen.thirdPartyUrl.match(/\/v\d+/) ? '' : '/v1'
-    return { url: gen.thirdPartyUrl + version, changed: true }
-  }
-
-  return { url: baseUrl.includes('/v1') ? baseUrl : `${baseUrl}/v1`, changed: false }
 }
 
 export type OAIUsage = {

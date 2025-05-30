@@ -156,3 +156,24 @@ export async function getThirdPartyModels(url: string, key: string) {
 
   return
 }
+
+const OFFICIAL_OAI_URL = `https://api.openai.com`
+
+export function getOaiCompatibleUrl(
+  preset: Partial<AppSchema.GenSettings>,
+  isThirdParty?: boolean
+) {
+  if (isThirdParty && preset.thirdPartyUrl) {
+    if (preset.thirdPartyUrlNoSuffix) return { url: preset.thirdPartyUrl, changed: true }
+
+    // If the user provides a versioned API URL for their third-party API, use that. Otherwise
+    // fall back to the standard /v1 URL.
+    const version = preset.thirdPartyUrl.match(/\/v\d+/) ? '' : '/v1'
+    return { url: preset.thirdPartyUrl + version, changed: true }
+  }
+
+  return {
+    url: OFFICIAL_OAI_URL.includes('/v1') ? OFFICIAL_OAI_URL : `${OFFICIAL_OAI_URL}/v1`,
+    changed: false,
+  }
+}

@@ -187,6 +187,12 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     const userKey = subPreset.subApiKey
 
     opts.user.oaiKey = userKey
+    opts.gen.thirdPartyKey = userKey || subPreset.thirdPartyKey
+    opts.gen.reasoning = subPreset.reasoning
+    opts.gen.jinjaEnabled = subPreset.jinjaEnabled
+    opts.gen.jinjaTemplate = subPreset.jinjaTemplate
+    opts.gen.thirdPartyUrlNoSuffix = subPreset.thirdPartyUrlNoSuffix
+    opts.gen.thirdPartyUrl = subPreset.thirdPartyUrl
     opts.gen.thirdPartyModel = subPreset.thirdPartyModel
     opts.gen.oaiModel = subPreset.thirdPartyModel || subPreset.oaiModel
 
