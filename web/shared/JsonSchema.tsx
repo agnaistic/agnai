@@ -7,7 +7,6 @@ import TextInput from './TextInput'
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash } from 'lucide-solid'
 import Button from './Button'
 import { SCHEMA_VARS } from '/common/guidance/json-schema'
-import { key } from 'localforage'
 
 export const JsonSchema: Component<{
   inherit?: JsonField[]
