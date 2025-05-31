@@ -128,6 +128,10 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     return
   }
 
+  if (DEBUG) {
+    console.log(`[fetch] response: ${tokens.join('')}`)
+  }
+
   if (!sentTokens) {
     yield { tokens: tokens.join('') }
   }
@@ -263,6 +267,9 @@ export async function* fetchStream(
                 if (!gens[index]) gens[index] = ''
                 gens[index] += token
               } else {
+                if (DEBUG) {
+                  console.log(`[fetch] token: ${token}`)
+                }
                 accum += token
                 yield { token, index }
               }

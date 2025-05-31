@@ -13,6 +13,7 @@ import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { Response } from 'express'
 import { getAdapter } from '/common/adapters'
+import { formatJsonSchemaVars } from '/common/guidance/json-schema'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 type MsgEntities = Awaited<ReturnType<typeof getMessageEntities>>
@@ -200,6 +201,11 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const schema = ents.preset.jsonSource === 'character' ? replyAs.json : ents.preset.json
+  formatJsonSchemaVars(schema, {
+    char: body.char,
+    impersonate: body.impersonate,
+    handle: body.sender?.handle,
+  })
   const hydrator = ents.preset.jsonEnabled && schema ? jsonHydrator(schema) : undefined
 
   let hydration: HydratedJson | undefined
@@ -324,7 +330,9 @@ export const generateMessageV2 = handle(async (req, res) => {
         if ('partial' in gen) {
           const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
           if (metadata.json && hydrator) {
-            jsonPartial = parsePartialJson(gen.partial) || jsonPartial
+            const prop = `${body.replyAs?.name || body.char?.name}'s response`
+            const aliases = { [prop]: 'response' }
+            jsonPartial = parsePartialJson(gen.partial, aliases) || jsonPartial
             hydration = hydrator(jsonPartial || {})
           }
 

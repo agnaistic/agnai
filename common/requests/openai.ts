@@ -40,6 +40,13 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     })
   }
 
+  if (opts.jsonSchema) {
+    payload.response_format = {
+      type: 'json_schema',
+      json_schema: opts.jsonSchema,
+    }
+  }
+
   const headers: any = {
     'Content-Type': 'application/json',
   }

@@ -530,25 +530,35 @@ export function tryParseConcat<T = any>(value: string, prev?: string): T | undef
   return
 }
 
-export function tryParse<T = any>(value?: any): T | undefined {
+export function tryParse<T = any>(value?: any, aliases?: Record<string, string>): T | undefined {
   if (!value) return
   try {
     const obj = JSON.parse(value)
+
+    if (aliases) {
+      for (const key in aliases) {
+        if (key in obj === false) continue
+        const rename = aliases[key]
+        const orig = obj[key]
+        obj[rename] = orig
+        delete obj[key]
+      }
+    }
     return obj
   } catch (ex) {}
 }
 
-export function parsePartialJson(value: string) {
+export function parsePartialJson(value: string, aliases?: Record<string, string>) {
   {
-    const obj = tryParse(value.trim())
+    const obj = tryParse(value.trim(), aliases)
     if (obj) return obj
   }
   {
-    const obj = tryParse(value.trim() + '}')
+    const obj = tryParse(value.trim() + '}', aliases)
     if (obj) return obj
   }
   {
-    const obj = tryParse(value.trim() + '"}')
+    const obj = tryParse(value.trim() + '"}', aliases)
     if (obj) return obj
   }
 }

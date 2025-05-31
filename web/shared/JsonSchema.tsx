@@ -6,6 +6,8 @@ import Select from './Select'
 import TextInput from './TextInput'
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash } from 'lucide-solid'
 import Button from './Button'
+import { SCHEMA_VARS } from '/common/guidance/json-schema'
+import { key } from 'localforage'
 
 export const JsonSchema: Component<{
   inherit?: JsonField[]
@@ -78,9 +80,32 @@ export const JsonSchema: Component<{
     setState({ fields: next as any })
   }
 
+  const pills = createMemo(() => {
+    const entries = Object.entries(SCHEMA_VARS)
+
+    return entries.map(([key, value]) => (
+      <>
+        <span class="font-bold">%{key}%</span>: {value}
+      </>
+    ))
+  })
+
   return (
     <>
       <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-1">
+          <div class="font-bold">Variables:</div>
+          <div class="flex flex-wrap gap-1">
+            {pills().map((pill) => (
+              <Pill small>{pill}</Pill>
+            ))}
+          </div>
+          <div>
+            <span class="font-bold">Example: </span>
+            <code class="text-sm">inner thoughts of %char%</code>
+          </div>
+        </div>
+
         <Index each={state.fields}>
           {(item, i) => (
             <SchemaField
