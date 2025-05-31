@@ -200,7 +200,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                         props.setter('thirdPartyModel', ev.value)
                         const isSavedPreest = !!props.state._id && !isDefaultPreset(props.state._id)
                         // Only change immediately save the preset in chat pages
-                        if (isSavedPreest && props.page === 'model') {
+                        if (isSavedPreest && props.page === 'mode') {
                           presetStore.updatePreset(
                             props.state._id,
                             { thirdPartyModel: ev.value },
