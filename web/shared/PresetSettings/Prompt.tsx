@@ -164,6 +164,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 setter={props.setter}
                 hides={props.hides}
                 sub={props.sub}
+                page={props.page}
               />
             </div>
           </Card>
