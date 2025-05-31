@@ -1,4 +1,13 @@
-import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  JSX,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
@@ -38,6 +47,13 @@ export const CustomSelect: Component<{
   onMount(() => {
     if (props.emitter) {
       props.emitter('close', () => setOpen(false))
+    }
+  })
+
+  createEffect(() => {
+    const isOpening = open()
+    if (isOpening) {
+      setFilter('')
     }
   })
 
@@ -112,6 +128,7 @@ export const CustomSelect: Component<{
               fieldName="options-filter"
               placeholder="Filter..."
               onChange={(ev) => setFilter(ev.currentTarget.value)}
+              value={filter()}
             />
           </Show>
 

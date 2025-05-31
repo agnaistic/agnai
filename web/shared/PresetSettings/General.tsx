@@ -31,6 +31,7 @@ import { CustomSelect } from '../CustomSelect'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { NOVEL_MODELS } from '/common/presets/novel'
+import { isDefaultPreset } from '/common/default-preset'
 
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -148,7 +149,13 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <ModelFormat state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
+      <ModelFormat
+        state={props.state}
+        hides={props.hides}
+        setter={props.setter}
+        sub={props.sub}
+        page={props.page}
+      />
 
       <Card hide={!serviceHasSetting(props.state, 'localRequests')}>
         <Toggle
@@ -191,7 +198,9 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                       options={localModels.models}
                       onSelect={(ev) => {
                         props.setter('thirdPartyModel', ev.value)
-                        if (props.state._id) {
+                        const isSavedPreest = !!props.state._id && !isDefaultPreset(props.state._id)
+                        // Only change immediately save the preset in chat pages
+                        if (isSavedPreest && props.page === 'model') {
                           presetStore.updatePreset(
                             props.state._id,
                             { thirdPartyModel: ev.value },
@@ -269,15 +278,23 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           hides={props.hides}
           setter={props.setter}
           sub={props.sub}
+          page={props.page}
         />
 
-        <ArliModels state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
+        <ArliModels
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+          page={props.page}
+        />
 
         <GoogleModels
           state={props.state}
           hides={props.hides}
           setter={props.setter}
           sub={props.sub}
+          page={props.page}
         />
 
         <Select
@@ -423,6 +440,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setter={props.setter}
           sub={props.sub}
           subMax={subMax()}
+          page={props.page}
         />
 
         <ContextSize
@@ -431,6 +449,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setter={props.setter}
           sub={props.sub}
           subMax={subMax()}
+          page={props.page}
         />
 
         <Temperature {...props} />
@@ -462,6 +481,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           hides={props.hides}
           setter={props.setter}
           sub={props.sub}
+          page={props.page}
         />
         <Toggle
           fieldName="disableNameStops"
@@ -471,7 +491,13 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setter('disableNameStops', ev)}
         />
 
-        <PhraseBias state={props.state} hides={props.hides} setter={props.setter} sub={props.sub} />
+        <PhraseBias
+          state={props.state}
+          hides={props.hides}
+          setter={props.setter}
+          sub={props.sub}
+          page={props.page}
+        />
       </Card>
     </div>
   )

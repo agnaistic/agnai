@@ -22,7 +22,7 @@ export const DEFAULT_EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2'
 export const EMBED_MODELS = {
   Disabled: '',
   Small: 'Xenova/all-MiniLM-L6-v2', // 23MB quantized, 90MB full
-  Medium: 'Xenova/all-MiniLM-L6-v2', // 110MB quantized, 436MB full
+  Medium: 'Xenova/all-mpnet-base-v2', // 110MB quantized, 436MB full
   'Large - Multi-lingual': 'Xenova/bge-base-en-v1.5', // 110MB quantized, 436M full
   'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 374 MB full
 } as const

@@ -31,7 +31,12 @@ export { PresetSettings as default }
 type TempSetting = AdapterSetting & { value: any }
 
 const PresetSettings: Component<
-  PresetProps & { noSave: boolean; store: PresetState; setter: SetPresetState; hides: HideState }
+  PresetProps & {
+    noSave: boolean
+    store: PresetState
+    setter: SetPresetState
+    hides: HideState
+  }
 > = (props) => {
   const settings = settingStore()
   const pane = usePaneManager()
@@ -107,6 +112,7 @@ const PresetSettings: Component<
           setter={props.setter}
           noSave={props.noSave}
           sub={sub()}
+          page={props.page}
         />
 
         <Select
@@ -138,7 +144,13 @@ const PresetSettings: Component<
           onChange={(ev) => props.setter('thirdPartyFormat', ev.value as ThirdPartyFormat)}
         />
 
-        <PresetMode state={props.store} setter={props.setter} hides={props.hides} sub={sub()} />
+        <PresetMode
+          state={props.store}
+          setter={props.setter}
+          hides={props.hides}
+          sub={sub()}
+          page={props.page}
+        />
 
         <RegisteredSettings
           service={props.store.service}
@@ -164,6 +176,7 @@ const PresetSettings: Component<
         setter={props.setter}
         sub={sub()}
         tab={tabName()}
+        page={props.page}
       />
 
       <PromptSettings
@@ -172,6 +185,7 @@ const PresetSettings: Component<
         setter={props.setter}
         sub={sub()}
         tab={tabName()}
+        page={props.page}
       />
 
       <MemorySettings
@@ -180,6 +194,7 @@ const PresetSettings: Component<
         setter={props.setter}
         sub={sub()}
         tab={tabName()}
+        page={props.page}
       />
 
       <SliderSettings
@@ -188,6 +203,7 @@ const PresetSettings: Component<
         setter={props.setter}
         sub={sub()}
         tab={tabName()}
+        page={props.page}
       />
 
       <ToggleSettings
@@ -196,6 +212,7 @@ const PresetSettings: Component<
         setter={props.setter}
         sub={sub()}
         tab={tabName()}
+        page={props.page}
       />
     </div>
   )

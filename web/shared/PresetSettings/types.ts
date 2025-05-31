@@ -12,6 +12,7 @@ export type PresetProps = {
   service?: AIAdapter
   disableService?: boolean
   hideTabs?: PresetTab[]
+  page?: string
 }
 
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
@@ -22,6 +23,7 @@ export type PresetTabProps = {
   hides: HideState
   sub: SubscriptionModelOption | undefined
   tab: string
+  page: string | undefined
 }
 
 export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {

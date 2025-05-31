@@ -196,6 +196,7 @@ export const ModeGenSettings: Component<{
           hideTabs={props.hideTabs}
           hides={hides}
           noSave={false}
+          page="mode"
         />
       </form>
     </div>
