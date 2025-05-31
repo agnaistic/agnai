@@ -11,6 +11,7 @@ import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
 import { Page } from '/web/Layout'
+import TextInput from '/web/shared/TextInput'
 
 const PresetList: Component = () => {
   setComponentPageTitle('Presets')
@@ -36,6 +37,14 @@ const PresetList: Component = () => {
 
   const [deleting, setDeleting] = createSignal<string>()
   const [importing, setImporting] = createSignal(false)
+  const [filter, setFilter] = createSignal('')
+
+  const presets = createMemo(() => {
+    const search = filter().trim().toLocaleUpperCase()
+    if (!search) return state.presets
+
+    return state.presets.filter((p) => p.name.toLocaleUpperCase().includes(search))
+  })
 
   const deletePreset = () => {
     const presetId = deleting()
@@ -52,20 +61,25 @@ const PresetList: Component = () => {
   return (
     <Page>
       <PageHeader title="Generation Presets" />
-      <div class="mb-4 flex w-full justify-end gap-2">
-        <A href="/presets/new">
-          <Button>
-            <Plus />
-            New
+      <div class="flex justify-between">
+        <div>
+          <TextInput placeholder="Filter..." onChange={(ev) => setFilter(ev.currentTarget.value)} />
+        </div>
+        <div class="mb-4 flex w-full justify-end gap-2">
+          <A href="/presets/new">
+            <Button>
+              <Plus />
+              New
+            </Button>
+          </A>
+          <Button onClick={() => setImporting(true)}>
+            <Import size={20} /> Import
           </Button>
-        </A>
-        <Button onClick={() => setImporting(true)}>
-          <Import size={20} /> Import
-        </Button>
+        </div>
       </div>
 
       <div class="flex flex-col items-center gap-2">
-        <For each={state.presets}>
+        <For each={presets()}>
           {(preset) => (
             <div class="bg-800 flex w-full items-center gap-2 rounded-xl py-1 hover:bg-[var(--bg-600)]">
               <A href={`/presets/${preset._id}`} class=" flex w-full">
