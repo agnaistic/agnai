@@ -5,7 +5,7 @@ import Select, { Option } from '../Select'
 import { defaultPresets } from '../../../common/presets'
 import { REPLICATE_MODEL_TYPES, MISTRAL_MODELS } from '../../../common/adapters'
 import { Toggle } from '../Toggle'
-import { presetStore, settingStore, userStore } from '../../store'
+import { presetStore, settingStore, toastStore, userStore } from '../../store'
 import { Card } from '../Card'
 import { isValidServiceSetting, serviceHasSetting } from '../util'
 import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
@@ -189,7 +189,19 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
                       value={props.state.thirdPartyModel}
                       selected={props.state.thirdPartyModel}
                       options={localModels.models}
-                      onSelect={(ev) => props.setter('thirdPartyModel', ev.value)}
+                      onSelect={(ev) => {
+                        props.setter('thirdPartyModel', ev.value)
+                        if (props.state._id) {
+                          presetStore.updatePreset(
+                            props.state._id,
+                            { thirdPartyModel: ev.value },
+                            {
+                              quiet: true,
+                              onSuccess: () => toastStore.success('Model changed'),
+                            }
+                          )
+                        }
+                      }}
                       search={tokenizedSearch}
                       buttonLabel="Select Model"
                       hide={localModels.models.length <= 1}
