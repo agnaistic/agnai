@@ -1,5 +1,6 @@
 import { AppSchema } from '../types'
 import { ResponseSchema } from '../types/library'
+import { JsonField } from '../prompt'
 
 export const SCHEMA_VARS = {
   user: `Your name: unformatted`,
@@ -11,13 +12,19 @@ export const SCHEMA_VARS = {
   kebab_char: `Character name: kebab-case`,
 }
 
+type Entities = {
+  replyAs: M<AppSchema.Character>
+  char: AppSchema.Character
+  impersonate: M<AppSchema.Character>
+  sender: M<AppSchema.Profile>
+}
+
+type M<T> = T | undefined
+
 /**
  * @destructive Mutates `schema` field names and templates if required
  */
-export function formatJsonSchemaVars(
-  schema: ResponseSchema,
-  ents: { char: AppSchema.Character; impersonate?: AppSchema.Character; handle: string }
-) {
+export function formatJsonSchemaVars(schema: ResponseSchema, ents: Entities) {
   if (!schema?.schema?.length) return
   schema.history = parseVariableName(schema.history, ents)
   schema.response = parseVariableName(schema.response, ents)
@@ -27,12 +34,77 @@ export function formatJsonSchemaVars(
   return
 }
 
-function parseVariableName(
-  varname: string,
-  opts: { char: AppSchema.Character; impersonate?: AppSchema.Character; handle: string }
+export function getJsonSchemaPayload(
+  json: JsonField[],
+  format: 'openai' | 'aphrodite',
+  entities: Entities
 ) {
-  const user = opts.impersonate?.name || opts.handle || 'You'
-  const parsed = formatPlaceholder(formatPlaceholder(varname, 'user', user), 'char', opts.char.name)
+  const response = getResponseVariable(entities)
+
+  const base = { [response]: { type: 'string' } }
+  // const base: any = {}
+  const fields = json.reduce((prev: any, field: JsonField) => {
+    const {
+      type: { type, ...subtype },
+    } = field
+
+    const spec: any = { type, ...subtype }
+    if (spec.maxLength !== undefined && spec.maxLength <= 0) {
+      delete spec.maxLength
+    }
+
+    prev[field.name] = spec
+    return prev
+  }, base as any)
+  const required = Object.keys(fields)
+
+  switch (format) {
+    case 'openai': {
+      const payload = {
+        type: 'json_schema',
+        json_schema: {
+          name: 'response',
+          type: 'object',
+          strict: true,
+          // name: 'response',
+          schema: {
+            strict: true,
+            properties: fields,
+            required,
+            additionalProperties: false,
+          },
+        },
+      }
+      return payload
+    }
+
+    case 'aphrodite': {
+      const payload = {
+        type: 'object',
+        properties: fields,
+        required,
+      }
+      return payload
+    }
+  }
+}
+
+export function getResponseVariable(entities: Entities) {
+  const { char } = getNames(entities)
+  return `${char}'s response`
+}
+
+function getNames(entities: Entities) {
+  const char = entities.replyAs?.name || entities.char?.name || 'Bot'
+  const user = entities.impersonate?.name || entities.sender?.handle || 'You'
+  return { char, user }
+}
+
+function parseVariableName(varname: string, opts: Entities) {
+  const user = opts.impersonate?.name || opts.sender?.handle || 'You'
+  const char = opts.replyAs?.name || opts.char?.name || 'Bot'
+
+  const parsed = formatPlaceholder(formatPlaceholder(varname, 'user', user), 'char', char)
   return parsed
 }
 

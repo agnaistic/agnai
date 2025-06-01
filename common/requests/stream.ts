@@ -1,5 +1,6 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
+import { round } from '../util'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -20,7 +21,11 @@ const DEBUG =
 export const streamGenerator: CompletionGenerator = async function* (opts) {
   const { signal, url, headers, body, format } = opts
   const tokens = []
-  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+  const start = Date.now()
+  let meta: any = {
+    model: '',
+    stop: '',
+  }
   // let current: any = {}
 
   headers['Content-Type'] = 'application/json'
@@ -81,13 +86,17 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     if (!data) continue
 
     if (data.token) {
+      if (!meta.wait) {
+        meta.wait = round((Date.now() - start) / 1000, 2)
+      }
       const token = data.token as string
       tokens.push(data.token)
       yield { token }
     }
 
     if (data.meta) {
-      Object.assign(meta, data.meta)
+      if (data.meta.finish_reason) meta.stop = data.meta.finish_reason
+      if (data.meta.model) meta.model = meta.model = data.meta.model
     }
 
     if (data.error) {
@@ -128,9 +137,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     return
   }
 
-  if (DEBUG) {
-    console.log(`[fetch] response: ${tokens.join('')}`)
-  }
+  meta.time = round((Date.now() - start) / 1000, 2)
 
   if (!sentTokens) {
     yield { tokens: tokens.join('') }
@@ -195,6 +202,9 @@ export async function* fetchStream(
           yield { tokens: accum, gens: swipes }
         }
 
+        if (DEBUG) {
+          console.log(`[fetch] response: ${accum}`)
+        }
         yield { tokens: accum }
         return
       }
@@ -279,10 +289,7 @@ export async function* fetchStream(
 
             const meta: any = {}
 
-            getChoiceProp(json, 'id')
-            getChoiceProp(json, 'created', meta)
             getChoiceProp(json, 'model', meta)
-            getChoiceProp(json, 'object')
             getChoiceProp(json, 'finish_reason', meta)
 
             yield { meta }

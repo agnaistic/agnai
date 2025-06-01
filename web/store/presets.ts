@@ -94,6 +94,8 @@ export const presetStore = createStore<PresetState>(
       preset: Partial<PresetUpdate>,
       opts?: { onSuccess?: (preest: AppSchema.UserGenPreset) => void; quiet?: boolean }
     ) {
+      if (!presetId || presetId === 'new' || isDefaultPreset(presetId)) return
+
       yield { saving: true }
       const res = await presetApi.editPreset(presetId, preset)
       yield { saving: false }

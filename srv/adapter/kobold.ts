@@ -16,6 +16,7 @@ import {
 import { insertImageContent, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
+import { round } from '/common/util'
 
 /**
  * Sampler order
@@ -75,10 +76,12 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   )
 
   insertImageContent(opts, opts.messages || [])
+  const start = Date.now()
   const stream = await dispatch(opts, body)
   yield { prompt: body.messages ? stripImageContent(body.messages) : body.prompt }
 
   let accum = ''
+  let wait = 0
 
   for await (const generated of stream) {
     if (!generated) break
@@ -94,6 +97,9 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
 
     if ('token' in generated) {
+      if (!wait) {
+        wait = round((Date.now() - start) / 1000)
+      }
       accum += generated.token
       yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
     }
@@ -109,8 +115,14 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     }
   }
 
-  if (opts.gen.service === 'kobold' && body.model) {
-    yield { meta: { model: body.model, fmt: opts.gen.thirdPartyFormat } }
+  if (opts.gen.service === 'kobold') {
+    let meta: any = {
+      fmt: opts.gen.thirdPartyFormat,
+      wait,
+      time: round((Date.now() - start) / 1000, 2),
+    }
+    if (body.model) meta.model = body.model
+    yield { meta }
   }
 
   const parsed = sanitise(accum)
@@ -199,7 +211,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'arli': {
-      const url = 'https://api.arliai.com/v1/completions'
+      const url = 'https://api.arliai.com/v1/chat/completions'
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })

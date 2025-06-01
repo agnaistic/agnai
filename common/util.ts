@@ -1,5 +1,5 @@
-import { AppSchema } from './types/schema'
-import { GenerateRequestV2 } from '/srv/adapter/type'
+import type { AppSchema } from './types/schema'
+import type { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 

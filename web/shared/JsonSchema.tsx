@@ -63,8 +63,13 @@ export const JsonSchema: Component<{
 
   const update = (update: Partial<JsonField>, index: number) => {
     const next = state.fields.map((f, i) => {
-      if (i === index) return { ...f, ...update }
-      return f
+      if (i !== index) return f
+
+      if (update.name && !!f.name?.trim()) {
+        props.onNameChange?.(f.name, update.name)
+      }
+
+      return { ...f, ...update }
     })
 
     setState({ fields: next })
@@ -72,8 +77,8 @@ export const JsonSchema: Component<{
 
   const updateType = (update: Partial<JsonType>, index: number) => {
     const next = state.fields.map((f, i) => {
-      if (i === index) return { ...f, type: { ...f.type, ...update } }
-      return f
+      if (i !== index) return f
+      return { ...f, type: { ...f.type, ...update } }
     })
 
     setState({ fields: next as any })

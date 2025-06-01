@@ -6,6 +6,7 @@ import { defaultPresets } from '/common/default-preset'
 import { getEncoderByName } from '../tokenize'
 import { decryptText } from '../db/util'
 import { toImageJinjaTemplate } from '/common/requests/payloads'
+import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen } = opts
@@ -222,7 +223,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   if (format === 'arli') {
     const body: any = {
       model: gen.arliModel,
-      prompt,
+      // prompt,
+      messages: opts.messages,
       stop: getStoppingStrings(opts, stops),
       presence_penalty: gen.presencePenalty,
       frequency_penalty: gen.frequencyPenalty,
@@ -263,6 +265,12 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
     if (body.top_k <= 0) {
       body.top_k = -1
+    }
+
+    if (gen.jsonEnabled && opts.jsonSchema) {
+      const schema = getJsonSchemaPayload(opts.jsonSchema, 'aphrodite', opts)
+      body.guided_json = schema
+      // body.guided_decoding_backend = 'outlines'
     }
 
     return body
@@ -499,6 +507,11 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     if (gen.xtcThreshold) {
       body.xtc_threshold = gen.xtcThreshold
       body.xtc_probability = gen.xtcProbability
+    }
+
+    if (gen.jsonEnabled && opts.jsonSchema) {
+      const schema = getJsonSchemaPayload(opts.jsonSchema, 'aphrodite', opts)
+      body.guided_json = schema
     }
 
     return body

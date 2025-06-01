@@ -5,7 +5,7 @@ import TextInput from '../TextInput'
 import Button, { ToggleButton } from '../Button'
 import { getStore } from '/web/store/create'
 import RangeInput from '../RangeInput'
-import { settingStore } from '/web/store'
+import { settingStore, toastStore } from '/web/store'
 import Select from '../Select'
 import { MODEL_FORMATS } from './General'
 import { FormLabel } from '../FormLabel'
@@ -445,6 +445,7 @@ export const ArliModels: Field = (props) => {
 
   const options = createMemo(() => {
     return state.models
+      .slice()
       .filter((s) => {
         const mclass = modelclass()
         if (!mclass) return true
@@ -461,6 +462,7 @@ export const ArliModels: Field = (props) => {
         ),
         value: s.id,
       }))
+      .sort((l, r) => l.value.localeCompare(r.value))
   })
 
   onMount(() => {
@@ -505,6 +507,13 @@ export const ArliModels: Field = (props) => {
       }
       onSelect={(opt) => {
         props.setter('arliModel', opt.value)
+        if (props.page === 'mode') {
+          getStore('presets').updatePreset(
+            props.state._id,
+            { arliModel: opt.value },
+            { quiet: true, onSuccess: () => toastStore.success('Model changed') }
+          )
+        }
       }}
       buttonLabel={label()}
       selected={props.state.arliModel}
