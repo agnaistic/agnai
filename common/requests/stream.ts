@@ -245,7 +245,7 @@ export async function* fetchStream(
 
           opts?.log?.error(
             { err: error, chunk: error ? undefined : chunk, url: response.url, msg: finalMsg },
-            `[fetch] request failed with error ${response.status}`
+            `Request failed with error ${response.status}`
           )
 
           yield {
@@ -280,9 +280,7 @@ export async function* fetchStream(
 
             if (msg) {
               yield {
-                error: `[fetch] provider responded with an error: ${msg}${
-                  code ? ` [${code}]` : ''
-                }`,
+                error: `Provider responded with an error: ${msg}${code ? ` [${code}]` : ''}`,
                 errorObj: json,
               }
               return
