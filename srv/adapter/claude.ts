@@ -56,7 +56,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   const claudeModel =
     gen.service === 'kobold'
       ? gen.thirdPartyModel || gen.claudeModel
-      : gen.claudeModel || CLAUDE_MODELS.ClaudeV37_Sonnet_Latest
+      : gen.claudeModel || gen.thirdPartyModel || CLAUDE_MODELS.ClaudeV37_Sonnet_Latest
 
   const base = getBaseUrl(gen, claudeModel || defaultPresets.claude.claudeModel, isThirdParty)
 

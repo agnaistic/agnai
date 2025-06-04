@@ -65,6 +65,7 @@ const AISettings: Component<{
       .filter((adp) => {
         if (adp === 'ooba') return false
         if (adp === 'openrouter-completion') return false
+        if (adp === 'kobold') return false
         if (adp === 'claude-v2') return false
         const reg = cfg.config.registered.find((r) => r.name === adp)
         if (!reg) return true
@@ -217,7 +218,12 @@ const AISettings: Component<{
             Are you using an external AI service such as OpenAI, NovelAI, or Horde? Provide your API
             key below.
           </SolidCard>
-          <Tabs tabs={tabs()} selected={tab} select={setTab} />
+          <Tabs
+            display="select"
+            tabs={tabs().map((t) => `Provider: ${t}`)}
+            selected={tab}
+            select={setTab}
+          />
         </div>
       </Show>
 

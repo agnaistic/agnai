@@ -202,7 +202,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   const isThirdParty = isThirdPartyPreset(settings)
 
-  const handler = getHandlers(settings)
+  const handler = getHandlers({ user: opts.user, settings })
   const stream = handler({
     kind: 'plain',
     requestId: '',
@@ -377,7 +377,7 @@ export async function createChatStream(
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model, subscription?.preset)
-  const handler = getHandlers(opts.settings)
+  const handler = getHandlers({ user: opts.user, settings: opts.settings })
 
   /**
    * Context limits set by the subscription need to be present before the prompt is finalised.

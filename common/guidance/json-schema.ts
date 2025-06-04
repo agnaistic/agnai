@@ -36,7 +36,7 @@ export function formatJsonSchemaVars(schema: ResponseSchema, ents: Entities) {
 
 export function getJsonSchemaPayload(
   json: JsonField[],
-  format: 'openai' | 'aphrodite',
+  format: 'openai' | 'guided_json',
   entities: Entities
 ) {
   const response = getResponseVariable(entities)
@@ -78,7 +78,7 @@ export function getJsonSchemaPayload(
       return payload
     }
 
-    case 'aphrodite': {
+    case 'guided_json': {
       const payload = {
         type: 'object',
         properties: fields,

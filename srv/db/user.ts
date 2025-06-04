@@ -6,7 +6,7 @@ import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
 import { logger } from '../middleware'
 import { errors, StatusError } from '../api/wrap'
-import { decryptText, encryptPassword, encryptUserText, now } from './util'
+import { decryptText, encryptPassword, encryptText, encryptUserText, now } from './util'
 import { defaultChars } from '/common/characters'
 import { resyncSubscription } from '../api/billing/stripe'
 import { getCachedSubscriptionModels, getCachedTiers, getTier } from './subscriptions'
@@ -38,6 +38,37 @@ export async function ensureInitialUser() {
   )
 
   logger.info(config.init, 'Created initial user')
+}
+
+export async function saveUserProvider(userId: string, prv: AppSchema.Provider) {
+  const user = await getUser(userId)
+  if (!user) throw errors.Forbidden
+
+  const providers = user.providers || []
+  const key = prv.key ? encryptText(prv.key) : ''
+
+  if (prv._id) {
+    const next = providers.map((p) => {
+      if (prv._id !== p._id) return p
+      return { _id: p._id, name: prv.name, url: prv.url, key, provider: prv.provider }
+    })
+
+    await db('user').updateOne({ _id: userId }, { $set: { providers: next } })
+    const safe = toSafeUser({ ...user, providers: next })
+    return safe
+  }
+
+  providers.push({
+    _id: v4(),
+    name: prv.name,
+    url: prv.url,
+    provider: prv.provider,
+    key,
+  })
+
+  await db('user').updateOne({ _id: userId }, { $set: { providers } })
+  const safe = toSafeUser({ ...user, providers })
+  return safe
 }
 
 export async function getMetrics() {
@@ -528,6 +559,12 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
   if (user.arliApiKey) {
     user.arliApiKey = ''
     user.arliApiKeySet = true
+  }
+
+  if (user.providers) {
+    for (const prov of user.providers) {
+      prov.key = ''
+    }
   }
 
   for (const svc of getRegisteredAdapters()) {

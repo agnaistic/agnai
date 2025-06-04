@@ -146,6 +146,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     'Content-Type': 'application/json',
     'HTTP-Referer': 'https://agnai.chat',
     'X-Title': 'Agnai.Chat',
+    'anthropic-version': '2023-06-01',
   }
 
   if (apiKey) {
@@ -264,9 +265,9 @@ export function getCompletionContent(completion: Completion<Inference> | undefin
     return completion
   }
 
-  if ('text' in completion.choices[0]) {
+  if ('text' in completion?.choices?.[0]) {
     return completion.choices[0].text
   } else {
-    return completion.choices[0].message.content
+    return completion?.choices?.[0]?.message?.content || ''
   }
 }

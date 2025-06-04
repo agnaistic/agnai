@@ -25,7 +25,7 @@ export const CustomSelect: Component<{
   onSelect: (opt: CustomOption) => void
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
-  value: any
+  // value: any
 
   header?: JSX.Element
 

@@ -3,6 +3,15 @@ import { ModelFormat } from '../presets/templates'
 import { BaseImageSettings, ImageSettings } from './image-schema'
 import { ResponseSchema } from './library'
 
+export interface Provider {
+  _id: string
+  /** 'custom-* | self-* | known-*' */
+  provider: string
+  name: string
+  url: string
+  key: string
+}
+
 export interface SubscriptionTier {
   kind: 'subscription-tier'
   _id: string
@@ -86,6 +95,7 @@ export interface GenSettings {
   presetMode?: 'simple' | 'advanced' | undefined
 
   service?: AIAdapter
+  providerId?: string
   tokenizer?: string
 
   temp: number
@@ -177,6 +187,7 @@ export interface GenSettings {
 
   frequencyPenalty?: number
   presencePenalty?: number
+
   oaiModel?: string
   novelModel?: string
   claudeModel?: string

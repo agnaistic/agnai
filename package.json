@@ -174,7 +174,7 @@
     "jwt-decode": "^4.0.0",
     "libsodium-wrappers-sumo": "^0.7.11",
     "localforage": "^1.10.0",
-    "lucide-solid": "0.356.0",
+    "lucide-solid": "0.513.0",
     "mocha": "^10.2.0",
     "mocha-chai-jest-snapshot": "^1.1.4",
     "nodemon": "^3.0.1",

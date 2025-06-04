@@ -1010,9 +1010,20 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 
   while (true) {
     const start = content.indexOf(open)
-    if (start < 0) break
-
     const end = content.indexOf(close)
+
+    // No starting tag
+    if (start < 0) {
+      // No end tag either, do nothing
+      if (end < 0) break
+
+      // We have an end tag, so capture everything from the start as a thought
+      const thought = content.slice(0, end)
+      thoughts.push(thought)
+      content = content.slice(end + len.close)
+      break
+    }
+
     if (end > start) {
       const thought = content.slice(start + len.open, end)
       thoughts.push(thought)

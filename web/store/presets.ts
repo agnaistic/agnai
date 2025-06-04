@@ -8,6 +8,7 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
+import { getSafeProviderDetail } from '/common/providers'
 import { replace } from '/common/util'
 
 type PresetState = {
@@ -62,24 +63,54 @@ export const presetStore = createStore<PresetState>(
         return { presets: res.result.presets }
       }
     },
-    async getPresetModelList(_, preset: Partial<AppSchema.UserGenPreset>, useCache?: boolean) {
-      if (preset.service !== 'kobold' || !preset.thirdPartyUrl) {
-        return { localModels: [] }
-      }
+    async getPresetModelList(
+      _,
+      preset: Partial<AppSchema.UserGenPreset>,
+      providers: AppSchema.Provider[],
+      useCache?: boolean
+    ) {
+      const provider = preset.providerId
+        ? providers.find((p) => preset.providerId === p._id)
+        : undefined
+      const detail = getSafeProviderDetail(provider?.provider || '')
 
-      if (preset.localRequests) {
+      let url = preset.thirdPartyUrl || ''
+      let key = preset.thirdPartyKey || ''
+
+      if (provider && detail) {
+        switch (detail.category) {
+          case 'self':
+          case 'custom':
+            url = provider.url || detail.detail.url || ''
+            break
+
+          case 'known':
+            url = detail.detail.url || ''
+            break
+        }
+
+        if (!url) return
         const models = await presetApi.getLocalModelList({
-          url: preset.thirdPartyUrl,
-          key: preset.userThirdPartyKey,
+          url,
+          key,
         })
+
         return { localModels: models }
       }
 
+      const known = getSafeProviderDetail(
+        preset.service === 'kobold' ? `known-${preset.thirdPartyFormat}` : `known-${preset.service}`
+      )
+      if (known?.detail?.url) {
+        url = known.detail.url
+      }
+
+      if (!url) return
       const models = await presetApi.getPresetModelList({
         id: preset._id || '',
-        url: preset.thirdPartyUrl,
+        url,
         // We pass this for presets that are un-saved
-        key: preset.thirdPartyKey,
+        key,
         useCache,
       })
 

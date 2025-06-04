@@ -152,7 +152,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   if (!opts.gen.streamResponse) {
     const ai = await client.models
       .generateContent({
-        model: opts.gen.googleModel!,
+        model: opts.gen.googleModel || opts.gen.thirdPartyModel!,
         contents,
         config: generationConfig,
       })
@@ -175,7 +175,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   } else {
     const ai = await client.models
       .generateContentStream({
-        model: opts.gen.googleModel!,
+        model: opts.gen.googleModel || opts.gen.thirdPartyModel!,
         config: generationConfig,
         contents,
       })

@@ -212,7 +212,6 @@ export const GOOGLE_MODELS = {
   GEMINI_15_FLASH_002: { id: 'gemini-1.5-flash-002', label: 'Gemini 1.5 Flash 002' },
   GEMINI_15_FLASH_8B: { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
   GEMINI_EXP_1114: { id: 'gemini-exp-1114', label: 'Gemini Exp 1114' },
-  GEMINI_20_FLASH: { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' },
   GEMINI_20_FLASH_EXP: { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash Exp' },
   GEMINI_20_FLASH_THINKING: {
     id: 'gemini-2.0-flash-thinking-exp-01-21',
@@ -312,6 +311,26 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   petals: 'Petals',
   agnaistic: 'Agnaistic',
   venus: 'Venus',
+}
+
+export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
+  kobold: 'Kobold',
+  openai: 'OpenAI (Completion)',
+  'openai-chat': 'OpenAI Compatible (Chat - Legacy)',
+  'openai-chatv2': 'OpenAI Compatible (Chat)',
+  aphrodite: 'Aphrodite',
+  arli: 'ArliAI',
+  claude: 'Claude (Legacy)',
+  exllamav2: 'ExllamaV2',
+  featherless: 'Featherless',
+  gemini: 'Google AI Studio',
+  koboldcpp: 'Kobold.cpp',
+  llamacpp: 'Llama.cpp',
+  mistral: 'Mistral AI',
+  ollama: 'Ollama',
+  ooba: 'TextGen WebUI (Ooba)',
+  tabby: 'TabbyAPI',
+  vllm: 'vLLM',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {

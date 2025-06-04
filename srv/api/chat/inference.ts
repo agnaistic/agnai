@@ -177,15 +177,9 @@ export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
 })
 
 export const inferenceModels = wrap(async (req) => {
-  if (!req.authed?.defaultPreset) {
-    throw new StatusError(`No default preset configured - Check your Agnai user settings`, 400)
-  }
-
-  const preset = await store.presets.getUserPresetInternal(req.authed?.defaultPreset!)
-  if (!preset) {
-    throw new StatusError(`Default preset not found - Check your Agnai user settings`, 400)
-  }
-
+  // if (!req.authed?.defaultPreset) {
+  //   throw new StatusError(`No default preset configured - Check your Agnai user settings`, 400)
+  // }
   const level = getUserSubscriptionTier(req.authed!, getCachedTiers())?.level ?? 0
   const userModels = getCachedSubscriptionModels()
     .filter((m) => m.subLevel <= level)
@@ -206,20 +200,24 @@ export const inferenceModels = wrap(async (req) => {
       }
     })
 
-  return {
-    object: 'list',
-    data: [
-      {
+  if (req.authed?.defaultPreset) {
+    const preset = await store.presets.getUserPresetInternal(req.authed?.defaultPreset!)
+    if (preset) {
+      userModels.unshift({
         id: `(${preset.service}) ${preset.name}`,
         object: 'model',
         created: Date.now(),
-        owned_by: req.user?.userId,
+        owned_by: req.user?.userId || '',
         root: preset._id,
         parent: null,
-        permission: [],
-      },
-      ...userModels,
-    ],
+        permissions: [] as any,
+      } as any)
+    }
+  }
+
+  return {
+    object: 'list',
+    data: [...userModels],
   }
 })
 
@@ -294,7 +292,7 @@ export const inferenceApi = wrap(async (req, res) => {
   const signal = new AbortController()
   const request: InferenceRequest = {
     prompt: body.prompt
-      ? replaceTags(body.prompt, subPreset?.modelFormat || preset?.modelFormat || 'ChatML')
+      ? replaceTags(body.prompt, subPreset?.modelFormat || preset?.modelFormat || 'None')
       : body.messages
       ? rendered?.prompt || ''
       : '',

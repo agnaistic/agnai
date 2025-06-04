@@ -202,8 +202,11 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'featherless': {
-      body.messages = opts.imageData ? opts.messages : undefined
-      let suffix = useChat ? 'chat/completions' : 'completions'
+      // Intentionally always using message format
+      body.messages = opts.messages
+      body.prompt = undefined
+      let suffix = body.messages ? 'chat/completions' : 'completions'
+
       const url = `https://api.featherless.ai/v1/${suffix}`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })

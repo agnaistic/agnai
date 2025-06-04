@@ -288,6 +288,16 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
   return next
 })
 
+export const saveProvider = handle(async ({ userId, body }) => {
+  assertValid(
+    { _id: 'string', name: 'string', provider: 'string', url: 'string', key: 'string' },
+    body
+  )
+
+  const user = await store.users.saveUserProvider(userId, body)
+  return user
+})
+
 export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(validConfig, body)
 

@@ -32,6 +32,7 @@ export const ModeGenSettings: Component<{
   }))
 
   const [store, setStore, hides] = getPresetEditor()
+  const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
     getPresetOptions(state.presets, { builtin: true, base: true })
@@ -62,15 +63,15 @@ export const ModeGenSettings: Component<{
 
         if (isDefaultPreset(id)) {
           const clone = deepClone(defaultPresets[id])
-          presetStore.getPresetModelList(clone, true)
+          presetStore.getPresetModelList(clone, user.user?.providers || [], true)
           setStore(clone)
           return
         }
 
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
-          setStore(preset)
-          presetStore.getPresetModelList(preset, true)
+          setStore({ providerId: '', ...preset })
+          presetStore.getPresetModelList(preset, user.user?.providers || [], true)
           return
         }
       }
@@ -157,6 +158,16 @@ export const ModeGenSettings: Component<{
 
   const activePreset = createMemo(() => presets().find((pre) => pre._id === selected()))
 
+  const copy = (text: string) => {
+    if (typeof navigator === undefined) return
+
+    try {
+      navigator.clipboard.writeText(text)
+      setTimeout(() => setClicked(false), 1000)
+      setClicked(true)
+    } catch (ex) {}
+  }
+
   return (
     <div class="text-sm">
       <form ref={ref} class="flex flex-col gap-4">
@@ -181,13 +192,21 @@ export const ModeGenSettings: Component<{
           <TextInput
             fieldName="name"
             value={store.name}
-            label="Preset Name"
+            label={
+              <div class="flex gap-2">
+                <div>Preset Name</div>{' '}
+                <div
+                  class="icon-button select-none text-sm"
+                  style={{ transition: '0.3s' }}
+                  classList={{ '!text-green-500': clicked() }}
+                  onClick={() => copy(store._id)}
+                >
+                  Copy ID {clicked() ? '✓' : ''}
+                </div>
+              </div>
+            }
             onChange={(ev) => setStore('name', ev.currentTarget.value)}
           />
-
-          <Show when={store._id}>
-            <TextInput prelabel="ID" value={store._id} disabled />
-          </Show>
         </Card>
 
         <PresetSettings

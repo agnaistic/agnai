@@ -28,6 +28,7 @@ import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { insertImageContent } from './template-chat-payload'
+import { assertProviderDetail } from '/common/providers'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -435,8 +436,27 @@ export const handlers: { [key in AIAdapter]: ModelAdapter } = {
   venus: handleVenus,
 }
 
-export function getHandlers(settings: Partial<AppSchema.GenSettings>): ModelAdapter {
-  switch (settings.service!) {
+export function getHandlers(opts: {
+  settings: Partial<AppSchema.GenSettings>
+  user?: AppSchema.User
+}): ModelAdapter {
+  if (opts.settings.providerId && opts.user?.providers) {
+    const provider = opts.user.providers?.find((p) => p._id === opts.settings.providerId)
+    if (provider) {
+      const { detail, handler, category } = getProviderHandler(provider)
+      if (provider.url) {
+        opts.settings.thirdPartyUrl = provider.url
+      } else if (category !== 'known' && detail.url) {
+        opts.settings.thirdPartyUrl = detail.url
+      } else if (category === 'known' && detail.url) {
+        opts.settings.thirdPartyUrl = detail.url
+      }
+      opts.settings.thirdPartyKey = provider.key
+      return handler
+    }
+  }
+
+  switch (opts.settings.service!) {
     case 'agnaistic':
     case 'claude':
     case 'claude-v2':
@@ -452,14 +472,14 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>): ModelAdap
     case 'mancer':
     case 'novel':
     case 'venus':
-      return handlers[settings.service]
+      return handlers[opts.settings.service]
   }
 
-  switch (settings.thirdPartyFormat!) {
+  switch (opts.settings.thirdPartyFormat!) {
     case 'claude':
     case 'kobold':
     case 'openai':
-      return handlers[settings.thirdPartyFormat!]
+      return handlers[opts.settings.thirdPartyFormat!]
 
     case 'openai-chat':
     case 'openai-chatv2':
@@ -474,4 +494,20 @@ export function getHandlers(settings: Partial<AppSchema.GenSettings>): ModelAdap
   }
 
   return handleThirdParty
+}
+
+function getProviderHandler(provider: AppSchema.Provider) {
+  const { detail, type, category } = assertProviderDetail(provider.provider)
+
+  if (detail.format) {
+    const handler = getHandlers({ settings: { thirdPartyFormat: detail.format } })
+    return { detail, handler, type, category }
+  }
+
+  if (detail.service) {
+    const handler = getHandlers({ settings: { service: detail.service } })
+    return { detail, handler, type, category }
+  }
+
+  throw new Error(`Unknown provider identifier: ${provider.provider}`)
 }

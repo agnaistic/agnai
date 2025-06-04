@@ -45,6 +45,7 @@ export namespace AppSchema {
   export type GenSettings = Preset.GenSettings
   export type UserGenPreset = Preset.UserGenPreset
   export type PromptTemplate = Preset.PromptTemplate
+  export type Provider = Preset.Provider
 
   export type SubscriptionTier = Preset.SubscriptionTier
   export type SubscriptionModel = Preset.SubscriptionModel
@@ -219,6 +220,8 @@ export namespace AppSchema {
     banHistory?: Array<{ at: Date; reason: string }>
 
     resetCode?: string
+
+    providers?: Preset.Provider[]
   }
 
   export interface ApiKey {

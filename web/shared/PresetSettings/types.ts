@@ -81,6 +81,7 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   dryMultiplier: 0,
   drySequenceBreakers: [],
   modelFormat: 'None',
+  providerId: '',
 }
 
 export function getPresetEditor() {
@@ -91,7 +92,7 @@ export function getPresetEditor() {
 
   createEffect(
     on(
-      () => store.service! + store.thirdPartyFormat! + store.presetMode!,
+      () => (store._id || '') + store.service! + store.thirdPartyFormat! + store.presetMode!,
       () => {
         const next = createHides(store)
         setHides(next)
@@ -104,11 +105,18 @@ export function getPresetEditor() {
 
 function createHides(store: PresetState) {
   const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
-  let hides: any = {}
+  let hides: { [key in keyof AppSchema.GenSettings]?: boolean } = {}
 
   for (const key of keys) {
     const hide = hidePresetSetting(store, key as any)
     hides[key] = hide
+  }
+
+  if (store.providerId) {
+    hides.thirdPartyUrl = true
+    hides.thirdPartyFormat = true
+    hides.thirdPartyKey = true
+    hides.thirdPartyUrlNoSuffix = true
   }
 
   return hides

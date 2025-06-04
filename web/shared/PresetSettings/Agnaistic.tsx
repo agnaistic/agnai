@@ -105,7 +105,6 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         search={isFoundModel}
         categories={cats().categories}
         onSelect={(ev) => onSave(ev.value)}
-        value={props.state.registered?.agnaistic?.subscriptionId}
         selected={props.state.registered?.agnaistic?.subscriptionId}
         emitter={emitter.on}
       />
@@ -242,7 +241,6 @@ export const AgnaisticModel: Component = (props) => {
         }
         categories={cats().categories}
         onSelect={onSave}
-        value={ctx.preset?.registered?.agnaistic?.subscriptionId}
         selected={selected()}
         emitter={emitter.on}
         search={isFoundModel}

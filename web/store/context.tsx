@@ -57,6 +57,7 @@ export type ContextState = {
   preset?: AppSchema.UserGenPreset
   subPreset?: AppSchema.SubscriptionModelOption
   ui: UI.UISettings
+  provider?: AppSchema.Provider
 }
 
 const initial: ContextState = {
@@ -158,6 +159,13 @@ export function ContextProvider(props: { children: any }) {
     return subModel
   })
 
+  const provider = createMemo(() => {
+    const p = preset()
+    if (!p?.providerId) return
+    const match = users.user?.providers?.find((val) => val._id === p.providerId)
+    return match
+  })
+
   createEffect(() => {
     const next: Partial<ContextState> = {
       bg: visuals(),
@@ -185,6 +193,7 @@ export function ContextProvider(props: { children: any }) {
       status: msgs.hordeStatus,
       preset: preset(),
       subPreset: subModel(),
+      provider: provider(),
       ui: users.ui,
     }
 

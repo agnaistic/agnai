@@ -29,6 +29,8 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
   // let current: any = {}
 
   headers['Content-Type'] = 'application/json'
+  headers['anthropic-version'] = '2023-06-01'
+
   switch (format) {
     case 'featherless': {
       headers.Accept = 'application/json'
@@ -234,15 +236,12 @@ export async function* fetchStream(
         const isError = isErrorCode || !!error?.error
         if (isError && error) {
           // OpenRouter provider errors
-          const suberror = tryParse(error?.error?.metadata?.raw)?.detail
+          const suberror = tryParse(error?.error?.metadata?.raw)
+          const providerError = suberror?.detail || suberror?.message || suberror?.error?.message
 
-          const msg =
-            suberror?.detail ||
-            error?.error?.message ||
-            error?.message ||
-            `status code ${response.status}`
+          const msg = error?.error?.message || error?.message || `status code ${response.status}`
 
-          const finalMsg = [msg, suberror].filter((m) => !!m).join(' - ')
+          const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
 
           opts?.log?.error(
             { err: error, chunk: error ? undefined : chunk, url: response.url, msg: finalMsg },
@@ -250,7 +249,7 @@ export async function* fetchStream(
           )
 
           yield {
-            error: `Request failed: ${finalMsg}`,
+            error: `${finalMsg}`,
             errorObj: error ? error : chunk,
           }
           return
@@ -267,6 +266,27 @@ export async function* fetchStream(
         if (json) {
           if (format === 'raw') {
             yield json
+          } else if (json?.error) {
+            const msg = json.error?.message
+            const code = json.error.code || ''
+
+            opts?.log?.error({
+              err: json,
+              chunk,
+              url: response.url,
+              code,
+              msg,
+            })
+
+            if (msg) {
+              yield {
+                error: `[fetch] provider responded with an error: ${msg}${
+                  code ? ` [${code}]` : ''
+                }`,
+                errorObj: json,
+              }
+              return
+            }
           } else {
             const token: string =
               getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response || ''

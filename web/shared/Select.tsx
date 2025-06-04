@@ -22,6 +22,7 @@ const Select: Component<{
   onChange?: (item: Option) => void
   recommend?: string
   recommendLabel?: string
+  children?: any
 
   ref?: (ref: HTMLSelectElement) => void
   hide?: boolean
@@ -75,7 +76,7 @@ const Select: Component<{
         helperMarkdown={props.helperMarkdown}
       />
 
-      <div class="flex items-center">
+      <div class="flex items-center gap-1">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select
             ref={(ele) => {
@@ -101,10 +102,12 @@ const Select: Component<{
               )}
             </For>
           </select>
+
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
             <ChevronDown />
           </div>
         </div>
+        {props.children ? props.children : null}
       </div>
     </div>
   )

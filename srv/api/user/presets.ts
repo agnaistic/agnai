@@ -55,7 +55,7 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body }) => {
   }
 
   const key = preset.thirdPartyKey ? decryptText(preset.thirdPartyKey, true) : ''
-  const models = await getThirdPartyModels(body.url, key)
+  const models = await getThirdPartyModels(body.url, body.key || key)
   return models?.data ? models : { data: [] }
 })
 

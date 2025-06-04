@@ -11,13 +11,13 @@ export const Copy: Component<{ text: string; size?: number }> = (props) => {
   }
 
   return (
-    <div onClick={copy} class="cursor-pointer">
+    <div onClick={copy} class="icon-button cursor-pointer font-normal">
       <Switch>
         <Match when={!clicked()}>
-          <ClipboardCopy size={props.size} />
+          <ClipboardCopy size={props.size ?? 20} />
         </Match>
         <Match when>
-          <ClipboardCheck size={props.size} />
+          <ClipboardCheck size={props.size ?? 20} />
         </Match>
       </Switch>
     </div>
