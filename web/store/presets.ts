@@ -99,7 +99,9 @@ export const presetStore = createStore<PresetState>(
               break
           }
 
-          if (!url) return
+          if (!url) {
+            return { presetModels: { list: [], url: '' } }
+          }
 
           const models =
             detail.category === 'self'
@@ -124,7 +126,9 @@ export const presetStore = createStore<PresetState>(
           url = known.detail.url
         }
 
-        if (!url) return
+        if (!url) {
+          return { presetModels: { list: [], url: '' } }
+        }
 
         const models = preset.localRequests
           ? await presetApi.getLocalModelList({ url, key: preset.userThirdPartyKey })
@@ -148,7 +152,7 @@ export const presetStore = createStore<PresetState>(
       { presets },
       presetId: string,
       preset: Partial<PresetUpdate>,
-      opts?: { onSuccess?: (preest: AppSchema.UserGenPreset) => void; quiet?: boolean }
+      opts?: { onSuccess?: (preset: AppSchema.UserGenPreset) => void; quiet?: boolean }
     ) {
       if (!presetId || presetId === 'new' || isDefaultPreset(presetId)) return
 

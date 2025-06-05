@@ -28,7 +28,7 @@ import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { insertImageContent } from './template-chat-payload'
-import { assertProviderDetail } from '/common/providers'
+import { assertProviderDetail, getPresetConnection } from '/common/providers'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -440,29 +440,12 @@ export function getHandlers(opts: {
   settings: Partial<AppSchema.GenSettings>
   user?: AppSchema.User
 }): ModelAdapter {
-  if (opts.settings.providerId && opts.user?.providers) {
-    const provider = opts.user.providers?.find((p) => p._id === opts.settings.providerId)
-    if (provider) {
-      const { detail, handler, category } = getProviderHandler(provider)
-      if (provider.url) {
-        opts.settings.thirdPartyUrl = provider.url
-      } else if (category !== 'known' && detail.url) {
-        opts.settings.thirdPartyUrl = detail.url
-      } else if (category === 'known' && detail.url) {
-        opts.settings.thirdPartyUrl = detail.url
-      }
+  const conn = getPresetConnection(opts.settings, opts.user?.providers)
 
-      if (detail.format) {
-        opts.settings.thirdPartyFormat = detail.format
-      }
-
-      if (detail.service) {
-        opts.settings.service = detail.service
-      }
-
-      opts.settings.thirdPartyKey = provider.key
-      return handler
-    }
+  if (conn.provider) {
+    const { handler } = getProviderHandler(conn.provider)
+    opts.settings = conn.preset
+    return handler
   }
 
   switch (opts.settings.service!) {

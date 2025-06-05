@@ -15,7 +15,7 @@ const DEBUG =
   typeof window !== 'undefined'
     ? false
     : typeof process !== 'undefined'
-    ? process.env.LOG_LEVEL === 'debug'
+    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
     : false
 
 export const streamGenerator: CompletionGenerator = async function* (opts) {
@@ -29,7 +29,6 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
   // let current: any = {}
 
   headers['Content-Type'] = 'application/json'
-  headers['anthropic-version'] = '2023-06-01'
 
   switch (format) {
     case 'featherless': {

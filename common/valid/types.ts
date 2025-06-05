@@ -44,7 +44,7 @@ export type FromOptional<T extends OptionalPrimitive> = T extends 'string?'
   ? unknown | undefined
   : never
 
-export type FromPrimitve<T extends Primitive> = T extends 'string'
+export type FromPrimitive<T extends Primitive> = T extends 'string'
   ? string
   : T extends 'boolean'
   ? boolean
@@ -63,8 +63,8 @@ export type FromTuple<T> = T extends
   | readonly [infer U, '?']
   ? U extends Primitive
     ? T extends [U, '?'] | readonly [U, '?']
-      ? Array<FromPrimitve<U>> | undefined
-      : Array<FromPrimitve<U>>
+      ? Array<FromPrimitive<U>> | undefined
+      : Array<FromPrimitive<U>>
     : never
   : never
 
@@ -90,7 +90,7 @@ export type UnwrapBody<T extends Validator> = {
   -readonly [key in keyof T]: key extends '?'
     ? never
     : T[key] extends Primitive
-    ? FromPrimitve<T[key]>
+    ? FromPrimitive<T[key]>
     : T[key] extends OptionalPrimitive
     ? FromOptional<T[key]>
     : T[key] extends [Primitive, '?'] | readonly [Primitive, '?']

@@ -97,7 +97,7 @@ export const PresetSelect: Component<{
       <RootModal
         show={showSelectModal()}
         close={() => setShowSelectModal(false)}
-        title="Choose a preset"
+        title="Choose a Preset"
       >
         <div class="flex flex-col gap-4">
           <div class="sticky top-0">

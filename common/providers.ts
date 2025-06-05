@@ -1,4 +1,5 @@
 import { AIAdapter, ThirdPartyFormat } from './adapters'
+import { AppSchema } from './types'
 
 type ProviderDefinition = {
   name: string
@@ -8,6 +9,56 @@ type ProviderDefinition = {
 }
 
 type ProviderCategory = 'custom' | 'known' | 'self'
+
+export function getPresetConnection(
+  preset: Partial<AppSchema.GenSettings>,
+  providers: AppSchema.Provider[] | undefined
+) {
+  let service: AIAdapter | undefined
+  let format: ThirdPartyFormat | undefined
+  let url = ''
+
+  const copy = { ...preset }
+  const provider = providers?.find((p) => p._id === preset.providerId)
+  if (provider) {
+    const { category, detail } = assertProviderDetail(provider.provider)
+
+    if (provider.url) {
+      url = provider.url
+    } else if (category !== 'known' && detail.url) {
+      url = detail.url
+    } else if (category === 'known' && detail.url) {
+      url = detail.url
+    }
+
+    if (url) copy.thirdPartyUrl = url
+    if (service) copy.service = service
+    if (format) copy.thirdPartyFormat = format
+    if (category === 'self') copy.localRequests = true
+    copy.thirdPartyKey = provider.key
+
+    if (detail.format) {
+      format = detail.format
+    }
+
+    if (detail.service) {
+      service = detail.service
+    }
+
+    return { provider, detail, category, preset: copy, service, format, url, key: provider.key }
+  }
+
+  return {
+    provider: undefined,
+    detail: undefined,
+    category: undefined,
+    preset: copy,
+    service: preset.service,
+    format: preset.thirdPartyFormat,
+    url: preset.thirdPartyUrl,
+    key: preset.thirdPartyKey,
+  }
+}
 
 export function assertProviderDetail(provider: string) {
   const category = provider.split('-')[0] as ProviderCategory
@@ -33,14 +84,30 @@ export function getSafeProviderDetail(provider: string) {
   const type = id.replace('known-', '').replace('self-', '').replace('custom-', '')
 
   switch (category) {
-    case 'custom':
+    case 'custom': {
       return { category, type, detail: CUSTOM_PROVIDERS[type] }
+    }
 
     case 'known':
       return { category, type, detail: KNOWN_PROVIDERS[type] }
 
     case 'self':
       return { category, type, detail: KNOWN_SELF_HOST[type] }
+  }
+}
+
+export function getProviderLabel(provider: AppSchema.Provider) {
+  const info = getSafeProviderDetail(provider.provider)
+
+  switch (info.category) {
+    case 'known':
+      return info.detail?.name || 'Provider'
+
+    case 'self':
+      return info.detail?.name || 'Local'
+
+    case 'custom':
+      return provider.name || 'Custom'
   }
 }
 
@@ -55,7 +122,7 @@ function getAlias(provider: string) {
 
 export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   claude: { name: 'Anthropic', url: 'https://api.anthropic.com/v1', service: 'claude' },
-  openrouter: { name: 'OpenRouter', url: '', service: 'openrouter' },
+  openrouter: { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1', service: 'openrouter' },
   gemini: {
     name: 'Google AI',
     url: 'https://generativelanguage.googleapis.com/v1beta/openai',

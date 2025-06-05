@@ -265,7 +265,7 @@ export const ImageSettingsModal = () => {
                 )
               }
             >
-              Use to {tab.current()} Settings
+              Use {tab.current()} Settings
             </Button>
           </div>
         </Show>

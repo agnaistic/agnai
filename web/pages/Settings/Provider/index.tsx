@@ -392,6 +392,15 @@ const ManageProvider: Component<{
     )
   }
 
+  const onProviderChange = (id: string) => {
+    setProvider(id)
+    const detail = getSafeProviderDetail(id)
+
+    if (detail?.detail.url && !url().trim()) {
+      setUrl(detail.detail.url)
+    }
+  }
+
   const label = createMemo(() => {
     const id = provider()
     if (!id) {
@@ -421,7 +430,7 @@ const ManageProvider: Component<{
       <div class="flex flex-col gap-2">
         <CustomSelect
           categories={categories()}
-          onSelect={(ev) => setProvider(ev.value)}
+          onSelect={(ev) => onProviderChange(ev.value)}
           buttonLabel={label()}
           selected={provider()}
         />

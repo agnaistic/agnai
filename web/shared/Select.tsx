@@ -84,7 +84,7 @@ const Select: Component<{
               props.ref?.(ele)
             }}
             name={props.fieldName}
-            class={`form-field cursor-pointer appearance-none rounded-xl bg-[var(--hl-700)] py-2 pl-3 pr-8 shadow-none ${
+            class={`form-field max-w-full cursor-pointer appearance-none rounded-xl bg-[var(--hl-700)] py-2 pl-3 pr-8 shadow-none ${
               props.class || ''
             }`}
             onChange={onChange}

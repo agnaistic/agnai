@@ -5,6 +5,7 @@ import { defaultPresets, isDefaultPreset } from '../../common/default-preset'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting, getAdapter } from '../../common/adapters'
 import { storage } from './util'
+import { getProviderLabel } from '/common/providers'
 
 const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
   novel: [
@@ -78,9 +79,9 @@ export function getPresetOptions(
   userPresets: AppSchema.UserGenPreset[],
   includes: { builtin?: boolean; base?: boolean }
 ): PresetOption[] {
-  const user = userStore.getState().user || { defaultPreset: '' }
+  const user = userStore.getState().user || { defaultPreset: '', providers: [] }
   const presets = userPresets.slice().map((preset) => ({
-    label: `[${getServiceName(preset.service)}] ${preset.name} ${
+    label: `[${getPresetProviderName(preset, user.providers)}] ${preset.name} ${
       user.defaultPreset === preset._id ? '★' : ''
     }`,
     value: preset._id,
@@ -141,4 +142,15 @@ export function getServiceTempConfig(service?: AIAdapter) {
   }
 
   return values
+}
+
+function getPresetProviderName(preset: AppSchema.GenSettings, providers?: AppSchema.Provider[]) {
+  if (preset.providerId) {
+    if (preset.providerId === 'agnaistic') return 'Agnaistic'
+    const provider = providers?.find((p) => p._id === preset.providerId)
+    const label = provider ? getProviderLabel(provider) : 'Unknown'
+    return label
+  }
+
+  return getServiceName(preset.service)
 }

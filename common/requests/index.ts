@@ -1,3 +1,4 @@
+import { getPresetConnection } from '../providers'
 import { handleOAI } from './openai'
 import { getLocalPayload } from './payloads'
 import { PayloadOpts } from './types'
@@ -60,6 +61,9 @@ export async function handleLocalRequest(
 function startRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
   const opts: PayloadOpts = { ...request, prompt }
   const payload = getLocalPayload(opts)
+
+  const conn = getPresetConnection(request.settings || {}, request.user.providers)
+  opts.settings = conn.preset
 
   switch (request.settings!.thirdPartyFormat) {
     case 'openai':

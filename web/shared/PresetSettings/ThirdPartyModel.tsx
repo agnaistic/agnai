@@ -97,6 +97,26 @@ const CompatModel: Field = (props) => {
     [{ label: 'None', value: '' }].concat(models.list.map((value) => ({ label: value, value })))
   )
 
+  const onModelSelect = (value: string) => {
+    props.setter('thirdPartyModel', value)
+    props.setter('mistralModel', '')
+    props.setter('googleModel', '')
+    props.setter('claudeModel', '')
+
+    const isSavedPreest = !!props.state._id && !isDefaultPreset(props.state._id)
+    // Only change immediately save the preset in chat pages
+    if (isSavedPreest && props.page === 'mode') {
+      getStore('presets').updatePreset(
+        props.state._id,
+        { thirdPartyModel: value },
+        {
+          quiet: true,
+          onSuccess: () => toastStore.success('Model changed'),
+        }
+      )
+    }
+  }
+
   return (
     <div class="flex w-full flex-col gap-1">
       <FormLabel
@@ -111,25 +131,7 @@ const CompatModel: Field = (props) => {
                   size="sm"
                   selected={props.state.thirdPartyModel}
                   options={modelList()}
-                  onSelect={(ev) => {
-                    props.setter('thirdPartyModel', ev.value)
-                    props.setter('mistralModel', '')
-                    props.setter('googleModel', '')
-                    props.setter('claudeModel', '')
-
-                    const isSavedPreest = !!props.state._id && !isDefaultPreset(props.state._id)
-                    // Only change immediately save the preset in chat pages
-                    if (isSavedPreest && props.page === 'mode') {
-                      getStore('presets').updatePreset(
-                        props.state._id,
-                        { thirdPartyModel: ev.value },
-                        {
-                          quiet: true,
-                          onSuccess: () => toastStore.success('Model changed'),
-                        }
-                      )
-                    }
-                  }}
+                  onSelect={(ev) => onModelSelect(ev.value)}
                   search={tokenizedSearch}
                   buttonLabel={`Select Model`}
                   hide={modelList().length <= 1}
@@ -241,6 +243,7 @@ const OpenRouterModels: Field = (props) => {
       <Select
         fieldName="openRouterModel"
         label="Model"
+        parentClass="w-1/2"
         items={openRouterModels()}
         value={props.state.openRouterModel?.id || ''}
         hide={
@@ -254,7 +257,9 @@ const OpenRouterModels: Field = (props) => {
           )
         }
       />
+
       <TextInput
+        parentClass="w-1/2"
         placeholder="Filter..."
         onChange={(ev) => setOrfilter(ev.currentTarget.value)}
         hide={

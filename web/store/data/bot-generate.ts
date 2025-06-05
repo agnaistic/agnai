@@ -27,6 +27,7 @@ import iconv from 'iconv-lite'
 import { genApi } from './inference'
 import { isDefaultPreset } from '/common/default-preset'
 import { ThirdPartyFormat } from '/common/adapters'
+import { getPresetConnection } from '/common/providers'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -143,7 +144,7 @@ export async function generateResponse(
     request.imageData = entities.imageData
   }
 
-  if (useLocalRequest(entities.settings, entities.user._id)) {
+  if (useLocalRequest(entities.settings, entities.user)) {
     localRequest(request, opts.signal, prompt.template.parsed).then(() => {
       console.log('[done]')
     })
@@ -581,8 +582,10 @@ function emptyMsg(
   }
 }
 
-function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, userId: string) {
-  if (!settings.localRequests) return false
+function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
+  const conn = getPresetConnection(settings, user.providers)
+
+  if (!conn.preset.localRequests) return false
   if (settings.service !== 'kobold') return false
 
   const format = settings.thirdPartyFormat
@@ -591,7 +594,7 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, userId: str
   if (settings.localRequests) {
     if (isDefaultPreset(settings._id)) return true
 
-    if (settings.userId !== userId) {
+    if (settings.userId !== user._id) {
       throw new Error(
         `Multiplayer not available for this chat: Chat is configured for local requests`
       )
