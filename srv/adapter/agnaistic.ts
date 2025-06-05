@@ -451,6 +451,15 @@ export function getHandlers(opts: {
       } else if (category === 'known' && detail.url) {
         opts.settings.thirdPartyUrl = detail.url
       }
+
+      if (detail.format) {
+        opts.settings.thirdPartyFormat = detail.format
+      }
+
+      if (detail.service) {
+        opts.settings.service = detail.service
+      }
+
       opts.settings.thirdPartyKey = provider.key
       return handler
     }
