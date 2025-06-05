@@ -21,10 +21,11 @@ export const getUserPresets = handle(async ({ userId }) => {
   return { presets, templates }
 })
 
-export const getThirdPartyPresetModels = handle(async ({ userId, body }) => {
+export const getThirdPartyPresetModels = handle(async ({ userId, body, authed }) => {
   assertValid(
     {
       id: 'string?',
+      providerId: 'string?',
       key: 'string?',
       url: 'string',
     },
@@ -33,6 +34,13 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body }) => {
 
   if (!body.url) {
     throw new StatusError(`Third Party URL not provided`, 400)
+  }
+
+  if (body.providerId) {
+    const provider = authed?.providers?.find((p) => p._id === body.providerId)
+    if (provider?.key) {
+      body.key = decryptText(provider.key, true)
+    }
   }
 
   // Guests or new presets

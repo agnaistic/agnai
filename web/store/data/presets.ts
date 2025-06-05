@@ -120,6 +120,7 @@ async function getLocalModelList(opts: { url: string; key?: string }): Promise<s
 async function getPresetModelList(opts: {
   id: string
   url: string
+  providerId?: string
   key?: string
   useCache?: boolean
 }): Promise<string[]> {
@@ -129,6 +130,7 @@ async function getPresetModelList(opts: {
   }
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
     id: opts.id,
+    providerId: opts.providerId,
     url: opts.url,
     key: opts.key,
   })

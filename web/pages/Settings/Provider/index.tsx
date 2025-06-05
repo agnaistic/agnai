@@ -83,6 +83,23 @@ export const PresetProvider: Field = (props) => {
     setOpen(true)
   }
 
+  const changeProvider = (id: string) => {
+    props.setter('providerId', id)
+    if (props.page !== 'mode') return
+
+    getStore('presets').updatePreset(
+      props.state._id,
+      { providerId: id },
+      {
+        onSuccess: () => {
+          getStore('toasts').success('Provider changed')
+          getStore('presets').getPresetModelList(props.state, state.providers, true)
+        },
+        quiet: true,
+      }
+    )
+  }
+
   const editLegacy = (ev: any) => {
     ev?.preventDefault?.()
     setOpenLegacy(true)
@@ -93,7 +110,7 @@ export const PresetProvider: Field = (props) => {
       <div class="flex flex-col gap-1">
         <Select
           label={
-            <div class="flex w-full items-center justify-between">
+            <div class="flex w-full items-center justify-between pb-1">
               <div>Service</div>
               <div class="flex gap-1">
                 <Button size="sm" classList={{ hidden: !showEdit() }} onClick={editProvider}>
@@ -112,7 +129,7 @@ export const PresetProvider: Field = (props) => {
               ? 'agnaistic'
               : props.state.providerId
           }
-          onChange={(ev) => props.setter('providerId', ev.value)}
+          onChange={(ev) => changeProvider(ev.value)}
         >
           <Show when={props.state.providerId === ''}>
             <button class="icon-button" onClick={editLegacy}>
@@ -428,7 +445,7 @@ const ManageProvider: Component<{
         <TextInput
           label="API Key"
           type="password"
-          placeholder="E.g. sk-..."
+          placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
           onChange={(ev) => setKey(ev.currentTarget.value)}
           value={key()}
         />

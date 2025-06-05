@@ -54,7 +54,7 @@ async function saveProvider(provider: AppSchema.Provider) {
   const user = await localApi.loadItem('config')
   const providers = user.providers || []
 
-  const upsert = { ...provider, id: provider._id ? provider._id : v4() }
+  const upsert = { ...provider, keySet: !!provider.key, id: provider._id ? provider._id : v4() }
   const exists = providers.some((p) => p._id === upsert.id)
 
   user.providers = exists ? replace(provider._id, providers, upsert) : providers.concat(upsert)

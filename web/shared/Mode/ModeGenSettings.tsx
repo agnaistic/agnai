@@ -5,7 +5,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
 import { toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
-import { AutoPreset, getPresetOptions } from '../adapter'
+import { getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
@@ -51,9 +51,7 @@ export const ModeGenSettings: Component<{
     return all.concat(defaults)
   })
 
-  const [selected, setSelected] = createSignal(
-    props.presetId || user.user?.defaultPreset || AutoPreset.service
-  )
+  const [selected, setSelected] = createSignal(props.presetId || '')
 
   createEffect(
     on(

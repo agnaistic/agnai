@@ -40,6 +40,7 @@ export const CustomSelect: Component<{
   classList?: Record<string, boolean>
   emitter?: ComponentSubscriber<'close'>
   search?: (value: string, search: string) => boolean
+  disabled?: boolean
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
@@ -116,6 +117,7 @@ export const CustomSelect: Component<{
           alignLeft
           onClick={() => setOpen(true)}
           class="w-fit"
+          disabled={props.disabled}
         >
           {buttonLabel()}
         </Button>

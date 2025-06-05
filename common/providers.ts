@@ -73,7 +73,7 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   arli: { name: 'ArliAI', url: 'https://api.arliai.com/v1', format: 'arli' },
   featherless: {
     name: 'Featherless',
-    url: 'https://api.featherless.com/v1',
+    url: 'https://api.featherless.ai/v1',
     format: 'featherless',
     // format: 'openai-chatv2',
   },

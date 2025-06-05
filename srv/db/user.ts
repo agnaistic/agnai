@@ -563,6 +563,7 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   if (user.providers) {
     for (const prov of user.providers) {
+      if (prov.key) prov.keySet = true
       prov.key = ''
     }
   }

@@ -87,12 +87,15 @@ export const ThirdPartyModel: Field = (props) => {
 
 const CompatModel: Field = (props) => {
   const state = getStore('user')((s) => ({ providers: s.user?.providers || [] }))
-
-  const localModels = getStore('presets')((p) => ({
-    models: [{ label: 'None', value: '' }].concat(
-      p.localModels.map((value) => ({ label: value, value }))
-    ),
+  const models = getStore('presets')((s) => ({
+    list: s.presetModels.list,
+    url: s.presetModels.url,
+    loading: s.modelsLoading,
   }))
+
+  const modelList = createMemo(() =>
+    [{ label: 'None', value: '' }].concat(models.list.map((value) => ({ label: value, value })))
+  )
 
   return (
     <div class="flex w-full flex-col gap-1">
@@ -101,12 +104,13 @@ const CompatModel: Field = (props) => {
           <div class="flex justify-between">
             <div>Model</div>
             <div class="flex gap-2">
-              <Show when={localModels.models.length > 1}>
+              <Show when={modelList().length > 1}>
                 <CustomSelect
+                  modalTitle={`Select Model: ${new URL(models.url).host || '...'}`}
                   parentClass="flex w-full justify-end"
                   size="sm"
                   selected={props.state.thirdPartyModel}
-                  options={localModels.models}
+                  options={modelList()}
                   onSelect={(ev) => {
                     props.setter('thirdPartyModel', ev.value)
                     props.setter('mistralModel', '')
@@ -127,8 +131,9 @@ const CompatModel: Field = (props) => {
                     }
                   }}
                   search={tokenizedSearch}
-                  buttonLabel="Select Model"
-                  hide={localModels.models.length <= 1}
+                  buttonLabel={`Select Model`}
+                  hide={modelList().length <= 1}
+                  disabled={models.loading}
                 />
               </Show>
 
