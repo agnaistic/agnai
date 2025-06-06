@@ -192,7 +192,7 @@ const ChatDetail: Component = () => {
     const userId = msgs.waiting.userId
     const charId = msgs.waiting.characterId
     const profile =
-      user.profile?.userId === userId
+      user.profile?.userId === userId || !userId
         ? user.profile
         : chats.members.find((ch) => ch.userId === userId)
     const char = charId ? ctx.allBots[charId] : undefined

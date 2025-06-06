@@ -101,7 +101,12 @@ export function getPresetEditor() {
 
   createEffect(
     on(
-      () => (store._id || '') + store.service! + store.thirdPartyFormat! + store.presetMode!,
+      () =>
+        (store._id || '') +
+        store.service! +
+        store.thirdPartyFormat! +
+        store.presetMode! +
+        store.providerId!,
       () => {
         const next = createHides(store)
         setHides(next)

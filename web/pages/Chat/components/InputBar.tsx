@@ -475,12 +475,13 @@ const InputBar: Component<{
 export default InputBar
 
 function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined, size: number) {
-  //
-  if (size > Math.pow(1024, 3)) return true
-  if (!preset) return false
-  if (preset.service === 'agnaistic') return true
-  if (preset.service !== 'kobold') return false
   return true
+  //
+  // if (size > Math.pow(1024, 3)) return true
+  // if (!preset) return false
+  // if (preset.service === 'agnaistic') return true
+  // if (preset.service !== 'kobold') return false
+  // return true
 }
 
 function canAttachImage(

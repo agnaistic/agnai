@@ -880,7 +880,10 @@ async function createUserMessage(req: AppRequest<GenRequest>, ents: MsgEntities)
   const { chatId, replyAs, impersonate } = ents
   let userMsg: AppSchema.ChatMessage | undefined
 
+  // If body.response is provided, it's a local request
+  // We don't need to do anything in this case
   if (ents.guest) {
+    if (req.body.response) return
     if (req.body.kind === 'send' || req.body.kind === 'ooc') {
       userMsg = newMessage(v4(), chatId, req.body.text!, {
         userId: 'anon',

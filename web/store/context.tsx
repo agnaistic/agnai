@@ -14,6 +14,8 @@ import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { presetStore } from './presets'
 import { getChatPreset } from '/common/prompt'
+import { getProviderConnection } from '/common/providers'
+import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -58,6 +60,8 @@ export type ContextState = {
   subPreset?: AppSchema.SubscriptionModelOption
   ui: UI.UISettings
   provider?: AppSchema.Provider
+  service: AIAdapter | undefined
+  format: ThirdPartyFormat | undefined
 }
 
 const initial: ContextState = {
@@ -80,6 +84,8 @@ const initial: ContextState = {
   chatTree: {},
   ui: {} as any,
   config: {} as any,
+  service: undefined,
+  format: undefined,
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -163,10 +169,12 @@ export function ContextProvider(props: { children: any }) {
     const p = preset()
     if (!p?.providerId) return
     const match = users.user?.providers?.find((val) => val._id === p.providerId)
-    return match
+    const conn = match ? getProviderConnection(match) : undefined
+    return { provider: match, conn }
   })
 
   createEffect(() => {
+    const detail = provider()
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
@@ -193,7 +201,9 @@ export function ContextProvider(props: { children: any }) {
       status: msgs.hordeStatus,
       preset: preset(),
       subPreset: subModel(),
-      provider: provider(),
+      provider: detail?.provider,
+      service: detail?.conn?.service,
+      format: detail?.conn?.format,
       ui: users.ui,
     }
 

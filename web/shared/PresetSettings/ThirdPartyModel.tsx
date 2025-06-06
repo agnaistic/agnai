@@ -21,6 +21,7 @@ import { getProvider } from './types'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
+    console.log('providerId', props.state.providerId)
     const provider = getProvider(props.state.providerId)
     const conn = provider ? getProviderConnection(provider) : null
 
