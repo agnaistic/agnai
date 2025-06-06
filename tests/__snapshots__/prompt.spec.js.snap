@@ -192,6 +192,7 @@ Object {
     "post": Array [
       "OtherBot:",
     ],
+    "prefill": "",
     "sampleChat": Array [
       "SAMPLECHAT OtherBot",
     ],
