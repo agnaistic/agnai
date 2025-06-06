@@ -19,6 +19,8 @@ import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
+import { optional } from '/common/valid/types'
+import { assertStrict } from '/common/valid/validate'
 
 export const getInitialLoad = handle(async ({ userId, query }) => {
   const replicate = await getLanguageModels()
@@ -289,13 +291,33 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
 })
 
 export const saveProvider = handle(async ({ userId, body }) => {
-  assertValid(
-    { _id: 'string', name: 'string', provider: 'string', url: 'string', key: 'string' },
+  assertStrict(
+    {
+      type: {
+        _id: 'string',
+        name: 'string',
+        provider: 'string',
+        url: 'string',
+        key: 'string',
+        format: optional({
+          type: ['service', 'format'],
+          name: 'string?',
+          value: 'string',
+          url: 'string?',
+        }),
+      },
+    },
     body
   )
 
-  const user = await store.users.saveUserProvider(userId, body)
+  const user = await store.users.saveUserProvider(userId, body as any)
   return user
+})
+
+export const deleteProvider = handle(async ({ userId, body }) => {
+  assertValid({ providerId: 'string' }, body)
+  const next = await store.users.deleteUserProvider({ userId, providerId: body.providerId })
+  return next
 })
 
 export const updateConfig = handle(async ({ userId, body }) => {

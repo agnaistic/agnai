@@ -68,7 +68,7 @@ export const ModeGenSettings: Component<{
 
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
-          setStore({ providerId: '', ...preset })
+          setStore({ providerId: '', thirdPartyKeySet: false, ...preset })
           presetStore.getPresetModelList(preset, user.user?.providers || [], true)
           return
         }

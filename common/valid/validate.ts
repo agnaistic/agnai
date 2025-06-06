@@ -11,6 +11,8 @@ import {
   isUnion,
 } from './util'
 
+const OPTIONAL_SYMBOL = '__optional__'
+
 export function isValid<T extends Validator>(type: T, compare: any): compare is UnwrapBody<T> {
   const valid = validateBody(type, compare, { notThrow: true })
   return valid.errors.length === 0
@@ -79,7 +81,7 @@ export function validateBody<T extends Validator>(
   const actual: any = {}
   const omits: string[] = []
 
-  if (!compare && '?' in guard && (guard as any)['?'] === '?') {
+  if (!compare && OPTIONAL_SYMBOL in guard) {
     return { errors, actual, original: compare, omits }
   }
 
@@ -93,7 +95,7 @@ export function validateBody<T extends Validator>(
     let value
     try {
       value = compare?.[key]
-      if (key !== '?' && value !== '?' && value !== undefined) {
+      if (key !== OPTIONAL_SYMBOL && value !== undefined) {
         actual[key] = value
       }
     } catch (ex: any) {
@@ -106,12 +108,12 @@ export function validateBody<T extends Validator>(
       if (isOptionalArray(bodyType)) continue
       if (isObjectOptional(bodyType)) continue
       if (isOptionalUnion(bodyType)) continue
-      if ((key as any) === '?' && (bodyType as any) === '?') continue
+      if ((key as any) === OPTIONAL_SYMBOL && (bodyType as any) === true) continue
       if (!opts.partial) errors.push(`.${prop} is undefined`)
       continue
     }
 
-    if (bodyType === 'any' || bodyType === 'unknown' || (bodyType as any) === '?') continue
+    if (bodyType === 'any' || bodyType === 'unknown') continue
 
     if (isPrimitive(bodyType) && typeof value !== bodyType) {
       errors.push(`.${prop} is ${typeof value}, expected ${bodyType}`)

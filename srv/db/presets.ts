@@ -178,6 +178,10 @@ export async function getSafeUserPreset(presetId: string, userId: string) {
     preset.userThirdPartyKey = decryptText(preset.thirdPartyKey)
   }
 
+  if (preset) {
+    preset.thirdPartyKeySet = !!preset?.thirdPartyKey
+  }
+
   if (preset?.thirdPartyKey) {
     preset.thirdPartyKey = ''
   }

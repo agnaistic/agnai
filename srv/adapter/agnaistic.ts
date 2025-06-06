@@ -28,7 +28,7 @@ import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { insertImageContent } from './template-chat-payload'
-import { assertProviderDetail, getPresetConnection } from '/common/providers'
+import { getPresetConnection, PresetConnection } from '/common/providers'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -443,7 +443,8 @@ export function getHandlers(opts: {
   const conn = getPresetConnection(opts.settings, opts.user?.providers)
 
   if (conn.provider) {
-    const { handler } = getProviderHandler(conn.provider)
+    const { handler } = getProviderHandler(conn)
+    Object.assign(opts.settings, conn.preset)
     opts.settings = conn.preset
     return handler
   }
@@ -488,18 +489,18 @@ export function getHandlers(opts: {
   return handleThirdParty
 }
 
-function getProviderHandler(provider: AppSchema.Provider) {
-  const { detail, type, category } = assertProviderDetail(provider.provider)
+function getProviderHandler({ provider, service, format, detail }: PresetConnection) {
+  // const { detail, type, category } = assertProviderDetail(provider.provider)
 
-  if (detail.format) {
-    const handler = getHandlers({ settings: { thirdPartyFormat: detail.format } })
-    return { detail, handler, type, category }
+  if (format) {
+    const handler = getHandlers({ settings: { thirdPartyFormat: format } })
+    return { handler }
   }
 
-  if (detail.service) {
-    const handler = getHandlers({ settings: { service: detail.service } })
-    return { detail, handler, type, category }
+  if (service) {
+    const handler = getHandlers({ settings: { service } })
+    return { handler }
   }
 
-  throw new Error(`Unknown provider identifier: ${provider.provider}`)
+  throw new Error(`Unknown provider: ${provider?.provider}`)
 }

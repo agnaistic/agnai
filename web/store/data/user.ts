@@ -1,7 +1,7 @@
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../common/types/schema'
 import { localApi } from './storage'
-import { replace, toArray } from '/common/util'
+import { exclude, replace, toArray } from '/common/util'
 import { UI } from '/common/types'
 import { storage } from '/web/shared/util'
 import { HORDE_SEED } from '/common/horde-gen'
@@ -33,6 +33,7 @@ export const usersApi = {
   updateServiceConfig,
   novelLogin,
   saveProvider,
+  deleteProvider,
 }
 
 export async function getInit() {
@@ -58,6 +59,20 @@ async function saveProvider(provider: AppSchema.Provider) {
   const exists = providers.some((p) => p._id === upsert.id)
 
   user.providers = exists ? replace(provider._id, providers, upsert) : providers.concat(upsert)
+  await localApi.saveConfig(user)
+  return { result: user, error: undefined }
+}
+
+async function deleteProvider(providerId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', '/user/provider', { providerId })
+    return res
+  }
+
+  const user = await localApi.loadItem('config')
+  const providers = exclude(user.providers || [], [providerId])
+
+  user.providers = providers
   await localApi.saveConfig(user)
   return { result: user, error: undefined }
 }

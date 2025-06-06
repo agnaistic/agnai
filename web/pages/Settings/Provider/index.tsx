@@ -44,9 +44,10 @@ export const PresetProvider: Field = (props) => {
         return { label: `Custom - ${url.host}`, value: p._id }
       }
 
-      if (detail.category === 'known')
+      if (detail.category === 'known') {
         return { label: 'Provider - ' + detail.detail.name, value: p._id }
-      return { label: `Local - ${detail.detail.name}`, value: p._id }
+      }
+      return { label: `Local - ${detail?.detail?.name || p.provider} `, value: p._id }
     })
 
     providers.sort(sortAlpha)
@@ -113,9 +114,6 @@ export const PresetProvider: Field = (props) => {
             <div class="flex w-full items-center justify-between pb-1">
               <div>Service</div>
               <div class="flex gap-1">
-                <Button size="sm" classList={{ hidden: !showEdit() }} onClick={editProvider}>
-                  Edit
-                </Button>
                 <Button size="sm" onClick={newProvider}>
                   <PlusIcon size={16} />
                   Provider
@@ -137,7 +135,7 @@ export const PresetProvider: Field = (props) => {
             </button>
           </Show>
 
-          <Show when={!!props.state.providerId && props.state.providerId !== 'agnaistic'}>
+          <Show when={showEdit()}>
             <button class="icon-button" onClick={editProvider}>
               <WifiPen size={16} />
             </button>
@@ -301,6 +299,7 @@ const ThirdPartyKey: Field = (props) => {
         value={props.state.thirdPartyKey}
         disabled={props.state.disabled}
         type="password"
+        placeholder={props.state.thirdPartyKeySet ? 'Key is set' : 'E.g. sk-...'}
         // hide={props.hides.thirdPartyKey}
         onChange={(ev) => props.setter('thirdPartyKey', ev.currentTarget.value)}
       />
@@ -319,6 +318,7 @@ const ManageProvider: Component<{
   const [provider, setProvider] = createSignal(props.provider?.provider || '')
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
+  const [format, setFormat] = createSignal('')
 
   const isUsableProvider = (id: string) => {
     if (!props.user?.providers) return true
@@ -367,6 +367,20 @@ const ManageProvider: Component<{
     setProvider(props.provider?.provider || '')
     setUrl(props.provider?.url || '')
     setName(props.provider?.name || '')
+
+    if (!props.provider?.provider || !props.provider.format) return
+
+    const detail = getSafeProviderDetail(props.provider?.provider)
+    if (!detail?.detail?.formats) return
+
+    for (let idx = 0; idx < detail.detail.formats.length; idx++) {
+      const fmt = detail.detail.formats[idx]
+
+      if (fmt.type !== props.provider.format.type) continue
+      if (fmt.value !== props.provider.format.value) continue
+      setFormat(`${idx}`)
+      break
+    }
   })
 
   const isCustom = createMemo(() => provider().startsWith('custom-'))
@@ -374,31 +388,61 @@ const ManageProvider: Component<{
 
   const save = () => {
     setLoading(true)
-    getStore('user').saveProvider(
-      {
-        _id: props.provider?._id || '',
-        name: name(),
-        key: key(),
-        provider: provider(),
-        url: url(),
-      },
-      (success) => {
-        setLoading(false)
+    const prv = provider()
+    const def = getSafeProviderDetail(prv)
 
-        if (success) {
-          props.close()
-        }
+    const fmt = +format()
+
+    const body: AppSchema.Provider = {
+      _id: props.provider?._id || '',
+      name: name(),
+      key: key(),
+      provider: provider(),
+      url: url(),
+    }
+
+    if (fmt >= 0 && def.detail?.formats) {
+      body.format = def.detail.formats[fmt]
+    }
+
+    getStore('user').saveProvider(body, (success) => {
+      setLoading(false)
+
+      if (success) {
+        props.close()
       }
-    )
+    })
   }
 
   const onProviderChange = (id: string) => {
     setProvider(id)
     const detail = getSafeProviderDetail(id)
 
-    if (detail?.detail.url && !url().trim()) {
-      setUrl(detail.detail.url)
+    if (detail?.detail.url?.trim()) {
+      setUrl(detail.detail.url?.trim())
     }
+
+    setFormat('0')
+  }
+
+  const onFormatChange = (id: string) => {
+    setFormat(id)
+    const detail = getSafeProviderDetail(provider())
+    const index = +id
+
+    if (index >= 0) {
+      const format = detail?.detail?.formats?.[index]
+      if (!format?.url) return
+
+      setUrl(format.url.trim())
+    }
+  }
+
+  const onClickDelete = () => {
+    if (!props.provider?._id) return
+    getStore('user').deleteProvider(props.provider._id, (success) => {
+      if (!success) return
+    })
   }
 
   const label = createMemo(() => {
@@ -407,7 +451,25 @@ const ManageProvider: Component<{
       return 'Provider: Choose a Provider'
     }
     const detail = getSafeProviderDetail(id)
-    return `Provider: ${detail.detail.name}`
+    return `Provider: ${detail?.detail?.name || id}`
+  })
+
+  const formatOptions = createMemo(() => {
+    const prv = provider()
+    const detail = getSafeProviderDetail(prv)
+    const list = detail?.detail?.formats
+    if (!list) {
+      return []
+    }
+
+    return list.map((format, index) => {
+      const label = format.name
+        ? format.name
+        : format.type === 'service'
+        ? ADAPTER_LABELS[format.value]
+        : FORMAT_LABEL[format.value]
+      return { label, value: `${index}` }
+    })
   })
 
   return (
@@ -416,14 +478,23 @@ const ManageProvider: Component<{
       close={props.close}
       title={`${props.provider?._id ? 'Update Provider' : 'Create Provider'}`}
       footer={
-        <>
-          <Button schema="secondary" onClick={props.close} disabled={loading()}>
-            Cancel
-          </Button>
-          <Button schema="success" onClick={save} disabled={loading() || !provider()}>
-            {props.provider?._id ? 'Update' : 'Create'}
-          </Button>
-        </>
+        <div class="flex w-full justify-between">
+          <div>
+            <Show when={!!props.provider?._id}>
+              <Button schema="red" onClick={onClickDelete}>
+                Delete
+              </Button>
+            </Show>
+          </div>
+          <div class="flex gap-2">
+            <Button schema="secondary" onClick={props.close} disabled={loading()}>
+              Cancel
+            </Button>
+            <Button schema="success" onClick={save} disabled={loading() || !provider()}>
+              {props.provider?._id ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </div>
       }
     >
       <div class="text-md">Provide connection details to use an external service</div>
@@ -458,6 +529,14 @@ const ManageProvider: Component<{
           onChange={(ev) => setKey(ev.currentTarget.value)}
           value={key()}
         />
+
+        <Select
+          items={formatOptions()}
+          label="Request Format"
+          value={format()}
+          onChange={(ev) => onFormatChange(ev.value)}
+          hide={formatOptions().length <= 1}
+        />
       </div>
     </RootModal>
   )
@@ -466,41 +545,3 @@ const ManageProvider: Component<{
 function sortAlpha(l: { label: string }, r: { label: string }) {
   return l.label.localeCompare(r.label)
 }
-
-// export const ManageProviders: Component = (props) => {
-//   const state = getStore('user')((state) => ({
-//     user: state.user,
-//   }))
-
-//   const [selected, setSelected] = createSignal('')
-
-//   const providers = createMemo(() => {
-//     const base = [
-//       { label: 'Select Provider', value: '' },
-//       { label: 'New', value: 'new' },
-//     ]
-
-//     if (!state.user?.providers) return base
-
-//     const existing = state.user.providers.map((p, i) => ({ label: p.name, value: `${i}` }))
-//     return base.concat(existing)
-//   })
-
-//   const current = createMemo(() => {
-//     const provider = providers().find((p) => p.value === selected())
-//     return provider
-//   })
-
-//   return (
-//     <div class="flex flex-col gap-1">
-//       <div class="flex justify-between">
-//         <div class="h-3">Third-Party Providers</div>
-//         <Button>
-//           <PlusIcon size={20}>Add Provider</PlusIcon>
-//         </Button>
-//       </div>
-
-//       <Select items={providers()} value={selected()} onChange={(ev) => setSelected(ev.value)} />
-//     </div>
-//   )
-// }

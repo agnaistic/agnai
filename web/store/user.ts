@@ -327,6 +327,14 @@ export const userStore = createStore<UserState>(
         return { user: { ...user!, providers: res.result.providers } }
       }
     },
+    async *deleteProvider({ user }, providerId: string, onDone?: (success: boolean) => void) {
+      const res = await usersApi.deleteProvider(providerId)
+      onDone?.(!!res.result)
+      if (res.result) {
+        toastStore.success('Provider removed')
+        return { user: { ...user!, providers: res.result.providers } }
+      }
+    },
     async *stopSubscription({ billingLoading }) {
       if (billingLoading) return
       yield { billingLoading: true }

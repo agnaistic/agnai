@@ -1,14 +1,21 @@
 import { AIAdapter, ThirdPartyFormat } from './adapters'
 import { AppSchema } from './types'
 
+export type ProviderFormat =
+  | { type: 'service'; name?: string; value: AIAdapter; url?: string }
+  | { type: 'format'; name?: string; value: ThirdPartyFormat; url?: string }
+
 type ProviderDefinition = {
   name: string
   url?: string
-  service?: AIAdapter
-  format?: ThirdPartyFormat
+  // service?: AIAdapter
+  // format?: ThirdPartyFormat
+  formats?: ProviderFormat[]
 }
 
 type ProviderCategory = 'custom' | 'known' | 'self'
+
+export type PresetConnection = ReturnType<typeof getPresetConnection>
 
 export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
@@ -31,19 +38,24 @@ export function getPresetConnection(
       url = detail.url
     }
 
+    const prvFormat = provider.format || detail.formats?.[0]
+    if (prvFormat) {
+      switch (prvFormat.type) {
+        case 'format':
+          copy.thirdPartyFormat = prvFormat.value
+          format = prvFormat.value
+          break
+
+        case 'service':
+          copy.service = prvFormat.value
+          service = prvFormat.value
+          break
+      }
+    }
+
     if (url) copy.thirdPartyUrl = url
-    if (service) copy.service = service
-    if (format) copy.thirdPartyFormat = format
     if (category === 'self') copy.localRequests = true
     copy.thirdPartyKey = provider.key
-
-    if (detail.format) {
-      format = detail.format
-    }
-
-    if (detail.service) {
-      service = detail.service
-    }
 
     return { provider, detail, category, preset: copy, service, format, url, key: provider.key }
   }
@@ -121,45 +133,118 @@ function getAlias(provider: string) {
 }
 
 export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
-  claude: { name: 'Anthropic', url: 'https://api.anthropic.com/v1', service: 'claude' },
-  openrouter: { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1', service: 'openrouter' },
+  claude: {
+    name: 'Anthropic',
+    url: 'https://api.anthropic.com/v1',
+    formats: [
+      { type: 'service', value: 'claude-v2' },
+      { type: 'service', value: 'claude' },
+    ],
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    url: 'https://openrouter.ai/api/v1',
+    formats: [
+      { type: 'service', value: 'openrouter' },
+      { type: 'service', value: 'openrouter-completion' },
+    ],
+  },
   gemini: {
     name: 'Google AI',
     url: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    format: 'gemini',
+    formats: [{ type: 'format', value: 'gemini' }],
   },
-  novel: { name: 'NovelAI', url: '', service: 'novel' },
-  horde: { name: 'Horde', url: '', service: 'horde' },
-  venus: { name: 'Venus', url: '', service: 'venus' },
-  mancer: { name: 'Mancer', url: '', service: 'mancer' },
+  novel: { name: 'NovelAI', url: '', formats: [{ type: 'service', value: 'novel' }] },
+  horde: { name: 'Horde', url: '', formats: [{ type: 'service', value: 'horde' }] },
+  venus: { name: 'Venus', url: '', formats: [{ type: 'service', value: 'venus' }] },
+  mancer: { name: 'Mancer', url: '', formats: [{ type: 'service', value: 'mancer' }] },
 
-  openai: { name: 'OpenAI', url: '', service: 'openai' },
-  mistral: { name: 'Mistral', url: 'https://api.mistral.ai/v1', format: 'openai-chatv2' },
-  deepseek: { name: 'DeepSeek', url: 'https://api.deepseek.com/v1', format: 'openai-chatv2' },
-  nanogpt: { name: 'NanoGPT', url: 'https://nano-gpt.com/api/v1', format: 'openai-chatv2' },
-  arli: { name: 'ArliAI', url: 'https://api.arliai.com/v1', format: 'arli' },
+  openai: {
+    name: 'OpenAI',
+    url: '',
+    formats: [
+      { type: 'format', value: 'openai-chatv2' },
+      { type: 'format', value: 'openai-chat' },
+      { type: 'format', value: 'openai' },
+    ],
+  },
+  mistral: {
+    name: 'Mistral',
+    url: 'https://api.mistral.ai/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    url: 'https://api.deepseek.com/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
+  nanogpt: {
+    name: 'NanoGPT',
+    url: 'https://nano-gpt.com/api/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
+  arli: {
+    name: 'ArliAI',
+    url: 'https://api.arliai.com/v1',
+    formats: [{ type: 'format', value: 'arli' }],
+  },
   featherless: {
     name: 'Featherless',
     url: 'https://api.featherless.ai/v1',
-    format: 'featherless',
-    // format: 'openai-chatv2',
+    formats: [{ type: 'format', value: 'featherless' }],
   },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
-  ooba: { name: 'Ooba Textgen', url: 'http://localhost:7860/v1', format: 'openai-chatv2' },
-  tabby: { name: 'TabbyAPI', url: 'http://localhost:5000/v1', format: 'openai-chatv2' },
-  aphrodite: { name: 'Aphrodite', url: 'http://localhost:2242/v1', format: 'openai-chatv2' },
-  vllm: { name: 'vLLM', url: 'http://localhost:8000/v1', format: 'openai-chatv2' },
-  llamacpp: { name: 'Llama.cpp', url: 'http://localhost:8080/v1', format: 'openai-chatv2' },
-  koboldcpp: { name: 'Kobold.cpp', url: 'http://localhost:5001/v1', format: 'openai-chatv2' },
-  localai: { name: 'LocalAI', url: 'http://localhost:8080/v1', format: 'openai-chatv2' },
-  ollama: { name: 'Ollama', url: 'http://localhost:11434/v1', format: 'openai-chatv2' },
-  lmstudio: { name: 'LM Studio', url: 'http://localhost:1235/v1', format: 'openai-chatv2' },
+  local: {
+    name: 'Locally Hosted',
+    url: '',
+    formats: [
+      { type: 'format', value: 'tabby', url: 'http://localhost:5000/v1' },
+      { type: 'format', value: 'aphrodite', url: 'http://localhost:2242/v1' },
+      { type: 'format', value: 'vllm', url: 'http://localhost:8000/v1' },
+      { type: 'format', value: 'llamacpp', url: 'http://localhost:8080/v1' },
+      { type: 'format', value: 'koboldcpp', url: 'http://localhost:5001/v1' },
+      { type: 'format', value: 'ollama', url: 'http://localhost:11434/v1' },
+      {
+        type: 'format',
+        name: 'LM Studio',
+        value: 'openai-chatv2',
+        url: 'http://localhost:7860/v1',
+      },
+      { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
+      { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },
+      { type: 'format', name: 'Other', url: '', value: 'openai-chatv2' },
+    ],
+  },
 }
 
 export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
-  'openai-chatv2': { name: 'OpenAI Compatible (Chat)', format: 'openai-chatv2' },
-  'openai-chat': { name: 'OpenAI Compatible (Chat - Legacy)', format: 'openai-chat' },
-  openai: { name: 'OpenAI (Completions)', format: 'openai' },
+  'openai-chatv2': {
+    name: 'OpenAI Compatible',
+    formats: [
+      { type: 'format', value: 'openai-chatv2' },
+      { type: 'format', value: 'openai-chat' },
+      { type: 'format', value: 'openai' },
+    ],
+  },
+  remote: {
+    name: 'Remotely Hosted',
+    url: '',
+    formats: [
+      { type: 'format', value: 'tabby' },
+      { type: 'format', value: 'aphrodite' },
+      { type: 'format', value: 'vllm' },
+      { type: 'format', value: 'llamacpp' },
+      { type: 'format', value: 'koboldcpp' },
+      { type: 'format', value: 'ollama' },
+      {
+        type: 'format',
+        name: 'LM Studio',
+        value: 'openai-chatv2',
+      },
+      { type: 'format', value: 'ooba' },
+      { type: 'format', name: 'Other', value: 'openai-chatv2' },
+    ],
+  },
 }

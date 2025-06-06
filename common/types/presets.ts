@@ -1,5 +1,6 @@
 import { AIAdapter, OpenRouterModel, ThirdPartyFormat } from '../adapters'
 import { ModelFormat } from '../presets/templates'
+import { ProviderFormat } from '../providers'
 import { BaseImageSettings, ImageSettings } from './image-schema'
 import { ResponseSchema } from './library'
 
@@ -7,6 +8,10 @@ export interface Provider {
   _id: string
   /** 'custom-* | self-* | known-*' */
   provider: string
+
+  /** For providers that have multiple formats (Claude, OpenAI, ...) */
+  format?: ProviderFormat
+  /** User-provided name */
   name: string
   url: string
   key: string
@@ -203,6 +208,9 @@ export interface GenSettings {
   thirdPartyUrlNoSuffix?: boolean
   thirdPartyModel?: string
   thirdPartyKey?: string
+
+  /** API-controlled property */
+  thirdPartyKeySet?: boolean
 
   replicateModelName?: string
   replicateModelType?: string

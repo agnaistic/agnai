@@ -195,7 +195,7 @@ async function dispatch(opts: AdapterProps, body: any) {
 
     case 'ollama': {
       body.messages = opts.imageData ? opts.messages : undefined
-      const url = `${baseURL}/api/generate`
+      const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })

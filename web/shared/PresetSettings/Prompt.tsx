@@ -76,13 +76,13 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
 
           <Select
             fieldName="useAdvancedPrompt"
-            label="Use Advanced Prompting"
+            label={'Use Advanced Prompting'}
             helperMarkdown="**Advanced**: Have complete control over the prompt. No 'missing' placeholders will be inserted."
             items={[
               { label: 'Basic', value: 'basic' },
               { label: 'Advanced', value: 'no-validation' },
             ]}
-            value={props.state.useAdvancedPrompt}
+            value={props.state.useAdvancedPrompt || 'no-validation'}
             onChange={(ev) => props.setter('useAdvancedPrompt', ev.value as any)}
             hide={props.state.presetMode === 'simple'}
           />

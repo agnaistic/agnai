@@ -40,6 +40,25 @@ export async function ensureInitialUser() {
   logger.info(config.init, 'Created initial user')
 }
 
+export async function deleteUserProvider(opts: { userId: string; providerId: string }) {
+  await db('user').updateOne(
+    { _id: opts.userId },
+    {
+      $pull: {
+        providers: { _id: opts.providerId },
+      },
+    },
+    {}
+  )
+
+  const next = await getUser(opts.userId)
+  if (!next) {
+    throw new Error('Invalid user')
+  }
+
+  return toSafeUser(next)
+}
+
 export async function saveUserProvider(userId: string, prv: AppSchema.Provider) {
   const user = await getUser(userId)
   if (!user) throw errors.Forbidden
@@ -50,7 +69,14 @@ export async function saveUserProvider(userId: string, prv: AppSchema.Provider) 
   if (prv._id) {
     const next = providers.map((p) => {
       if (prv._id !== p._id) return p
-      return { _id: p._id, name: prv.name, url: prv.url, key, provider: prv.provider }
+      return {
+        _id: p._id,
+        name: prv.name,
+        url: prv.url,
+        key,
+        provider: prv.provider,
+        format: prv.format,
+      }
     })
 
     await db('user').updateOne({ _id: userId }, { $set: { providers: next } })
@@ -63,6 +89,7 @@ export async function saveUserProvider(userId: string, prv: AppSchema.Provider) 
     name: prv.name,
     url: prv.url,
     provider: prv.provider,
+    format: prv.format,
     key,
   })
 

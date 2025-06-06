@@ -479,6 +479,7 @@ export async function buildPromptPlaceholders(
       replyAs.name,
       replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
     ),
+    prefill: opts.settings?.prefill || '',
     post: [],
     allPersonas: [],
     chatEmbeds: [],
