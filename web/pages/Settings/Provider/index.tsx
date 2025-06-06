@@ -47,7 +47,8 @@ export const PresetProvider: Field = (props) => {
       if (detail.category === 'known') {
         return { label: 'Provider - ' + detail.detail.name, value: p._id }
       }
-      return { label: `Local - ${detail?.detail?.name || p.provider} `, value: p._id }
+
+      return { label: `Local - ${p.name || detail?.detail?.name || p.provider} `, value: p._id }
     })
 
     providers.sort(sortAlpha)
@@ -86,7 +87,10 @@ export const PresetProvider: Field = (props) => {
 
   const changeProvider = (id: string) => {
     props.setter('providerId', id)
-    if (props.page !== 'mode') return
+
+    if (props.page !== 'mode') {
+      return
+    }
 
     getStore('presets').updatePreset(
       props.state._id,
@@ -367,6 +371,7 @@ const ManageProvider: Component<{
     setProvider(props.provider?.provider || '')
     setUrl(props.provider?.url || '')
     setName(props.provider?.name || '')
+    setKey('')
 
     if (!props.provider?.provider || !props.provider.format) return
 
@@ -511,7 +516,7 @@ const ManageProvider: Component<{
           placeholder="Custom label for this provider"
           value={name()}
           onChange={(ev) => setName(ev.currentTarget.value)}
-          hide={!isCustom()}
+          hide={!isCustom() && !isSelf()}
         />
 
         <TextInput

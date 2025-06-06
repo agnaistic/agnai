@@ -17,47 +17,66 @@ type ProviderCategory = 'custom' | 'known' | 'self'
 
 export type PresetConnection = ReturnType<typeof getPresetConnection>
 
+export function getProviderConnection(provider: AppSchema.Provider) {
+  const { category, detail } = assertProviderDetail(provider.provider)
+  let url = ''
+
+  let service: AIAdapter | undefined
+  let format: ThirdPartyFormat | undefined
+
+  if (provider.url) {
+    url = provider.url
+  } else if (category !== 'known' && detail.url) {
+    url = detail.url
+  } else if (category === 'known' && detail.url) {
+    url = detail.url
+  }
+
+  const prvFormat = provider.format || detail.formats?.[0]
+  if (prvFormat) {
+    switch (prvFormat.type) {
+      case 'format':
+        format = prvFormat.value
+        break
+
+      case 'service':
+        service = prvFormat.value
+        break
+    }
+  }
+
+  return { detail, category, service, format, url, key: provider.key, local: category === 'self' }
+}
+
 export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
   providers: AppSchema.Provider[] | undefined
 ) {
-  let service: AIAdapter | undefined
-  let format: ThirdPartyFormat | undefined
-  let url = ''
-
   const copy = { ...preset }
   const provider = providers?.find((p) => p._id === preset.providerId)
   if (provider) {
-    const { category, detail } = assertProviderDetail(provider.provider)
+    const conn = getProviderConnection(provider)
 
-    if (provider.url) {
-      url = provider.url
-    } else if (category !== 'known' && detail.url) {
-      url = detail.url
-    } else if (category === 'known' && detail.url) {
-      url = detail.url
+    if (conn.service) {
+      copy.service = conn.service
+    } else {
+      copy.thirdPartyFormat = conn.format
     }
 
-    const prvFormat = provider.format || detail.formats?.[0]
-    if (prvFormat) {
-      switch (prvFormat.type) {
-        case 'format':
-          copy.thirdPartyFormat = prvFormat.value
-          format = prvFormat.value
-          break
+    if (conn.url) copy.thirdPartyUrl = conn.url
+    copy.localRequests = conn.local
+    copy.thirdPartyKey = conn.key
 
-        case 'service':
-          copy.service = prvFormat.value
-          service = prvFormat.value
-          break
-      }
+    return {
+      provider,
+      detail: conn.detail,
+      category: conn.category,
+      preset: copy,
+      service: conn.service,
+      format: conn.format,
+      url: conn.url,
+      key: provider.key,
     }
-
-    if (url) copy.thirdPartyUrl = url
-    if (category === 'self') copy.localRequests = true
-    copy.thirdPartyKey = provider.key
-
-    return { provider, detail, category, preset: copy, service, format, url, key: provider.key }
   }
 
   return {

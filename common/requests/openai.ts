@@ -4,7 +4,10 @@ import { PayloadOpts } from './types'
 import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { validateChatMessagesWithImage } from '/srv/adapter/template-chat-payload'
+import {
+  stripImageContent,
+  validateChatMessagesWithImage,
+} from '/srv/adapter/template-chat-payload'
 import { toImageJinjaTemplate } from './payloads'
 
 type Role = 'user' | 'assistant' | 'system'
@@ -64,11 +67,10 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     payload.prompt = opts.prompt
     console.log(`Prompt:${opts.prompt}`)
   } else {
-    payload.messages = messages
-    console.log(`Prompt:\n`, JSON.stringify(messages, null, 2))
+    payload.messages = validateChatMessagesWithImage(opts, messages)
   }
 
-  payload.messages = validateChatMessagesWithImage(opts, messages)
+  console.log(`Prompt:\n`, JSON.stringify(stripImageContent(messages), null, 2))
   const fullUrl = joinUrl(gen.thirdPartyUrl || '', urlPath)
 
   if (!gen.streamResponse) {

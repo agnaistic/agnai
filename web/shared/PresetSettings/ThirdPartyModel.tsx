@@ -16,15 +16,23 @@ import { Field } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
+import { getProviderConnection } from '/common/providers'
+import { getProvider } from './types'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
-    switch (props.state.service) {
+    const provider = getProvider(props.state.providerId)
+    const conn = provider ? getProviderConnection(provider) : null
+
+    const service = conn ? conn.service : props.state.service
+    const format = conn ? conn.format : props.state.thirdPartyFormat
+
+    switch (service) {
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
       case 'agnaistic':
-        return props.state.service
+        return service
 
       case 'openai':
       case 'claude':
@@ -32,12 +40,12 @@ export const ThirdPartyModel: Field = (props) => {
         return 'compat'
     }
 
-    if (props.state.service !== 'kobold') return ''
+    if (!conn && service !== 'kobold') return ''
 
-    switch (props.state.thirdPartyFormat) {
+    switch (format) {
       case 'featherless':
       case 'arli':
-        return props.state.thirdPartyFormat
+        return format
 
       case 'claude':
         return 'claude-external'

@@ -21,10 +21,10 @@ export const DEFAULT_EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2'
 
 export const EMBED_MODELS = {
   Disabled: '',
-  Small: 'Xenova/all-MiniLM-L6-v2', // 23MB quantized, 90MB full
-  Medium: 'Xenova/all-mpnet-base-v2', // 110MB quantized, 436MB full
-  'Large - Multi-lingual': 'Xenova/bge-base-en-v1.5', // 110MB quantized, 436M full
-  'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 374 MB full
+  Small: 'Xenova/all-MiniLM-L6-v2', // 23MB quantized, 45mb fp16
+  Medium: 'Xenova/all-mpnet-base-v2', // 110MB quantized, 218MB fp16
+  'Large - Multi-lingual': 'Xenova/bge-base-en-v1.5', // 110MB quantized, 218MB fp16
+  'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 274MB fp16
 } as const
 
 export const CAPTION_MODELS = {
@@ -523,8 +523,5 @@ function upsertEmbeddingId(id: string, name: string) {
 }
 
 function getLocalModelDtype() {
-  const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-  if (mobile) return 'fp8'
   return 'fp16'
 }

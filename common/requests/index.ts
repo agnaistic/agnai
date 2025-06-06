@@ -10,9 +10,9 @@ export async function handleLocalRequest(
   signal: AbortController,
   prompt: string
 ) {
-  if (body.settings?.service !== 'kobold') {
-    throw new Error(`Cannot run local request: Preset is not a third-party preset`)
-  }
+  // if (body.settings?.service !== 'kobold') {
+  //   throw new Error(`Cannot run local request: Preset is not a third-party preset`)
+  // }
 
   const stream = startRequest(body, signal, prompt)
   let response = ''

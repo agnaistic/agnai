@@ -82,6 +82,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
 
   const stream = fetchStream(response, { format, log: opts.log })
   let sentTokens = false
+  let errorObj: any = undefined
 
   for await (const data of stream) {
     if (!data) continue
@@ -102,10 +103,11 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
 
     if (data.error) {
       sentError = true
-      yield { error: data.error }
+      yield { error: data.error, errorObj: data.errorObj }
     }
 
     if (data.error || data.errorObj) {
+      errorObj = data.errorObj
       opts.log?.error(
         { err: data.error, obj: data.errorObj },
         `Exception occurred parsing fetch stream`
@@ -123,6 +125,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       case 404: {
         yield {
           error: `Request failed with 404 Not Found: Check your URL`,
+          errorObj,
         }
         break
       }
@@ -130,6 +133,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       default: {
         yield {
           error: `Request failed: ${response.status} ${response.statusText}`,
+          errorObj,
         }
         break
       }

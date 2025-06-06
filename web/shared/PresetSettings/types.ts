@@ -6,6 +6,7 @@ import { agnaiPresets } from '/common/presets/agnaistic'
 import { createEffect, on } from 'solid-js'
 import { ADAPTER_SETTINGS } from './settings'
 import { isValidServiceSetting } from '../util'
+import { getStore } from '/web/store/create'
 
 export type PresetProps = {
   disabled?: boolean
@@ -82,6 +83,14 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   drySequenceBreakers: [],
   modelFormat: 'None',
   providerId: '',
+}
+
+export function getProvider(id: string | undefined) {
+  if (!id || id === 'agnaistic') return
+
+  const providers = getStore('user').getState().user?.providers || []
+  const match = providers.find((p) => p._id === id)
+  return match
 }
 
 export function getPresetEditor() {

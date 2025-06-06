@@ -27,7 +27,6 @@ import iconv from 'iconv-lite'
 import { genApi } from './inference'
 import { isDefaultPreset } from '/common/default-preset'
 import { ThirdPartyFormat } from '/common/adapters'
-import { getPresetConnection } from '/common/providers'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -583,10 +582,7 @@ function emptyMsg(
 }
 
 function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
-  const conn = getPresetConnection(settings, user.providers)
-
-  if (!conn.preset.localRequests) return false
-  if (settings.service !== 'kobold') return false
+  if (!settings.localRequests) return false
 
   const format = settings.thirdPartyFormat
   if (!isSupportedLocalRequestFormat(format)) return false

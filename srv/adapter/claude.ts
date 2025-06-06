@@ -340,12 +340,15 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
       }
 
       if (event.error !== undefined) {
-        opts.log.warn({ error: event.error }, '[Claude] Received SSE error event')
+        opts.log.warn(
+          { error: event.error, errorObj: event.errorObj, url: opts.url },
+          '[Claude] Received SSE error event'
+        )
         const message = event.error
           ? `Anthropic interrupted the response: ${event.error?.message || event.error}`
           : `Anthropic interrupted the response.`
         if (!tokens.length) {
-          yield { error: message }
+          yield { error: message, errorObj: event.errorObj }
           return
         }
         sendOne(opts.userId, { type: 'notification', level: 'warn', message })

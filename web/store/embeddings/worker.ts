@@ -427,7 +427,7 @@ async function pipeline<T extends TaskType>(
   const api = await hf()
 
   const p = api.pipeline(task, model, {
-    dtype: 'q4',
+    dtype: 'fp16',
     progress_callback: callback,
     device: DEVICE,
   })

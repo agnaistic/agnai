@@ -9,6 +9,7 @@ import { AppSchema } from '/common/types'
 import { deepClone } from '/common/util'
 import { getBotsForChat } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
+import { getPresetConnection } from '/common/providers'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
@@ -138,6 +139,7 @@ async function getGuestEntities() {
   const { impersonating, chatChars } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, chatChars.map)
+  const conn = getPresetConnection(settings, user.providers)
 
   return {
     chat,
@@ -146,7 +148,7 @@ async function getGuestEntities() {
     profile,
     book,
     messages: messageHistory.concat(msgs),
-    settings,
+    settings: conn.preset,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
@@ -173,6 +175,7 @@ function getAuthedPromptEntities() {
 
   const { msgs, messageHistory, attachments } = getStore('messages').getState()
   const settings = getActivePreset(chat, user)!
+  const conn = getPresetConnection(settings, user.providers)
   const scenarios = getStore('scenario')
     .getState()
     .scenarios.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
@@ -188,7 +191,7 @@ function getAuthedPromptEntities() {
     profile,
     book,
     messages: messageHistory.concat(msgs),
-    settings,
+    settings: conn.preset,
     members,
     chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
