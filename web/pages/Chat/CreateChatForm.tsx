@@ -87,7 +87,7 @@ const CreateChatForm: Component<{
     const id = selectedId()
     if (!id) return
 
-    if (chars.char?._id === id) return
+    if (chars.char?._id === id && '__type' in chars.char === false) return
     characterStore.getCharacter(id)
   })
 
@@ -379,8 +379,8 @@ function getInitState(char?: AppSchema.Character, previous?: ChatState): ChatSta
     systemPrompt: '',
     postHistoryInstructions: '',
 
-    personaKind: char?.persona.kind || 'text',
-    personaAttrs: toAttrs(char?.persona.attributes),
+    personaKind: char?.persona?.kind || 'text',
+    personaAttrs: toAttrs(char?.persona?.attributes),
   }
 }
 
