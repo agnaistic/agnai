@@ -26,7 +26,9 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const messages =
     opts.messages || (await toChatCompletionPayload(opts, encoder.count, opts.gen.maxTokens!))
 
-  if (!opts.gen.googleModel) {
+  const googleModel = opts.gen.thirdPartyModel || opts.gen.googleModel
+
+  if (!googleModel) {
     yield { error: 'Google AI Studio Model not set: Check your preset' }
     return
   }
@@ -82,7 +84,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const systems = opts.messages?.find((m) => m.role === 'system')
   const contents: Content[] = []
 
-  const canUseSystemInstruct = !SYSTEM_INCAPABLE[opts.gen.googleModel]
+  const canUseSystemInstruct = !SYSTEM_INCAPABLE[googleModel]
 
   for (const msg of messages) {
     if (msg.role === 'system') {
@@ -152,7 +154,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   if (!opts.gen.streamResponse) {
     const ai = await client.models
       .generateContent({
-        model: opts.gen.googleModel || opts.gen.thirdPartyModel!,
+        model: googleModel!,
         contents,
         config: generationConfig,
       })
@@ -175,7 +177,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   } else {
     const ai = await client.models
       .generateContentStream({
-        model: opts.gen.googleModel || opts.gen.thirdPartyModel!,
+        model: googleModel,
         config: generationConfig,
         contents,
       })
