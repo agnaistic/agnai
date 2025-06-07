@@ -16,7 +16,6 @@ export const RegisteredSettings: Component<{
   const options = createMemo(() => {
     if (!props.service) return []
 
-    console.log('service_option', props.service)
     const svc = state.config.registered.find((reg) => reg.name === props.service)
     if (!svc) return []
 

@@ -125,9 +125,7 @@ export function getPresetEditor() {
         store.presetMode! +
         store.providerId!,
       (id) => {
-        console.log('changing hides', id)
         const ctx = getPresetContext(store)
-        console.log('[next context] ', { ...ctx }, store.providerId)
         setContext(ctx)
 
         const next = createHides(store, context)
