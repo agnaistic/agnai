@@ -695,7 +695,19 @@ export function getSubscriptionModelLimits(
   for (const candidate of levels) {
     if (candidate.level > level) continue
 
-    if (!match || match.level < candidate.level) {
+    if (!match) {
+      match = candidate
+      continue
+    }
+
+    if (match.level < candidate.level) {
+      match = candidate
+      continue
+    }
+
+    // Use the level with the higher context if there is a duplicate
+    // E.g. if the 'model.subLevel' settings and 'model.levels[]' settings conflict
+    if (match.level === candidate.level && match.maxContextLength < candidate.maxContextLength) {
       match = candidate
       continue
     }

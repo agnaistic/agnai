@@ -108,7 +108,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       body.top_p = -1
     }
 
-    if (opts.imageData) {
+    if (opts.imageData && gen.jinjaEnabled) {
       body.chat_template = toImageJinjaTemplate({
         jinja: gen.jinjaTemplate,
         format: gen.modelFormat,
