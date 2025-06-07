@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
 import { FLAI_CONTEXTS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
