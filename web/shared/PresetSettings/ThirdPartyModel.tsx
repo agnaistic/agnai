@@ -68,7 +68,7 @@ export const ThirdPartyModel: Field = (props) => {
         <Match when={component() === 'novel'}>
           <NovelAIModel {...props} />
         </Match>
-        <Match when={component() === 'openrouter' || component() === 'openrouter'}>
+        <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
           <OpenRouterModels {...props} />
         </Match>
 
