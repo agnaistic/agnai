@@ -272,7 +272,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const [submodel, override = ''] = subPreset.subModel.split(',')
 
-  if (body.messages) {
+  if (body.messages && subPreset.subVisionModel) {
     insertImageContent(opts, body.messages)
   }
 
