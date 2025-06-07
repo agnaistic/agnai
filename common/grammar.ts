@@ -36,7 +36,7 @@ BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
 
 HistoryIterator "history-iterator" = OP "#each" WS loop:History CL children:(HistoryChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
-HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Placeholder / InsertText)* CloseInsert { return { kind: 'history-insert', values: +line.join(''), children } }
+HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Condition / Placeholder / InsertText)* CloseInsert { return { kind: 'history-insert', values: +line.join(''), children } }
 
 ChatEmbedIterator "chat-embed-iterator" = OP "#each" WS loop:ChatEmbed CL children:(ChatEmbedChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 ChatEmbedChild = i:(ChatEmbedRef / ManyPlaceholder) { return i }
@@ -68,7 +68,7 @@ Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)*
 }
 
 
-InsertText "insert-text" = !(BotChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
+InsertText "insert-text" = !(BotChild / HistoryChild / CloseInsert) ch:(.) { return ch }
 LowPriorityText "lowpriority-text" = !(BotChild / HistoryChild / CloseCondition / CloseLowPriority) ch:(.) { return ch }
 ElseText "else-text" = !(CloseElseBlock / CloseCondition / CloseLowPriority) ch:(.) { return ch }
 LoopText "loop-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }

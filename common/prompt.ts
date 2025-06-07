@@ -768,7 +768,9 @@ export async function fillPromptWithLines(opts: {
   // instead we put them at the top of the conversation history
   const remainingInserts = insertsDeeperThanConvoHistory(inserts, linesAddedCount)
   if (remainingInserts) {
-    adding.push(formatInsert(remainingInserts))
+    // Unshift so they get added at the top
+    // They haven't been added due to the chat history length being smaller than the insert depth
+    adding.unshift(formatInsert(remainingInserts))
   }
 
   const unusedTokens = tokenLimitMinusInserts - count
