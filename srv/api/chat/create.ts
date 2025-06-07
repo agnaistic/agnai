@@ -3,6 +3,7 @@ import { PERSONA_FORMATS } from '../../../common/adapters'
 import { store } from '../../db'
 import { NewMessage } from '../../db/messages'
 import { handle, StatusError } from '../wrap'
+import { optional } from '/common/valid/types'
 
 export const createChat = handle(async ({ body, user, userId }) => {
   assertValid(
@@ -14,7 +15,7 @@ export const createChat = handle(async ({ body, user, userId }) => {
       greeting: 'string?',
       scenario: 'string?',
       sampleChat: 'string?',
-      overrides: { '?': 'any?', kind: PERSONA_FORMATS, attributes: 'any' },
+      overrides: optional({ kind: PERSONA_FORMATS, attributes: 'any' }),
       useOverrides: 'boolean?',
       scenarioId: 'string?',
       impersonating: 'string?',

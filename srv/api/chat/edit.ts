@@ -5,6 +5,7 @@ import { StatusError, errors, handle } from '../wrap'
 import { sendMany } from '../ws'
 import { personaValidator } from './common'
 import { AppSchema } from '/common/types'
+import { optional } from '/common/valid/types'
 
 export const updateChat = handle(async ({ params, body, user, userId }) => {
   assertValid(
@@ -16,7 +17,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       scenario: 'string?',
       sampleChat: 'string?',
       memoryId: 'string?',
-      overrides: { '?': 'any?', ...personaValidator },
+      overrides: optional({ ...personaValidator }),
       scenarioIds: ['string?'],
       useOverrides: 'boolean?',
       userEmbedId: 'string?',

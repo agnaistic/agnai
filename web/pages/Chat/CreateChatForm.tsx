@@ -193,11 +193,14 @@ const CreateChatForm: Component<{
   return (
     <Page>
       <PageHeader
-        title={`Create Chat with ${chars.char?.name}`}
+        title={`Create Chat`}
         subtitle={
-          <Button onClick={onCreate} size="sm">
-            Create
-          </Button>
+          <div class="flex w-full justify-between">
+            <div>{chars.char?.name || ''}</div>
+            <Button onClick={onCreate} size="sm">
+              Create
+            </Button>
+          </div>
         }
       />
       <form ref={ref}>
