@@ -12,7 +12,7 @@ export const TierCard: Component<{
 }> = (props) => {
   const stripeCost = createMemo(() => {
     const prices: any[] = []
-    if (props.tier.cost > 0) {
+    if (props.tier && props.tier.cost > 0) {
       const cost = (
         <div>
           ${(props.tier.cost / 100).toFixed(2)}/mo <span class="text-600 text-xs">Stripe</span>
