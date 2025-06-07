@@ -53,7 +53,25 @@ export function getPresetConnection(
   providers: AppSchema.Provider[] | undefined
 ) {
   const copy = { ...preset }
+
+  if (preset.providerId === 'agnaistic') {
+    copy.service = 'agnaistic'
+    copy.thirdPartyFormat = undefined
+
+    return {
+      provider: undefined,
+      detail: undefined,
+      category: undefined,
+      preset: copy,
+      service: 'agnaistic' as const,
+      format: undefined,
+      url: '',
+      key: '',
+    }
+  }
+
   const provider = providers?.find((p) => p._id === preset.providerId)
+
   if (provider) {
     const conn = getProviderConnection(provider)
 

@@ -70,7 +70,7 @@ export const SubscriptionModel: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
   const [replacing, setReplacing] = createSignal(false)
-  const [state, setState, hides] = getPresetEditor()
+  const [state, setState, hides, context] = getPresetEditor()
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -361,6 +361,7 @@ export const SubscriptionModel: Component = () => {
                   store={state}
                   setter={setState}
                   hides={hides}
+                  context={context}
                   noSave
                 />
                 <div class="flex flex-row justify-end">

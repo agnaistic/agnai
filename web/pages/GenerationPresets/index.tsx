@@ -26,7 +26,7 @@ export const GenerationPresetsPage: Component = () => {
   const [selecting, setSelecting] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
 
-  const [store, setStore, hides] = getPresetEditor()
+  const [store, setStore, hides, context] = getPresetEditor()
 
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
@@ -172,7 +172,13 @@ export const GenerationPresetsPage: Component = () => {
                 parentClass="mb-2"
               />
 
-              <PresetSettings store={store} setter={setStore} hides={hides} noSave />
+              <PresetSettings
+                store={store}
+                setter={setStore}
+                hides={hides}
+                context={context}
+                noSave
+              />
             </div>
             <Show when={store.userId !== 'SYSTEM'}>
               <div class="flex flex-row justify-end">

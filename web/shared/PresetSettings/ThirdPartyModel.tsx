@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
+import { Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { FLAI_CONTEXTS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
@@ -16,24 +16,15 @@ import { Field } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
-import { getProviderConnection } from '/common/providers'
-import { getProvider } from './types'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
-    console.log('providerId', props.state.providerId)
-    const provider = getProvider(props.state.providerId)
-    const conn = provider ? getProviderConnection(provider) : null
-
-    const service = conn ? conn.service : props.state.service
-    const format = conn ? conn.format : props.state.thirdPartyFormat
-
-    switch (service) {
+    switch (props.context.service) {
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
       case 'agnaistic':
-        return service
+        return props.context.service
 
       case 'openai':
       case 'claude':
@@ -41,12 +32,14 @@ export const ThirdPartyModel: Field = (props) => {
         return 'compat'
     }
 
-    if (!conn && service !== 'kobold') return ''
+    // If there is no provider, it's a legacy preset
+    // Therefore, if it isn't set to third-party, don't return a component
+    if (!props.context.provider && props.context.service !== 'kobold') return ''
 
-    switch (format) {
+    switch (props.context.format) {
       case 'featherless':
       case 'arli':
-        return format
+        return props.context.format
 
       case 'claude':
         return 'claude-external'
@@ -65,32 +58,35 @@ export const ThirdPartyModel: Field = (props) => {
         return 'compat'
     }
   })
-  return (
-    <Switch>
-      <Match when={component() === 'agnaistic'}>
-        <AgnaisticSettings {...props} noSave={false} />
-      </Match>
-      <Match when={component() === 'novel'}>
-        <NovelAIModel {...props} />
-      </Match>
-      <Match when={component() === 'openrouter' || component() === 'openrouter'}>
-        <OpenRouterModels {...props} />
-      </Match>
 
-      <Match when={component() === 'featherless'}>
-        <FeatherlessModels {...props} />
-      </Match>
-      <Match when={component() === 'claude-external'}>
-        <ClaudeModel {...props} />
-      </Match>
-      <Match when={component() === 'compat'}>
-        <CompatModel {...props} />
-      </Match>
-      <Match when={component() === 'arli'}>
-        <ArliModels {...props} />
-      </Match>
-      <Match when>{null}</Match>
-    </Switch>
+  return (
+    <>
+      <Switch>
+        <Match when={component() === 'agnaistic'}>
+          <AgnaisticSettings {...props} noSave={false} />
+        </Match>
+        <Match when={component() === 'novel'}>
+          <NovelAIModel {...props} />
+        </Match>
+        <Match when={component() === 'openrouter' || component() === 'openrouter'}>
+          <OpenRouterModels {...props} />
+        </Match>
+
+        <Match when={component() === 'featherless'}>
+          <FeatherlessModels {...props} />
+        </Match>
+        <Match when={component() === 'claude-external'}>
+          <ClaudeModel {...props} />
+        </Match>
+        <Match when={component() === 'compat'}>
+          <CompatModel {...props} />
+        </Match>
+        <Match when={component() === 'arli'}>
+          <ArliModels {...props} />
+        </Match>
+        <Match when>{null}</Match>
+      </Switch>
+    </>
   )
 }
 

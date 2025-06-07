@@ -84,7 +84,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   })
 
   return (
-    <Show when={props.state.service === 'agnaistic'}>
+    <Show when={props.context.service === 'agnaistic'}>
       <CustomSelect
         size="sm"
         buttonLabel={label()}

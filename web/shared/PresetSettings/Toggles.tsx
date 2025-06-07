@@ -7,7 +7,7 @@ import { Card } from '../Card'
 import Sortable, { SortItem } from '../Sortable'
 import { A } from '@solidjs/router'
 import { inverseSamplerServiceMap, samplerServiceMap } from '/common/sampler-order'
-import { PresetState, PresetTabProps, SetPresetState } from './types'
+import { PresetContext, PresetState, PresetTabProps, SetPresetState } from './types'
 
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
@@ -56,8 +56,8 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           label="Temperature Last"
           helperText="When using Min P, enabling this will make temperature the last sampler to be applied"
           value={props.state.tempLast ?? false}
-          service={props.state.service}
-          format={props.state.thirdPartyFormat}
+          service={props.context.service}
+          format={props.context.format}
           hide={props.hides.tempLast}
           recommended={props.sub?.preset.tempLast}
           onChange={(ev) => props.setter('tempLast', ev)}
@@ -77,9 +77,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           }
           value={props.state.mirostatToggle ?? false}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
           hide={props.hides.mirostatLR}
-          format={props.state.thirdPartyFormat}
+          format={props.context.format}
           recommended={props.sub?.preset.mirostatToggle}
           onChange={(ev) => props.setter('mirostatToggle', ev)}
         />
@@ -90,9 +90,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Backs up the generation process by one token then constrains the output's first token to equal the last token of your prompt."
           value={props.state.tokenHealing ?? true}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
           hide={props.hides.tokenHealing}
-          format={props.state.thirdPartyFormat}
+          format={props.context.format}
           recommended={props.sub?.preset.tokenHealing}
           onChange={(ev) => props.setter('tokenHealing', ev)}
         />
@@ -102,9 +102,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
           value={props.state.addBosToken ?? true}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
           hide={props.hides.addBosToken}
-          format={props.state.thirdPartyFormat}
+          format={props.context.format}
           recommended={props.sub?.preset.addBosToken}
           onChange={(ev) => props.setter('addBosToken', ev)}
         />
@@ -114,9 +114,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Ban the end of sequence token. This forces the model to never end the generation prematurely."
           value={props.state.banEosToken ?? false}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
           hide={props.hides.banEosToken}
-          format={props.state.thirdPartyFormat}
+          format={props.context.format}
           recommended={props.sub?.preset.banEosToken}
           onChange={(ev) => props.setter('banEosToken', ev)}
         />
@@ -126,9 +126,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Some specific models need this unset."
           value={props.state.skipSpecialTokens ?? true}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
+          format={props.context.format}
           hide={props.hides.skipSpecialTokens}
-          format={props.state.thirdPartyFormat}
           recommended={props.sub?.preset.skipSpecialTokens}
           onChange={(ev) => props.setter('skipSpecialTokens', ev)}
         />
@@ -139,9 +139,9 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="If doing contrastive search, disable this."
           value={props.state.doSample ?? true}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
+          format={props.context.format}
           hide={props.hides.doSample}
-          format={props.state.thirdPartyFormat}
           onChange={(ev) => props.setter('doSample', ev)}
         />
 
@@ -151,13 +151,13 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           helperText="Controls the stopping condition for beam-based methods, like beam-search."
           value={props.state.earlyStopping ?? false}
           disabled={props.state.disabled}
-          service={props.state.service}
+          service={props.context.service}
+          format={props.context.format}
           hide={props.hides.earlyStopping}
-          format={props.state.thirdPartyFormat}
           onChange={(ev) => props.setter('earlyStopping', ev)}
         />
 
-        <SamplerOrder state={props.state} setter={props.setter} />
+        <SamplerOrder state={props.state} setter={props.setter} context={props.context} />
       </Card>
     </div>
   )
@@ -165,6 +165,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
 
 const SamplerOrder: Component<{
   state: PresetState
+  context: PresetContext
   setter: SetPresetState
 }> = (props) => {
   const updateValue = (next: SortItem[]) => {
@@ -175,13 +176,13 @@ const SamplerOrder: Component<{
 
   const items = createMemo(() => {
     const list: SortItem[] = []
-    if (!props.state.service) return list
+    if (!props.context.service) return list
 
-    const orderMap = samplerServiceMap[props.state.service]
-    const inverseMap = inverseSamplerServiceMap[props.state.service]
+    const orderMap = samplerServiceMap[props.context.service]
+    const inverseMap = inverseSamplerServiceMap[props.context.service]
     const disabled = ensureArray(props.state.disabledSamplers)
 
-    const base = samplerOrders[props.state.service]
+    const base = samplerOrders[props.context.service]
       ?.map((o) => orderMap?.[o])
       .filter((o) => o !== undefined)
     const order = ensureArray(props.state.order)
@@ -218,7 +219,7 @@ const SamplerOrder: Component<{
   return (
     <div
       classList={{
-        hidden: items().length === 0 || props.state.thirdPartyFormat === 'aphrodite',
+        hidden: items().length === 0 || props.context.format === 'aphrodite',
       }}
     >
       <Sortable label="Sampler Order" items={items()} onChange={updateValue} />

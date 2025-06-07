@@ -31,7 +31,7 @@ export const ModeGenSettings: Component<{
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, setStore, hides] = getPresetEditor()
+  const [store, setStore, hides, context] = getPresetEditor()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -210,6 +210,7 @@ export const ModeGenSettings: Component<{
         <PresetSettings
           store={store}
           setter={setStore}
+          context={context}
           hideTabs={props.hideTabs}
           hides={hides}
           noSave={false}

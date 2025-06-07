@@ -165,6 +165,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 hides={props.hides}
                 sub={props.sub}
                 page={props.page}
+                context={props.context}
               />
             </div>
           </Card>
@@ -205,8 +206,8 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             }
             value={props.state.prefixNameAppend ?? true}
             disabled={props.state.disabled}
-            service={props.state.service}
-            format={props.state.thirdPartyFormat}
+            service={props.context.service}
+            format={props.context.format}
             hide={props.hides.prefixNameAppend}
             onChange={(ev) => props.setter('prefixNameAppend', ev)}
           />

@@ -16,6 +16,7 @@ export const RegisteredSettings: Component<{
   const options = createMemo(() => {
     if (!props.service) return []
 
+    console.log('service_option', props.service)
     const svc = state.config.registered.find((reg) => reg.name === props.service)
     if (!svc) return []
 
@@ -35,10 +36,10 @@ export const RegisteredSettings: Component<{
               hide={props.mode === 'simple' && opt.advanced === false}
               onChange={(ev) => {
                 if (!props.setter || !props.state) return
-                if (!props.state.service) return
-                const prev = { ...(props.state.registered as any)?.[props.state.service!] }
+                if (!props.service) return
+                const prev = { ...(props.state.registered as any)?.[props.service!] }
                 prev[opt.field] = ev
-                const next = { ...props.state.registered, [props.state.service]: prev }
+                const next = { ...props.state.registered, [props.service]: prev }
                 props.setter('registered', next)
               }}
             />

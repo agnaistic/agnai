@@ -35,14 +35,15 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         setter={props.setter}
         sub={props.sub}
         page={props.page}
+        context={props.context}
       />
 
       <Toggle
         fieldName="localRequests"
         label="Use Local Requests"
         helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
-        service={props.state.service}
-        format={props.state.thirdPartyFormat}
+        service={props.context.service}
+        format={props.context.format}
         hide={props.hides.localRequests}
         value={props.state.localRequests}
         onChange={(ev) => props.setter('localRequests', ev)}
@@ -53,16 +54,16 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         label="Disable Auto-URL"
         helperText="No paths will be added to your URL."
         value={props.state.thirdPartyUrlNoSuffix}
-        service={props.state.service}
+        service={props.context.service}
         hide={
           props.hides.thirdPartyFormat ||
-          props.state.thirdPartyModel === 'featherless' ||
-          props.state.thirdPartyFormat === 'arli'
+          props.context.format === 'featherless' ||
+          props.context.format === 'arli'
         }
         onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
       />
 
-      <Show when={props.state.service === 'horde'}>
+      <Show when={props.context.service === 'horde'}>
         <Card>
           <HordeDetails
             maxTokens={props.state.maxTokens}
@@ -72,9 +73,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
       </Show>
 
       <Card class="flex flex-col gap-2">
-        <Show
-          when={props.state.service === 'kobold' && props.state.thirdPartyFormat === 'aphrodite'}
-        >
+        <Show when={props.context.service === 'kobold' && props.context.format === 'aphrodite'}>
           <RangeInput
             fieldName="swipesPerGeneration"
             label="Swipes Per Generation"
@@ -95,6 +94,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           sub={props.sub}
           subMax={subMax()}
           page={props.page}
+          context={props.context}
         />
 
         <ContextSize
@@ -104,6 +104,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           sub={props.sub}
           subMax={subMax()}
           page={props.page}
+          context={props.context}
         />
 
         <Temperature {...props} />
@@ -136,6 +137,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setter={props.setter}
           sub={props.sub}
           page={props.page}
+          context={props.context}
         />
         <Toggle
           fieldName="disableNameStops"
@@ -151,6 +153,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setter={props.setter}
           sub={props.sub}
           page={props.page}
+          context={props.context}
         />
       </Card>
     </div>

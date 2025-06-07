@@ -88,14 +88,14 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
           <>
             <p>
               The amount of infomation sent to the model to generate a response.{' '}
-              <Show when={props.state.service !== 'agnaistic'}>
+              <Show when={props.context.service !== 'agnaistic'}>
                 Check your AI service for the maximum context size.
               </Show>
             </p>
           </>
         }
         min={16}
-        max={props.state.service === 'claude' ? 200000 : 32000}
+        max={props.context.service === 'claude' ? 200000 : 32000}
         step={1}
         value={props.state.maxContextLength || 8192}
         disabled={props.state.disabled}

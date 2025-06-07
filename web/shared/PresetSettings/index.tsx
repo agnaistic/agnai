@@ -11,7 +11,14 @@ import { getServiceTempConfig } from '../adapter'
 import Tabs from '../Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { usePaneManager } from '../hooks'
-import { HideState, PresetProps, PresetState, PresetTab, SetPresetState } from './types'
+import {
+  HideState,
+  PresetContext,
+  PresetProps,
+  PresetState,
+  PresetTab,
+  SetPresetState,
+} from './types'
 import { GeneralSettings } from './General'
 import { RegisteredSettings } from './Registered'
 import { PromptSettings } from './Prompt'
@@ -30,6 +37,7 @@ const PresetSettings: Component<
   PresetProps & {
     noSave: boolean
     store: PresetState
+    context: PresetContext
     setter: SetPresetState
     hides: HideState
   }
@@ -90,6 +98,7 @@ const PresetSettings: Component<
           setter={props.setter}
           page={props.page}
           sub={sub()}
+          context={props.context}
         />
 
         <ThirdPartyModel
@@ -98,6 +107,7 @@ const PresetSettings: Component<
           setter={props.setter}
           page={props.page}
           sub={sub()}
+          context={props.context}
         />
 
         <PresetMode
@@ -106,17 +116,18 @@ const PresetSettings: Component<
           hides={props.hides}
           sub={sub()}
           page={props.page}
+          context={props.context}
         />
 
         <RegisteredSettings
-          service={props.store.service}
+          service={props.context.service}
           setter={props.setter}
           state={props.store}
           mode={props.store.presetMode}
         />
       </Card>
       <Show when={pane.showing()}>
-        <TempSettings service={props.store.service} />
+        <TempSettings service={props.context.service} />
       </Show>
       <Tabs
         select={(ev) => {
@@ -133,6 +144,7 @@ const PresetSettings: Component<
         sub={sub()}
         tab={tabName()}
         page={props.page}
+        context={props.context}
       />
 
       <PromptSettings
@@ -142,6 +154,7 @@ const PresetSettings: Component<
         sub={sub()}
         tab={tabName()}
         page={props.page}
+        context={props.context}
       />
 
       <MemorySettings
@@ -151,6 +164,7 @@ const PresetSettings: Component<
         sub={sub()}
         tab={tabName()}
         page={props.page}
+        context={props.context}
       />
 
       <SliderSettings
@@ -160,6 +174,7 @@ const PresetSettings: Component<
         sub={sub()}
         tab={tabName()}
         page={props.page}
+        context={props.context}
       />
 
       <ToggleSettings
@@ -169,6 +184,7 @@ const PresetSettings: Component<
         sub={sub()}
         tab={tabName()}
         page={props.page}
+        context={props.context}
       />
     </div>
   )
