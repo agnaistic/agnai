@@ -145,6 +145,7 @@ async function testChat(prompt: string) {
 
   const props: AdapterProps = {
     prompt,
+    conn: {} as any,
     char: bot1,
     chat: toChat(bot1),
     gen: {},
