@@ -215,8 +215,10 @@ const AISettings: Component<{
 
         <div class="my-2">
           <SolidCard bg="orange-500" class="mb-2">
-            Are you using an external AI service such as OpenAI, NovelAI, or Horde? Provide your API
-            key below.
+            Using an external AI service such as OpenAI, NovelAI, or Horde? Use the <b>PROVIDERS</b>{' '}
+            in your preset.
+            <br />
+            The section below is deprecated.
           </SolidCard>
           <Tabs
             display="select"
