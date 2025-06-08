@@ -3,6 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { SubscriptionPreset } from './agnaistic'
 import { ThirdPartyFormat } from '/common/adapters'
+import { PresetConnection } from '/common/providers'
 import { Memory, TokenCounter } from '/common/types'
 
 export type ChatRole = 'user' | 'assistant' | 'system'
@@ -117,6 +118,7 @@ export type GenerateOptions = {
 
 export type AdapterProps = {
   kind: GenerateRequestV2['kind']
+  conn: PresetConnection
   chat: AppSchema.Chat
   char: AppSchema.Character
   replyAs: AppSchema.Character

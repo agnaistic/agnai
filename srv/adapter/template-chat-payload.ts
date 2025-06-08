@@ -178,29 +178,108 @@ export function logPayload(logger: AppLog, payload: any) {
   logger.debug({ ...payload, messages: null }, 'Payload')
 }
 
-/** Currently unused, intended to work with awful inflexible jinja templates */
-export function ensureUserMessageFirst(messages: CompletionItem[]): CompletionItem[] {
+/**
+ * Currently unused, intended to work with awful inflexible jinja templates.
+ * E.g. Official Mistral API and default jinja templates in Huggingface repos
+ */
+export function ensureMessagesAlternate(
+  messages: CompletionItem[],
+  opts?: { userFirst?: boolean; userLast?: boolean }
+): CompletionItem[] {
   if (!messages.length) return messages
 
-  const [first, second, ...rest] = messages
-  if (first.role === 'user') return messages
-
-  if (first.role === 'assistant') {
-    messages.unshift({ role: 'user', content: '' })
-    return messages
+  if (opts?.userLast) {
+    const last = messages.slice(-1)[0]
+    if (last.role === 'assistant') {
+      last.role = 'user'
+    }
   }
 
-  if (first.role === 'system') {
-    if (!second) {
-      messages.push({ role: 'user', content: '...' })
-      return messages
+  const merges: Array<CompletionItem[]> = []
+
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i]
+    const previous = merges.slice(-1)[0]
+    const mergeMsg = previous?.[0]
+
+    if (!previous || !mergeMsg) {
+      merges.push([msg])
+      continue
     }
 
-    if (second.role === 'user') return messages
+    // All system messages must go to the top in bad templates
+    if (msg.role === 'system') {
+      const first = merges[0]
+      // Case 1. First merge isn't a system role - Move this message to the top
+      if (!first || first[0].role !== 'system') {
+        merges.unshift([msg])
+        continue
+      }
 
-    const next: CompletionItem[] = [first, { role: 'user', content: '' }, second, ...rest]
-    return next
+      // Case 2. First merge is a system role, add it to the top merge
+      first.push(msg)
+      continue
+    }
+
+    // Same role as last merge, add it to 'current merge'
+    if (mergeMsg.role === msg.role) {
+      previous.push(msg)
+      continue
+    }
+
+    // Differnt role to last merge, create a new merge
+    merges.push([msg])
   }
 
-  return messages
+  const processed: CompletionItem[] = merges.map((merge) => {
+    const first = merge[0]
+    return { role: first.role, content: mergeCompletionItems(merge) }
+  })
+
+  // We do this after merging
+  if (opts?.userFirst) {
+    const first = processed[0]
+    const second = processed[1]
+
+    // Case 1. No system message, but starts with assistant
+    if (first.role === 'assistant') {
+      processed.unshift({ role: 'user', content: '...' })
+    }
+    // Case 2. System message, but first message is assistant
+    else if (first.role === 'system' && second?.role !== 'user') {
+      processed.splice(1, 0, { role: 'user', content: '...' })
+    }
+  }
+
+  // const [first, second, ...rest] = messages
+  // if (first.role === 'user') return messages
+
+  // if (first.role === 'assistant') {
+  //   messages.unshift({ role: 'user', content: '' })
+  //   return messages
+  // }
+
+  // if (first.role === 'system') {
+  //   if (!second) {
+  //     messages.push({ role: 'user', content: '...' })
+  //     return messages
+  //   }
+
+  //   if (second.role === 'user') return messages
+
+  //   const next: CompletionItem[] = [first, { role: 'user', content: '' }, second, ...rest]
+  //   return next
+  // }
+
+  return processed
+}
+
+function mergeCompletionItems(items: CompletionItem[]) {
+  const contents: string[] = []
+
+  for (const item of items) {
+    contents.push(item.content)
+  }
+
+  return contents.join('\n\n')
 }

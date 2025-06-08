@@ -23,6 +23,7 @@ import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
 import { toChatMessages } from './template-chat-payload'
 import { isDefaultPreset } from '/common/default-preset'
+import { getPresetConnection } from '/common/providers'
 
 let version = ''
 
@@ -202,9 +203,11 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   const isThirdParty = isThirdPartyPreset(settings)
 
+  const conn = getPresetConnection(settings, opts.user.providers)
   const handler = getHandlers({ user: opts.user, settings })
   const stream = handler({
     kind: 'plain',
+    conn,
     requestId: '',
     char: {} as any,
     chat: {} as any,
@@ -377,6 +380,7 @@ export async function createChatStream(
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model, subscription?.preset)
+  const conn = getPresetConnection(opts.settings, opts.user.providers)
   const handler = getHandlers({ user: opts.user, settings: opts.settings })
 
   /**
@@ -428,6 +432,7 @@ export async function createChatStream(
   const mappedSettings = mapPresetsToAdapter(gen, adapter)
   const stream = handler({
     requestId: opts.requestId,
+    conn,
     kind: opts.kind,
     char: opts.char,
     chat: opts.chat,

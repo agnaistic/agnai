@@ -5,7 +5,11 @@ import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
-import { insertImageContent, stripImageContent } from './template-chat-payload'
+import {
+  ensureMessagesAlternate,
+  insertImageContent,
+  stripImageContent,
+} from './template-chat-payload'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { toImageJinjaTemplate } from '/common/requests/payloads'
@@ -170,6 +174,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     ? joinUrl(base.url, 'chat/completions')
     : joinUrl(base.url, 'completions')
 
+  if (opts.conn.provider?.provider === 'known-mistral' && body.messages) {
+    const merged = ensureMessagesAlternate(body.messages, { userFirst: true, userLast: true })
+    body.messages = merged
+  }
+
   const iter = body.stream
     ? streamGenerator({
         userId: opts.user._id,
@@ -203,6 +212,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if ('error' in generated.value) {
+      if (typeof generated.value.error === 'object') {
+        const msg = JSON.stringify(generated.value.error)
+        yield { error: msg }
+        return
+      }
       yield { error: generated.value.error }
       return
     }

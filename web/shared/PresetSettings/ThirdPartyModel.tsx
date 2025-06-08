@@ -195,7 +195,6 @@ const NovelAIModel: Field = (props) => {
         items={novelModels()}
         value={props.state.novelModel || ''}
         disabled={props.state.disabled}
-        hide={props.hides.novelModel}
         onChange={(ev) => props.setter('novelModel', ev.value)}
       />
       <Show when={cfg.flags.naiModel}>
@@ -203,7 +202,6 @@ const NovelAIModel: Field = (props) => {
           fieldName="novelModelOverride"
           helperText="Advanced: Use a custom NovelAI model"
           label="NovelAI Model Override"
-          hide={props.hides.novelModel}
         />
       </Show>
     </div>
@@ -251,9 +249,6 @@ const OpenRouterModels: Field = (props) => {
         parentClass="w-1/2"
         items={openRouterModels()}
         value={props.state.openRouterModel?.id || ''}
-        hide={
-          props.state.service !== 'openrouter' && props.state.service !== 'openrouter-completion'
-        }
         disabled={props.state.disabled}
         onChange={(ev) =>
           props.setter(
@@ -267,9 +262,6 @@ const OpenRouterModels: Field = (props) => {
         parentClass="w-1/2"
         placeholder="Filter..."
         onChange={(ev) => setOrfilter(ev.currentTarget.value)}
-        hide={
-          props.state.service !== 'openrouter' && props.state.service !== 'openrouter-completion'
-        }
       />
     </div>
   )
@@ -453,12 +445,7 @@ const FeatherlessModels: Field = (props) => {
   })
 
   return (
-    <div
-      class="flex items-end gap-1"
-      classList={{
-        hidden: props.state.service !== 'kobold' || props.state.thirdPartyFormat !== 'featherless',
-      }}
-    >
+    <div class="flex items-end gap-1">
       <CustomSelect
         modalTitle="Select a Model"
         label="Model"
@@ -534,7 +521,6 @@ const ClaudeModel: Field = (props) => {
       helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
       value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
       disabled={props.state.disabled}
-      hide={props.hides.claudeModel}
       onChange={(ev) => props.setter('claudeModel', ev.value)}
     />
   )
