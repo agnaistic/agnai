@@ -18,11 +18,11 @@ export const handleHorde: ModelAdapter = async function* ({
   ...opts
 }) {
   try {
-    const key = user.hordeKey
-      ? guest
-        ? user.hordeKey
-        : decryptText(user.hordeKey)
-      : HORDE_GUEST_KEY
+    let key = user.hordeKey ? (guest ? user.hordeKey : decryptText(user.hordeKey)) : HORDE_GUEST_KEY
+
+    if (gen.providerId && gen.thirdPartyKey) {
+      key = guest ? gen.thirdPartyKey : decryptText(gen.thirdPartyKey)
+    }
 
     yield { prompt }
 
