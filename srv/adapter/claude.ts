@@ -15,7 +15,7 @@ import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
-import { sanitiseAndTrim } from '/common/requests/util'
+import { joinUrl, sanitiseAndTrim } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
@@ -52,7 +52,11 @@ type CompletionGenerator = (opts: {
 const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  const { members, user, log, guest, gen, isThirdParty } = opts
+  let { members, user, log, guest, gen, isThirdParty } = opts
+  if (gen.providerId) {
+    isThirdParty = true
+  }
+
   const claudeModel =
     gen.service === 'kobold'
       ? gen.thirdPartyModel || gen.claudeModel
@@ -268,9 +272,17 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 }
 
 function getBaseUrl(gen: Partial<GenSettings>, model: string, isThirdParty?: boolean) {
-  const validFormat = gen.thirdPartyFormat === 'claude'
+  const isChatModel = !CLAUDE_TEXT_MODELS[model]
+  if (gen.providerId && (gen.service === 'claude' || gen.service === 'claude-v2')) {
+    switch (isChatModel) {
+      case true:
+        return { url: joinUrl(gen.thirdPartyUrl!, 'messages'), changed: true }
+      case false:
+        return { url: joinUrl(gen.thirdPartyUrl!, 'complete'), changed: true }
+    }
+  }
 
-  if (isThirdParty && validFormat) {
+  if (isThirdParty) {
     const url = gen.thirdPartyUrl
     return { url, changed: true }
   }
