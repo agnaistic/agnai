@@ -565,7 +565,7 @@ function simplifyPreset(
     }
   }
 
-  Object.assign(next, sub?.preset || {}, keep, { useMaxContext: true })
+  Object.assign(next, keep, { useMaxContext: true })
 
   return next
 }
