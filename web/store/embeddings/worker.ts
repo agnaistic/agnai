@@ -429,7 +429,6 @@ async function pipeline<T extends TaskType>(
   const p = api.pipeline(task, model, {
     dtype: 'fp16',
     progress_callback: callback,
-    device: DEVICE,
   })
 
   return p
