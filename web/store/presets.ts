@@ -77,16 +77,19 @@ export const presetStore = createStore<PresetState>(
       providers: AppSchema.Provider[],
       useCache?: boolean
     ) {
+      if (preset.providerId === 'agnaistic') return
+      if (!preset.providerId && preset.service === 'agnaistic') return
+
+      const provider = preset.providerId
+        ? providers.find((p) => preset.providerId === p._id)
+        : undefined
+      const detail = getSafeProviderDetail(provider?.provider || '')
+
       yield { modelsLoading: true }
       let url = preset.thirdPartyUrl || ''
       let key = preset.thirdPartyKey || ''
 
       try {
-        const provider = preset.providerId
-          ? providers.find((p) => preset.providerId === p._id)
-          : undefined
-        const detail = getSafeProviderDetail(provider?.provider || '')
-
         if (provider && detail) {
           switch (detail.category) {
             case 'self':
