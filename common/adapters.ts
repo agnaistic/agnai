@@ -1,6 +1,7 @@
 import { defaultPresets, isDefaultPreset } from './default-preset'
 import { NOVEL_MODELS } from './presets/novel'
 import { OPENAI_MODELS } from './presets/openai'
+import { getPresetConnection, PresetConnection } from './providers'
 import { AppSchema } from './types/schema'
 
 export type AdapterSetting = {
@@ -437,7 +438,8 @@ export function getAdapter(
 ) {
   let adapter = preset?.service!
   let model = ''
-  const isThirdParty = isThirdPartyPreset(preset || {})
+  const conn = getPresetConnection(preset || {}, user.providers)
+  const isThirdParty = isThirdPartyPreset(conn)
 
   if (adapter === 'kobold') {
     adapter = THIRDPARTY_HANDLERS[user.thirdPartyFormat]
@@ -473,13 +475,17 @@ export function getAdapter(
   return { adapter, model, preset: presetName, isThirdParty }
 }
 
-export function isThirdPartyPreset(preset: Partial<AppSchema.GenSettings>) {
-  let adapter = preset?.service!
-  const thirdPartyFormat = preset?.thirdPartyFormat
-  const isThirdParty =
-    thirdPartyFormat && thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
+export function isThirdPartyPreset(conn: PresetConnection) {
+  if (!conn.provider) {
+    const isThirdParty =
+      conn.format && conn.format in THIRDPARTY_HANDLERS && conn.service === 'kobold'
+    return !!isThirdParty
+  }
 
-  return !!isThirdParty
+  if (conn.service === 'agnaistic') return false
+  if (conn.service) return false
+
+  return true
 }
 
 export function adaptersToOptions(adapters: AIAdapter[]) {
