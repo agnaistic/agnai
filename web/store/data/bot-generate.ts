@@ -606,6 +606,10 @@ function emptyMsg(
 }
 
 function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
+  if (!settings.providerId && settings.service === 'agnaistic') {
+    return false
+  }
+
   if (!settings.localRequests) return false
 
   const format = settings.thirdPartyFormat
