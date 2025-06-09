@@ -147,6 +147,10 @@ const handlers: {
   },
   init: (type) => {
     try {
+      if (isMobile()) {
+        console.log('[embeds] skipped due to mobile')
+        return
+      }
       const user = getStore('user').getState()
       const chat = getStore('chat').getState().active?.chat
 
