@@ -211,7 +211,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     requestId: '',
     char: {} as any,
     chat: {} as any,
-    gen: settings,
+    gen: conn.preset,
     log: opts.log,
     lines: [],
     members: [],
@@ -235,7 +235,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     isThirdParty,
   })
 
-  return { stream, service: settings.service || '' }
+  return { stream, service: conn.service || '' }
 }
 
 async function getRequestPreset(opts: InferenceRequest) {
