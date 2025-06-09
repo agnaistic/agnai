@@ -77,7 +77,9 @@ export function getPresetConnection(
 
     if (conn.service) {
       copy.service = conn.service
+      copy.thirdPartyFormat = undefined
     } else {
+      copy.service = undefined
       copy.thirdPartyFormat = conn.format
     }
 

@@ -44,8 +44,8 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt, subscription } = opts
 
-  const service = subscription?.preset?.service || gen.service
-  const format = subscription?.preset?.thirdPartyFormat || gen.thirdPartyFormat
+  const service = subscription?.preset?.service || opts.conn.service
+  const format = subscription?.preset?.thirdPartyFormat || opts.conn.format
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
@@ -68,7 +68,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   }
 
   // Agnaistic
-  if (service !== 'kobold') {
+  if (service === 'agnaistic') {
     if (!opts.contextSize) {
       const encoder = getEncoderByName(opts.subscription?.preset?.tokenizer as any)
       const context = encoder?.count(prompt)

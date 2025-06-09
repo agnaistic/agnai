@@ -292,6 +292,8 @@ export async function createChatStream(
   log: AppLog,
   guestSocketId?: string
 ) {
+  const conn = getPresetConnection(opts.settings || {}, opts.user.providers)
+  opts.settings = conn.preset
   const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
   opts.subscription = subscription
 
@@ -380,7 +382,6 @@ export async function createChatStream(
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model, subscription?.preset)
-  const conn = getPresetConnection(opts.settings, opts.user.providers)
   const handler = getHandlers({ user: opts.user, settings: opts.settings })
 
   /**
