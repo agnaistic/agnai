@@ -104,6 +104,7 @@ const CompatModel: Field = (props) => {
 
   const onModelSelect = (value: string) => {
     props.setter('thirdPartyModel', value)
+    // We intentionally don't unset arli/openrouter here
     props.setter('mistralModel', '')
     props.setter('googleModel', '')
     props.setter('claudeModel', '')
@@ -250,12 +251,10 @@ const OpenRouterModels: Field = (props) => {
         items={openRouterModels()}
         value={props.state.openRouterModel?.id || ''}
         disabled={props.state.disabled}
-        onChange={(ev) =>
-          props.setter(
-            'openRouterModel',
-            cfg.config.openRouter.models?.find((m) => m.id === ev.value)
-          )
-        }
+        onChange={(ev) => {
+          const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
+          props.setter({ openRouterModel: model, thirdPartyModel: model?.id })
+        }}
       />
 
       <TextInput
@@ -272,7 +271,7 @@ const ArliModels: Field = (props) => {
   const [modelclass, setModelclass] = createSignal('')
 
   const label = createMemo(() => {
-    const id = props.state.arliModel
+    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.arliModel
     const match = state.models.find((s) => s.id === id)
     if (!match) return id || 'None selected'
 
@@ -334,12 +333,7 @@ const ArliModels: Field = (props) => {
   })
 
   return (
-    <div
-      class="flex gap-1"
-      classList={{
-        hidden: props.state.service !== 'kobold' || props.state.thirdPartyFormat !== 'arli',
-      }}
-    >
+    <div class="flex gap-1">
       <CustomSelect
         modalTitle="Select a Model"
         label="Model"
@@ -355,14 +349,17 @@ const ArliModels: Field = (props) => {
           />
         }
         onSelect={(opt) => {
-          props.setter('arliModel', opt.value)
-          if (props.page === 'mode') {
-            getStore('presets').updatePreset(
-              props.state._id,
-              { arliModel: opt.value },
-              { quiet: true, onSuccess: () => toastStore.success('Model changed') }
-            )
-          }
+          props.setter({ thirdPartyModel: opt.value, arliModel: opt.value })
+          if (props.page !== 'mode') return
+
+          getStore('presets').updatePreset(
+            props.state._id,
+            { thirdPartyModel: opt.value, arliModel: opt.value },
+            {
+              quiet: true,
+              onSuccess: () => toastStore.success('Model changed'),
+            }
+          )
         }}
         buttonLabel={label()}
         selected={props.state.arliModel}
@@ -380,7 +377,7 @@ const FeatherlessModels: Field = (props) => {
   const [modelclass, setModelclass] = createSignal('')
 
   const label = createMemo(() => {
-    const id = props.state.featherlessModel
+    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.featherlessModel
     const match = state.models.find((s) => s.id === id)
     if (!match) return id || 'None selected'
 
@@ -462,10 +459,13 @@ const FeatherlessModels: Field = (props) => {
           />
         }
         onSelect={(opt) => {
-          props.setter('featherlessModel', opt.value)
-          if (props.page === 'mode') {
-            getStore('presets').updatePreset(props.state._id, { featherlessModel: opt.value })
-          }
+          props.setter({ featherlessModel: opt.value, thirdPartyModel: opt.value })
+          if (props.page !== 'mode') return
+
+          getStore('presets').updatePreset(props.state._id, {
+            thirdPartyModel: opt.value,
+            featherlessModel: opt.value,
+          })
         }}
         buttonLabel={label()}
         selected={props.state.featherlessModel}
