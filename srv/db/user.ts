@@ -99,7 +99,7 @@ export async function saveUserProvider(userId: string, prv: AppSchema.Provider) 
 }
 
 export async function getMetrics() {
-  const [totalUsers] = await Promise.all([db('user').countDocuments()])
+  const [totalUsers] = await Promise.all([db('user').estimatedDocumentCount()])
 
   return { totalUsers }
 }
