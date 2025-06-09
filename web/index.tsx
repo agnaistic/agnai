@@ -1,3 +1,7 @@
+import { Component } from 'solid-js'
+import { render } from 'solid-js/web'
+import App from './App'
+
 if (location.hostname === 'dev.agnai.chat') {
   window.addEventListener('unload', function () {
     debugger
@@ -7,10 +11,6 @@ if (location.hostname === 'dev.agnai.chat') {
     debugger
   })
 }
-
-import { Component } from 'solid-js'
-import { render } from 'solid-js/web'
-import App from './App'
 
 const AppContainer: Component = () => <App />
 
