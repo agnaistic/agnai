@@ -10,7 +10,6 @@ import {
 import { docCache } from './cache'
 import { getEncoding } from 'js-tiktoken'
 import { AllTasks, TaskType } from '@huggingface/transformers'
-import { isMobile } from '/web/shared/hooks'
 
 const encoder = getEncoding('cl100k_base')
 const DEVICE = undefined
@@ -60,11 +59,6 @@ const handlers: {
     post('decoding', { id: msg.id, text: result })
   },
   initSimilarity: async (msg) => {
-    if (isMobile()) {
-      console.log('[embed:init] skipped due to mobile')
-      return
-    }
-
     if (!msg.model) {
       if (EMBED.inited) {
         console.log('[embed] unloaded')

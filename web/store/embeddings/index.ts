@@ -86,6 +86,8 @@ export const embedApi = {
     // WIP: Only use small model on mobile
     if (isMobile()) {
       model = EMBED_MODELS.Small
+      console.log('[embed:init] skipped due to mobile')
+      return
     }
 
     post('initSimilarity', { model, dtype: getLocalModelDtype() })
