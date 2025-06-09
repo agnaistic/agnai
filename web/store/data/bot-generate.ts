@@ -630,7 +630,7 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSc
   const conn = getPresetConnection(settings || {}, user.providers)
   if (conn.category === 'self') return true
 
-  return true
+  return false
 }
 
 function isSupportedLocalRequestFormat(format: ThirdPartyFormat | undefined) {
