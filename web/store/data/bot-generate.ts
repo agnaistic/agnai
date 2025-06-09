@@ -606,11 +606,12 @@ function emptyMsg(
 }
 
 function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
-  if (!settings.providerId && settings.service === 'agnaistic') {
-    return false
-  }
+  if (!settings.providerId) {
+    if (settings.service === 'agnaistic') return false
+    if (settings.service !== 'kobold') return false
 
-  if (!settings.localRequests) return false
+    if (settings.service === 'kobold' && !settings.localRequests) return false
+  }
 
   const format = settings.thirdPartyFormat
   if (!isSupportedLocalRequestFormat(format)) return false
