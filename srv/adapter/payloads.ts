@@ -205,7 +205,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (format === 'featherless') {
     const payload: any = {
-      model: gen.featherlessModel || gen.thirdPartyModel,
+      model: gen.providerId ? gen.thirdPartyModel : gen.featherlessModel || gen.thirdPartyModel,
       prompt,
       stop: getStoppingStrings(opts, stops),
       presence_penalty: gen.presencePenalty,
@@ -225,7 +225,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (format === 'arli') {
     const body: any = {
-      model: gen.arliModel || gen.thirdPartyModel,
+      model: gen.providerId ? gen.thirdPartyModel : gen.arliModel || gen.thirdPartyModel,
       // prompt,
       messages: opts.messages,
       stop: getStoppingStrings(opts, stops),
