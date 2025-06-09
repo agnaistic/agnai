@@ -1025,7 +1025,8 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
     }
 
     if (end > start) {
-      const thought = content.slice(start + len.open, end)
+      const actualStart = Math.max(start, 0)
+      const thought = content.slice(actualStart + len.open, end)
       thoughts.push(thought)
       content = content.slice(end + len.close)
       continue
