@@ -40,8 +40,8 @@ export const PresetProvider: Field = (props) => {
       const detail = assertProviderDetail(p.provider)
       if (detail.category === 'custom') {
         if (p.name) return { label: `Custom - ${p.name}`, value: p._id }
-        const url = new URL(p.url)
-        return { label: `Custom - ${url.host}`, value: p._id }
+        const hostname = tryGetHostname(p.url)
+        return { label: `Custom - ${hostname}`, value: p._id }
       }
 
       if (detail.category === 'known') {
@@ -549,4 +549,14 @@ const ManageProvider: Component<{
 
 function sortAlpha(l: { label: string }, r: { label: string }) {
   return l.label.localeCompare(r.label)
+}
+
+function tryGetHostname(url: string) {
+  if (!url.trim()) return 'Untitled'
+
+  try {
+    return new URL(url).host
+  } catch (ex) {
+    return 'Untitled (Invalid URL)'
+  }
 }
