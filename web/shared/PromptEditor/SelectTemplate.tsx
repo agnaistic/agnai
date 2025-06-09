@@ -29,8 +29,8 @@ export const SelectTemplate: Component<{
 
   const [opt, setOpt] = createSignal(props.currentTemplateId || 'Alpaca')
   const [templateName, setName] = createSignal(props.currentTemplate || 'Alpaca')
-  const [template, setTemplate] = createSignal(templates.Alpaca)
-  const [builtin, setBuiltin] = createSignal(templates.Alpaca)
+  const [template, setTemplate] = createSignal(templates.Universal)
+  const [builtin, setBuiltin] = createSignal(templates.Universal)
   const [filter, setFilter] = createSignal('')
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [help, showHelp] = createSignal(false)
