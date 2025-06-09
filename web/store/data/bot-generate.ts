@@ -28,6 +28,7 @@ import { genApi } from './inference'
 import { isDefaultPreset } from '/common/default-preset'
 import { ThirdPartyFormat } from '/common/adapters'
 import { localEmit } from '../socket'
+import { getPresetConnection } from '/common/providers'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -625,6 +626,9 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSc
       )
     }
   }
+
+  const conn = getPresetConnection(settings || {}, user.providers)
+  if (conn.category === 'self') return true
 
   return true
 }
