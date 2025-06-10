@@ -33,6 +33,8 @@ export const CLAUDE_MODELS = {
   ClaudeV35_Sonnet_Latest: 'claude-3-5-sonnet-latest',
   ClaudeV37_Sonnet_Feb2025: 'claude-3-7-sonnet-20250219',
   ClaudeV37_Sonnet_Latest: 'claude-3-7-sonnet-latest',
+  ClaudeV4_Opus_May2025: 'claude-opus-4-20250514',
+  ClaudeV4_Sonnet_May2025: 'claude-sonnet-4-20250514',
 } as const
 
 export const CLAUDE_TEXT_MODELS: Record<string, boolean> = {

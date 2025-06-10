@@ -539,6 +539,8 @@ const ClaudeModel: Field = (props) => {
     ClaudeV35_Sonnet_Oct2024: `Claude v3.5 Sonnet (Oct 2024)`,
     ClaudeV37_Sonnet_Latest: 'Claude v3.7 Sonnet (Latest)',
     ClaudeV37_Sonnet_Feb2025: 'Claude v3.7 Sonnet (Feb 2025)',
+    ClaudeV4_Opus_May2025: 'Claude v4 Opus (May 2025)',
+    ClaudeV4_Sonnet_May2025: 'Claude v4 Sonnet (May 2025)',
   } satisfies Record<keyof typeof CLAUDE_MODELS, string>
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
@@ -556,7 +558,19 @@ const ClaudeModel: Field = (props) => {
       helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
       value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
       disabled={props.state.disabled}
-      onChange={(ev) => props.setter('claudeModel', ev.value)}
+      onChange={(ev) => {
+        props.setter({ claudeModel: ev.value, thirdPartyModel: ev.value })
+        if (props.page === 'mode') {
+          presetStore.updatePreset(
+            props.state._id,
+            { claudeModel: ev.value, thirdPartyModel: ev.value },
+            {
+              quiet: true,
+              onSuccess: () => toastStore.success('Model changed'),
+            }
+          )
+        }
+      }}
     />
   )
 }

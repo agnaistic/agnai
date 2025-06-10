@@ -111,6 +111,7 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
       { type: 'format', value: 'llamacpp' },
       { type: 'format', value: 'koboldcpp' },
       { type: 'format', value: 'ollama' },
+      { type: 'format', value: 'claude' },
       {
         type: 'format',
         name: 'LM Studio',
