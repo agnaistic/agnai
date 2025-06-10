@@ -436,14 +436,14 @@ export function getAdapter(
   user: AppSchema.User,
   preset: Partial<AppSchema.GenSettings> | undefined
 ) {
-  let adapter = preset?.service!
   let model = ''
   const conn = getPresetConnection(preset || {}, user.providers)
   const isThirdParty = isThirdPartyPreset(conn)
+  let adapter = conn.service || 'third-party'
 
-  if (adapter === 'kobold') {
+  if (adapter === 'kobold' || adapter === 'third-party') {
     adapter = THIRDPARTY_HANDLERS[user.thirdPartyFormat]
-    model = preset?.thirdPartyModel || ''
+    model = conn.preset.thirdPartyModel || ''
   }
 
   let presetName = 'Fallback Preset'

@@ -80,7 +80,7 @@ const squelched = new Set([
   'ping',
   'inference-partial',
   'horde-check',
-  // 'message-created',
+  'message-completed',
   'message-try',
 ])
 

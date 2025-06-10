@@ -1,4 +1,4 @@
-import { allSockets, sendMany, userSockets } from './redis'
+import { allSockets, sendGuest, sendMany, userSockets } from './redis'
 import { AppSocket } from './types'
 import { assertValid } from '/common/valid'
 import { store } from '/srv/db'
@@ -84,6 +84,11 @@ export const handlers: Handlers = {
       return
     }
 
+    // The client.updatedAt is newer than the stored.updatedAt
+    if (data.updatedAt && data.updatedAt > msg.updatedAt) {
+      return
+    }
+
     const chat = await store.chats.getChatOnly(msg.chatId)
     if (!chat) {
       return
@@ -93,7 +98,15 @@ export const handlers: Handlers = {
     const isChatMember = chat.memberIds.concat(chat.userId).includes(client.userId)
     if (!isChatMember) return
 
-    sendMany(members, {
+    const excluded = members.filter((m) => m !== client.userId)
+    sendGuest(client.uid, {
+      type: 'message-completed',
+      chatId: msg.chatId,
+      generate: true,
+      msg,
+      retry: !!data.updatedAt,
+    })
+    sendMany(excluded, {
       type: 'message-completed',
       chatId: msg.chatId,
       generate: true,

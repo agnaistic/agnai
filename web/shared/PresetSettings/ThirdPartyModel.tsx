@@ -16,6 +16,7 @@ import { Field } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
+import { Pill } from '../Card'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
@@ -123,9 +124,23 @@ const CompatModel: Field = (props) => {
     }
   }
 
+  const warning = createMemo(() => {
+    if (modelList().length <= 1) return
+    const match = modelList().find((m) => m.value === props.state.thirdPartyModel)
+
+    if (match) return `Your current model is not in the model list`
+  })
+
   return (
     <div class="flex w-full flex-col gap-1">
       <FormLabel
+        helperText={
+          <Show when={!!warning()}>
+            <Pill type="orange" small>
+              {warning()}
+            </Pill>
+          </Show>
+        }
         label={
           <div class="flex justify-between">
             <div>Model</div>

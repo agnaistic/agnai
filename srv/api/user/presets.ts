@@ -135,6 +135,10 @@ export const createUserPreset = handle(async ({ userId, body, authed }) => {
 })
 
 export const updateUserPreset = handle(async ({ params, body, userId }) => {
+  if (!body.thirdPartyFormat?.trim()) {
+    delete body.thirdPartyFormat
+  }
+
   assertValid(presetValidator, body, true)
 
   if (body.novelModelOverride) {

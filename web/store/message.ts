@@ -1004,12 +1004,11 @@ subscribe(
     chatId: 'string',
     message: 'string',
     continue: 'boolean?',
-    adapter: 'string',
+    adapter: 'string?',
     extras: ['string?'],
     meta: 'any?',
     retries: ['string?'],
     updatedAt: 'string?',
-    actions: [{ emote: 'string', action: 'string' }, '?'],
     json: 'any?',
   },
   async (body) => {
@@ -1041,7 +1040,6 @@ subscribe(
 
     const nextMsg = {
       msg: body.message,
-      actions: body.actions,
       voiceUrl: undefined,
       meta: body.meta,
       extras: body.extras || prev?.extras,
@@ -1055,6 +1053,9 @@ subscribe(
     const replacement = { ...prev, ...nextMsg }
 
     msgStore.setState({
+      partial: undefined,
+      retrying: undefined,
+      waiting: undefined,
       msgs: nextMsgs,
       graph: { ...graph, tree: updateChatTreeNode(graph.tree, replacement) },
     })
@@ -1110,8 +1111,14 @@ async function onMessageReceived(body: {
   const msg = body.msg as AppSchema.ChatMessage
   const user = userStore.getState().user
 
-  if (graph.tree[msg._id]) {
-    console.log('message-created: already received')
+  const existing = graph.tree[msg._id]
+  if (existing && existing.msg === body.msg.msg) {
+    console.log('message-created: already received [text equal]')
+    return
+  }
+
+  if (existing && existing.msg.updatedAt >= body.msg.updatedAt) {
+    console.log('message-created: already received [existing newer]')
     return
   }
 
@@ -1138,6 +1145,8 @@ async function onMessageReceived(body: {
       tree,
       root: graph.root,
     },
+    waiting: undefined,
+    partial: undefined,
   })
 
   // If the message is from a user don't clear the "waiting for response" flags
