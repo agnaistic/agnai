@@ -7,7 +7,6 @@ import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
 import { decryptText } from '/srv/db/util'
 import { getThirdPartyModels } from '/common/requests/util'
-import { getPresetConnection, getProviderConnection } from '/common/providers'
 
 const createPreset = {
   ...presetValidator,
