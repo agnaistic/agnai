@@ -7,6 +7,7 @@ import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
 import { decryptText } from '/srv/db/util'
 import { getThirdPartyModels } from '/common/requests/util'
+import { getPresetConnection, getProviderConnection } from '/common/providers'
 
 const createPreset = {
   ...presetValidator,
@@ -19,6 +20,25 @@ export const getUserPresets = handle(async ({ userId }) => {
     store.presets.getUserTemplates(userId),
   ])
   return { presets, templates }
+})
+
+export const testConnectionUrl = handle(async ({ body, userId, authed }) => {
+  assertValid({ providerId: 'string?', url: 'string', key: 'string?' }, body)
+
+  if (!body.key && body.providerId) {
+    const provider = authed?.providers?.find((p) => p._id === body.providerId)
+
+    if (provider?.key) {
+      body.key = body.key = decryptText(provider.key || '', true)
+    }
+  }
+
+  const models = await getThirdPartyModels(body.url, body.key!)
+  if (models) {
+    return { url: models.url, success: true }
+  }
+
+  return { success: false, url: '' }
 })
 
 export const getThirdPartyPresetModels = handle(async ({ userId, body, authed }) => {

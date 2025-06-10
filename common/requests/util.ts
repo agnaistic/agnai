@@ -142,15 +142,17 @@ export async function getThirdPartyModels(url: string, key: string) {
       .catch((err) => ({ err }))
 
     if (Array.isArray(res?.data) && 'err' in res === false) {
+      res.url = url
       return res
     }
   }
-
-  const res = await fetch(joinUrl(url, 'v1/models'), { headers, method: 'GET' })
+  const autoUrl = joinUrl(url, 'v1')
+  const res = await fetch(joinUrl(autoUrl, 'models'), { headers, method: 'GET' })
     .then((res) => res.json())
     .catch((err) => ({ err }))
 
   if (Array.isArray(res?.data) && 'err' in res === false) {
+    res.url = autoUrl
     return res
   }
 

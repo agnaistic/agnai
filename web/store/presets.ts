@@ -22,6 +22,7 @@ type PresetState = {
     url: string
   }
   modelsLoading: boolean
+  testLoading: boolean
 }
 
 const initState: PresetState = {
@@ -34,6 +35,7 @@ const initState: PresetState = {
     url: '',
   },
   modelsLoading: false,
+  testLoading: false,
 }
 
 export const presetStore = createStore<PresetState>(
@@ -70,6 +72,21 @@ export const presetStore = createStore<PresetState>(
         }
         return { presets: res.result.presets }
       }
+    },
+    async *testConnection(
+      _,
+      opts: { providerId?: string; url: string; key: string },
+      cb: (success: boolean, url: string) => void
+    ) {
+      if (!opts.url) return
+      yield { testLoading: true }
+      const res = await api.post('/user/preset-test', opts)
+      if (res.result) {
+        cb(!!res.result.success, res.result.url || '')
+      } else {
+        cb(false, '')
+      }
+      yield { testLoading: false }
     },
     async *getPresetModelList(
       _,

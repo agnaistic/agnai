@@ -1,7 +1,7 @@
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Match, Show, Switch } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
-import { PlusIcon, WifiPen } from 'lucide-solid'
+import { Cable, Check, Ellipsis, PlusIcon, WifiPen, X } from 'lucide-solid'
 import Select from '/web/shared/Select'
 import { RootModal } from '/web/shared/Modal'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
@@ -17,6 +17,7 @@ import {
 import { Field } from '/web/shared/PresetSettings/Fields'
 import { getUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
+import { presetStore, toastStore } from '/web/store'
 
 export const PresetProvider: Field = (props) => {
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
@@ -317,12 +318,15 @@ const ManageProvider: Component<{
   close: () => void
   provider?: AppSchema.Provider
 }> = (props) => {
+  const [tested, setTested] = createSignal<boolean>()
   const [loading, setLoading] = createSignal(false)
   const [name, setName] = createSignal(props.provider?.name || '')
   const [provider, setProvider] = createSignal(props.provider?.provider || '')
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
   const [format, setFormat] = createSignal('')
+
+  const state = presetStore((s) => ({ testLoading: s.testLoading }))
 
   const isUsableProvider = (id: string) => {
     if (!props.user?.providers) return true
@@ -368,6 +372,7 @@ const ManageProvider: Component<{
 
   createEffect(() => {
     if (!props.show) return
+    setTested(undefined)
     setProvider(props.provider?.provider || '')
     setUrl(props.provider?.url || '')
     setName(props.provider?.name || '')
@@ -421,6 +426,7 @@ const ManageProvider: Component<{
 
   const onProviderChange = (id: string) => {
     setProvider(id)
+    setTested(undefined)
     const detail = getSafeProviderDetail(id)
 
     if (detail?.detail.url?.trim()) {
@@ -477,6 +483,27 @@ const ManageProvider: Component<{
     })
   })
 
+  const testConnection = () => {
+    try {
+      new URL(url()) // Validate the URL
+      presetStore.testConnection(
+        { providerId: provider(), url: url(), key: key() },
+        (success, goodUrl) => {
+          if (!success) {
+            setTested(false)
+          }
+
+          if (success && goodUrl) {
+            setTested(true)
+            setUrl(goodUrl)
+          }
+        }
+      )
+    } catch (ex) {
+      toastStore.error('URL is not valid. Check it and try again')
+    }
+  }
+
   return (
     <RootModal
       show={props.show}
@@ -523,7 +550,10 @@ const ManageProvider: Component<{
           label="URL"
           placeholder="https://..."
           value={url()}
-          onChange={(ev) => setUrl(ev.currentTarget.value)}
+          onChange={(ev) => {
+            setUrl(ev.currentTarget.value)
+            setTested(undefined)
+          }}
           hide={!isCustom() && !isSelf()}
         />
 
@@ -542,6 +572,30 @@ const ManageProvider: Component<{
           onChange={(ev) => onFormatChange(ev.value)}
           hide={formatOptions().length <= 1}
         />
+
+        <Show when={isCustom()}>
+          <div class="flex w-full items-center justify-center">
+            <Button size="sm" onClick={testConnection} disabled={!url().trim()}>
+              Test Connection
+            </Button>
+            <span class="pl-2">
+              <Switch>
+                <Match when={state.testLoading}>
+                  <Ellipsis color="var(--text-600" size={20} />
+                </Match>
+                <Match when={tested()}>
+                  <Check color="var(--green-500)" size={20} />
+                </Match>
+                <Match when={tested() === false}>
+                  <X color="var(--red-500)" size={20} />
+                </Match>
+                <Match when>
+                  <Cable color="var(--text-600)" size={20} />
+                </Match>
+              </Switch>
+            </span>
+          </div>
+        </Show>
       </div>
     </RootModal>
   )
