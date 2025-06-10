@@ -209,6 +209,8 @@ export function getPresetConnection(
     }
 
     if (conn.url) copy.thirdPartyUrl = conn.url
+    if (conn.key) copy.thirdPartyKey = conn.key
+
     copy.localRequests = conn.local
     copy.thirdPartyKey = conn.key
 
@@ -220,7 +222,7 @@ export function getPresetConnection(
       service: conn.service,
       format: conn.format,
       url: conn.url,
-      key: provider.key,
+      key: conn.key,
     }
   }
 
