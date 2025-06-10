@@ -58,6 +58,14 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     url: 'https://api.featherless.ai/v1',
     formats: [{ type: 'format', value: 'featherless' }],
   },
+  chutes: {
+    name: 'Chutes',
+    url: 'https://llm.chutes.ai/v1',
+    formats: [
+      { type: 'format', value: 'openai-chatv2' },
+      { type: 'format', value: 'openai' },
+    ],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
