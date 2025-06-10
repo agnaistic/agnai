@@ -31,11 +31,7 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   openai: {
     name: 'OpenAI',
     url: 'https://api.openai.com/v1',
-    formats: [
-      { type: 'format', value: 'openai-chatv2' },
-      { type: 'format', value: 'openai-chat' },
-      { type: 'format', value: 'openai' },
-    ],
+    formats: [{ type: 'service', value: 'openai' }],
   },
   mistral: {
     name: 'Mistral',
@@ -149,7 +145,11 @@ export function getProviderConnection(provider: AppSchema.Provider) {
     url = detail.url
   }
 
-  const prvFormat = provider.format || detail.formats?.[0]
+  if (detail.formats?.length === 1) {
+    provider.format = detail.formats[0]
+  }
+  let prvFormat = provider.format || detail.formats?.[0]
+
   if (prvFormat) {
     switch (prvFormat.type) {
       case 'format':
