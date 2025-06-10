@@ -3,7 +3,7 @@ import { FLAI_CONTEXTS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { getStore } from '/web/store/create'
-import { settingStore, toastStore } from '/web/store'
+import { presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { FormLabel } from '../FormLabel'
 import { CustomSelect } from '../CustomSelect'
@@ -127,8 +127,7 @@ const CompatModel: Field = (props) => {
   const warning = createMemo(() => {
     if (modelList().length <= 1) return
     const match = modelList().find((m) => m.value === props.state.thirdPartyModel)
-
-    if (match) return `Your current model is not in the model list`
+    if (!match) return `Your current model is not in the model list`
   })
 
   return (
@@ -269,6 +268,20 @@ const OpenRouterModels: Field = (props) => {
         onChange={(ev) => {
           const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
           props.setter({ openRouterModel: model, thirdPartyModel: model?.id })
+
+          if (props.page === 'mode' && model?.id) {
+            presetStore.updatePreset(
+              props.state._id,
+              {
+                openRouterModel: model,
+                thirdPartyModel: model?.id,
+              },
+              {
+                quiet: true,
+                onSuccess: () => toastStore.success('Model changed'),
+              }
+            )
+          }
         }}
       />
 
@@ -477,10 +490,17 @@ const FeatherlessModels: Field = (props) => {
           props.setter({ featherlessModel: opt.value, thirdPartyModel: opt.value })
           if (props.page !== 'mode') return
 
-          getStore('presets').updatePreset(props.state._id, {
-            thirdPartyModel: opt.value,
-            featherlessModel: opt.value,
-          })
+          getStore('presets').updatePreset(
+            props.state._id,
+            {
+              thirdPartyModel: opt.value,
+              featherlessModel: opt.value,
+            },
+            {
+              quiet: true,
+              onSuccess: () => toastStore.success('Model changed'),
+            }
+          )
         }}
         buttonLabel={label()}
         selected={props.state.featherlessModel}
