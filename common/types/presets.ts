@@ -1,7 +1,7 @@
 import { AIAdapter, OpenRouterModel, ThirdPartyFormat } from '../adapters'
 import { ModelFormat } from '../presets/templates'
 import { ProviderFormat } from '../providers'
-import { BaseImageSettings, ImageSettings } from './image-schema'
+import { BaseImageSettings } from './image-schema'
 import { ResponseSchema } from './library'
 
 export interface Provider {
@@ -251,10 +251,43 @@ export interface PromptTemplate {
   updatedAt: string
 }
 
-export interface ImagePreset extends ImageSettings {
-  kind: 'image-preset'
+export interface ImageSamplers {
+  model: string
+
+  sampler: string
+  steps: number
+  clipSkip: number
+  width: number
+  height: number
+  cfg: number
+  seed?: number
+
+  /** Agnaistic specific */
+  draftMode: boolean
+  loras?: Array<{ id: string; clipStrength: boolean; modelStrength: number; enabled: boolean }>
+
+  /** NovelAI specific */
+  ucPreset: string
+  qualityTags: boolean
+}
+export interface ImagePreset {
   _id: string
+  kind: 'image-preset'
+  providerId: string
   userId: string
+
   name: string
   description: string
+
+  samplers: ImageSamplers
+}
+
+export type ImageHost = 'agnaistic' | 'novel' | 'sdapi' | 'horde'
+
+export type ImageProvider = {
+  format: ImageHost
+  name: string
+
+  url: string
+  key: string
 }

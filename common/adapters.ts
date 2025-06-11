@@ -265,6 +265,7 @@ export const GOOGLE_MODELS = {
   },
   GEMINI_20_PRO_0205: { id: 'gemini-2.0-pro-exp-02-05', label: 'Gemini 2.0 02/05' },
   GEMINI_25_PRO_0325: { id: 'gemini-2.5-pro-exp-03-25', label: 'Gemini 2.5 Pro Exp 03/25' },
+  GEMINI_25_PRO: { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Latest)' },
   GEMINI_25_PRO_PREVIEW_0325: {
     id: 'gemini-2.5-pro-preview-03-25',
     label: 'Gemini 2.5 Pro Preview 03/25',

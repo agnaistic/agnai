@@ -1,5 +1,5 @@
-import { Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { FLAI_CONTEXTS } from '/common/adapters'
+import { Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { FLAI_CONTEXTS, GOOGLE_MODELS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { getStore } from '/web/store/create'
@@ -20,6 +20,24 @@ import { Pill } from '../Card'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
+    if (!props.state.providerId && props.context.service) {
+      switch (props.context.service) {
+        case 'claude':
+        case 'claude-v2':
+          return 'claude-external'
+
+        case 'novel':
+        case 'openrouter':
+        case 'openrouter-completion':
+          return props.context.service
+      }
+
+      switch (props.context.format) {
+        case 'gemini':
+          return props.context.format
+      }
+    }
+
     switch (props.context.service) {
       case 'novel':
       case 'openrouter':
@@ -60,6 +78,11 @@ export const ThirdPartyModel: Field = (props) => {
     }
   })
 
+  createEffect(() => {
+    const type = component()
+    console.log('component', type)
+  })
+
   return (
     <>
       <Switch>
@@ -84,6 +107,9 @@ export const ThirdPartyModel: Field = (props) => {
         </Match>
         <Match when={component() === 'arli'}>
           <ArliModels {...props} />
+        </Match>
+        <Match when={component() === 'gemini'}>
+          <GoogleModels {...props} />
         </Match>
         <Match when>{null}</Match>
       </Switch>
@@ -125,6 +151,7 @@ const CompatModel: Field = (props) => {
   }
 
   const warning = createMemo(() => {
+    if (!props.state.providerId) return
     if (modelList().length <= 1) return
     const match = modelList().find((m) => m.value === props.state.thirdPartyModel)
     if (!match) return `Your current model is not in the model list`
@@ -547,7 +574,9 @@ const ClaudeModel: Field = (props) => {
     const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
     const labels = Object.entries(CLAUDE_LABELS) as [keyof typeof CLAUDE_MODELS, string][]
 
-    return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
+    const options = labels.map(([key, label]) => ({ label, value: models.get(key)! }))
+    options.unshift({ label: 'None', value: '' })
+    return options
   })
 
   return (
@@ -571,6 +600,46 @@ const ClaudeModel: Field = (props) => {
           )
         }
       }}
+    />
+  )
+}
+
+const GoogleModels: Field = (props) => {
+  const label = createMemo(() => {
+    const id = props.state.googleModel
+    if (!id) return 'None Selected'
+    const match = Object.values(GOOGLE_MODELS).find((model) => model.id === id)
+
+    if (!match) return 'Invalid Model'
+    return match.label
+  })
+
+  const options = createMemo(() => {
+    const list = Object.values(GOOGLE_MODELS).map(({ label, id }) => ({ label, value: id }))
+    return list
+  })
+
+  return (
+    <CustomSelect
+      modalTitle="Select a Model"
+      label="Google Model"
+      options={options()}
+      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      onSelect={(opt) => {
+        props.setter({ googleModel: opt.value, thirdPartyModel: opt.value })
+        if (props.page === 'mode') {
+          presetStore.updatePreset(
+            props.state._id,
+            { googleModel: opt.value, thirdPartyModel: opt.value },
+            {
+              quiet: true,
+              onSuccess: () => toastStore.success('Model changed'),
+            }
+          )
+        }
+      }}
+      buttonLabel={label()}
+      selected={props.state.googleModel || props.state.thirdPartyModel}
     />
   )
 }
