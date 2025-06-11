@@ -444,7 +444,7 @@ const NavIcons: Component<{
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Show when={!!props.supportEmail}>
           <ExternalLink href={`mailto:${props.supportEmail}`} newtab ariaLabel="Email Support">
-            <Tooltip position="top" tip={`${props.supportEmail}`}>
+            <Tooltip position="top" tip={`${props.supportEmail?.split?.(',')[0]}`}>
               <MailQuestion aria-hidden />
             </Tooltip>
           </ExternalLink>

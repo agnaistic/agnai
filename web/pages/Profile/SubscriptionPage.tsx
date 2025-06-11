@@ -119,7 +119,7 @@ export const SubscriptionPage: Component<{}> = (props) => {
             <SolidCard>
               If you require billing or subscription support contact{' '}
               <a class="link" href={`mailto:${settings.serverConfig?.supportEmail}`}>
-                {settings.serverConfig?.supportEmail}
+                {settings.serverConfig?.supportEmail?.split(',')[0]}
               </a>
             </SolidCard>
           </Show>
