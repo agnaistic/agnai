@@ -48,13 +48,13 @@ const Button: Component<{
         ...props.classList,
         [schema()]: true,
         'leading-5': props.size === 'pill',
-        'py-0': props.size === 'pill',
-        'py-1': props.size === 'sm',
-        'py-2': !props.size || props.size === 'md',
-        'py-4': props.size === 'lg',
-        'text-sm': props.size === 'sm' || props.size === 'pill',
-        'text-lg': props.size === 'lg',
-        'justify-center': !props.alignLeft,
+        '!px-1 !py-0': props.size === 'pill',
+        '!px-1 !py-1': props.size === 'sm',
+        '!px-2 !py-2': !props.size || props.size === 'md',
+        '!px-2 !py-4': props.size === 'lg',
+        '!text-sm': props.size === 'sm' || props.size === 'pill',
+        '!text-lg': props.size === 'lg',
+        '!justify-center': !props.alignLeft,
       }}
       disabled={props.disabled}
       onClick={props.onClick}

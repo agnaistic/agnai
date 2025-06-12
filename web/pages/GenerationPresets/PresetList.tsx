@@ -1,12 +1,12 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Copy, Download, Import, Plus, Trash } from 'lucide-solid'
+import { Copy, Download, Image, Import, Plus, Sliders, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { defaultPresets, presetValidator } from '../../../common/presets'
-import { exportPreset, presetStore, settingStore, toastStore } from '../../store'
-import { getUsableServices, setComponentPageTitle } from '../../shared/util'
+import { presetValidator } from '../../../common/presets'
+import { exportPreset, presetStore, toastStore } from '../../store'
+import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
@@ -21,19 +21,6 @@ const PresetList: Component = () => {
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
-  const cfg = settingStore((s) => s.config)
-
-  const useableServices = createMemo(() => getUsableServices())
-
-  const defaults = Object.entries(defaultPresets)
-    .filter(([_, pre]) => {
-      if (!cfg.adapters.includes(pre.service)) return false
-      if (!useableServices().includes(pre.service)) return false
-      if (pre.service !== 'agnaistic') return true
-      return cfg.subs.length > 0
-    })
-    .map(([id, cfg]) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}`, _id: id }))
-    .sort(sortByLabel)
 
   const [deleting, setDeleting] = createSignal<string>()
   const [importing, setImporting] = createSignal(false)
@@ -60,7 +47,7 @@ const PresetList: Component = () => {
 
   return (
     <Page>
-      <PageHeader title="Generation Presets" />
+      <PageHeader title="Presets" />
       <div class="flex justify-between">
         <div>
           <TextInput placeholder="Filter..." onChange={(ev) => setFilter(ev.currentTarget.value)} />
@@ -78,10 +65,19 @@ const PresetList: Component = () => {
         </div>
       </div>
 
+      <div class="flex gap-2 pb-1">
+        <Button size="sm" schema="clear" class="icon-button">
+          <Sliders size={20} />
+        </Button>
+        <Button size="sm" schema="clear" class="icon-button">
+          <Image size={20} />
+        </Button>
+      </div>
+
       <div class="flex flex-col items-center gap-2">
         <For each={presets()}>
           {(preset) => (
-            <div class="bg-800 flex w-full items-center gap-2 rounded-xl py-1 hover:bg-[var(--bg-600)]">
+            <div class="bg-800 flex w-full items-center gap-1 rounded-xl py-1 hover:bg-[var(--bg-600)]">
               <A href={`/presets/${preset._id}`} class=" flex w-full">
                 <div class="ml-4 flex w-full flex-col items-start">
                   <div>
@@ -116,26 +112,6 @@ const PresetList: Component = () => {
               >
                 <Trash size={20} />
               </Button>
-            </div>
-          )}
-        </For>
-
-        <div>Built-in Presets</div>
-        <For each={defaults}>
-          {(preset) => (
-            <div class="flex w-full items-center gap-2">
-              <A
-                href={`/presets/new?preset=${preset._id}`}
-                class="bg-800 flex w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
-              >
-                <div class="x ml-4 flex w-full flex-col items-start">
-                  {' '}
-                  <div class="text-md">{preset.name}</div>
-                  <div class="mr-1 text-xs italic text-[var(--text-600)]">
-                    {getServiceName(preset.service)}
-                  </div>
-                </div>
-              </A>
             </div>
           )}
         </For>

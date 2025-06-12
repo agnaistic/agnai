@@ -584,7 +584,7 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
     system: '' as string | undefined,
   }
 
-  if (!settings?.service) return parts
+  if (!settings) return parts
 
   parts.ujb = settings.ultimeJailbreak
   parts.system = settings.systemPrompt
