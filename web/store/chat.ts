@@ -222,7 +222,12 @@ export const chatStore = createStore<ChatState>('chat', {
         },
       }
     },
-    async *openChat(_, id: string, clear = true) {
+    async *openChat(
+      _,
+      id: string,
+      opts?: { clear?: boolean; onDone?: (success: boolean) => void }
+    ) {
+      const clear = opts?.clear ?? true
       if (clear) {
         yield { loaded: false, active: undefined }
       }
@@ -280,6 +285,8 @@ export const chatStore = createStore<ChatState>('chat', {
           memberIds: res.result.members.reduce(toMemberKeys, {}),
         }
       }
+
+      opts?.onDone?.(!!res.result)
     },
     setAutoReplyAs({ active }, charId: string | undefined) {
       if (!active) return
@@ -575,7 +582,7 @@ export const chatStore = createStore<ChatState>('chat', {
     async restartChat(_, chatId: string) {
       const res = await chatsApi.restartChat(chatId)
       if (res.result) {
-        chatStore.openChat(chatId, false)
+        chatStore.openChat(chatId, { clear: false })
       }
 
       if (res.error) {

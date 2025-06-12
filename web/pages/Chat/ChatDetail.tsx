@@ -269,7 +269,14 @@ const ChatDetail: Component = () => {
 
     events.emit(EVENTS.chatOpened, params.id)
     if (params.id !== chats.chat?._id) {
-      chatStore.openChat(params.id)
+      chatStore.openChat(params.id, {
+        onDone: (success) => {
+          if (success) return
+
+          // If the chat fails to load, return to the chat list
+          nav('/chats')
+        },
+      })
     } else {
       characterStore.loadImpersonate()
     }
