@@ -197,8 +197,8 @@ Object {
       "SAMPLECHAT OtherBot",
     ],
     "scenario": "MAIN MainChar",
-    "systemPrompt": "",
-    "ujb": "",
+    "systemPrompt": undefined,
+    "ujb": "!!UJB_PROMPT!!",
     "userEmbeds": Array [],
   },
   "template": Object {
