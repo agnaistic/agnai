@@ -201,6 +201,9 @@ export function getPresetConnection(
   if (provider) {
     const conn = getProviderConnection(provider)
 
+    // We always disable this feature when using a provider
+    copy.thirdPartyUrlNoSuffix = false
+
     if (conn.service) {
       copy.service = conn.service
       copy.thirdPartyFormat = undefined

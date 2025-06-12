@@ -166,7 +166,9 @@ export function getOaiCompatibleUrl(
   isThirdParty?: boolean
 ) {
   if (isThirdParty && preset.thirdPartyUrl) {
-    if (preset.thirdPartyUrlNoSuffix) return { url: preset.thirdPartyUrl, changed: true }
+    if (!preset.providerId && preset.thirdPartyUrlNoSuffix) {
+      return { url: preset.thirdPartyUrl, changed: true }
+    }
 
     // If the user provides a versioned API URL for their third-party API, use that. Otherwise
     // fall back to the standard /v1 URL.

@@ -170,11 +170,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     log.debug(body, 'OpenAI payload')
   }
 
-  const url = gen.thirdPartyUrlNoSuffix
-    ? base.url
-    : useChat
-    ? joinUrl(base.url, 'chat/completions')
-    : joinUrl(base.url, 'completions')
+  const url =
+    !gen.providerId && !!gen.thirdPartyUrlNoSuffix
+      ? base.url
+      : useChat
+      ? joinUrl(base.url, 'chat/completions')
+      : joinUrl(base.url, 'completions')
 
   if (opts.conn.provider?.provider === 'known-mistral' && body.messages) {
     const merged = ensureMessagesAlternate(body.messages, { userFirst: true, userLast: true })

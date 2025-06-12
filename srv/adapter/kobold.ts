@@ -151,11 +151,12 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'llamacpp':
     case 'vllm': {
       body.messages = opts.imageData ? opts.messages : undefined
-      const url = opts.gen.thirdPartyUrlNoSuffix
-        ? baseURL
-        : body.messages
-        ? `${baseURL}/v1/chat/completions`
-        : `${baseURL}/v1/completions`
+      const url =
+        !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
+          ? baseURL
+          : body.messages
+          ? `${baseURL}/v1/chat/completions`
+          : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
@@ -229,12 +230,13 @@ async function dispatch(opts: AdapterProps, body: any) {
         body.messages = opts.messages
       }
       const url = getOaiCompatibleUrl(opts.gen, true)
-      const fullUrl = opts.gen.thirdPartyUrlNoSuffix
-        ? url.url
-        : joinUrl(
-            url.url,
-            opts.gen.thirdPartyFormat === 'openai' ? 'completions' : 'chat/completions'
-          )
+      const fullUrl =
+        !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
+          ? url.url
+          : joinUrl(
+              url.url,
+              opts.gen.thirdPartyFormat === 'openai' ? 'completions' : 'chat/completions'
+            )
 
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url: fullUrl, format: opts.gen.thirdPartyFormat })
