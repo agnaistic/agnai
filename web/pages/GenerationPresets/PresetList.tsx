@@ -1,5 +1,5 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Copy, Download, Image, Import, Plus, Sliders, Trash } from 'lucide-solid'
+import { Copy, Download, Import, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
@@ -65,14 +65,14 @@ const PresetList: Component = () => {
         </div>
       </div>
 
-      <div class="flex gap-2 pb-1">
+      {/* <div class="flex gap-2 pb-1">
         <Button size="sm" schema="clear" class="icon-button">
           <Sliders size={20} />
         </Button>
         <Button size="sm" schema="clear" class="icon-button">
           <Image size={20} />
         </Button>
-      </div>
+      </div> */}
 
       <div class="flex flex-col items-center gap-2">
         <For each={presets()}>
