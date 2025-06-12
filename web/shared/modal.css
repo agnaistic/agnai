@@ -16,6 +16,12 @@
   max-height: calc(80dvh - 132px); */
 }
 
+.modal-content-footerless {
+  max-height: calc(var(--window-height) - 76px);
+  /* max-height: calc(80vh - 132px);
+  max-height: calc(80dvh - 132px); */
+}
+
 @media (min-width: 1024px) {
   /* .modal-height {
     max-height: 75vh;

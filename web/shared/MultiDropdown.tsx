@@ -7,7 +7,8 @@ export type DropdownItem = {
 }
 
 const MultiDropdown: Component<{
-  fieldName: string
+  parentClass?: string
+  fieldName?: string
   label?: string
   helperText?: string | JSX.Element
   items: DropdownItem[]
@@ -30,7 +31,7 @@ const MultiDropdown: Component<{
   }
 
   return (
-    <div>
+    <div class={props.parentClass || ''}>
       <FormLabel label={props.label} helperText={props.helperText} />
       <div class="max-h-64 w-full overflow-auto p-2">
         <select

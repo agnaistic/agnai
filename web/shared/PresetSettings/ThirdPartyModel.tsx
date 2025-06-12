@@ -152,6 +152,7 @@ const CompatModel: Field = (props) => {
 
   const warning = createMemo(() => {
     if (!props.state.providerId) return
+    if (models.loading) return
     if (modelList().length <= 1) return
     const match = modelList().find((m) => m.value === props.state.thirdPartyModel)
     if (!match) return `Your current model is not in the model list`
@@ -370,10 +371,14 @@ const ArliModels: Field = (props) => {
   })
 
   const search = (value: string, input: string) => {
-    const res = input.split(' ').map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+    const cleanedInput = input.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
+    const cleanedValue = value.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
+    const res = cleanedInput
+      .split(' ')
+      .map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
 
     for (const re of res) {
-      const match = value.match(re)
+      const match = cleanedValue.match(re)
       if (!match) return false
     }
 
@@ -390,6 +395,7 @@ const ArliModels: Field = (props) => {
   return (
     <div class="flex gap-1">
       <CustomSelect
+        maxHeight
         modalTitle="Select a Model"
         label="Model"
         options={options()}
@@ -429,7 +435,7 @@ const ArliModels: Field = (props) => {
 
 const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
-  const [modelclass, setModelclass] = createSignal('')
+  const [selectedClasses, setClasses] = createSignal<string[]>([])
 
   const label = createMemo(() => {
     const id = props.state.providerId ? props.state.thirdPartyModel : props.state.featherlessModel
@@ -448,26 +454,32 @@ const FeatherlessModels: Field = (props) => {
   })
 
   const options = createMemo(() => {
+    const modelClasses = selectedClasses().reduce((prev, curr) => {
+      prev.add(curr)
+      return prev
+    }, new Set<string>())
+
     return state.models
       .filter((s) => {
         if (s.status === 'not_deployed') return false
-        const mclass = modelclass()
-        if (!mclass) return true
-        return s.model_class === mclass
+        if (modelClasses.size === 0) return true
+        if (modelClasses.has(s.model_class)) return true
+        return false
       })
       .map((s) => ({
         label: (
           <div
-            class="flex w-full justify-between"
+            class="flex w-full flex-col"
             title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
           >
             <div class="ellipsis">{s.id}</div>
             <div class="text-500 text-xs">
-              {flaiContext(s, state.classes)} {s.status}
+              {s.model_class} - {flaiContext(s, state.classes)} {s.status}
             </div>
           </div>
         ),
         value: s.id,
+        disabled: s.status !== 'active',
       }))
       .sort((l, r) => l.value.localeCompare(r.value))
   })
@@ -479,10 +491,14 @@ const FeatherlessModels: Field = (props) => {
   })
 
   const search = (value: string, input: string) => {
-    const res = input.split(' ').map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+    const cleanedInput = input.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
+    const cleanedValue = value.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
+    const res = cleanedInput
+      .split(' ')
+      .map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
 
     for (const re of res) {
-      const match = value.match(re)
+      const match = cleanedValue.match(re)
       if (!match) return false
     }
 
@@ -496,22 +512,81 @@ const FeatherlessModels: Field = (props) => {
     return [{ label: 'All', value: '' }].concat(list)
   })
 
+  const availables = createMemo(() => {
+    const map: Record<string, number> = {}
+    for (const model of state.models) {
+      if (!map[model.model_class]) {
+        map[model.model_class] = 0
+      }
+
+      if (model.status === 'active') {
+        map[model.model_class]++
+      }
+    }
+
+    return map
+  })
+
+  const deselectClass = (cls: string) => {
+    const next = selectedClasses().filter((s) => s !== cls)
+    setClasses(next)
+  }
+
+  const selectClass = (cls: string) => {
+    const next = selectedClasses().concat(cls)
+    setClasses(next)
+  }
+
+  const classPills = createMemo(() => {
+    const available = availables()
+    const set = new Set<string>()
+    const selected = selectedClasses()
+    for (const cls of selected) {
+      set.add(cls)
+    }
+
+    const pills = classes()
+      .filter((cls) => available[cls.value] > 0)
+      .map((cls) => {
+        if (set.has(cls.value)) {
+          return (
+            <Pill class="select-none" small type="green" onClick={() => deselectClass(cls.value)}>
+              {cls.value}
+            </Pill>
+          )
+        }
+
+        return (
+          <Pill class="select-none" inverse small type="hl" onClick={() => selectClass(cls.value)}>
+            {cls.value}
+          </Pill>
+        )
+      })
+
+    return pills
+  })
+
   return (
     <div class="flex items-end gap-1">
       <CustomSelect
+        maxHeight
         modalTitle="Select a Model"
         label="Model"
         options={options()}
         search={search}
         header={
-          <Select
-            items={classes()}
-            value={''}
-            label={'Filter: Model Class'}
-            fieldName="featherless.classFilter"
-            onChange={(ev) => setModelclass(ev.value)}
-            parentClass="text-sm"
-          />
+          <div class="flex w-full flex-wrap gap-1">
+            {classPills()}
+
+            {/* <Select
+              items={classes()}
+              value={''}
+              label={'Filter: Model Class'}
+              fieldName="featherless.classFilter"
+              onChange={(ev) => setModelclass(ev.value)}
+              parentClass="text-sm"
+            /> */}
+          </div>
         }
         onSelect={(opt) => {
           props.setter({ featherlessModel: opt.value, thirdPartyModel: opt.value })

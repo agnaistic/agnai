@@ -1,6 +1,6 @@
 import { Accessor, JSX, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { RootModal, rootModalStore } from '../store/root-modal'
+import { ModalOptions, rootModalStore } from '../store/root-modal'
 import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
@@ -448,7 +448,7 @@ function isFunction<T>(value: T | Function): value is Function {
   return typeof value === 'function'
 }
 
-export function useRootModal(modal: RootModal) {
+export function useRootModal(modal: ModalOptions) {
   onMount(() => rootModalStore.addModal(modal))
   onCleanup(() => rootModalStore.removeModal(modal.id))
 }

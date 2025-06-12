@@ -1,10 +1,10 @@
 import { JSX } from 'solid-js'
 import { createStore } from './create'
 
-export type RootModal = { id: string; element: JSX.Element }
+export type ModalOptions = { id: string; element: JSX.Element }
 
 export type RootModalState = {
-  modals: RootModal[]
+  modals: ModalOptions[]
   info?: any
   infoTitle: string
 }
@@ -14,7 +14,7 @@ export const rootModalStore = createStore<RootModalState>('root-modal', {
   infoTitle: '',
 })((get, set) => {
   return {
-    addModal: ({}, modal: RootModal) => {
+    addModal: ({}, modal: ModalOptions) => {
       const { modals } = get()
       return { modals: [...modals.filter((m) => m.id !== modal.id), modal] }
     },

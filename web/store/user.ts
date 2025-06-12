@@ -123,8 +123,9 @@ export const userStore = createStore<UserState>(
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
      */
 
-    if (!init.user || !init.user.ui) {
-      userStore.saveUI(defaultUIsettings)
+    if (!init.user?.ui) {
+      // Disabled as we should be long past having users without persisted UI settings
+      // userStore.saveUI(defaultUIsettings)
     } else {
       const embeddingsModel = getInitialEmbeddingsModel(init.user)
       init.user.ui.embeddingsModel = embeddingsModel

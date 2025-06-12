@@ -26,6 +26,7 @@ export const CustomSelect: Component<{
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
   // value: any
+  maxHeight?: boolean
 
   header?: JSX.Element
 
@@ -122,7 +123,12 @@ export const CustomSelect: Component<{
           {buttonLabel()}
         </Button>
       </div>
-      <RootModal show={open()} close={() => setOpen(false)} title={props.modalTitle}>
+      <RootModal
+        show={open()}
+        close={() => setOpen(false)}
+        title={props.modalTitle}
+        maxHeight={props.maxHeight}
+      >
         <div class="flex flex-col gap-4">
           <Show when={props.search}>
             <TextInput
