@@ -73,7 +73,7 @@ export async function saveUserProvider(userId: string, prv: AppSchema.Provider) 
         _id: p._id,
         name: prv.name,
         url: prv.url,
-        key,
+        key: key ? key : p.key,
         provider: prv.provider,
         format: prv.format,
       }
