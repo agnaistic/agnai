@@ -17,6 +17,7 @@ import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
+import Accordian from '../Accordian'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
@@ -436,6 +437,7 @@ const ArliModels: Field = (props) => {
 const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
+  const [classesOpen, setClassesOpen] = createSignal(false)
 
   const label = createMemo(() => {
     const id = props.state.providerId ? props.state.thirdPartyModel : props.state.featherlessModel
@@ -575,18 +577,25 @@ const FeatherlessModels: Field = (props) => {
         options={options()}
         search={search}
         header={
-          <div class="flex w-full flex-wrap gap-1">
-            {classPills()}
+          <Accordian
+            class="!bg-opacity-10 !p-1"
+            title={<span class="text-sm">Model Classes</span>}
+            open={classesOpen()}
+            onChange={(ev) => setClassesOpen(ev)}
+          >
+            <div class="flex w-full flex-wrap gap-1">
+              {classPills()}
 
-            {/* <Select
+              {/* <Select
               items={classes()}
               value={''}
               label={'Filter: Model Class'}
               fieldName="featherless.classFilter"
               onChange={(ev) => setModelclass(ev.value)}
               parentClass="text-sm"
-            /> */}
-          </div>
+              /> */}
+            </div>
+          </Accordian>
         }
         onSelect={(opt) => {
           props.setter({ featherlessModel: opt.value, thirdPartyModel: opt.value })
