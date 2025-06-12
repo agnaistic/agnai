@@ -109,6 +109,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     : getCompletion(opts.signal, payload, headers)
 
   let accum = ''
+  let fullText: string | undefined
   let response: any
 
   logPayload(opts.log, payload)
@@ -131,13 +132,17 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim(accum, opts.prompt, opts.replyAs, opts.characters, opts.members),
       }
     }
+
+    if (typeof gen.value === 'string') {
+      fullText = gen.value
+    }
   }
 
   if (response && 'model' in response) {
     yield { meta: { model: response.model, provider: response.provider, ...response.usage } }
   }
 
-  const text = getResponseText(response, opts.log)
+  const text = fullText === undefined ? getResponseText(response, opts.log) : fullText
   if (text instanceof Error) {
     yield { error: `OpenRouter response failed: ${text.message}` }
     return

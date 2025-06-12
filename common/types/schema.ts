@@ -29,6 +29,7 @@ export type AllDoc =
   | AppSchema.Configuration
   | AppSchema.SagaTemplate
   | AppSchema.SagaSession
+  | AppSchema.ImagePreset
 
 export type OAuthScope = keyof typeof oauthScopes
 
@@ -43,6 +44,7 @@ export namespace AppSchema {
   export type Character = Library.Character
 
   export type GenSettings = Preset.GenSettings
+  export type ImagePreset = Preset.ImagePreset
   export type UserGenPreset = Preset.UserGenPreset
   export type PromptTemplate = Preset.PromptTemplate
   export type Provider = Preset.Provider

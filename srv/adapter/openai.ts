@@ -14,6 +14,7 @@ import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
+import { getStoppingStrings } from './prompt'
 
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
 
@@ -31,7 +32,6 @@ export type Completion<T = Inference> = {
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
-  const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
 
   const oaiKey = gen.providerId ? gen.thirdPartyKey : user.oaiKey
   if (!oaiKey && !base.changed) {
@@ -46,13 +46,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
+  const stops = getStoppingStrings(opts)
+
   const body: any = {
     model: oaiModel,
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
-    stop: [`\n${handle}:`].concat(gen.stopSequences!),
+    stop: stops,
   }
 
   // if (gen.service !== 'openai') {

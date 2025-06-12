@@ -53,6 +53,7 @@ import { createStore } from 'solid-js/store'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { LogProbs } from './LogProbs'
 import { MessageImages } from './MessageImages'
+import Select from '/web/shared/Select'
 
 type MessageProps = {
   msg: SplitMessage
@@ -97,6 +98,7 @@ const Message: Component<MessageProps> = (props) => {
   const user = userStore()
   const state = chatStore()
   const [edit, setEdit] = createSignal(false)
+  const [editSender, setEditSender] = createSignal<string>()
   const isBot = !!props.msg.characterId
   const isUser = !!props.msg.userId
   const [img, setImg] = createSignal('h-full')
@@ -121,6 +123,9 @@ const Message: Component<MessageProps> = (props) => {
   })
 
   const saveEdit = () => {
+    const senderJson = editSender()
+    const sender = senderJson ? JSON.parse(senderJson) : {}
+
     if (props.msg.json) {
       const json = jsonValues()
       const update = getJsonUpdate(
@@ -131,7 +136,12 @@ const Message: Component<MessageProps> = (props) => {
       )
 
       if (update) {
-        msgStore.editMessageProp(props.msg._id, update)
+        msgStore.editMessageProp(props.msg._id, {
+          ...update,
+          characterId: '',
+          userId: '',
+          ...sender,
+        })
       }
 
       setEdit(false)
@@ -140,7 +150,12 @@ const Message: Component<MessageProps> = (props) => {
 
     if (!editRef) return
 
-    msgStore.editMessage(props.msg._id, editRef.innerText)
+    msgStore.editMessageProp(props.msg._id, {
+      msg: editRef.innerText,
+      characterId: '',
+      userId: '',
+      ...sender,
+    })
     setEdit(false)
   }
 
@@ -148,6 +163,12 @@ const Message: Component<MessageProps> = (props) => {
 
   const startEdit = () => {
     setEdit(true)
+
+    if (!props.msg.characterId) {
+      setEditSender(JSON.stringify({ userId: props.msg.userId }))
+    } else {
+      setEditSender(JSON.stringify({ characterId: props.msg.characterId }))
+    }
     if (editRef) {
       editRef.innerText = props.msg.msg
     }
@@ -166,6 +187,49 @@ const Message: Component<MessageProps> = (props) => {
   const imageSpeed = createMemo(() => {
     const next = ctx.waiting?.image ?? 1
     return next
+  })
+
+  const senderOptions = createMemo(() => {
+    if (!edit()) return []
+
+    const opts: Array<{ label: string; value: string }> = []
+    const seen = new Set<string>()
+    let impersonated = false
+
+    for (const { msg } of Object.values(ctx.chatTree)) {
+      if (!msg.characterId) continue
+      if (seen.has(msg.characterId)) continue
+
+      const bot = ctx.allBots[msg.characterId]
+      if (!bot) continue
+
+      seen.add(msg.characterId)
+
+      if (ctx.impersonate && bot._id === ctx.impersonate._id) {
+        impersonated = true
+      }
+
+      opts.push({
+        label: `Bot: ${bot.name}`,
+        value: JSON.stringify({ characterId: bot._id }),
+      })
+    }
+
+    if (!impersonated && ctx.impersonate && !seen.has(ctx.impersonate._id)) {
+      opts.push({
+        label: `Bot: ${ctx.impersonate.name}`,
+        value: JSON.stringify({ characterId: ctx.impersonate._id }),
+      })
+    }
+
+    if (ctx.profile && ctx.user) {
+      opts.push({
+        label: `Profile: ${ctx.profile?.handle || 'You'}`,
+        value: JSON.stringify({ userId: ctx.user._id }),
+      })
+    }
+
+    return opts
   })
 
   return (
@@ -246,7 +310,7 @@ const Message: Component<MessageProps> = (props) => {
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
-                class={`flex min-w-0 shrink flex-col items-start gap-1 overflow-hidden`}
+                class={`flex min-w-0 shrink flex-col items-start gap-1 overflow-hidden align-middle`}
                 classList={{
                   'sm:flex-col': props.isPaneOpen,
                   'sm:gap-1': props.isPaneOpen,
@@ -256,22 +320,37 @@ const Message: Component<MessageProps> = (props) => {
                   italic: props.msg.ooc,
                 }}
               >
-                <b
-                  class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
-                  // Necessary to override text-md and text-lg's line height, for proper alignment
-                  style="line-height: 1;"
-                  data-bot-name={isBot}
-                  data-user-name={isUser}
-                  classList={{
-                    hidden: !!props.msg.event,
-                    'sm:text-base': props.isPaneOpen,
-                    'sm:text-lg': !props.isPaneOpen,
-                  }}
+                <Show
+                  when={!edit()}
+                  fallback={
+                    <>
+                      <Select
+                        parentClass="!pr-1"
+                        class="!py-0.5 !pl-2 !text-sm"
+                        items={senderOptions()}
+                        value={editSender()}
+                        onChange={(ev) => setEditSender(ev.value)}
+                      />
+                    </>
+                  }
                 >
-                  {ctx.anonymize && !props.msg.characterId
-                    ? getAnonName(props.msg.userId!)
-                    : props.msg.handle}
-                </b>
+                  <b
+                    class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
+                    // Necessary to override text-md and text-lg's line height, for proper alignment
+                    style="line-height: 1;"
+                    data-bot-name={isBot}
+                    data-user-name={isUser}
+                    classList={{
+                      hidden: !!props.msg.event,
+                      'sm:text-base': props.isPaneOpen,
+                      'sm:text-lg': !props.isPaneOpen,
+                    }}
+                  >
+                    {ctx.anonymize && !props.msg.characterId
+                      ? getAnonName(props.msg.userId!)
+                      : props.msg.handle}
+                  </b>
+                </Show>
 
                 <span
                   classList={{ invisible: ctx.anonymize }}

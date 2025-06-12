@@ -224,6 +224,10 @@ export async function* fetchStream(
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
+
+        // if (accum.length > 0) {
+        //   console.warn('[processing] warning: are we done here?')
+        // }
       }
 
       if (chunk.includes(': FEATHERLESS PROCESSING\n')) {
