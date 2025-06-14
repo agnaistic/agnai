@@ -20,7 +20,7 @@ import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { insertImageContent, stripImageContent } from './template-chat-payload'
+import { remapImageContent, stripImageContent } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
@@ -105,15 +105,16 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     payload.max_tokens = gen.maxTokens
     const messages = opts.messages || []
 
-    const mime = getMimeTypeBase64(opts.imageData || '')
-
-    insertImageContent(opts, messages, {
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: mime.mimeType,
-        data: mime.data,
-      },
+    remapImageContent(opts, messages, (image) => {
+      const mime = getMimeTypeBase64(image)
+      return {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mime.mimeType,
+          data: mime.data,
+        },
+      }
     })
 
     const system = messages

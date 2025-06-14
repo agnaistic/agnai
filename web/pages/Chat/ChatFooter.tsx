@@ -29,11 +29,12 @@ export const ChatFooter: Component<{
   }))
 
   const [ooc, setOoc] = createSignal<boolean>()
-  const attachment = createMemo(() => {
+  const attachments = createMemo(() => {
     if (!props.ctx.chat) return
-    const attachment = msgs.attachments[props.ctx.chat._id]
-    if (!attachment) return
-    return attachment.image
+    const atts = msgs.attachments[props.ctx.chat._id]
+    if (!atts) return
+
+    return atts.map((a) => a.image)
   })
 
   const isGroupChat = createMemo(() => {
@@ -88,15 +89,23 @@ export const ChatFooter: Component<{
         </div>
       </Show>
       <Show when={!!chats.chat}>
-        <Show when={!!attachment()}>
+        <Show when={!!attachments()?.length}>
           <div class="flex h-[40x] items-center gap-2 pl-4">
-            <img
-              src={attachment()}
-              class="h-[40px] cursor-pointer rounded-md"
-              onClick={() => settingStore.showImage(attachment()!)}
-            />
+            <For each={attachments()}>
+              {(image) => (
+                <img
+                  src={image}
+                  class="h-[40px] cursor-pointer rounded-md"
+                  onClick={() => settingStore.showImage(image)}
+                />
+              )}
+            </For>
+
             <div class="icon-button">
-              <CircleX size={16} onClick={() => msgStore.removeAttachment(props.ctx?.chat?._id!)} />
+              <CircleX
+                size={16}
+                onClick={() => msgStore.removeAttachment(props.ctx?.chat?._id!, -1)}
+              />
             </div>
           </div>
         </Show>

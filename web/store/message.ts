@@ -28,6 +28,7 @@ import { embedApi } from './embeddings'
 import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import { botGen, GenerateOpts } from './data/bot-generate'
+import type { MsgAttachment } from '/srv/adapter/type'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -87,7 +88,7 @@ export type MsgState = {
   // images: Record<ChatId, AppSchema.ChatMessage[]>
 
   /** Attachments, mapped by Chat ID  */
-  attachments: Record<string, { image: string } | undefined>
+  attachments: Record<string, MsgAttachment[]>
   graph: {
     tree: ChatTree
     root: string
@@ -202,11 +203,35 @@ export const msgStore = createStore<MsgState>(
       state.waiting.signal?.abort?.()
       return { waiting: undefined, partial: undefined, retrying: undefined }
     },
-    setAttachment({ attachments }, chatId: string, base64: string) {
-      return { attachments: { ...attachments, [chatId]: { image: base64 } } }
+    // setAttachment({ attachments }, chatId: string, base64: string) {
+    //   return { attachments: { ...attachments, [chatId]: { image: base64 } } }
+    // },
+    addAttachment({ attachments }, msgId: string, attachment: MsgAttachment[]) {
+      const next = { ...attachments }
+      if (!next[msgId]) {
+        next[msgId] = []
+      } else {
+        next[msgId] = next[msgId].slice()
+      }
+
+      next[msgId].push(...attachment)
+      // events.emit('msg-attachment', next[msgId])
+      return { attachments: next }
     },
-    removeAttachment({ attachments }, chatId: string) {
-      return { attachments: { ...attachments, [chatId]: undefined } }
+    removeAttachment({ attachments }, msgId: string, index: number) {
+      const next = { ...attachments }
+
+      if (next[msgId]) {
+        if (index < 0) {
+          next[msgId] = []
+        } else {
+          const list = next[msgId].toSpliced(index, 1)
+          next[msgId] = list
+        }
+      }
+
+      // events.emit('msg-attachment', next[msgId])
+      return { attachments: next }
     },
     async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
       if (nextLoading) return
@@ -1105,7 +1130,7 @@ async function onMessageReceived(body: {
   retry?: boolean
   json?: any
 }) {
-  const { msgs, activeChatId, graph } = msgStore.getState()
+  const { msgs, activeChatId, graph, attachments } = msgStore.getState()
   if (activeChatId !== body.chatId) return
 
   const msg = body.msg as AppSchema.ChatMessage
@@ -1160,6 +1185,12 @@ async function onMessageReceived(body: {
       retrying: undefined,
       speaking: speech?.speaking,
     })
+  }
+
+  const chatAttachments = attachments[body.chatId]
+  if (isUserMsg && chatAttachments?.length && body.msg._id) {
+    msgStore.removeAttachment(body.chatId, -1)
+    msgStore.addAttachment(body.msg._id, chatAttachments)
   }
 
   if (!isLoggedIn()) {

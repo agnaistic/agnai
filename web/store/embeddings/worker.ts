@@ -297,13 +297,16 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
       const original = cache[msg._id]
       if (original && original.msg === msg.msg) continue
 
-      const embedding = await vectorize(msg.msg)
-
-      cache[msg._id] = {
-        entityId: msg.characterId || msg.userId || '',
-        msg: msg.msg,
-        embed: embedding,
-        meta: { id: msg._id, created: msg.createdAt },
+      try {
+        const embedding = await vectorize(msg.msg)
+        cache[msg._id] = {
+          entityId: msg.characterId || msg.userId || '',
+          msg: msg.msg,
+          embed: embedding,
+          meta: { id: msg._id, created: msg.createdAt },
+        }
+      } catch (ex: any) {
+        console.log(`vectorized failed: ${ex?.message || ex}`)
       }
     }
 
@@ -361,7 +364,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 }
 
 async function vectorize(msg: string) {
-  console.log('vectorizing', msg)
+  console.log(`vectorizing ${msg.length} chars`)
   const embed = await EMBED.pipeline!(msg, { pooling: 'mean', normalize: true })
   console.log('vectorized')
   return { data: embed.data as number[] }

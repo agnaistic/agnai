@@ -10,6 +10,7 @@ import { deepClone } from '/common/util'
 import { getBotsForChat } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
+import { MsgState } from '../message'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
@@ -28,7 +29,7 @@ export type PromptEntities = {
   impersonating?: AppSchema.Character
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
-  imageData?: string
+  attachments?: MsgState['attachments']
 }
 
 export function getInferencePreset(
@@ -155,7 +156,7 @@ async function getGuestEntities() {
     characters,
     impersonating,
     scenarios,
-    imageData: attachments[chat._id]?.image,
+    attachments,
   }
 }
 
@@ -198,7 +199,7 @@ function getAuthedPromptEntities() {
     characters,
     impersonating,
     scenarios,
-    imageData: attachments[chat._id]?.image,
+    attachments,
   }
 }
 

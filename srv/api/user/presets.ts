@@ -139,6 +139,10 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
     delete body.thirdPartyFormat
   }
 
+  if (!params.id) {
+    throw new StatusError('Invalid preset ID - Contact support to investigate', 400)
+  }
+
   assertValid(presetValidator, body, true)
 
   if (body.novelModelOverride) {
@@ -149,6 +153,10 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
   const { order, disabledSamplers, ...rest } = body
 
   const update: Partial<AppSchema.UserGenPreset> = { ...rest }
+  if (update._id) {
+    delete update._id
+  }
+
   if (order) {
     const samplers = toSamplerOrder(body.service, order, disabledSamplers)
     if (samplers) {

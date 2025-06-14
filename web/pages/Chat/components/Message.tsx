@@ -16,6 +16,7 @@ import {
   Split,
   MoreHorizontal,
   Braces,
+  ImagePlus,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -34,7 +35,15 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { chatStore, userStore, msgStore, toastStore, ChatState, VoiceState } from '../../../store'
+import {
+  chatStore,
+  userStore,
+  msgStore,
+  toastStore,
+  ChatState,
+  VoiceState,
+  settingStore,
+} from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
@@ -54,6 +63,11 @@ import { RelativeSpinner } from '/web/shared/Loading'
 import { LogProbs } from './LogProbs'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
+import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
+import { resizeImage } from '/web/shared/image-resize'
+import { MsgAttachment } from '/srv/adapter/type'
+import { ALLOWED_TYPES } from '/web/store/data/image'
+import { MessageAttachments } from './Attachments'
 
 type MessageProps = {
   msg: SplitMessage
@@ -415,6 +429,7 @@ const Message: Component<MessageProps> = (props) => {
                     show={opts}
                     showMore={showOpt}
                     textBeforeGenMore={props.textBeforeGenMore}
+                    ctx={ctx}
                   />
                 </Match>
 
@@ -505,6 +520,8 @@ const Message: Component<MessageProps> = (props) => {
                   </Show>
 
                   <MessageImages msg={props.msg} />
+                  <MessageAttachments msg={props.msg} ctx={ctx} />
+
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>
@@ -605,7 +622,10 @@ const MessageOptions: Component<{
   textBeforeGenMore?: string
   onRemove: () => void
   showMore: Signal<boolean>
+  ctx: ContextState
 }> = (props) => {
+  let menuParent: any
+
   const closer = (action: () => void) => {
     return () => {
       action()
@@ -685,6 +705,23 @@ const MessageOptions: Component<{
         icon: Braces,
       },
 
+      attach: {
+        key: 'attach',
+        class: '',
+        label: 'Attach',
+        outer: { outer: false, pos: 0 },
+        icon: ImagePlus,
+        show:
+          props.ctx.canUseAttachments &&
+          (props.msg.userId === props.ctx.user?._id ||
+            props.ctx.impersonate?._id === props.msg.characterId),
+        onClick: () =>
+          settingStore.openAttach(
+            { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
+            (files) => attachImages(props.msg._id, files)
+          ),
+      },
+
       trash: {
         key: 'trash',
         label: 'Delete',
@@ -747,6 +784,7 @@ const MessageOptions: Component<{
         class="flex items-center"
         classList={{ 'tour-message-opts': props.index === 0, hidden: !showInner() }}
         onClick={() => props.showMore[1](true)}
+        ref={menuParent}
       >
         <MoreHorizontal class="icon-button" />
       </div>
@@ -758,6 +796,7 @@ const MessageOptions: Component<{
           vert="down"
           show={open()}
           close={() => props.showMore[1](false)}
+          parent={menuParent}
         >
           <div class="flex flex-col gap-1" id={`inner-${props.msg._id}`}></div>
         </DropMenu>
@@ -1144,4 +1183,23 @@ const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
       </Show>
     </div>
   )
+}
+
+async function attachImages(msgId: string, files: FileInputResult[]) {
+  if (!msgId || msgId === 'partial') return
+  const add: MsgAttachment[] = []
+
+  for (const file of files) {
+    const ext = file.file.name.split('.').slice(-1)[0].toLowerCase()
+    if (!ALLOWED_TYPES.has(ext)) {
+      continue
+    }
+
+    const buffer = await getFileAsDataURL(file.file)
+    if (!buffer) continue
+    const shrink = await resizeImage(buffer, { type: 'fit', max: 768 })
+    add.push({ type: 'image', image: shrink.content })
+  }
+
+  msgStore.addAttachment(msgId, add)
 }

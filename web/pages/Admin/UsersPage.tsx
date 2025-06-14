@@ -35,7 +35,6 @@ const UsersPage: Component = () => {
   }
 
   onMount(() => {
-    adminStore.getUsers({ username: '', subscribed: false, customerId: '' })
     presetStore.getSubscriptions()
     userStore.getTiers()
   })
@@ -63,29 +62,29 @@ const UsersPage: Component = () => {
           <div class="flex flex-wrap gap-2">
             <TextInput
               class="text-xs"
-              fieldName="username"
-              placeholder="Username"
-              onChange={(ev) => setStore('username', ev.currentTarget.value)}
-              onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
-            />
-            <TextInput
-              class="text-xs"
               fieldName="customerId"
               placeholder="Customer ID"
               onChange={(ev) => setStore('customerId', ev.currentTarget.value)}
             />
-            <ToggleButton fieldName="subscribed" onChange={(ev) => setStore('subscribed', ev)}>
+            <ToggleButton
+              size="sm"
+              fieldName="subscribed"
+              onChange={(ev) => setStore('subscribed', ev)}
+            >
               Subscribed
             </ToggleButton>
           </div>
-          <Button onClick={search}>Search</Button>
+          <Button size="sm" onClick={search}>
+            Search
+          </Button>
         </form>
         <For each={state.users}>
           {(user) => (
-            <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl">
+            <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl hover:bg-[var(--hl-600)]">
               <div class="flex w-6/12 px-2">
-                <div>
-                  <span class="text-600 text-[0.5rem]">{user._id}</span> {user.username}
+                <div class="flex flex-col gap-0.5">
+                  <div>{user.username}</div>
+                  <div class="text-600 text-[0.5rem]">{user._id}</div>
                 </div>
               </div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">

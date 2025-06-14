@@ -242,7 +242,11 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    */
   const contextBuffer = opts.contextBuffer ?? 0
   const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
-  const lines = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  const { lines, indexes } = await getLinesForPrompt(
+    opts,
+    encoder,
+    (maxContext || 0) + contextBuffer
+  )
   const parts = await buildPromptPlaceholders(opts, lines, encoder)
 
   const prompt = await injectPlaceholders(template, {
@@ -255,7 +259,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     jsonValues: opts.jsonValues,
   })
 
-  return { lines, parts, template: prompt }
+  return { lines, parts, template: prompt, indexes }
 }
 
 export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
@@ -661,7 +665,10 @@ export async function getLinesForPrompt(
     profiles.set(member.userId, member)
   }
 
+  const indexes: { [msgId: string]: number } = {}
+
   const formatMsg = (msg: AppSchema.ChatMessage, i: number, all: AppSchema.ChatMessage[]) => {
+    indexes[msg._id] = all.length - i - 1
     const profile = msg.userId ? profiles.get(msg.userId) : opts.sender
     const sender = opts.impersonate
       ? opts.impersonate.name
@@ -700,10 +707,10 @@ export async function getLinesForPrompt(
   })
 
   if (opts.trimSentences) {
-    return lines.map(trimSentence)
+    return { lines: lines.map(trimSentence), indexes }
   }
 
-  return lines
+  return { lines, indexes }
 }
 
 /** This function is not used for Claude or Chat */

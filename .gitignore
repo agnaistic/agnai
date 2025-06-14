@@ -26,3 +26,4 @@ settings.json
 !llama3.js
 *.key
 *.pub
+.todos.md

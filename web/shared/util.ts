@@ -42,6 +42,19 @@ export type ComponentEmitter<T extends string> = {
 
 export type ComponentSubscriber<T> = (event: T, callback: () => any) => void
 
+export function getAbsolutePosition(ele: HTMLElement) {
+  let curr = ele
+  let top = 0
+  let left = 0
+  do {
+    top += curr.offsetTop
+    left += curr.offsetLeft
+    curr = curr.offsetParent as HTMLElement
+  } while (curr)
+
+  return { top, left }
+}
+
 export function createEmitter<T extends string>(...events: T[]) {
   let emit: any = {}
   const listeners: Array<{ event: T; callback: () => void }> = []

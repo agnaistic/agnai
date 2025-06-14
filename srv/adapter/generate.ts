@@ -461,6 +461,8 @@ export async function createChatStream(
     jsonValues: opts.jsonValues,
     contextSize: assembled.length,
     signal: opts.signal,
+    attachments: opts.attachments,
+    indexes: opts.indexes,
   })
 
   return {

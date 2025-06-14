@@ -46,11 +46,12 @@ import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import { ALLOWED_TYPES } from '/web/store/data/image'
 import { api } from '/web/store/api'
 import { ThirdPartyFormat } from '/common/adapters'
-import { resizeImage } from '/web/shared/image-resize'
 import { getPresetConnection, getProviderConnection } from '/common/providers'
+import { resizeImage } from '/web/shared/image-resize'
+import { ALLOWED_TYPES } from '/web/store/data/image'
+import { MsgAttachment } from '/srv/adapter/type'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -213,9 +214,7 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  const onButtonClick = () => {
-    setMenu(true)
-  }
+  const onMoreClick = () => setMenu(true)
 
   const setAutoReplyAs = (charId: string) => {
     chatStore.setAutoReplyAs(charId)
@@ -229,34 +228,32 @@ const InputBar: Component<{
   const onFile = async (files: FileInputResult[]) => {
     setDragging(false)
     setMenu(false)
-    const [file] = files
-    if (!file) return
 
-    return attach(file.file)
+    await attach(files.map((f) => f.file))
   }
 
-  const attach = async (file: File) => {
+  const attach = async (files: File[]) => {
     setMenu(false)
-    const ext = file.name.split('.').slice(-1)[0].toLowerCase()
-    const isAllowed = ALLOWED_TYPES.has(ext)
-    if (!isAllowed) {
-      toastStore.warn(`Invalid file type: Must be an image`)
-      return
-    }
+    const toAttach: MsgAttachment[] = []
 
-    const buffer = await getFileAsDataURL(file)
-    if (file.size > 1024 * 1024 * 1024) {
-      toastStore.warn(`Attachment exceeds size limit (1MB)`)
-      return
-    }
+    for (const file of files) {
+      const ext = file.name.split('.').slice(-1)[0].toLowerCase()
+      const isAllowed = ALLOWED_TYPES.has(ext)
+      if (!isAllowed) {
+        toastStore.warn(`Invalid file type: Must be an image`)
+        return
+      }
+      const buffer = await getFileAsDataURL(file)
+      if (file.size > 1024 * 1024 * 1024) {
+        toastStore.warn(`Attachment exceeds size limit (1MB)`)
+        return
+      }
 
-    const win: any = window
-    if (shouldShrinkImage(ctx.preset, buffer.file.size) || win.shrink) {
       const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
-      msgStore.setAttachment(props.chat._id, resized.content)
-    } else {
-      msgStore.setAttachment(props.chat._id, buffer.content)
+      toAttach.push({ type: 'image', image: resized.content })
     }
+
+    msgStore.addAttachment(props.chat._id, toAttach)
   }
 
   return (
@@ -351,13 +348,13 @@ const InputBar: Component<{
             const file = ev.dataTransfer?.files[0]
             if (!file) return
 
-            attach(file)
+            attach([file])
           },
         }}
       />
       <Button
         schema="clear"
-        onClick={onButtonClick}
+        onClick={onMoreClick}
         class="tour-message-actions h-full bg-[var(--bg-800)] px-2 py-2"
       >
         <MoreHorizontal class="icon-button" />
@@ -440,6 +437,7 @@ const InputBar: Component<{
               parentClass="hidden"
               onUpdate={onFile}
               accept="image/jpg,image/png,image/jpeg"
+              multiple
             />
             <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
               <ImageUp size={18} />
@@ -473,16 +471,6 @@ const InputBar: Component<{
 }
 
 export default InputBar
-
-function shouldShrinkImage(preset: AppSchema.UserGenPreset | undefined, size: number) {
-  return true
-  //
-  // if (size > Math.pow(1024, 3)) return true
-  // if (!preset) return false
-  // if (preset.service === 'agnaistic') return true
-  // if (preset.service !== 'kobold') return false
-  // return true
-}
 
 function canAttachImage(
   provider: AppSchema.Provider | undefined,

@@ -13,7 +13,7 @@ import {
   sanitiseAndTrim,
   trimResponseV2,
 } from '/common/requests/util'
-import { insertImageContent, stripImageContent } from './template-chat-payload'
+import { stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
@@ -75,7 +75,6 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
     `3rd-party payload ${opts.gen.thirdPartyFormat}`
   )
 
-  insertImageContent(opts, opts.messages || [])
   const start = Date.now()
   const stream = await dispatch(opts, body)
   yield { prompt: body.messages ? stripImageContent(body.messages) : body.prompt }

@@ -7,11 +7,7 @@ import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
-import {
-  validateChatMessagesWithImage,
-  logPayload,
-  stripImageContent,
-} from './template-chat-payload'
+import { validateChatMessages, logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
@@ -81,7 +77,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   }
 
   if (payload.messages) {
-    payload.messages = validateChatMessagesWithImage(opts, payload.messages)
+    payload.messages = validateChatMessages(payload.messages)
   }
 
   yield {

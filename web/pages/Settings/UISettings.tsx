@@ -27,6 +27,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   prompt: 'Prompt View',
   fork: 'Fork',
   trash: 'Delete',
+  attach: 'Attach',
   'schema-regen': 'Retry Schema',
 }
 
@@ -174,6 +175,14 @@ const UISettings: Component<{}> = () => {
           <Sortable items={inline()} onChange={updateInline} />
         </Show>
       </Card>
+
+      <Toggle
+        fieldName="imageWrap"
+        label="Avatar Wrap Around"
+        helperText='Allow text in messages to "wrap around" avatars'
+        onChange={(value) => userStore.saveUI({ imageWrap: value })}
+        value={state.ui.imageWrap}
+      />
 
       <Toggle
         label="Trim Incomplete Sentences"
@@ -383,14 +392,6 @@ const UISettings: Component<{}> = () => {
         min={0}
         max={1}
         onChange={(value) => userStore.saveUI({ msgOpacity: value })}
-      />
-
-      <Toggle
-        fieldName="imageWrap"
-        label="Avatar Wrap Around"
-        helperText='Allow text in messages to "wrap around" avatars'
-        onChange={(value) => userStore.saveUI({ imageWrap: value })}
-        value={state.ui.imageWrap}
       />
 
       <Divider />

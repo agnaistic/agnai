@@ -3,6 +3,13 @@ import type { JSX } from 'solid-js'
 import { PresetAISettings, samplerDisableValues } from '../../common/adapters'
 import { markdown } from './markdown'
 
+function updateSliderColors(range: HTMLInputElement, current: number) {
+  if (!range) return
+  const percent = Math.min(+current, +range.max)
+  const nextSize = ((percent - +range.min) * 100) / (+range.max - +range.min) + '% 100%'
+  range.style.backgroundSize = nextSize
+}
+
 const RangeInput: Component<{
   label: string | JSX.Element
   fieldName?: string
@@ -44,9 +51,7 @@ const RangeInput: Component<{
       input.value = parsed
     }
 
-    const percent = Math.min(+parsed, +range.max)
-    const nextSize = ((percent - +range.min) * 100) / (+range.max - +range.min) + '% 100%'
-    range.style.backgroundSize = nextSize
+    updateSliderColors(range, +parsed)
 
     if (evented && next !== undefined) {
       props.onChange(+parsed)
@@ -64,7 +69,10 @@ const RangeInput: Component<{
   createEffect(
     on(
       () => props.value,
-      () => updateRangeSliders(false, 'input', props.value.toString())
+      () => {
+        updateRangeSliders(false, 'input', props.value.toString())
+        updateSliderColors(range!, +props.value)
+      }
     )
   )
 

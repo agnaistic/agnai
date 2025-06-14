@@ -17,6 +17,7 @@ import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
 import { JSX } from 'solid-js'
+import { FileInputResult } from '../shared/FileInput'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -67,6 +68,13 @@ export type SettingState = {
     message: string | JSX.Element
     onConfirm?: () => void
   }
+
+  attach?: {
+    show: boolean
+    multiple: boolean
+    accept: string
+    callback: (files: FileInputResult[]) => void
+  }
 }
 
 const HORDE_URL = `https://aihorde.net/api/v2`
@@ -115,7 +123,7 @@ const initState: SettingState = {
 export const settingStore = createStore<SettingState>(
   'settings',
   initState
-)((get) => {
+)((get, setter) => {
   events.on(EVENTS.loggedOut, () => {
     const prev = get()
     settingStore.setState({ ...initState, slots: prev.slots, slotsLoaded: prev.slotsLoaded })
@@ -138,6 +146,25 @@ export const settingStore = createStore<SettingState>(
   })
 
   return {
+    openAttach(
+      {},
+      opts: { multiple?: boolean; accept?: string },
+      callback: (files: FileInputResult[]) => void
+    ) {
+      const wrapped = (files: FileInputResult[]) => {
+        callback(files)
+        setter({ attach: undefined })
+      }
+
+      return {
+        attach: {
+          show: true,
+          multiple: !!opts.multiple,
+          accept: opts.accept || '*/*',
+          callback: wrapped,
+        },
+      }
+    },
     openConfirm(
       {},
       opts: { message: string | JSX.Element; title?: string; onConfirm?: () => void }

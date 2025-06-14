@@ -45,6 +45,7 @@ import { SagaList } from './pages/Saga/List'
 import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
+import { GlobalFileInput } from './shared/GlobalFileInput'
 
 const App: Component = () => {
   const state = userStore()
@@ -233,6 +234,7 @@ const Layout: Component<{ children?: any }> = (props) => {
       <InfoModal />
       <ProfileModal />
       <BannedModal />
+      <GlobalFileInput />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
       <Show when={cfg.showImgSettings}>

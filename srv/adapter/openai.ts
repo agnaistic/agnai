@@ -5,11 +5,7 @@ import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
-import {
-  ensureMessagesAlternate,
-  insertImageContent,
-  stripImageContent,
-} from './template-chat-payload'
+import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { toImageJinjaTemplate } from '/common/requests/payloads'
@@ -133,9 +129,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.messages = messages
 
     yield { prompt: stripImageContent(messages) }
-
-    // If we have image data, add it to the last user message
-    insertImageContent(opts, body.messages)
   } else {
     body.prompt = prompt
     yield { prompt }

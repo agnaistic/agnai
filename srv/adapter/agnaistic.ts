@@ -27,7 +27,6 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
-import { insertImageContent } from './template-chat-payload'
 import { getPresetConnection, PresetConnection } from '/common/providers'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
@@ -272,9 +271,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const [submodel, override = ''] = subPreset.subModel.split(',')
 
-  if (body.messages && subPreset.subVisionModel) {
-    insertImageContent(opts, body.messages)
-  }
+  // if (body.messages && subPreset.subVisionModel) {
+  //   remapImageContent(opts, body.messages)
+  // }
 
   let params = [
     `type=text`,
