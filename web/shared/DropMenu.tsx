@@ -161,8 +161,14 @@ export const DropMenu: Component<{
           <div
             ref={onRef}
             classList={{
-              'bottom-6': !props.parent && !props.customPosition && props.vert === 'up',
-              'right-0': !props.parent && !props.customPosition && props.horz === 'left',
+              'bottom-6':
+                !props.parent &&
+                !props.customPosition &&
+                (auto()?.vert === 'up' || props.vert === 'up'),
+              'right-0':
+                !props.parent &&
+                !props.customPosition &&
+                (auto()?.horz === 'left' || props.horz === 'left'),
             }}
             class={`bg-800 absolute w-fit rounded-md border-[1px] border-[var(--bg-600)] ${
               props.class || ''
