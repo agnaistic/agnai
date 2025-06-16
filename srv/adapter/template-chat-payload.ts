@@ -35,10 +35,10 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   const sender = (req.impersonate?.name || req.sender.handle) + ':'
   // let lastRole = ''
 
-  const map = new Map<number, string>()
+  const map: { [pos: number]: string } = {}
   if (req.indexes) {
     for (const [id, pos] of Object.entries(req.indexes)) {
-      map.set(pos, id)
+      map[pos] = id
     }
   }
 
@@ -48,7 +48,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     const original = req.lines[i + offset]
     const role = isPreHistory ? 'user' : original?.startsWith(sender) ? 'user' : 'assistant'
 
-    const id = map.get(history.length - i - offset - 1)
+    const id = map[history.length - i - offset - 1]
     const attachments = getAttachments(req, id)
 
     if (role === 'user' && attachments) {
