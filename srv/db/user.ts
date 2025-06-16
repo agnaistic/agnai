@@ -59,12 +59,16 @@ export async function deleteUserProvider(opts: { userId: string; providerId: str
   return toSafeUser(next)
 }
 
-export async function saveUserProvider(userId: string, prv: AppSchema.Provider) {
+export async function saveUserProvider(
+  userId: string,
+  prv: AppSchema.Provider,
+  deleteKey?: boolean
+) {
   const user = await getUser(userId)
   if (!user) throw errors.Forbidden
 
   const providers = user.providers || []
-  const key = prv.key ? encryptText(prv.key) : ''
+  const key = deleteKey ? '' : prv.key ? encryptText(prv.key) : ''
 
   if (prv._id) {
     const next = providers.map((p) => {
@@ -73,7 +77,7 @@ export async function saveUserProvider(userId: string, prv: AppSchema.Provider) 
         _id: p._id,
         name: prv.name,
         url: prv.url,
-        key: key ? key : p.key,
+        key: deleteKey ? '' : key ? key : p.key,
         provider: prv.provider,
         format: prv.format,
       }
@@ -590,7 +594,7 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   if (user.providers) {
     for (const prov of user.providers) {
-      if (prov.key) prov.keySet = true
+      prov.keySet = !!prov.key
       prov.key = ''
     }
   }

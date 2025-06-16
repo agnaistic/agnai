@@ -46,13 +46,14 @@ export function getAbsolutePosition(ele: HTMLElement) {
   let curr = ele
   let top = 0
   let left = 0
+
   do {
     top += curr.offsetTop
     left += curr.offsetLeft
     curr = curr.offsetParent as HTMLElement
   } while (curr)
 
-  return { top, left }
+  return { top, left, bottom: window.innerHeight - top, right: window.innerWidth - left }
 }
 
 export function createEmitter<T extends string>(...events: T[]) {

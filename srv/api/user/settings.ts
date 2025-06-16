@@ -290,6 +290,22 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
   return next
 })
 
+export const removeProviderKey = handle(async ({ userId, body, authed, params }) => {
+  assertValid({ id: 'string' }, body)
+  const user = await getUser(userId)
+  if (!user) throw errors.Forbidden
+
+  const provider = user.providers?.find((p) => p._id === body.id)
+
+  if (!provider) {
+    return toSafeUser(user)
+  }
+
+  const update = { ...provider, key: '' }
+  const next = await store.users.saveUserProvider(userId, update, true)
+  return next
+})
+
 export const saveProvider = handle(async ({ userId, body }) => {
   assertStrict(
     {

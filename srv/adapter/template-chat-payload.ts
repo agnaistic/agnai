@@ -3,6 +3,7 @@ import { CompletionItem, GenerateRequestV2, RequestAttachments } from './type'
 import { replaceTags } from '/common/presets/templates'
 import { assemblePrompt } from '/common/prompt'
 import { AppSchema, TokenCounter } from '/common/types'
+import { findLast } from '/common/util'
 
 export async function toChatMessages(req: GenerateRequestV2, counter: TokenCounter) {
   const assembled = await assemblePrompt(req, counter)
@@ -51,12 +52,28 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     const attachments = getAttachments(req, id)
 
     if (role === 'user' && attachments) {
-      messages.push({ role, content: [{ type: 'text', text: line.trim() }, ...attachments] })
+      messages.push({
+        role,
+        content: [{ type: 'text', content: line.trim(), text: line.trim() }, ...attachments],
+      })
     } else {
       messages.push({ role, content: line.trim() })
     }
 
     // lastRole = role
+  }
+  const lastUserIndex = findLast(messages, (m) => m.role === 'user')
+  const unused = Object.values(req.attachments || {}).flat()
+
+  if (unused.length && lastUserIndex > 0) {
+    const msg = messages[lastUserIndex]
+    if (!Array.isArray(msg.content)) {
+      msg.content = [{ type: 'text', content: msg.content, text: msg.content }]
+    }
+
+    for (const image of unused) {
+      msg.content.push({ type: 'image_url', image_url: { url: image.image } })
+    }
   }
 
   const postContent = post.join('').trim()
@@ -81,6 +98,9 @@ function getAttachments(req: GenerateRequestV2, id: string | undefined) {
 
   const list = req.attachments[id]
   if (!list?.length) return
+
+  delete req.attachments[id]
+  // Remove from the list so we can track which images we've attached
 
   const messages: any[] = []
   for (const item of list) {

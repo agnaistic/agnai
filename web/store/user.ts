@@ -314,6 +314,14 @@ export const userStore = createStore<UserState>(
         toastStore.error(`Could not complete checkout: ${res.error}`)
       }
     },
+
+    async *deleteProviderKey({ user }, providerId: string) {
+      const res = await usersApi.deleteProviderKey(providerId)
+      if (res.result) {
+        return { user: { ...user!, providers: res.result.providers } }
+      }
+    },
+
     async *saveProvider(
       { user },
       provider: AppSchema.Provider,

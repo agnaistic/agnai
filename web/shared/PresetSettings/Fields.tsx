@@ -9,6 +9,7 @@ import { FormLabel } from '../FormLabel'
 import { SubscriptionModelLevel } from '/common/types/presets'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
+import { ThirdPartyFormat } from '/common/adapters'
 
 export type Field<T = {}> = Component<Omit<PresetTabProps, 'tab'> & T>
 
@@ -196,6 +197,20 @@ export const Jailbreak: Field = (props) => {
 }
 
 export const JinjaTemplate: Field = (props) => {
+  const allowed: { [format in ThirdPartyFormat]?: boolean } = {
+    'openai-chatv2': true,
+    'openai-chat': true,
+    koboldcpp: true,
+    tabby: true,
+    aphrodite: true,
+    vllm: true,
+    ollama: true,
+    llamacpp: true,
+    ooba: true,
+    kobold: true,
+    exllamav2: true,
+  }
+  console.log('jinja', props.context)
   return (
     <TextInput
       fieldName="jinjaTemplate"
@@ -215,7 +230,7 @@ export const JinjaTemplate: Field = (props) => {
       If left blank, one will be generated for you."
       value={props.state.jinjaTemplate || ''}
       disabled={props.state.disabled}
-      hide={props.hides.thirdPartyUrl}
+      hide={!props.context.format || !allowed[props.context.format]}
       onChange={(ev) => props.setter('jinjaTemplate', ev.currentTarget.value)}
       isMultiline
     />

@@ -34,6 +34,7 @@ export const usersApi = {
   novelLogin,
   saveProvider,
   deleteProvider,
+  deleteProviderKey,
 }
 
 export async function getInit() {
@@ -44,6 +45,24 @@ export async function getInit() {
 
   const init = await localApi.handleGuestInit()
   return init
+}
+
+async function deleteProviderKey(providerId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', '/user/provider-key', { id: providerId })
+    return res
+  }
+
+  const user = await localApi.loadItem('config')
+  const providers = user.providers || []
+
+  const next = providers.map((p) => {
+    if (p._id !== providerId) return p
+    return { ...p, key: '', keySet: false }
+  })
+  user.providers = next
+  await localApi.saveConfig(user)
+  return { result: user, error: undefined }
 }
 
 async function saveProvider(provider: AppSchema.Provider) {

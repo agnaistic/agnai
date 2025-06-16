@@ -1,10 +1,9 @@
 import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
-import { toChatCompletionPayload } from '/srv/adapter/chat-completion'
 import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { stripImageContent, validateChatMessages } from '/srv/adapter/template-chat-payload'
+import { stripImageContent, toChatMessages } from '/srv/adapter/template-chat-payload'
 import { toImageJinjaTemplate } from './payloads'
 
 type Role = 'user' | 'assistant' | 'system'
@@ -27,13 +26,9 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   const gen = opts.settings!
   const options = { ...opts, gen }
 
-  const messages = await toChatCompletionPayload(
-    options as any,
-    countTokens,
-    opts.settings?.maxTokens!
-  )
+  const { messages } = await toChatMessages(options, countTokens)
 
-  if (opts.imageData && gen.jinjaEnabled) {
+  if (gen.jinjaEnabled) {
     payload.chat_template = toImageJinjaTemplate({
       format: gen.modelFormat,
       jinja: gen.jinjaTemplate,
@@ -64,10 +59,10 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     payload.prompt = opts.prompt
     console.log(`Prompt:${opts.prompt}`)
   } else {
-    payload.messages = validateChatMessages(messages)
+    payload.messages = messages
   }
 
-  console.log(`Prompt:\n`, JSON.stringify(stripImageContent(messages), null, 2))
+  console.log(`Prompt:\n`, JSON.stringify(stripImageContent(messages as any), null, 2))
   const fullUrl = joinUrl(gen.thirdPartyUrl || '', urlPath)
 
   if (!gen.streamResponse) {

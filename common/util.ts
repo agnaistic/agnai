@@ -55,6 +55,14 @@ export function findOne<T extends { _id: string }>(id: string, list: T[]): T | v
   }
 }
 
+export function findLast<T>(list: T[], pred: (value: T) => boolean) {
+  for (let i = list.length - 1; i >= 0; i++) {
+    if (pred(list[i])) return i
+  }
+
+  return -1
+}
+
 export function joinImagePrompts(prompts: string[]) {
   const joined = prompts.filter((v) => !!v?.trim()).join(', ')
   return formatImagePrompt(joined)

@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
 import { getAbsolutePosition } from './util'
@@ -67,10 +67,20 @@ export const DropMenu: Component<{
     }, 1)
 
     if (props.parent) {
-      const { top, left } = getAbsolutePosition(props.parent)
-      console.log('parent', { top, left })
-      el.style.top = `${top}px`
-      el.style.left = `${left}px`
+      const pos = getAbsolutePosition(props.parent)
+
+      if (!props.horz || props.horz === 'left') {
+        el.style.left = `${pos.left}px`
+      } else {
+        el.style.right = `${pos.right}px`
+      }
+
+      if (!props.vert || props.vert === 'down') {
+        el.style.top = `${pos.top}px`
+      } else {
+        el.style.bottom = `${pos.bottom}px`
+      }
+
       return
     }
 
@@ -154,25 +164,30 @@ export const DropMenu: Component<{
     }
   })
 
+  const classes = createMemo(() => {
+    return {
+      bottom:
+        !props.parent && !props.customPosition && (auto()?.vert === 'up' || props.vert === 'up')
+          ? 'bottom-6'
+          : '',
+      right:
+        !props.parent &&
+        !props.customPosition &&
+        !!(auto()?.horz === 'left' || props.horz === 'left')
+          ? 'right-0'
+          : '',
+    }
+  })
+
   return (
     <>
       <div ref={ref!} class="z-50 text-sm" data-id={id()} classList={{ relative: !props.parent }}>
         <Show when={props.show}>
           <div
             ref={onRef}
-            classList={{
-              'bottom-6':
-                !props.parent &&
-                !props.customPosition &&
-                (auto()?.vert === 'up' || props.vert === 'up'),
-              'right-0':
-                !props.parent &&
-                !props.customPosition &&
-                (auto()?.horz === 'left' || props.horz === 'left'),
-            }}
             class={`bg-800 absolute w-fit rounded-md border-[1px] border-[var(--bg-600)] ${
               props.class || ''
-            }`}
+            } ${classes().bottom} ${classes().right}`}
           >
             {props.children}
           </div>
