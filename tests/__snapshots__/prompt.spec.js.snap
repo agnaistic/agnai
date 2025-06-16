@@ -178,6 +178,9 @@ OtherBot:"
 
 exports[`Prompt building will include ujb when omitted from gaslight 1`] = `
 Object {
+  "indexes": Object {
+    "": 0,
+  },
   "lines": Array [
     "MainChar: bot response",
   ],
