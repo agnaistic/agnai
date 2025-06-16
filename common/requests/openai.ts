@@ -3,7 +3,11 @@ import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { stripImageContent, toChatMessages } from '/srv/adapter/template-chat-payload'
+import {
+  stripImageContent,
+  toChatMessages,
+  validateChatMessages,
+} from '/srv/adapter/template-chat-payload'
 import { toImageJinjaTemplate } from './payloads'
 
 type Role = 'user' | 'assistant' | 'system'
@@ -27,6 +31,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   const options = { ...opts, gen }
 
   const { messages } = await toChatMessages(options, countTokens)
+  validateChatMessages(messages)
 
   if (gen.jinjaEnabled) {
     payload.chat_template = toImageJinjaTemplate({
