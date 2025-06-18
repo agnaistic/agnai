@@ -2,7 +2,9 @@ import {
   Component,
   For,
   JSX,
+  Match,
   Show,
+  Switch,
   createEffect,
   createMemo,
   createSignal,
@@ -140,13 +142,17 @@ export const CustomSelect: Component<{
             />
           </Show>
 
+          <Show when={!!props.categories && !!props.header}>{props.header}</Show>
+
           <Show when={props.categories}>
             <For each={filteredCats()}>
               {(category) => (
-                <div class="flex flex-wrap gap-2 pr-3">
+                <div
+                  class="flex flex-wrap gap-2 pr-3"
+                  classList={{ hidden: category.options.length === 0 }}
+                >
                   <div class="bold text-md">{category.name}</div>
                   <OptionList
-                    header={props.header}
                     options={category.options}
                     onSelect={onSelect}
                     selected={props.selected}
@@ -179,33 +185,38 @@ const OptionList: Component<{
   header?: JSX.Element
 }> = (props) => {
   return (
-    <div class={`flex w-full flex-col gap-2`}>
-      <Show when={props.title}>
-        <div class="text-md">{props.title}</div>
-      </Show>
+    <Switch>
+      <Match when={props.options.length === 0}>{null}</Match>
+      <Match when>
+        <div class={`flex w-full flex-col gap-2`}>
+          <Show when={props.title}>
+            <div class="text-md">{props.title}</div>
+          </Show>
 
-      <Show when={props.header}>{props.header}</Show>
+          <Show when={props.header}>{props.header}</Show>
 
-      <div class={`flex flex-col gap-2 p-2`}>
-        <For each={props.options}>
-          {(option) => (
-            <div
-              classList={{
-                'bg-[var(--hl-800)]': props.selected === option.value,
-                'bg-700': !option.disabled && props.selected !== option.value,
-                'bg-[var(--error-900)] text-700':
-                  option.disabled && props.selected !== option.value,
-                'cursor-not-allowed': option.disabled,
-                'cursor-pointer': !option.disabled,
-              }}
-              class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
-              onClick={() => props.onSelect(option)}
-            >
-              <div class="font-bold">{option.label}</div>
-            </div>
-          )}
-        </For>
-      </div>
-    </div>
+          <div class={`flex flex-col gap-2 p-2`}>
+            <For each={props.options}>
+              {(option) => (
+                <div
+                  classList={{
+                    'bg-[var(--hl-800)]': props.selected === option.value,
+                    'bg-700': !option.disabled && props.selected !== option.value,
+                    'bg-[var(--error-900)] text-700':
+                      option.disabled && props.selected !== option.value,
+                    'cursor-not-allowed': option.disabled,
+                    'cursor-pointer': !option.disabled,
+                  }}
+                  class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
+                  onClick={() => props.onSelect(option)}
+                >
+                  <div class="font-bold">{option.label}</div>
+                </div>
+              )}
+            </For>
+          </div>
+        </div>
+      </Match>
+    </Switch>
   )
 }

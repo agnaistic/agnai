@@ -127,7 +127,6 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
           ? getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
           : undefined,
       reschema_prompt: opts.reschemaPrompt,
-      imageData: opts.imageData,
       context_size: opts.contextSize,
       xtc_threshold: gen.xtcThreshold,
       xtc_probability: gen.xtcProbability,
@@ -139,7 +138,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       dry_sequence_breakers: sequenceBreakers,
     }
 
-    if (opts.imageData && opts.subscription?.preset?.subVisionModel) {
+    if (opts.hasAttachments && opts.subscription?.preset?.subVisionModel) {
       body.messages = opts.messages
     }
 
@@ -194,7 +193,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
       body.top_p = -1
     }
 
-    if (opts.imageData) {
+    if (opts.hasAttachments) {
       body.messages = opts.messages
     } else {
       body.prompt = prompt
@@ -315,12 +314,6 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     if (opts.jsonSchema) {
       const schema = JSON.stringify(opts.jsonSchema, null, 2)
       payload.prompt += `\nRespond using the following JSON Schema:\n${schema}`
-    }
-
-    if (opts.imageData) {
-      const comma = opts.imageData.indexOf(',')
-      const base64 = opts.imageData.slice(comma + 1)
-      payload.images = [base64]
     }
 
     return payload

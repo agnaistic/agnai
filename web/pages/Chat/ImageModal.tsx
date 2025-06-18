@@ -28,7 +28,14 @@ export const ImageModal: Component = (props) => {
       show={!!state.showImage}
       close={settingStore.clearImage}
       maxWidth="half"
-      footer={footer()}
+      footer={
+        <>
+          <Button schema="secondary" onClick={() => settingStore.clearImage()}>
+            Close
+          </Button>
+          {footer()}
+        </>
+      }
     >
       <div class="flex justify-center p-4">
         <img class="rounded-md" src={getAssetUrl(state.showImage!.url!)} />

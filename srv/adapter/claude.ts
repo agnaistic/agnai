@@ -105,7 +105,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     payload.max_tokens = gen.maxTokens
     const messages = opts.messages || []
 
-    remapImageContent(opts, messages, (image) => {
+    remapImageContent(messages, (image) => {
       const mime = getMimeTypeBase64(image)
       return {
         type: 'image',

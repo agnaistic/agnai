@@ -157,12 +157,6 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       payload.prompt += `\nRespond using the following JSON Schema:\n${schema}`
     }
 
-    if (opts.imageData) {
-      const comma = opts.imageData.indexOf(',')
-      const base64 = opts.imageData.slice(comma + 1)
-      payload.images = [base64]
-    }
-
     return payload
   }
 

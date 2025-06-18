@@ -807,6 +807,42 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
+
+    async *generateImagePrompt(
+      { activeChatId, activeCharId, msgs },
+      onSummary: (summary: string) => void
+    ) {
+      const messageId = msgs.slice(-1)[0]._id
+
+      if (!messageId) {
+        toastStore.warn('Could not generate image prompt: Current chat has no messages')
+        return
+      }
+
+      yield {
+        hordeStatus: undefined,
+        waiting: {
+          chatId: activeChatId,
+          mode: 'send',
+          characterId: activeCharId,
+          image: 1,
+          messageId,
+        },
+      }
+
+      const res = await imageApi.generateImagePrompt()
+
+      yield { waiting: undefined }
+      if (res.result) {
+        console.log(`Image Prompt:\n${res.result.response}`)
+        // msgStore.editMessageProp(messageId, { imagePrompt: res.result.response })
+        onSummary?.(res.result.response)
+        return
+      }
+
+      toastStore.error(`Image prompt failed to generate`)
+    },
+
     async *createImage(
       { msgs, activeChatId, activeCharId, waiting },
       sourceMessageId?: string,

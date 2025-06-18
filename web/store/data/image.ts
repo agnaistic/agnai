@@ -39,11 +39,19 @@ export const ALLOWED_TYPES = new Map([
 
 export const imageApi = {
   generateImage,
+  generateImagePrompt,
   generateImageWithPrompt,
   generateImageAsync,
   dataURLtoFile,
   getImageData,
   ALLOWED_TYPES,
+}
+
+export async function generateImagePrompt() {
+  const entities = await getPromptEntities()
+  const summary = await createSummarizedImagePrompt(entities)
+
+  return summary
 }
 
 export async function generateImage(opts: GenerateOpts, onSummary?: (summary: string) => void) {

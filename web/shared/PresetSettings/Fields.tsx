@@ -210,7 +210,7 @@ export const JinjaTemplate: Field = (props) => {
     kobold: true,
     exllamav2: true,
   }
-  console.log('jinja', props.context)
+
   return (
     <TextInput
       fieldName="jinjaTemplate"

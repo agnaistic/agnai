@@ -6,7 +6,7 @@ import { getStore } from '/web/store/create'
 import { presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { FormLabel } from '../FormLabel'
-import { CustomSelect } from '../CustomSelect'
+import { CustomOption, CustomSelect } from '../CustomSelect'
 import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
@@ -434,6 +434,8 @@ const ArliModels: Field = (props) => {
   )
 }
 
+let FILTERED_CACHE: Record<string, boolean> = {}
+
 const FeatherlessModels: Field = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
@@ -461,32 +463,42 @@ const FeatherlessModels: Field = (props) => {
       return prev
     }, new Set<string>())
 
-    return state.models
-      .filter((s) => {
-        if (s.status === 'not_deployed') return false
-        if (modelClasses.size === 0) return true
-        if (modelClasses.has(s.model_class)) return true
-        return false
-      })
-      .map((s) => ({
+    const categories: Record<string, { name: string; options: CustomOption[] }> = {}
+
+    for (const model of state.models) {
+      // Skip models that cannot be used
+      if (model.status !== 'active') continue
+
+      // If classes are being filtered by the user, skip classes that aren't selected
+      if (modelClasses.size > 0 && !modelClasses.has(model.model_class)) continue
+
+      if (!categories[model.model_class]) {
+        categories[model.model_class] = { name: model.model_class, options: [] }
+      }
+
+      categories[model.model_class].options.push({
         label: (
           <div
             class="flex w-full flex-col"
-            title={`${s.status}, ${(s.health || '...').toLowerCase()}`}
+            title={`${model.status}, ${(model.health || '...').toLowerCase()}`}
           >
-            <div class="ellipsis">{s.id}</div>
+            <div class="ellipsis">{model.id}</div>
             <div class="text-500 text-xs">
-              {s.model_class} - {flaiContext(s, state.classes)} {s.status}
+              {model.model_class} - {flaiContext(model, state.classes)} {model.status}
             </div>
           </div>
         ),
-        value: s.id,
-        disabled: s.status !== 'active',
-      }))
-      .sort((l, r) => l.value.localeCompare(r.value))
+        value: model.id,
+        disabled: model.status !== 'active',
+      })
+    }
+
+    const options = Array.from(Object.values(categories))
+    return options
   })
 
   onMount(() => {
+    FILTERED_CACHE = {}
     if (!state.models.length) {
       settingStore.getFeatherless()
     }
@@ -501,9 +513,13 @@ const FeatherlessModels: Field = (props) => {
 
     for (const re of res) {
       const match = cleanedValue.match(re)
-      if (!match) return false
+      if (!match) {
+        FILTERED_CACHE[value] = false
+        return false
+      }
     }
 
+    FILTERED_CACHE[value] = true
     return true
   }
 
@@ -519,6 +535,11 @@ const FeatherlessModels: Field = (props) => {
     for (const model of state.models) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
+      }
+
+      const filteredOut = FILTERED_CACHE[model.id]
+      if (filteredOut) {
+        continue
       }
 
       if (model.status === 'active') {
@@ -574,7 +595,7 @@ const FeatherlessModels: Field = (props) => {
         maxHeight
         modalTitle="Select a Model"
         label="Model"
-        options={options()}
+        categories={options()}
         search={search}
         header={
           <Accordian

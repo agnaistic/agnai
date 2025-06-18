@@ -463,6 +463,7 @@ export async function createChatStream(
     signal: opts.signal,
     attachments: opts.attachments,
     indexes: opts.indexes,
+    hasAttachments: opts.hasAttachments,
   })
 
   return {

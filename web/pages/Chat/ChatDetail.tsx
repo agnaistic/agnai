@@ -1,5 +1,14 @@
 import './chat-detail.css'
-import { Component, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Index,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
@@ -465,42 +474,44 @@ const ChatDetail: Component = () => {
             {/* Original Slot location */}
             <LoadMore canFetch={chars.ready} />
 
-            <For each={chatMsgs()}>
+            <Index each={chatMsgs()}>
               {(msg, i) => (
                 <>
                   <Message
-                    index={i()}
-                    msg={msg}
+                    index={i}
+                    msg={msg()}
                     editing={chats.opts.editing}
-                    last={i() === indexOfLastRPMessage()}
-                    onRemove={() => setRemoveId(msg._id)}
-                    swipe={msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]}
-                    confirmSwipe={() => confirmSwipe(msg._id)}
+                    last={i === indexOfLastRPMessage()}
+                    onRemove={() => setRemoveId(msg()._id)}
+                    swipe={
+                      msg()._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                    }
+                    confirmSwipe={() => confirmSwipe(msg()._id)}
                     cancelSwipe={cancelSwipe}
-                    discardSwipe={() => discardSwipe(msg._id, swipe())}
+                    discardSwipe={() => discardSwipe(msg()._id, swipe())}
                     tts={tts()}
                     retrying={msgs.retrying}
                     partial={msgs.partial}
                     sendMessage={sendMessage}
                     isPaneOpen={pane.showing()}
                     textBeforeGenMore={msgs.textBeforeGenMore}
-                    voice={msg._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined}
+                    voice={
+                      msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
+                    }
                   >
-                    {isOwner() &&
-                      retries()?.list?.length! > 1 &&
-                      i() === indexOfLastRPMessage() && (
-                        <SwipeMessage
-                          chatId={chats.chat?._id!}
-                          pos={swipe()}
-                          prev={clickSwipe(-1)}
-                          next={clickSwipe(1)}
-                          list={retries()?.list || []}
-                        />
-                      )}
+                    {isOwner() && retries()?.list?.length! > 1 && i === indexOfLastRPMessage() && (
+                      <SwipeMessage
+                        chatId={chats.chat?._id!}
+                        pos={swipe()}
+                        prev={clickSwipe(-1)}
+                        next={clickSwipe(1)}
+                        list={retries()?.list || []}
+                      />
+                    )}
                   </Message>
                 </>
               )}
-            </For>
+            </Index>
             <Show when={waitingMsg()?.length}>
               <For each={waitingMsg()}>
                 {(msg) => (

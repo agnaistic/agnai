@@ -1,6 +1,4 @@
 import { decryptText } from '../db/util'
-import { getEncoderByName } from '../tokenize'
-import { toChatCompletionPayload } from './chat-completion'
 import { getStoppingStrings } from './prompt'
 import { ModelAdapter } from './type'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
@@ -12,8 +10,9 @@ import {
   HarmCategory,
   SafetySetting,
 } from '@google/genai'
-import { stripImageContent } from './template-chat-payload'
+import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
+import { getEncoderByName } from '../tokenize'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -22,9 +21,8 @@ const SYSTEM_INCAPABLE: Record<string, boolean> = {
 export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
 
-  const encoder = getEncoderByName('gemma')
-  const messages =
-    opts.messages || (await toChatCompletionPayload(opts, encoder.count, opts.gen.maxTokens!))
+  const counter = getEncoderByName('gemma')
+  const messages = opts.messages || (await toChatMessages(opts, counter.count))
 
   const googleModel = opts.gen.thirdPartyModel || opts.gen.googleModel
 
@@ -86,12 +84,27 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
   const canUseSystemInstruct = !SYSTEM_INCAPABLE[googleModel]
 
+  remapMessages(messages, {
+    text: (text) => ({ text }),
+    image: (data) => ({ inlineData: { mimeType: getMimeTypeBase64(data), data } }),
+  })
+
   for (const msg of messages) {
     if (msg.role === 'system') {
       continue
     }
 
-    contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] })
+    if (msg.role === 'user') {
+      if (Array.isArray(msg.content)) {
+        contents.push({ role: 'user', parts: msg.content })
+        continue
+      }
+
+      contents.push({ role: 'user', parts: [{ text: msg.content }] })
+    }
+
+    contents.push({ role: 'model', parts: [{ text: msg.content }] })
+
     continue
   }
 
@@ -102,40 +115,6 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       }
     } else {
       contents.unshift({ role: 'user', parts: [{ text: systems.content }] })
-    }
-  }
-
-  if (opts.imageData) {
-    let added = false
-    for (let i = contents.length - 1; i >= 0; i--) {
-      const msg = contents[i]
-
-      if (msg.role !== 'user') continue
-
-      const { mimeType, data } = getMimeTypeBase64(opts.imageData)
-
-      msg.parts!.push({
-        inlineData: {
-          mimeType: mimeType,
-          data,
-        },
-      })
-      added = true
-      break
-    }
-
-    if (!added) {
-      const { mimeType, data } = getMimeTypeBase64(opts.imageData)
-      contents.push({
-        parts: [
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data,
-            },
-          },
-        ],
-      })
     }
   }
 

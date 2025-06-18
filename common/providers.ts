@@ -154,10 +154,8 @@ export function getProviderConnection(provider: AppSchema.Provider) {
     url = detail.url
   }
 
-  if (detail.formats?.length === 1) {
-    provider.format = detail.formats[0]
-  }
-  let prvFormat = provider.format || detail.formats?.[0]
+  const prvFormat =
+    detail.formats?.length === 1 ? detail.formats[0] : provider.format || detail.formats?.[0]
 
   if (prvFormat) {
     switch (prvFormat.type) {

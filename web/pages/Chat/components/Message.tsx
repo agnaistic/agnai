@@ -398,6 +398,7 @@ const Message: Component<MessageProps> = (props) => {
                             history={ctx.promptHistory[props.msg._id]}
                             flags={ctx.flags}
                             tree={ctx.chatTree}
+                            loading={!!ctx.waiting}
                           />
                         )
                       }
@@ -935,6 +936,7 @@ const Meta: Component<{
   history?: any
   flags: FeatureFlags
   tree: ChatTree
+  loading: boolean
 }> = (props) => {
   if (!props.msg) return null
   const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
@@ -1000,24 +1002,37 @@ const Meta: Component<{
         </table>
       </Card>
 
-      <Show when={props.msg.imagePrompt}>
-        <Card>
-          <TextInput
-            helperText={
-              <>
+      <Card>
+        <TextInput
+          helperText={
+            <>
+              <div class="flex items-center gap-1">
                 Image Prompt -{' '}
-                <span class="link" onClick={updateImagePrompt}>
+                <Button
+                  size="sm"
+                  schema="secondary"
+                  onClick={updateImagePrompt}
+                  disabled={prompt() === props.msg.imagePrompt}
+                >
                   Save
-                </span>
-              </>
-            }
-            parentClass="text-sm"
-            isMultiline
-            value={prompt()}
-            onChange={(ev) => setPrompt(ev.currentTarget.value)}
-          />
-        </Card>
-      </Show>
+                </Button>
+                <Button
+                  size="sm"
+                  schema="secondary"
+                  onClick={() => msgStore.generateImagePrompt((summary) => setPrompt(summary))}
+                  disabled={props.loading}
+                >
+                  Generate
+                </Button>
+              </div>
+            </>
+          }
+          parentClass="text-sm"
+          isMultiline
+          value={prompt()}
+          onChange={(ev) => setPrompt(ev.currentTarget.value)}
+        />
+      </Card>
 
       <Show when={props.history}>
         <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">

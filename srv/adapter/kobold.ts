@@ -132,7 +132,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
 async function dispatch(opts: AdapterProps, body: any) {
   const baseURL = normalizeUrl(opts.gen.thirdPartyUrl || opts.user.koboldUrl)
-  const useChat = !!opts.imageData
+  const useChat = !!opts.hasAttachments
 
   const headers: any = await getHeaders(opts)
   const base = {
@@ -149,7 +149,7 @@ async function dispatch(opts: AdapterProps, body: any) {
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
     case 'vllm': {
-      body.messages = opts.imageData ? opts.messages : undefined
+      body.messages = opts.hasAttachments ? opts.messages : undefined
       const url =
         !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
           ? baseURL
@@ -164,7 +164,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'ooba':
     case 'aphrodite':
     case 'tabby': {
-      body.messages = opts.imageData ? opts.messages : undefined
+      body.messages = opts.hasAttachments ? opts.messages : undefined
       let url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/`
       if (useChat) {
         url += 'chat/completions'
@@ -178,14 +178,14 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'exllamav2': {
-      body.messages = opts.imageData ? opts.messages : undefined
+      body.messages = opts.hasAttachments ? opts.messages : undefined
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url: baseURL, service: opts.gen.thirdPartyFormat })
     }
 
     case 'mistral': {
-      body.messages = opts.imageData ? opts.messages : body.messages
+      body.messages = opts.hasAttachments ? opts.messages : body.messages
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: 'mistral' })
@@ -194,7 +194,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'ollama': {
-      body.messages = opts.imageData ? opts.messages : undefined
+      body.messages = opts.hasAttachments ? opts.messages : undefined
       const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
@@ -203,8 +203,10 @@ async function dispatch(opts: AdapterProps, body: any) {
 
     case 'featherless': {
       // Intentionally always using message format
-      body.messages = opts.messages
-      body.prompt = undefined
+      if (opts.messages) {
+        body.messages = opts.messages
+        body.prompt = undefined
+      }
       let suffix = body.messages ? 'chat/completions' : 'completions'
 
       const url = `https://api.featherless.ai/v1/${suffix}`

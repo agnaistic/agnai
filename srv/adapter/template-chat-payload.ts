@@ -1,5 +1,5 @@
 import { AppLog } from '../middleware'
-import { CompletionItem, GenerateRequestV2, RequestAttachments } from './type'
+import { CompletionItem, GenerateRequestV2 } from './type'
 import { replaceTags } from '/common/presets/templates'
 import { assemblePrompt } from '/common/prompt'
 import { AppSchema, TokenCounter } from '/common/types'
@@ -51,7 +51,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     const id = map[history.length - i - offset - 1]
     const attachments = getAttachments(req, id)
 
-    if (role === 'user' && attachments) {
+    if (role === 'user' && attachments?.length) {
+      req.hasAttachments = true
       messages.push({
         role,
         content: [{ type: 'text', content: line.trim(), text: line.trim() }, ...attachments],
@@ -65,7 +66,12 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   const lastUserIndex = findLast(messages, (m) => m.role === 'user')
   const unused = Object.values(req.attachments || {}).flat()
 
+  if (req.imageData) {
+    unused.push({ type: 'image', image: req.imageData })
+  }
+
   if (unused.length && lastUserIndex > 0) {
+    req.hasAttachments = true
     const msg = messages[lastUserIndex]
     if (!Array.isArray(msg.content)) {
       msg.content = [{ type: 'text', content: msg.content, text: msg.content }]
@@ -156,8 +162,38 @@ export function renderMessagesToPrompt(
  * @destructive
  * mutates the messages list: adds the image data (base64) to the last user message
  */
+export function remapMessages(
+  messages: Array<{ role: string; content: any }>,
+  maps: { image?: (image: string) => any; text?: (text: string) => any }
+) {
+  if (!messages) return messages
+
+  for (const msg of messages) {
+    if (!Array.isArray(msg.content)) {
+      continue
+    }
+
+    for (let i = 0; i < msg.content.length; i++) {
+      const item = msg.content[i]
+      if (item.type === 'text') {
+        item[i] = maps.text?.(item) || item
+        continue
+      }
+
+      if (item.image_url?.url) continue
+      item[i] = maps.image?.(item.image_url.url) || item
+      continue
+    }
+  }
+
+  return messages
+}
+
+/**
+ * @destructive
+ * mutates the messages list: adds the image data (base64) to the last user message
+ */
 export function remapImageContent(
-  opts: { imageData?: string; attachments?: RequestAttachments; indexes?: Record<string, number> },
   messages: Array<{ role: string; content: any }>,
   block: (image: string) => any
 ) {

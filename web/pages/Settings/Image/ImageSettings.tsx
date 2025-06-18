@@ -282,6 +282,7 @@ export const ImageSettingsModal = () => {
         <TextInput
           fieldName="summaryPrompt"
           label="Summary Prompt"
+          isMultiline
           helperText='When summarising the chat to an image caption, this is the "prompt" is used summarise your conversation into an image prompt.'
           placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
           value={store.summaryPrompt}

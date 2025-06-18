@@ -94,6 +94,7 @@ export type GenerateRequestV2 = {
   /** Base64 attachments */
   attachments?: RequestAttachments
   indexes?: { [messageId: string]: number }
+  hasAttachments?: boolean
 
   /** Chat Tree  */
   parent?: string
@@ -149,6 +150,7 @@ export type AdapterProps = {
   reschemaPrompt?: string
   jsonValues: Record<string, any> | undefined
 
+  hasAttachments?: boolean
   imageData?: string
   attachments?: RequestAttachments
   indexes?: { [messageId: string]: number }

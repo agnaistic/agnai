@@ -28,6 +28,7 @@ import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { getPresetConnection, PresetConnection } from '/common/providers'
+import { stripImageContent } from './template-chat-payload'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -257,23 +258,21 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getThirdPartyPayload(opts, allStops)
-  if (opts.imageData) {
+  if (opts.hasAttachments) {
     body.messages = opts.messages
   }
 
   body.api_key = key
 
-  yield { prompt: body.messages || prompt }
+  const stripped = body.messages ? stripImageContent(body.messages) : null
+
+  yield { prompt: stripped || prompt }
 
   log.debug({ ...body, prompt: null, messages: null, imageData: null }, 'Agnaistic payload')
 
-  log.debug(`Prompt:\n${body.messages ? JSON.stringify(body.messages, null, 2) : prompt}`)
+  log.debug(`Prompt:\n${body.messages ? JSON.stringify(stripped, null, 2) : prompt}`)
 
   const [submodel, override = ''] = subPreset.subModel.split(',')
-
-  // if (body.messages && subPreset.subVisionModel) {
-  //   remapImageContent(opts, body.messages)
-  // }
 
   let params = [
     `type=text`,
