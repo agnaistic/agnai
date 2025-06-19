@@ -77,7 +77,6 @@ const ChatNav: Component<NavProps> = (props) => {
   )
 
   const canModel = createMemo(() => {
-    console.log(props.ctx.service, props.ctx.format, props.ctx.provider)
     return props.ctx.service === 'agnaistic'
   })
 

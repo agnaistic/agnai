@@ -55,8 +55,6 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                 if (state.page > 1) {
                   chubStore.setPage(state.page - 1)
                   update()
-                } else {
-                  toastStore.error('Already on first page!')
                 }
               }}
             >
@@ -68,12 +66,10 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                 fieldName="number"
                 value={state.page}
                 onChange={(ev) => {
-                  const n = Number(ev.currentTarget.value)
+                  const n = +ev.currentTarget.value
                   if (!isNaN(n) && n !== 0) {
                     chubStore.setPage(n)
                     update()
-                  } else {
-                    toastStore.error('Not a valid page number.')
                   }
                 }}
               />
@@ -85,8 +81,6 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
                 if (state.chars.length % 48 == 0) {
                   chubStore.setPage(state.page + 1)
                   update()
-                } else {
-                  toastStore.error(`Already on last page!`)
                 }
               }}
             >
