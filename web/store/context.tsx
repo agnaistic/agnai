@@ -14,7 +14,7 @@ import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { presetStore } from './presets'
 import { getChatPreset } from '/common/prompt'
-import { getPresetConnection, getProviderConnection } from '/common/providers'
+import { getPresetConnection, PresetConnection } from '/common/providers'
 import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
 
 export type ContextState = {
@@ -172,10 +172,9 @@ export function ContextProvider(props: { children: any }) {
 
   const provider = createMemo(() => {
     const p = preset()
-    if (!p?.providerId) return
-    const match = users.user?.providers?.find((val) => val._id === p.providerId)
-    const conn = match ? getProviderConnection(match) : undefined
-    return { provider: match, conn }
+    if (!p) return
+    const conn = getPresetConnection(p, users.user?.providers)
+    return { provider: conn.provider, conn }
   })
 
   createEffect(() => {
@@ -205,7 +204,7 @@ export function ContextProvider(props: { children: any }) {
       waiting: msgs.waiting,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,
-      canUseAttachments: canAttachImage(detail?.provider, preset(), subModel()),
+      canUseAttachments: canAttachImage(detail?.conn, subModel()),
       preset: preset(),
       subPreset: subModel(),
       provider: detail?.provider,
@@ -227,15 +226,9 @@ export function useAppContext() {
 }
 
 function canAttachImage(
-  provider: AppSchema.Provider | undefined,
-  preset: AppSchema.UserGenPreset | undefined,
+  conn: PresetConnection | undefined,
   subModel: AppSchema.SubscriptionModelOption | undefined
 ) {
-  const conn = provider
-    ? getProviderConnection(provider)
-    : preset
-    ? getPresetConnection(preset, [])
-    : undefined
   if (!conn) return false
   if (conn.service === 'openrouter') return true
   if (conn.service === 'claude-v2') return true

@@ -47,8 +47,6 @@ import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { api } from '/web/store/api'
-import { ThirdPartyFormat } from '/common/adapters'
-import { getPresetConnection, getProviderConnection } from '/common/providers'
 import { resizeImage } from '/web/shared/image-resize'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
@@ -431,7 +429,7 @@ const InputBar: Component<{
               </Button>
             </Show>
           </Show>
-          <Show when={canAttachImage(ctx.provider, ctx.preset, ctx.subPreset)}>
+          <Show when={ctx.canUseAttachments}>
             <FileInput
               fieldName="imageCaption"
               parentClass="hidden"
@@ -471,36 +469,3 @@ const InputBar: Component<{
 }
 
 export default InputBar
-
-function canAttachImage(
-  provider: AppSchema.Provider | undefined,
-  preset: AppSchema.UserGenPreset | undefined,
-  subModel: AppSchema.SubscriptionModelOption | undefined
-) {
-  const conn = provider
-    ? getProviderConnection(provider)
-    : preset
-    ? getPresetConnection(preset, [])
-    : undefined
-  if (!conn) return false
-  if (conn.service === 'openrouter') return true
-  if (conn.service === 'claude-v2') return true
-  if (conn.service === 'agnaistic') {
-    if (!subModel) return false
-    return !!subModel.preset.subVisionModel
-  }
-
-  const supportedFormats: { [key in ThirdPartyFormat]?: boolean } = {
-    'openai-chat': true,
-    'openai-chatv2': true,
-    llamacpp: true,
-    ollama: true,
-    gemini: true,
-    vllm: true,
-    aphrodite: true,
-    tabby: true,
-    featherless: true,
-  }
-
-  return !!conn.format && !!supportedFormats[conn.format]
-}

@@ -76,7 +76,10 @@ const ChatNav: Component<NavProps> = (props) => {
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
 
-  const canModel = createMemo(() => props.ctx.service === 'agnaistic')
+  const canModel = createMemo(() => {
+    console.log(props.ctx.service, props.ctx.format, props.ctx.provider)
+    return props.ctx.service === 'agnaistic'
+  })
 
   const size = 20
 

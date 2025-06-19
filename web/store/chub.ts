@@ -128,6 +128,13 @@ export const chubStore = createStore<ChubState>(
   }
 })
 
+export function createOnEnter(callback: Function) {
+  return (ev: KeyboardEvent) => {
+    if (ev.key !== 'Enter') return
+    callback()
+  }
+}
+
 function getSort(sort: string) {
   switch (sort) {
     case 'Download Count':

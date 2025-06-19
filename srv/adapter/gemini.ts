@@ -22,7 +22,11 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
 
   const counter = getEncoderByName('gemma')
-  const messages = opts.messages || (await toChatMessages(opts, counter.count))
+  let messages = opts.messages
+  if (!messages) {
+    const res = await toChatMessages(opts, counter.count)
+    messages = res.messages
+  }
 
   const googleModel = opts.gen.thirdPartyModel || opts.gen.googleModel
 

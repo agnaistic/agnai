@@ -139,39 +139,6 @@ type ProviderCategory = 'custom' | 'known' | 'self'
 
 export type PresetConnection = ReturnType<typeof getPresetConnection>
 
-export function getProviderConnection(provider: AppSchema.Provider) {
-  const { category, detail } = assertProviderDetail(provider.provider)
-  let url = ''
-
-  let service: AIAdapter | undefined
-  let format: ThirdPartyFormat | undefined
-
-  if (provider.url) {
-    url = provider.url
-  } else if (category !== 'known' && detail.url) {
-    url = detail.url
-  } else if (category === 'known' && detail.url) {
-    url = detail.url
-  }
-
-  const prvFormat =
-    detail.formats?.length === 1 ? detail.formats[0] : provider.format || detail.formats?.[0]
-
-  if (prvFormat) {
-    switch (prvFormat.type) {
-      case 'format':
-        format = prvFormat.value
-        break
-
-      case 'service':
-        service = prvFormat.value
-        break
-    }
-  }
-
-  return { detail, category, service, format, url, key: provider.key, local: category === 'self' }
-}
-
 export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
   providers: AppSchema.Provider[] | undefined
@@ -289,6 +256,39 @@ export function getProviderLabel(provider: AppSchema.Provider) {
     case 'custom':
       return provider.name || 'Custom'
   }
+}
+
+function getProviderConnection(provider: AppSchema.Provider) {
+  const { category, detail } = assertProviderDetail(provider.provider)
+  let url = ''
+
+  let service: AIAdapter | undefined
+  let format: ThirdPartyFormat | undefined
+
+  if (provider.url) {
+    url = provider.url
+  } else if (category !== 'known' && detail.url) {
+    url = detail.url
+  } else if (category === 'known' && detail.url) {
+    url = detail.url
+  }
+
+  const prvFormat =
+    detail.formats?.length === 1 ? detail.formats[0] : provider.format || detail.formats?.[0]
+
+  if (prvFormat) {
+    switch (prvFormat.type) {
+      case 'format':
+        format = prvFormat.value
+        break
+
+      case 'service':
+        service = prvFormat.value
+        break
+    }
+  }
+
+  return { detail, category, service, format, url, key: provider.key, local: category === 'self' }
 }
 
 function getAlias(provider: string) {

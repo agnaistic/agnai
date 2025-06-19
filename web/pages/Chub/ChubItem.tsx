@@ -74,16 +74,27 @@ export const ChubItem: Component<{
           </div>
         </div>
         <div class="w-full text-sm">
-          <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold">
+          <div
+            class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold"
+            title={props.name}
+          >
             {props.name}
           </div>
-          <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
+          <div
+            class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal"
+            title={props.description}
+          >
             {props.description}
           </div>
-          <div class="flex max-h-14 flex-wrap justify-center gap-1 overflow-hidden px-1">
+          <div class="flex max-h-12 flex-wrap justify-center gap-1 overflow-hidden px-1 pb-1">
             <For each={props.entity?.topics || []}>
               {(tag) => (
-                <Pill inverse small type="hl" class="h-[16px] max-w-[80px] text-[10px]">
+                <Pill
+                  inverse
+                  small
+                  type="hl"
+                  class="h-[16px] max-w-[80px] px-1 py-0.5 text-[10px] leading-[16px]"
+                >
                   <span class="ellipsis">{tag}</span>
                 </Pill>
               )}

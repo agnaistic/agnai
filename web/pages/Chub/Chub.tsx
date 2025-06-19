@@ -107,7 +107,23 @@ const Chub: Component = () => {
       <Modal
         show={filter()}
         close={() => setFilter(false)}
-        footer={<Button onClick={() => setFilter(false)}>Close</Button>}
+        footer={
+          <>
+            <Button schema="secondary" onClick={() => setFilter(false)}>
+              Close
+            </Button>
+
+            <Button
+              onClick={() => {
+                chubStore.setPage(1)
+                chubStore.getChars()
+                chubStore.getBooks()
+              }}
+            >
+              Search
+            </Button>
+          </>
+        }
       >
         <FilterSettings />
       </Modal>
