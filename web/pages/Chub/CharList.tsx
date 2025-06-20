@@ -13,7 +13,7 @@ const CharList: Component<{
 
   return (
     <>
-      <ChubNavigation buttons={state.chars.length >= 48} />
+      <ChubNavigation buttons={state.chars.length >= 48} page="chars" />
       <Show when={state.charsLoading}>
         <div class="flex w-full justify-center">
           <Loading />

@@ -45,6 +45,8 @@ type Props = {
   hide?: boolean
   variant?: 'outline'
 
+  adornment?: JSX.Element
+
   /** Do not update the input value if the value property receives a new value */
   static?: boolean
   ref?: (ref: any) => void

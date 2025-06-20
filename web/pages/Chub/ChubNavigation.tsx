@@ -1,12 +1,12 @@
-import { Component, For, Show, createMemo, createSignal, onMount } from 'solid-js'
-import { chubStore, createOnEnter } from '../../store/chub'
+import { Component, For, Show, createMemo, onMount } from 'solid-js'
+import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
-import { ArrowLeft, ArrowRight, Plus, Search } from 'lucide-solid'
-import { toastStore } from '../../store'
+import { ArrowLeft, ArrowRight, Search } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
+import { Combobox } from '/web/shared/Combobox'
 
-const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
+const ChubNavigation: Component<{ buttons: boolean; page: 'books' | 'chars' }> = (props) => {
   const state = chubStore()
 
   const update = (page?: number) => {
@@ -14,8 +14,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
       chubStore.setPage(page)
     }
 
-    chubStore.getBooks()
-    chubStore.getChars()
+    chubStore.getEntities(props.page)
   }
 
   onMount(update)
@@ -63,6 +62,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
 
             <div class="w-12">
               <TextInput
+                class="py-1"
                 fieldName="number"
                 value={state.page}
                 onChange={(ev) => {
@@ -99,12 +99,11 @@ export default ChubNavigation
 
 const Tags: Component = () => {
   const state = chubStore()
-  const [text, setText] = createSignal('')
 
-  const onDone = () => {
-    const next = tags().concat(text().trim()).join(',')
+  const addTag = (tag: string) => {
+    const next = tags().concat(tag.trim()).join(',')
     chubStore.setTags(next)
-    setText('')
+    chubStore.getEntities()
     update()
   }
 
@@ -117,8 +116,7 @@ const Tags: Component = () => {
 
   const update = () => {
     chubStore.setPage(1)
-    chubStore.getChars()
-    chubStore.getBooks()
+    chubStore.getEntities()
   }
 
   const tags = createMemo(() =>
@@ -128,24 +126,34 @@ const Tags: Component = () => {
       .filter((t) => t!!)
   )
 
+  const officialTags = createMemo(() => {
+    const list = state.officialTags.tags
+      .map((tag) => ({
+        label: `${tag.name} (${tag.non_private_projects_count})`,
+        value: tag.name.toLowerCase().trim(),
+        count: tag.non_private_projects_count,
+      }))
+      .sort((l, r) => r.count - l.count)
+    return list
+  })
+
   return (
     <div class="flex gap-2">
-      <TextInput
-        class="px-1 py-1"
-        placeholder="Enter tag"
-        value={text()}
-        onChange={(ev) => setText(ev.currentTarget.value)}
-        onKeyUp={createOnEnter(onDone)}
+      <Combobox
+        items={officialTags()}
+        onClick={(item) => addTag(item.value)}
+        autoClose
+        placeholder="Tags..."
       />
-      <Button onClick={onDone}>
-        <Plus size={16} />
-      </Button>
-      <div class="flex flex-wrap gap-1">
+
+      <div class="flex flex-wrap items-center gap-1">
         <For each={tags()}>
           {(tag, i) => (
             <Pill
               small
-              class="px-0.5 py-0.5 !text-xs hover:cursor-pointer"
+              type="hl"
+              inverse
+              class="px-0.5 py-0.5 !text-sm hover:cursor-pointer"
               onClick={() => remove(i())}
             >
               {tag}

@@ -18,6 +18,7 @@ export type ChubEntity = {
 }
 
 type ChubState = {
+  view: 'chars' | 'books'
   nsfw: boolean
   tags: string
   excludeTags: string
@@ -28,7 +29,7 @@ type ChubState = {
   page: number
   booksLoading: boolean
   charsLoading: boolean
-  officialTags: ChubTag[]
+  officialTags: { ttl: number; tags: ChubTag[] }
 }
 
 type ChubTag = {
@@ -42,6 +43,7 @@ type ChubTag = {
 export const CHUB_URL = `https://api.chub.ai`
 
 const initState: ChubState = {
+  view: 'chars',
   nsfw: getStoredValue('chub-nsfw', false),
   tags: '',
   excludeTags: '',
@@ -52,7 +54,7 @@ const initState: ChubState = {
   page: 1,
   booksLoading: false,
   charsLoading: false,
-  officialTags: getStoredValue('chub-tags', []),
+  officialTags: getStoredValue('chub-tags', { ttl: 0, tags: [] }),
 }
 
 export const chubStore = createStore<ChubState>(
@@ -60,17 +62,32 @@ export const chubStore = createStore<ChubState>(
   initState
 )((_, setState) => {
   return {
-    async initTags(state) {
-      if (state.officialTags.length) return
+    async initTags({ officialTags: prev }) {
+      if ('ttl' in prev && 'tags' in prev && prev.tags.length > 0) {
+        if (Date.now() < prev.ttl) return
+      }
 
-      const result = await fetch('https://api.chub.ai/tags')
+      const ttl = Date.now() + 60000 * 60 * 24
+
+      const result = await fetch('https://api.chub.ai/tags', {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          nsfl: false,
+          nsfw: true,
+          order_by: null,
+          sort: null,
+          offset: 0,
+          search: '',
+        }),
+      })
         .then((res) => res.json())
         .catch(() => null)
 
       if (!result) return
 
-      setStoredValue('chub-tags', result.tags)
-      return { officialTags: result.tags }
+      setStoredValue('chub-tags', { ttl, tags: result.tags })
+      return { officialTags: { ttl, tags: result.tags } }
     },
 
     setSearch(_, query: string) {
@@ -92,6 +109,15 @@ export const chubStore = createStore<ChubState>(
     },
     setPage(_, page: number) {
       return { page }
+    },
+    async *getEntities({ view }, type?: 'books' | 'chars') {
+      if (type) {
+        yield { view: type }
+      }
+
+      let curr = type ?? view
+      if (curr === 'books') chubStore.getBooks()
+      else chubStore.getChars()
     },
     async *getBooks(state) {
       if (state.booksLoading) return
