@@ -96,7 +96,7 @@ OtherBot:"
 exports[`Prompt building will exclude sample chat when gaslight contains sample chat placeholder 1`] = `
 "OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-This is how OtherBot should talk: SAMPLECHAT OtherBot
+This is how OtherBot should talk: __lp_sample_chat__
 MainChar: FIRST
 ChatOwner: SECOND
 MainChar: ORIGINAL
