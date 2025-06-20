@@ -180,6 +180,8 @@ export async function generateResponse(
 
   request.eventStream = true
 
+  console.log(`${opts.kind} cx:${!!opts.signal} p:${request.parent?.slice(0, 5) || 'none'}`)
+
   api.fetchSSE({
     path: `/chat/${entities.chat._id}/generate`,
     headers: getAuthHeaders(),

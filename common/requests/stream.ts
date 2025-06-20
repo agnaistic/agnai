@@ -244,7 +244,11 @@ export async function* fetchStream(
         if (isError && error) {
           // OpenRouter provider errors
           const suberror = tryParse(error?.error?.metadata?.raw)
-          const providerError = suberror?.detail || suberror?.message || suberror?.error?.message
+          const providerError =
+            suberror?.detail ||
+            suberror?.message ||
+            suberror?.error?.message ||
+            error?.error?.metadata?.raw
 
           const msg = error?.error?.message || error?.message || `status code ${response.status}`
 

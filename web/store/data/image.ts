@@ -283,7 +283,6 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryP
     context: 1024,
     encoder: await getEncoder(),
   }
-  opts.lines = (opts.lines || []).reverse()
 
   let template = getSummaryTemplate(settings.service!, summaryPrompt)
 
