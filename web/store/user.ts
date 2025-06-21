@@ -1008,7 +1008,10 @@ async function updateTheme(ui: UI.UISettings) {
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
   setRootVariable('text-quote-color', getSettingColor(mode.chatQuoteColor || 'text-800'))
+  setRootVariable('text-quote-emphasis-color', getSettingColor(mode.chatQuoteEmphasisColor || 'text-800'))
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))
+  
+  setRootVariable('text-quote-emphasis-weight', mode.chatQuoteEmphasisWeight)
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
 

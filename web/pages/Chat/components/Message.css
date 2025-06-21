@@ -13,6 +13,13 @@ em {
   color: var(--text-quote-color);
 }
 
+qem { /* quote emphasis; "I like *that*" */
+  color: var(--text-800);
+  color: var(--text-quote-emphasis-color);
+  font-style: italic;
+  font-weight: var(--text-quote-emphasis-weight);
+}
+
 .rendered-markdown img {
   display: inline-block; /* markdown images are expected to be inline-block */
 }
@@ -20,7 +27,7 @@ em {
 .rendered-markdown q::before,
 .rendered-markdown q::after {
   content: '';
-  border: none; /* necessary for th escreenshot feature or we see weird white borders */
+  border: none; /* necessary for the screenshot feature or we see weird white borders */
 }
 
 .rendered-markdown p:not(:last-child) {
