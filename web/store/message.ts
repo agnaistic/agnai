@@ -93,6 +93,7 @@ export type MsgState = {
     tree: ChatTree
     root: string
   }
+  metadata?: AppSchema.ChatMessage
 }
 
 const initState: MsgState = {
@@ -198,6 +199,9 @@ export const msgStore = createStore<MsgState>(
   )
 
   return {
+    setMetadataMsg(_, msg?: AppSchema.ChatMessage) {
+      return { metadata: msg }
+    },
     abortMessage(state) {
       if (!state.waiting) return
       state.waiting.signal?.abort?.()

@@ -15,7 +15,7 @@ import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
-import Message from './components/Message'
+import Message, { MessageMeta } from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
@@ -32,7 +32,7 @@ import { embedApi } from '/web/store/embeddings'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { ChatMenu } from './ChatMenu'
 import { ChatFooter } from './ChatFooter'
-import { ConfirmModal } from '/web/shared/Modal'
+import { ConfirmModal, RootModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
@@ -551,6 +551,8 @@ const ChatDetail: Component = () => {
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       </Show>
+
+      <MessageMeta />
 
       <Show
         when={
