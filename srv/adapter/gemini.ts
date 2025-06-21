@@ -13,6 +13,7 @@ import {
 import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getEncoderByName } from '../tokenize'
+import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -46,6 +47,10 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     presencePenalty: opts.gen.presencePenalty,
     frequencyPenalty: opts.gen.frequencyPenalty,
     abortSignal: opts.signal.signal,
+    responseSchema:
+      opts.gen.jsonEnabled && opts.jsonSchema
+        ? getJsonSchemaPayload(opts.jsonSchema, 'gemini', opts)
+        : undefined,
   }
 
   if (opts.gen.reasoning?.enabled) {

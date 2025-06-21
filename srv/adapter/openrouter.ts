@@ -9,6 +9,7 @@ import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
 import { validateChatMessages, logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
+import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -58,6 +59,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
   if (opts.gen.openRouterModel?.id) {
     payload.model = opts.gen.openRouterModel.id
+  }
+
+  if (opts.gen.jsonEnabled && opts.jsonSchema) {
+    payload.response_format = getJsonSchemaPayload(opts.jsonSchema, 'openai', opts)
   }
 
   const useAnthropic =

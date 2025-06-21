@@ -246,6 +246,19 @@ const Message: Component<MessageProps> = (props) => {
     return opts
   })
 
+  const editMessageMeta = () => {
+    rootModalStore.info(
+      'Message Information',
+      <Meta
+        msg={props.msg}
+        history={ctx.promptHistory[props.msg._id]}
+        flags={ctx.flags}
+        tree={ctx.chatTree}
+        loading={!!ctx.waiting}
+      />
+    )
+  }
+
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
@@ -390,18 +403,7 @@ const Message: Component<MessageProps> = (props) => {
                   >
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
-                      onClick={() =>
-                        rootModalStore.info(
-                          'Message Information',
-                          <Meta
-                            msg={props.msg}
-                            history={ctx.promptHistory[props.msg._id]}
-                            flags={ctx.flags}
-                            tree={ctx.chatTree}
-                            loading={!!ctx.waiting}
-                          />
-                        )
-                      }
+                      onClick={editMessageMeta}
                     >
                       <Info size={14} />
                     </span>
@@ -475,7 +477,7 @@ const Message: Component<MessageProps> = (props) => {
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
                 <Match when={props.msg.adapter === 'image'}>
-                  <MessageImages msg={props.msg} />
+                  <MessageImages msg={props.msg} onEditClick={editMessageMeta} />
                 </Match>
 
                 <Match when={!edit()}>
@@ -520,7 +522,7 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
 
-                  <MessageImages msg={props.msg} />
+                  <MessageImages msg={props.msg} onEditClick={editMessageMeta} />
                   <MessageAttachments msg={props.msg} ctx={ctx} />
 
                   <Show when={!props.partial && props.last}>

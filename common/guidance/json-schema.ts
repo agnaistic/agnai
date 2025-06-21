@@ -1,6 +1,7 @@
 import { AppSchema } from '../types'
 import { ResponseSchema } from '../types/library'
 import { JsonField } from '../prompt'
+import { GenerationConfig, Schema, Type } from '@google/genai'
 
 export const SCHEMA_VARS = {
   user: `Your name: unformatted`,
@@ -34,11 +35,38 @@ export function formatJsonSchemaVars(schema: ResponseSchema, ents: Entities) {
   return
 }
 
-export function getJsonSchemaPayload(
+type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
+
+type JsonSchemaFormat = 'openai' | 'guided_json' | 'gemini'
+
+type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
+  ? {
+      type: 'json_schema'
+      json_schema: {
+        name: string
+        type: string
+        strict: boolean
+        schema: {
+          strict: boolean
+          properties: Record<string, any>
+          required: string[]
+          additionalProperties: boolean
+        }
+      }
+    }
+  : T extends 'gemini'
+  ? GeminiResponseSchema
+  : {
+      type: 'object'
+      properties: Record<string, any>
+      required: string[]
+    }
+
+export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   json: JsonField[],
-  format: 'openai' | 'guided_json',
+  format: T,
   entities: Entities
-) {
+): OutboundJsonSchema<T> {
   const response = getResponseVariable(entities)
 
   const base = { [response]: { type: 'string' } }
@@ -60,13 +88,12 @@ export function getJsonSchemaPayload(
 
   switch (format) {
     case 'openai': {
-      const payload = {
+      const payload: OutboundJsonSchema<'openai'> = {
         type: 'json_schema',
         json_schema: {
           name: 'response',
           type: 'object',
           strict: true,
-          // name: 'response',
           schema: {
             strict: true,
             properties: fields,
@@ -75,18 +102,80 @@ export function getJsonSchemaPayload(
           },
         },
       }
-      return payload
+      return payload as OutboundJsonSchema<T>
+    }
+
+    case 'gemini': {
+      const payload: OutboundJsonSchema<'gemini'> = toResponseSchema(json, entities)
+      return payload as OutboundJsonSchema<T>
     }
 
     case 'guided_json': {
-      const payload = {
+      const payload: OutboundJsonSchema<'guided_json'> = {
         type: 'object',
         properties: fields,
         required,
       }
-      return payload
+      return payload as OutboundJsonSchema<T>
     }
   }
+}
+
+function toResponseSchema(fields: JsonField[], entities: Entities) {
+  const response = getResponseVariable(entities)
+
+  const schema: GeminiResponseSchema = {
+    type: Type.OBJECT,
+    properties: {},
+    propertyOrdering: [response].concat(fields.map((f) => f.name)),
+    required: [response].concat(fields.map((f) => f.name)),
+  }
+
+  const properties: Record<string, Schema> = {
+    [response]: { type: Type.STRING, description: response },
+  }
+
+  for (const entry of fields) {
+    switch (entry.type.type) {
+      case 'string': {
+        properties[entry.name] = {
+          type: Type.STRING,
+          description: entry.name,
+          maxLength: +entry.type.maxLength! > 0 ? `${entry.type.maxLength}` : undefined,
+        }
+        continue
+      }
+
+      case 'integer': {
+        properties[entry.name] = {
+          type: Type.INTEGER,
+          description: entry.name,
+        }
+        continue
+      }
+
+      case 'enum': {
+        properties[entry.name] = {
+          type: Type.STRING,
+          description: entry.name,
+          enum: entry.type.enum,
+        }
+        continue
+      }
+
+      case 'bool': {
+        properties[entry.name] = {
+          description: entry.name,
+          type: Type.BOOLEAN,
+        }
+        continue
+      }
+    }
+  }
+
+  schema.properties = properties
+
+  return schema
 }
 
 export function getResponseVariable(entities: Entities) {

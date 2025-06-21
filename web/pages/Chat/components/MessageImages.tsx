@@ -3,7 +3,7 @@ import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { settingStore } from '/web/store/settings'
 import { deleteCachedMessageImage, getMessageImages, msgStore } from '/web/store/message'
-import { PlusCircle } from 'lucide-solid'
+import { Pencil, PlusCircle } from 'lucide-solid'
 import { ButtonSchema } from '/web/shared/Button'
 
 type MessageImage = {
@@ -17,7 +17,9 @@ type ImageButton = {
   onClick: () => void
 }
 
-export const MessageImages: Component<{ msg: AppSchema.ChatMessage }> = (props) => {
+export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick: () => void }> = (
+  props
+) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
 
   createEffect(
@@ -40,12 +42,15 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage }> = (props) 
         )}
       </For>
 
-      <Show when={images().length}>
-        <div
-          class="icon-button mx-2 flex items-center"
-          onClick={() => msgStore.createImage(props.msg._id, true)}
-        >
-          <PlusCircle size={20} />
+      <Show when={images().length || !!props.msg.imagePrompt}>
+        <div class="ml-2 flex items-center gap-3">
+          <div class="icon-button" onClick={() => msgStore.createImage(props.msg._id, true)}>
+            <PlusCircle size={16} />
+          </div>
+
+          <div class="icon-button m" onClick={props.onEditClick}>
+            <Pencil size={16} />
+          </div>
         </div>
       </Show>
     </div>

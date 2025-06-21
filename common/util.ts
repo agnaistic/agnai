@@ -557,6 +557,12 @@ export function tryParse<T = any>(value?: any, aliases?: Record<string, string>)
 }
 
 export function parsePartialJson(value: string, aliases?: Record<string, string>) {
+  if (!value.trim().startsWith('{')) {
+    const index = value.indexOf('{')
+    if (index > -1) {
+      value = value.slice(index)
+    }
+  }
   {
     const obj = tryParse(value.trim(), aliases)
     if (obj) return obj
