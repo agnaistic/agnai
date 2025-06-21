@@ -1021,7 +1021,7 @@ async function updateTheme(ui: UI.UISettings) {
   setRootVariable('text-quote-emphasis-color', getSettingColor(mode.chatQuoteEmphasisColor || 'text-800'))
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))
   
-  setRootVariable('text-quote-emphasis-weight', mode.chatQuoteEmphasisWeight)
+  setRootVariable('text-quote-emphasis-weight', mode.chatQuoteEmphasisWeight) /*Controls the thickness of the font. default: 'unset'*/
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
 

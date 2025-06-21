@@ -445,7 +445,7 @@ const UISettings: Component<{}> = () => {
               editing={false}
               msg={toUserMsg(
                 state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"',
+                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How abot we have some *fun* today?"',
                 { _id: '2' }
               )}
               onRemove={noop}
