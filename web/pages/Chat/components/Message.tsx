@@ -66,7 +66,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import Modal, { RootModal } from '/web/shared/Modal'
+import Modal from '/web/shared/Modal'
 
 type MessageProps = {
   msg: SplitMessage
