@@ -5,6 +5,8 @@
   --text-chatcolor: unset;
   --text-emphasis-color: unset;
   --text-quote-color: unset;
+  --text-quote-emphasis-color: unset;
+  --text-quote-emphasis-weight: unset;
 
   --tooltip-x: 0;
   --tooltip-y: 0;
