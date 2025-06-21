@@ -906,22 +906,34 @@ function wrapWithQuoteElement(str: string) {
   str = str.replace(/[\u201C\u201D\u201E\u201F]/g,'"')
 
   return str.replace(
-    // we first match code blocks AND html tags
-    // to ensure we do NOTHING to what's inside them
-    // then we match "regular quotes" as capture group
+    /*
+    Regex magic explained:
+    <[\s\S]*?>      - skip all HTML tags   eg. <sumting>
+    ```[\s\S]*?```  - skip all code blocks eg. <pre>/``` markdown transform <pre><code> to ```
+    ``[\s\S]*?``    - skip all inline code eg. <code>/`` markdown transform <code> to `` | this is a non standard markup 
+    `[\s\S]*?`      - skip all inline code eg. <code>/` markdown transform <code> to `
+
+    (\".+?\")       - capture all regular double quotes, which are not part of HTML tags or code blocks
+    All captured groups are passed to the wrapCaptureGroupQuotes function
+    */
     /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")/gm,
-    wrapCaptureGroups
+    wrapCaptureGroupQuotes
   )
 }
 
-/** For use as a String#replace(str, cb) callback */
-function wrapCaptureGroups(
+/** Processes capture group from above*/
+function wrapCaptureGroupQuotes(
   match: string,
   regularQuoted?: string
 ) {
   if (regularQuoted) {
+  /*If we have a valid string then we are within a quote
+    ([\s\S]*?) - we ignore all characters between <em> and </em>
+    a valid capure will look like this: "lets have some <em>fun</em>"
+    we then pass the capture group to wrapCaptureGroupEmphasis function, which will replace <em> with <qem>
+    */
     regularQuoted = regularQuoted.replace(
-      /<em>([\s\S]*?)<\/em>|<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`/gm,
+      /<em>([\s\S]*?)<\/em>/gm,
       wrapCaptureGroupEmphasis
     )
     return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
