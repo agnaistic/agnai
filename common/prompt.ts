@@ -486,13 +486,16 @@ export async function buildPromptPlaceholders(
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
-  const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
+  const replace = (value: string, botName?: string) =>
+    placeholderReplace(value, botName || opts.replyAs.name, sender)
 
   const parts: PromptPlaceholders = {
     systemPrompt: opts.settings?.systemPrompt || '',
-    persona: formatCharacter(
-      replyAs.name,
-      replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+    persona: replace(
+      formatCharacter(
+        replyAs.name,
+        replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+      )
     ),
     prefill: opts.settings?.prefill || '',
     post: [],
@@ -504,10 +507,12 @@ export async function buildPromptPlaceholders(
   const personalities = new Set([replyAs._id])
 
   if (opts.impersonate?.persona) {
-    parts.impersonality = formatCharacter(
-      opts.impersonate.name,
-      opts.impersonate.persona,
-      opts.impersonate.persona.kind
+    parts.impersonality = replace(
+      formatCharacter(
+        opts.impersonate.name,
+        opts.impersonate.persona,
+        opts.impersonate.persona.kind
+      )
     )
   }
 
@@ -524,7 +529,10 @@ export async function buildPromptPlaceholders(
 
     personalities.add(bot._id)
     parts.allPersonas.push(
-      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`
+      `${bot.name}'s personality: ${replace(
+        formatCharacter(bot.name, bot.persona, bot.persona.kind),
+        bot.name
+      )}`
     )
   }
 
@@ -541,7 +549,7 @@ export async function buildPromptPlaceholders(
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-    .map(replace)
+    .map((text) => replace(text))
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
@@ -565,7 +573,7 @@ export async function buildPromptPlaceholders(
   parts.ujb = supplementary.ujb
   parts.systemPrompt = supplementary.system
 
-  parts.post = post.map(replace)
+  parts.post = post.map((post) => replace(post))
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)

@@ -41,6 +41,10 @@ const EmbedContent: Component = (props) => {
   }
 
   const embedFile = async () => {
+    if (!store.embedName) {
+      toastStore.error(`Enter a name for the embedding`)
+    }
+
     setLoading(true)
     try {
       const docNeeded = store.type === 'PDF' || store.type === 'Text file'
