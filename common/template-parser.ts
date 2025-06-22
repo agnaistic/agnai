@@ -641,6 +641,9 @@ function renderCondition(
     value = elseOutput.join('')
   }
 
+  // If the condition's placeholder and else-block is empty: return nothing
+  if (!value?.trim()) return
+
   const output: string[] = []
 
   for (const child of children) {
