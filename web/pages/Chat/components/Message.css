@@ -13,7 +13,8 @@ em {
   color: var(--text-quote-color);
 }
 
-qem { /* quote emphasis; "I like *that*" */
+qem {
+  /* quote emphasis; "I like *that*" */
   color: var(--text-800);
   color: var(--text-quote-emphasis-color);
   font-style: italic;
