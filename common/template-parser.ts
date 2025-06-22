@@ -11,7 +11,7 @@ type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 let DEBUG = false
 const SAMPLE_CHAT_LP = `__lp_sample_chat__`
 
-type InternalFlags = { sample_chat?: boolean }
+type InternalFlags = { sample_chat?: boolean; pre_render?: boolean; is_final?: boolean }
 
 export type TemplateOpts = {
   continue?: boolean
@@ -19,7 +19,6 @@ export type TemplateOpts = {
   chat: AppSchema.Chat
 
   isPart?: boolean
-  isFinal?: boolean
 
   char: AppSchema.Character
   replyAs?: AppSchema.Character
@@ -201,7 +200,7 @@ export async function parseTemplate(
     opts.limit.output = {}
   }
 
-  const flags: InternalFlags = {}
+  const flags: InternalFlags = { pre_render: true }
 
   const sections: TemplateOpts['sections'] = {
     flags: {},
@@ -230,6 +229,7 @@ export async function parseTemplate(
     opts.isPart = false
   }
 
+  flags.pre_render = false
   const ast = parser.parse(template, {}) as PNode[]
   readInserts(opts, ast, flags)
   let output = render(template, opts, flags, ast)
@@ -250,9 +250,9 @@ export async function parseTemplate(
   /**
    * Some placeholders require re-parsing as they also contain placeholders
    */
-  opts.isFinal = true
+  flags.is_final = true
   const result = render(output, opts, flags).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
-  opts.isFinal = false
+  flags.is_final = false
 
   /** Replace iterators */
   let history: string[] = []
@@ -319,7 +319,7 @@ export async function parseTemplate(
     }
   }
 
-  opts.isFinal = true
+  flags.is_final = true
   output = render(output, opts, flags).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
 
   if (opts.lowpriority) {
@@ -435,7 +435,7 @@ function render(template: string, opts: TemplateOpts, flags: InternalFlags, exis
       }
 
       if (!opts.sections?.done) {
-        fillSection(opts, prevMarker, result)
+        fillSection(opts, prevMarker, flags, result)
       }
 
       if (result) {
@@ -636,12 +636,9 @@ function renderCondition(
     if (result) elseOutput.push(result)
   }
 
-  const value = getPlaceholder(node, opts, flags)
-  if (!value) {
-    if (elseOutput.length) {
-      return elseOutput.join('')
-    }
-    return
+  let value = getPlaceholder(node, opts, flags)
+  if (!value && elseOutput.length) {
+    value = elseOutput.join('')
   }
 
   const output: string[] = []
@@ -799,7 +796,7 @@ function getPlaceholder(
     return `{{${node.value}}}`
   }
 
-  if (opts.isFinal && FINAL_IGNORE_HOLDERS[node.value]) {
+  if (flags.is_final && FINAL_IGNORE_HOLDERS[node.value]) {
     return `{{${node.value}}}`
   }
 
@@ -941,7 +938,13 @@ function handleDice(node: DiceExpr) {
   return rand
 }
 
-function fillSection(opts: TemplateOpts, marker: Section | undefined, result: string | undefined) {
+function fillSection(
+  opts: TemplateOpts,
+  marker: Section | undefined,
+  interal: InternalFlags,
+  result: string | undefined
+) {
+  if (interal.pre_render) return
   if (!opts.sections) return
   if (!result) return
   if (result === HISTORY_MARKER) return

@@ -21,7 +21,7 @@ import {
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
-import { toChatMessages } from './template-chat-payload'
+import { toChatMessages, validateChatMessages } from './template-chat-payload'
 import { isDefaultPreset } from '/common/default-preset'
 import { getPresetConnection } from '/common/providers'
 
@@ -441,7 +441,7 @@ export async function createChatStream(
     log,
     members: opts.members.concat(opts.sender),
     prompt: assembled.prompt,
-    messages,
+    messages: validateChatMessages(messages),
     parts: assembled.parts,
     sender: opts.sender,
     mappedSettings,
