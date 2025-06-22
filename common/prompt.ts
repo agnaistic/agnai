@@ -9,7 +9,7 @@ import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
-import { ModelFormat, replaceTags } from './presets/templates'
+import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
 import { isDefaultPreset } from './default-preset'
 import { OPENAI_CONTEXTS } from './presets/openai'
@@ -229,10 +229,6 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    */
   let template = getTemplate(opts)
 
-  if (opts.modelFormat) {
-    template = replaceTags(template, opts.modelFormat)
-  }
-
   /**
    * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
    * are retrieved based on the number of history messages we return here.
@@ -258,6 +254,10 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     encoder,
     jsonValues: opts.jsonValues,
   })
+
+  if (opts.modelFormat) {
+    prompt.parsed = replaceTags(prompt.parsed, opts.modelFormat)
+  }
 
   return { lines, parts, template: prompt, indexes }
 }
@@ -364,8 +364,6 @@ type InjectOpts = {
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'None')
-
   /**
    * This is currently disabled:
    * Models behave far too differently to insert sample chat using this method.
@@ -420,7 +418,20 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
       encoder,
     },
   })
+
+  const format = inject.format || opts.settings?.modelFormat || 'None'
+  result.parsed = replaceTags(result.parsed, format)
+  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, format)
+  replaceSectionTags(result.sections.sections, format)
+
   return result
+}
+
+function replaceSectionTags(sections: Record<string, string[] | any>, format: ModelFormat) {
+  for (const key in sections) {
+    if (!Array.isArray(sections[key])) continue
+    sections[key] = replaceArrayTags(sections[key], format)
+  }
 }
 
 /**
@@ -991,6 +1002,9 @@ export function resolveScenario(
       result += `\n${book.text}`
     }
   }
+
+  // The scenario `{{char}}` placeholders must always refer to the owner of the scenario
+  result.replace(/{{char}}/gi, mainChar.name)
 
   return result.trim()
 }

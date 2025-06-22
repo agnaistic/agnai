@@ -178,6 +178,7 @@ const EmbedContent: Component = (props) => {
             helperText="The content to be embedded. Use line breaks to seperate lines."
             isMultiline
             onChange={(ev) => setStore('embedText', ev.currentTarget.value)}
+            class="max-h-80"
           />
 
           <Button class="mt-2 w-fit" onClick={embedFile}>

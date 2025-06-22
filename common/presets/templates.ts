@@ -91,6 +91,14 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
   },
 }
 
+export function replaceArrayTags(prompts: string[], format: FormatTags | ModelFormat) {
+  const next: string[] = []
+  for (const prompt of prompts) {
+    next.push(replaceTags(prompt, format))
+  }
+  return next
+}
+
 export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
   if (!format) {
     format = 'None'

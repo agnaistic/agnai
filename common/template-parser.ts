@@ -79,7 +79,16 @@ function loadParser() {
 
 const HISTORY_MARKER = '__history__marker__'
 
-type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
+type PNode =
+  | SystemNode
+  | PlaceHolder
+  | ConditionNode
+  | IteratorNode
+  | InsertNode
+  | LowPriorityNode
+  | string
+
+type SystemNode = { kind: 'system-block'; value: string }
 
 type PlaceHolder = {
   kind: 'placeholder'
@@ -455,6 +464,12 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalFlags, condi
   }
 
   switch (node.kind) {
+    case 'system-block': {
+      const subAst = parser.parse(node.value)
+      const result = renderNodes(subAst, opts, flags)
+      return `<system>${result}</system>`
+    }
+
     case 'placeholder': {
       const result = getPlaceholder(node, opts, flags, conditionText)
       return result
@@ -973,6 +988,10 @@ function getMarker(opts: TemplateOpts, node: PNode, previous: Section): Section 
   }
 
   switch (node.kind) {
+    case 'system-block': {
+      return 'system'
+    }
+
     case 'placeholder': {
       if (node.value === 'history') return 'history'
       if (node.value === 'system_prompt') return 'system'

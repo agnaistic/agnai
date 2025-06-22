@@ -73,8 +73,8 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
       init: {
         steps: 20,
         cfg: 5,
-        height: 1024,
-        width: 1024,
+        height: 1216,
+        width: 1216,
         prefix: '',
         suffix: '',
         negative: '',
@@ -120,7 +120,7 @@ const Model: Component<{
   remove: (index: number) => void
 }> = (props) => {
   return (
-    <Accordian title={props.item.desc} titleClickOpen open={false}>
+    <Accordian title={props.item.desc} titleClickOpen open={!props.item.name}>
       <Card
         bg="bg-900"
         bgOpacity={1}

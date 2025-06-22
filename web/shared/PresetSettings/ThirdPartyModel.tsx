@@ -170,23 +170,20 @@ const CompatModel: Field = (props) => {
           </Show>
         }
         label={
-          <div class="flex justify-between">
+          <div class="flex items-center gap-2">
             <div>Model</div>
-            <div class="flex gap-2">
-              <Show when={modelList().length > 1}>
-                <CustomSelect
-                  modalTitle={`Select Model: ${new URL(models.url).host || '...'}`}
-                  parentClass="flex w-full justify-end"
-                  size="sm"
-                  selected={props.state.thirdPartyModel}
-                  options={modelList()}
-                  onSelect={(ev) => onModelSelect(ev.value)}
-                  search={tokenizedSearch}
-                  buttonLabel={`Select Model`}
-                  hide={modelList().length <= 1}
-                  disabled={models.loading}
-                />
-              </Show>
+            <div class="ml-2 flex gap-2">
+              <CustomSelect
+                modalTitle={`Select Model: ${new URL(models.url).host || '...'}`}
+                parentClass="flex w-full justify-end"
+                size="sm"
+                selected={props.state.thirdPartyModel}
+                options={modelList()}
+                onSelect={(ev) => onModelSelect(ev.value)}
+                search={tokenizedSearch}
+                buttonLabel={`Select Model`}
+                disabled={models.loading || modelList().length <= 1}
+              />
 
               <Button
                 size="sm"

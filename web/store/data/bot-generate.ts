@@ -180,7 +180,11 @@ export async function generateResponse(
 
   request.eventStream = true
 
-  console.log(`${opts.kind} cx:${!!opts.signal} p:${request.parent?.slice(0, 5) || 'none'}`)
+  console.log(
+    `${opts.kind} cx:${!!opts.signal} p:${
+      request.parent?.slice(0, 5) || 'none'
+    } rep:${request.replacing?._id?.slice(0, 4)}`
+  )
 
   api.fetchSSE({
     path: `/chat/${entities.chat._id}/generate`,

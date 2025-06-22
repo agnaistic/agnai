@@ -33,11 +33,6 @@ export const MessageAttachments: Component<{ ctx: ContextState; msg: AppSchema.C
               onClick={() =>
                 settingStore.showImage(image, [
                   {
-                    schema: 'secondary',
-                    text: 'Close',
-                    onClick: () => settingStore.clearImage(),
-                  },
-                  {
                     schema: 'warning',
                     text: 'Remove',
                     onClick: () => {
