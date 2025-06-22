@@ -890,7 +890,10 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   const html = Purify.sanitize(
     wrapWithQuoteElement(
       markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
-    ), {ALLOWED_TAGS: ['q', 'qem', 'em', 'strong', 'b', 'i', 'br', 'p', 'span', 'div', 'code', 'pre']}
+    ),
+    {
+      ALLOWED_TAGS: ['q', 'qem', 'em', 'strong', 'b', 'i', 'br', 'p', 'span', 'div', 'code', 'pre'],
+    }
   )
 
   return html
@@ -903,7 +906,7 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
 function wrapWithQuoteElement(str: string) {
   // Replace all non-regular double quotes with double regular quotes
   // Unicode double quote characters: https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
-  str = str.replace(/[\u201C\u201D\u201E\u201F]/g,'"')
+  str = str.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
 
   return str.replace(
     /*
@@ -922,30 +925,21 @@ function wrapWithQuoteElement(str: string) {
 }
 
 /** Processes capture group from above*/
-function wrapCaptureGroupQuotes(
-  match: string,
-  regularQuoted?: string
-) {
+function wrapCaptureGroupQuotes(match: string, regularQuoted?: string) {
   if (regularQuoted) {
-  /*If we have a valid string then we are within a quote
+    /*If we have a valid string then we are within a quote
     ([\s\S]*?) - we ignore all characters between <em> and </em>
     a valid capure will look like this: "lets have some <em>fun</em>"
     we then pass the capture group to wrapCaptureGroupEmphasis function, which will replace <em> with <qem>
     */
-    regularQuoted = regularQuoted.replace(
-      /<em>([\s\S]*?)<\/em>/gm,
-      wrapCaptureGroupEmphasis
-    )
+    regularQuoted = regularQuoted.replace(/<em>([\s\S]*?)<\/em>/gm, wrapCaptureGroupEmphasis)
     return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
   }
   return match
-  }
+}
 
 /** Replaces all <em> tags within a <q> tag with <qem> tags*/
-function wrapCaptureGroupEmphasis(
-  match: string,
-  emphasisQuote?: string
-) {
+function wrapCaptureGroupEmphasis(match: string, emphasisQuote?: string) {
   if (emphasisQuote) {
     return '<qem>' + emphasisQuote.replace(/\"/g, '') + '</qem>'
   }
