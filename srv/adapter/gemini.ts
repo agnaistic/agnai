@@ -8,7 +8,6 @@ import {
   GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
-  Part,
   SafetySetting,
 } from '@google/genai'
 import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
@@ -29,6 +28,11 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     const res = await toChatMessages(opts, counter.count)
     messages = res.messages
   }
+
+  remapMessages(messages, {
+    text: (text) => ({ text }),
+    image: (data) => ({ inlineData: { mimeType: getMimeTypeBase64(data), data } }),
+  })
 
   const googleModel = opts.gen.thirdPartyModel || opts.gen.googleModel
 
@@ -57,7 +61,6 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   if (opts.gen.reasoning?.enabled) {
     const effort = opts.gen.reasoning.effort || 'low'
     const max = Math.max(opts.gen.maxTokens ?? 2048, 2048)
-    generationConfig.maxOutputTokens = max
 
     let tokens = 0
     switch (effort) {
@@ -89,43 +92,54 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     }
   }
 
-  const systems = opts.messages?.find((m) => m.role === 'system')
   const contents: Content[] = []
 
+  const systems = opts.messages?.find((m) => m.role === 'system')
   const canUseSystemInstruct = !SYSTEM_INCAPABLE[googleModel]
 
-  remapMessages(messages, {
-    text: (text) => ({ text }),
-    image: (data) => ({ inlineData: { mimeType: getMimeTypeBase64(data), data } }),
-  })
-
-  for (const msg of messages) {
-    if (msg.role === 'system') {
-      continue
-    }
-
-    if (msg.role === 'user') {
-      if (Array.isArray(msg.content)) {
-        contents.push({ role: 'user', parts: msg.content })
-        continue
-      }
-
-      contents.push({ role: 'user', parts: [{ text: msg.content }] })
-    }
-
-    contents.push({ role: 'model', parts: [{ text: msg.content }] })
-
-    continue
-  }
-
+  let systemIsUsed = false
   if (systems) {
     if (canUseSystemInstruct) {
       generationConfig.systemInstruction = {
         parts: [{ text: systems.content }],
       }
-    } else {
-      contents.unshift({ role: 'user', parts: [{ text: systems.content }] })
+      systemIsUsed = true
     }
+  }
+
+  let hack = false
+  for (const msg of messages) {
+    // If we didnt set a system instruction, we use the first user message for the prompt
+    if (msg.role === 'system' && !systemIsUsed) {
+      contents.push({ role: 'user', parts: [{ text: msg.content }] })
+      hack = true
+      continue
+    }
+
+    // WTF! Please send help to my brain
+    if (hack) {
+      if (
+        contents[0] &&
+        Array.isArray(contents[0].parts) &&
+        contents[0].parts[0] &&
+        typeof contents[0].parts[0].text === 'string'
+      ) {
+        // if we are here this means, we have to put the SysPrompt and rest of the Prompt in one user message.
+        contents[0].parts[0].text += '\n\n' + msg.content
+        continue
+      }
+    }
+
+    if (msg.role === 'user') {
+      contents.push({ role: 'user', parts: [{ text: msg.content }] })
+      continue
+    }
+
+    if (msg.role === 'assistant') {
+      contents.push({ role: 'model', parts: [{ text: msg.content }] })
+      continue
+    }
+    continue
   }
 
   const client = new GoogleGenAI({ apiKey: key! })
@@ -161,15 +175,32 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
+    // If reasining is enabled, the API will return a response with two parts.
+    // The first part is the reasoning, the second part is the actual response.
     if (ai.candidates && opts.gen.reasoning && ai.candidates[0]?.content?.parts?.length === 2) {
-      accum += opts.gen.prefill || ''
+      accum += opts.gen.prefill || '' // Add the prefill, makes it the resonse complete.
       accum += ai.candidates[0]?.content.parts[0].text || ''
-      accum += '</think>'
+      accum += (opts.gen.reasoning.end || '</think>') + '\n' // Reasining is done, lets close the <think> tag.
       accum += ai.candidates[0]?.content.parts[1].text || ''
     } else {
       accum += ai.candidates?.[0]?.content?.parts?.[0]?.text || ai.text || ''
     }
   } else {
+    /*For now giving up on properly streaming reasoning responses and have it look nice.
+    Iam 90% exactly where the issue is, When sending the Histrory inside a Content[] Array,
+    which is required to properly send over the chat History. The thought bool is missing.
+    If we send a plain string, we will receive the thought bool inside the response.
+    I dont think there is anything on our side we can do about this.
+
+    Rant_Mode: true
+    I spent like 12 hours only on this fricking issue, its fricking stoopid and Illogical.
+    And for what? frick this, they can just turn off the streaming and it will work perfectly.
+    @sceuick we should to tell the users somehow that its reccomended to disable streaming for gemini.
+    otherwise they will complain why the fricking thoughts in their responses. It bugs me so much.
+    Rant_Mode: false
+
+    generateContentStream will work just fine, but we cant disdinguish between thoughts and normal text.
+    */
     const ai = await client.models
       .generateContentStream({
         model: googleModel,
@@ -191,24 +222,29 @@ export const handleGemini: ModelAdapter = async function* (opts) {
         yield { error: `[GoogleAI] Prompt was blocked: ${blocked}` }
         return
       }
-      const parts = ((tick.candidates && tick.candidates?.[0]?.content?.parts) as Part[]) || []
+      const parts = (tick.candidates && tick.candidates?.[0]?.content?.parts) || []
       for (const part of parts) {
-        part as Part
-        if (!part.text) {
-          continue
-        } else if (part.thought) {
+        if (!part.text) continue
+
+        if (part.thought) {
           if (!accum) {
-            accum += opts.gen.prefill || ''
+            accum += opts.gen.prefill + '\n' || ''
             wasThinking = true
           }
           accum += part.text
-          yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+
+          yield {
+            partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members),
+          }
         } else {
           if (wasThinking) {
-            accum += '</think>'
+            accum += (opts.gen?.reasoning?.end || '</think>') + '\n'
+            wasThinking = false
           }
           accum += part.text
-          yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+          yield {
+            partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members),
+          }
         }
       }
     }
