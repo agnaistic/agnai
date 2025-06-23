@@ -8,6 +8,7 @@ import {
   GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
+  Part,
   SafetySetting,
 } from '@google/genai'
 import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
@@ -160,14 +161,20 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
-    const text = ai.candidates?.[0].content?.parts?.[0]?.text || ai.text || ''
-    accum += text
+    if (ai.candidates && opts.gen.reasoning && ai.candidates[0]?.content?.parts?.length === 2) {
+      accum += opts.gen.prefill || ''
+      accum += ai.candidates[0]?.content.parts[0].text || ''
+      accum += '</think>'
+      accum += ai.candidates[0]?.content.parts[1].text || ''
+    } else {
+      accum += ai.candidates?.[0]?.content?.parts?.[0]?.text || ai.text || ''
+    }
   } else {
     const ai = await client.models
       .generateContentStream({
         model: googleModel,
-        config: generationConfig,
         contents,
+        config: generationConfig,
       })
       .catch((err) => ({ err }))
 
@@ -177,16 +184,33 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
+    let wasThinking = false
     for await (const tick of ai) {
       const blocked = tick.promptFeedback?.blockReasonMessage || tick.promptFeedback?.blockReason
       if (blocked) {
         yield { error: `[GoogleAI] Prompt was blocked: ${blocked}` }
         return
       }
-
-      const text = tick.candidates?.[0].content?.parts?.[0]?.text || tick.text
-      accum += text || ''
-      yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+      const parts = ((tick.candidates && tick.candidates?.[0]?.content?.parts) as Part[]) || []
+      for (const part of parts) {
+        part as Part
+        if (!part.text) {
+          continue
+        } else if (part.thought) {
+          if (!accum) {
+            accum += opts.gen.prefill || ''
+            wasThinking = true
+          }
+          accum += part.text
+          yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+        } else {
+          if (wasThinking) {
+            accum += '</think>'
+          }
+          accum += part.text
+          yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+        }
+      }
     }
   }
 
