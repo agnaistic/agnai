@@ -6,7 +6,6 @@ import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
 import { Pill } from './Card'
-import Divider from './Divider'
 
 export type Option<T extends string = string> = {
   label: string
@@ -116,7 +115,6 @@ const CharacterSelectList: Component<{
                 </div>
               )}
             </For>
-            <Divider />
           </Show>
           <For each={sorted()}>
             {(item) => (

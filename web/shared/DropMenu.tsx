@@ -2,7 +2,6 @@ import { ChevronDown, ChevronUp } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
-import { getAbsolutePosition } from './util'
 
 export const Dropup: Component<{ children: any }> = (props) => {
   const [show, setShow] = createSignal(false)
@@ -55,30 +54,52 @@ export const DropMenu: Component<{
   class?: string
   parent?: HTMLElement
 }> = (props) => {
-  let ref: HTMLDivElement | undefined
+  let container!: HTMLDivElement
+  let menu!: HTMLDivElement
+
   const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
   const [opened, setOpened] = createSignal(false)
   const [id, _setId] = createSignal('dropdown-' + v4())
 
-  const onRef = (el: HTMLDivElement) => {
-    const rect = el.getBoundingClientRect()
+  const onRef = () => {
+    const el = menu
+    // const bounds = { w: window.innerWidth, h: window.innerHeight }
+    const self = el.getBoundingClientRect()
     setTimeout(() => {
       setOpened(true)
     }, 1)
 
     if (props.parent) {
-      const pos = getAbsolutePosition(props.parent)
+      const parent = getBoundingRect(props.parent)
 
       if (!props.horz || props.horz === 'left') {
-        el.style.left = `${pos.left}px`
+        // Left Positioning
+        let pos = parent.left - self.width
+        if (pos - self.width < 0) {
+          pos = self.width + 24
+        }
+        el.style.left = `${pos}px`
       } else {
-        el.style.right = `${pos.right}px`
+        // Right Positioning
+        let pos = window.innerWidth - parent.right - self.width
+        if (pos < 0) {
+          pos = 24
+        }
+
+        el.style.right = `${pos}px`
       }
 
       if (!props.vert || props.vert === 'down') {
-        el.style.top = `${pos.top}px`
+        // Down positioning
+        let pos = parent.top + parent.height
+        if (pos + self.height > window.innerHeight) {
+          pos = window.innerHeight - self.height - 24
+        }
+
+        el.style.top = `${pos}px`
       } else {
-        el.style.bottom = `${pos.bottom}px`
+        // Up positioning
+        el.style.bottom = `${parent.bottom}px`
       }
 
       return
@@ -94,17 +115,17 @@ export const DropMenu: Component<{
 
     if (props.vert) {
       vert = props.vert
-    } else if (rect.y + rect.height > window.innerHeight) {
+    } else if (self.y + self.height > window.innerHeight) {
       vert = 'up'
-    } else if (rect.y - rect.height < 0) {
+    } else if (self.y - self.height < 0) {
       vert = 'down'
     }
 
     if (props.horz) {
       horz = props.horz
-    } else if (rect.x + rect.width > window.innerWidth) {
+    } else if (self.x + self.width > window.innerWidth) {
       horz = 'left'
-    } else if (rect.x - rect.width < 0) {
+    } else if (self.x - self.width < 0) {
       horz = 'right'
     }
 
@@ -112,14 +133,17 @@ export const DropMenu: Component<{
   }
 
   createEffect(() => {
-    if (props.show) return
+    if (props.show) {
+      onRef()
+      return
+    }
     setOpened(false)
   })
 
   useEffect(() => {
     const handler = (event: MouseEvent | TouchEvent) => {
       if (!opened()) return
-      if (!ref) return
+      if (!container) return
 
       let dropdown: HTMLElement | null = event.target as HTMLElement
 
@@ -144,7 +168,11 @@ export const DropMenu: Component<{
         return
       }
 
-      if (event.target instanceof Element && !ref.contains(event.target) && event.target !== ref) {
+      if (
+        event.target instanceof Element &&
+        !container.contains(event.target) &&
+        event.target !== container
+      ) {
         event.preventDefault()
         event.stopPropagation()
         setOpened(false)
@@ -166,6 +194,7 @@ export const DropMenu: Component<{
 
   const classes = createMemo(() => {
     return {
+      invisible: props.show ? '' : 'hidden',
       bottom:
         !props.parent && !props.customPosition && (auto()?.vert === 'up' || props.vert === 'up')
           ? 'bottom-6'
@@ -181,13 +210,21 @@ export const DropMenu: Component<{
 
   return (
     <>
-      <div ref={ref!} class="z-50 text-sm" data-id={id()} classList={{ relative: !props.parent }}>
-        <Show when={props.show}>
+      <div
+        ref={container!}
+        class="z-50 text-sm"
+        data-id={id()}
+        classList={{ relative: !props.parent }}
+      >
+        <Show when={true}>
           <div
-            ref={onRef}
+            ref={(ref) => {
+              menu = ref
+              // onRef(ref)
+            }}
             class={`bg-800 absolute w-fit rounded-md border-[1px] border-[var(--bg-600)] ${
               props.class || ''
-            } ${classes().bottom} ${classes().right}`}
+            } ${classes().bottom} ${classes().right} ${classes().invisible}`}
           >
             {props.children}
           </div>
@@ -195,4 +232,22 @@ export const DropMenu: Component<{
       </div>
     </>
   )
+}
+
+function rectToObject(rect: DOMRect) {
+  return {
+    top: rect.top,
+    bottom: rect.bottom,
+    left: rect.left,
+    right: rect.right,
+    width: rect.width,
+    height: rect.height,
+    x: rect.x,
+    y: rect.y,
+  }
+}
+
+function getBoundingRect(ele: HTMLElement) {
+  const rect = ele.getBoundingClientRect()
+  return rectToObject(rect)
 }

@@ -344,6 +344,7 @@ const CharacterListOptions: Component<{
   download: () => void
   toggleFavorite: (value: boolean) => void
 }> = (props) => {
+  let itemMenu!: HTMLDivElement
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
 
@@ -371,15 +372,15 @@ const CharacterListOptions: Component<{
         </A>
         <Trash class="icon-button" onClick={props.delete} />
       </div>
-      <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
+      <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)} ref={itemMenu}>
         <MoreHorizontal class="icon-button" />
       </div>
       <DropMenu
         class="bg-[var(--bg-700)]"
         show={listOpts()}
         close={() => setListOpts(false)}
-        customPosition="right-[10px]"
-        // horz="left"
+        parent={itemMenu}
+        horz="left"
         vert="down"
       >
         <div class="flex flex-col gap-2 p-2 font-bold">

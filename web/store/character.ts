@@ -85,66 +85,6 @@ export const characterStore = createStore<CharacterState>(
   'character',
   initState
 )((get, set) => {
-  events.on(EVENTS.loggedOut, () => {
-    characterStore.setState({ ...initState })
-    characterStore.getCharacters(true)
-  })
-
-  events.on(EVENTS.loggedIn, () => {
-    characterStore.setState({ ...initState })
-  })
-
-  events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
-    const { chatChars: prev } = get()
-    set({
-      chatChars: {
-        chatId: prev.chatId,
-        list: prev.list.concat(char),
-        map: Object.assign({}, prev.map, { [char._id]: char }),
-      },
-    })
-  })
-
-  events.on(
-    EVENTS.charsReceived,
-    async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
-      const allChars = chars.concat(temps)
-      set({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
-      characterStore.loadImpersonate(chatId)
-    }
-  )
-
-  events.on(EVENTS.init, (data) => {
-    if (!data.characters) return
-    events.emit(EVENTS.allChars, data.characters)
-  })
-
-  events.on(EVENTS.chatOpened, (chatId: string) => {
-    set({ activeChatId: chatId })
-  })
-
-  events.on(EVENTS.chatClosed, () => {
-    set({ activeChatId: '' })
-    characterStore.loadImpersonate()
-  })
-
-  events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
-    const state = get()
-    const userId = getUserId()
-
-    set({
-      characters: {
-        map: toMap(chars),
-        list: chars.filter((ch) => ch.userId === userId),
-        loaded: Date.now(),
-      },
-    })
-
-    if (state.impersonating) return
-
-    characterStore.loadImpersonate()
-  })
-
   return {
     clearCharacter() {
       return { editing: undefined }
@@ -508,6 +448,66 @@ subscribe(
     })
   }
 )
+
+events.on(EVENTS.loggedOut, () => {
+  characterStore.setState({ ...initState })
+  characterStore.getCharacters(true)
+})
+
+events.on(EVENTS.loggedIn, () => {
+  characterStore.setState({ ...initState })
+})
+
+events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
+  const { chatChars: prev } = characterStore.getState()
+  characterStore.setState({
+    chatChars: {
+      chatId: prev.chatId,
+      list: prev.list.concat(char),
+      map: Object.assign({}, prev.map, { [char._id]: char }),
+    },
+  })
+})
+
+events.on(
+  EVENTS.charsReceived,
+  async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
+    const allChars = chars.concat(temps)
+    characterStore.setState({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
+    characterStore.loadImpersonate(chatId)
+  }
+)
+
+events.on(EVENTS.init, (data) => {
+  if (!data.characters) return
+  events.emit(EVENTS.allChars, data.characters)
+})
+
+events.on(EVENTS.chatOpened, (chatId: string) => {
+  characterStore.setState({ activeChatId: chatId })
+})
+
+events.on(EVENTS.chatClosed, () => {
+  characterStore.setState({ activeChatId: '' })
+  characterStore.loadImpersonate()
+})
+
+events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
+  const state = characterStore.getState()
+  const userId = getUserId()
+
+  characterStore.setState({
+    characters: {
+      map: toMap(chars),
+      list: chars.filter((ch) => ch.userId === userId),
+      loaded: Date.now(),
+    },
+  })
+
+  if (state.impersonating) return
+
+  characterStore.loadImpersonate()
+})
 
 function replace(
   map: Record<string, AppSchema.Character>,
