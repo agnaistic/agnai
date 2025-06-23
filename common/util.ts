@@ -738,3 +738,35 @@ export function parseSearchQuery<T = any>(search: string) {
     return prev
   }, {} as any) as T
 }
+
+/**
+ * Converts objects to strings `{ key: value | key: value | ... }` for the purposes of logging.
+ */
+export function inline(obj: object): string {
+  if (typeof obj === 'number' || typeof obj === 'string' || typeof obj === 'boolean') return obj
+
+  const output = Object.entries(obj)
+    .filter(([_, value]) => value !== undefined && value !== null && typeof value !== 'function')
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        const next = value.map(inline).join(', ')
+        return `${bold(key)}: [${next}]`
+      }
+
+      if (value instanceof Date) {
+        return `${bold(key)}: ${value.toISOString()}`
+      }
+
+      if (typeof value === 'object') {
+        return `${bold(key)}: ${inline(value)}`
+      }
+
+      return `${bold(key)}: ${value}`
+    })
+    .join(' | ')
+  return `{ ${output} }`
+}
+
+function bold(text: string) {
+  return `\x1b[1m${text}\x1b[0m`
+}
