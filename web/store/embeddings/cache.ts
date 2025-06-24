@@ -84,6 +84,8 @@ async function saveDocument(id: string, doc: EmbeddedDocument) {
 
 async function deleteDocument(docId: string) {
   const ids = await getCachedIds()
+  if (!docId) return ids
+
   const nextIds = ids.filter((doc) => doc._id !== docId)
   await lf.setItem(CACHE_KEY, JSON.stringify(nextIds))
   await lf.removeItem(`${CACHE_KEY}_${docId}`)

@@ -7,7 +7,7 @@ import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
-import { validateChatMessages, logPayload, stripImageContent } from './template-chat-payload'
+import { logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 
@@ -79,10 +79,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.messages = opts.messages
   } else {
     payload.prompt = opts.prompt
-  }
-
-  if (payload.messages) {
-    payload.messages = validateChatMessages(payload.messages)
   }
 
   yield {

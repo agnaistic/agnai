@@ -48,7 +48,7 @@ import {
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
-import { hydrateTemplate, trimSentence } from '/common/util'
+import { hydrateTemplate, inline, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card, Pill } from '/web/shared/Card'
@@ -785,17 +785,25 @@ const MessageOptions: Component<{
 
       <div
         class="flex items-center"
-        classList={{ 'tour-message-opts': props.index === 0, hidden: !showInner() }}
+        classList={{ 'tour-message-opts': props.index === 0 }}
         onClick={() => props.showMore[1](true)}
-        ref={menuParent}
+        id={`actions-${props.msg._id}`}
+        ref={(ref) => {
+          menuParent = ref
+        }}
       >
-        <MoreHorizontal class="icon-button" />
+        <MoreHorizontal
+          class="icon-button"
+          ref={(r) => {
+            console.log(inline(r.getBoundingClientRect()))
+          }}
+        />
       </div>
 
       <Show when={showInner()}>
         <DropMenu
           class="p-1"
-          horz="left"
+          horz="right"
           vert="down"
           show={open()}
           close={() => props.showMore[1](false)}

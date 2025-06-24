@@ -82,6 +82,7 @@ const CharacterListOptions: Component<{
 }> = (props) => {
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
+  let itemMenu!: HTMLDivElement
 
   return (
     <div>
@@ -148,16 +149,17 @@ const CharacterListOptions: Component<{
           <Trash class="icon-button" />
         </a>
       </div>
-      <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
+      <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)} ref={itemMenu}>
         <MoreHorizontal class="icon-button" />
       </div>
       <DropMenu
         class="bg-[var(--bg-700)]"
         show={listOpts()}
         close={() => setListOpts(false)}
-        customPosition="right-[10px]"
-        // horz="left"
+        // customPosition="right-[10px]"
+        horz="left"
         vert="down"
+        parent={itemMenu}
       >
         <div class="flex flex-col gap-2 p-2 font-bold">
           <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">

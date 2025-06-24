@@ -213,9 +213,9 @@ export function remapImageContent(
   return messages
 }
 
-export function validateChatMessages(messages: CompletionItem[]) {
+export function validateChatMessages(messages: Array<{ role: string; content: any }>) {
   let lastRole = ''
-  const next: CompletionItem[] = []
+  const next: typeof messages = []
 
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]

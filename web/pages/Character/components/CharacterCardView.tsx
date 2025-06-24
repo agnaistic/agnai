@@ -56,6 +56,7 @@ const Character: Component<CardProps> = (props) => {
   const [opts, setOpts] = createSignal(false)
   const nav = useNavigate()
 
+  let itemMenu!: HTMLDivElement
   let ref: any
 
   const size = 20
@@ -164,13 +165,18 @@ const Character: Component<CardProps> = (props) => {
           class="float-right mr-[3px] mt-[-224px] flex justify-end"
           onClick={() => setOpts(true)}
         >
-          <div class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]">
+          <div
+            class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
+            ref={itemMenu}
+          >
             <Menu size={size} class="icon-button" color="var(--bg-100)" />
           </div>
           <DropMenu
             show={opts()}
             close={() => setOpts(false)}
-            customPosition="right-[9px] top-[6px]"
+            vert="down"
+            horz="right"
+            parent={itemMenu}
           >
             <div class="flex flex-col gap-2 p-2">
               <Button

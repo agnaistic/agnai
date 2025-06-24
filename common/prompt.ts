@@ -9,7 +9,7 @@ import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
-import { ModelFormat, replaceTags } from './presets/templates'
+import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
 import { isDefaultPreset } from './default-preset'
 import { OPENAI_CONTEXTS } from './presets/openai'
@@ -229,10 +229,6 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    */
   let template = getTemplate(opts)
 
-  if (opts.modelFormat) {
-    template = replaceTags(template, opts.modelFormat)
-  }
-
   /**
    * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
    * are retrieved based on the number of history messages we return here.
@@ -258,6 +254,10 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     encoder,
     jsonValues: opts.jsonValues,
   })
+
+  if (opts.modelFormat) {
+    prompt.parsed = replaceTags(prompt.parsed, opts.modelFormat)
+  }
 
   return { lines, parts, template: prompt, indexes }
 }
@@ -364,8 +364,6 @@ type InjectOpts = {
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  template = replaceTags(template, inject.format || opts.settings?.modelFormat || 'None')
-
   /**
    * This is currently disabled:
    * Models behave far too differently to insert sample chat using this method.
@@ -420,7 +418,20 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
       encoder,
     },
   })
+
+  const format = inject.format || opts.settings?.modelFormat || 'None'
+  result.parsed = replaceTags(result.parsed, format)
+  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, format)
+  replaceSectionTags(result.sections.sections, format)
+
   return result
+}
+
+function replaceSectionTags(sections: Record<string, string[] | any>, format: ModelFormat) {
+  for (const key in sections) {
+    if (!Array.isArray(sections[key])) continue
+    sections[key] = replaceArrayTags(sections[key], format)
+  }
 }
 
 /**
@@ -475,13 +486,16 @@ export async function buildPromptPlaceholders(
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
-  const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
+  const replace = (value: string, botName?: string) =>
+    placeholderReplace(value, botName || opts.replyAs.name, sender)
 
   const parts: PromptPlaceholders = {
     systemPrompt: opts.settings?.systemPrompt || '',
-    persona: formatCharacter(
-      replyAs.name,
-      replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+    persona: replace(
+      formatCharacter(
+        replyAs.name,
+        replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+      )
     ),
     prefill: opts.settings?.prefill || '',
     post: [],
@@ -493,10 +507,12 @@ export async function buildPromptPlaceholders(
   const personalities = new Set([replyAs._id])
 
   if (opts.impersonate?.persona) {
-    parts.impersonality = formatCharacter(
-      opts.impersonate.name,
-      opts.impersonate.persona,
-      opts.impersonate.persona.kind
+    parts.impersonality = replace(
+      formatCharacter(
+        opts.impersonate.name,
+        opts.impersonate.persona,
+        opts.impersonate.persona.kind
+      )
     )
   }
 
@@ -513,7 +529,10 @@ export async function buildPromptPlaceholders(
 
     personalities.add(bot._id)
     parts.allPersonas.push(
-      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`
+      `${bot.name}'s personality: ${replace(
+        formatCharacter(bot.name, bot.persona, bot.persona.kind),
+        bot.name
+      )}`
     )
   }
 
@@ -530,7 +549,7 @@ export async function buildPromptPlaceholders(
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-    .map(replace)
+    .map((text) => replace(text))
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
@@ -554,7 +573,7 @@ export async function buildPromptPlaceholders(
   parts.ujb = supplementary.ujb
   parts.systemPrompt = supplementary.system
 
-  parts.post = post.map(replace)
+  parts.post = post.map((post) => replace(post))
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
@@ -991,6 +1010,9 @@ export function resolveScenario(
       result += `\n${book.text}`
     }
   }
+
+  // The scenario `{{char}}` placeholders must always refer to the owner of the scenario
+  result.replace(/{{char}}/gi, mainChar.name)
 
   return result.trim()
 }

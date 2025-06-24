@@ -41,6 +41,10 @@ const EmbedContent: Component = (props) => {
   }
 
   const embedFile = async () => {
+    if (!store.embedName) {
+      toastStore.error(`Enter a name for the embedding`)
+    }
+
     setLoading(true)
     try {
       const docNeeded = store.type === 'PDF' || store.type === 'Text file'
@@ -178,6 +182,7 @@ const EmbedContent: Component = (props) => {
             helperText="The content to be embedded. Use line breaks to seperate lines."
             isMultiline
             onChange={(ev) => setStore('embedText', ev.currentTarget.value)}
+            class="max-h-80"
           />
 
           <Button class="mt-2 w-fit" onClick={embedFile}>

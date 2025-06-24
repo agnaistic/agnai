@@ -87,7 +87,7 @@ export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
 
 export const formatHolders: Record<string, Record<string, string>> = {
   Universal: {
-    system_prompt: neat`<system>{{#if system_prompt}}{{value}}</system>{{#else}}${defaultSystemPrompt}</system>{{/else}}{{/if}}`,
+    system_prompt: neat`<system>{{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}</system>`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,

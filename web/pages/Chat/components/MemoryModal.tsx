@@ -160,17 +160,23 @@ const ChatMemoryModal: Component<{
               Use Embedding
             </Button>
 
-            <Show when={embedId() === props.chat?.userEmbedId}>
-              <Button
-                class="w-fit"
-                schema="secondary"
-                disabled={editingEmbed() || !props.chat?.userEmbedId}
-                onClick={() => setEditingEmbed(true)}
-              >
-                <Edit size={16} />
-                Edit
-              </Button>
-            </Show>
+            <Button
+              class="w-fit"
+              disabled={editingEmbed() || !embedId()}
+              onClick={() => setEditingEmbed(true)}
+            >
+              <Edit size={16} />
+              Edit
+            </Button>
+
+            <Button
+              schema="error"
+              class="w-fit"
+              disabled={!embedId()}
+              onClick={() => embedApi.removeDocument(embedId()!)}
+            >
+              Remove
+            </Button>
           </div>
           <Portal>
             <EditEmbedModal
