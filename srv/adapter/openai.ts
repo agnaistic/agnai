@@ -43,6 +43,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const stops = getStoppingStrings(opts)
+  if (!base.changed) {
+    stops.splice(4, stops.length - 4)
+  }
 
   const body: any = {
     model: oaiModel,

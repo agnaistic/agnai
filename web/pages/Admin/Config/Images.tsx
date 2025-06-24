@@ -73,8 +73,8 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
       init: {
         steps: 20,
         cfg: 5,
-        height: 1216,
-        width: 1216,
+        height: 1024,
+        width: 768,
         prefix: '',
         suffix: '',
         negative: '',
@@ -82,7 +82,7 @@ const ImageModels: Component<{ signal: Signal<Model[]> }> = (props) => {
         denoise: 1,
         sampler: SD_SAMPLER['Euler a'],
       },
-      limit: { steps: 40, cfg: 10, height: 1024, width: 1024 },
+      limit: { steps: 40, cfg: 10, height: 1216, width: 1216 },
     }),
   })
 
