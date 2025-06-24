@@ -539,7 +539,7 @@ export async function buildPromptPlaceholders(
   // we use the BOT_REPLACE here otherwise later it'll get replaced with the
   // replyAs instead of the main character
   // (we always use the main character's scenario, not replyAs)
-  parts.scenario = replace(opts.resolvedScenario)
+  parts.scenario = replace(opts.resolvedScenario, char.name)
 
   parts.sampleChat = (
     replyAs._id === char._id && !!chat.overrides
