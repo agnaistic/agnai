@@ -10,14 +10,15 @@ import { CustomOption, CustomSelect } from '../CustomSelect'
 import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
-import { defaultPresets, isDefaultPreset } from '/common/default-preset'
+import { defaultPresets } from '/common/default-preset'
 import { RefreshCcw } from 'lucide-solid'
-import { Field } from './Fields'
+import { Field, FieldProps } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
+import { PresetState } from './types'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
@@ -131,24 +132,9 @@ const CompatModel: Field = (props) => {
   )
 
   const onModelSelect = (value: string) => {
-    props.setter('thirdPartyModel', value)
-    // We intentionally don't unset arli/openrouter here
-    props.setter('mistralModel', '')
-    props.setter('googleModel', '')
-    props.setter('claudeModel', '')
-
-    const isSavedPreest = !!props.state._id && !isDefaultPreset(props.state._id)
+    props.setter({ mistralModel: '', googleModel: '', claudeModel: '' })
     // Only change immediately save the preset in chat pages
-    if (isSavedPreest && props.page === 'mode') {
-      getStore('presets').updatePreset(
-        props.state._id,
-        { thirdPartyModel: value },
-        {
-          quiet: true,
-          onSuccess: () => toastStore.success('Model changed'),
-        }
-      )
-    }
+    setProviderModel(props, value)
   }
 
   const warning = createMemo(() => {
@@ -177,7 +163,10 @@ const CompatModel: Field = (props) => {
                 modalTitle={`Select Model: ${new URL(models.url).host || '...'}`}
                 parentClass="flex w-full justify-end"
                 size="sm"
-                selected={props.state.thirdPartyModel}
+                selected={
+                  props.state.providerModels?.[props.state.providerId || 'na'] ||
+                  props.state.thirdPartyModel
+                }
                 options={modelList()}
                 onSelect={(ev) => onModelSelect(ev.value)}
                 search={tokenizedSearch}
@@ -234,9 +223,11 @@ const NovelAIModel: Field = (props) => {
         fieldName="novelModel"
         label="NovelAI Model"
         items={novelModels()}
-        value={props.state.novelModel || ''}
+        value={
+          props.state.providerModels?.[props.state.providerId || 'na'] || props.state.novelModel
+        }
         disabled={props.state.disabled}
-        onChange={(ev) => props.setter('novelModel', ev.value)}
+        onChange={(ev) => setProviderModel(props, ev.value, { novelModel: ev.value })}
       />
       <Show when={cfg.flags.naiModel}>
         <TextInput
@@ -289,24 +280,15 @@ const OpenRouterModels: Field = (props) => {
         label="Model"
         parentClass="w-1/2"
         items={openRouterModels()}
-        value={props.state.openRouterModel?.id || ''}
+        value={
+          props.state.providerModels?.[props.state.providerId || 'na'] ||
+          props.state.openRouterModel?.id
+        }
         disabled={props.state.disabled}
         onChange={(ev) => {
           const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
-          props.setter({ openRouterModel: model, thirdPartyModel: model?.id })
-
-          if (props.page === 'mode' && model?.id) {
-            presetStore.updatePreset(
-              props.state._id,
-              {
-                openRouterModel: model,
-                thirdPartyModel: model?.id,
-              },
-              {
-                quiet: true,
-                onSuccess: () => toastStore.success('Model changed'),
-              }
-            )
+          if (model) {
+            setProviderModel(props, model?.id, { openRouterModel: model })
           }
         }}
       />
@@ -408,20 +390,12 @@ const ArliModels: Field = (props) => {
           />
         }
         onSelect={(opt) => {
-          props.setter({ thirdPartyModel: opt.value, arliModel: opt.value })
-          if (props.page !== 'mode') return
-
-          getStore('presets').updatePreset(
-            props.state._id,
-            { thirdPartyModel: opt.value, arliModel: opt.value },
-            {
-              quiet: true,
-              onSuccess: () => toastStore.success('Model changed'),
-            }
-          )
+          setProviderModel(props, opt.value, { arliModel: opt.value })
         }}
         buttonLabel={label()}
-        selected={props.state.arliModel}
+        selected={
+          props.state.providerModels?.[props.state.providerId || 'na'] || props.state.arliModel
+        }
       />
 
       <div class="flex items-end pb-2.5">
@@ -601,38 +575,17 @@ const FeatherlessModels: Field = (props) => {
             open={classesOpen()}
             onChange={(ev) => setClassesOpen(ev)}
           >
-            <div class="flex w-full flex-wrap gap-1">
-              {classPills()}
-
-              {/* <Select
-              items={classes()}
-              value={''}
-              label={'Filter: Model Class'}
-              fieldName="featherless.classFilter"
-              onChange={(ev) => setModelclass(ev.value)}
-              parentClass="text-sm"
-              /> */}
-            </div>
+            <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
           </Accordian>
         }
         onSelect={(opt) => {
-          props.setter({ featherlessModel: opt.value, thirdPartyModel: opt.value })
-          if (props.page !== 'mode') return
-
-          getStore('presets').updatePreset(
-            props.state._id,
-            {
-              thirdPartyModel: opt.value,
-              featherlessModel: opt.value,
-            },
-            {
-              quiet: true,
-              onSuccess: () => toastStore.success('Model changed'),
-            }
-          )
+          setProviderModel(props, opt.value, { featherlessModel: opt.value })
         }}
         buttonLabel={label()}
-        selected={props.state.featherlessModel}
+        selected={
+          props.state.providerModels?.[props.state.providerId || 'na'] ||
+          props.state.featherlessModel
+        }
       />
 
       <div class="pb-2">
@@ -687,20 +640,14 @@ const ClaudeModel: Field = (props) => {
       label="Claude Model"
       items={claudeModels()}
       helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
-      value={props.state.claudeModel ?? defaultPresets.claude.claudeModel}
+      value={
+        props.state.providerModels?.[props.state.providerId || 'na'] ||
+        props.state.claudeModel ||
+        defaultPresets.claude.claudeModel
+      }
       disabled={props.state.disabled}
       onChange={(ev) => {
-        props.setter({ claudeModel: ev.value, thirdPartyModel: ev.value })
-        if (props.page === 'mode') {
-          presetStore.updatePreset(
-            props.state._id,
-            { claudeModel: ev.value, thirdPartyModel: ev.value },
-            {
-              quiet: true,
-              onSuccess: () => toastStore.success('Model changed'),
-            }
-          )
-        }
+        setProviderModel(props, ev.value, { claudeModel: ev.value })
       }}
     />
   )
@@ -728,20 +675,14 @@ const GoogleModels: Field = (props) => {
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => {
-        props.setter({ googleModel: opt.value, thirdPartyModel: opt.value })
-        if (props.page === 'mode') {
-          presetStore.updatePreset(
-            props.state._id,
-            { googleModel: opt.value, thirdPartyModel: opt.value },
-            {
-              quiet: true,
-              onSuccess: () => toastStore.success('Model changed'),
-            }
-          )
-        }
+        setProviderModel(props, opt.value, { googleModel: opt.value })
       }}
       buttonLabel={label()}
-      selected={props.state.googleModel || props.state.thirdPartyModel}
+      selected={
+        props.state.providerModels?.[props.state.providerId || 'na'] ||
+        props.state.googleModel ||
+        props.state.thirdPartyModel
+      }
     />
   )
 }
@@ -777,4 +718,28 @@ function tokenizedSearch(compare: string, input: string) {
 function modelsToItems(models: Record<string, string>): Option<string>[] {
   const pairs = Object.entries(models).map(([label, value]) => ({ label, value }))
   return pairs
+}
+
+function setProviderModel(
+  { state, setter, page }: FieldProps,
+  model: string,
+  extras?: Partial<PresetState>
+) {
+  const update: Partial<PresetState> = extras ?? {}
+  update.thirdPartyModel = model
+  const models = state.providerModels ? { ...state.providerModels } : {}
+  if (state.providerId) {
+    models[state.providerId] = model
+  }
+
+  update.providerModels = models
+
+  setter(update)
+
+  if (state._id && page === 'mode') {
+    presetStore.updatePreset(state._id, update, {
+      quiet: true,
+      onSuccess: () => toastStore.success('Model changed'),
+    })
+  }
 }

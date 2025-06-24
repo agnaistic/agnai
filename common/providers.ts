@@ -180,6 +180,11 @@ export function getPresetConnection(
     if (conn.url) copy.thirdPartyUrl = conn.url
     if (conn.key) copy.thirdPartyKey = conn.key
 
+    const providerModel = preset.providerModels?.[preset.providerId || 'none']
+    if (providerModel) {
+      copy.thirdPartyModel = providerModel
+    }
+
     copy.localRequests = conn.local
     copy.thirdPartyKey = conn.key
 

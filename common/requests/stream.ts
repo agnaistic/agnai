@@ -299,7 +299,13 @@ export async function* fetchStream(
           } else {
             const token: string =
               getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response || ''
+
+            const reasoning = getChoiceProp(json, 'thought') || getChoiceProp(json, 'reasoning')
             const index = +(getChoiceProp<string>(json, 'index') || '0')
+
+            if (reasoning !== undefined) {
+              yield { reasoning }
+            }
 
             if (token !== undefined) {
               if (index > 0) {

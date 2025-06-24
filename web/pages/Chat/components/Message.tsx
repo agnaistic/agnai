@@ -792,12 +792,7 @@ const MessageOptions: Component<{
           menuParent = ref
         }}
       >
-        <MoreHorizontal
-          class="icon-button"
-          ref={(r) => {
-            console.log(inline(r.getBoundingClientRect()))
-          }}
-        />
+        <MoreHorizontal class="icon-button" />
       </div>
 
       <Show when={showInner()}>

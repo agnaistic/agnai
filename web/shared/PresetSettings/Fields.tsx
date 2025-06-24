@@ -11,7 +11,8 @@ import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
 
-export type Field<T = {}> = Component<Omit<PresetTabProps, 'tab'> & T>
+export type FieldProps = Omit<PresetTabProps, 'tab'>
+export type Field<T = {}> = Component<FieldProps & T>
 
 export const PresetMode: Field = (props) => {
   return (
