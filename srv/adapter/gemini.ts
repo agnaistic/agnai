@@ -186,19 +186,14 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     BUT! it sometimes likes to throw a curveball and return multiple parts.
     lets make sure we handle any amount of parts corectly.*/
 
-    // if (ai.candidates?.[0]?.content?.parts?.length > 2) {
-    //   console.log(
-    //     `[GoogleAI] Warning: Received more than 2 parts in response, this is unexpected behavior*`
-    //   )
-    // }
     for (const part of (ai.candidates?.[0]?.content?.parts as Part[]) || []) {
-      // If reasoning is enabled, the first part will be always a part of the reasoning.
-      if (firstThought && opts.gen.reasoning?.enabled) {
+      // If reasoning is expected we treat the first part as <think>.
+      if (firstThought && !opts.gen.reasoning?.exclude) {
         str_thinking += part.text || ''
         firstThought = false
         continue
       }
-
+      // In case of large responses, we can have multiple parts with thought=true.
       if (part.thought) {
         str_thinking += part.text || ''
         continue
@@ -211,7 +206,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       (!opts.gen.reasoning?.exclude || false) &&
       (ai.candidates?.[0]?.content?.parts?.length ?? 0) >= 2
     ) {
-      accum += opts.gen.prefill || ''
+      accum += opts.gen.prefill || '' // TODO: get a version of prefill after the Placeholder is replaced
       accum += str_thinking
       accum += opts.gen.reasoning?.end || '</think>'
       accum += '\n'
@@ -219,24 +214,6 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     } else {
       accum = str_text + str_thinking
     }
-    // console.log(
-    //   'Parts: ' +
-    //     ai.candidates?.[0]?.content?.parts?.length +
-    //     '\n' +
-    //     'Thinking: enabled? ' +
-    //     opts.gen.reasoning?.enabled +
-    //     '  exclude?' +
-    //     opts.gen.reasoning?.exclude +
-    //     '\n' +
-    //     'FULL RESPONSE:\n' +
-    //     str_text +
-    //     '\n\n\n' +
-    //     str_thinking +
-    //     '\n\n\n' +
-    //     accum +
-    //     '\n\n\n' +
-    //     'END OF FULL RESPONSE\n\n\n'
-    // )
   } else {
     /*For now giving up on properly streaming reasoning responses and have it look nice.
     Iam 90% exactly where the issue is, When sending the Histrory inside a Content[] Array,
@@ -280,7 +257,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
         if (part.thought) {
           if (!accum) {
-            accum += opts.gen.prefill + '\n' || ''
+            accum += opts.gen.prefill + '\n' || '' // TODO: get a version of prefill after the Placeholder is replaced
             wasThinking = true
           }
           accum += part.text
