@@ -8,6 +8,7 @@ import {
   GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
+  Part,
   SafetySetting,
 } from '@google/genai'
 import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
@@ -175,16 +176,67 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
-    // If reasining is enabled, the API will return a response with two parts.
-    // The first part is the reasoning, the second part is the actual response.
-    if (ai.candidates && opts.gen.reasoning && ai.candidates[0]?.content?.parts?.length === 2) {
-      accum += opts.gen.prefill || '' // Add the prefill, makes it the resonse complete.
-      accum += ai.candidates[0]?.content.parts[0].text || ''
-      accum += (opts.gen.reasoning.end || '</think>') + '\n' // Reasining is done, lets close the <think> tag.
-      accum += ai.candidates[0]?.content.parts[1].text || ''
-    } else {
-      accum += ai.candidates?.[0]?.content?.parts?.[0]?.text || ai.text || ''
+    let str_thinking = ''
+    let str_text = ''
+    let firstThought = true
+
+    /* Fun times with gemini responses.
+    gemini API most of the time returns a response with two parts.
+    The first part is the reasoning, the second part is the actual response.
+    BUT! it sometimes likes to throw a curveball and return multiple parts.
+    lets make sure we handle any amount of parts corectly.*/
+
+    // if (ai.candidates?.[0]?.content?.parts?.length > 2) {
+    //   console.log(
+    //     `[GoogleAI] Warning: Received more than 2 parts in response, this is unexpected behavior*`
+    //   )
+    // }
+    for (const part of (ai.candidates?.[0]?.content?.parts as Part[]) || []) {
+      // If reasoning is enabled, the first part will be always a part of the reasoning.
+      if (firstThought && opts.gen.reasoning?.enabled) {
+        str_thinking += part.text || ''
+        firstThought = false
+        continue
+      }
+
+      if (part.thought) {
+        str_thinking += part.text || ''
+        continue
+      }
+      str_text += part.text || ''
     }
+
+    // Packing the response into the accumulator.
+    if (
+      (!opts.gen.reasoning?.exclude || false) &&
+      (ai.candidates?.[0]?.content?.parts?.length ?? 0) >= 2
+    ) {
+      accum += opts.gen.prefill || ''
+      accum += str_thinking
+      accum += opts.gen.reasoning?.end || '</think>'
+      accum += '\n'
+      accum += str_text
+    } else {
+      accum = str_text + str_thinking
+    }
+    // console.log(
+    //   'Parts: ' +
+    //     ai.candidates?.[0]?.content?.parts?.length +
+    //     '\n' +
+    //     'Thinking: enabled? ' +
+    //     opts.gen.reasoning?.enabled +
+    //     '  exclude?' +
+    //     opts.gen.reasoning?.exclude +
+    //     '\n' +
+    //     'FULL RESPONSE:\n' +
+    //     str_text +
+    //     '\n\n\n' +
+    //     str_thinking +
+    //     '\n\n\n' +
+    //     accum +
+    //     '\n\n\n' +
+    //     'END OF FULL RESPONSE\n\n\n'
+    // )
   } else {
     /*For now giving up on properly streaming reasoning responses and have it look nice.
     Iam 90% exactly where the issue is, When sending the Histrory inside a Content[] Array,
