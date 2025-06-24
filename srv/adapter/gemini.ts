@@ -215,20 +215,14 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       accum = str_text + str_thinking
     }
   } else {
-    /*For now giving up on properly streaming reasoning responses and have it look nice.
-    Iam 90% exactly where the issue is, When sending the Histrory inside a Content[] Array,
-    which is required to properly send over the chat History. The thought bool is missing.
-    If we send a plain string, we will receive the thought bool inside the response.
-    I dont think there is anything on our side we can do about this.
-
-    Rant_Mode: true
-    I spent like 12 hours only on this fricking issue, its fricking stoopid and Illogical.
-    And for what? frick this, they can just turn off the streaming and it will work perfectly.
-    @sceuick we should to tell the users somehow that its reccomended to disable streaming for gemini.
-    otherwise they will complain why the fricking thoughts in their responses. It bugs me so much.
+    /*Rant_Mode: true
+    I spent like 12 hours only on this fricking issue, its fricking stoopid.
+    Using a Prefill with streaming is a nightmare, the part.thought will not be set to true
+    @sceuick we might want to disable Prefills for streaming on Gemini. Or somehow tell them not to use it.
+    otherwise they will complain why the fricking thoughts in their responses.
     Rant_Mode: false
 
-    generateContentStream will work just fine, but we cant disdinguish between thoughts and normal text.
+    TLDR; Dont mix Prefills with streamingContent on Gemini.
     */
     const ai = await client.models
       .generateContentStream({
