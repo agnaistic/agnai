@@ -304,8 +304,10 @@ export async function parseTemplate(
       const contentLength = await opts.limit.encoder(content)
       if (contentLength > unusedTokens) {
         output = output.replace(id, '')
+        replaceSections(sections, id, '')
       } else {
         output = output.replace(id, content)
+        replaceSections(sections, id, content)
         unusedTokens -= contentLength
       }
     }
@@ -320,7 +322,7 @@ export async function parseTemplate(
   }
 
   flags.is_final = true
-  output = render(output, opts, flags).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+  output = render(output, opts, flags)
 
   if (opts.lowpriority) {
     for (const key of Object.keys(opts.lowpriority)) {
@@ -342,6 +344,8 @@ export async function parseTemplate(
   // )
 
   output = output.replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trim()
+  replaceSections(sections, /\r\n/g, '\n')
+  replaceSections(sections, /\n\n+/g, '\n\n')
   await addCount('final', output)
 
   if (sizes.length > 1) {
@@ -765,6 +769,23 @@ function renderIterator(
   return isHistory || isChatEmbed ? output.join('\n') : output.join('')
 }
 
+function replaceSections(
+  sections: NonNullable<TemplateOpts['sections']>,
+  searchValue: string | RegExp,
+  replaceValue: string
+) {
+  for (let i = 0; i < sections.strictSystem.length; i++) {
+    sections.strictSystem[i] = sections.strictSystem[i].replace(searchValue, replaceValue)
+  }
+
+  for (const key in sections.sections) {
+    const list = sections.sections[key as Section]
+    for (let i = 0; i < list.length; i++) {
+      list[i] = list[i].replace(searchValue, replaceValue)
+    }
+  }
+}
+
 function renderEntityCondition(
   nodes: CNode[],
   opts: TemplateOpts,
@@ -955,7 +976,11 @@ function fillSection(
   const flags = opts.sections.flags
   const sections = opts.sections.sections
 
-  const cleaned = result.replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
+  const cleaned = result
+    .replace(/\r\n/g, '\n')
+    .replace(/\n\n+/g, '\n\n')
+    .replace(/{{user}}/gi, opts.impersonate?.name || opts.sender.handle || 'Ypu')
+    .replace(/{{char}}/gi, opts.replyAs?.name || opts.char.name)
 
   const isSystem = marker?.includes('system')
   if (!flags.system && isSystem) {
