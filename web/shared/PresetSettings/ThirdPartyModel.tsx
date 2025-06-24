@@ -141,20 +141,17 @@ const CompatModel: Field = (props) => {
     if (!props.state.providerId) return
     if (models.loading) return
     if (modelList().length <= 1) return
-    const match = modelList().find((m) => m.value === props.state.thirdPartyModel)
+
+    const modelId =
+      props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+
+    const match = modelList().find((m) => m.value === modelId)
     if (!match) return `Your current model is not in the model list`
   })
 
   return (
     <div class="flex w-full flex-col gap-1">
       <FormLabel
-        helperText={
-          <Show when={!!warning()}>
-            <Pill type="orange" small>
-              {warning()}
-            </Pill>
-          </Show>
-        }
         label={
           <div class="flex items-center gap-2">
             <div>Model</div>
@@ -187,14 +184,22 @@ const CompatModel: Field = (props) => {
         }
       />
 
-      <div class="flex w-full gap-1">
+      <div class="flex w-full flex-col gap-1">
         <TextInput
           parentClass="w-full"
           fieldName="thirdPartyModel"
           value={props.state.thirdPartyModel ?? ''}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('thirdPartyModel', ev.currentTarget.value)}
+          onChange={(ev) => {
+            setProviderModel({ ...props, page: 'none' }, ev.currentTarget.value)
+          }}
         />
+
+        <Show when={!!warning()}>
+          <Pill type="orange" small>
+            {warning()}
+          </Pill>
+        </Show>
       </div>
     </div>
   )

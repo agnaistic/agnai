@@ -48,7 +48,7 @@ import {
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
-import { hydrateTemplate, inline, trimSentence } from '/common/util'
+import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card, Pill } from '/web/shared/Card'

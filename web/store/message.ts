@@ -707,7 +707,11 @@ export const msgStore = createStore<MsgState>(
         onSuccess?.()
 
         if (res.result.created) {
-          onMessageReceived({ msg: res.result.created, chatId: res.result.created.chatId })
+          onMessageReceived({
+            type: res.result.messageId ? 'message-created' : 'message-complete',
+            msg: res.result.created,
+            chatId: res.result.created.chatId,
+          })
         }
       }
 
@@ -1183,7 +1187,7 @@ async function onMessageReceived(body: {
   retry?: boolean
   json?: any
 }) {
-  const { msgs, activeChatId, graph, attachments, ...prev } = msgStore.getState()
+  const { msgs, activeChatId, graph, attachments } = msgStore.getState()
   if (activeChatId !== body.chatId) return
 
   const msg = body.msg as AppSchema.ChatMessage
