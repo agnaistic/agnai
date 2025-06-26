@@ -54,7 +54,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     if (role === 'user' && attachments?.length) {
       req.hasAttachments = true
       messages.push({
-        role,
+        role: `${role}`,
         content: [{ type: 'text', content: line.trim(), text: line.trim() }, ...attachments],
       })
     } else {
@@ -74,7 +74,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     req.hasAttachments = true
     const msg = messages[lastUserIndex]
     if (!Array.isArray(msg.content)) {
-      msg.content = [{ type: 'text', content: msg.content, text: msg.content }]
+      msg.content = [{ type: 'text', content: `${msg.content}`, text: msg.content }]
     }
 
     for (const image of unused) {
@@ -176,12 +176,12 @@ export function remapMessages(
     for (let i = 0; i < msg.content.length; i++) {
       const item = msg.content[i]
       if (item.type === 'text') {
-        item[i] = maps.text?.(item) || item
+        msg.content[i] = maps.text?.(item.text) || item
         continue
       }
 
-      if (item.image_url?.url) continue
-      item[i] = maps.image?.(item.image_url.url) || item
+      if (!item.image_url?.url) continue
+      msg.content[i] = maps.image?.(item.image_url.url) || item
       continue
     }
   }
@@ -206,7 +206,7 @@ export function remapImageContent(
       const item = msg.content[i]
       if (item.type === 'text') continue
       if (item.image_url?.url) continue
-      item[i] = block(item.image_url.url)
+      msg.content[i] = block(item.image_url.url)
     }
   }
 

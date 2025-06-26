@@ -1187,7 +1187,7 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
     break
   }
 
-  return { thoughts, content }
+  return { thoughts: thoughts.filter((t) => !!t.trim()), content }
 }
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {

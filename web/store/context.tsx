@@ -14,7 +14,7 @@ import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { presetStore } from './presets'
 import { getChatPreset } from '/common/prompt'
-import { getPresetConnection, PresetConnection } from '/common/providers'
+import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
 
 export type ContextState = {
@@ -64,6 +64,7 @@ export type ContextState = {
   provider?: AppSchema.Provider
   service: AIAdapter | undefined
   format: ThirdPartyFormat | undefined
+  detail?: ProviderDefinition
 }
 
 const initial: ContextState = {
@@ -210,6 +211,7 @@ export function ContextProvider(props: { children: any }) {
       provider: detail?.provider,
       service: detail?.conn?.service,
       format: detail?.conn?.format,
+      detail: detail?.conn.detail,
       ui: users.ui,
     }
 

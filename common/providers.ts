@@ -127,7 +127,7 @@ export type ProviderFormat =
   | { type: 'service'; name?: string; value: AIAdapter; url?: string }
   | { type: 'format'; name?: string; value: ThirdPartyFormat; url?: string }
 
-type ProviderDefinition = {
+export type ProviderDefinition = {
   name: string
   url?: string
   // service?: AIAdapter

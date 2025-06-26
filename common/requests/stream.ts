@@ -20,6 +20,7 @@ const DEBUG =
 
 export const streamGenerator: CompletionGenerator = async function* (opts) {
   const { signal, url, headers, body, format } = opts
+
   const tokens = []
   const start = Date.now()
   let meta: any = {
@@ -91,6 +92,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       if (!meta.wait) {
         meta.wait = round((Date.now() - start) / 1000, 2)
       }
+
       const token = data.token as string
       tokens.push(data.token)
       yield { token }
@@ -180,6 +182,8 @@ export async function* fetchStream(
 
   let buffer = ''
   const gens: string[] = []
+
+  let thoughts = ''
   let accum = ''
 
   if (!reader) {
@@ -210,7 +214,7 @@ export async function* fetchStream(
         if (DEBUG) {
           console.log(`[fetch] response: ${accum}`)
         }
-        yield { tokens: accum }
+        yield { tokens: thoughts + accum }
         return
       }
 
@@ -297,14 +301,17 @@ export async function* fetchStream(
               return
             }
           } else {
+            const reasoning = getChoiceProp(json, 'reasoning') || getChoiceProp(json, 'thought')
             const token: string =
               getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response || ''
 
-            const reasoning = getChoiceProp(json, 'thought') || getChoiceProp(json, 'reasoning')
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 
             if (reasoning !== undefined) {
-              yield { reasoning }
+              let prefix = ''
+              if (!thoughts) prefix += '<think>'
+              thoughts += prefix + reasoning
+              yield { token: prefix + reasoning }
             }
 
             if (token !== undefined) {
@@ -315,8 +322,15 @@ export async function* fetchStream(
                 if (DEBUG) {
                   console.log(`[fetch] token: ${token}`)
                 }
+                // When we flip from reasoning to the response, we want to append a closing think tag
+                let suffix = ''
+                if (thoughts && !accum) {
+                  suffix = '</think>'
+                  thoughts += suffix
+                }
+
                 accum += token
-                yield { token, index }
+                yield { token: suffix + token, index }
               }
             } else {
               opts?.log?.info({ json }, `[${format || 'fetch'}] cannot get token`)

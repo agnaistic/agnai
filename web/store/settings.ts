@@ -562,12 +562,21 @@ subscribe('submodel-updated', { model: 'any' }, (body) => {
     return { ...reg, settings }
   })
 
+  /** TODO: Check if:
+   * - Model already exists
+   * - User tier was ineligible
+   * - User tier is now eligible
+   */
+
+  const { user, userLevel } = getStore('user').getState()
+  const wasIneligible = exists && exists.level > userLevel && incoming.level <= userLevel
   if (!exists) {
-    const { user, userLevel } = getStore('user').getState()
     const isEligible = incoming.level <= userLevel || !!user?.admin
     if (isEligible) {
       toastStore.success(`A new model has been added: "${incoming.name}"`, 30)
     }
+  } else if (wasIneligible) {
+    toastStore.success(`A new model is now available to you: "${incoming.name}"`, 30)
   }
 
   settingStore.setState({ config: { ...config, subs: next, registered } })

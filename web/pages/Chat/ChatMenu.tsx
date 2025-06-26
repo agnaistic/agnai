@@ -49,7 +49,9 @@ export const ChatMenu: Component<{
 
   const adapterLabel = createMemo(() => {
     if (!props.ctx.preset) return ''
-    const label = `${ADAPTER_LABELS[props.ctx.preset.service!]} - ${props.ctx.preset.name}`
+    const label = `${
+      props.ctx.provider?.name || props.ctx.detail?.name || ADAPTER_LABELS[props.ctx.service!]
+    } - ${props.ctx.preset.name}`
     return label
   })
 

@@ -20,7 +20,7 @@ import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { remapImageContent, stripImageContent } from './template-chat-payload'
+import { remapImageContent, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
@@ -435,6 +435,22 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
 
   yield { meta }
   return
+}
+
+export async function createClaudeChatCompletionV2(opts: AdapterProps) {
+  let messages = opts.messages
+  if (!messages) {
+    const result = await toChatMessages(opts, getTokenCounter('claude', ''))
+    messages = result.messages
+  }
+
+  // Last message must be 'thinking' block or role 'user'
+  const lastMsg = messages?.slice(-1)?.[0]
+  if (lastMsg?.role === 'assistant') {
+    lastMsg.role = 'user'
+  }
+
+  return messages
 }
 
 export async function createClaudeChatCompletion(opts: AdapterProps) {
