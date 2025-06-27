@@ -35,11 +35,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const oaiModel =
-    opts.gen.service === 'openai'
-      ? gen.oaiModel || defaultPresets.openai.oaiModel
-      : gen.thirdPartyModel || ''
-
+  const oaiModel = gen.thirdPartyModel || ''
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const stops = getStoppingStrings(opts)
