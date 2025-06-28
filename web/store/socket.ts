@@ -97,6 +97,17 @@ function onMessage(msg: MessageEvent<any>) {
     const onceHandlers = onceListeners.get(payload.type) || []
 
     if (!squelched.has(payload.type)) {
+      const now = `[${new Date().toLocaleTimeString()}]`
+      if (payload.type === 'message-retry') {
+        console.log(
+          `${now} ${JSON.stringify({
+            ...payload,
+            message: '...' + payload.message?.slice(-50),
+            retries: undefined,
+          })}`
+        )
+      }
+
       if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
         console.log(
           `Prompt\n${
@@ -106,11 +117,11 @@ function onMessage(msg: MessageEvent<any>) {
           }`
         )
       } else if (payload.type !== 'image-generated') {
-        console.log(`[${new Date().toLocaleTimeString()}]`, JSON.stringify(payload))
+        console.log(now, JSON.stringify(payload))
       } else {
         const image = payload.image || ''
         console.log(
-          `[${new Date().toLocaleTimeString()}]`,
+          now,
           JSON.stringify({
             ...payload,
             image: image.startsWith('http') ? image : `${image.slice(0, 60)}'...'`,

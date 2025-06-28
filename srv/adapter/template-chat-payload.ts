@@ -213,7 +213,9 @@ export function remapImageContent(
   return messages
 }
 
-export function validateChatMessages(messages: Array<{ role: string; content: any }>) {
+type OutgoingMsg = { role: string; content: any }
+
+export function validateChatMessages(messages: OutgoingMsg[]) {
   let lastRole = ''
   const next: typeof messages = []
 
@@ -226,16 +228,53 @@ export function validateChatMessages(messages: Array<{ role: string; content: an
     }
 
     const last = next.slice(-1)[0]
-    if (last) {
+    if (!last) continue
+
+    if (!Array.isArray(last.content) && !Array.isArray(msg.content)) {
       next[next.length - 1] = {
         ...last,
         content: `${last.content.trim()}\n\n${msg.content}`,
       }
       continue
     }
+
+    const joined = joinMessages(last, msg)
+    next[next.length - 1] = joined
   }
 
   return next
+}
+
+function joinMessages(head: OutgoingMsg, tail: OutgoingMsg) {
+  const first = splitMessage(head)
+  const second = splitMessage(tail)
+
+  const text = [first.text, second.text].filter((t) => !!t.trim()).join('\n\n')
+
+  return {
+    role: second.role,
+    content: [{ type: 'text', text, content: text }, ...first.attachments, ...second.attachments],
+  }
+}
+
+function splitMessage(msg: OutgoingMsg) {
+  if (!Array.isArray(msg.content)) {
+    return { role: msg.role, text: msg.content, attachments: [] }
+  }
+
+  const texts: string[] = []
+  const attachments: any[] = []
+
+  for (const part of msg.content) {
+    if (part.type === 'text') {
+      texts.push(part.text)
+      continue
+    }
+
+    attachments.push(part)
+  }
+
+  return { role: msg.role, text: texts.join('\n\n'), attachments }
 }
 
 export function stripImageContent(messages: any[]) {
