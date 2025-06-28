@@ -151,8 +151,6 @@ const Message: Component<MessageProps> = (props) => {
       if (update) {
         msgStore.editMessageProp(props.msg._id, {
           ...update,
-          characterId: '',
-          userId: '',
           ...sender,
         })
       }
@@ -165,8 +163,6 @@ const Message: Component<MessageProps> = (props) => {
 
     msgStore.editMessageProp(props.msg._id, {
       msg: editRef.innerText,
-      characterId: '',
-      userId: '',
       ...sender,
     })
     setEdit(false)
@@ -392,7 +388,8 @@ const Message: Component<MessageProps> = (props) => {
                         <b>id</b>
                       </td>
                       <td>
-                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}
+                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}{' '}
+                        {`${!!props.msg.userId}`}
                       </td>
                     </tr>
                   </Show>
