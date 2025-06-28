@@ -143,6 +143,7 @@ async function getGuestEntities() {
 
   const characters = getBotsForChat(chat, char, chatChars.map)
   const conn = getPresetConnection(settings, user.providers)
+  const messages = messageHistory.concat(msgs)
 
   return {
     chat,
@@ -150,7 +151,7 @@ async function getGuestEntities() {
     user,
     profile,
     book,
-    messages: messageHistory.concat(msgs),
+    messages,
     settings: conn.preset,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
@@ -158,15 +159,19 @@ async function getGuestEntities() {
     characters,
     impersonating,
     scenarios,
-    attachments: getChatAttachments(graph.tree, attachments),
+    attachments: getChatAttachments(messages, attachments),
   }
 }
 
-function getChatAttachments(graph: ChatTree, attachments: Record<string, MsgAttachment[]>) {
+function getChatAttachments(
+  messages: AppSchema.ChatMessage[],
+  attachments: Record<string, MsgAttachment[]>
+) {
   const next: Record<string, MsgAttachment[]> = {}
+  const ids = new Set(messages.map((m) => m._id))
 
   for (const key in attachments) {
-    if (!graph[key]) continue
+    if (!ids.has(key)) continue
     next[key] = attachments[key]
   }
 
@@ -197,6 +202,7 @@ function getAuthedPromptEntities() {
   const { impersonating, chatChars } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, chatChars.map)
+  const messages = messageHistory.concat(msgs)
 
   return {
     chat,
@@ -204,7 +210,7 @@ function getAuthedPromptEntities() {
     user,
     profile,
     book,
-    messages: messageHistory.concat(msgs),
+    messages,
     settings: conn.preset,
     members,
     chatBots: chatChars.list,
@@ -212,7 +218,7 @@ function getAuthedPromptEntities() {
     characters,
     impersonating,
     scenarios,
-    attachments: getChatAttachments(graph.tree, attachments),
+    attachments: getChatAttachments(messages, attachments),
   }
 }
 
