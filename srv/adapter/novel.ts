@@ -7,9 +7,9 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
-import { getStoppingStrings } from './prompt'
 import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/presets/novel'
 import { fetchStream } from '/common/requests/stream'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.
@@ -81,7 +81,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
     parameters: NEW_PARAMS[model] ? getModernParams(opts.gen) : { ...base, ...mappedSettings },
   }
 
-  const baseStops = getStoppingStrings(opts)
+  const baseStops = getStoppingStrings(opts, opts.gen)
 
   if (opts.kind === 'plain') {
     body.parameters.prefix = 'special_instruct'

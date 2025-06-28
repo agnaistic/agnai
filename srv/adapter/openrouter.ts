@@ -5,11 +5,11 @@ import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
-import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
 import { logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -34,7 +34,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     // 256 is the OpenRouter default. We will use this.
     temperature: opts.gen.temp,
     max_tokens: opts.gen.maxTokens ?? 256,
-    stop: getStoppingStrings(opts),
+    stop: getStoppingStrings(opts, opts.gen),
     top_p: opts.gen.topP,
     top_k: opts.gen.topK,
     top_a: opts.gen.topA,

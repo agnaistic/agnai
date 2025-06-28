@@ -11,7 +11,6 @@ import { getBotsForChat } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
 import { MsgState } from '../message'
-import { ChatTree } from '/common/chat'
 import { MsgAttachment } from '/srv/adapter/type'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
@@ -120,7 +119,7 @@ export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
 async function getGuestEntities() {
   const { active } = getStore('chat').getState()
   if (!active) return
-  const { msgs, messageHistory, attachments, graph } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
 
   const chat = active.chat
   const char = active.char
@@ -192,7 +191,7 @@ function getAuthedPromptEntities() {
     .getState()
     .books.list.find((book) => book._id === chat.memoryId)
 
-  const { msgs, messageHistory, attachments, graph } = getStore('messages').getState()
+  const { msgs, messageHistory, attachments } = getStore('messages').getState()
   const settings = getActivePreset(chat, user)!
   const conn = getPresetConnection(settings, user.providers)
   const scenarios = getStore('scenario')

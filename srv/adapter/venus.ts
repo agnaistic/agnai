@@ -2,8 +2,8 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
-import { getStoppingStrings } from './prompt'
 import { streamGenerator } from '/common/requests/stream'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',
@@ -25,7 +25,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
     temperature: opts.gen.temp,
     top_p: opts.gen.topP,
     top_k: opts.gen.topK,
-    stop: getStoppingStrings(opts),
+    stop: getStoppingStrings(opts, opts.gen),
   }
 
   const url = `https://inference.chub.ai/prompt`

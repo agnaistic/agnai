@@ -2,11 +2,11 @@ import needle from 'needle'
 import { Completion, Inference, ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
-import { getStoppingStrings } from './prompt'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { requestFullCompletion } from './chat-completion'
 import { streamGenerator } from '/common/requests/stream'
 import { getCompletionContent } from './openai'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const mancerOptions: Record<string, string> = {}
 
@@ -52,7 +52,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     frequency_penalty: opts.gen.frequencyPenalty,
     tfs: opts.gen.tailFreeSampling,
     seed: -1,
-    stop: getStoppingStrings(opts),
+    stop: getStoppingStrings(opts, opts.gen),
     smoothing_factor: gen.smoothingFactor,
     smoothing_curve: gen.smoothingCurve,
     stream: opts.gen.streamResponse,

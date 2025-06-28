@@ -2,9 +2,7 @@ import needle from 'needle'
 import { logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
-import { getStoppingStrings } from './prompt'
 import { decryptText } from '../db/util'
-import { getThirdPartyPayload } from './payloads'
 import { toSamplerOrder } from '/common/sampler-order'
 import {
   getOaiCompatibleUrl,
@@ -17,6 +15,7 @@ import { stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
+import { getStoppingStrings, getThirdPartyPayload } from '/common/requests/payloads'
 
 /**
  * Sampler order
@@ -46,7 +45,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
-  const stop_sequence = getStoppingStrings(opts)
+  const stop_sequence = getStoppingStrings(opts, opts.gen)
   if (opts.gen.thirdPartyFormat === 'kobold' || opts.gen.thirdPartyFormat === 'koboldcpp') {
     stop_sequence.push('END_OF_DIALOG')
     body.stop_sequence = stop_sequence

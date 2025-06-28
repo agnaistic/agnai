@@ -12,7 +12,6 @@ import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
-import { getThirdPartyPayload } from './payloads'
 import { handlePetals } from './petals'
 import { registerAdapter } from './register'
 import { handleReplicate } from './replicate'
@@ -29,6 +28,7 @@ import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { getPresetConnection, PresetConnection } from '/common/providers'
 import { stripImageContent } from './template-chat-payload'
+import { getServicePayload } from './payloads'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 
@@ -257,7 +257,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getThirdPartyPayload(opts, allStops)
+  const body = getServicePayload(opts, allStops)
   if (opts.hasAttachments) {
     body.messages = opts.messages
   }

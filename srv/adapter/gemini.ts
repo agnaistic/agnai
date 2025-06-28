@@ -1,5 +1,4 @@
 import { decryptText } from '../db/util'
-import { getStoppingStrings } from './prompt'
 import { ModelAdapter } from './type'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import {
@@ -14,6 +13,7 @@ import { remapMessages, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
@@ -50,7 +50,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     maxOutputTokens: opts.gen.maxTokens,
     topP: opts.gen.topP,
     topK: opts.gen.topK,
-    stopSequences: getStoppingStrings(opts),
+    stopSequences: getStoppingStrings(opts, opts.gen),
     presencePenalty: opts.gen.presencePenalty,
     frequencyPenalty: opts.gen.frequencyPenalty,
     abortSignal: opts.signal.signal,

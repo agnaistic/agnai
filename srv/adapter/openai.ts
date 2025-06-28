@@ -8,9 +8,8 @@ import { getTokenCounter } from '../tokenize'
 import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
-import { toImageJinjaTemplate } from '/common/requests/payloads'
+import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
-import { getStoppingStrings } from './prompt'
 
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
 
@@ -38,7 +37,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const oaiModel = gen.thirdPartyModel || ''
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
-  const stops = getStoppingStrings(opts)
+  const stops = getStoppingStrings(opts, opts.gen)
   if (!base.changed) {
     stops.splice(4, stops.length - 4)
   }
