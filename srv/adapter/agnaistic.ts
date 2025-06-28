@@ -258,7 +258,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getServicePayload(opts, allStops)
-  if (opts.hasAttachments) {
+  if (opts.hasAttachments && opts.subscription.preset.subVisionModel) {
     body.messages = opts.messages
   }
 
