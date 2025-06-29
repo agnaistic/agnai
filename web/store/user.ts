@@ -316,6 +316,8 @@ export const userStore = createStore<UserState>(
     },
 
     async *deleteProviderKey({ user }, providerId: string) {
+      if (!providerId || providerId === 'agnaistic') return
+
       const res = await usersApi.deleteProviderKey(providerId)
       if (res.result) {
         return { user: { ...user!, providers: res.result.providers } }

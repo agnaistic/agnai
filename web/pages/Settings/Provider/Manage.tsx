@@ -16,6 +16,8 @@ import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { Cable, Check, Ellipsis, X } from 'lucide-solid'
 import Select from '/web/shared/Select'
+import OpenRouterOauth from '../OpenRouterOauth'
+import { userStore } from '/web/store'
 
 export const ManageProvider: Component<{
   user: AppSchema.User | undefined
@@ -278,6 +280,16 @@ export const ManageProvider: Component<{
           hide={formatOptions().length <= 1}
         />
 
+        <CustomProviderContent
+          setKey={setKey}
+          provider={provider()}
+          keySet={!!props.provider?.keySet}
+          deleteKey={() => {
+            userStore.deleteProviderKey(props.provider?._id || '')
+            setKey('')
+          }}
+        />
+
         <Show when={isCustom()}>
           <div class="flex w-full items-center justify-center">
             <Button size="sm" onClick={testConnection} disabled={!url().trim()}>
@@ -308,4 +320,21 @@ export const ManageProvider: Component<{
 
 function sortAlpha(l: { label: string }, r: { label: string }) {
   return l.label.localeCompare(r.label)
+}
+
+const CustomProviderContent: Component<{
+  provider: string
+  deleteKey: () => void
+  keySet: boolean
+  setKey: (key: string) => void
+}> = (props) => {
+  return (
+    <Switch>
+      <Match when={props.provider === 'known-openrouter'}>
+        <OpenRouterOauth onKey={props.setKey} deleteKey={props.deleteKey} keySet={props.keySet} />
+      </Match>
+
+      <Match when>{null}</Match>
+    </Switch>
+  )
 }

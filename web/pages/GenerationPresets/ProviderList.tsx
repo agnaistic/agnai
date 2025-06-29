@@ -1,4 +1,4 @@
-import { Component, createSignal, For } from 'solid-js'
+import { Component, createEffect, createSignal, For, on } from 'solid-js'
 import { userStore } from '/web/store'
 import { Provider } from '/common/types/presets'
 import { getProviderConnection } from '/common/providers'
@@ -11,6 +11,20 @@ export const ProviderList: Component = () => {
 
   const [show, setShow] = createSignal(false)
   const [curr, setCurr] = createSignal<Provider>()
+
+  createEffect(
+    on(
+      () => state.user?.providers,
+      () => {
+        const providers = state.user?.providers
+        const current = curr()
+        if (!providers || !current?._id) return
+
+        const next = providers.find((p) => p._id === current._id)
+        setCurr(next)
+      }
+    )
+  )
 
   return (
     <>

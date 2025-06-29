@@ -49,7 +49,7 @@ export async function getInit() {
 
 async function deleteProviderKey(providerId: string) {
   if (isLoggedIn()) {
-    const res = await api.method('delete', '/user/provider-key', { id: providerId })
+    const res = await api.method('delete', '/user/provider-key', { id: providerId, providerId })
     return res
   }
 

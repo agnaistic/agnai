@@ -290,7 +290,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
   return next
 })
 
-export const removeProviderKey = handle(async ({ userId, body, authed, params }) => {
+export const removeProviderKey = handle(async ({ userId, body }) => {
   assertValid({ id: 'string' }, body)
   const user = await getUser(userId)
   if (!user) throw errors.Forbidden
@@ -331,8 +331,14 @@ export const saveProvider = handle(async ({ userId, body }) => {
 })
 
 export const deleteProvider = handle(async ({ userId, body }) => {
-  assertValid({ providerId: 'string' }, body)
-  const next = await store.users.deleteUserProvider({ userId, providerId: body.providerId })
+  assertValid({ id: 'string?', providerId: 'string?' }, body)
+  const providerId = body.id || body.providerId
+
+  if (!providerId) {
+    throw errors.BadRequest
+  }
+
+  const next = await store.users.deleteUserProvider({ userId, providerId })
   return next
 })
 

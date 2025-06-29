@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
 import { PlusIcon, WifiPen } from 'lucide-solid'
@@ -103,6 +103,20 @@ export const PresetProvider: Field = (props) => {
     ev?.preventDefault?.()
     setOpenLegacy(true)
   }
+
+  createEffect(
+    on(
+      () => state.user?.providers,
+      () => {
+        const providers = state.user?.providers
+        const current = editing()
+        if (!providers || !current?._id) return
+
+        const next = providers.find((p) => p._id === current._id)
+        setEditing(next)
+      }
+    )
+  )
 
   return (
     <>
