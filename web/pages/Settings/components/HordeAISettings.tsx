@@ -212,7 +212,7 @@ const ModelModal: Component<{
   save: (items: Option[]) => void
 }> = (props) => {
   const cfg = settingStore((s) => ({
-    models: s.models.slice().map(toItem),
+    models: s.models.slice().map(toHordeModelItem),
   }))
 
   const state = userStore((s) => ({
@@ -329,7 +329,7 @@ const WorkerModal: Component<{
   )
 }
 
-function toItem(model: HordeModel) {
+export function toHordeModelItem(model: HordeModel) {
   return {
     label: `${model.name} - (count: ${model.count}, queue: ${model.queued}, eta: ${model.eta})`,
     value: model.name,

@@ -27,7 +27,9 @@ export const handleHorde: ModelAdapter = async function* ({
     yield { prompt }
 
     const models = getHordeModels()
-    const userModels = toArray(user.hordeModel)
+    const userModels = gen.providerId
+      ? toArray(gen.thirdPartyModel?.split(','))
+      : toArray(user.hordeModel)
 
     const modelsMatch = models
       .filter((m) => {

@@ -4,13 +4,10 @@ import { decryptText } from '../db/util'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { HordeCheck } from '../../common/horde-gen'
 import { sendGuest, sendOne } from '../api/ws'
+import { AppSchema } from '/common/types'
 
 export const handleHordeImage: ImageAdapter = async ({ user, prompt, negative }, log, guestId) => {
-  const key = user.hordeKey
-    ? guestId
-      ? user.hordeKey
-      : decryptText(user.hordeKey)
-    : HORDE_GUEST_KEY
+  let key = getHordeKey(user, !!guestId)
 
   const onTick = (status: HordeCheck) => {
     const payload = {
@@ -33,4 +30,19 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt, negative },
   )
   const buffer = Buffer.from(image, 'base64')
   return { ext: 'png', content: buffer }
+}
+
+function getHordeKey(user: AppSchema.User, guest: boolean) {
+  let key = user.hordeKey
+  const match = user.providers?.find((p) => p.provider === 'known-horde')
+
+  if (match?.key) {
+    key = match.key
+  }
+
+  if (key) {
+    return guest ? key : decryptText(key)
+  }
+
+  return HORDE_GUEST_KEY
 }
