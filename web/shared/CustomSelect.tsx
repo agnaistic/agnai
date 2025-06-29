@@ -208,7 +208,11 @@ const OptionList: Component<{
                     'cursor-pointer': !option.disabled,
                   }}
                   class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
-                  onClick={() => props.onSelect(option)}
+                  onClick={() => {
+                    if (!option.disabled) {
+                      props.onSelect(option)
+                    }
+                  }}
                 >
                   <div class="font-bold">{option.label}</div>
                 </div>

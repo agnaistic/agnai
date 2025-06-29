@@ -7,7 +7,8 @@ import { defaultChars } from '../../common/characters'
 const ALGO = 'aes-192-cbc'
 const KEY = crypto.scryptSync(config.jwtSecret, 'salt', 24)
 const KEY_LB = crypto.scryptSync(`${config.jwtSecret}\n`, 'salt', 24)
-// const KEY_TRIM = crypto.scryptSync(`${config.jwtSecret}\\n`, 'salt', 24)
+const KEY_TRIM = crypto.scryptSync(`${config.jwtSecret}\\n`, 'salt', 24)
+const CAN_USE_TRIMMED_KEY = process.env.LOG_LEVEL === 'debug'
 
 export function now() {
   return new Date().toISOString()
@@ -42,11 +43,6 @@ export function decryptText(text: string, noError?: boolean) {
     throw new Error('IV not found')
   }
 
-  // try {
-  //   const decipher = crypto.createDecipheriv(ALGO, KEY_TRIM as any, Buffer.from(iv, 'hex') as any)
-  //   return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
-  // } catch (ex) {}
-
   try {
     const decipher = crypto.createDecipheriv(ALGO, KEY as any, Buffer.from(iv, 'hex') as any)
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
@@ -56,6 +52,13 @@ export function decryptText(text: string, noError?: boolean) {
     const decipher = crypto.createDecipheriv(ALGO, KEY_LB as any, Buffer.from(iv, 'hex') as any)
     return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
   } catch (ex) {}
+
+  if (CAN_USE_TRIMMED_KEY) {
+    try {
+      const decipher = crypto.createDecipheriv(ALGO, KEY_TRIM as any, Buffer.from(iv, 'hex') as any)
+      return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
+    } catch (ex) {}
+  }
 
   if (noError) return ''
   throw new Error(`Could not read API key: Try re-entering your service API key.`)
