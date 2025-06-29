@@ -890,10 +890,10 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   const html = Purify.sanitize(
     wrapWithQuoteElement(
       markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
-    ),
-    {
-      ALLOWED_TAGS: ['q', 'qem', 'em', 'strong', 'b', 'i', 'br', 'p', 'span', 'div', 'code', 'pre'],
-    }
+    )
+    // {
+    //   ALLOWED_TAGS: ['q', 'qem', 'em', 'strong', 'b', 'i', 'br', 'p', 'span', 'div', 'code', 'pre'],
+    // }
   )
 
   return html
