@@ -44,7 +44,7 @@ const EditMemoryForm: Component<{
     books.books.list.filter((book) => book._id !== props.state._id)
   )
   const sourceBook = createMemo(() =>
-    books.books.list.find((book) => book._id === selectedSourceBookId())
+    otherBooks().find((book) => book._id === selectedSourceBookId())
   )
 
   createEffect(() => {
