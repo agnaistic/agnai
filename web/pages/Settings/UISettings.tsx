@@ -386,7 +386,7 @@ const UISettings: Component<{}> = () => {
 
       <Select
         fieldName="chatQuoteEmphasisWeight"
-        label="Chat quote emphasis bold"
+        label="Chat Quote Emphasis Weight"
         inline
         items={[
           { label: 'None', value: 'unset' },
