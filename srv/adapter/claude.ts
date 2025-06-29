@@ -277,9 +277,9 @@ function getBaseUrl(gen: Partial<GenSettings>, model: string, isThirdParty?: boo
   if (gen.providerId && (gen.service === 'claude' || gen.service === 'claude-v2')) {
     switch (isChatModel) {
       case true:
-        return { url: joinUrl(gen.thirdPartyUrl!, 'messages'), changed: true }
+        return { url: joinUrl(gen.thirdPartyUrl!, 'messages'), changed: false }
       case false:
-        return { url: joinUrl(gen.thirdPartyUrl!, 'complete'), changed: true }
+        return { url: joinUrl(gen.thirdPartyUrl!, 'complete'), changed: false }
     }
   }
 

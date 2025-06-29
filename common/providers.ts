@@ -135,7 +135,7 @@ export type ProviderDefinition = {
   formats?: ProviderFormat[]
 }
 
-type ProviderCategory = 'custom' | 'known' | 'self'
+type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'
 
 export type PresetConnection = ReturnType<typeof getPresetConnection>
 
@@ -145,14 +145,17 @@ export function getPresetConnection(
 ) {
   const copy = { ...preset }
 
-  if (preset.providerId === 'agnaistic') {
+  const isAgnai =
+    preset.providerId === 'agnaistic' || (!preset.providerId && preset.service === 'agnaistic')
+
+  if (isAgnai) {
     copy.service = 'agnaistic'
     copy.thirdPartyFormat = undefined
 
     return {
       provider: undefined,
       detail: undefined,
-      category: undefined,
+      category: 'agnai' as ProviderCategory,
       preset: copy,
       service: 'agnaistic' as const,
       format: undefined,
@@ -245,6 +248,9 @@ export function getSafeProviderDetail(provider: string) {
 
     case 'self':
       return { category, type, detail: KNOWN_SELF_HOST[type] }
+
+    case 'agnai':
+      return { category, type: category, defail: undefined }
   }
 }
 
@@ -260,6 +266,28 @@ export function getProviderLabel(provider: AppSchema.Provider) {
 
     case 'custom':
       return provider.name || 'Custom'
+
+    case 'agnai':
+      return 'Agnai'
+  }
+}
+
+export function getProviderCategoryLabel(cate: ProviderCategory | undefined) {
+  switch (cate) {
+    case 'known':
+      return 'Know'
+
+    case 'self':
+      return 'Local'
+
+    case 'custom':
+      return 'Custom'
+
+    case 'agnai':
+      return 'Agnai'
+
+    default:
+      return 'Legacy'
   }
 }
 

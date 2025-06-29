@@ -5,9 +5,9 @@ import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { presetValidator } from '../../../common/presets'
-import { exportPreset, presetStore, toastStore } from '../../store'
+import { exportPreset, presetStore, toastStore, userStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
-import { getServiceName, sortByLabel } from '/web/shared/adapter'
+import { getPresetLabel, getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
 import { Page } from '/web/Layout'
@@ -21,6 +21,8 @@ const PresetList: Component = () => {
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
+
+  const self = userStore((s) => ({ user: s.user }))
 
   const [deleting, setDeleting] = createSignal<string>()
   const [importing, setImporting] = createSignal(false)
@@ -76,44 +78,53 @@ const PresetList: Component = () => {
 
       <div class="flex flex-col items-center gap-2">
         <For each={presets()}>
-          {(preset) => (
-            <div class="bg-800 flex w-full items-center gap-1 rounded-xl py-1 hover:bg-[var(--bg-600)]">
-              <A href={`/presets/${preset._id}`} class=" flex w-full">
-                <div class="ml-4 flex w-full flex-col items-start">
-                  <div>
-                    <div>{preset.name}</div>
-                    <div class="mr-1 text-xs italic text-[var(--text-600)]">
-                      {getServiceName(preset.service)}
+          {(preset) => {
+            const label = getPresetLabel(preset)
+            return (
+              <div
+                class="flex w-full items-center gap-1 rounded-xl py-1 hover:bg-[var(--bg-600)]"
+                classList={{
+                  'bg-800': self.user?.defaultPreset !== preset._id,
+                  'bg-700': self.user?.defaultPreset === preset._id,
+                }}
+              >
+                <A href={`/presets/${preset._id}`} class=" flex w-full">
+                  <div class="ml-4 flex w-full flex-col items-start">
+                    <div>
+                      <div>{preset.name}</div>
+                      <div class="mr-1 text-xs text-[var(--text-600)]">
+                        {label.category} | {label.prefix}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </A>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => exportPreset(preset)}
-                class="icon-button"
-              >
-                <Download size={20} />
-              </Button>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
-                class="icon-button"
-              >
-                <Copy size={20} />
-              </Button>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => setDeleting(preset._id)}
-                class="icon-button"
-              >
-                <Trash size={20} />
-              </Button>
-            </div>
-          )}
+                </A>
+                <Button
+                  schema="clear"
+                  size="sm"
+                  onClick={() => exportPreset(preset)}
+                  class="icon-button"
+                >
+                  <Download size={20} />
+                </Button>
+                <Button
+                  schema="clear"
+                  size="sm"
+                  onClick={() => nav(`/presets/new?preset=${preset._id}`)}
+                  class="icon-button"
+                >
+                  <Copy size={20} />
+                </Button>
+                <Button
+                  schema="clear"
+                  size="sm"
+                  onClick={() => setDeleting(preset._id)}
+                  class="icon-button"
+                >
+                  <Trash size={20} />
+                </Button>
+              </div>
+            )
+          }}
         </For>
       </div>
 

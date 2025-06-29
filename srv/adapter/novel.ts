@@ -56,7 +56,8 @@ const NEW_PARAMS: Record<string, boolean> = {
 
 export const handleNovel: ModelAdapter = async function* (opts) {
   const { members, user, prompt, mappedSettings, guest, log } = opts
-  if (!user.novelApiKey) {
+  const apiKey = opts.gen.thirdPartyKey || user.novelApiKey
+  if (!apiKey) {
     yield { error: 'Novel API key not set' }
     return
   }
@@ -131,7 +132,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
   log.debug(`Prompt:\n${body.input}`)
 
   const headers = {
-    Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
+    Authorization: `Bearer ${guest ? apiKey : decryptText(apiKey)}`,
   }
 
   const maxTokens = await getMaxTokens(body.model, headers)

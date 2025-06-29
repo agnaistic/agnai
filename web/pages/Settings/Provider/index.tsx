@@ -429,8 +429,8 @@ const ManageProvider: Component<{
     setTested(undefined)
     const detail = getSafeProviderDetail(id)
 
-    if (detail?.detail.url?.trim()) {
-      setUrl(detail.detail.url?.trim())
+    if (detail?.detail?.url?.trim()) {
+      setUrl(detail.detail?.url?.trim())
     }
 
     setFormat('0')

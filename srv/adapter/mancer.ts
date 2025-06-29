@@ -74,7 +74,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     return
   }
 
-  const key = opts.user.adapterConfig?.mancer?.apiKey
+  const key = opts.gen.thirdPartyKey || opts.user.adapterConfig?.mancer?.apiKey
   if (!key) {
     yield { error: `Mancer request failed: API key not set` }
     return
