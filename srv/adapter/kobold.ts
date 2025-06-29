@@ -222,6 +222,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'arli': {
+      body.messages = opts.messages
       const url = 'https://api.arliai.com/v1/chat/completions'
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })

@@ -6,6 +6,7 @@ import { ModelFormat } from '../presets/templates'
 import { AppSchema } from '../types'
 import type { SubscriptionPreset } from '/srv/adapter/agnaistic'
 import { getPresetConnection } from '../providers'
+import { getJsonSchemaPayload } from '../guidance/json-schema'
 
 type MinOpts = Pick<
   PayloadOpts,
@@ -18,6 +19,8 @@ type MinOpts = Pick<
   | 'impersonate'
   | 'replyAs'
   | 'user'
+  | 'sender'
+  | 'char'
 > & {
   gen?: Partial<AppSchema.GenSettings>
   settings?: Partial<AppSchema.GenSettings>
@@ -99,6 +102,20 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   const json_schema = opts.jsonSchema && gen.jsonEnabled ? toJsonSchema(opts.jsonSchema) : undefined
 
+  const characterNames = Object.values(opts.characters || {})
+    .map((c) => c.name.split(' '))
+    .concat(opts.members.map((m) => m.handle.split(' ')))
+    .flat()
+
+  const sequenceBreakers = Array.from(
+    new Set(
+      [opts.replyAs.name?.split(' '), opts.replyAs.name?.split(' '), ...characterNames].flat()
+    ).values()
+  )
+    .concat(gen.drySequenceBreakers || [])
+    .flat()
+    .filter((t) => !!t)
+
   if (!gen.temp) {
     gen.temp = 0.75
   }
@@ -122,6 +139,61 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
     if (gen.frequencyPenalty) {
       body.frequency_penalty = gen.frequencyPenalty
+    }
+
+    return body
+  }
+
+  if (format === 'arli') {
+    const body: any = {
+      model: gen.providerId ? gen.thirdPartyModel : gen.arliModel || gen.thirdPartyModel,
+      // prompt,
+      stop: getStoppingStrings(opts, opts.settings, stops),
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
+      length_penalty: gen.repetitionPenalty,
+      tfs: gen.tailFreeSampling,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      typical_p: gen.typicalP,
+      ignore_eos: false,
+      max_tokens: gen.maxTokens,
+      smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
+
+      stream: gen.streamResponse,
+    }
+
+    if (gen.dryMultiplier) {
+      body.dry_multiplier = gen.dryMultiplier
+      body.dry_base = gen.dryBase
+      body.dry_allowed_length = gen.dryAllowedLength
+      body.dry_range = gen.dryRange
+      body.dry_sequence_breakers = sequenceBreakers
+    }
+
+    if (gen.dynatemp_range) {
+      body.dynamic_temperature = true
+      body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_exponent = gen.dynatemp_exponent
+    }
+
+    if (gen.xtcThreshold) {
+      body.xtc_threshold = gen.xtcThreshold
+      body.xtc_probability = gen.xtcProbability
+    }
+
+    if (body.top_k <= 0) {
+      body.top_k = -1
+    }
+
+    if (gen.jsonEnabled && opts.jsonSchema) {
+      const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
+      body.guided_json = schema
+      // body.guided_decoding_backend = 'outlines'
     }
 
     return body
