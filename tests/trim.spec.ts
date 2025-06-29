@@ -1,6 +1,6 @@
 import './init'
 import { expect } from 'chai'
-import { trimResponseV2 } from '/common/requests/util'
+import { sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { toChar, toBotMsg, toProfile, reset } from './util'
 
 const bot = toChar('Bot')
@@ -38,5 +38,27 @@ describe('Response trimming', () => {
     )
     const actual = trimResponseV2(msg.msg, bot, users, {})
     expect(actual).to.eq('aaa bbb ccc.  ddd eee fff.')
+  })
+
+  it('will correctly replace think tags', () => {
+    const msg = toBotMsg(bot, `${bot.name}: ${bot.name}: <think> aaa bbb ccc</think>.`)
+    const actual = sanitiseAndTrim({
+      text: msg.msg,
+      char: bot,
+      members: users,
+      characters: {},
+      gen: {
+        reasoning: {
+          start: '[think]',
+          end: '[/think]',
+          enabled: false,
+          effort: 'low',
+          exclude: false,
+          maxTokens: 1,
+        },
+      },
+    })
+
+    expect(actual).to.equal(`[think] aaa bbb ccc[/think].`)
   })
 })
