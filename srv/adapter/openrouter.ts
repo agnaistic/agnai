@@ -20,7 +20,7 @@ let modelCache: OpenRouterModel[]
 export const handleOpenRouter: ModelAdapter = async function* (opts) {
   const { user, guest } = opts
 
-  const key = user.adapterConfig?.openrouter?.apiKey
+  const key = opts.gen.thirdPartyKey || user.adapterConfig?.openrouter?.apiKey
   if (!key) {
     yield {
       error:
