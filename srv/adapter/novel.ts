@@ -158,7 +158,15 @@ export const handleNovel: ModelAdapter = async function* (opts) {
 
     if ('token' in generated.value) {
       accum += generated.value.token
-      yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, opts.characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          characters: opts.characters,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('tokens' in generated.value) {

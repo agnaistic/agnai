@@ -325,7 +325,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       else accumulated += generated.token
 
       if (gen.streamResponse) {
-        yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+        yield {
+          partial: sanitiseAndTrim({
+            text: accumulated,
+            char,
+            characters: opts.characters,
+            members,
+            gen: opts.gen,
+          }),
+        }
       }
     }
 

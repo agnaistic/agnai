@@ -252,7 +252,13 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     if ('token' in generated.value) {
       acc += generated.value.token
       yield {
-        partial: sanitiseAndTrim(acc, payload.prompt, opts.replyAs, opts.characters, members),
+        partial: sanitiseAndTrim({
+          text: acc,
+          char: opts.replyAs,
+          characters: opts.characters,
+          members,
+          gen: opts.gen,
+        }),
       }
     }
   }
@@ -263,7 +269,13 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       log.error({ body: resp }, 'Claude request failed: Empty response')
       yield { error: `Claude request failed: Received empty response. Try again.` }
     } else {
-      yield sanitiseAndTrim(completion, payload.prompt, opts.replyAs, opts.characters, members)
+      yield sanitiseAndTrim({
+        text: completion,
+        char: opts.replyAs,
+        characters: opts.characters,
+        members,
+        gen: opts.gen,
+      })
     }
   } catch (ex: any) {
     log.error({ err: ex }, 'Claude failed to parse')

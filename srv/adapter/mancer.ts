@@ -133,13 +133,13 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     if ('token' in generated.value) {
       accumulated += generated.value.token
       yield {
-        partial: sanitiseAndTrim(
-          accumulated,
-          opts.prompt,
-          opts.char,
-          opts.characters,
-          opts.members
-        ),
+        partial: sanitiseAndTrim({
+          text: accumulated,
+          char: opts.char,
+          characters: opts.characters,
+          members: opts.members,
+          gen: opts.gen,
+        }),
       }
     }
   }

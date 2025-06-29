@@ -77,13 +77,13 @@ export const handleVenus: ModelAdapter = async function* (opts) {
 
       if (opts.gen.streamResponse) {
         yield {
-          partial: sanitiseAndTrim(
-            accumulated,
-            body.template,
-            opts.char,
-            opts.characters,
-            opts.members
-          ),
+          partial: sanitiseAndTrim({
+            text: accumulated,
+            char: opts.char,
+            characters: opts.characters,
+            members: opts.members,
+            gen: opts.gen,
+          }),
         }
       }
     }

@@ -31,14 +31,24 @@ export function notify() {
   return notifier
 }
 
-export function sanitiseAndTrim(
-  text: string,
-  prompt: string,
-  char: AppSchema.Character,
-  characters: Record<string, AppSchema.Character> | undefined,
+type SanitiseOpts = {
+  text: string
+  char: AppSchema.Character
+  characters: Record<string, AppSchema.Character> | undefined
   members: AppSchema.Profile[]
-) {
-  const parsed = sanitise(text.replace(prompt, ''))
+  gen: Partial<AppSchema.GenSettings>
+}
+
+export function sanitiseAndTrim({ text, char, members, characters, gen }: SanitiseOpts) {
+  let parsed = sanitise(text)
+  if (gen.reasoning?.start) {
+    parsed = parsed.replaceAll('<think>', gen.reasoning.start)
+  }
+
+  if (gen.reasoning?.end) {
+    parsed = parsed.replaceAll('</think>', gen.reasoning.end)
+  }
+
   const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
     .split(`${char.name}:`)
     .join('')

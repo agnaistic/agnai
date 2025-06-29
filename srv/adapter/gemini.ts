@@ -226,7 +226,13 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       if (!thought) accum += text || ''
 
       yield {
-        partial: sanitiseAndTrim(thoughts + accum, '', opts.replyAs, opts.characters, opts.members),
+        partial: sanitiseAndTrim({
+          text: thoughts + accum,
+          char: opts.replyAs,
+          characters: opts.characters,
+          members: opts.members,
+          gen: opts.gen,
+        }),
       }
     }
   }

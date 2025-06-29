@@ -220,7 +220,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accumulated,
+          char,
+          characters: opts.characters,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('meta' in generated.value) {
@@ -246,8 +254,20 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     gen.swipesPerGeneration! > 1
-      ? yield sanitiseAndTrim(accumulated, prompt, char, opts.characters, members)
-      : yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
+      ? yield sanitiseAndTrim({
+          text: accumulated,
+          char,
+          characters: opts.characters,
+          members,
+          gen: opts.gen,
+        })
+      : yield sanitiseAndTrim({
+          text,
+          char: opts.replyAs,
+          characters: opts.characters,
+          members,
+          gen: opts.gen,
+        })
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }

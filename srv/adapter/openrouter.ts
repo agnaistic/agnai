@@ -126,7 +126,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     if ('token' in gen.value) {
       accum += gen.value.token
       yield {
-        partial: sanitiseAndTrim(accum, opts.prompt, opts.replyAs, opts.characters, opts.members),
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          characters: opts.characters,
+          members: opts.members,
+          gen: opts.gen,
+        }),
       }
     }
 
@@ -151,7 +157,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     return
   }
 
-  yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
+  yield sanitiseAndTrim({
+    text,
+    char: opts.replyAs,
+    characters: opts.characters,
+    members: opts.members,
+    gen: opts.gen,
+  })
 }
 
 async function* getCompletion(

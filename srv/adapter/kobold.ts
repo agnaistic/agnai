@@ -39,7 +39,7 @@ const REQUIRED_SAMPLERS = presetDefaults.order!
 // }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members, characters, prompt } = opts
+  const { members, characters } = opts
 
   const body = getThirdPartyPayload(opts)
 
@@ -99,7 +99,15 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
         wait = round((Date.now() - start) / 1000)
       }
       accum += generated.token
-      yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          characters,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('tokens' in generated) {
