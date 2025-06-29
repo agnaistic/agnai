@@ -129,7 +129,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accum,
           char: opts.replyAs,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.gen,
         }),
@@ -160,7 +159,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   yield sanitiseAndTrim({
     text,
     char: opts.replyAs,
-    characters: opts.characters,
     members: opts.members,
     gen: opts.gen,
   })

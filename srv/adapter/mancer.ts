@@ -136,7 +136,6 @@ export const handleMancer: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accumulated,
           char: opts.char,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.gen,
         }),
@@ -159,7 +158,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     accumulated = text
 
     const parsed = sanitise(accumulated.replace(opts.prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, body.stop)
+    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, body.stop)
     yield trimmed || parsed
   } catch (ex: any) {
     opts.log.error({ err: ex }, 'Mancer failed to parse')

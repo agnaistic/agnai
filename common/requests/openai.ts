@@ -86,7 +86,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     yield sanitiseAndTrim({
       text,
       char: opts.replyAs,
-      characters: opts.characters,
       members: opts.members,
       gen: opts.settings || {},
     })
@@ -128,7 +127,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
         partial: sanitiseAndTrim({
           text: accumulated,
           char: opts.char,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.settings || {},
         }),
@@ -177,7 +175,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   yield sanitiseAndTrim({
     text: accumulated,
     char: opts.replyAs,
-    characters: opts.characters,
     members: opts.members,
     gen: opts.settings || {},
   })

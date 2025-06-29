@@ -255,7 +255,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: acc,
           char: opts.replyAs,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         }),
@@ -272,7 +271,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       yield sanitiseAndTrim({
         text: completion,
         char: opts.replyAs,
-        characters: opts.characters,
         members,
         gen: opts.gen,
       })

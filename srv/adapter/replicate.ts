@@ -274,7 +274,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       },
     }
     const parsed = sanitise(text)
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
+    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, [
       '<|USER|>',
       '<|ASSISTANT|>',
       '[/LIST]',

@@ -39,7 +39,7 @@ const REQUIRED_SAMPLERS = presetDefaults.order!
 // }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members, characters } = opts
+  const { members } = opts
 
   const body = getThirdPartyPayload(opts)
 
@@ -103,7 +103,6 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accum,
           char: opts.replyAs,
-          characters,
           members,
           gen: opts.gen,
         }),
@@ -132,7 +131,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, stop_sequence)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, stop_sequence)
 
   yield trimmed || parsed
 }

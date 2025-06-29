@@ -224,7 +224,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accumulated,
           char,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         }),
@@ -257,14 +256,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       ? yield sanitiseAndTrim({
           text: accumulated,
           char,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         })
       : yield sanitiseAndTrim({
           text,
           char: opts.replyAs,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         })

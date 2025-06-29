@@ -329,7 +329,6 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
           partial: sanitiseAndTrim({
             text: accumulated,
             char,
-            characters: opts.characters,
             members,
             gen: opts.gen,
           }),
@@ -356,7 +355,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     parsed,
     opts.replyAs,
     members,
-    opts.characters,
+    opts.gen,
     Array.from(stops.values())
   )
   yield trimmed || parsed
