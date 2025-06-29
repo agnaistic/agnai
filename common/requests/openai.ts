@@ -83,7 +83,13 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
       return
     }
 
-    yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
+    yield sanitiseAndTrim({
+      text,
+      char: opts.replyAs,
+      characters: opts.characters,
+      members: opts.members,
+      gen: opts.settings || {},
+    })
     return
   }
 
@@ -119,13 +125,13 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     if ('token' in generated.value) {
       accumulated += generated.value.token
       yield {
-        partial: sanitiseAndTrim(
-          accumulated,
-          opts.prompt,
-          opts.char,
-          opts.characters,
-          opts.members
-        ),
+        partial: sanitiseAndTrim({
+          text: accumulated,
+          char: opts.char,
+          characters: opts.characters,
+          members: opts.members,
+          gen: opts.settings || {},
+        }),
       }
     }
 
@@ -168,7 +174,13 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     }
   }
 
-  yield sanitiseAndTrim(accumulated, opts.prompt, opts.replyAs, opts.characters, opts.members)
+  yield sanitiseAndTrim({
+    text: accumulated,
+    char: opts.replyAs,
+    characters: opts.characters,
+    members: opts.members,
+    gen: opts.settings || {},
+  })
 }
 
 export async function requestFullCompletion(
