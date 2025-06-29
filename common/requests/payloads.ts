@@ -413,6 +413,26 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     }
     return body
   }
+
+  if (format === 'featherless') {
+    const payload: any = {
+      model: gen.providerId ? gen.thirdPartyModel : gen.featherlessModel || gen.thirdPartyModel,
+      prompt,
+      stop: getStoppingStrings(opts, opts.settings, stops),
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
+      repetition_penalty: gen.repetitionPenalty,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      max_tokens: gen.maxTokens,
+      include_stop_str_in_output: false,
+      stream: gen.streamResponse,
+    }
+
+    return payload
+  }
 }
 
 export function getStoppingStrings(
