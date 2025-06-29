@@ -899,9 +899,10 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   return html
 }
 
-/** Markup beautification. Lets us control color of diffrent HTML tags, expands on the markdown functionality
- *  Especially useful for quotes, which are wrapped in <q> tags
- *  and emphasis, which is wrapped in <qem> tags.
+/**
+ * Markup beautification. Lets us control color of diffrent HTML tags, expands on the markdown functionality
+ * Especially useful for quotes, which are wrapped in <q> tags
+ * and emphasis, which is wrapped in <qem> tags.
  */
 function wrapWithQuoteElement(str: string) {
   // Replace all non-regular double quotes with double regular quotes
@@ -924,7 +925,7 @@ function wrapWithQuoteElement(str: string) {
   )
 }
 
-/** Processes capture group from above*/
+/** Processes capture group from above */
 function wrapCaptureGroupQuotes(match: string, regularQuoted?: string) {
   if (regularQuoted) {
     /*If we have a valid string then we are within a quote
@@ -938,7 +939,7 @@ function wrapCaptureGroupQuotes(match: string, regularQuoted?: string) {
   return match
 }
 
-/** Replaces all <em> tags within a <q> tag with <qem> tags*/
+/** Replaces all <em> tags within a <q> tag with <qem> tags */
 function wrapCaptureGroupEmphasis(match: string, emphasisQuote?: string) {
   if (emphasisQuote) {
     return '<qem>' + emphasisQuote.replace(/\"/g, '') + '</qem>'
