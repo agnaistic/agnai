@@ -1,28 +1,8 @@
-import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
-import Tabs from '../../shared/Tabs'
-import HordeAISettings from './components/HordeAISettings'
-import {
-  Component,
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-} from 'solid-js'
-import OpenAISettings from './components/OpenAISettings'
-import ScaleSettings from './components/ScaleSettings'
-import NovelAISettings from './components/NovelAISettings'
-import ThirdPartySettings from './components/ThirdPartySettings'
-import OobaAISettings from './components/OobaAISettings'
-import ClaudeSettings from './components/ClaudeSettings'
+import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
-import RegisteredSettings from './components/RegisteredSettings'
-import { useSearchParams } from '@solidjs/router'
-import OpenRouterOauth from './OpenRouterOauth'
-import { SolidCard, TitleCard } from '/web/shared/Card'
+import { A } from '@solidjs/router'
+import { SolidCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
@@ -38,7 +18,6 @@ const AISettings: Component<{
   state: UserSettings
   setter: SetStoreFunction<UserSettings>
 }> = (props) => {
-  const [query] = useSearchParams()
   const state = userStore()
   const cfg = settingStore((s) => ({
     config: s.config,
@@ -60,40 +39,6 @@ const AISettings: Component<{
     })
   }
 
-  createEffect(() => {
-    const tabs = cfg.config.adapters
-      .filter((adp) => {
-        if (adp === 'ooba') return false
-        if (adp === 'openrouter-completion') return false
-        if (adp === 'kobold') return false
-        if (adp === 'claude-v2') return false
-        const reg = cfg.config.registered.find((r) => r.name === adp)
-        if (!reg) return true
-        for (const opt of reg.settings) {
-          if (!opt.preset) return true
-        }
-        return false
-      })
-      .map((a) => ADAPTER_LABELS[a] || a)
-
-    setTabs(tabs)
-
-    if (!ready() && cfg.config.adapters?.length) {
-      const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)
-      setTab(queryTab !== -1 ? queryTab : 0)
-      setReady(true)
-    }
-  })
-
-  const [tabs, setTabs] = createSignal<string[]>([])
-  const [tab, setTab] = createSignal(-1)
-  const [ready, setReady] = createSignal(false)
-
-  const currentTab = createMemo(() => {
-    const list = tabs()
-    const next = list[tab()]
-    return next
-  })
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter(
       (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
@@ -112,31 +57,24 @@ const AISettings: Component<{
     return true
   })
 
-  const tabClass = `flex flex-col gap-4`
-
   return (
     <>
-      <Show when={!ready()}>
-        <div>Loading...</div>
-      </Show>
+      <FormLabel
+        label={
+          <div class="flex flex-wrap items-center gap-1">
+            <div>Enable Embeddings/Long-Term Memory</div>
+            <Select
+              parentClass="text-sm py-1 px-2"
+              items={EMBED_MODELS_OPTS}
+              value={state.ui.embeddingModel || ''}
+              onChange={(ev) => userStore.updateEmbeddingModel(ev.value)}
+            />
+          </div>
+        }
+        helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
+      />
 
-      <Show when={ready()}>
-        <FormLabel
-          label={
-            <div class="flex flex-wrap items-center gap-1">
-              <div>Enable Embeddings/Long-Term Memory</div>
-              <Select
-                parentClass="text-sm py-1 px-2"
-                items={EMBED_MODELS_OPTS}
-                value={state.ui.embeddingModel || ''}
-                onChange={(ev) => userStore.updateEmbeddingModel(ev.value)}
-              />
-            </div>
-          }
-          helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
-        />
-
-        {/* <Show when={cfg.flags.caption}>
+      {/* <Show when={cfg.flags.caption}>
           <FormLabel
             label={
               <div class="flex flex-wrap items-center gap-1">
@@ -153,134 +91,75 @@ const AISettings: Component<{
           />
         </Show> */}
 
-        <Show when={!canUseApi()}>
+      <Show when={!canUseApi()}>
+        <PresetSelect
+          label="Default Preset"
+          helperText="The initially selected preset when creating a new chat. "
+          options={presetOptions()}
+          selected={props.state.defaultPreset}
+          setPresetId={(ev) => props.setter('defaultPreset', ev)}
+        />
+      </Show>
+
+      <Show when={canUseApi()}>
+        <SolidCard class="flex flex-col gap-2">
+          <HelpModal
+            title="Agnaistic API Access"
+            cta={
+              <div>
+                <a class="link">How to use API Access</a>
+              </div>
+            }
+            markdown={ApiAccessHelp}
+          />
+
           <PresetSelect
-            label="Default Preset"
-            helperText="The initially selected preset when creating a new chat. "
+            fieldName="defaultPreset"
+            label="Default/API Access Preset"
+            helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
             options={presetOptions()}
             selected={props.state.defaultPreset}
             setPresetId={(ev) => props.setter('defaultPreset', ev)}
           />
-        </Show>
 
-        <Show when={canUseApi()}>
-          <SolidCard class="flex flex-col gap-2">
-            <HelpModal
-              title="Agnaistic API Access"
-              cta={
-                <div>
-                  <a class="link">How to use API Access</a>
-                </div>
-              }
-              markdown={ApiAccessHelp}
-            />
-
-            <PresetSelect
-              fieldName="defaultPreset"
-              label="Default/API Access Preset"
-              helperText="Preset used when using API access. Also the initially selected preset when creating a new chat."
-              options={presetOptions()}
-              selected={props.state.defaultPreset}
-              setPresetId={(ev) => props.setter('defaultPreset', ev)}
-            />
-
-            <TextInput
-              fieldName="apiKeyPlaceholder"
-              helperText={
-                <div class="text-900 flex gap-1">
-                  <Show when={apiKey().includes('***')}>
-                    <Button size="pill" onClick={revealKey}>
-                      Reveal Key
-                    </Button>
-                  </Show>
-                  <Show when={apiKey() === 'Not set'}>
-                    <Button size="pill" onClick={generateKey}>
-                      Generate Key
-                    </Button>
-                  </Show>
-                  <Show when={apiKey() !== 'Not set'}>
-                    <Button size="pill" onClick={generateKey}>
-                      Regenerate Key
-                    </Button>
-                  </Show>
-                </div>
-              }
-              label="API Key"
-              readonly
-              placeholder="API Key Hidden"
-              value={apiKey()}
-            />
-          </SolidCard>
-        </Show>
-
-        <div class="my-2">
-          <SolidCard bg="orange-500" class="mb-2">
-            Using an external AI service such as OpenAI, NovelAI, or Horde? Use the <b>PROVIDERS</b>{' '}
-            in your preset.
-            <br />
-            The section below is deprecated.
-          </SolidCard>
-          <Tabs
-            display="select"
-            tabs={tabs().map((t) => `Provider: ${t}`)}
-            selected={tab}
-            select={setTab}
+          <TextInput
+            fieldName="apiKeyPlaceholder"
+            helperText={
+              <div class="text-900 flex gap-1">
+                <Show when={apiKey().includes('***')}>
+                  <Button size="pill" onClick={revealKey}>
+                    Reveal Key
+                  </Button>
+                </Show>
+                <Show when={apiKey() === 'Not set'}>
+                  <Button size="pill" onClick={generateKey}>
+                    Generate Key
+                  </Button>
+                </Show>
+                <Show when={apiKey() !== 'Not set'}>
+                  <Button size="pill" onClick={generateKey}>
+                    Regenerate Key
+                  </Button>
+                </Show>
+              </div>
+            }
+            label="API Key"
+            readonly
+            placeholder="API Key Hidden"
+            value={apiKey()}
           />
-        </div>
+        </SolidCard>
       </Show>
 
-      <div class={currentTab() === ADAPTER_LABELS.horde ? tabClass : 'hidden'}>
-        <HordeAISettings state={props.state} setter={props.setter} />
+      <div class="my-2">
+        <SolidCard bg="premium-700" class="mb-2">
+          Looking for the Providers section? Head to the{' '}
+          <A class="link font-bold" href="/presets?preset_tab=1">
+            Presets
+          </A>{' '}
+          page
+        </SolidCard>
       </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>
-        <ThirdPartySettings state={props.state} setter={props.setter} />
-      </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.ooba ? tabClass : 'hidden'}>
-        <OobaAISettings state={props.state} setter={props.setter} />
-      </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.openai ? tabClass : 'hidden'}>
-        <OpenAISettings state={props.state} setter={props.setter} />
-      </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.scale ? tabClass : 'hidden'}>
-        <ScaleSettings state={props.state} setter={props.setter} />
-      </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.novel ? tabClass : 'hidden'}>
-        <NovelAISettings state={props.state} setter={props.setter} />
-      </div>
-
-      <div class={currentTab() === ADAPTER_LABELS.claude ? tabClass : 'hidden'}>
-        <ClaudeSettings state={props.state} setter={props.setter} />
-      </div>
-
-      <For each={cfg.config.registered}>
-        {(each) => (
-          <div class={currentTab() === ADAPTER_LABELS[each.name] ? tabClass : 'hidden'}>
-            {/** Optionally show adapter specific information for registered adapters */}
-            <Switch>
-              <Match when={each.name === 'openrouter'}>
-                <OpenRouterOauth />
-              </Match>
-
-              <Match when={each.name === 'replicate'}>
-                <TitleCard>
-                  Head to{' '}
-                  <a class="link" target="_blank" href="https://replicate.com/">
-                    Replicate.com
-                  </a>{' '}
-                  to get started.
-                </TitleCard>
-              </Match>
-            </Switch>
-
-            <RegisteredSettings service={each} state={props.state} setter={props.setter} />
-          </div>
-        )}
-      </For>
     </>
   )
 }

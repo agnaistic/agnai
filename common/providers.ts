@@ -275,7 +275,7 @@ export function getProviderLabel(provider: AppSchema.Provider) {
 export function getProviderCategoryLabel(cate: ProviderCategory | undefined) {
   switch (cate) {
     case 'known':
-      return 'Know'
+      return 'Known'
 
     case 'self':
       return 'Local'
@@ -291,7 +291,7 @@ export function getProviderCategoryLabel(cate: ProviderCategory | undefined) {
   }
 }
 
-function getProviderConnection(provider: AppSchema.Provider) {
+export function getProviderConnection(provider: AppSchema.Provider) {
   const { category, detail } = assertProviderDetail(provider.provider)
   let url = ''
 
@@ -321,7 +321,16 @@ function getProviderConnection(provider: AppSchema.Provider) {
     }
   }
 
-  return { detail, category, service, format, url, key: provider.key, local: category === 'self' }
+  return {
+    detail,
+    category,
+    label: getProviderCategoryLabel(category),
+    service,
+    format,
+    url,
+    key: provider.key,
+    local: category === 'self',
+  }
 }
 
 function getAlias(provider: string) {

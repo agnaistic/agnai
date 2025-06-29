@@ -4,7 +4,6 @@ import { ImageAdapter } from './types'
 import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
 import { NovelSettings } from '../../common/types/image-schema'
 import { formatImagePrompt, joinImagePrompts } from '/common/util'
-import { getNovelApiKey } from '../adapter/novel'
 import { AppSchema } from '/common/types'
 import { decryptText } from '../db/util'
 
