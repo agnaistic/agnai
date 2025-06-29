@@ -117,6 +117,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       }
 
       contents.push({ role: 'user', parts: [{ text: msg.content }] })
+      continue
     }
 
     contents.push({ role: 'model', parts: [{ text: msg.content }] })
