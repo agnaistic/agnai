@@ -873,14 +873,15 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  // we sanizize user input to prevent XSS attacks, allowing only following HTML Tags see ALLOWED_TAGS below
+  // we sanizize user input to prevent XSS attacks
+  // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
   const html = Purify.sanitize(
     wrapWithQuoteElement(
       markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
-    )
-    // {
-    //   ALLOWED_TAGS: ['q', 'qem', 'em', 'strong', 'b', 'i', 'br', 'p', 'span', 'div', 'code', 'pre'],
-    // }
+    ),
+    {
+      ADD_TAGS: ['qem'],
+    }
   )
 
   return html
