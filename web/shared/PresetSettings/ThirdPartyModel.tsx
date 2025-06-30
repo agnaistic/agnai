@@ -325,6 +325,16 @@ const OpenRouterModels: Field = (props) => {
         }}
         buttonLabel={label()}
       />
+
+      <div class="flex items-end pb-2.5">
+        <Copy
+          text={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.openRouterModel?.id ||
+            ''
+          }
+        />
+      </div>
     </div>
   )
 }
@@ -432,16 +442,6 @@ const ArliModels: Field = (props) => {
           text={
             props.state.providerModels?.[props.state.providerId || 'na'] ||
             props.state.arliModel ||
-            ''
-          }
-        />
-      </div>
-
-      <div class="flex items-end pb-2.5">
-        <Copy
-          text={
-            props.state.providerModels?.[props.state.providerId || 'na'] ||
-            props.state.openRouterModel?.id ||
             ''
           }
         />
