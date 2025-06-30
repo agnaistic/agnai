@@ -133,7 +133,9 @@ const ChatNav: Component<NavProps> = (props) => {
         when={canModel()}
         fallback={
           <div class="flex w-full justify-center">
-            <ThirdPartyModel page="mode" />
+            <div class="w-fit">
+              <ThirdPartyModel page="mode" />
+            </div>
           </div>
         }
       >
