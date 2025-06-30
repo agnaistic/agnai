@@ -2,9 +2,9 @@
   "compilerOptions": {
     "strict": true,
     "target": "ES2022",
-    "module": "Node16",
+    "module": "nodenext",
     "incremental": true,
-    "moduleResolution": "Node16",
+    "moduleResolution": "nodenext",
     "noEmit": false,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

@@ -80,7 +80,6 @@ export const handleVenus: ModelAdapter = async function* (opts) {
           partial: sanitiseAndTrim({
             text: accumulated,
             char: opts.char,
-            characters: opts.characters,
             members: opts.members,
             gen: opts.gen,
           }),
@@ -90,7 +89,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accumulated)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, body.stop)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, body.stop)
 
   yield trimmed || parsed
 }

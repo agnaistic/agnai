@@ -388,8 +388,7 @@ const Message: Component<MessageProps> = (props) => {
                         <b>id</b>
                       </td>
                       <td>
-                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}{' '}
-                        {`${!!props.msg.userId}`}
+                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}
                       </td>
                     </tr>
                   </Show>

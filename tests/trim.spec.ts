@@ -46,7 +46,6 @@ describe('Response trimming', () => {
       text: msg.msg,
       char: bot,
       members: users,
-      characters: {},
       gen: {
         reasoning: {
           start: '[think]',

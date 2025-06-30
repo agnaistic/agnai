@@ -34,22 +34,14 @@ export function notify() {
 type SanitiseOpts = {
   text: string
   char: AppSchema.Character
-  characters: Record<string, AppSchema.Character> | undefined
   members: AppSchema.Profile[]
   gen: Partial<AppSchema.GenSettings>
 }
 
-export function sanitiseAndTrim({ text, char, members, characters, gen }: SanitiseOpts) {
+export function sanitiseAndTrim({ text, char, members, gen }: SanitiseOpts) {
   let parsed = sanitise(text)
-  if (gen.reasoning?.start) {
-    parsed = parsed.replaceAll('<think>', gen.reasoning.start)
-  }
 
-  if (gen.reasoning?.end) {
-    parsed = parsed.replaceAll('</think>', gen.reasoning.end)
-  }
-
-  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
+  const trimmed = trimResponseV2(parsed, char, members, gen, ['END_OF_DIALOG'])
     .split(`${char.name}:`)
     .join('')
   return trimmed || parsed
@@ -64,12 +56,19 @@ export function trimResponseV2(
   generated: string,
   char: AppSchema.Character,
   members: AppSchema.Profile[],
-  bots: Record<string, AppSchema.Character> | undefined,
+  gen: Partial<AppSchema.GenSettings> | undefined,
   endTokens: string[] = []
 ) {
   const allEndTokens = getEndTokens(null, members)
 
   generated = generated.split(`${char.name} :`).join(`${char.name}:`)
+  if (gen?.reasoning?.start) {
+    generated = generated.replaceAll('<think>', gen.reasoning.start)
+  }
+
+  if (gen?.reasoning?.end) {
+    generated = generated.replaceAll('</think>', gen.reasoning.end)
+  }
 
   for (const member of members) {
     if (!member.handle) continue

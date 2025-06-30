@@ -27,7 +27,9 @@ export const handleHorde: ModelAdapter = async function* ({
     yield { prompt }
 
     const models = getHordeModels()
-    const userModels = toArray(user.hordeModel)
+    const userModels = gen.providerId
+      ? toArray(gen.thirdPartyModel?.split(','))
+      : toArray(user.hordeModel)
 
     const modelsMatch = models
       .filter((m) => {
@@ -44,7 +46,7 @@ export const handleHorde: ModelAdapter = async function* ({
     const result = await horde.generateText({ ...user, hordeKey: key }, gen, prompt, opts.log)
     const sanitised = sanitise(result.text)
     const stops = gen.stopSequences || []
-    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, characters, [
+    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, gen, [
       'END_OF_DIALOG',
       ...stops,
     ])

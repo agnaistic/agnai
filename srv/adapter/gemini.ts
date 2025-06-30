@@ -117,6 +117,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       }
 
       contents.push({ role: 'user', parts: [{ text: msg.content }] })
+      continue
     }
 
     contents.push({ role: 'model', parts: [{ text: msg.content }] })
@@ -210,26 +211,21 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       if (!text) continue
 
       if (thought) {
-        if (!thoughts) thoughts += '<think>'
         thoughts += text
-      }
-
-      // When we've flipped to the response, append a closing think tag
-      if (!thought && thoughts && !accum) {
-        thoughts += '</think>'
       }
 
       if (DEBUG) {
         console.log([`[g:chunk] ${JSON.stringify(tick)}`])
       }
 
-      if (!thought) accum += text || ''
+      if (!thought) {
+        accum += text || ''
+      }
 
       yield {
         partial: sanitiseAndTrim({
-          text: thoughts + accum,
+          text: (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum,
           char: opts.replyAs,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.gen,
         }),
@@ -237,12 +233,15 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     }
   }
 
-  const parsed = sanitise(thoughts + accum)
+  const parsed = sanitise(
+    (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum
+  )
+
   const trimmed = trimResponseV2(
     parsed,
     opts.replyAs,
     opts.members,
-    opts.characters,
+    opts.gen,
     generationConfig.stopSequences
   )
 

@@ -162,7 +162,6 @@ export const handleNovel: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accum,
           char: opts.replyAs,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         }),
@@ -176,7 +175,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, endTokens)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, endTokens)
 
   yield trimmed || parsed
 }

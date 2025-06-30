@@ -193,15 +193,14 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'anthropic-version': apiVersion,
   }
 
-  const useThirdPartyPassword =
-    base.changed && isThirdParty && (gen.thirdPartyKey || user.thirdPartyPassword)
+  const useThirdPartyPassword = gen.providerId
   const apiKey = useThirdPartyPassword
     ? gen.thirdPartyKey || user.thirdPartyPassword
     : !isThirdParty
     ? user.claudeApiKey
     : null
 
-  const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : null
+  const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : ''
   if (key) {
     headers['x-api-key'] = key
     headers.Authorization = `Bearer ${key}`
@@ -255,7 +254,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: acc,
           char: opts.replyAs,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         }),
@@ -272,7 +270,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       yield sanitiseAndTrim({
         text: completion,
         char: opts.replyAs,
-        characters: opts.characters,
         members,
         gen: opts.gen,
       })

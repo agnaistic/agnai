@@ -11,7 +11,7 @@ import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
 import { defaultPresets } from '/common/default-preset'
-import { RefreshCcw } from 'lucide-solid'
+import { RefreshCcw, Save, X } from 'lucide-solid'
 import { Field, FieldProps } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
 import { CLAUDE_MODELS } from '/common/presets/claude'
@@ -19,6 +19,9 @@ import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
 import { PresetState } from './types'
+import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
+import { RootModal } from '../Modal'
+import MultiDropdown from '../MultiDropdown'
 
 export const ThirdPartyModel: Field = (props) => {
   const component = createMemo(() => {
@@ -41,6 +44,7 @@ export const ThirdPartyModel: Field = (props) => {
     }
 
     switch (props.context.service) {
+      case 'horde':
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
@@ -112,6 +116,9 @@ export const ThirdPartyModel: Field = (props) => {
         </Match>
         <Match when={component() === 'gemini'}>
           <GoogleModels {...props} />
+        </Match>
+        <Match when={component() === 'horde'}>
+          <HordeModels {...props} />
         </Match>
         <Match when>{null}</Match>
       </Switch>
@@ -689,6 +696,95 @@ const GoogleModels: Field = (props) => {
         props.state.thirdPartyModel
       }
     />
+  )
+}
+
+const HordeModels: Field = (props) => {
+  const [show, setShow] = createSignal(false)
+  const cfg = settingStore((s) => ({
+    models: s.models.slice().map(toHordeModelItem),
+  }))
+
+  const refreshHorde = () => {
+    settingStore.getHordeModels()
+    settingStore.getHordeWorkers()
+  }
+
+  const [selected, setSelected] = createSignal<Option[]>()
+
+  const open = () => {
+    setShow(true)
+    refreshHorde()
+  }
+
+  const save = () => {
+    const models = selected()
+    if (models) {
+      setProviderModel(props, models.map((m) => m.value).join(','))
+    }
+    setShow(false)
+  }
+
+  const close = () => {
+    setShow(false)
+  }
+
+  const currentModels = createMemo(() => {
+    const list = props.state.providerModels?.[props.state.providerId || 'na']?.split(',') || []
+    return list
+  })
+
+  return (
+    <>
+      <div class="flex items-center gap-2">
+        <Button class="w-fit" onClick={open}>
+          Select Model(s)
+        </Button>
+        <Show when={currentModels().length}>
+          <div class="text-500">{currentModels().length} models selected</div>
+        </Show>
+      </div>
+      <RootModal
+        show={show()}
+        close={close}
+        title="Specify AI Horde Models"
+        footer={
+          <>
+            <Button schema="secondary" onClick={close}>
+              <X /> Cancel
+            </Button>
+            <Button onClick={save}>
+              <Save /> Select Model(s)
+            </Button>
+          </>
+        }
+      >
+        <div class="flex flex-col gap-4 text-sm">
+          <MultiDropdown
+            class="min-h-[6rem]"
+            fieldName="workers"
+            items={cfg.models}
+            label="Select Model(s)"
+            onChange={setSelected}
+            values={
+              selected()?.map((s) => s.value) ||
+              props.state.providerModels?.[props.state.providerId || 'na']?.split(',')
+            }
+          />
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              Models selected:{' '}
+              {selected()?.length ||
+                props.state.providerModels?.[props.state.providerId || 'na']?.split(',').length ||
+                '0'}
+            </div>
+            <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
+              De-select All
+            </Button>
+          </div>
+        </div>
+      </RootModal>
+    </>
   )
 }
 

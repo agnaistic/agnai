@@ -6,7 +6,7 @@ import { requestFullCompletion, toChatCompletionPayload } from './chat-completio
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
 import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
-import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
+import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
@@ -28,10 +28,19 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
 
-  const oaiKey = gen.providerId ? gen.thirdPartyKey : user.oaiKey
-  if (!oaiKey && !base.changed) {
+  let oaiKey = gen.providerId
+    ? gen.thirdPartyKey
+    : gen.service === 'openai'
+    ? user.oaiKey
+    : gen.thirdPartyKey
+
+  if (!oaiKey) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
+  }
+
+  if (!guest) {
+    oaiKey = decryptText(oaiKey)
   }
 
   const oaiModel = gen.thirdPartyModel || ''
@@ -112,11 +121,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const isChatFormat =
     gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
-  const useChat = (isThirdParty && isChatFormat) || !!OPENAI_CHAT_MODELS[oaiModel]
+  const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
     const messages =
-      gen.thirdPartyFormat === 'openai-chatv2' && opts.messages
+      gen.thirdPartyFormat !== 'openai-chat' && opts.messages
         ? opts.messages
         : await toChatCompletionPayload(
             opts,
@@ -132,14 +141,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { prompt }
   }
 
-  const useThirdPartyPassword = !!(base.changed && isThirdParty && gen.thirdPartyKey)
-
-  let apiKey = useThirdPartyPassword ? gen.thirdPartyKey : !isThirdParty ? oaiKey : null
-
-  if (!guest && apiKey) {
-    apiKey = decryptText(apiKey)
-  }
-  const bearer = !!apiKey ? `Bearer ${apiKey}` : null
+  const bearer = !!oaiKey ? `Bearer ${oaiKey}` : null
 
   const headers: any = {
     'Content-Type': 'application/json',
@@ -148,10 +150,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     'anthropic-version': '2023-06-01',
   }
 
-  if (apiKey) {
+  if (oaiKey) {
     headers.Authorization = bearer
-    headers['X-RapidAPI-Key'] = apiKey
-    headers['x-api-key'] = apiKey
+    headers['X-RapidAPI-Key'] = oaiKey
+    headers['x-api-key'] = oaiKey
   }
 
   if (body.messages) {
@@ -224,7 +226,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accumulated,
           char,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         }),
@@ -257,14 +258,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       ? yield sanitiseAndTrim({
           text: accumulated,
           char,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         })
       : yield sanitiseAndTrim({
           text,
           char: opts.replyAs,
-          characters: opts.characters,
           members,
           gen: opts.gen,
         })

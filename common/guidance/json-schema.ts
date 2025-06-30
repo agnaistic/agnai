@@ -16,7 +16,7 @@ export const SCHEMA_VARS = {
 type Entities = {
   replyAs: M<AppSchema.Character>
   char: AppSchema.Character
-  impersonate: M<AppSchema.Character>
+  impersonate?: M<AppSchema.Character>
   sender: M<AppSchema.Profile>
 }
 

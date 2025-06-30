@@ -65,7 +65,6 @@ export const handlePetals: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accum,
           char: opts.replyAs,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.gen,
         }),
@@ -74,9 +73,7 @@ export const handlePetals: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum.replace(opts.prompt, ''))
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
-    'END_OF_DIALOG',
-  ])
+  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, ['END_OF_DIALOG'])
   yield trimmed || parsed
 }
 

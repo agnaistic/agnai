@@ -20,7 +20,10 @@ let modelCache: OpenRouterModel[]
 export const handleOpenRouter: ModelAdapter = async function* (opts) {
   const { user, guest } = opts
 
-  const key = user.adapterConfig?.openrouter?.apiKey
+  const key = opts.gen.providerId
+    ? opts.gen.thirdPartyKey
+    : opts.gen.thirdPartyKey || user.adapterConfig?.openrouter?.apiKey
+
   if (!key) {
     yield {
       error:
@@ -129,7 +132,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
         partial: sanitiseAndTrim({
           text: accum,
           char: opts.replyAs,
-          characters: opts.characters,
           members: opts.members,
           gen: opts.gen,
         }),
@@ -160,7 +162,6 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   yield sanitiseAndTrim({
     text,
     char: opts.replyAs,
-    characters: opts.characters,
     members: opts.members,
     gen: opts.gen,
   })

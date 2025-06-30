@@ -3,7 +3,6 @@ import RangeInput from '../RangeInput'
 import { Toggle } from '../Toggle'
 import { userStore } from '../../store'
 import { Card } from '../Card'
-import { HordeDetails } from '../../pages/Settings/components/HordeAISettings'
 import { PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
@@ -63,14 +62,14 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
       />
 
-      <Show when={props.context.service === 'horde'}>
+      {/* <Show when={props.context.service === 'horde'}>
         <Card>
           <HordeDetails
             maxTokens={props.state.maxTokens}
             maxContextLength={props.state.maxContextLength!}
           />
         </Card>
-      </Show>
+      </Show> */}
 
       <Card class="flex flex-col gap-2">
         <Show when={props.context.service === 'kobold' && props.context.format === 'aphrodite'}>
