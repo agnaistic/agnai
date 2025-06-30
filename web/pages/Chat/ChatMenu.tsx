@@ -24,6 +24,7 @@ import {
 } from 'lucide-solid'
 import { AgnaisticModel } from '/web/shared/PresetSettings/Agnaistic'
 import { startTour } from '/web/tours'
+import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 
 type NavProps = {
   ctx: ContextState
@@ -128,7 +129,14 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Show>
 
-      <Show when={canModel()}>
+      <Show
+        when={canModel()}
+        fallback={
+          <div class="flex w-full justify-center">
+            <ThirdPartyModel page="mode" />
+          </div>
+        }
+      >
         <div class="flex w-full justify-center">
           <AgnaisticModel />
         </div>

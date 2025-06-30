@@ -101,14 +101,7 @@ const PresetSettings: Component<
           context={props.context}
         />
 
-        <ThirdPartyModel
-          state={props.store}
-          hides={props.hides}
-          setter={props.setter}
-          page={props.page}
-          sub={sub()}
-          context={props.context}
-        />
+        <ThirdPartyModel page={props.page} sub={sub()} />
 
         <Divider class="!my-2" />
 

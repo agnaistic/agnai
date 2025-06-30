@@ -85,29 +85,26 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
 
   return (
     <Show when={props.context.service === 'agnaistic'}>
-      <CustomSelect
-        size="sm"
-        buttonLabel={label()}
-        modalTitle={
-          <div class="flex w-full flex-col">
-            <div>Select a Model</div>
-            <div class="flex justify-center">
-              <SubCTA onClick={emitter.emit.close}>Subscribe for higher quality models</SubCTA>
+      <div class="flex items-center gap-2">
+        <CustomSelect
+          size="sm"
+          buttonLabel={label()}
+          modalTitle={
+            <div class="flex w-full flex-col">
+              <div class="flex justify-center">
+                <SubCTA onClick={emitter.emit.close}>Subscribe for higher quality models</SubCTA>
+              </div>
             </div>
-          </div>
-        }
-        label={
-          <>
-            Model <span class="text-500 text-xs italic">(Available: {cats().all.length})</span>
-          </>
-        }
-        // options={opts()}
-        search={isFoundModel}
-        categories={cats().categories}
-        onSelect={(ev) => onSave(ev.value)}
-        selected={props.state.registered?.agnaistic?.subscriptionId}
-        emitter={emitter.on}
-      />
+          }
+          // options={opts()}
+          search={isFoundModel}
+          categories={cats().categories}
+          onSelect={(ev) => onSave(ev.value)}
+          selected={props.state.registered?.agnaistic?.subscriptionId}
+          emitter={emitter.on}
+        />{' '}
+        <span class="text-500 text-xs italic">(Available: {cats().all.length})</span>
+      </div>
     </Show>
   )
 }
