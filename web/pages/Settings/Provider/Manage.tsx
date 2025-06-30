@@ -20,6 +20,9 @@ import OpenRouterOauth from '../OpenRouterOauth'
 import { userStore } from '/web/store'
 
 export const ManageProvider: Component<{
+  presetId?: string
+  onCreated?: (provider: AppSchema.Provider) => void
+  onUpdated?: (provider: AppSchema.Provider) => void
   user: AppSchema.User | undefined
   show: boolean
   close: () => void
@@ -122,11 +125,17 @@ export const ManageProvider: Component<{
       body.format = def.detail.formats[fmt]
     }
 
-    getStore('user').saveProvider(body, (success) => {
+    getStore('user').saveProvider(body, (success, next) => {
       setLoading(false)
+      if (!success) return
+      props.close()
 
-      if (success) {
-        props.close()
+      if (!next) return
+      const wasCreated = !body._id && next._id
+      if (wasCreated) {
+        props.onCreated?.(next)
+      } else {
+        props.onUpdated?.(next)
       }
     })
   }
@@ -160,6 +169,7 @@ export const ManageProvider: Component<{
     if (!props.provider?._id) return
     getStore('user').deleteProvider(props.provider._id, (success) => {
       if (!success) return
+      props.close()
     })
   }
 

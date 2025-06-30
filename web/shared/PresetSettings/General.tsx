@@ -43,7 +43,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
         service={props.context.service}
         format={props.context.format}
-        hide={props.hides.localRequests}
+        hide={props.hides.localRequests || !!props.state.providerId}
         value={props.state.localRequests}
         onChange={(ev) => props.setter('localRequests', ev)}
       />
@@ -71,7 +71,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         </Card>
       </Show> */}
 
-      <Card class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <Show when={props.context.service === 'kobold' && props.context.format === 'aphrodite'}>
           <RangeInput
             fieldName="swipesPerGeneration"
@@ -154,7 +154,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           page={props.page}
           context={props.context}
         />
-      </Card>
+      </div>
     </div>
   )
 }

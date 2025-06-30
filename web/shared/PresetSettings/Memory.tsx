@@ -1,12 +1,11 @@
 import { Component } from 'solid-js'
-import { Card } from '../Card'
 import RangeInput from '../RangeInput'
 import { PresetTabProps } from './types'
 
 export const MemorySettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Memory' }}>
-      <Card class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <RangeInput
           fieldName="memoryContextLimit"
           label="Memory: Context Limit"
@@ -54,7 +53,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('memoryDepth', ev)}
         />
-      </Card>
+      </div>
     </div>
   )
 }

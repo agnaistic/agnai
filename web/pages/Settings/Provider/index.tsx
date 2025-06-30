@@ -1,9 +1,9 @@
-import { createEffect, createMemo, createSignal, on, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
-import { PlusIcon, WifiPen } from 'lucide-solid'
+import { Info, PlusIcon, WifiPen } from 'lucide-solid'
 import Select from '/web/shared/Select'
-import { RootModal } from '/web/shared/Modal'
+import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
 import { assertProviderDetail } from '../../../../common/providers'
@@ -11,6 +11,7 @@ import { Field } from '/web/shared/PresetSettings/Fields'
 import { getUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
 import { ManageProvider } from './Manage'
+import { markdown } from '/web/shared/markdown'
 
 export const PresetProvider: Field = (props) => {
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
@@ -68,6 +69,24 @@ export const PresetProvider: Field = (props) => {
     return providers
   })
 
+  // If a provider is deleted, the preset.providerId may still refer to it
+  // Soft-set the providerId to 'legacy', or maybe the first provider in the list?
+  createEffect(
+    on(
+      () => `${props.state.providerId} ${state.user?.providers?.length}`,
+      () => {
+        if (!props.state.providerId || props.state.providerId === 'agnaistic') return
+        if (!state.user?.providers) return
+
+        // However we need to deal with the race condition of receiving a new provider
+        const exists = state.user.providers.find((p) => p._id === props.state.providerId)
+        if (exists) return
+
+        props.setter('providerId', '')
+      }
+    )
+  )
+
   const editProvider = (ev: any) => {
     ev?.preventDefault?.()
     setEditing(selectedProvider())
@@ -123,14 +142,29 @@ export const PresetProvider: Field = (props) => {
       <div class="flex flex-col gap-1">
         <Select
           label={
-            <div class="flex w-full items-center justify-between pb-1">
+            <div class="flex w-full items-center gap-2 pb-1">
               <div>Service</div>
-              <div class="flex gap-1">
-                <Button size="sm" onClick={newProvider}>
-                  <PlusIcon size={16} />
-                  Provider
-                </Button>
-              </div>
+              <HelpModal
+                title="Providers"
+                cta={
+                  <button class="icon-button flex gap-1">
+                    <Info size={16} />
+                  </button>
+                }
+              >
+                <div class="flex flex-col gap-3">
+                  <p>Providers are used to connect to your preferred AI models.</p>
+                  <Markdown
+                    text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
+                  />
+                  <Markdown
+                    text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
+                  />
+                  <Markdown
+                    text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your preset.`}
+                  />
+                </div>
+              </HelpModal>
             </div>
           }
           items={services()}
@@ -142,23 +176,34 @@ export const PresetProvider: Field = (props) => {
           onChange={(ev) => changeProvider(ev.value)}
         >
           <Show when={props.state.providerId === ''}>
-            <button class="icon-button" onClick={editLegacy}>
+            <Button size="sm" onClick={editLegacy}>
               <WifiPen size={16} />
-            </button>
+              Edit
+            </Button>
           </Show>
 
           <Show when={showEdit()}>
-            <button class="icon-button" onClick={editProvider}>
+            <Button size="sm" onClick={editProvider}>
               <WifiPen size={16} />
-            </button>
+              Edit
+            </Button>
           </Show>
+
+          <Button size="sm" onClick={newProvider}>
+            <PlusIcon size={16} />
+            New
+          </Button>
         </Select>
       </div>
       <ManageProvider
+        presetId={props.state._id}
         user={state.user}
         show={open()}
         close={() => setOpen(false)}
         provider={editing()}
+        onCreated={(provider) => {
+          changeProvider(provider._id)
+        }}
       />
       <EditConnectionDetails {...props} show={openLegacy()} close={() => setOpenLegacy(false)} />
     </>
@@ -332,3 +377,7 @@ function tryGetHostname(url: string) {
     return 'Untitled (Invalid URL)'
   }
 }
+
+const Markdown: Component<{ text: string }> = (props) => (
+  <div class="rendered-markdown" innerHTML={markdown.makeHtml(props.text)}></div>
+)

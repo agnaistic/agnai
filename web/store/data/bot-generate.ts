@@ -619,10 +619,11 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSc
     if (settings.service !== 'kobold') return false
 
     if (settings.service === 'kobold' && !settings.localRequests) return false
+    return true
   }
 
-  const format = settings.thirdPartyFormat
-  if (!isSupportedLocalRequestFormat(format)) return false
+  const conn = getPresetConnection(settings || {}, user.providers)
+  if (!isSupportedLocalRequestFormat(conn.format)) return false
 
   if (settings.localRequests) {
     if (isDefaultPreset(settings._id)) return true
@@ -634,7 +635,6 @@ function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSc
     }
   }
 
-  const conn = getPresetConnection(settings || {}, user.providers)
   if (conn.category === 'self') return true
 
   return false

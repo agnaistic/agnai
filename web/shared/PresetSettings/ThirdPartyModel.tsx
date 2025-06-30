@@ -22,8 +22,11 @@ import { PresetState } from './types'
 import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
 import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
+import { round } from '/common/util'
 
 export const ThirdPartyModel: Field = (props) => {
+  const cfg = getStore('settings')((s) => ({ flags: s.flags }))
+
   const component = createMemo(() => {
     if (!props.state.providerId && props.context.service) {
       switch (props.context.service) {
@@ -91,8 +94,11 @@ export const ThirdPartyModel: Field = (props) => {
 
   return (
     <>
+      <div classList={{ hidden: !cfg.flags.debug }}>
+        C: {component()} {props.context.service} {props.context.format} {props.state.providerId}
+      </div>
       <Switch>
-        <Match when={component() === 'agnaistic'}>
+        <Match when={component() === 'agnaistic' || !component()}>
           <AgnaisticSettings {...props} noSave={false} />
         </Match>
         <Match when={component() === 'novel'}>
@@ -253,62 +259,71 @@ const NovelAIModel: Field = (props) => {
 }
 
 const OpenRouterModels: Field = (props) => {
-  const [orfilter, setOrfilter] = createSignal('')
   const cfg = getStore('settings')()
+
+  const label = createMemo(() => {
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.openRouterModel?.id
+
+    const match = cfg.config.openRouter.models.find((s) => s.id === id)
+    if (!match) return 'None selected'
+
+    return (
+      <span title={`${match.id}, ${(match.id || '...').toLowerCase()}`}>
+        {match.id}
+        <span class="text-500 ml-1 text-xs">{Math.round(match.context_length / 1024)}K</span>
+      </span>
+    )
+  })
 
   const openRouterModels = createMemo(() => {
     if (!cfg.config.openRouter.models) return []
 
-    const options = cfg.config.openRouter.models.map((model) => ({
-      value: model.id,
-      label: model.id,
-    }))
+    const options = cfg.config.openRouter.models
+      .map((model) => ({
+        value: model.id,
+        model: model,
+        label: (
+          <div class="flex w-full flex-col justify-between" title={`${model.id}`}>
+            <div class="ellipsis">{model.id}</div>
+            <div class="text-500 flex w-1/2 justify-between gap-1 text-xs">
+              <div>{Math.round(model.context_length / 1024)}K</div>
+              <div>${round(+model.pricing.prompt * 1_000_000, 2).toFixed(2)} In</div>
+              <div>${round(+model.pricing.completion * 1_000_000, 2).toFixed(2)} Out</div>
+            </div>
+          </div>
+        ),
+      }))
+      .sort((l, r) => l.value.localeCompare(r.value))
 
-    const search = orfilter().trim().toLowerCase()
-    const filtered = (
-      search ? options.filter((opt) => opt.value.toLowerCase().includes(search)) : options
-    ).sort((l, r) => l.label.localeCompare(r.label))
+    options.unshift({ label: 'Default', value: '', model: {} as any })
 
-    const includesCurrent = props.state.openRouterModel?.id
-      ? filtered.some((v) => v.value === props.state.openRouterModel?.id)
-      : true
-
-    if (!includesCurrent) {
-      filtered.unshift({
-        value: props.state.openRouterModel?.id!,
-        label: props.state.openRouterModel?.id!,
-      })
-    }
-
-    filtered.unshift({ label: 'Default', value: '' })
-
-    return filtered
+    return options
   })
 
   return (
     <div class="flex w-full items-end gap-1">
-      <Select
-        fieldName="openRouterModel"
+      <CustomSelect
+        maxHeight
+        modalTitle="Select a Model"
         label="Model"
-        parentClass="w-1/2"
-        items={openRouterModels()}
-        value={
+        options={openRouterModels()}
+        search={(value, search) => {
+          return value.toLowerCase().includes(search)
+        }}
+        selected={
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.openRouterModel?.id
         }
         disabled={props.state.disabled}
-        onChange={(ev) => {
+        onSelect={(ev) => {
           const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
           if (model) {
             setProviderModel(props, model?.id, { openRouterModel: model })
           }
         }}
-      />
-
-      <TextInput
-        parentClass="w-1/2"
-        placeholder="Filter..."
-        onChange={(ev) => setOrfilter(ev.currentTarget.value)}
+        buttonLabel={label()}
       />
     </div>
   )
@@ -319,9 +334,11 @@ const ArliModels: Field = (props) => {
   const [modelclass, setModelclass] = createSignal('')
 
   const label = createMemo(() => {
-    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.arliModel
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.arliModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return id || 'None selected'
+    if (!match) return 'None selected'
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
@@ -411,7 +428,23 @@ const ArliModels: Field = (props) => {
       />
 
       <div class="flex items-end pb-2.5">
-        <Copy text={props.state.arliModel || ''} />
+        <Copy
+          text={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.arliModel ||
+            ''
+          }
+        />
+      </div>
+
+      <div class="flex items-end pb-2.5">
+        <Copy
+          text={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.openRouterModel?.id ||
+            ''
+          }
+        />
       </div>
     </div>
   )
@@ -425,9 +458,11 @@ const FeatherlessModels: Field = (props) => {
   const [classesOpen, setClassesOpen] = createSignal(false)
 
   const label = createMemo(() => {
-    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.featherlessModel
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.featherlessModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return id || 'None selected'
+    if (!match) return 'None selected'
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
