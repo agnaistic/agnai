@@ -226,7 +226,7 @@ const CompatModel: Selector = (props) => {
           emitter={emitter.on}
           modalTitle={
             <div class="flex flex-col gap-2">
-              <div>Select a Model: ${new URL(models.url).host || '...'}</div>
+              <div>Select a Model: {new URL(models.url).host || '...'}</div>
 
               <div class="flex gap-2">
                 <TextInput

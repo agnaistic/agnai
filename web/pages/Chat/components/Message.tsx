@@ -872,7 +872,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
     msgStore.retry(split.chatId, original._id)
   } else {
-    msgStore.createImage(split._id)
+    msgStore.createImage({ sourceMsgId: split._id })
   }
 }
 
@@ -1030,7 +1030,12 @@ export const MessageMeta: Component = () => {
                   <Button
                     size="sm"
                     schema="secondary"
-                    onClick={() => msgStore.generateImagePrompt((summary) => setPrompt(summary))}
+                    onClick={() =>
+                      msgStore.generateImagePrompt({
+                        onSummary: (summary) => setPrompt(summary),
+                        onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+                      })
+                    }
                     disabled={!!ctx.waiting}
                   >
                     Generate

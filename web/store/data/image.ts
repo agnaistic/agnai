@@ -15,6 +15,7 @@ import { v4 } from 'uuid'
 import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
+import { TickHandler } from '/common/prompt'
 
 type GenerateOpts = {
   chatId?: string
@@ -47,25 +48,28 @@ export const imageApi = {
   ALLOWED_TYPES,
 }
 
-export async function generateImagePrompt() {
+export async function generateImagePrompt(onTick?: TickHandler) {
   const entities = await getPromptEntities()
-  const summary = await createSummarizedImagePrompt(entities)
+  const summary = await createSummarizedImagePrompt(entities, onTick)
 
   return summary
 }
 
-export async function generateImage(opts: GenerateOpts, onSummary?: (summary: string) => void) {
+export async function generateImage(
+  opts: GenerateOpts,
+  callbacks?: { onSummary?: (prompt: string) => void; onTick?: TickHandler }
+) {
   const entities = await getPromptEntities()
   const summary = opts.prompt
     ? await localApi.result({ response: opts.prompt })
-    : await createSummarizedImagePrompt(entities)
+    : await createSummarizedImagePrompt(entities, callbacks?.onTick)
 
   if (!summary.result) {
     return summary
   }
 
   const prompt = summary.result.response
-  onSummary?.(prompt)
+  callbacks?.onSummary?.(prompt)
 
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
@@ -255,7 +259,7 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-async function createSummarizedImagePrompt(opts: PromptEntities) {
+async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHandler) {
   if (opts.user.images?.summariseChat) {
     const imageEntities = await getImagePromptEntities(opts)
     const settings = imageEntities.preset || opts.settings
@@ -267,7 +271,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
       settings.name || '',
       `\n${imageEntities.summary || ''}`
     )
-    const summary = await getChatSummary(settings, imageEntities.summary)
+    const summary = await getChatSummary(settings, imageEntities.summary, onTick)
 
     console.log('Image caption: ', summary.result?.response)
     return summary
@@ -277,7 +281,11 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   return localApi.result({ response: prompt, meta: {} })
 }
 
-async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryPrompt?: string) {
+async function getChatSummary(
+  settings: Partial<AppSchema.GenSettings>,
+  summaryPrompt: string,
+  onTick?: TickHandler
+) {
   const opts = await msgsApi.getActiveTemplateParts()
   opts.limit = {
     context: 4096,
@@ -290,10 +298,13 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryP
 
   const parsed = await parseTemplate(template, opts)
   const prompt = parsed.parsed
-  const response = await genApi.basicInference({
-    prompt,
-    settings,
-  })
+  const response = await genApi.inferenceStream(
+    {
+      prompt,
+      settings,
+    },
+    onTick
+  )
 
   return response
 }

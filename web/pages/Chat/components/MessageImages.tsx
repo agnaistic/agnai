@@ -44,7 +44,15 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
 
       <Show when={images().length || !!props.msg.imagePrompt}>
         <div class="ml-2 flex items-center gap-3">
-          <div class="icon-button" onClick={() => msgStore.createImage(props.msg._id, true)}>
+          <div
+            class="icon-button"
+            onClick={() =>
+              msgStore.createImage({
+                sourceMsgId: props.msg._id,
+                append: true,
+              })
+            }
+          >
             <PlusCircle size={16} />
           </div>
 
