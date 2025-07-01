@@ -887,7 +887,7 @@ export const msgStore = createStore<MsgState>(
           source: 'summary',
         },
         {
-          onSummary: () => {
+          onDone: () => {
             const { waiting } = msgStore.getState()
             const next = (waiting?.image || 1) + 1
             msgStore.setState({ waiting: { ...waiting!, image: next } })

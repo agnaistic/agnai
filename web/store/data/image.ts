@@ -57,24 +57,23 @@ export async function generateImagePrompt(onTick?: TickHandler) {
 
 export async function generateImage(
   opts: GenerateOpts,
-  callbacks?: { onSummary?: (prompt: string) => void; onTick?: TickHandler }
+  callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
 ) {
   const entities = await getPromptEntities()
   const summary = opts.prompt
-    ? await localApi.result({ response: opts.prompt })
+    ? opts.prompt
     : await createSummarizedImagePrompt(entities, callbacks?.onTick)
 
-  if (!summary.result) {
+  if (!summary) {
     return summary
   }
 
-  const prompt = summary.result.response
-  callbacks?.onSummary?.(prompt)
+  callbacks?.onDone?.(summary)
 
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
   const max = getMaxImageContext(entities.user)
-  const trimmed = await encode(prompt)
+  const trimmed = await encode(summary)
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
