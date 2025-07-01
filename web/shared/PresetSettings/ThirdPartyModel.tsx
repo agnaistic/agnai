@@ -21,7 +21,7 @@ import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
 import { RefreshCcw, Save, X } from 'lucide-solid'
 import { NOVEL_MODELS } from '/common/presets/novel'
-import { CLAUDE_MODELS } from '/common/presets/claude'
+import { CLAUDE_LABELS, CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
@@ -185,9 +185,8 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
   )
 }
 
-const emitter = createEmitter('close')
-
 const CompatModel: Selector = (props) => {
+  const emitter = createEmitter('close')
   const state = getStore('user')((s) => ({ providers: s.user?.providers || [] }))
   const models = getStore('presets')((s) => ({
     list: s.presetModels.list,
@@ -242,10 +241,9 @@ const CompatModel: Selector = (props) => {
                   size="sm"
                   schema="primary"
                   onClick={() => {
-                    setProviderModel({ ...props, page: 'none' }, customId())
+                    setProviderModel(props, customId())
                     emitter.emit.close()
                   }}
-                  // disabled={!customId()}
                 >
                   Confirm
                 </Button>
@@ -265,7 +263,7 @@ const CompatModel: Selector = (props) => {
             <div class="text-md p-1">
               {(props.state.providerModels?.[props.state.providerId! || '...'] ||
                 props.state.thirdPartyModel) ??
-                'None selected'}
+                'Model - None selected'}
             </div>
           }
           disabled={models.loading || modelList().length <= 1}
@@ -724,34 +722,8 @@ const FeatherlessModels: Selector = (props) => {
 }
 
 const ClaudeModel: Selector = (props) => {
-  const CLAUDE_LABELS = {
-    ClaudeV2: 'Latest: Claude v2',
-    ClaudeV2_1: 'Claude v2.1',
-    ClaudeV2_0: 'Claude v2.0',
-    ClaudeV1_100k: 'Latest: Claude v1 100K',
-    ClaudeV1_3_100k: 'Claude v1.3 100K',
-    ClaudeV1: 'Latest: Claude v1',
-    ClaudeV1_3: 'Claude v1.3',
-    ClaudeV1_2: 'Claude v1.2',
-    ClaudeV1_0: 'Claude v1.0',
-    ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
-    ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
-    ClaudeInstantV1: 'Latest: Claude Instant v1',
-    ClaudeInstantV1_1: 'Claude Instant v1.1',
-    ClaudeInstantV1_0: 'Claude Instant v1.0',
-    ClaudeV3_Opus: 'Claude v3 Opus',
-    ClaudeV3_Sonnet: 'Claude v3 Sonnet',
-    ClaudeV3_Haiku: 'Claude v3 Haiku',
-    ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
-    ClaudeV35_Haiku_Latest: 'Claude v3.5 Haiku (Latest)',
-    ClaudeV35_Haiku_Oct2024: 'Claude v3.5 Haiku (Oct 2024)',
-    ClaudeV35_Sonnet_Latest: 'Claude v3.5 Sonnet (Latest)',
-    ClaudeV35_Sonnet_Oct2024: `Claude v3.5 Sonnet (Oct 2024)`,
-    ClaudeV37_Sonnet_Latest: 'Claude v3.7 Sonnet (Latest)',
-    ClaudeV37_Sonnet_Feb2025: 'Claude v3.7 Sonnet (Feb 2025)',
-    ClaudeV4_Opus_May2025: 'Claude v4 Opus (May 2025)',
-    ClaudeV4_Sonnet_May2025: 'Claude v4 Sonnet (May 2025)',
-  } satisfies Record<keyof typeof CLAUDE_MODELS, string>
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
     const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
@@ -771,13 +743,39 @@ const ClaudeModel: Selector = (props) => {
     if (!id) return 'Model - None Selected'
     const match = Object.values(CLAUDE_MODELS).find((model) => model === id)
 
-    if (!match) return 'Model - None Selected'
+    if (!match) return id
     return match
   })
 
   return (
     <CustomSelect
-      modalTitle="Select a Model"
+      modalTitle={
+        <div class="flex flex-col gap-2">
+          <div>Select a Model</div>
+
+          <div class="flex gap-2">
+            <TextInput
+              prelabel="Manual Model ID"
+              parentClass="w-full !font-normal !text-sm !h-8"
+              class=""
+              value={customId()}
+              onChange={(ev) => {
+                setCustomId(ev.currentTarget.value)
+              }}
+            />
+            <Button
+              size="sm"
+              schema="primary"
+              onClick={() => {
+                setProviderModel(props, customId())
+                emitter.emit.close()
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      }
       options={claudeModels()}
       selected={
         props.state.providerModels?.[props.state.providerId || 'na'] ||
@@ -790,17 +788,20 @@ const ClaudeModel: Selector = (props) => {
       }}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       buttonLabel={label()}
+      emitter={emitter.on}
     />
   )
 }
 
 const GoogleModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
   const label = createMemo(() => {
     const id = props.state.googleModel
-    if (!id) return 'None Selected'
+    if (!id) return 'Model - None Selected'
     const match = Object.values(GOOGLE_MODELS).find((model) => model.id === id)
 
-    if (!match) return 'Invalid Model'
+    if (!match) return id
     return match.label
   })
 
@@ -811,13 +812,40 @@ const GoogleModels: Selector = (props) => {
 
   return (
     <CustomSelect
-      modalTitle="Select a Model"
+      modalTitle={
+        <div class="flex flex-col gap-2">
+          <div>Select a Model</div>
+
+          <div class="flex gap-2">
+            <TextInput
+              prelabel="Manual Model ID"
+              parentClass="w-full !font-normal !text-sm !h-8"
+              class=""
+              value={customId()}
+              onChange={(ev) => {
+                setCustomId(ev.currentTarget.value)
+              }}
+            />
+            <Button
+              size="sm"
+              schema="primary"
+              onClick={() => {
+                setProviderModel(props, customId())
+                emitter.emit.close()
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      }
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => {
         setProviderModel(props, opt.value, { googleModel: opt.value })
       }}
       buttonLabel={label()}
+      emitter={emitter.on}
       selected={
         props.state.providerModels?.[props.state.providerId || 'na'] ||
         props.state.googleModel ||
