@@ -2,7 +2,7 @@ import { v4 } from 'uuid'
 import { getStore } from '../create'
 import { getInferencePreset, replaceUniversalTags } from './common'
 import { localApi } from './storage'
-import { InferenceState, JsonField, TickHandler } from '/common/prompt'
+import { JsonField, TickHandler } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { api } from '../api'
 import { toastStore } from '../toasts'
@@ -102,10 +102,7 @@ export async function basicInference(opts: InferenceOpts) {
   return res
 }
 
-export async function inferenceStream(
-  opts: InferenceOpts,
-  onTick: (msg: string, state: InferenceState) => any
-) {
+export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler) {
   let { overrides, settings, prompt } = opts
   const requestId = v4()
   const { user } = getStore('user').getState()
@@ -121,8 +118,17 @@ export async function inferenceStream(
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)
+  const lazy = lazyPromise()
 
-  inferenceCallbacks.set(requestId, onTick)
+  const tickWrapper: TickHandler = (res, state) => {
+    if (state === 'done') {
+      lazy.resolve(res)
+    }
+
+    onTick?.(res, state)
+  }
+
+  inferenceCallbacks.set(requestId, tickWrapper)
 
   const res = await api.method<{ requestId: string; generating: boolean }>(
     'post',
@@ -138,10 +144,27 @@ export async function inferenceStream(
   )
 
   if (res.error) {
-    onTick(res.error, 'error')
+    onTick?.(res.error, 'error')
   }
 
   if (!res.result?.generating) {
     inferenceCallbacks.delete(requestId)
   }
+
+  return lazy.promise
+}
+
+export function lazyPromise<T = any>() {
+  const parts = {
+    resolve: (result: T) => {},
+    reject: (error: any) => {},
+    promise: {} as any as Promise<T>,
+  }
+
+  parts.promise = new Promise<T>((resolve, reject) => {
+    parts.resolve = resolve
+    parts.reject = reject
+  })
+
+  return parts
 }

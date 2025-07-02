@@ -2,7 +2,6 @@ import { Component, createEffect, createMemo, createSignal, For, on, onMount, Sh
 import { Option } from '../Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../../common/adapters'
 import { presetStore, settingStore } from '../../store'
-import { Card } from '../Card'
 import { getUsableServices, storage } from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
@@ -28,6 +27,7 @@ import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
 import { PresetProvider } from '/web/pages/Settings/Provider'
 import { ThirdPartyModel } from './ThirdPartyModel'
+import Divider from '../Divider'
 
 export { PresetSettings as default }
 
@@ -91,7 +91,7 @@ const PresetSettings: Component<
 
   return (
     <div class="flex flex-col gap-4">
-      <Card class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <PresetProvider
           state={props.store}
           hides={props.hides}
@@ -101,14 +101,9 @@ const PresetSettings: Component<
           context={props.context}
         />
 
-        <ThirdPartyModel
-          state={props.store}
-          hides={props.hides}
-          setter={props.setter}
-          page={props.page}
-          sub={sub()}
-          context={props.context}
-        />
+        <ThirdPartyModel page={props.page} sub={sub()} />
+
+        <Divider class="!my-2" />
 
         <PresetMode
           state={props.store}
@@ -125,7 +120,8 @@ const PresetSettings: Component<
           state={props.store}
           mode={props.store.presetMode}
         />
-      </Card>
+      </div>
+
       <Show when={pane.showing()}>
         <TempSettings service={props.context.service} />
       </Show>

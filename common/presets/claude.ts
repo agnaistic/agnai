@@ -37,6 +37,35 @@ export const CLAUDE_MODELS = {
   ClaudeV4_Sonnet_May2025: 'claude-sonnet-4-20250514',
 } as const
 
+export const CLAUDE_LABELS = {
+  ClaudeV2: 'Latest: Claude v2',
+  ClaudeV2_1: 'Claude v2.1',
+  ClaudeV2_0: 'Claude v2.0',
+  ClaudeV1_100k: 'Latest: Claude v1 100K',
+  ClaudeV1_3_100k: 'Claude v1.3 100K',
+  ClaudeV1: 'Latest: Claude v1',
+  ClaudeV1_3: 'Claude v1.3',
+  ClaudeV1_2: 'Claude v1.2',
+  ClaudeV1_0: 'Claude v1.0',
+  ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
+  ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
+  ClaudeInstantV1: 'Latest: Claude Instant v1',
+  ClaudeInstantV1_1: 'Claude Instant v1.1',
+  ClaudeInstantV1_0: 'Claude Instant v1.0',
+  ClaudeV3_Opus: 'Claude v3 Opus',
+  ClaudeV3_Sonnet: 'Claude v3 Sonnet',
+  ClaudeV3_Haiku: 'Claude v3 Haiku',
+  ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
+  ClaudeV35_Haiku_Latest: 'Claude v3.5 Haiku (Latest)',
+  ClaudeV35_Haiku_Oct2024: 'Claude v3.5 Haiku (Oct 2024)',
+  ClaudeV35_Sonnet_Latest: 'Claude v3.5 Sonnet (Latest)',
+  ClaudeV35_Sonnet_Oct2024: `Claude v3.5 Sonnet (Oct 2024)`,
+  ClaudeV37_Sonnet_Latest: 'Claude v3.7 Sonnet (Latest)',
+  ClaudeV37_Sonnet_Feb2025: 'Claude v3.7 Sonnet (Feb 2025)',
+  ClaudeV4_Opus_May2025: 'Claude v4 Opus (May 2025)',
+  ClaudeV4_Sonnet_May2025: 'Claude v4 Sonnet (May 2025)',
+} satisfies Record<keyof typeof CLAUDE_MODELS, string>
+
 export const CLAUDE_TEXT_MODELS: Record<string, boolean> = {
   [CLAUDE_MODELS.ClaudeV1]: true,
   [CLAUDE_MODELS.ClaudeV1_0]: true,

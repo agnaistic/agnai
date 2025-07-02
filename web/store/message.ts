@@ -825,7 +825,7 @@ export const msgStore = createStore<MsgState>(
 
     async *generateImagePrompt(
       { activeChatId, activeCharId, msgs },
-      onSummary: (summary: string) => void
+      callbacks: { onSummary?: (summary: string) => void; onTick?: TickHandler }
     ) {
       const messageId = msgs.slice(-1)[0]._id
 
@@ -845,14 +845,14 @@ export const msgStore = createStore<MsgState>(
         },
       }
 
-      const res = await imageApi.generateImagePrompt()
+      const res = await imageApi.generateImagePrompt(callbacks.onTick)
 
       console.log('[wait] gen-img-prompt')
       yield { waiting: undefined }
       if (res.result) {
         console.log(`Image Prompt:\n${res.result.response}`)
         // msgStore.editMessageProp(messageId, { imagePrompt: res.result.response })
-        onSummary?.(res.result.response)
+        callbacks.onSummary?.(res.result.response)
         return
       }
 
@@ -861,12 +861,11 @@ export const msgStore = createStore<MsgState>(
 
     async *createImage(
       { msgs, activeChatId, activeCharId, waiting },
-      sourceMessageId?: string,
-      append?: boolean
+      opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler }
     ) {
       if (waiting) return
 
-      const messageId = sourceMessageId || msgs.slice(-1)[0]._id
+      const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
 
       yield {
@@ -884,13 +883,16 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           prompt: prev?.imagePrompt,
-          append,
+          append: opts.append,
           source: 'summary',
         },
-        () => {
-          const { waiting } = msgStore.getState()
-          const next = (waiting?.image || 1) + 1
-          msgStore.setState({ waiting: { ...waiting!, image: next } })
+        {
+          onDone: () => {
+            const { waiting } = msgStore.getState()
+            const next = (waiting?.image || 1) + 1
+            msgStore.setState({ waiting: { ...waiting!, image: next } })
+          },
+          onTick: opts.onTick,
         }
       )
       if (res.error) {
@@ -1215,7 +1217,7 @@ async function onMessageReceived(body: {
     : msgs.filter((m) => m._id !== msg._id).concat(msg)
 
   const stack = new Error()
-  console.log('[wait] msg-rec', stack.stack)
+  console.log('[wait] msg-rec', body.type, stack.stack)
 
   msgStore.setState({
     lastInference: {

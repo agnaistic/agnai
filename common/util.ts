@@ -274,7 +274,7 @@ export function getMessageAuthor(opts: {
   members: Map<string, AppSchema.Profile>
   sender: AppSchema.Profile
   impersonate?: AppSchema.Character
-}) {
+}): { role: 'user' | 'model'; name: string } {
   const { chat, msg, chars, members, sender, impersonate } = opts
 
   if (msg.characterId) {
@@ -282,14 +282,18 @@ export function getMessageAuthor(opts: {
       msg.characterId === impersonate?._id
         ? impersonate
         : chars[msg.characterId] || chat.tempCharacters?.[msg.characterId]
-    return char?.name || msg.name || 'Unknown'
+
+    return {
+      role: !!msg.userId && msg.userId === sender.userId ? 'user' : 'model',
+      name: char?.name || msg.name || 'Unknown',
+    }
   }
 
   if (msg.userId) {
-    return members.get(msg.userId)?.handle || sender.handle || 'You'
+    return { role: 'user', name: members.get(msg.userId)?.handle || sender.handle || 'You' }
   }
 
-  return impersonate?.name || sender.handle || 'You'
+  return { role: 'user', name: impersonate?.name || sender.handle || 'You' }
 }
 
 export function getBotName(

@@ -1,10 +1,11 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
-import { PromptPlaceholders, fillPromptWithLines } from './prompt'
+import { PromptLine, PromptPlaceholders, fillPromptWithLines } from './prompt'
 import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
+import { HistoryLine } from '/srv/adapter/type'
 
 type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
@@ -26,6 +27,8 @@ export type TemplateOpts = {
   sender: AppSchema.Profile
 
   lines?: string[]
+  history?: HistoryLine[]
+
   characters?: Record<string, AppSchema.Character>
   lastMessage?: string
 
@@ -36,7 +39,7 @@ export type TemplateOpts = {
   limit?: {
     context: number
     encoder: TokenCounter
-    output?: Record<string, { src: string; lines: string[] }>
+    output?: Record<string, { src: string; lines: string[]; raw?: string[] }>
   }
 
   sections?: {
@@ -193,7 +196,10 @@ export async function parseTemplate(
   inserts: Map<number, string>
   length?: number
   linesAddedCount: number
-  history?: string[]
+  history: PromptLine[]
+
+  /** Raw history lines, no iterator parsing, just `name: msg` format */
+  addedLines: string[]
   sections: NonNullable<TemplateOpts['sections']>
 }> {
   if (opts.limit) {
@@ -256,6 +262,8 @@ export async function parseTemplate(
 
   /** Replace iterators */
   let history: string[] = []
+  let historyLines: PromptLine[] = []
+  let addedLines: string[] = []
 
   let sizes: string[] = []
   let tally = 0
@@ -275,22 +283,28 @@ export async function parseTemplate(
   await addCount('init', result)
 
   if (opts.limit && opts.limit.output) {
-    for (const [id, { lines, src }] of Object.entries(opts.limit.output)) {
+    for (const [id, { lines, src, raw }] of Object.entries(opts.limit.output)) {
       src
       const filled = await fillPromptWithLines({
         encoder: opts.limit.encoder,
         tokenLimit: opts.limit.context,
         context: result,
         lines,
+        unparsed: opts.history?.slice(-lines.length),
         inserts: opts.inserts,
         optional: opts.lowpriority,
         marker: id,
       })
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.slice()
-      output = result.replace(new RegExp(id, 'gi'), trimmed.join('\n'))
+      history = trimmed.map((t) => t.line)
+      output = result.replace(new RegExp(id, 'gi'), history.join('\n'))
       linesAddedCount += filled.linesAddedCount
-      history = trimmed
+      historyLines = trimmed
+      // `.linesAddedCount` is important here:
+      // This is the number of lines from history that were added, excluding any inserts.
+      // If we use `trimmed.length` then that number includes inserts added.
+      addedLines = Array.isArray(raw) ? raw.slice(-filled.linesAddedCount) : []
     }
 
     await addCount('lines', output)
@@ -360,6 +374,8 @@ export async function parseTemplate(
     length,
     linesAddedCount,
     sections,
+    history: historyLines,
+    addedLines,
   }
 }
 
@@ -758,7 +774,7 @@ function renderIterator(
 
   if (isHistory && opts.limit?.output) {
     const id = HISTORY_MARKER
-    opts.limit.output[id] = { src: holder, lines: output }
+    opts.limit.output[id] = { src: holder, lines: output, raw: entities as string[] }
     if (opts.sections) {
       opts.sections.flags.history = true
       opts.sections.warnings.noHistory = false

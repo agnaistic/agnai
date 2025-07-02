@@ -2,6 +2,8 @@
 
 exports[`Placeholder tests will not include duplicates in {{all_personalities}} 1`] = `
 Object {
+  "addedLines": Array [],
+  "history": Array [],
   "inserts": Map {},
   "length": undefined,
   "linesAddedCount": 0,

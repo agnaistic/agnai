@@ -12,7 +12,7 @@ import { PresetContext, PresetState, PresetTabProps, SetPresetState } from './ty
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Toggles' }}>
-      <Card class="flex flex-col gap-4">
+      <Card class="flex flex-col gap-4" bg="bg-500">
         <TextInput
           fieldName="cfgOppose"
           label="CFG Opposing Prompt"

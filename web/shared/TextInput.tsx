@@ -223,7 +223,7 @@ const TextInput: Component<Props> = (props) => {
             aria-placeholder={placeholder()}
             value={props.initialValue ?? value()}
             class={
-              'form-field focusable-field text-900 box-border min-h-[40px] w-full rounded-md px-4 hover:border-white/20 ' +
+              'form-field focusable-field text-900 box-border min-h-[40px] w-full rounded-md border border-[var(--bg-600)] px-4 hover:border-white/20 ' +
               (props.class || '')
             }
             style={{ transition: 'height 0.2s ease-in-out', height: height() }}
@@ -256,7 +256,7 @@ const TextInput: Component<Props> = (props) => {
             aria-placeholder={placeholder()}
             value={props.initialValue ?? value()}
             class={
-              'form-field focusable-field box-border rounded-md px-4 hover:border-white/20 ' +
+              'form-field focusable-field box-border rounded-md border border-[var(--bg-600)] px-4 hover:border-white/20 ' +
               (props.class || '')
             }
             classList={{
@@ -294,7 +294,10 @@ const TextInput: Component<Props> = (props) => {
               placeholder={placeholder()}
               aria-placeholder={placeholder()}
               value={value()}
-              class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
+              class={
+                'form-field focusable-field rounded-xl border border-[var(--bg-600)] px-4 py-2 ' +
+                (props.class || '')
+              }
               classList={{
                 'w-full': !props.class?.includes('w-'),
                 'border-[1px]': props.variant === 'outline',

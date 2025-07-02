@@ -11,7 +11,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   const { sections } = assembled
   const {
     strictSystem,
-    sections: { post, history, post_system },
+    sections: { post, post_system },
   } = sections
 
   const prefill = (req.parts.prefill || '').trim()
@@ -31,34 +31,40 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     messages.push({ role: 'user', content: postSystem })
   }
 
-  let offset = history.length > req.lines.length ? -1 : 0
   const sender = (req.impersonate?.name || req.sender.handle) + ':'
   // let lastRole = ''
 
-  const map: { [pos: number]: string } = {}
-  if (req.indexes) {
-    for (const [id, pos] of Object.entries(req.indexes)) {
-      map[pos] = id
+  let unparsedIndex = 0
+
+  for (let i = 0; i < assembled.lines.length; i++) {
+    const unparsed = assembled.unparsedLines[unparsedIndex]
+    const line = assembled.lines[i]
+
+    const text = replaceTags(line.line, req.settings?.modelFormat || 'None').trim()
+
+    /**
+     * The `assembles.lines` can contain history interwoven with inserts.
+     * The `unparsedLines` only contains history.
+     * We need to track the indexes independently to ensure we get the correct unparsed line
+     */
+    if (line.type === 'history') {
+      unparsedIndex++
     }
-  }
 
-  for (let i = 0; i < history.length; i++) {
-    const isPreHistory = offset !== 0 && i === 0
-    const line = history[i]
-    const original = req.lines[i + offset]
-    const role = isPreHistory ? 'user' : original?.startsWith(sender) ? 'user' : 'assistant'
+    const role =
+      line.type !== 'history' ? 'user' : unparsed.startsWith(sender) ? 'user' : 'assistant'
 
-    const id = map[history.length - i - offset - 1]
+    const id = line.type === 'history' ? line.id : undefined
     const attachments = getAttachments(req, id)
 
     if (role === 'user' && attachments?.length) {
       req.hasAttachments = true
       messages.push({
         role: `${role}`,
-        content: [{ type: 'text', content: line.trim(), text: line.trim() }, ...attachments],
+        content: [{ type: 'text', content: text, text }, ...attachments],
       })
     } else {
-      messages.push({ role, content: line.trim() })
+      messages.push({ role, content: text })
     }
 
     // lastRole = role
@@ -99,8 +105,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   return { messages, assembled }
 }
 
-function getAttachments(req: GenerateRequestV2, id: string | undefined) {
-  if (!id || !req.attachments || !req.indexes) return
+function getAttachments(req: Pick<GenerateRequestV2, 'attachments'>, id: string | undefined) {
+  if (!id || !req.attachments) return
 
   const list = req.attachments[id]
   if (!list?.length) return
@@ -364,11 +370,11 @@ export function ensureMessagesAlternate(
 
     // Case 1. No system message, but starts with assistant
     if (first.role === 'assistant') {
-      processed.unshift({ role: 'user', content: '...' })
+      processed.unshift({ role: 'user', content: '' })
     }
     // Case 2. System message, but first message is assistant
     else if (first.role === 'system' && second?.role !== 'user') {
-      processed.splice(1, 0, { role: 'user', content: '...' })
+      processed.splice(1, 0, { role: 'user', content: '' })
     }
   }
 

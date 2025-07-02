@@ -1,4 +1,4 @@
-import type { JsonField, PromptPlaceholders } from '../../common/prompt'
+import type { JsonField, PromptLine, PromptPlaceholders } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { SubscriptionPreset } from './agnaistic'
@@ -8,6 +8,7 @@ import { Memory, TokenCounter } from '/common/types'
 
 export type MsgAttachment = { type: 'image'; image: string }
 export type RequestAttachments = { [messageId: string]: MsgAttachment[] }
+export type HistoryLine = { _id: string; msg: string; role: 'user' | 'model' }
 
 export type ChatRole = 'user' | 'assistant' | 'system'
 
@@ -74,6 +75,8 @@ export type GenerateRequestV2 = {
 
   parts: PromptPlaceholders
   lines: string[]
+  history?: HistoryLine[]
+
   linesCount?: number
   text?: string
   settings?: Partial<AppSchema.GenSettings>
@@ -139,6 +142,7 @@ export type AdapterProps = {
 
   parts: PromptPlaceholders
   lines: string[]
+  promptLines: PromptLine[]
 
   characters: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
@@ -153,7 +157,6 @@ export type AdapterProps = {
   hasAttachments?: boolean
   imageData?: string
   attachments?: RequestAttachments
-  indexes?: { [messageId: string]: number }
 
   guidance?: boolean
   placeholders?: Record<string, string>

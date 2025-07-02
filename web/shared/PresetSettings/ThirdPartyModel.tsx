@@ -1,32 +1,66 @@
-import { Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import { FLAI_CONTEXTS, GOOGLE_MODELS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { getStore } from '/web/store/create'
 import { presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
-import { FormLabel } from '../FormLabel'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
-import { defaultPresets } from '/common/default-preset'
 import { RefreshCcw, Save, X } from 'lucide-solid'
-import { Field, FieldProps } from './Fields'
 import { NOVEL_MODELS } from '/common/presets/novel'
-import { CLAUDE_MODELS } from '/common/presets/claude'
+import { CLAUDE_LABELS, CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
-import { PresetState } from './types'
+import { getPresetEditor, PresetContext, PresetState, SetPresetState } from './types'
 import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
 import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
+import { round } from '/common/util'
+import { createEmitter } from '../util'
+import { useAppContext } from '/web/store/context'
+import { SubscriptionModelOption } from '/common/types/presets'
 
-export const ThirdPartyModel: Field = (props) => {
+type SelectorProps = {
+  state: PresetState
+  setter: SetPresetState
+  context: PresetContext
+  page: string | undefined
+}
+type Selector = Component<SelectorProps>
+
+export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
+  props
+) => {
+  const [ctx] = useAppContext()
+  const [state, setter, _, context] = getPresetEditor()
+
+  createEffect(
+    on(
+      () => `${ctx.preset?._id}`,
+      () => {
+        if (state._id === ctx.preset?._id) return
+        setter({ providerId: '', thirdPartyKeySet: false, ...ctx.preset })
+      }
+    )
+  )
+
   const component = createMemo(() => {
-    if (!props.state.providerId && props.context.service) {
-      switch (props.context.service) {
+    if (!state.providerId && context.service) {
+      switch (context.service) {
         case 'claude':
         case 'claude-v2':
           return 'claude-external'
@@ -34,22 +68,22 @@ export const ThirdPartyModel: Field = (props) => {
         case 'novel':
         case 'openrouter':
         case 'openrouter-completion':
-          return props.context.service
+          return context.service
       }
 
-      switch (props.context.format) {
+      switch (context.format) {
         case 'gemini':
-          return props.context.format
+          return context.format
       }
     }
 
-    switch (props.context.service) {
+    switch (context.service) {
       case 'horde':
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
       case 'agnaistic':
-        return props.context.service
+        return context.service
 
       case 'openai':
       case 'claude':
@@ -59,12 +93,12 @@ export const ThirdPartyModel: Field = (props) => {
 
     // If there is no provider, it's a legacy preset
     // Therefore, if it isn't set to third-party, don't return a component
-    if (!props.context.provider && props.context.service !== 'kobold') return ''
+    if (!context.provider && context.service !== 'kobold') return ''
 
-    switch (props.context.format) {
+    switch (context.format) {
       case 'featherless':
       case 'arli':
-        return props.context.format
+        return context.format
 
       case 'claude':
         return 'claude-external'
@@ -92,33 +126,41 @@ export const ThirdPartyModel: Field = (props) => {
   return (
     <>
       <Switch>
-        <Match when={component() === 'agnaistic'}>
-          <AgnaisticSettings {...props} noSave={false} />
+        <Match when={component() === 'agnaistic' || !component()}>
+          <AgnaisticSettings
+            state={state}
+            context={context}
+            page={props.page}
+            setter={setter}
+            sub={props.sub}
+            hides={{}}
+            noSave={false}
+          />
         </Match>
         <Match when={component() === 'novel'}>
-          <NovelAIModel {...props} />
+          <NovelAIModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
-          <OpenRouterModels {...props} />
+          <OpenRouterModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
 
         <Match when={component() === 'featherless'}>
-          <FeatherlessModels {...props} />
+          <FeatherlessModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'claude-external'}>
-          <ClaudeModel {...props} />
+          <ClaudeModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'compat'}>
-          <CompatModel {...props} />
+          <CompatModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'arli'}>
-          <ArliModels {...props} />
+          <ArliModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'gemini'}>
-          <GoogleModels {...props} />
+          <GoogleModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'horde'}>
-          <HordeModels {...props} />
+          <HordeModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when>{null}</Match>
       </Switch>
@@ -126,13 +168,16 @@ export const ThirdPartyModel: Field = (props) => {
   )
 }
 
-const CompatModel: Field = (props) => {
+const CompatModel: Selector = (props) => {
+  const emitter = createEmitter('close')
   const state = getStore('user')((s) => ({ providers: s.user?.providers || [] }))
   const models = getStore('presets')((s) => ({
     list: s.presetModels.list,
     url: s.presetModels.url,
     loading: s.modelsLoading,
   }))
+
+  const [customId, setCustomId] = createSignal('')
 
   const modelList = createMemo(() =>
     [{ label: 'None', value: '' }].concat(models.list.map((value) => ({ label: value, value })))
@@ -158,50 +203,65 @@ const CompatModel: Field = (props) => {
 
   return (
     <div class="flex w-full flex-col gap-1">
-      <FormLabel
-        label={
-          <div class="flex items-center gap-2">
-            <div>Model</div>
-            <div class="ml-2 flex gap-2">
-              <CustomSelect
-                modalTitle={`Select Model: ${new URL(models.url).host || '...'}`}
-                parentClass="flex w-full justify-end"
-                size="sm"
-                selected={
-                  props.state.providerModels?.[props.state.providerId || 'na'] ||
-                  props.state.thirdPartyModel
-                }
-                options={modelList()}
-                onSelect={(ev) => onModelSelect(ev.value)}
-                search={tokenizedSearch}
-                buttonLabel={`Select Model`}
-                disabled={models.loading || modelList().length <= 1}
-              />
+      <div class="flex gap-2">
+        <CustomSelect
+          emitter={emitter.on}
+          modalTitle={
+            <div class="flex flex-col gap-2">
+              <div>Select a Model: {new URL(models.url).host || '...'}</div>
 
-              <Button
-                size="sm"
-                onClick={() =>
-                  getStore('presets').getPresetModelList(props.state, state.providers, false)
-                }
-              >
-                <RefreshCcw size={20} />
-              </Button>
+              <div class="flex gap-2">
+                <TextInput
+                  prelabel="Manual Model ID"
+                  parentClass="w-full !font-normal !text-sm !h-8"
+                  class=""
+                  value={customId()}
+                  onChange={(ev) => {
+                    setCustomId(ev.currentTarget.value)
+                  }}
+                />
+                <Button
+                  size="sm"
+                  schema="primary"
+                  onClick={() => {
+                    setProviderModel(props, customId())
+                    emitter.emit.close()
+                  }}
+                >
+                  Confirm
+                </Button>
+              </div>
             </div>
-          </div>
-        }
-      />
-
-      <div class="flex w-full flex-col gap-1">
-        <TextInput
-          parentClass="w-full"
-          fieldName="thirdPartyModel"
-          value={props.state.thirdPartyModel ?? ''}
-          disabled={props.state.disabled}
-          onChange={(ev) => {
-            setProviderModel({ ...props, page: 'none' }, ev.currentTarget.value)
-          }}
+          }
+          parentClass="flex"
+          size="sm"
+          selected={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.thirdPartyModel
+          }
+          options={modelList()}
+          onSelect={(ev) => onModelSelect(ev.value)}
+          search={tokenizedSearch}
+          buttonLabel={
+            <div class="text-md p-1">
+              {(props.state.providerModels?.[props.state.providerId! || '...'] ||
+                props.state.thirdPartyModel) ??
+                'Model - None selected'}
+            </div>
+          }
+          disabled={models.loading || modelList().length <= 1}
         />
 
+        <Button
+          onClick={() =>
+            getStore('presets').getPresetModelList(props.state, state.providers, false)
+          }
+        >
+          <RefreshCcw size={20} />
+        </Button>
+      </div>
+
+      <div class="flex w-full flex-col gap-1">
         <Show when={!!warning()}>
           <Pill type="orange" small>
             {warning()}
@@ -212,7 +272,7 @@ const CompatModel: Field = (props) => {
   )
 }
 
-const NovelAIModel: Field = (props) => {
+const NovelAIModel: Selector = (props) => {
   const cfg = getStore('settings')()
 
   const novelModels = createMemo(() => {
@@ -229,17 +289,26 @@ const NovelAIModel: Field = (props) => {
     return base
   })
 
+  const label = createMemo(() => {
+    const id =
+      props.state.providerModels?.[props.state.providerId || 'na'] || props.state.novelModel
+    if (!id) return 'Model - None Selected'
+    const match = Object.values(NOVEL_MODELS).find((model) => model === id)
+
+    if (!match) return 'Model - None Selected'
+    return match
+  })
+
   return (
     <div class="flex flex-wrap gap-2">
-      <Select
-        fieldName="novelModel"
-        label="NovelAI Model"
-        items={novelModels()}
-        value={
+      <CustomSelect
+        modalTitle="Select a Model"
+        options={novelModels()}
+        selected={
           props.state.providerModels?.[props.state.providerId || 'na'] || props.state.novelModel
         }
-        disabled={props.state.disabled}
-        onChange={(ev) => setProviderModel(props, ev.value, { novelModel: ev.value })}
+        onSelect={(ev) => setProviderModel(props, ev.value, { novelModel: ev.value })}
+        buttonLabel={label()}
       />
       <Show when={cfg.flags.naiModel}>
         <TextInput
@@ -252,76 +321,98 @@ const NovelAIModel: Field = (props) => {
   )
 }
 
-const OpenRouterModels: Field = (props) => {
-  const [orfilter, setOrfilter] = createSignal('')
+const OpenRouterModels: Selector = (props) => {
   const cfg = getStore('settings')()
+
+  const label = createMemo(() => {
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.openRouterModel?.id
+
+    const match = cfg.config.openRouter.models.find((s) => s.id === id)
+    if (!match) return 'Model - None selected'
+
+    return (
+      <span title={`${match.id}, ${(match.id || '...').toLowerCase()}`}>
+        {match.id}
+        <span class="text-500 ml-1 text-xs">{Math.round(match.context_length / 1024)}K</span>
+      </span>
+    )
+  })
 
   const openRouterModels = createMemo(() => {
     if (!cfg.config.openRouter.models) return []
 
-    const options = cfg.config.openRouter.models.map((model) => ({
-      value: model.id,
-      label: model.id,
-    }))
+    const options = cfg.config.openRouter.models
+      .map((model) => ({
+        value: model.id,
+        model: model,
+        label: (
+          <div class="flex w-full flex-col justify-between" title={`${model.id}`}>
+            <div class="ellipsis">
+              {model.id}{' '}
+              <span class="text-500 ml-1 text-sm">{Math.round(model.context_length / 1024)}K</span>
+            </div>
+            <div class="text-500 flex gap-2 text-xs">
+              <div>${round(+model.pricing.prompt * 1_000_000, 2).toFixed(2)} In</div>
+              <div>${round(+model.pricing.completion * 1_000_000, 2).toFixed(2)} Out</div>
+            </div>
+          </div>
+        ),
+      }))
+      .sort((l, r) => l.value.localeCompare(r.value))
 
-    const search = orfilter().trim().toLowerCase()
-    const filtered = (
-      search ? options.filter((opt) => opt.value.toLowerCase().includes(search)) : options
-    ).sort((l, r) => l.label.localeCompare(r.label))
+    options.unshift({ label: 'Default', value: '', model: {} as any })
 
-    const includesCurrent = props.state.openRouterModel?.id
-      ? filtered.some((v) => v.value === props.state.openRouterModel?.id)
-      : true
-
-    if (!includesCurrent) {
-      filtered.unshift({
-        value: props.state.openRouterModel?.id!,
-        label: props.state.openRouterModel?.id!,
-      })
-    }
-
-    filtered.unshift({ label: 'Default', value: '' })
-
-    return filtered
+    return options
   })
 
   return (
     <div class="flex w-full items-end gap-1">
-      <Select
-        fieldName="openRouterModel"
-        label="Model"
-        parentClass="w-1/2"
-        items={openRouterModels()}
-        value={
+      <CustomSelect
+        maxHeight
+        modalTitle="Select a Model"
+        options={openRouterModels()}
+        search={(value, search) => {
+          return value.toLowerCase().includes(search)
+        }}
+        selected={
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.openRouterModel?.id
         }
         disabled={props.state.disabled}
-        onChange={(ev) => {
+        onSelect={(ev) => {
           const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
           if (model) {
             setProviderModel(props, model?.id, { openRouterModel: model })
           }
         }}
+        buttonLabel={label()}
       />
 
-      <TextInput
-        parentClass="w-1/2"
-        placeholder="Filter..."
-        onChange={(ev) => setOrfilter(ev.currentTarget.value)}
-      />
+      <div class="flex items-end pb-2.5">
+        <Copy
+          text={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.openRouterModel?.id ||
+            ''
+          }
+        />
+      </div>
     </div>
   )
 }
 
-const ArliModels: Field = (props) => {
+const ArliModels: Selector = (props) => {
   const state = settingStore((s) => s.arliai)
   const [modelclass, setModelclass] = createSignal('')
 
   const label = createMemo(() => {
-    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.arliModel
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.arliModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return id || 'None selected'
+    if (!match) return 'Model - None selected'
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
@@ -389,7 +480,6 @@ const ArliModels: Field = (props) => {
       <CustomSelect
         maxHeight
         modalTitle="Select a Model"
-        label="Model"
         options={options()}
         search={search}
         header={
@@ -411,7 +501,13 @@ const ArliModels: Field = (props) => {
       />
 
       <div class="flex items-end pb-2.5">
-        <Copy text={props.state.arliModel || ''} />
+        <Copy
+          text={
+            props.state.providerModels?.[props.state.providerId || 'na'] ||
+            props.state.arliModel ||
+            ''
+          }
+        />
       </div>
     </div>
   )
@@ -419,15 +515,17 @@ const ArliModels: Field = (props) => {
 
 let FILTERED_CACHE: Record<string, boolean> = {}
 
-const FeatherlessModels: Field = (props) => {
+const FeatherlessModels: Selector = (props) => {
   const state = settingStore((s) => s.featherless)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
 
   const label = createMemo(() => {
-    const id = props.state.providerId ? props.state.thirdPartyModel : props.state.featherlessModel
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.featherlessModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return id || 'None selected'
+    if (!match) return 'Model - None selected'
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
@@ -577,7 +675,6 @@ const FeatherlessModels: Field = (props) => {
       <CustomSelect
         maxHeight
         modalTitle="Select a Model"
-        label="Model"
         categories={options()}
         search={search}
         header={
@@ -607,35 +704,9 @@ const FeatherlessModels: Field = (props) => {
   )
 }
 
-const ClaudeModel: Field = (props) => {
-  const CLAUDE_LABELS = {
-    ClaudeV2: 'Latest: Claude v2',
-    ClaudeV2_1: 'Claude v2.1',
-    ClaudeV2_0: 'Claude v2.0',
-    ClaudeV1_100k: 'Latest: Claude v1 100K',
-    ClaudeV1_3_100k: 'Claude v1.3 100K',
-    ClaudeV1: 'Latest: Claude v1',
-    ClaudeV1_3: 'Claude v1.3',
-    ClaudeV1_2: 'Claude v1.2',
-    ClaudeV1_0: 'Claude v1.0',
-    ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
-    ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
-    ClaudeInstantV1: 'Latest: Claude Instant v1',
-    ClaudeInstantV1_1: 'Claude Instant v1.1',
-    ClaudeInstantV1_0: 'Claude Instant v1.0',
-    ClaudeV3_Opus: 'Claude v3 Opus',
-    ClaudeV3_Sonnet: 'Claude v3 Sonnet',
-    ClaudeV3_Haiku: 'Claude v3 Haiku',
-    ClaudeV35_Sonnet: 'Claude v3.5 Sonnet',
-    ClaudeV35_Haiku_Latest: 'Claude v3.5 Haiku (Latest)',
-    ClaudeV35_Haiku_Oct2024: 'Claude v3.5 Haiku (Oct 2024)',
-    ClaudeV35_Sonnet_Latest: 'Claude v3.5 Sonnet (Latest)',
-    ClaudeV35_Sonnet_Oct2024: `Claude v3.5 Sonnet (Oct 2024)`,
-    ClaudeV37_Sonnet_Latest: 'Claude v3.7 Sonnet (Latest)',
-    ClaudeV37_Sonnet_Feb2025: 'Claude v3.7 Sonnet (Feb 2025)',
-    ClaudeV4_Opus_May2025: 'Claude v4 Opus (May 2025)',
-    ClaudeV4_Sonnet_May2025: 'Claude v4 Sonnet (May 2025)',
-  } satisfies Record<keyof typeof CLAUDE_MODELS, string>
+const ClaudeModel: Selector = (props) => {
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
 
   const claudeModels: () => Option<string>[] = createMemo(() => {
     const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
@@ -646,32 +717,74 @@ const ClaudeModel: Field = (props) => {
     return options
   })
 
+  const label = createMemo(() => {
+    const id =
+      props.state.providerModels?.[props.state.providerId || 'na'] ||
+      props.state.thirdPartyModel ||
+      props.state.claudeModel ||
+      ''
+    if (!id) return 'Model - None Selected'
+    const match = Object.values(CLAUDE_MODELS).find((model) => model === id)
+
+    if (!match) return id
+    return match
+  })
+
   return (
-    <Select
-      fieldName="claudeModel"
-      label="Claude Model"
-      items={claudeModels()}
-      helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
-      value={
-        props.state.providerModels?.[props.state.providerId || 'na'] ||
-        props.state.claudeModel ||
-        defaultPresets.claude.claudeModel
+    <CustomSelect
+      modalTitle={
+        <div class="flex flex-col gap-2">
+          <div>Select a Model</div>
+
+          <div class="flex gap-2">
+            <TextInput
+              prelabel="Manual Model ID"
+              parentClass="w-full !font-normal !text-sm !h-8"
+              class=""
+              value={customId()}
+              onChange={(ev) => {
+                setCustomId(ev.currentTarget.value)
+              }}
+            />
+            <Button
+              size="sm"
+              schema="primary"
+              onClick={() => {
+                setProviderModel(props, customId())
+                emitter.emit.close()
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
       }
-      disabled={props.state.disabled}
-      onChange={(ev) => {
+      options={claudeModels()}
+      selected={
+        props.state.providerModels?.[props.state.providerId || 'na'] ||
+        props.state.thirdPartyModel ||
+        props.state.claudeModel ||
+        ''
+      }
+      onSelect={(ev) => {
         setProviderModel(props, ev.value, { claudeModel: ev.value })
       }}
+      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      buttonLabel={label()}
+      emitter={emitter.on}
     />
   )
 }
 
-const GoogleModels: Field = (props) => {
+const GoogleModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+  const [customId, setCustomId] = createSignal('')
   const label = createMemo(() => {
     const id = props.state.googleModel
-    if (!id) return 'None Selected'
+    if (!id) return 'Model - None Selected'
     const match = Object.values(GOOGLE_MODELS).find((model) => model.id === id)
 
-    if (!match) return 'Invalid Model'
+    if (!match) return id
     return match.label
   })
 
@@ -682,14 +795,40 @@ const GoogleModels: Field = (props) => {
 
   return (
     <CustomSelect
-      modalTitle="Select a Model"
-      label="Google Model"
+      modalTitle={
+        <div class="flex flex-col gap-2">
+          <div>Select a Model</div>
+
+          <div class="flex gap-2">
+            <TextInput
+              prelabel="Manual Model ID"
+              parentClass="w-full !font-normal !text-sm !h-8"
+              class=""
+              value={customId()}
+              onChange={(ev) => {
+                setCustomId(ev.currentTarget.value)
+              }}
+            />
+            <Button
+              size="sm"
+              schema="primary"
+              onClick={() => {
+                setProviderModel(props, customId())
+                emitter.emit.close()
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      }
       options={options()}
       search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
       onSelect={(opt) => {
         setProviderModel(props, opt.value, { googleModel: opt.value })
       }}
       buttonLabel={label()}
+      emitter={emitter.on}
       selected={
         props.state.providerModels?.[props.state.providerId || 'na'] ||
         props.state.googleModel ||
@@ -699,7 +838,7 @@ const GoogleModels: Field = (props) => {
   )
 }
 
-const HordeModels: Field = (props) => {
+const HordeModels: Selector = (props) => {
   const [show, setShow] = createSignal(false)
   const cfg = settingStore((s) => ({
     models: s.models.slice().map(toHordeModelItem),
@@ -822,7 +961,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 function setProviderModel(
-  { state, setter, page }: FieldProps,
+  { state, setter, page }: SelectorProps,
   model: string,
   extras?: Partial<PresetState>
 ) {

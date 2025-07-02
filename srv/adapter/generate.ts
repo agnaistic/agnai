@@ -21,7 +21,7 @@ import {
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
-import { toChatMessages, validateChatMessages } from './template-chat-payload'
+import { toChatMessages } from './template-chat-payload'
 import { isDefaultPreset } from '/common/default-preset'
 import { getPresetConnection } from '/common/providers'
 
@@ -214,6 +214,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     gen: conn.preset,
     log: opts.log,
     lines: [],
+    promptLines: [],
     members: [],
     guest: opts.guest,
     user: opts.user,
@@ -441,13 +442,15 @@ export async function createChatStream(
     log,
     members: opts.members.concat(opts.sender),
     prompt: assembled.prompt,
-    messages: validateChatMessages(messages),
+    // messages: validateChatMessages(messages),
+    messages: messages,
     parts: assembled.parts,
     sender: opts.sender,
     mappedSettings,
     user: opts.user,
     guest: guestSocketId,
-    lines: assembled.lines,
+    lines: assembled.unparsedLines, // assembled.lines.map((l) => l.line),
+    promptLines: assembled.lines,
     isThirdParty,
     replyAs: opts.replyAs,
     characters: opts.characters,
@@ -462,7 +465,6 @@ export async function createChatStream(
     contextSize: assembled.length,
     signal: opts.signal,
     attachments: opts.attachments,
-    indexes: opts.indexes,
     hasAttachments: opts.hasAttachments,
   })
 

@@ -1,4 +1,4 @@
-import type { GenerateRequestV2 } from '../srv/adapter/type'
+import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
 import { AIAdapter, getAdapter, GOOGLE_LIMITS } from './adapters'
 import { formatCharacter } from './characters'
@@ -21,6 +21,13 @@ export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
+
+export type PromptLine = {
+  type: 'insert' | 'history'
+  line: string
+  id?: string
+  role: 'user' | 'model'
+}
 
 export type PromptPlaceholders = {
   scenario?: string
@@ -47,7 +54,7 @@ export type Prompt = {
     inserts: Map<number, string>
     linesAddedCount: number
   }
-  lines: string[]
+  lines: HistoryLine[]
   parts: PromptPlaceholders
   shown: boolean
 }
@@ -97,6 +104,7 @@ export type BuildPromptOpts = {
   impersonate?: AppSchema.Character
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
+  history?: HistoryLine[]
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -238,17 +246,17 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
    */
   const contextBuffer = opts.contextBuffer ?? 0
   const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
-  const { lines, indexes } = await getLinesForPrompt(
+  const { lines } = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  const parts = await buildPromptPlaceholders(
     opts,
-    encoder,
-    (maxContext || 0) + contextBuffer
+    lines.map((l) => l.msg),
+    encoder
   )
-  const parts = await buildPromptPlaceholders(opts, lines, encoder)
 
   const prompt = await injectPlaceholders(template, {
     opts,
     parts,
-    history: { lines, order: 'desc' },
+    history: lines.map((l) => l.msg),
     lastMessage: opts.lastMessage,
     characters: opts.characters,
     encoder,
@@ -259,7 +267,7 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     prompt.parsed = replaceTags(prompt.parsed, opts.modelFormat)
   }
 
-  return { lines, parts, template: prompt, indexes }
+  return { lines, parts, template: prompt }
 }
 
 export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
@@ -276,20 +284,28 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
-  const history = { lines: opts.lines, order: 'asc' } as const
-  let { parsed, inserts, length, sections, linesAddedCount } = await injectPlaceholders(template, {
-    opts,
-    parts: opts.parts,
-    history,
-    characters: opts.characters,
-    lastMessage: opts.lastMessage,
-    encoder,
-    jsonValues: opts.jsonValues,
-    format: getFormatOverride(opts),
-  })
+  let { parsed, inserts, length, sections, linesAddedCount, history, addedLines } =
+    await injectPlaceholders(template, {
+      opts,
+      parts: opts.parts,
+      history: opts.lines,
+      characters: opts.characters,
+      lastMessage: opts.lastMessage,
+      encoder,
+      jsonValues: opts.jsonValues,
+      format: getFormatOverride(opts),
+    })
 
   return {
-    lines: history.lines,
+    /** Parsed lines - Output of renderIterator if used */
+    lines: history,
+
+    /** Raw history lines in `Name: Message` format */
+    unparsedLines: addedLines,
+
+    /** New format when available */
+    // history: opts.history,
+
     prompt: parsed,
     inserts,
     parts: opts.parts,
@@ -356,7 +372,7 @@ type InjectOpts = {
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
   jsonValues: Record<string, any> | undefined
-  history?: { lines: string[]; order: 'asc' | 'desc' }
+  history?: string[]
   encoder: TokenCounter
   format?: ModelFormat
 }
@@ -403,7 +419,7 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
-    lines: hist?.lines || [],
+    lines: hist || [],
     ...rest,
   }
 
@@ -480,7 +496,7 @@ type PromptPartsOptions = Pick<
 
 export async function buildPromptPlaceholders(
   opts: PromptPartsOptions,
-  lines: string[],
+  lines: string[] | HistoryLine[],
   encoder: TokenCounter
 ) {
   const { chat, char, replyAs } = opts
@@ -568,7 +584,10 @@ export async function buildPromptPlaceholders(
   if (replyAs.characterBook) books.push(replyAs.characterBook)
   if (opts.book) books.push(opts.book)
 
-  parts.memory = await buildMemoryPrompt({ ...opts, books, lines }, encoder)
+  parts.memory = await buildMemoryPrompt(
+    { ...opts, books, lines: lines.map((l) => (typeof l === 'string' ? l : l.msg)) },
+    encoder
+  )
 
   const supplementary = getSupplementaryParts(opts, replyAs)
   parts.ujb = supplementary.ujb
@@ -584,7 +603,7 @@ export async function buildPromptPlaceholders(
       context: '',
       lines: embeds,
     })
-    parts.userEmbeds = fit
+    parts.userEmbeds = fit.map((l) => l.line)
   }
 
   if (opts.chatEmbeds) {
@@ -595,7 +614,7 @@ export async function buildPromptPlaceholders(
       context: '',
       lines: embeds,
     })
-    parts.chatEmbeds = fit
+    parts.chatEmbeds = fit.map((l) => l.line)
   }
 
   return parts
@@ -676,7 +695,7 @@ export async function getLinesForPrompt(
   opts: PromptOpts,
   encoder: TokenCounter,
   maxContext?: number
-) {
+): Promise<{ lines: HistoryLine[] }> {
   const { settings, members, messages } = opts
   maxContext = maxContext || getContextLimit(opts.user, settings)
 
@@ -685,10 +704,7 @@ export async function getLinesForPrompt(
     profiles.set(member.userId, member)
   }
 
-  const indexes: { [msgId: string]: number } = {}
-
-  const formatMsg = (msg: AppSchema.ChatMessage, i: number, all: AppSchema.ChatMessage[]) => {
-    indexes[msg._id] = all.length - i - 1
+  const formatMsg = (msg: AppSchema.ChatMessage): HistoryLine => {
     const profile = msg.userId ? profiles.get(msg.userId) : opts.sender
     const sender = opts.impersonate
       ? opts.impersonate.name
@@ -713,8 +729,9 @@ export async function getLinesForPrompt(
     )
 
     msg.msg = removeReasoning(msg.msg, settings?.reasoning)
-    const filled = fillPlaceholders({ msg, author, char, user: sender }).trim()
-    return filled
+    const filled = fillPlaceholders({ msg, author: author.name, char, user: sender }).trim()
+
+    return { _id: msg._id, msg: filled, role: author.role }
   }
 
   const history = messages.map(formatMsg)
@@ -723,19 +740,23 @@ export async function getLinesForPrompt(
     encoder,
     tokenLimit: maxContext,
     context: '',
-    lines: history,
+    lines: history.map((h) => h.msg),
   })
 
   if (opts.trimSentences) {
-    return { lines: lines.map(trimSentence), indexes }
+    return { lines: history.slice(-lines.length).map(trimAddedLine) }
   }
 
-  return { lines, indexes }
+  return { lines: history.slice(-lines.length).map(trimAddedLine) }
+}
+
+function trimAddedLine(added: HistoryLine): HistoryLine {
+  return { msg: trimSentence(added.msg), _id: added._id, role: added.role }
 }
 
 /** This function is not used for Claude or Chat */
-export function formatInsert(insert: string): string {
-  return `${insert}\n`
+export function formatInsert(insert: string): PromptLine {
+  return { type: 'insert' as const, line: `${insert}\n`, role: 'user' }
 }
 
 /**
@@ -751,7 +772,8 @@ export async function fillPromptWithLines(opts: {
   encoder: TokenCounter
   tokenLimit: number
   context: string
-  lines: string[]
+  lines: string[] | HistoryLine[]
+  unparsed?: HistoryLine[]
 
   /** Nodes to be inserted at a particular depth in the `lines` */
   inserts?: Map<number, string>
@@ -772,14 +794,18 @@ export async function fillPromptWithLines(opts: {
   }
 
   let count = await encoder(cleanContext)
-  const adding: string[] = []
+  const adding: PromptLine[] = []
 
   let linesAddedCount = 0
 
   // We count from the bottom as lines are in natural order
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i]
-    const tokens = await encoder(line)
+    const rawLine = Array.isArray(opts.unparsed) ? opts.unparsed[i] : undefined
+
+    const id = typeof line === 'string' ? rawLine?._id : line._id
+    const text = typeof line === 'string' ? line : line.msg
+    const tokens = await encoder(text)
     if (tokens + count > tokenLimitMinusInserts) {
       break
     }
@@ -787,7 +813,17 @@ export async function fillPromptWithLines(opts: {
     if (insert) adding.unshift(formatInsert(insert))
 
     count += tokens
-    adding.unshift(line)
+
+    /**
+     * @TODO ~~Double check the role is correct here~~
+     * Role here is correct: If `lines` is `string[]` then we're filling embeds.
+     */
+    adding.unshift({
+      type: 'history',
+      line: text,
+      id,
+      role: typeof line === 'string' ? (rawLine ? rawLine.role : 'user') : line.role,
+    })
     linesAddedCount++
   }
 

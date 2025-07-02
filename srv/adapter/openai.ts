@@ -56,9 +56,16 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
+    max_completion_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: stops,
   }
+
+  // if (oaiModel.match(/o[1-9]/)) {
+  //   body.max_completion_tokens = maxResponseLength
+  //   delete body.max_tokens
+  //   delete body.temperature
+  // }
 
   // if (gen.service !== 'openai') {
   //   body.min_p = gen.minP

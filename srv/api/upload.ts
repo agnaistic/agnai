@@ -7,6 +7,7 @@ import { createReadStream, readdirSync } from 'fs'
 import { assertValid, Validator, UnwrapBody } from '/common/valid'
 import { config } from '../config'
 import { errors } from './wrap'
+import { joinUrl } from '/common/requests/util'
 
 const s3 = new S3({
   region: 'us-east-1',
@@ -122,6 +123,11 @@ export async function saveFile(filename: string, content: any, ttl?: number) {
     )
   }
   await writeFile(safeRelativeResolve(config.assetFolder, filename), content, { encoding: 'utf8' })
+
+  if (config.assetUploadUrl) {
+    return joinUrl(config.assetUploadUrl, `/assets/${filename}`)
+  }
+
   return `/assets/${filename}`
 }
 
