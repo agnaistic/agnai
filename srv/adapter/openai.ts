@@ -169,7 +169,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const url =
-    !gen.providerId && !!gen.thirdPartyUrlNoSuffix
+    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) || base.url.includes('/completion')
       ? base.url
       : useChat
       ? joinUrl(base.url, 'chat/completions')
