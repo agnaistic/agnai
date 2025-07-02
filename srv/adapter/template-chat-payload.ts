@@ -51,8 +51,16 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
       unparsedIndex++
     }
 
+    const lineRole = line.role === 'user' ? 'user' : 'assistant'
+
     const role =
-      line.type !== 'history' ? 'user' : unparsed.startsWith(sender) ? 'user' : 'assistant'
+      line.type !== 'history'
+        ? 'user'
+        : req.history
+        ? lineRole
+        : (unparsed || text || '').startsWith(sender)
+        ? 'user'
+        : 'assistant'
 
     const id = line.type === 'history' ? line.id : undefined
     const attachments = getAttachments(req, id)
