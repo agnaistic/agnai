@@ -28,11 +28,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
 
-  let oaiKey = gen.providerId
-    ? gen.thirdPartyKey
-    : gen.service === 'openai'
-    ? user.oaiKey
-    : gen.thirdPartyKey
+  let oaiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.oaiKey
 
   if (!oaiKey) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }

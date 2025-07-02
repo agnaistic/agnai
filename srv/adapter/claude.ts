@@ -69,11 +69,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     return
   }
 
-  const hasKey = isThirdParty
-    ? !!(gen.thirdPartyKey || user.thirdPartyPassword)
-    : !!user.claudeApiKey
-
-  if (!hasKey && !base.changed) {
+  const apiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.claudeApiKey
+  if (!apiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
@@ -199,13 +196,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'Content-Type': 'application/json',
     'anthropic-version': apiVersion,
   }
-
-  const useThirdPartyPassword = gen.providerId
-  const apiKey = useThirdPartyPassword
-    ? gen.thirdPartyKey || user.thirdPartyPassword
-    : !isThirdParty
-    ? user.claudeApiKey
-    : null
 
   const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : ''
   if (key) {
