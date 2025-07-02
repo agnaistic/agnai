@@ -370,11 +370,11 @@ export function ensureMessagesAlternate(
 
     // Case 1. No system message, but starts with assistant
     if (first.role === 'assistant') {
-      processed.unshift({ role: 'user', content: '...' })
+      processed.unshift({ role: 'user', content: '' })
     }
     // Case 2. System message, but first message is assistant
     else if (first.role === 'system' && second?.role !== 'user') {
-      processed.splice(1, 0, { role: 'user', content: '...' })
+      processed.splice(1, 0, { role: 'user', content: '' })
     }
   }
 

@@ -509,7 +509,11 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
       return msgs
     }
 
-    last.content += '\n\n' + msg.content
+    if (last.content === '...') {
+      last.content = ''
+    }
+
+    last.content += ('\n\n' + msg.content).trim()
     return msgs
   }, [] as CompletionItem[])
 

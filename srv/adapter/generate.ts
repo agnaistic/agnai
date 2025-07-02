@@ -449,7 +449,7 @@ export async function createChatStream(
     mappedSettings,
     user: opts.user,
     guest: guestSocketId,
-    lines: assembled.lines.map((l) => l.line),
+    lines: assembled.unparsedLines, // assembled.lines.map((l) => l.line),
     promptLines: assembled.lines,
     isThirdParty,
     replyAs: opts.replyAs,
