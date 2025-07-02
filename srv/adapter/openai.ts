@@ -56,7 +56,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
-    max_completion_tokens: maxResponseLength,
+    // max_completion_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: stops,
   }
