@@ -1217,7 +1217,7 @@ async function onMessageReceived(body: {
     : msgs.filter((m) => m._id !== msg._id).concat(msg)
 
   const stack = new Error()
-  console.log('[wait] msg-rec', stack.stack)
+  console.log('[wait] msg-rec', body.type, stack.stack)
 
   msgStore.setState({
     lastInference: {
