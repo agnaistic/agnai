@@ -814,7 +814,10 @@ export async function fillPromptWithLines(opts: {
 
     count += tokens
 
-    /** @TODO Double check the roile is correct here */
+    /**
+     * @TODO ~~Double check the role is correct here~~
+     * Role here is correct: If `lines` is `string[]` then we're filling embeds.
+     */
     adding.unshift({
       type: 'history',
       line: text,

@@ -301,7 +301,10 @@ export async function parseTemplate(
       output = result.replace(new RegExp(id, 'gi'), history.join('\n'))
       linesAddedCount += filled.linesAddedCount
       historyLines = trimmed
-      addedLines = Array.isArray(raw) ? raw.slice(-trimmed.length) : []
+      // `.linesAddedCount` is important here:
+      // This is the number of lines from history that were added, excluding any inserts.
+      // If we use `trimmed.length` then that number includes inserts added.
+      addedLines = Array.isArray(raw) ? raw.slice(-filled.linesAddedCount) : []
     }
 
     await addCount('lines', output)
