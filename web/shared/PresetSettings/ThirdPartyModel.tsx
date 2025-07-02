@@ -45,7 +45,6 @@ type Selector = Component<SelectorProps>
 export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
   prps
 ) => {
-  const cfg = getStore('settings')((s) => ({ flags: s.flags }))
   const presets = getStore('presets')((s) => ({ list: s.presets }))
 
   const [ctx] = useAppContext()
@@ -139,9 +138,6 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
 
   return (
     <>
-      <div classList={{ hidden: !cfg.flags.debug }}>
-        C: {component()} {context.service} {context.format} {state.providerId}
-      </div>
       <Switch>
         <Match when={component() === 'agnaistic' || !component()}>
           <AgnaisticSettings

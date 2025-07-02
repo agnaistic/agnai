@@ -31,7 +31,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   onMount(() => loadImages(props.msg, setImages))
 
   return (
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2" classList={{ hidden: images().length === 0 }}>
       <For each={images()}>
         {(img) => (
           <img
