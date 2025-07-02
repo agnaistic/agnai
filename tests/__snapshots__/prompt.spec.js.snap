@@ -178,11 +178,12 @@ OtherBot:"
 
 exports[`Prompt building will include ujb when omitted from gaslight 1`] = `
 Object {
-  "indexes": Object {
-    "": 0,
-  },
   "lines": Array [
-    "MainChar: bot response",
+    Object {
+      "_id": "",
+      "msg": "MainChar: bot response",
+      "role": "model",
+    },
   ],
   "parts": Object {
     "allPersonas": Array [
@@ -205,6 +206,15 @@ Object {
     "userEmbeds": Array [],
   },
   "template": Object {
+    "addedLines": Array [],
+    "history": Array [
+      Object {
+        "id": undefined,
+        "line": "MainChar: bot response",
+        "role": "user",
+        "type": "history",
+      },
+    ],
     "inserts": Map {},
     "linesAddedCount": 1,
     "parsed": "GASLIGHT TEMPLATE

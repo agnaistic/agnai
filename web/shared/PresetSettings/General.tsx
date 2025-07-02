@@ -124,7 +124,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
-          helperText="Stream the AI's response as it is generated"
+          helperText="Stream the response as it is generated"
           value={props.state.streamResponse ?? false}
           disabled={props.state.disabled}
           onChange={(ev) => props.setter('streamResponse', ev)}

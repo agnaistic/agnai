@@ -43,10 +43,8 @@ type SelectorProps = {
 type Selector = Component<SelectorProps>
 
 export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
-  prps
+  props
 ) => {
-  const presets = getStore('presets')((s) => ({ list: s.presets }))
-
   const [ctx] = useAppContext()
   const [state, setter, _, context] = getPresetEditor()
 
@@ -56,17 +54,6 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
       () => {
         if (state._id === ctx.preset?._id) return
         setter({ providerId: '', thirdPartyKeySet: false, ...ctx.preset })
-      }
-    )
-  )
-
-  createEffect(
-    on(
-      () => presets.list,
-      (list) => {
-        if (!ctx.preset?._id) return
-        const match = list.find((l) => l._id === ctx.preset?._id)
-        console.log(`[preset changed]`, match)
       }
     )
   )
@@ -143,37 +130,37 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
           <AgnaisticSettings
             state={state}
             context={context}
-            page={prps.page}
+            page={props.page}
             setter={setter}
-            sub={prps.sub}
+            sub={props.sub}
             hides={{}}
             noSave={false}
           />
         </Match>
         <Match when={component() === 'novel'}>
-          <NovelAIModel state={state} context={context} page={prps.page} setter={setter} />
+          <NovelAIModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
-          <OpenRouterModels state={state} context={context} page={prps.page} setter={setter} />
+          <OpenRouterModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
 
         <Match when={component() === 'featherless'}>
-          <FeatherlessModels state={state} context={context} page={prps.page} setter={setter} />
+          <FeatherlessModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'claude-external'}>
-          <ClaudeModel state={state} context={context} page={prps.page} setter={setter} />
+          <ClaudeModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'compat'}>
-          <CompatModel state={state} context={context} page={prps.page} setter={setter} />
+          <CompatModel state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'arli'}>
-          <ArliModels state={state} context={context} page={prps.page} setter={setter} />
+          <ArliModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'gemini'}>
-          <GoogleModels state={state} context={context} page={prps.page} setter={setter} />
+          <GoogleModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when={component() === 'horde'}>
-          <HordeModels state={state} context={context} page={prps.page} setter={setter} />
+          <HordeModels state={state} context={context} page={props.page} setter={setter} />
         </Match>
         <Match when>{null}</Match>
       </Switch>

@@ -9,6 +9,7 @@ import {
   getTemplate,
   InferenceState,
   JsonField,
+  PromptLine,
   resolveScenario,
 } from '/common/prompt'
 import { handleLocalRequest } from '/common/requests'
@@ -112,12 +113,12 @@ export async function generateResponse(
       opts.kind === 'send-event:hidden'
         ? opts.text
         : undefined,
-    lines: prompt.lines,
+    lines: prompt.lines.map((l) => l.msg),
+    history: prompt.lines,
     linesCount: props.messages.length,
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
-    indexes: prompt.indexes,
     replyAs: removeAvatar(
       opts.kind === 'self' && props.impersonate ? props.impersonate : props.replyAs
     ),
@@ -248,10 +249,10 @@ async function getActivePromptOptions(
     jsonValues: props.json,
   }
 
-  const { lines, indexes } = await getLinesForPrompt(promptOpts, encoder)
+  const { lines } = await getLinesForPrompt(promptOpts, encoder)
   const parts = await buildPromptPlaceholders(promptOpts, lines, encoder)
 
-  return { lines, parts, entities, props, indexes }
+  return { lines, parts, entities, props }
 }
 
 type EventKind =
@@ -351,7 +352,7 @@ async function createActiveChatPrompt(
   }
 
   if (opts.kind === 'chat-query') {
-    prompt.lines.push(`Chat Query: ${opts.text}`)
+    prompt.lines.push({ msg: `Chat Query: ${opts.text}`, role: 'user', _id: '' })
   }
 
   return { prompt, props, entities, chatEmbeds, userEmbeds, template }
@@ -361,7 +362,7 @@ async function getRetrievalBreakpoint(
   text: string | undefined,
   ents: PromptEntities,
   messages: AppSchema.ChatMessage[],
-  lines: string[]
+  lines: PromptLine[]
 ) {
   const { settings, chat } = ents
   if (!text?.trim()) return { users: undefined, chats: undefined }
@@ -372,7 +373,7 @@ async function getRetrievalBreakpoint(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[lines.length - 1 - i]
-    const size = await encoder(line)
+    const size = await encoder(line.line)
     removed += size
     count++
 
