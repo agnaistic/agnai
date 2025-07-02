@@ -21,6 +21,14 @@ qem {
   font-weight: var(--text-quote-emphasis-weight);
 }
 
+eem {
+  /* emphasis emphasis; *inner* emphasis within <em> tags */
+  color: var(--text-800);
+  color: var(--text-emphasis-emphasis-color);
+  font-style: italic;
+  font-weight: var(--text-emphasis-emphasis-weight);
+}
+
 .rendered-markdown img {
   display: inline-block; /* markdown images are expected to be inline-block */
 }

@@ -398,6 +398,36 @@ const UISettings: Component<{}> = () => {
         value={state.current.chatQuoteEmphasisWeight || 'unset'}
       />
 
+      <ColorPicker
+        label="Chat Emphasis Emphasis Color"
+        fieldName="chatEmphasisEmphasisColor"
+        helperText={
+          <span
+            class="link"
+            onClick={() => userStore.saveCustomUI({ chatEmphasisEmphasisColor: 'text-800' })}
+          >
+            Reset to Default
+          </span>
+        }
+        onInput={(color) => tryCustomUI({ chatEmphasisEmphasisColor: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatEmphasisEmphasisColor: color })}
+        value={state.current.chatEmphasisEmphasisColor || '--text-800'}
+      />
+
+      <Select
+        fieldName="chatEmphasisEmphasisWeight"
+        label="Chat Emphasis Emphasis Weight"
+        inline
+        items={[
+          { label: 'None', value: 'unset' },
+          { label: 'Bold', value: 'bold' },
+        ]}
+        onChange={(item) =>
+          userStore.saveCustomUI({ chatEmphasisEmphasisWeight: item.value as string })
+        }
+        value={state.current.chatEmphasisEmphasisWeight || 'unset'}
+      />
+
       <Select
         fieldName="chatWidth"
         label="Content Width"
