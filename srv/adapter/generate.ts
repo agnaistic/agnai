@@ -475,6 +475,7 @@ export async function createChatStream(
     size,
     length: assembled.length,
     json: !!jsonSchema || !!opts.jsonSchema,
+    conn,
   }
 }
 
