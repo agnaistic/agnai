@@ -152,6 +152,7 @@ export interface GenSettings {
   banEosToken?: boolean
   tokenHealing?: boolean
 
+  skipRoleMerging?: boolean
   disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]

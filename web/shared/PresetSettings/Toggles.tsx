@@ -13,6 +13,13 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Toggles' }}>
       <Card class="flex flex-col gap-4" bg="bg-500">
+        <Toggle
+          label="Skip Chat Role Merges"
+          helperText="Chat completions: When enabled, do not collapse repeated roles into a single message"
+          value={props.state.skipRoleMerging}
+          onChange={(ev) => props.setter('skipRoleMerging', ev)}
+        />
+
         <TextInput
           fieldName="cfgOppose"
           label="CFG Opposing Prompt"

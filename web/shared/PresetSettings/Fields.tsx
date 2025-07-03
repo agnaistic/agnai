@@ -248,7 +248,6 @@ export const ModelFormat: Field = (props) => {
       (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={MODEL_FORMATS}
         value={props.state.modelFormat || 'None'}
-        recommend={props.sub?.preset.modelFormat}
         onChange={(ev) => props.setter('modelFormat', ev.value as any)}
       />
     </>

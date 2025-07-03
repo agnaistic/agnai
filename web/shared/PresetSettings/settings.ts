@@ -55,16 +55,16 @@ export const ADAPTER_SETTINGS: {
   xtcProbability: ['agnaistic', 'tabby', 'ooba', 'arli', 'aphrodite'],
   xtcThreshold: ['agnaistic', 'tabby', 'ooba', 'arli', 'aphrodite'],
 
-  prefill: [
-    'claude',
-    'openrouter',
-    'openai',
-    'openai-chat',
-    'gemini',
-    'openai-chatv2',
-    'agnaistic',
-    'openrouter-completion',
-  ],
+  // prefill: [
+  //   'claude',
+  //   'openrouter',
+  //   'openai',
+  //   'openai-chat',
+  //   'gemini',
+  //   'openai-chatv2',
+  //   'agnaistic',
+  //   'openrouter-completion',
+  // ],
 
   topP: [
     'horde',

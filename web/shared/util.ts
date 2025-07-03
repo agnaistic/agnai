@@ -588,20 +588,12 @@ export function isValidServiceSetting(
   prop?: keyof PresetAISettings
 ) {
   const services = getAISettingServices(prop)
+
   // Setting does not declare itself as a service setting
-  if (!services || !state.service) return true
-
-  if (services.includes(state.service)) return true
-  if (!state.thirdPartyFormat) {
-    return false
-  }
-
-  if (state.service !== 'kobold') {
-    return false
-  }
+  if (!services?.length || (!state.service && !state.thirdPartyFormat)) return true
 
   for (const srv of services) {
-    if (srv === state.thirdPartyFormat) return true
+    if (srv === state.thirdPartyFormat || srv === state.service) return true
   }
 
   return false
