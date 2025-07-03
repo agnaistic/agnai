@@ -596,7 +596,7 @@ export function isValidServiceSetting(
     if (srv === state.thirdPartyFormat || srv === state.service) return true
   }
 
-  return false
+  return true
 }
 
 export function applyDotProperty<T>(obj: T, property: string, value: any) {
