@@ -83,7 +83,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
         type: 'format',
         name: 'LM Studio',
         value: 'openai-chatv2',
-        url: 'http://localhost:7860/v1',
+        url: 'http://localhost:1234/v1',
       },
       { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
       { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },

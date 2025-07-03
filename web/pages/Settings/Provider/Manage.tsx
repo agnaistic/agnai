@@ -300,7 +300,7 @@ export const ManageProvider: Component<{
           }}
         />
 
-        <Show when={isCustom()}>
+        <Show when={isCustom() || isSelf()}>
           <div class="flex w-full items-center justify-center">
             <Button size="sm" onClick={testConnection} disabled={!url().trim()}>
               Test Connection
