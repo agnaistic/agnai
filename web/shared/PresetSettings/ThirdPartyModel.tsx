@@ -244,8 +244,8 @@ const CompatModel: Selector = (props) => {
           search={tokenizedSearch}
           buttonLabel={
             <div class="text-md p-1">
-              {(props.state.providerModels?.[props.state.providerId! || '...'] ||
-                props.state.thirdPartyModel) ??
+              {props.state.providerModels?.[props.state.providerId! || '...'] ||
+                props.state.thirdPartyModel ||
                 'Model - None selected'}
             </div>
           }
