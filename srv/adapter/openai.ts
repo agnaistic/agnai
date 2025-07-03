@@ -30,12 +30,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   let oaiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.oaiKey
 
-  if (!oaiKey) {
-    yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
-    return
-  }
-
-  if (!guest) {
+  if (!guest && oaiKey) {
     oaiKey = decryptText(oaiKey)
   }
 
