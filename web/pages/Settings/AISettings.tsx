@@ -184,5 +184,5 @@ const ApiAccessHelp = neat`
   **Instructions**:
   1. Select your \`API Access Preset\`: This preset will be used for your API calls. Change this on your settings page.
   2. Generate your API Key.
-  3. Use the API URL \`https://api.agnai.chat\` and your generated API key.
+  3. Use the API URL \`https://api.agnai.chat\` or \`https://api.agnai.chat/v1\` and your generated API key.
 `
