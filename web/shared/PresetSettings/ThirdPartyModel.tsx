@@ -53,7 +53,7 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
       () => `${ctx.preset?._id}`,
       () => {
         if (state._id === ctx.preset?._id) return
-        setter({ providerId: '', thirdPartyKeySet: false, ...ctx.preset })
+        setter({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...ctx.preset })
       }
     )
   )
