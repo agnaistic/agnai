@@ -126,7 +126,11 @@ const AISettings: Component<{
             options={presetOptions()}
             selected={props.state.defaultPreset}
             setPresetId={(ev) => props.setter('defaultPreset', ev)}
-          />
+          >
+            <Show when={props.state.defaultPreset}>
+              <Copy text={props.state.defaultPreset!} size={24} />
+            </Show>
+          </PresetSelect>
 
           <div class="flex items-center gap-1">
             <FormLabel label="API Key" />
