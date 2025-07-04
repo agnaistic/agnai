@@ -270,9 +270,10 @@ async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHa
       settings.name || '',
       `\n${imageEntities.summary || ''}`
     )
-    const summary = await getChatSummary(settings, imageEntities.summary, onTick)
+    const result = await getChatSummary(settings, imageEntities.summary, onTick)
+    const summary = result.result?.response
 
-    console.log('Image caption: ', summary.result?.response)
+    console.log('Image caption: ', summary)
     return summary
   }
 

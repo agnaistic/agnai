@@ -122,7 +122,8 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
 
   const tickWrapper: TickHandler = (res, state) => {
     if (state === 'done') {
-      lazy.resolve(res)
+      if (typeof res !== 'string') lazy.resolve(res)
+      else lazy.resolve({ result: { response: res } })
     }
 
     onTick?.(res, state)
