@@ -15,7 +15,7 @@ import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
-import Message, { MessageMeta } from './components/Message'
+import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
@@ -38,6 +38,7 @@ import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
 import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
+import { MessageMeta } from './components/MessageMeta'
 
 export { ChatDetail as default }
 

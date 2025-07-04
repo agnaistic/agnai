@@ -21,7 +21,6 @@ import {
 import {
   Accessor,
   Component,
-  createEffect,
   createMemo,
   createSignal,
   For,
@@ -36,29 +35,19 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import {
-  chatStore,
-  userStore,
-  msgStore,
-  toastStore,
-  ChatState,
-  VoiceState,
-  settingStore,
-} from '../../../store'
+import { chatStore, userStore, msgStore, ChatState, VoiceState, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
 import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
-import TextInput from '/web/shared/TextInput'
-import { Card, Pill } from '/web/shared/Card'
+import { Pill } from '/web/shared/Card'
 import { DropMenu } from '/web/shared/DropMenu'
 import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { RelativeSpinner } from '/web/shared/Loading'
-import { LogProbs } from './LogProbs'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
 import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
@@ -66,7 +55,6 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import Modal from '/web/shared/Modal'
 
 type MessageProps = {
   msg: SplitMessage
@@ -932,143 +920,16 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-export const MessageMeta: Component = () => {
-  const [ctx] = useAppContext()
-  const state = msgStore((s) => ({ msg: s.metadata, graph: s.graph }))
-  const [prompt, setPrompt] = createSignal(state.msg?.imagePrompt || '')
-
-  const close = () => {
-    msgStore.setState({ metadata: undefined })
-  }
-
-  createEffect(() => {
-    if (!state.msg) return
-    setPrompt(state.msg.imagePrompt || '')
-  })
-
-  const updateImagePrompt = () => {
-    if (!state.msg) return
-    msgStore.editMessageProp(state.msg?._id, { imagePrompt: prompt() }, () => {
-      toastStore.success('Image prompt updated')
-    })
-  }
-
-  const descendants = createMemo(() => {
-    if (!state.msg) return []
-    const self = state.graph.tree[state.msg._id]
-    if (!self) return []
-
-    return Array.from(self.children.values())
-  })
-
-  const depth = createMemo(() => {
-    if (!state.msg) return -1
-    return state.graph.tree[state.msg._id]?.depth || -1
-  })
-
-  return (
-    <Modal show={!!state.msg} close={close} title="Message Info" maxWidth="half">
-      <div class="flex w-full flex-col gap-2">
-        <Card>
-          <LogProbs msg={state.msg!} />
-          <table class="text-sm">
-            <Show when={state.msg!.adapter}>
-              <tr>
-                <td class="pr-2">
-                  <b>Adapter</b>
-                </td>
-                <td>{state.msg!.adapter}</td>
-              </tr>
-            </Show>
-            <Show when={depth() >= 0}>
-              <tr>
-                <td>
-                  <b>depth</b>
-                </td>
-                <td>#{depth() + 1}</td>
-              </tr>
-            </Show>
-            <Show when={descendants().length > 0 && ctx.flags.debug}>
-              <tr>
-                <td>
-                  <b>descendants</b>
-                </td>
-                <td>
-                  {descendants()
-                    .map((d) => d.slice(0, 4))
-                    .join(', ')}
-                </td>
-              </tr>
-            </Show>
-            <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
-              {([key, value]) => (
-                <tr>
-                  <td class="pr-2">
-                    <b>{key}</b>
-                  </td>
-                  <td>{value as string}</td>
-                </tr>
-              )}
-            </For>
-          </table>
-        </Card>
-
-        <Card>
-          <TextInput
-            helperText={
-              <>
-                <div class="flex items-center gap-1">
-                  Image Prompt -{' '}
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={updateImagePrompt}
-                    disabled={prompt() === state.msg!.imagePrompt}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={() =>
-                      msgStore.generateImagePrompt({
-                        onSummary: (summary) => setPrompt(summary),
-                        onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
-                      })
-                    }
-                    disabled={!!ctx.waiting}
-                  >
-                    Generate
-                  </Button>
-                </div>
-              </>
-            }
-            parentClass="text-sm"
-            isMultiline
-            value={prompt()}
-            onChange={(ev) => setPrompt(ev.currentTarget.value)}
-          />
-        </Card>
-
-        <Show when={ctx.promptHistory[state.msg!._id]}>
-          <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
-            <Show
-              when={typeof ctx.promptHistory[state.msg!._id] === 'string'}
-              fallback={JSON.stringify(ctx.promptHistory[state.msg!._id], null, 2)}
-            >
-              {ctx.promptHistory[state.msg!._id]}
-            </Show>
-          </pre>
-        </Show>
-      </div>
-    </Modal>
-  )
-}
-
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
   if (msg._id === 'partial-response') return false
-  return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
+
+  return (
+    !!msg.adapter ||
+    !!history ||
+    (!!msg.meta && Object.keys(msg.meta).length >= 1) ||
+    msg.imagePrompt
+  )
 }
 
 function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
