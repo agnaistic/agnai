@@ -1,13 +1,25 @@
 import { ClipboardCheck, ClipboardCopy } from 'lucide-solid'
 import { Component, createSignal, Match, Switch } from 'solid-js'
 
-export const Copy: Component<{ text: string; size?: number }> = (props) => {
+/**
+ *
+ * @param props
+ * @returns
+ */
+export const Copy: Component<{ text: string; size?: number; onClick?: () => Promise<string> }> = (
+  props
+) => {
   const [clicked, setClicked] = createSignal(false)
 
-  const copy = () => {
-    setTimeout(() => setClicked(false), 1000)
-    navigator.clipboard.writeText(props.text)
+  const copy = async () => {
     setClicked(true)
+
+    try {
+      const text = props.onClick ? await props.onClick?.() : props.text
+      navigator.clipboard.writeText(text)
+    } finally {
+      setTimeout(() => setClicked(false), 1000)
+    }
   }
 
   return (
