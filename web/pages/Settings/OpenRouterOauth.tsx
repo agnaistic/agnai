@@ -1,12 +1,12 @@
-import { Component, Match, Show, Switch, createMemo, createSignal } from 'solid-js'
-import { userStore } from '/web/store'
+import { Component, Match, Show, Switch, createSignal } from 'solid-js'
 import Button from '/web/shared/Button'
 import { TitleCard } from '/web/shared/Card'
 
-const OpenRouterOauth: Component = () => {
-  const users = userStore()
-
-  const isKeySet = createMemo(() => !!users.user?.adapterConfig?.openrouter?.apiKeySet)
+const OpenRouterOauth: Component<{
+  onKey: (key: string) => void
+  deleteKey: () => void
+  keySet: boolean
+}> = (props) => {
   const [trying, setTrying] = createSignal(false)
 
   const handleCode = async (code: string) => {
@@ -16,9 +16,8 @@ const OpenRouterOauth: Component = () => {
       body: JSON.stringify({ code }),
     }).then((res) => res.json())
 
-    userStore.updateService('openrouter', { apiKey: res.key }, () => {
-      setTrying(false)
-    })
+    props.onKey(res.key)
+    setTrying(false)
   }
 
   const start = () => {
@@ -50,34 +49,27 @@ const OpenRouterOauth: Component = () => {
 
   return (
     <>
-      <Show when={!isKeySet()}>
+      <Show when={!props.keySet}>
         <TitleCard>
           Click <b class="highlight">Login with OpenRouter</b> or visit{' '}
           <a class="link" target="_blank" href="https://openrouter.ai/keys">
             OpenRouter.ai/keys
           </a>{' '}
-          to create an API key and enter it below.
-          <br />
-          Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
-          issues or questions.
+          to create an API key and enter it above.
         </TitleCard>
       </Show>
-      <Show when={isKeySet()}>
-        <em>You are currently logged in.</em>
-      </Show>
+
       <div>
         <Switch>
           <Match when={trying()}>
             <Button disabled>Logging in...</Button>
           </Match>
-          <Match when={!isKeySet()}>
+          <Match when={!props.keySet}>
             <Button onClick={start}>Login with OpenRouter</Button>
           </Match>
 
-          <Match when={isKeySet()}>
-            <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
-              Logout
-            </Button>
+          <Match when={props.keySet}>
+            <Button onClick={props.deleteKey}>Logout</Button>
           </Match>
         </Switch>
       </div>

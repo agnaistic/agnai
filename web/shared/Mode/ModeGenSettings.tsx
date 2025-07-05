@@ -8,13 +8,14 @@ import { presetStore } from '../../store'
 import { getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
-import { Card, TitleCard } from '/web/shared/Card'
+import { TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { getPresetEditor, getPresetForm, PresetTab } from '../PresetSettings/types'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 import { deepClone } from '/common/util'
+import Divider from '../Divider'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -169,43 +170,43 @@ export const ModeGenSettings: Component<{
   return (
     <div class="text-sm">
       <form ref={ref} class="flex flex-col gap-4">
-        <Card class="flex flex-col gap-2">
-          <PresetSelect
-            options={presetOptions()}
-            selected={selected()}
-            setPresetId={(val) => {
-              setSelected(val)
-              props.onPresetChanged(val)
-            }}
-          />
+        <PresetSelect
+          options={presetOptions()}
+          selected={selected()}
+          setPresetId={(val) => {
+            setSelected(val)
+            props.onPresetChanged(val)
+          }}
+        />
 
-          <ServiceWarning preset={activePreset()} />
-          <Show when={isDefaultPreset(selected())}>
-            <TitleCard type="orange">
-              You are using a built-in preset which cannot be modified. Modifying this will create a
-              new preset and assign it to your chat.
-            </TitleCard>
-          </Show>
+        <ServiceWarning preset={activePreset()} />
+        <Show when={isDefaultPreset(selected())}>
+          <TitleCard type="orange">
+            You are using a built-in preset which cannot be modified. Modifying this will create a
+            new preset and assign it to your chat.
+          </TitleCard>
+        </Show>
 
-          <TextInput
-            fieldName="name"
-            value={store.name}
-            label={
-              <div class="flex gap-2">
-                <div>Preset Name</div>{' '}
-                <div
-                  class="icon-button select-none text-sm"
-                  style={{ transition: '0.3s' }}
-                  classList={{ '!text-green-500': clicked() }}
-                  onClick={() => copy(store._id)}
-                >
-                  Copy ID {clicked() ? '✓' : ''}
-                </div>
+        <TextInput
+          fieldName="name"
+          value={store.name}
+          label={
+            <div class="flex gap-2">
+              <div>Preset Name</div>{' '}
+              <div
+                class="icon-button select-none text-sm"
+                style={{ transition: '0.3s' }}
+                classList={{ '!text-green-500': clicked() }}
+                onClick={() => copy(store._id)}
+              >
+                Copy ID {clicked() ? '✓' : ''}
               </div>
-            }
-            onChange={(ev) => setStore('name', ev.currentTarget.value)}
-          />
-        </Card>
+            </div>
+          }
+          onChange={(ev) => setStore('name', ev.currentTarget.value)}
+        />
+
+        <Divider class="!my-1" />
 
         <PresetSettings
           store={store}

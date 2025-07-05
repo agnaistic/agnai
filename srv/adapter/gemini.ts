@@ -1,5 +1,4 @@
 import { decryptText } from '../db/util'
-import { getStoppingStrings } from './prompt'
 import { ModelAdapter } from './type'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import {
@@ -10,14 +9,22 @@ import {
   HarmCategory,
   SafetySetting,
 } from '@google/genai'
-import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
+import { remapMessages, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
 }
+
+const DEBUG =
+  typeof window !== 'undefined'
+    ? false
+    : typeof process !== 'undefined'
+    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
+    : false
 
 export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
@@ -43,7 +50,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     maxOutputTokens: opts.gen.maxTokens,
     topP: opts.gen.topP,
     topK: opts.gen.topK,
-    stopSequences: getStoppingStrings(opts),
+    stopSequences: getStoppingStrings(opts, opts.gen),
     presencePenalty: opts.gen.presencePenalty,
     frequencyPenalty: opts.gen.frequencyPenalty,
     abortSignal: opts.signal.signal,
@@ -95,7 +102,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
   remapMessages(messages, {
     text: (text) => ({ text }),
-    image: (data) => ({ inlineData: { mimeType: getMimeTypeBase64(data), data } }),
+    image: (data) => ({ inlineData: getMimeTypeBase64(data) }),
   })
 
   for (const msg of messages) {
@@ -110,6 +117,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       }
 
       contents.push({ role: 'user', parts: [{ text: msg.content }] })
+      continue
     }
 
     contents.push({ role: 'model', parts: [{ text: msg.content }] })
@@ -128,7 +136,18 @@ export const handleGemini: ModelAdapter = async function* (opts) {
   }
 
   const client = new GoogleGenAI({ apiKey: key! })
+  let thoughts = ''
   let accum = ''
+
+  const finder = (part: any) => !!part.text
+  const stripped = contents.map((content) => {
+    if (!content.parts || content.parts.length < 2) return content
+    const text = content.parts.find(finder)
+    return {
+      ...content,
+      parts: [text, { type: 'image_url', image_url: `[REDACTED:${content.parts.length - 1}]` }],
+    }
+  })
 
   yield {
     prompt: [
@@ -136,7 +155,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
         role: 'system',
         parts: (generationConfig.systemInstruction as Content)?.parts,
       },
-    ].concat(...stripImageContent(contents)),
+    ].concat(...(stripped as any[])),
   }
 
   if (!opts.gen.streamResponse) {
@@ -184,18 +203,45 @@ export const handleGemini: ModelAdapter = async function* (opts) {
         return
       }
 
-      const text = tick.candidates?.[0].content?.parts?.[0]?.text || tick.text
-      accum += text || ''
-      yield { partial: sanitiseAndTrim(accum, '', opts.replyAs, opts.characters, opts.members) }
+      const candidate = tick.candidates?.[0].content?.parts?.[0] || {}
+
+      const thought = candidate.thought as boolean
+      const text = candidate.text || tick.text
+
+      if (!text) continue
+
+      if (thought) {
+        thoughts += text
+      }
+
+      if (DEBUG) {
+        console.log([`[g:chunk] ${JSON.stringify(tick)}`])
+      }
+
+      if (!thought) {
+        accum += text || ''
+      }
+
+      yield {
+        partial: sanitiseAndTrim({
+          text: (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum,
+          char: opts.replyAs,
+          members: opts.members,
+          gen: opts.gen,
+        }),
+      }
     }
   }
 
-  const parsed = sanitise(accum)
+  const parsed = sanitise(
+    (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum
+  )
+
   const trimmed = trimResponseV2(
     parsed,
     opts.replyAs,
     opts.members,
-    opts.characters,
+    opts.gen,
     generationConfig.stopSequences
   )
 

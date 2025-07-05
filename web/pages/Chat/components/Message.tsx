@@ -48,7 +48,7 @@ import {
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
-import { hydrateTemplate, inline, trimSentence } from '/common/util'
+import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card, Pill } from '/web/shared/Card'
@@ -151,8 +151,6 @@ const Message: Component<MessageProps> = (props) => {
       if (update) {
         msgStore.editMessageProp(props.msg._id, {
           ...update,
-          characterId: '',
-          userId: '',
           ...sender,
         })
       }
@@ -165,8 +163,6 @@ const Message: Component<MessageProps> = (props) => {
 
     msgStore.editMessageProp(props.msg._id, {
       msg: editRef.innerText,
-      characterId: '',
-      userId: '',
       ...sender,
     })
     setEdit(false)
@@ -792,12 +788,7 @@ const MessageOptions: Component<{
           menuParent = ref
         }}
       >
-        <MoreHorizontal
-          class="icon-button"
-          ref={(r) => {
-            console.log(inline(r.getBoundingClientRect()))
-          }}
-        />
+        <MoreHorizontal class="icon-button" />
       </div>
 
       <Show when={showInner()}>
@@ -881,7 +872,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
     msgStore.retry(split.chatId, original._id)
   } else {
-    msgStore.createImage(split._id)
+    msgStore.createImage({ sourceMsgId: split._id })
   }
 }
 
@@ -1039,7 +1030,12 @@ export const MessageMeta: Component = () => {
                   <Button
                     size="sm"
                     schema="secondary"
-                    onClick={() => msgStore.generateImagePrompt((summary) => setPrompt(summary))}
+                    onClick={() =>
+                      msgStore.generateImagePrompt({
+                        onSummary: (summary) => setPrompt(summary),
+                        onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+                      })
+                    }
                     disabled={!!ctx.waiting}
                   >
                     Generate
@@ -1192,7 +1188,7 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
     break
   }
 
-  return { thoughts, content }
+  return { thoughts: thoughts.filter((t) => !!t.trim()), content }
 }
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {

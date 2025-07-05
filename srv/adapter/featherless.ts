@@ -106,7 +106,7 @@ async function getModelList() {
 
     return json
   } catch (ex) {
-    logger.error({ err: ex }, `Featherless model list failed`)
+    logger.warn({ err: ex }, `Featherless model list failed`)
   }
 }
 

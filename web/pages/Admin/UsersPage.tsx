@@ -62,6 +62,11 @@ const UsersPage: Component = () => {
           <div class="flex flex-wrap gap-2">
             <TextInput
               class="text-xs"
+              placeholder="Username"
+              onChange={(ev) => setStore('username', ev.currentTarget.value)}
+            />
+            <TextInput
+              class="text-xs"
               fieldName="customerId"
               placeholder="Customer ID"
               onChange={(ev) => setStore('customerId', ev.currentTarget.value)}

@@ -5,7 +5,8 @@ import { defaultPresets, isDefaultPreset } from '../../common/default-preset'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting, getAdapter } from '../../common/adapters'
 import { storage } from './util'
-import { getProviderLabel } from '/common/providers'
+import { getPresetConnection, getProviderCategoryLabel, getProviderLabel } from '/common/providers'
+import { getStore } from '../store/create'
 
 const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
   novel: [
@@ -119,6 +120,20 @@ export function getInitialPresetValue(chat?: AppSchema.Chat) {
 export function getServiceName(service?: AIAdapter) {
   if (!service) return 'Unset'
   return `${ADAPTER_LABELS[service]}`
+}
+
+export function getPresetLabel(preset: AppSchema.GenSettings) {
+  const providers = getStore('user').getState().user?.providers
+  const conn = getPresetConnection(preset, providers)
+
+  const prefix = conn.provider?.name || conn.detail?.name || ADAPTER_LABELS[conn.service!]
+  return {
+    prefix,
+    type: conn.category,
+    category: getProviderCategoryLabel(conn.category),
+    desc: preset.name || 'Unnamed',
+    conn,
+  }
 }
 
 export function sortByName(left: { name: string }, right: { name: string }) {

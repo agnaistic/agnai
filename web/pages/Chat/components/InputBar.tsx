@@ -166,7 +166,7 @@ const InputBar: Component<{
   }, 100)
 
   const createImage = () => {
-    msgStore.createImage()
+    msgStore.createImage({})
     setMenu(false)
   }
 
@@ -312,7 +312,7 @@ const InputBar: Component<{
         placeholder={placeholder()}
         parentClass="flex w-full"
         classList={{ 'blur-md': dragging() }}
-        class="input-bar max-h-[120px] min-h-[40px] rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+        class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === '@') {
             setComplete(true)

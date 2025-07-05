@@ -205,6 +205,7 @@ export const msgStore = createStore<MsgState>(
     abortMessage(state) {
       if (!state.waiting) return
       state.waiting.signal?.abort?.()
+      console.log('[wait] abort-msg')
       return { waiting: undefined, partial: undefined, retrying: undefined }
     },
     // setAttachment({ attachments }, chatId: string, base64: string) {
@@ -458,6 +459,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Continue) Generation request failed: ${res.error}`)
+        console.log('[wait] continue err')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -483,6 +485,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Bot) Generation request failed: ${res.error}`)
+        console.log('[wait] request err')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -533,6 +536,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
+        console.log('[wait] retry err')
         yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
@@ -571,6 +575,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
+        console.log('[wait] retry-schema err')
         yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
@@ -678,6 +683,7 @@ export const msgStore = createStore<MsgState>(
             .generate({ signal, kind: mode, text: message })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result.generating) {
+            console.log('[wait] send no-gen')
             yield { partial: undefined, waiting: undefined }
           }
 
@@ -693,6 +699,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
+        console.log('[wait] send err')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -700,7 +707,11 @@ export const msgStore = createStore<MsgState>(
         onSuccess?.()
 
         if (res.result.created) {
-          onMessageReceived({ msg: res.result.created, chatId: res.result.created.chatId })
+          onMessageReceived({
+            type: res.result.messageId ? 'message-created' : 'message-complete',
+            msg: res.result.created,
+            chatId: res.result.created.chatId,
+          })
         }
       }
 
@@ -814,7 +825,7 @@ export const msgStore = createStore<MsgState>(
 
     async *generateImagePrompt(
       { activeChatId, activeCharId, msgs },
-      onSummary: (summary: string) => void
+      callbacks: { onSummary?: (summary: string) => void; onTick?: TickHandler }
     ) {
       const messageId = msgs.slice(-1)[0]._id
 
@@ -834,13 +845,14 @@ export const msgStore = createStore<MsgState>(
         },
       }
 
-      const res = await imageApi.generateImagePrompt()
+      const res = await imageApi.generateImagePrompt(callbacks.onTick)
 
+      console.log('[wait] gen-img-prompt')
       yield { waiting: undefined }
       if (res.result) {
         console.log(`Image Prompt:\n${res.result.response}`)
         // msgStore.editMessageProp(messageId, { imagePrompt: res.result.response })
-        onSummary?.(res.result.response)
+        callbacks.onSummary?.(res.result.response)
         return
       }
 
@@ -849,12 +861,11 @@ export const msgStore = createStore<MsgState>(
 
     async *createImage(
       { msgs, activeChatId, activeCharId, waiting },
-      sourceMessageId?: string,
-      append?: boolean
+      opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler }
     ) {
       if (waiting) return
 
-      const messageId = sourceMessageId || msgs.slice(-1)[0]._id
+      const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
 
       yield {
@@ -872,16 +883,20 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           prompt: prev?.imagePrompt,
-          append,
+          append: opts.append,
           source: 'summary',
         },
-        () => {
-          const { waiting } = msgStore.getState()
-          const next = (waiting?.image || 1) + 1
-          msgStore.setState({ waiting: { ...waiting!, image: next } })
+        {
+          onDone: () => {
+            const { waiting } = msgStore.getState()
+            const next = (waiting?.image || 1) + 1
+            msgStore.setState({ waiting: { ...waiting!, image: next } })
+          },
+          onTick: opts.onTick,
         }
       )
       if (res.error) {
+        console.log('[wait] create-img err')
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
       }
@@ -976,6 +991,7 @@ async function handleImage(body: {
   const nextMsgs = replace(messageId, msgs, { extras })
 
   if (chatId === activeChatId) {
+    console.log('[wait] handle-img')
     msgStore.setState({
       msgs: nextMsgs,
       waiting: undefined,
@@ -1088,6 +1104,7 @@ subscribe(
     const prev = msgs.find((msg) => msg._id === body.messageId)
     const char = prev?.characterId ? characters.map[prev?.characterId] : undefined
 
+    console.log('[wait] msg-retry')
     msgStore.setState({
       partial: undefined,
       retrying: undefined,
@@ -1117,6 +1134,7 @@ subscribe(
     const nextMsgs = replace(body.messageId, msgs, nextMsg)
     const replacement = { ...prev, ...nextMsg }
 
+    console.log('[wait] msg-retry:2')
     msgStore.setState({
       partial: undefined,
       retrying: undefined,
@@ -1163,6 +1181,7 @@ subscribe(
 )
 
 async function onMessageReceived(body: {
+  type: string
   msg: any
   chatId: string
   generate?: boolean
@@ -1197,6 +1216,9 @@ async function onMessageReceived(body: {
     ? msgs.map((m) => (m._id === msg._id ? msg : m))
     : msgs.filter((m) => m._id !== msg._id).concat(msg)
 
+  const stack = new Error()
+  console.log('[wait] msg-rec', body.type, stack.stack)
+
   msgStore.setState({
     lastInference: {
       requestId: body.requestId!,
@@ -1210,14 +1232,20 @@ async function onMessageReceived(body: {
       tree,
       root: graph.root,
     },
-    waiting: undefined,
-    partial: undefined,
   })
+
+  if (body.type !== 'message-created') {
+    msgStore.setState({
+      waiting: undefined,
+      partial: undefined,
+    })
+  }
 
   // If the message is from a user don't clear the "waiting for response" flags
   if (isUserMsg && !body.generate) {
     msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
   } else {
+    console.log('[wait] msg-rec:2')
     msgStore.setState({
       msgs: nextMsgs,
       partial: undefined,
@@ -1296,6 +1324,7 @@ subscribe('chat-query', { requestId: 'string', response: 'string' }, (body) => {
 })
 
 subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
+  console.log('[wait] img-failed')
   msgStore.setState({ waiting: undefined })
   toastStore.error(body.error)
 })
@@ -1351,6 +1380,7 @@ subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
     toastStore.error(`Failed to generate response: ${body.error}`)
   }
 
+  console.log('[wait] voice-gen')
   msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
 })
 
@@ -1566,6 +1596,7 @@ subscribe(
     )
     await localApi.saveMessages(body.chatId, next)
 
+    console.log('[wait] guest-msg-created')
     msgStore.setState({
       msgs: exclude(msgs, [body.msg._id]).concat(msg),
       retrying: undefined,

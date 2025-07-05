@@ -62,15 +62,18 @@ export const handlePetals: ModelAdapter = async function* (opts) {
     if (event.token) {
       accum += event.token
       yield {
-        partial: sanitiseAndTrim(accum, opts.prompt, opts.replyAs, opts.characters, opts.members),
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          members: opts.members,
+          gen: opts.gen,
+        }),
       }
     }
   }
 
   const parsed = sanitise(accum.replace(opts.prompt, ''))
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
-    'END_OF_DIALOG',
-  ])
+  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, ['END_OF_DIALOG'])
   yield trimmed || parsed
 }
 

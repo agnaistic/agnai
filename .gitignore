@@ -27,3 +27,4 @@ settings.json
 *.key
 *.pub
 .todos.md
+.DS_Store

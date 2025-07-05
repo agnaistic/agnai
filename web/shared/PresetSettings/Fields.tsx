@@ -11,7 +11,8 @@ import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
 
-export type Field<T = {}> = Component<Omit<PresetTabProps, 'tab'> & T>
+export type FieldProps = Omit<PresetTabProps, 'tab'>
+export type Field<T = {}> = Component<FieldProps & T>
 
 export const PresetMode: Field = (props) => {
   return (
@@ -247,7 +248,6 @@ export const ModelFormat: Field = (props) => {
       (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={MODEL_FORMATS}
         value={props.state.modelFormat || 'None'}
-        recommend={props.sub?.preset.modelFormat}
         onChange={(ev) => props.setter('modelFormat', ev.value as any)}
       />
     </>

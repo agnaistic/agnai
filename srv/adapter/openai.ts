@@ -6,11 +6,10 @@ import { requestFullCompletion, toChatCompletionPayload } from './chat-completio
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
 import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
-import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '/common/presets/openai'
+import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
-import { toImageJinjaTemplate } from '/common/requests/payloads'
+import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
-import { getStoppingStrings } from './prompt'
 
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
 
@@ -29,29 +28,35 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
 
-  const oaiKey = gen.providerId ? gen.thirdPartyKey : user.oaiKey
-  if (!oaiKey && !base.changed) {
-    yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
-    return
+  let oaiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.oaiKey
+
+  if (!guest && oaiKey) {
+    oaiKey = decryptText(oaiKey)
   }
 
-  const oaiModel =
-    opts.gen.service === 'openai'
-      ? gen.oaiModel || defaultPresets.openai.oaiModel
-      : gen.thirdPartyModel || ''
-
+  const oaiModel = gen.thirdPartyModel || ''
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
-  const stops = getStoppingStrings(opts)
+  const stops = getStoppingStrings(opts, opts.gen)
+  if (!base.changed) {
+    stops.splice(4, stops.length - 4)
+  }
 
   const body: any = {
     model: oaiModel,
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
+    // max_completion_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: stops,
   }
+
+  // if (oaiModel.match(/o[1-9]/)) {
+  //   body.max_completion_tokens = maxResponseLength
+  //   delete body.max_tokens
+  //   delete body.temperature
+  // }
 
   // if (gen.service !== 'openai') {
   //   body.min_p = gen.minP
@@ -114,11 +119,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const isChatFormat =
     gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
-  const useChat = (isThirdParty && isChatFormat) || !!OPENAI_CHAT_MODELS[oaiModel]
+  const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
     const messages =
-      gen.thirdPartyFormat === 'openai-chatv2' && opts.messages
+      gen.thirdPartyFormat !== 'openai-chat' && opts.messages
         ? opts.messages
         : await toChatCompletionPayload(
             opts,
@@ -134,14 +139,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { prompt }
   }
 
-  const useThirdPartyPassword = !!(base.changed && isThirdParty && gen.thirdPartyKey)
-
-  let apiKey = useThirdPartyPassword ? gen.thirdPartyKey : !isThirdParty ? oaiKey : null
-
-  if (!guest && apiKey) {
-    apiKey = decryptText(apiKey)
-  }
-  const bearer = !!apiKey ? `Bearer ${apiKey}` : null
+  const bearer = !!oaiKey ? `Bearer ${oaiKey}` : null
 
   const headers: any = {
     'Content-Type': 'application/json',
@@ -150,10 +148,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     'anthropic-version': '2023-06-01',
   }
 
-  if (apiKey) {
+  if (oaiKey) {
     headers.Authorization = bearer
-    headers['X-RapidAPI-Key'] = apiKey
-    headers['x-api-key'] = apiKey
+    headers['X-RapidAPI-Key'] = oaiKey
+    headers['x-api-key'] = oaiKey
   }
 
   if (body.messages) {
@@ -166,7 +164,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const url =
-    !gen.providerId && !!gen.thirdPartyUrlNoSuffix
+    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) || base.url.includes('/completion')
       ? base.url
       : useChat
       ? joinUrl(base.url, 'chat/completions')
@@ -222,7 +220,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accumulated,
+          char,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('meta' in generated.value) {
@@ -248,8 +253,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     gen.swipesPerGeneration! > 1
-      ? yield sanitiseAndTrim(accumulated, prompt, char, opts.characters, members)
-      : yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
+      ? yield sanitiseAndTrim({
+          text: accumulated,
+          char,
+          members,
+          gen: opts.gen,
+        })
+      : yield sanitiseAndTrim({
+          text,
+          char: opts.replyAs,
+          members,
+          gen: opts.gen,
+        })
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }

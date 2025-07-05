@@ -3,8 +3,31 @@ import { toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { PayloadOpts } from './types'
 import { ModelFormat } from '../presets/templates'
+import { AppSchema } from '../types'
+import type { SubscriptionPreset } from '/srv/adapter/agnaistic'
+import { getPresetConnection } from '../providers'
+import { getJsonSchemaPayload } from '../guidance/json-schema'
 
-export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
+type MinOpts = Pick<
+  PayloadOpts,
+  | 'kind'
+  | 'requestId'
+  | 'jsonSchema'
+  | 'prompt'
+  | 'characters'
+  | 'members'
+  | 'impersonate'
+  | 'replyAs'
+  | 'user'
+  | 'sender'
+  | 'char'
+> & {
+  gen?: Partial<AppSchema.GenSettings>
+  settings?: Partial<AppSchema.GenSettings>
+  subscription?: SubscriptionPreset
+}
+
+export function getLocalPayload(opts: MinOpts, stops: string[] = []) {
   const gen = opts.settings!
   const body = getBasePayload(opts, stops)
 
@@ -12,7 +35,7 @@ export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
   body.model ??= gen.thirdPartyModel || ''
   body.temperature ??= gen.temp
   body.top_p ??= gen.topP
-  body.stop ??= getStoppingStrings(opts)
+  body.stop ??= getStoppingStrings(opts, opts.settings)
   body.stream ??=
     (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse
 
@@ -36,32 +59,83 @@ export function getLocalPayload(opts: PayloadOpts, stops: string[] = []) {
   return body
 }
 
-function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
-  const gen = opts.settings!
+export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
+  const gen = opts.gen || opts.settings || {}
+
+  const body = getBasePayload(opts, stops)
+
+  if (body.dynamic_temperature) {
+    body.dynatemp_low = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+    body.dynatemp_high = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+    body.dynatemp_exponent = gen.dynatemp_exponent
+  }
+
+  if (gen.reasoning?.enabled) {
+    body.reasoning = {
+      exclude: gen.reasoning.exclude ?? false,
+    }
+
+    if (gen.reasoning.effort === 'custom') {
+      body.reasoning.max_tokens = gen.reasoning.maxTokens ?? 0
+    } else {
+      body.reasoning.effort = gen.reasoning.effort ?? 'low'
+    }
+  }
+
+  if (opts.kind === 'continue') {
+    gen.tokenHealing = true
+  }
+
+  if (gen.jinjaEnabled) {
+    body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
+  }
+
+  return body
+}
+
+function getBasePayload(opts: MinOpts, stops: string[] = []) {
+  const gen = opts.gen || opts.settings!
   const prompt = opts.prompt
 
-  const format = gen.thirdPartyFormat
+  const conn = getPresetConnection(gen, opts.user.providers)
+  const format = opts.subscription?.preset?.thirdPartyFormat || conn.format
 
-  const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
+  const json_schema = opts.jsonSchema && gen.jsonEnabled ? toJsonSchema(opts.jsonSchema) : undefined
+
+  const characterNames = Object.values(opts.characters || {})
+    .map((c) => c.name.split(' '))
+    .concat(opts.members.map((m) => m.handle.split(' ')))
+    .flat()
+
+  const sequenceBreakers = Array.from(
+    new Set(
+      [opts.replyAs.name?.split(' '), opts.replyAs.name?.split(' '), ...characterNames].flat()
+    ).values()
+  )
+    .concat(gen.drySequenceBreakers || [])
+    .flat()
+    .filter((t) => !!t)
 
   if (!gen.temp) {
     gen.temp = 0.75
   }
 
-  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
-    const model =
-      gen.service === 'openai'
-        ? gen.oaiModel || defaultPresets.openai.oaiModel
-        : gen.thirdPartyModel || ''
+  if (
+    format === 'openai' ||
+    format === 'openai-chat' ||
+    format === 'openai-chatv2' ||
+    format === 'kobold'
+  ) {
+    const model = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
     const body: any = {
-      model: model,
+      model,
       stream:
         (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse,
       temperature: gen.temp ?? defaultPresets.openai.temp,
       max_tokens: gen.maxTokens,
       top_p: gen.topP ?? 1,
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
     }
 
     if (gen.presencePenalty) {
@@ -70,6 +144,61 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
 
     if (gen.frequencyPenalty) {
       body.frequency_penalty = gen.frequencyPenalty
+    }
+
+    return body
+  }
+
+  if (format === 'arli') {
+    const body: any = {
+      model: gen.providerId ? gen.thirdPartyModel : gen.arliModel || gen.thirdPartyModel,
+      // prompt,
+      stop: getStoppingStrings(opts, opts.settings, stops),
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
+      length_penalty: gen.repetitionPenalty,
+      tfs: gen.tailFreeSampling,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      typical_p: gen.typicalP,
+      ignore_eos: false,
+      max_tokens: gen.maxTokens,
+      smoothing_factor: gen.smoothingFactor,
+      smoothing_curve: gen.smoothingCurve,
+
+      stream: gen.streamResponse,
+    }
+
+    if (gen.dryMultiplier) {
+      body.dry_multiplier = gen.dryMultiplier
+      body.dry_base = gen.dryBase
+      body.dry_allowed_length = gen.dryAllowedLength
+      body.dry_range = gen.dryRange
+      body.dry_sequence_breakers = sequenceBreakers
+    }
+
+    if (gen.dynatemp_range) {
+      body.dynamic_temperature = true
+      body.dynatemp_min = (gen.temp ?? 1) - (gen.dynatemp_range ?? 0)
+      body.dynatemp_max = (gen.temp ?? 1) + (gen.dynatemp_range ?? 0)
+      body.dynatemp_exponent = gen.dynatemp_exponent
+    }
+
+    if (gen.xtcThreshold) {
+      body.xtc_threshold = gen.xtcThreshold
+      body.xtc_probability = gen.xtcProbability
+    }
+
+    if (body.top_k <= 0) {
+      body.top_k = -1
+    }
+
+    if (gen.jsonEnabled && opts.jsonSchema) {
+      const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
+      body.guided_json = schema
+      // body.guided_decoding_backend = 'outlines'
     }
 
     return body
@@ -87,7 +216,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       min_p: gen.minP,
       top_k: gen.topK! < 1 ? -1 : gen.topK,
 
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
       ignore_eos: gen.banEosToken,
 
       repetition_penalty: gen.repetitionPenalty,
@@ -144,7 +273,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
         mirostat: gen.mirostatToggle && gen.mirostatTau ? 2 : 0,
         mirostat_tau: gen.mirostatTau,
         mirostat_eta: gen.mirostatLR,
-        stop: getStoppingStrings(opts, stops),
+        stop: getStoppingStrings(opts, opts.settings, stops),
 
         // ignore_eos: false,
         dynatemp_range: gen.dynatemp_range,
@@ -191,7 +320,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       ban_eos_token: gen.banEosToken,
       cfg_scale: gen.cfgScale,
       negative_prompt: gen.cfgOppose,
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
       max_tokens: gen.maxTokens,
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
@@ -218,7 +347,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       top_k: gen.topK,
       top_p: gen.topP,
       n_predict: gen.maxTokens,
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
       stream: true,
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
@@ -244,7 +373,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       top_k: gen.topK,
       top_p: gen.topP,
       top_a: gen.topA,
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
       stream: true,
       frequency_penalty: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
@@ -288,7 +417,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       min_p: gen.minP,
       top_k: gen.topK! < 1 ? -1 : gen.topK,
       top_a: gen.topA,
-      stop: getStoppingStrings(opts, stops),
+      stop: getStoppingStrings(opts, opts.settings, stops),
       smoothing_factor: gen.smoothingFactor,
       smoothing_curve: gen.smoothingCurve,
 
@@ -327,7 +456,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       top_k: gen.topK,
       top_p: gen.topP,
       max_new_tokens: gen.maxTokens,
-      stop_conditions: getStoppingStrings(opts, stops),
+      stop_conditions: getStoppingStrings(opts, opts.settings, stops),
       typical: gen.typicalP,
       rep_pen: gen.repetitionPenalty,
       freq_pen: gen.frequencyPenalty,
@@ -352,7 +481,7 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
       top_k: gen.topK,
       top_a: gen.topA,
       typical: gen.typicalP,
-      stop_sequence: getStoppingStrings(opts, stops),
+      stop_sequence: getStoppingStrings(opts, opts.settings, stops),
       dynatemp_range: gen.dynatemp_range,
       dynatemp_exponent: gen.dynatemp_exponent,
       smoothing_factor: gen.smoothingFactor,
@@ -361,13 +490,37 @@ function getBasePayload(opts: PayloadOpts, stops: string[] = []) {
     }
     return body
   }
+
+  if (format === 'featherless') {
+    const payload: any = {
+      model: gen.providerId ? gen.thirdPartyModel : gen.featherlessModel || gen.thirdPartyModel,
+      prompt,
+      stop: getStoppingStrings(opts, opts.settings, stops),
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
+      repetition_penalty: gen.repetitionPenalty,
+      temperature: gen.temp,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      min_p: gen.minP,
+      max_tokens: gen.maxTokens,
+      include_stop_str_in_output: false,
+      stream: gen.streamResponse,
+    }
+
+    return payload
+  }
 }
 
-function getStoppingStrings(opts: PayloadOpts, extras: string[] = []) {
+export function getStoppingStrings(
+  opts: Pick<PayloadOpts, 'characters' | 'members' | 'impersonate' | 'replyAs'>,
+  settings: Partial<AppSchema.GenSettings> | undefined,
+  extras: string[] = []
+) {
   const seen = new Set<string>(extras)
   const unique = new Set<string>(extras)
 
-  if (!opts.settings?.disableNameStops) {
+  if (!settings?.disableNameStops) {
     const chars = Object.values(opts.characters || {})
     if (opts.impersonate) {
       chars.push(opts.impersonate)
@@ -388,20 +541,21 @@ function getStoppingStrings(opts: PayloadOpts, extras: string[] = []) {
     }
   }
 
-  if (opts.settings?.stopSequences && !Array.isArray(opts.settings.stopSequences)) {
-    const values = Object.values(opts.settings.stopSequences) as string[]
-    opts.settings.stopSequences = values
+  if (settings?.stopSequences && !Array.isArray(settings.stopSequences)) {
+    const values = Object.values(settings?.stopSequences) as string[]
+    settings.stopSequences = values
     for (const stop of values) {
       seen.add(stop)
       unique.add(stop)
     }
-  } else if (opts.settings?.stopSequences) {
-    opts.settings.stopSequences.forEach((seq) => {
+  } else if (settings?.stopSequences) {
+    for (const seq of settings.stopSequences) {
       unique.add(seq)
-    })
+    }
   }
 
-  return Array.from(unique.values()).filter((str) => !!str)
+  const stops = Array.from(unique.values()).filter((str) => !!str)
+  return stops
 }
 
 export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelFormat }) {

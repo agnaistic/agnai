@@ -2,9 +2,7 @@ import needle from 'needle'
 import { logger } from '../middleware'
 import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
-import { getStoppingStrings } from './prompt'
 import { decryptText } from '../db/util'
-import { getThirdPartyPayload } from './payloads'
 import { toSamplerOrder } from '/common/sampler-order'
 import {
   getOaiCompatibleUrl,
@@ -17,6 +15,7 @@ import { stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
+import { getStoppingStrings, getThirdPartyPayload } from '/common/requests/payloads'
 
 /**
  * Sampler order
@@ -40,13 +39,13 @@ const REQUIRED_SAMPLERS = presetDefaults.order!
 // }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members, characters, prompt } = opts
+  const { members } = opts
 
   const body = getThirdPartyPayload(opts)
 
   // Kobold has a stop sequence parameter which automatically
   // halts generation when a certain token is generated
-  const stop_sequence = getStoppingStrings(opts)
+  const stop_sequence = getStoppingStrings(opts, opts.gen)
   if (opts.gen.thirdPartyFormat === 'kobold' || opts.gen.thirdPartyFormat === 'koboldcpp') {
     stop_sequence.push('END_OF_DIALOG')
     body.stop_sequence = stop_sequence
@@ -100,7 +99,14 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
         wait = round((Date.now() - start) / 1000)
       }
       accum += generated.token
-      yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('tokens' in generated) {
@@ -125,7 +131,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, stop_sequence)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, stop_sequence)
 
   yield trimmed || parsed
 }
@@ -216,6 +222,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'arli': {
+      body.messages = opts.messages
       const url = 'https://api.arliai.com/v1/chat/completions'
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })

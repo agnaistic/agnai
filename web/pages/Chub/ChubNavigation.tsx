@@ -127,6 +127,8 @@ const Tags: Component = () => {
   )
 
   const officialTags = createMemo(() => {
+    if (!state.officialTags?.tags?.length) return []
+
     const list = state.officialTags.tags
       .map((tag) => ({
         label: `${tag.name} (${tag.non_private_projects_count})`,

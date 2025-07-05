@@ -83,7 +83,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
         type: 'format',
         name: 'LM Studio',
         value: 'openai-chatv2',
-        url: 'http://localhost:7860/v1',
+        url: 'http://localhost:1234/v1',
       },
       { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
       { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },
@@ -127,7 +127,7 @@ export type ProviderFormat =
   | { type: 'service'; name?: string; value: AIAdapter; url?: string }
   | { type: 'format'; name?: string; value: ThirdPartyFormat; url?: string }
 
-type ProviderDefinition = {
+export type ProviderDefinition = {
   name: string
   url?: string
   // service?: AIAdapter
@@ -135,7 +135,7 @@ type ProviderDefinition = {
   formats?: ProviderFormat[]
 }
 
-type ProviderCategory = 'custom' | 'known' | 'self'
+type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'
 
 export type PresetConnection = ReturnType<typeof getPresetConnection>
 
@@ -145,14 +145,17 @@ export function getPresetConnection(
 ) {
   const copy = { ...preset }
 
-  if (preset.providerId === 'agnaistic') {
+  const isAgnai =
+    preset.providerId === 'agnaistic' || (!preset.providerId && preset.service === 'agnaistic')
+
+  if (isAgnai) {
     copy.service = 'agnaistic'
     copy.thirdPartyFormat = undefined
 
     return {
       provider: undefined,
       detail: undefined,
-      category: undefined,
+      category: 'agnai' as ProviderCategory,
       preset: copy,
       service: 'agnaistic' as const,
       format: undefined,
@@ -179,6 +182,11 @@ export function getPresetConnection(
 
     if (conn.url) copy.thirdPartyUrl = conn.url
     if (conn.key) copy.thirdPartyKey = conn.key
+
+    const providerModel = preset.providerModels?.[preset.providerId || 'none']
+    if (providerModel) {
+      copy.thirdPartyModel = providerModel
+    }
 
     copy.localRequests = conn.local
     copy.thirdPartyKey = conn.key
@@ -240,6 +248,9 @@ export function getSafeProviderDetail(provider: string) {
 
     case 'self':
       return { category, type, detail: KNOWN_SELF_HOST[type] }
+
+    case 'agnai':
+      return { category, type: category, defail: undefined }
   }
 }
 
@@ -255,10 +266,32 @@ export function getProviderLabel(provider: AppSchema.Provider) {
 
     case 'custom':
       return provider.name || 'Custom'
+
+    case 'agnai':
+      return 'Agnai'
   }
 }
 
-function getProviderConnection(provider: AppSchema.Provider) {
+export function getProviderCategoryLabel(cate: ProviderCategory | undefined) {
+  switch (cate) {
+    case 'known':
+      return 'Known'
+
+    case 'self':
+      return 'Local'
+
+    case 'custom':
+      return 'Custom'
+
+    case 'agnai':
+      return 'Agnai'
+
+    default:
+      return 'Legacy'
+  }
+}
+
+export function getProviderConnection(provider: AppSchema.Provider) {
   const { category, detail } = assertProviderDetail(provider.provider)
   let url = ''
 
@@ -288,7 +321,16 @@ function getProviderConnection(provider: AppSchema.Provider) {
     }
   }
 
-  return { detail, category, service, format, url, key: provider.key, local: category === 'self' }
+  return {
+    detail,
+    category,
+    label: getProviderCategoryLabel(category),
+    service,
+    format,
+    url,
+    key: provider.key,
+    local: category === 'self',
+  }
 }
 
 function getAlias(provider: string) {

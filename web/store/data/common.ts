@@ -11,6 +11,7 @@ import { getBotsForChat } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
 import { MsgState } from '../message'
+import { MsgAttachment } from '/srv/adapter/type'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
@@ -141,6 +142,7 @@ async function getGuestEntities() {
 
   const characters = getBotsForChat(chat, char, chatChars.map)
   const conn = getPresetConnection(settings, user.providers)
+  const messages = messageHistory.concat(msgs)
 
   return {
     chat,
@@ -148,7 +150,7 @@ async function getGuestEntities() {
     user,
     profile,
     book,
-    messages: messageHistory.concat(msgs),
+    messages,
     settings: conn.preset,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
@@ -156,8 +158,24 @@ async function getGuestEntities() {
     characters,
     impersonating,
     scenarios,
-    attachments,
+    attachments: getChatAttachments(chat._id, messages, attachments),
   }
+}
+
+function getChatAttachments(
+  chatId: string,
+  messages: AppSchema.ChatMessage[],
+  attachments: Record<string, MsgAttachment[]>
+) {
+  const next: Record<string, MsgAttachment[]> = {}
+  const ids = new Set(messages.map((m) => m._id).concat(chatId))
+
+  for (const key in attachments) {
+    if (!ids.has(key)) continue
+    next[key] = attachments[key]
+  }
+
+  return next
 }
 
 function getAuthedPromptEntities() {
@@ -184,6 +202,7 @@ function getAuthedPromptEntities() {
   const { impersonating, chatChars } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, chatChars.map)
+  const messages = messageHistory.concat(msgs)
 
   return {
     chat,
@@ -191,7 +210,7 @@ function getAuthedPromptEntities() {
     user,
     profile,
     book,
-    messages: messageHistory.concat(msgs),
+    messages,
     settings: conn.preset,
     members,
     chatBots: chatChars.list,
@@ -199,7 +218,7 @@ function getAuthedPromptEntities() {
     characters,
     impersonating,
     scenarios,
-    attachments,
+    attachments: getChatAttachments(chat._id, messages, attachments),
   }
 }
 

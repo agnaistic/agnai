@@ -366,7 +366,7 @@ const ChatDetail: Component = () => {
         const msg = msgs.msgs[last]
         if (!msg) return
         if (msg.adapter === 'image') {
-          msgStore.createImage(msg._id)
+          msgStore.createImage({ sourceMsgId: msg._id })
         } else if (msg.characterId) {
           msgStore.retry(msg.chatId, msg._id)
         } else {
@@ -395,7 +395,7 @@ const ChatDetail: Component = () => {
 
       if (ev.key === 'p' || ev.key === 'KeyP') {
         ev.preventDefault()
-        msgStore.createImage()
+        msgStore.createImage({})
       }
     }
 

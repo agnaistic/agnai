@@ -1,11 +1,12 @@
 import { Component, For, JSX, Match, Switch, createMemo, createSignal } from 'solid-js'
 import Select from './Select'
 
-export type TabHook = {
-  tabs: string[]
+export type TabHook<T extends string[] = string[]> = {
+  tabs: T
+  set: (tab: T[number]) => void
   select: (tab: number) => void
   selected: () => number
-  current: () => string
+  current: () => T[number]
 }
 
 const Tabs: Component<{
@@ -58,16 +59,26 @@ const Tabs: Component<{
 
 export default Tabs
 
-export function useTabs(tabs: string[], initial: number = 0): TabHook {
+export function useTabs<T extends string[] = string[]>(tabs: T, initial: number = 0): TabHook<T> {
   const [tab, setTabs] = createSignal(initial)
   const current = createMemo(() => {
     return tabs[tab()]
   })
 
+  const setTab = (tab: T[number]) => {
+    const index = tabs.findIndex((t) => t === tab)
+    setTabs(index)
+  }
+
   return {
     tabs,
     selected: tab,
     select: setTabs,
-    current,
+    set: setTab,
+    current: current as () => T[number],
   }
+}
+
+export function useStrictTabs<T extends string[]>(tabs: T, initial = 0): TabHook<T> {
+  return useTabs<T>(tabs, initial)
 }

@@ -20,7 +20,7 @@ import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { remapImageContent, stripImageContent } from './template-chat-payload'
+import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
@@ -69,11 +69,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     return
   }
 
-  const hasKey = isThirdParty
-    ? !!(gen.thirdPartyKey || user.thirdPartyPassword)
-    : !!user.claudeApiKey
-
-  if (!hasKey && !base.changed) {
+  const apiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.claudeApiKey
+  if (!apiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
@@ -105,18 +102,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     payload.max_tokens = gen.maxTokens
     const messages = opts.messages || []
 
-    remapImageContent(messages, (image) => {
-      const mime = getMimeTypeBase64(image)
-      return {
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: mime.mimeType,
-          data: mime.data,
-        },
-      }
-    })
-
     const system = messages
       .filter((m) => m.role === 'system')
       .map((m) => m.content)
@@ -127,6 +112,25 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   } else {
     payload.max_tokens_to_sample = gen.maxTokens
     payload.prompt = await createClaudePrompt(opts)
+  }
+
+  if (payload.messages) {
+    remapMessages(payload.messages, {
+      text: (text) => {
+        return { type: 'text', text }
+      },
+      image: (image) => {
+        const mime = getMimeTypeBase64(image)
+        return {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: mime.mimeType,
+            data: mime.data,
+          },
+        }
+      },
+    })
   }
 
   /**
@@ -193,15 +197,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'anthropic-version': apiVersion,
   }
 
-  const useThirdPartyPassword =
-    base.changed && isThirdParty && (gen.thirdPartyKey || user.thirdPartyPassword)
-  const apiKey = useThirdPartyPassword
-    ? gen.thirdPartyKey || user.thirdPartyPassword
-    : !isThirdParty
-    ? user.claudeApiKey
-    : null
-
-  const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : null
+  const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : ''
   if (key) {
     headers['x-api-key'] = key
     headers.Authorization = `Bearer ${key}`
@@ -252,7 +248,12 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     if ('token' in generated.value) {
       acc += generated.value.token
       yield {
-        partial: sanitiseAndTrim(acc, payload.prompt, opts.replyAs, opts.characters, members),
+        partial: sanitiseAndTrim({
+          text: acc,
+          char: opts.replyAs,
+          members,
+          gen: opts.gen,
+        }),
       }
     }
   }
@@ -263,7 +264,12 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       log.error({ body: resp }, 'Claude request failed: Empty response')
       yield { error: `Claude request failed: Received empty response. Try again.` }
     } else {
-      yield sanitiseAndTrim(completion, payload.prompt, opts.replyAs, opts.characters, members)
+      yield sanitiseAndTrim({
+        text: completion,
+        char: opts.replyAs,
+        members,
+        gen: opts.gen,
+      })
     }
   } catch (ex: any) {
     log.error({ err: ex }, 'Claude failed to parse')
@@ -277,9 +283,9 @@ function getBaseUrl(gen: Partial<GenSettings>, model: string, isThirdParty?: boo
   if (gen.providerId && (gen.service === 'claude' || gen.service === 'claude-v2')) {
     switch (isChatModel) {
       case true:
-        return { url: joinUrl(gen.thirdPartyUrl!, 'messages'), changed: true }
+        return { url: joinUrl(gen.thirdPartyUrl!, 'messages'), changed: false }
       case false:
-        return { url: joinUrl(gen.thirdPartyUrl!, 'complete'), changed: true }
+        return { url: joinUrl(gen.thirdPartyUrl!, 'complete'), changed: false }
     }
   }
 
@@ -437,6 +443,22 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
   return
 }
 
+export async function createClaudeChatCompletionV2(opts: AdapterProps) {
+  let messages = opts.messages
+  if (!messages) {
+    const result = await toChatMessages(opts, getTokenCounter('claude', ''))
+    messages = result.messages
+  }
+
+  // Last message must be 'thinking' block or role 'user'
+  const lastMsg = messages?.slice(-1)?.[0]
+  if (lastMsg?.role === 'assistant') {
+    lastMsg.role = 'user'
+  }
+
+  return messages
+}
+
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
@@ -477,7 +499,11 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
       return msgs
     }
 
-    last.content += '\n\n' + msg.content
+    if (last.content === '...') {
+      last.content = ''
+    }
+
+    last.content += ('\n\n' + msg.content).trim()
     return msgs
   }, [] as CompletionItem[])
 

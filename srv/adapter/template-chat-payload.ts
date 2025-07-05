@@ -11,7 +11,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   const { sections } = assembled
   const {
     strictSystem,
-    sections: { post, history, post_system },
+    sections: { post, post_system },
   } = sections
 
   const prefill = (req.parts.prefill || '').trim()
@@ -31,34 +31,48 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     messages.push({ role: 'user', content: postSystem })
   }
 
-  let offset = history.length > req.lines.length ? -1 : 0
   const sender = (req.impersonate?.name || req.sender.handle) + ':'
   // let lastRole = ''
 
-  const map: { [pos: number]: string } = {}
-  if (req.indexes) {
-    for (const [id, pos] of Object.entries(req.indexes)) {
-      map[pos] = id
+  let unparsedIndex = 0
+
+  for (let i = 0; i < assembled.lines.length; i++) {
+    const unparsed = assembled.unparsedLines[unparsedIndex]
+    const line = assembled.lines[i]
+
+    const text = replaceTags(line.line, req.settings?.modelFormat || 'None').trim()
+
+    /**
+     * The `assembles.lines` can contain history interwoven with inserts.
+     * The `unparsedLines` only contains history.
+     * We need to track the indexes independently to ensure we get the correct unparsed line
+     */
+    if (line.type === 'history') {
+      unparsedIndex++
     }
-  }
 
-  for (let i = 0; i < history.length; i++) {
-    const isPreHistory = offset !== 0 && i === 0
-    const line = history[i]
-    const original = req.lines[i + offset]
-    const role = isPreHistory ? 'user' : original?.startsWith(sender) ? 'user' : 'assistant'
+    const lineRole = line.role === 'user' ? 'user' : 'assistant'
 
-    const id = map[history.length - i - offset - 1]
+    const role =
+      line.type !== 'history'
+        ? 'user'
+        : req.history
+        ? lineRole
+        : (unparsed || text || '').startsWith(sender)
+        ? 'user'
+        : 'assistant'
+
+    const id = line.type === 'history' ? line.id : undefined
     const attachments = getAttachments(req, id)
 
     if (role === 'user' && attachments?.length) {
       req.hasAttachments = true
       messages.push({
-        role,
-        content: [{ type: 'text', content: line.trim(), text: line.trim() }, ...attachments],
+        role: `${role}`,
+        content: [{ type: 'text', content: text, text }, ...attachments],
       })
     } else {
-      messages.push({ role, content: line.trim() })
+      messages.push({ role, content: text })
     }
 
     // lastRole = role
@@ -74,7 +88,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     req.hasAttachments = true
     const msg = messages[lastUserIndex]
     if (!Array.isArray(msg.content)) {
-      msg.content = [{ type: 'text', content: msg.content, text: msg.content }]
+      msg.content = [{ type: 'text', content: `${msg.content}`, text: msg.content }]
     }
 
     for (const image of unused) {
@@ -99,8 +113,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   return { messages, assembled }
 }
 
-function getAttachments(req: GenerateRequestV2, id: string | undefined) {
-  if (!id || !req.attachments || !req.indexes) return
+function getAttachments(req: Pick<GenerateRequestV2, 'attachments'>, id: string | undefined) {
+  if (!id || !req.attachments) return
 
   const list = req.attachments[id]
   if (!list?.length) return
@@ -176,12 +190,12 @@ export function remapMessages(
     for (let i = 0; i < msg.content.length; i++) {
       const item = msg.content[i]
       if (item.type === 'text') {
-        item[i] = maps.text?.(item) || item
+        msg.content[i] = maps.text?.(item.text) || item
         continue
       }
 
-      if (item.image_url?.url) continue
-      item[i] = maps.image?.(item.image_url.url) || item
+      if (!item.image_url?.url) continue
+      msg.content[i] = maps.image?.(item.image_url.url) || item
       continue
     }
   }
@@ -206,14 +220,16 @@ export function remapImageContent(
       const item = msg.content[i]
       if (item.type === 'text') continue
       if (item.image_url?.url) continue
-      item[i] = block(item.image_url.url)
+      msg.content[i] = block(item.image_url.url)
     }
   }
 
   return messages
 }
 
-export function validateChatMessages(messages: Array<{ role: string; content: any }>) {
+type OutgoingMsg = { role: string; content: any }
+
+export function validateChatMessages(messages: OutgoingMsg[]) {
   let lastRole = ''
   const next: typeof messages = []
 
@@ -226,16 +242,53 @@ export function validateChatMessages(messages: Array<{ role: string; content: an
     }
 
     const last = next.slice(-1)[0]
-    if (last) {
+    if (!last) continue
+
+    if (!Array.isArray(last.content) && !Array.isArray(msg.content)) {
       next[next.length - 1] = {
         ...last,
         content: `${last.content.trim()}\n\n${msg.content}`,
       }
       continue
     }
+
+    const joined = joinMessages(last, msg)
+    next[next.length - 1] = joined
   }
 
   return next
+}
+
+function joinMessages(head: OutgoingMsg, tail: OutgoingMsg) {
+  const first = splitMessage(head)
+  const second = splitMessage(tail)
+
+  const text = [first.text, second.text].filter((t) => !!t.trim()).join('\n\n')
+
+  return {
+    role: second.role,
+    content: [{ type: 'text', text, content: text }, ...first.attachments, ...second.attachments],
+  }
+}
+
+function splitMessage(msg: OutgoingMsg) {
+  if (!Array.isArray(msg.content)) {
+    return { role: msg.role, text: msg.content, attachments: [] }
+  }
+
+  const texts: string[] = []
+  const attachments: any[] = []
+
+  for (const part of msg.content) {
+    if (part.type === 'text') {
+      texts.push(part.text)
+      continue
+    }
+
+    attachments.push(part)
+  }
+
+  return { role: msg.role, text: texts.join('\n\n'), attachments }
 }
 
 export function stripImageContent(messages: any[]) {
@@ -325,11 +378,11 @@ export function ensureMessagesAlternate(
 
     // Case 1. No system message, but starts with assistant
     if (first.role === 'assistant') {
-      processed.unshift({ role: 'user', content: '...' })
+      processed.unshift({ role: 'user', content: '' })
     }
     // Case 2. System message, but first message is assistant
     else if (first.role === 'system' && second?.role !== 'user') {
-      processed.splice(1, 0, { role: 'user', content: '...' })
+      processed.splice(1, 0, { role: 'user', content: '' })
     }
   }
 

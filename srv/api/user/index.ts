@@ -51,6 +51,7 @@ import {
   deleteFeatherlessKey,
   saveProvider,
   deleteProvider,
+  removeProviderKey,
 } from './settings'
 import { deleteUserAccount } from './delete-user'
 
@@ -64,7 +65,7 @@ router.post('/login', login)
 router.post('/reset-password', resetPassword)
 router.post('/register', register)
 router.post('/provider', loggedIn, saveProvider)
-router.delete('/provider-key', loggedIn, saveProvider)
+router.delete('/provider-key', loggedIn, removeProviderKey)
 router.delete('/provider', loggedIn, deleteProvider)
 router.post('/services/novel', novelLogin)
 router.post('/services/horde-stats', hordeStats)

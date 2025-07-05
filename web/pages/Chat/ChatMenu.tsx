@@ -24,6 +24,7 @@ import {
 } from 'lucide-solid'
 import { AgnaisticModel } from '/web/shared/PresetSettings/Agnaistic'
 import { startTour } from '/web/tours'
+import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 
 type NavProps = {
   ctx: ContextState
@@ -49,7 +50,9 @@ export const ChatMenu: Component<{
 
   const adapterLabel = createMemo(() => {
     if (!props.ctx.preset) return ''
-    const label = `${ADAPTER_LABELS[props.ctx.preset.service!]} - ${props.ctx.preset.name}`
+    const label = `${
+      props.ctx.provider?.name || props.ctx.detail?.name || ADAPTER_LABELS[props.ctx.service!]
+    } - ${props.ctx.preset.name}`
     return label
   })
 
@@ -126,7 +129,16 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Show>
 
-      <Show when={canModel()}>
+      <Show
+        when={canModel()}
+        fallback={
+          <div class="flex w-full justify-center">
+            <div class="w-fit">
+              <ThirdPartyModel page="mode" />
+            </div>
+          </div>
+        }
+      >
         <div class="flex w-full justify-center">
           <AgnaisticModel />
         </div>

@@ -5,11 +5,11 @@ import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
-import { getStoppingStrings } from './prompt'
 import { createClaudeChatCompletion } from './claude'
 import { logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -20,7 +20,10 @@ let modelCache: OpenRouterModel[]
 export const handleOpenRouter: ModelAdapter = async function* (opts) {
   const { user, guest } = opts
 
-  const key = user.adapterConfig?.openrouter?.apiKey
+  const key = opts.gen.providerId
+    ? opts.gen.thirdPartyKey
+    : opts.gen.thirdPartyKey || user.adapterConfig?.openrouter?.apiKey
+
   if (!key) {
     yield {
       error:
@@ -34,7 +37,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     // 256 is the OpenRouter default. We will use this.
     temperature: opts.gen.temp,
     max_tokens: opts.gen.maxTokens ?? 256,
-    stop: getStoppingStrings(opts),
+    stop: getStoppingStrings(opts, opts.gen),
     top_p: opts.gen.topP,
     top_k: opts.gen.topK,
     top_a: opts.gen.topA,
@@ -126,7 +129,12 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     if ('token' in gen.value) {
       accum += gen.value.token
       yield {
-        partial: sanitiseAndTrim(accum, opts.prompt, opts.replyAs, opts.characters, opts.members),
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          members: opts.members,
+          gen: opts.gen,
+        }),
       }
     }
 
@@ -151,7 +159,12 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     return
   }
 
-  yield sanitiseAndTrim(text, opts.prompt, opts.replyAs, opts.characters, opts.members)
+  yield sanitiseAndTrim({
+    text,
+    char: opts.replyAs,
+    members: opts.members,
+    gen: opts.gen,
+  })
 }
 
 async function* getCompletion(

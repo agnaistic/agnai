@@ -1,10 +1,11 @@
 import Zip from 'adm-zip'
 import needle from 'needle'
 import { ImageAdapter } from './types'
-import { decryptText } from '../db/util'
 import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
 import { NovelSettings } from '../../common/types/image-schema'
 import { formatImagePrompt, joinImagePrompts } from '/common/util'
+import { AppSchema } from '/common/types'
+import { decryptText } from '../db/util'
 
 const baseUrl = `https://image.novelai.net/ai`
 
@@ -54,7 +55,8 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   const ucPreset = +(settings.ucPreset || defaultSettings.ucPreset)
   const ucNegative = UC_PRESETS[ucPreset] || ''
 
-  const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
+  const key = getNovelApiKey(user, !!guestId)
+
   let input = [formatImagePrompt(prompt)]
 
   if (settings.qualityTags ?? true) {
@@ -127,4 +129,21 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   }
 
   return { ext: 'png', content: entry.getData() }
+}
+
+// Specifically for Image gen, there is no preset with the API key set
+// This can be removed after Image Presets w/ Providers
+function getNovelApiKey(user: AppSchema.User, isGuest: boolean) {
+  const provider = user.providers?.find((p) => p.provider === `known-novel`)
+  if (provider && provider.key) {
+    const key = isGuest ? provider.key : decryptText(provider.key)
+    return key
+  }
+
+  if (user.novelApiKey) {
+    const key = isGuest ? user.novelApiKey : decryptText(user.novelApiKey)
+    return key
+  }
+
+  return ''
 }

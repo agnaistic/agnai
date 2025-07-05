@@ -7,9 +7,9 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
-import { getStoppingStrings } from './prompt'
 import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/presets/novel'
 import { fetchStream } from '/common/requests/stream'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.
@@ -56,7 +56,8 @@ const NEW_PARAMS: Record<string, boolean> = {
 
 export const handleNovel: ModelAdapter = async function* (opts) {
   const { members, user, prompt, mappedSettings, guest, log } = opts
-  if (!user.novelApiKey) {
+  const apiKey = opts.gen.thirdPartyKey || user.novelApiKey
+  if (!apiKey) {
     yield { error: 'Novel API key not set' }
     return
   }
@@ -81,7 +82,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
     parameters: NEW_PARAMS[model] ? getModernParams(opts.gen) : { ...base, ...mappedSettings },
   }
 
-  const baseStops = getStoppingStrings(opts)
+  const baseStops = getStoppingStrings(opts, opts.gen)
 
   if (opts.kind === 'plain') {
     body.parameters.prefix = 'special_instruct'
@@ -131,7 +132,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
   log.debug(`Prompt:\n${body.input}`)
 
   const headers = {
-    Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
+    Authorization: `Bearer ${guest ? apiKey : decryptText(apiKey)}`,
   }
 
   const maxTokens = await getMaxTokens(body.model, headers)
@@ -157,7 +158,14 @@ export const handleNovel: ModelAdapter = async function* (opts) {
 
     if ('token' in generated.value) {
       accum += generated.value.token
-      yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, opts.characters, members) }
+      yield {
+        partial: sanitiseAndTrim({
+          text: accum,
+          char: opts.replyAs,
+          members,
+          gen: opts.gen,
+        }),
+      }
     }
 
     if ('tokens' in generated.value) {
@@ -167,7 +175,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, endTokens)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, endTokens)
 
   yield trimmed || parsed
 }

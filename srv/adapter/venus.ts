@@ -2,8 +2,8 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { registerAdapter } from './register'
-import { getStoppingStrings } from './prompt'
 import { streamGenerator } from '/common/requests/stream'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const venusOptions: Record<string, string> = {
   Mars: 'asha',
@@ -25,7 +25,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
     temperature: opts.gen.temp,
     top_p: opts.gen.topP,
     top_k: opts.gen.topK,
-    stop: getStoppingStrings(opts),
+    stop: getStoppingStrings(opts, opts.gen),
   }
 
   const url = `https://inference.chub.ai/prompt`
@@ -77,20 +77,19 @@ export const handleVenus: ModelAdapter = async function* (opts) {
 
       if (opts.gen.streamResponse) {
         yield {
-          partial: sanitiseAndTrim(
-            accumulated,
-            body.template,
-            opts.char,
-            opts.characters,
-            opts.members
-          ),
+          partial: sanitiseAndTrim({
+            text: accumulated,
+            char: opts.char,
+            members: opts.members,
+            gen: opts.gen,
+          }),
         }
       }
     }
   }
 
   const parsed = sanitise(accumulated)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, body.stop)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, body.stop)
 
   yield trimmed || parsed
 }

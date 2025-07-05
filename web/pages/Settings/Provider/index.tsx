@@ -1,23 +1,17 @@
-import { Component, createEffect, createMemo, createSignal, Match, Show, Switch } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
-import { Cable, Check, Ellipsis, PlusIcon, WifiPen, X } from 'lucide-solid'
+import { Info, PlusIcon, WifiPen } from 'lucide-solid'
 import Select from '/web/shared/Select'
-import { RootModal } from '/web/shared/Modal'
-import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
+import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
-import {
-  assertProviderDetail,
-  CUSTOM_PROVIDERS,
-  getSafeProviderDetail,
-  KNOWN_PROVIDERS,
-  KNOWN_SELF_HOST,
-} from '../../../../common/providers'
+import { assertProviderDetail } from '../../../../common/providers'
 import { Field } from '/web/shared/PresetSettings/Fields'
 import { getUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
-import { presetStore, toastStore } from '/web/store'
+import { ManageProvider } from './Manage'
+import { markdown } from '/web/shared/markdown'
 
 export const PresetProvider: Field = (props) => {
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
@@ -75,6 +69,24 @@ export const PresetProvider: Field = (props) => {
     return providers
   })
 
+  // If a provider is deleted, the preset.providerId may still refer to it
+  // Soft-set the providerId to 'legacy', or maybe the first provider in the list?
+  createEffect(
+    on(
+      () => `${props.state.providerId} ${state.user?.providers?.length}`,
+      () => {
+        if (!props.state.providerId || props.state.providerId === 'agnaistic') return
+        if (!state.user?.providers) return
+
+        // However we need to deal with the race condition of receiving a new provider
+        const exists = state.user.providers.find((p) => p._id === props.state.providerId)
+        if (exists) return
+
+        props.setter('providerId', '')
+      }
+    )
+  )
+
   const editProvider = (ev: any) => {
     ev?.preventDefault?.()
     setEditing(selectedProvider())
@@ -111,19 +123,48 @@ export const PresetProvider: Field = (props) => {
     setOpenLegacy(true)
   }
 
+  createEffect(
+    on(
+      () => state.user?.providers,
+      () => {
+        const providers = state.user?.providers
+        const current = editing()
+        if (!providers || !current?._id) return
+
+        const next = providers.find((p) => p._id === current._id)
+        setEditing(next)
+      }
+    )
+  )
+
   return (
     <>
       <div class="flex flex-col gap-1">
         <Select
           label={
-            <div class="flex w-full items-center justify-between pb-1">
+            <div class="flex w-full items-center gap-2 pb-1">
               <div>Service</div>
-              <div class="flex gap-1">
-                <Button size="sm" onClick={newProvider}>
-                  <PlusIcon size={16} />
-                  Provider
-                </Button>
-              </div>
+              <HelpModal
+                title="Providers"
+                cta={
+                  <button class="icon-button flex gap-1">
+                    <Info size={16} />
+                  </button>
+                }
+              >
+                <div class="flex flex-col gap-3">
+                  <p>Providers are used to connect to your preferred AI models.</p>
+                  <Markdown
+                    text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
+                  />
+                  <Markdown
+                    text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
+                  />
+                  <Markdown
+                    text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your preset.`}
+                  />
+                </div>
+              </HelpModal>
             </div>
           }
           items={services()}
@@ -135,23 +176,34 @@ export const PresetProvider: Field = (props) => {
           onChange={(ev) => changeProvider(ev.value)}
         >
           <Show when={props.state.providerId === ''}>
-            <button class="icon-button" onClick={editLegacy}>
+            <Button size="sm" onClick={editLegacy}>
               <WifiPen size={16} />
-            </button>
+              Edit
+            </Button>
           </Show>
 
           <Show when={showEdit()}>
-            <button class="icon-button" onClick={editProvider}>
+            <Button size="sm" onClick={editProvider}>
               <WifiPen size={16} />
-            </button>
+              Edit
+            </Button>
           </Show>
+
+          <Button size="sm" onClick={newProvider}>
+            <PlusIcon size={16} />
+            New
+          </Button>
         </Select>
       </div>
       <ManageProvider
+        presetId={props.state._id}
         user={state.user}
         show={open()}
         close={() => setOpen(false)}
         provider={editing()}
+        onCreated={(provider) => {
+          changeProvider(provider._id)
+        }}
       />
       <EditConnectionDetails {...props} show={openLegacy()} close={() => setOpenLegacy(false)} />
     </>
@@ -312,295 +364,6 @@ const ThirdPartyKey: Field = (props) => {
   )
 }
 
-const ManageProvider: Component<{
-  user: AppSchema.User | undefined
-  show: boolean
-  close: () => void
-  provider?: AppSchema.Provider
-}> = (props) => {
-  const [tested, setTested] = createSignal<boolean>()
-  const [loading, setLoading] = createSignal(false)
-  const [name, setName] = createSignal(props.provider?.name || '')
-  const [provider, setProvider] = createSignal(props.provider?.provider || '')
-  const [url, setUrl] = createSignal(props.provider?.url || '')
-  const [key, setKey] = createSignal('')
-  const [format, setFormat] = createSignal('')
-
-  const state = presetStore((s) => ({ testLoading: s.testLoading }))
-
-  const isUsableProvider = (id: string) => {
-    if (!props.user?.providers) return true
-    if (props.provider?.provider === id) return true
-    const match = props.user.providers.find((p) => p.provider === id)
-    return !match
-  }
-
-  const categories = createMemo(() => {
-    const known = {
-      name: 'Supported Providers',
-      options: Object.entries(KNOWN_PROVIDERS)
-        .map(([key, info]) => ({
-          label: info.name,
-          value: `known-${key}`,
-          disabled: !isUsableProvider(`known-${key}`),
-        }))
-        .sort(sortAlpha) as CustomOption[],
-    }
-
-    const self = {
-      name: 'Self-Host',
-      options: Object.entries(KNOWN_SELF_HOST)
-        .map(([key, info]) => ({
-          label: info.name,
-          value: `self-${key}`,
-        }))
-        .sort(sortAlpha) as CustomOption[],
-    }
-
-    const custom = {
-      name: 'Custom - OpenAI Compatible',
-      options: Object.entries(CUSTOM_PROVIDERS)
-        .map(([key, info]) => ({
-          label: info.name,
-          value: `custom-${key}`,
-        }))
-        .sort(sortAlpha) as CustomOption[],
-    }
-
-    return [known, self, custom]
-  })
-
-  createEffect(() => {
-    if (!props.show) return
-    setTested(undefined)
-    setProvider(props.provider?.provider || '')
-    setUrl(props.provider?.url || '')
-    setName(props.provider?.name || '')
-    setKey('')
-
-    if (!props.provider?.provider || !props.provider.format) return
-
-    const detail = getSafeProviderDetail(props.provider?.provider)
-    if (!detail?.detail?.formats) return
-
-    for (let idx = 0; idx < detail.detail.formats.length; idx++) {
-      const fmt = detail.detail.formats[idx]
-
-      if (fmt.type !== props.provider.format.type) continue
-      if (fmt.value !== props.provider.format.value) continue
-      setFormat(`${idx}`)
-      break
-    }
-  })
-
-  const isCustom = createMemo(() => provider().startsWith('custom-'))
-  const isSelf = createMemo(() => provider().startsWith('self-'))
-
-  const save = () => {
-    setLoading(true)
-    const prv = provider()
-    const def = getSafeProviderDetail(prv)
-
-    const fmt = +format()
-
-    const body: AppSchema.Provider = {
-      _id: props.provider?._id || '',
-      name: name(),
-      key: key(),
-      provider: provider(),
-      url: url(),
-    }
-
-    if (fmt >= 0 && def.detail?.formats) {
-      body.format = def.detail.formats[fmt]
-    }
-
-    getStore('user').saveProvider(body, (success) => {
-      setLoading(false)
-
-      if (success) {
-        props.close()
-      }
-    })
-  }
-
-  const onProviderChange = (id: string) => {
-    setProvider(id)
-    setTested(undefined)
-    const detail = getSafeProviderDetail(id)
-
-    if (detail?.detail.url?.trim()) {
-      setUrl(detail.detail.url?.trim())
-    }
-
-    setFormat('0')
-  }
-
-  const onFormatChange = (id: string) => {
-    setFormat(id)
-    const detail = getSafeProviderDetail(provider())
-    const index = +id
-
-    if (index >= 0) {
-      const format = detail?.detail?.formats?.[index]
-      if (!format?.url) return
-
-      setUrl(format.url.trim())
-    }
-  }
-
-  const onClickDelete = () => {
-    if (!props.provider?._id) return
-    getStore('user').deleteProvider(props.provider._id, (success) => {
-      if (!success) return
-    })
-  }
-
-  const label = createMemo(() => {
-    const id = provider()
-    if (!id) {
-      return 'Provider: Choose a Provider'
-    }
-    const detail = getSafeProviderDetail(id)
-    return `Provider: ${detail?.detail?.name || id}`
-  })
-
-  const formatOptions = createMemo(() => {
-    const prv = provider()
-    const detail = getSafeProviderDetail(prv)
-    const list = detail?.detail?.formats
-    if (!list) {
-      return []
-    }
-
-    return list.map((format, index) => {
-      const label = format.name
-        ? format.name
-        : format.type === 'service'
-        ? ADAPTER_LABELS[format.value]
-        : FORMAT_LABEL[format.value]
-      return { label, value: `${index}` }
-    })
-  })
-
-  const testConnection = () => {
-    try {
-      new URL(url()) // Validate the URL
-      presetStore.testConnection(
-        { providerId: provider(), url: url(), key: key() },
-        (success, goodUrl) => {
-          if (!success) {
-            setTested(false)
-          }
-
-          if (success && goodUrl) {
-            setTested(true)
-            setUrl(goodUrl)
-          }
-        }
-      )
-    } catch (ex) {
-      toastStore.error('URL is not valid. Check it and try again')
-    }
-  }
-
-  return (
-    <RootModal
-      show={props.show}
-      close={props.close}
-      title={`${props.provider?._id ? 'Update Provider' : 'Create Provider'}`}
-      footer={
-        <div class="flex w-full justify-between">
-          <div>
-            <Show when={!!props.provider?._id}>
-              <Button schema="red" onClick={onClickDelete}>
-                Delete
-              </Button>
-            </Show>
-          </div>
-          <div class="flex gap-2">
-            <Button schema="secondary" onClick={props.close} disabled={loading()}>
-              Cancel
-            </Button>
-            <Button schema="success" onClick={save} disabled={loading() || !provider()}>
-              {props.provider?._id ? 'Update' : 'Create'}
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <div class="text-md">Provide connection details to use an external service</div>
-      <div class="flex flex-col gap-2">
-        <CustomSelect
-          categories={categories()}
-          onSelect={(ev) => onProviderChange(ev.value)}
-          buttonLabel={label()}
-          selected={provider()}
-        />
-
-        <TextInput
-          label="Label"
-          placeholder="Custom label for this provider"
-          value={name()}
-          onChange={(ev) => setName(ev.currentTarget.value)}
-          hide={!isCustom() && !isSelf()}
-        />
-
-        <TextInput
-          label="URL"
-          placeholder="https://..."
-          value={url()}
-          onChange={(ev) => {
-            setUrl(ev.currentTarget.value)
-            setTested(undefined)
-          }}
-          hide={!isCustom() && !isSelf()}
-        />
-
-        <TextInput
-          label="API Key"
-          type="password"
-          placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
-          onChange={(ev) => setKey(ev.currentTarget.value)}
-          value={key()}
-        />
-
-        <Select
-          items={formatOptions()}
-          label="Request Format"
-          value={format()}
-          onChange={(ev) => onFormatChange(ev.value)}
-          hide={formatOptions().length <= 1}
-        />
-
-        <Show when={isCustom()}>
-          <div class="flex w-full items-center justify-center">
-            <Button size="sm" onClick={testConnection} disabled={!url().trim()}>
-              Test Connection
-            </Button>
-            <span class="pl-2">
-              <Switch>
-                <Match when={state.testLoading}>
-                  <Ellipsis color="var(--text-600" size={20} />
-                </Match>
-                <Match when={tested()}>
-                  <Check color="var(--green-500)" size={20} />
-                </Match>
-                <Match when={tested() === false}>
-                  <X color="var(--red-500)" size={20} />
-                </Match>
-                <Match when>
-                  <Cable color="var(--text-600)" size={20} />
-                </Match>
-              </Switch>
-            </span>
-          </div>
-        </Show>
-      </div>
-    </RootModal>
-  )
-}
-
 function sortAlpha(l: { label: string }, r: { label: string }) {
   return l.label.localeCompare(r.label)
 }
@@ -614,3 +377,7 @@ function tryGetHostname(url: string) {
     return 'Untitled (Invalid URL)'
   }
 }
+
+const Markdown: Component<{ text: string }> = (props) => (
+  <div class="rendered-markdown" innerHTML={markdown.makeHtml(props.text)}></div>
+)
