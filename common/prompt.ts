@@ -965,7 +965,7 @@ export function getContextLimit(
     case 'novel': {
       const model = gen?.novelModel || NOVEL_MODELS.kayra_v1
       if (model === NOVEL_MODELS.clio_v1 || model === NOVEL_MODELS.kayra_v1) {
-        return Math.min(8000, configuredMax) - genAmount
+        return configuredMax - genAmount
       }
 
       return configuredMax - genAmount
@@ -988,23 +988,21 @@ export function getContextLimit(
       return configuredMax - genAmount
 
     case 'goose':
-      return Math.min(configuredMax, 2048) - genAmount
+      return configuredMax - genAmount
 
     case 'openrouter-completion':
     case 'openrouter':
-      if (gen?.openRouterModel) {
-        if (gen.useMaxContext) return gen.openRouterModel.context_length - genAmount
-
-        return Math.min(gen.openRouterModel.context_length, configuredMax) - genAmount
+      if (gen?.openRouterModel && gen.useMaxContext) {
+        return gen.openRouterModel.context_length - genAmount
       }
 
-      return Math.min(configuredMax, 16 * 1024) - genAmount
+      return configuredMax - genAmount
 
     case 'mancer':
-      return Math.min(configuredMax, 8000) - genAmount
+      return configuredMax - genAmount
 
     case 'venus':
-      return Math.min(configuredMax, 7800) - genAmount
+      return configuredMax - genAmount
   }
 }
 
