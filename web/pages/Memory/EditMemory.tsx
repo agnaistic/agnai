@@ -176,8 +176,8 @@ const EditMemoryForm: Component<{
             </Index>
           }
         >
-          <div class="flex flex-row gap-4">
-            <div class="w-1/2">
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="w-full md:w-1/2">
               <div class="flex flex-col gap-2">
                 <Index each={props.state.entries}>
                   {(entry, i) => (
@@ -195,7 +195,7 @@ const EditMemoryForm: Component<{
                 </Index>
               </div>
             </div>
-            <div class="w-1/2">
+            <div class="w-full md:w-1/2">
               <Show when={sourceBook()}>
                 <div class="flex flex-col gap-2">
                   <Index each={sourceBook()!.entries}>
