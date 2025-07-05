@@ -61,7 +61,7 @@ export async function generateImage(
 ) {
   const entities = await getPromptEntities()
   const result = opts.prompt
-    ? localApi.result({ response: opts.prompt })
+    ? await localApi.result({ response: opts.prompt })
     : await createSummarizedImagePrompt(entities, callbacks?.onTick)
 
   if (!result.result?.response) {
