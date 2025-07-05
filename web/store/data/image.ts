@@ -60,15 +60,17 @@ export async function generateImage(
   callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
 ) {
   const entities = await getPromptEntities()
-  const summary = opts.prompt
-    ? opts.prompt
+  const result = opts.prompt
+    ? localApi.result({ response: opts.prompt })
     : await createSummarizedImagePrompt(entities, callbacks?.onTick)
 
-  if (!summary) {
-    return summary
+  if (!result.result?.response) {
+    return result
   }
 
-  callbacks?.onDone?.(summary)
+  const summary = result.result.response
+
+  callbacks?.onDone?.(result.result?.response)
 
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
@@ -274,7 +276,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHa
     const summary = result.result?.response
 
     console.log('Image caption: ', summary)
-    return summary
+    return result
   }
 
   const prompt = await createImagePrompt(opts)

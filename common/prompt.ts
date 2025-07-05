@@ -992,7 +992,7 @@ export function getContextLimit(
 
     case 'openrouter-completion':
     case 'openrouter':
-      if (gen?.openRouterModel && gen.useMaxContext) {
+      if (gen?.openRouterModel?.context_length && gen.useMaxContext) {
         return gen.openRouterModel.context_length - genAmount
       }
 
