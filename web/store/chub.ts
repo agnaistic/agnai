@@ -125,9 +125,7 @@ export const chubStore = createStore<ChubState>(
       const { nsfw, tags, sort, excludeTags, search, page } = state
       yield { booksLoading: true }
       const res = await fetch(
-        `${CHUB_URL}/search?&search=${search}&first=${
-          48 * page
-        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(
+        `${CHUB_URL}/search?&search=${search}&first=48&page=${page}&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(
           sort
         )}&namespace=lorebooks`
       )
@@ -142,9 +140,9 @@ export const chubStore = createStore<ChubState>(
       const { search, page, tags, excludeTags, nsfw, sort } = state
       yield { charsLoading: true }
       const res = await fetch(
-        `${CHUB_URL}/search?&search=${search}&first=${
-          48 * page
-        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(sort)}`
+        `${CHUB_URL}/search?&search=${search}&first=48&page=${page}&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(
+          sort
+        )}`
       )
       yield { charsLoading: false }
 

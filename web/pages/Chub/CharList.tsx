@@ -13,14 +13,14 @@ const CharList: Component<{
 
   return (
     <>
-      <ChubNavigation buttons={state.chars.length >= 48} page="chars" />
+      <ChubNavigation page="chars" />
       <Show when={state.charsLoading}>
         <div class="flex w-full justify-center">
           <Loading />
         </div>
       </Show>
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(160px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
-        <For each={state.chars.slice(48 * (state.page - 1))}>
+        <For each={state.chars}>
           {(char) => (
             <ChubItem
               entity={char}
