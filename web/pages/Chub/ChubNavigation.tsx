@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo, onMount } from 'solid-js'
+import { Component, For, createMemo, onMount } from 'solid-js'
 import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
