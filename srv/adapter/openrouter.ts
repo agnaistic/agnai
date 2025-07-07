@@ -126,6 +126,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
       return
     }
 
+    if ('meta' in gen.value) {
+      yield { meta: gen.value.meta }
+    }
+
     if ('token' in gen.value) {
       accum += gen.value.token
       yield {
