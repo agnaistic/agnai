@@ -20,7 +20,6 @@ import OpenRouterOauth from '../OpenRouterOauth'
 import { userStore } from '/web/store'
 
 export const ManageProvider: Component<{
-  presetId?: string
   onCreated?: (provider: AppSchema.Provider) => void
   onUpdated?: (provider: AppSchema.Provider) => void
   user: AppSchema.User | undefined

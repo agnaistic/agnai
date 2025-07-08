@@ -112,13 +112,14 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
       { type: 'format', value: 'koboldcpp' },
       { type: 'format', value: 'ollama' },
       { type: 'format', value: 'claude' },
+      // { type: 'format', value: 'gemini' },
       {
         type: 'format',
         name: 'LM Studio',
         value: 'openai-chatv2',
       },
       { type: 'format', value: 'ooba' },
-      { type: 'format', name: 'Other', value: 'openai-chatv2' },
+      { type: 'format', name: 'Other (Generic OpenAI)', value: 'openai-chatv2' },
     ],
   },
 }

@@ -1,4 +1,6 @@
-import { applyObjectPatch, createObjectPatch, ObjectPatch } from 'symmetry'
+import { applyPatch, createObjectPatch, ObjectPatch } from 'symmetry'
+import { AppSchema } from './types'
+import { inline } from './util'
 
 export class VersionController<T extends { _id: string }, U extends Array<keyof T>> {
   current: Pick<T, U[number]>
@@ -6,6 +8,7 @@ export class VersionController<T extends { _id: string }, U extends Array<keyof 
 
   constructor(public base: T, private keys: U) {
     this.current = getBase(base, keys)
+    console.log(`[vers] ${inline(this.current)}`)
   }
 
   update = (next: T) => {
@@ -14,10 +17,11 @@ export class VersionController<T extends { _id: string }, U extends Array<keyof 
     const patch = createObjectPatch(obj, this.current)
     this.current = obj
     this.changes.push(patch as any)
+    console.log(`[vers] ${inline(patch as any)}`)
   }
 
   undo = (): T => {
-    const reverted = applyObjectPatch(this.current, this.changes.slice(-1)[0])
+    const reverted = applyPatch(this.current, this.changes.slice(-1)[0])
 
     // TODO:
     return { ...this.base, ...reverted }
@@ -25,7 +29,7 @@ export class VersionController<T extends { _id: string }, U extends Array<keyof 
 
   reset = () => {
     const reverted = this.changes.reduce((prev, curr) => {
-      const next = applyObjectPatch(prev, curr)
+      const next = applyPatch(prev, curr)
       return next
     }, this.current)
 
@@ -41,4 +45,26 @@ function getBase<T extends { _id: string }, U extends Array<keyof T>>(obj: T, ke
   }
 
   return diffable as Pick<T, U[number]>
+}
+
+export type CharVersioner = ReturnType<typeof getCharVersioner>
+
+export function getCharVersioner(bot: AppSchema.Character) {
+  return new VersionController(bot, [
+    'alternateGreetings',
+    'appearance',
+    'avatar',
+    'description',
+    'persona',
+    'systemPrompt',
+    'scenario',
+    'sampleChat',
+    'postHistoryInstructions',
+    'name',
+    'greeting',
+    'json',
+    'tags',
+    'creator',
+    'alternateGreetings',
+  ])
 }

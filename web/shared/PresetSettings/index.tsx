@@ -92,14 +92,7 @@ const PresetSettings: Component<
   return (
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
-        <PresetProvider
-          state={props.store}
-          hides={props.hides}
-          setter={props.setter}
-          page={props.page}
-          sub={sub()}
-          context={props.context}
-        />
+        <PresetProvider page={props.page} />
 
         <ThirdPartyModel page={props.page} sub={sub()} />
 

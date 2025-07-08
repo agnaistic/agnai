@@ -65,6 +65,7 @@ export type ContextState = {
   service: AIAdapter | undefined
   format: ThirdPartyFormat | undefined
   detail?: ProviderDefinition
+  providers?: AppSchema.Provider[]
 }
 
 const initial: ContextState = {
@@ -213,6 +214,7 @@ export function ContextProvider(props: { children: any }) {
       format: detail?.conn?.format,
       detail: detail?.conn.detail,
       ui: users.ui,
+      providers: users.user?.providers,
     }
 
     setState(next)

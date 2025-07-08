@@ -101,7 +101,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
           categories={cats().categories}
           onSelect={(ev) => onSave(ev.value)}
           selected={props.state.registered?.agnaistic?.subscriptionId}
-          emitter={emitter.on}
+          closeSub={emitter.on}
         />{' '}
         <span class="text-500 text-xs italic">(Available: {cats().all.length})</span>
       </div>
@@ -239,7 +239,7 @@ export const AgnaisticModel: Component = (props) => {
         categories={cats().categories}
         onSelect={onSave}
         selected={selected()}
-        emitter={emitter.on}
+        closeSub={emitter.on}
         search={isFoundModel}
       />
     </Show>
