@@ -588,15 +588,23 @@ export function isValidServiceSetting(
   prop?: keyof PresetAISettings
 ) {
   const services = getAISettingServices(prop)
-
   // Setting does not declare itself as a service setting
-  if (!services?.length || (!state.service && !state.thirdPartyFormat)) return true
+  if (!services || !state.service) return true
 
-  for (const srv of services) {
-    if (srv === state.thirdPartyFormat || srv === state.service) return true
+  if (services.includes(state.service)) return true
+  if (!state.thirdPartyFormat) {
+    return false
   }
 
-  return true
+  if (state.service !== 'kobold') {
+    return false
+  }
+
+  for (const srv of services) {
+    if (srv === state.thirdPartyFormat) return true
+  }
+
+  return false
 }
 
 export function applyDotProperty<T>(obj: T, property: string, value: any) {
