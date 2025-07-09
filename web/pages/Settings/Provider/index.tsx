@@ -12,7 +12,6 @@ import { ComponentSubscriber, createEmitter, getUsableServices } from '/web/shar
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
-import { useAppContext } from '/web/store/context'
 import { getPresetEditor } from '/web/shared/PresetSettings/types'
 import { CustomSelect } from '/web/shared/CustomSelect'
 
@@ -20,18 +19,7 @@ export const PresetProvider: Component<{
   page?: string
   openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
-  const [ctx] = useAppContext()
   const [preset, setter, hides] = getPresetEditor()
-
-  createEffect(
-    on(
-      () => `${ctx.preset?._id}`,
-      () => {
-        if (preset._id === ctx.preset?._id) return
-        setter({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...ctx.preset })
-      }
-    )
-  )
 
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
 
@@ -42,7 +30,7 @@ export const PresetProvider: Component<{
   const showEdit = createMemo(() => !!preset.providerId && preset.providerId !== 'agnaistic')
 
   const selectedProvider = createMemo(() => {
-    if (!ctx.provider?._id || ctx.preset?.providerId === 'agnaistic') return
+    if (!preset.providerId || preset.providerId === 'agnaistic') return
     const match = state.providers.find((p) => p._id === preset.providerId)
     return match
   })
@@ -252,17 +240,17 @@ export const PresetProvider: Component<{
         state={preset}
         setter={setter}
         hides={hides}
-        context={ctx}
-        page={props.page}
         show={openLegacy()}
-        sub={undefined}
         close={() => setOpenLegacy(false)}
       />
     </>
   )
 }
 
-const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (props) => {
+const EditConnectionDetails: Field<
+  { show: boolean; close: () => void },
+  'state' | 'setter' | 'hides'
+> = (props) => {
   const services = createMemo(() => {
     const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     return list
@@ -365,7 +353,7 @@ const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (prop
   )
 }
 
-const ThirdPartyUrl: Field = (props) => {
+const ThirdPartyUrl: Field<{}, 'state' | 'hides' | 'setter'> = (props) => {
   return (
     <TextInput
       fieldName="thirdPartyUrl"
@@ -386,7 +374,7 @@ const ThirdPartyUrl: Field = (props) => {
   )
 }
 
-const ThirdPartyKey: Field = (props) => {
+const ThirdPartyKey: Field<{}, 'state' | 'setter'> = (props) => {
   return (
     <>
       <TextInput

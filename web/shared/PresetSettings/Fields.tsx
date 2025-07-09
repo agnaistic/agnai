@@ -12,7 +12,9 @@ import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
 
 export type FieldProps = Omit<PresetTabProps, 'tab'>
-export type Field<T = {}> = Component<FieldProps & T>
+export type Field<T = {}, TOnly extends keyof FieldProps = keyof FieldProps> = Component<
+  Pick<FieldProps, TOnly> & T
+>
 
 export const PresetMode: Field = (props) => {
   return (

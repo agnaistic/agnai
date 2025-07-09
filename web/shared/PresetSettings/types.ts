@@ -8,6 +8,7 @@ import { ADAPTER_SETTINGS } from './settings'
 import { isValidServiceSetting } from '../util'
 import { getStore } from '/web/store/create'
 import { getPresetConnection } from '/common/providers'
+import { useAppContext } from '/web/store/context'
 
 export type PresetProps = {
   disabled?: boolean
@@ -110,10 +111,21 @@ export type PresetContext = {
 }
 
 export function getPresetEditor() {
+  const [appctx] = useAppContext()
   const [store, setStore] = createStore(initPreset)
   const [context, setContext] = createStore<PresetContext>({})
   const [hide, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
     createHides(store, context)
+  )
+
+  createEffect(
+    on(
+      () => `${appctx.preset?._id}`,
+      () => {
+        if (store._id === appctx.preset?._id) return
+        setStore({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...appctx.preset })
+      }
+    )
   )
 
   createEffect(

@@ -1,14 +1,4 @@
-import {
-  Component,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onMount,
-} from 'solid-js'
+import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
 import { FLAI_CONTEXTS, GOOGLE_MODELS } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
@@ -45,18 +35,7 @@ type Selector = Component<SelectorProps>
 export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
   props
 ) => {
-  const [ctx] = useAppContext()
   const [state, setter, _, context] = getPresetEditor()
-
-  createEffect(
-    on(
-      () => `${ctx.preset?._id}`,
-      () => {
-        if (state._id === ctx.preset?._id) return
-        setter({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...ctx.preset })
-      }
-    )
-  )
 
   const component = createMemo(() => {
     if (!state.providerId && context.service) {
