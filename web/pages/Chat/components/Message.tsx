@@ -1029,49 +1029,39 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
     return { thoughts: [], content }
   }
 
-  // Only one thought tag present, take a shortcut
-  if (init.start < 0 || init.end < 0) {
-    // We only have a start tag
-    if (init.start > -1) {
-      const pre = content.slice(0, init.start)
-      thoughts.push(content.slice(init.start + len.open))
-      return { content: pre, thoughts }
-    }
-
-    // We only have an end tag
-    thoughts.push(content.slice(0, init.end))
-    const post = content.slice(init.end + len.close)
-
-    return { thoughts, content: post }
-  }
-
   while (true) {
     const start = content.indexOf(open)
     const end = content.indexOf(close)
 
-    // No starting tag
-    if (start < 0) {
-      // No end tag either, do nothing
-      if (end < 0) break
-
-      // We have an end tag, so capture everything from the start as a thought
-      const thought = content.slice(0, end)
+    // Both tags present
+    if (start > -1 && end > -1) {
+      const pre = content.slice(0, start)
+      const post = content.slice(end + len.close)
+      const thought = content.slice(start + len.open, end)
       thoughts.push(thought)
-      content = content.slice(end + len.close)
-      break
-    }
-
-    if (end > start) {
-      const actualStart = Math.max(start, 0)
-      const thought = content.slice(actualStart + len.open, end)
-      thoughts.push(thought)
-      content = content.slice(end + len.close)
+      content = pre.trim() + '\n' + post.trim()
       continue
     }
 
-    const thought = content.slice(start + len.open)
-    thoughts.push(thought)
-    content = ''
+    // Only opening tag
+    if (start > -1) {
+      const pre = content.slice(0, start)
+      const thought = content.slice(start + len.open)
+      content = pre
+      thoughts.push(thought)
+      break
+    }
+
+    // Only closing tag
+    if (end > -1) {
+      const post = content.slice(end + len.close)
+      const thought = content.slice(0, end)
+      thoughts.push(thought)
+      content = post
+      break
+    }
+
+    // Should never get here
     break
   }
 
@@ -1079,11 +1069,7 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 }
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {
-  return (
-    <For each={props.thoughts}>
-      {(thought) => <Thought expanded={props.expanded}>{thought}</Thought>}
-    </For>
-  )
+  return <Thought expanded={props.expanded}>{props.thoughts.join('\n\n')}</Thought>
 }
 
 const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
