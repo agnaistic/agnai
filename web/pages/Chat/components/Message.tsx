@@ -1097,7 +1097,11 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 }
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {
-  return <Thought expanded={props.expanded}>{props.thoughts.join('\n\n')}</Thought>
+  return (
+    <Show when={props.thoughts.length}>
+      <Thought expanded={props.expanded}>{props.thoughts.join('\n\n')}</Thought>
+    </Show>
+  )
 }
 
 const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
