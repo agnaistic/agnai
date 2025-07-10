@@ -747,7 +747,7 @@ export async function getLinesForPrompt(
     return { lines: history.slice(-lines.length).map(trimAddedLine) }
   }
 
-  return { lines: history }
+  return { lines: history.slice(-lines.length) }
 }
 
 function trimAddedLine(added: HistoryLine): HistoryLine {
