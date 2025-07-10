@@ -1061,14 +1061,33 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
     const start = content.indexOf(open)
     const end = content.indexOf(close)
 
+    // Both present, but end comes before start
+    if (start > -1 && end > -1 && start > end) {
+      let pre = content.slice(0, end)
+      let thought = content.slice(start + len.open)
+      const nextEnd = thought.indexOf(close)
+
+      // There is another end tag
+      if (nextEnd > -1) {
+        const innerThought = thought.slice(0, nextEnd)
+        const post = thought.slice(nextEnd + len.close)
+        content = `${pre.trim()}\n${post.trim()}`
+        thought = innerThought
+        thoughts.push(thought)
+        continue
+      }
+
+      thoughts.push(thought)
+      return { content: pre, thoughts }
+    }
+
     // Both tags present
     if (start > -1 && end > -1) {
       const pre = content.slice(0, start)
       const post = content.slice(end + len.close)
       const thought = content.slice(start + len.open, end)
-      console.log({ start, end, content })
       thoughts.push(thought)
-      content = pre.trim() + '\n' + post.trim()
+      content = `${pre.trim()}\n${post.trim()}`
       continue
     }
 
