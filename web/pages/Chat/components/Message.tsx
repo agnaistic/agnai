@@ -1019,6 +1019,32 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 
   if (!content) return { thoughts, content }
 
+  const init = {
+    start: content.indexOf(open),
+    end: content.indexOf(close),
+  }
+
+  // No thoughts, skip everything
+  if (init.start === -1 && init.end === -1) {
+    return { thoughts: [], content }
+  }
+
+  // Only one thought tag present, take a shortcut
+  if (init.start < 0 || init.end < 0) {
+    // We only have a start tag
+    if (init.start > -1) {
+      const pre = content.slice(0, init.start)
+      thoughts.push(content.slice(init.start + len.open))
+      return { content: pre, thoughts }
+    }
+
+    // We only have an end tag
+    thoughts.push(content.slice(0, init.end))
+    const post = content.slice(init.end + len.close)
+
+    return { thoughts, content: post }
+  }
+
   while (true) {
     const start = content.indexOf(open)
     const end = content.indexOf(close)
@@ -1063,6 +1089,8 @@ const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props)
 const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
   const [open, setOpen] = createSignal(props.expanded ?? false)
 
+  const html = createMemo(() => markdown.makeHtml(props.children))
+
   return (
     <div class="flex flex-col gap-1">
       <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
@@ -1072,7 +1100,7 @@ const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
         </Show>
       </div>
       <Show when={open()}>
-        <span class="text-600">{props.children}</span>
+        <div class="text-600" innerHTML={html()}></div>
       </Show>
     </div>
   )
