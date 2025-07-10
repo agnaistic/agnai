@@ -1066,6 +1066,7 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
       const pre = content.slice(0, start)
       const post = content.slice(end + len.close)
       const thought = content.slice(start + len.open, end)
+      console.log({ start, end, content })
       thoughts.push(thought)
       content = pre.trim() + '\n' + post.trim()
       continue
