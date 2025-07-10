@@ -1117,26 +1117,32 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 }
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {
-  return <Thought expanded={props.expanded}>{props.thoughts.join('\n\n')}</Thought>
+  return (
+    <Show when={props.thoughts.length}>
+      <Thought expanded={props.expanded} text={props.thoughts.join('\n\n')} />
+    </Show>
+  )
 }
 
-const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
+const Thought: Component<{ expanded?: boolean; text: string }> = (props) => {
   const [open, setOpen] = createSignal(props.expanded ?? false)
 
-  const html = createMemo(() => markdown.makeHtml(props.children))
+  const html = createMemo(() => markdown.makeHtml(props.text))
 
   return (
-    <div class="flex flex-col gap-1">
-      <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
-        Thought{' '}
-        <Show when={open()} fallback={'+'}>
-          -
+    <Show when={!!props.text.trim()}>
+      <div class="flex flex-col gap-1">
+        <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
+          Thought{' '}
+          <Show when={open()} fallback={'+'}>
+            -
+          </Show>
+        </div>
+        <Show when={open()}>
+          <div class="text-600" innerHTML={html()}></div>
         </Show>
       </div>
-      <Show when={open()}>
-        <div class="text-600" innerHTML={html()}></div>
-      </Show>
-    </div>
+    </Show>
   )
 }
 
