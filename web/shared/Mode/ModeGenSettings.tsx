@@ -12,10 +12,10 @@ import { TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
-import { getPresetEditor, getPresetForm, PresetTab } from '../PresetSettings/types'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 import { deepClone } from '/common/util'
 import Divider from '../Divider'
+import { getPresetForm, PresetTab, usePresetContext } from '/web/store/preset-context'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -32,7 +32,7 @@ export const ModeGenSettings: Component<{
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, setStore, hides, context] = getPresetEditor()
+  const [store, { setState }] = usePresetContext()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -63,13 +63,13 @@ export const ModeGenSettings: Component<{
         if (isDefaultPreset(id)) {
           const clone = deepClone(defaultPresets[id])
           presetStore.getPresetModelList(clone, user.user?.providers || [], true)
-          setStore(clone)
+          setState(clone)
           return
         }
 
         const preset = state.presets.find((p) => p._id === id)
         if (preset) {
-          setStore({ providerId: '', thirdPartyKeySet: false, ...preset })
+          setState({ providerId: '', thirdPartyKeySet: false, ...preset })
           presetStore.getPresetModelList(preset, user.user?.providers || [], true)
           return
         }
@@ -132,7 +132,7 @@ export const ModeGenSettings: Component<{
 
       presetStore.updatePreset(presetId, update as any, {
         onSuccess: (next) => {
-          setStore(next)
+          setState(next)
           if (pane() === 'popup') {
             props.close?.()
           }
@@ -203,20 +203,12 @@ export const ModeGenSettings: Component<{
               </div>
             </div>
           }
-          onChange={(ev) => setStore('name', ev.currentTarget.value)}
+          onChange={(ev) => setState('name', ev.currentTarget.value)}
         />
 
         <Divider class="!my-1" />
 
-        <PresetSettings
-          store={store}
-          setter={setStore}
-          context={context}
-          hideTabs={props.hideTabs}
-          hides={hides}
-          noSave={false}
-          page="mode"
-        />
+        <PresetSettings hideTabs={props.hideTabs} noSave={false} page="mode" />
       </form>
     </div>
   )

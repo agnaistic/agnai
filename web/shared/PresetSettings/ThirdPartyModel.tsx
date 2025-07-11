@@ -15,7 +15,6 @@ import { CLAUDE_LABELS, CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
-import { getPresetEditor, PresetContext, PresetState, SetPresetState } from './types'
 import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
 import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
@@ -23,6 +22,12 @@ import { round } from '/common/util'
 import { createEmitter } from '../util'
 import { useAppContext } from '/web/store/context'
 import { SubscriptionModelOption } from '/common/types/presets'
+import {
+  PresetContext,
+  PresetState,
+  SetPresetState,
+  usePresetContext,
+} from '/web/store/preset-context'
 
 type SelectorProps = {
   state: PresetState
@@ -35,7 +40,7 @@ type Selector = Component<SelectorProps>
 export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
   props
 ) => {
-  const [state, setter, _, context] = getPresetEditor()
+  const [state, { setState, context }] = usePresetContext()
 
   const component = createMemo(() => {
     if (!state.providerId && context.service) {
@@ -105,36 +110,36 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
             state={state}
             context={context}
             page={props.page}
-            setter={setter}
+            setter={setState}
             sub={props.sub}
             hides={{}}
             noSave={false}
           />
         </Match>
         <Match when={component() === 'novel'}>
-          <NovelAIModel state={state} context={context} page={props.page} setter={setter} />
+          <NovelAIModel state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
-          <OpenRouterModels state={state} context={context} page={props.page} setter={setter} />
+          <OpenRouterModels state={state} context={context} page={props.page} setter={setState} />
         </Match>
 
         <Match when={component() === 'featherless'}>
-          <FeatherlessModels state={state} context={context} page={props.page} setter={setter} />
+          <FeatherlessModels state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'claude-external'}>
-          <ClaudeModel state={state} context={context} page={props.page} setter={setter} />
+          <ClaudeModel state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'compat'}>
-          <CompatModel state={state} context={context} page={props.page} setter={setter} />
+          <CompatModel state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'arli'}>
-          <ArliModels state={state} context={context} page={props.page} setter={setter} />
+          <ArliModels state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'gemini'}>
-          <GoogleModels state={state} context={context} page={props.page} setter={setter} />
+          <GoogleModels state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when={component() === 'horde'}>
-          <HordeModels state={state} context={context} page={props.page} setter={setter} />
+          <HordeModels state={state} context={context} page={props.page} setter={setState} />
         </Match>
         <Match when>{null}</Match>
       </Switch>

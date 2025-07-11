@@ -7,7 +7,12 @@ import { Card } from '../Card'
 import Sortable, { SortItem } from '../Sortable'
 import { A } from '@solidjs/router'
 import { inverseSamplerServiceMap, samplerServiceMap } from '/common/sampler-order'
-import { PresetContext, PresetState, PresetTabProps, SetPresetState } from './types'
+import {
+  PresetContext,
+  PresetState,
+  PresetTabProps,
+  SetPresetState,
+} from '/web/store/preset-context'
 
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (

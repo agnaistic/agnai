@@ -10,7 +10,7 @@ import { deepClone } from '/common/util'
 import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
-import { PresetState } from './PresetSettings/types'
+import { PresetState } from '../store/preset-context'
 
 const [css, hooks] = createHooks(recommended)
 

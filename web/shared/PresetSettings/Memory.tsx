@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import RangeInput from '../RangeInput'
-import { PresetTabProps } from './types'
+import { PresetTabProps } from '/web/store/preset-context'
 
 export const MemorySettings: Component<PresetTabProps> = (props) => {
   return (

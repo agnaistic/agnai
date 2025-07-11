@@ -12,14 +12,14 @@ import { ComponentSubscriber, createEmitter, getUsableServices } from '/web/shar
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
-import { getPresetEditor } from '/web/shared/PresetSettings/types'
 import { CustomSelect } from '/web/shared/CustomSelect'
+import { usePresetContext } from '/web/store/preset-context'
 
 export const PresetProvider: Component<{
   page?: string
   openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
-  const [preset, setter, hides] = getPresetEditor()
+  const [preset, { setState, hides, update }] = usePresetContext()
 
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
 
@@ -87,7 +87,7 @@ export const PresetProvider: Component<{
         const exists = state.user.providers.find((p) => p._id === preset.providerId)
         if (exists) return
 
-        setter('providerId', '')
+        setState('providerId', '')
       }
     )
   )
@@ -104,21 +104,20 @@ export const PresetProvider: Component<{
   }
 
   const changeProvider = (id: string) => {
-    setter('providerId', id)
+    setState('providerId', id)
 
     if (props.page !== 'mode' && props.page !== 'menu') {
       return
     }
 
-    getStore('presets').updatePreset(
-      preset._id,
+    update(
       { providerId: id },
       {
+        quiet: true,
         onSuccess: () => {
           getStore('toasts').success('Provider changed')
           getStore('presets').getPresetModelList(preset, state.providers, true)
         },
-        quiet: true,
       }
     )
   }
@@ -238,7 +237,7 @@ export const PresetProvider: Component<{
       />
       <EditConnectionDetails
         state={preset}
-        setter={setter}
+        setter={setState}
         hides={hides}
         show={openLegacy()}
         close={() => setOpenLegacy(false)}

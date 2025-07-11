@@ -10,9 +10,9 @@ import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
-import { PresetTabProps } from './types'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
+import { PresetTabProps } from '/web/store/preset-context'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)

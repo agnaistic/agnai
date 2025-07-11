@@ -16,6 +16,7 @@ import { presetStore } from './presets'
 import { getChatPreset } from '/common/prompt'
 import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
+import { PresetProvider } from './preset-context'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -220,7 +221,11 @@ export function ContextProvider(props: { children: any }) {
     setState(next)
   })
 
-  return <AppContext.Provider value={[state, setState]}>{props.children}</AppContext.Provider>
+  return (
+    <AppContext.Provider value={[state, setState]}>
+      <PresetProvider>{props.children}</PresetProvider>
+    </AppContext.Provider>
+  )
 }
 
 export function useAppContext() {

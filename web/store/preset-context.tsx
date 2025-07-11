@@ -3,12 +3,12 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createEffect, on } from 'solid-js'
-import { ADAPTER_SETTINGS } from './settings'
-import { isValidServiceSetting } from '../util'
+import { createContext, createEffect, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection } from '/common/providers'
-import { useAppContext } from '/web/store/context'
+import { isDefaultPreset } from '/common/default-preset'
+import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
+import { isValidServiceSetting } from '../shared/util'
 
 export type PresetProps = {
   disabled?: boolean
@@ -31,10 +31,11 @@ export type PresetTabProps = {
 }
 
 export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {
+  userId?: string
   disabled?: boolean
 }
 
-export type HideState = ReturnType<typeof getPresetEditor>[2]
+export type HideState = ReturnType<typeof usePresetContext>[1]['hides']
 
 export type SetPresetState = SetStoreFunction<PresetState>
 
@@ -86,6 +87,88 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   drySequenceBreakers: [],
   modelFormat: 'None',
   providerId: '',
+  providerModels: {},
+}
+
+const noop: SetStoreFunction<PresetState> = (...args: any[]) => {}
+
+const PresetContext = createContext([initPreset, noop] as const)
+
+export function PresetProvider(props: { children: any }) {
+  const [store, setStore] = createStore(initPreset)
+
+  return <PresetContext.Provider value={[store, setStore]}>{props.children}</PresetContext.Provider>
+}
+
+export function usePresetContext() {
+  const [state, setState] = useContext(PresetContext)
+  const [context, setContext] = createStore<PresetContext>({})
+  const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
+    createHides(state, context)
+  )
+
+  const load = (presetId: string) => {
+    const preset = getStore('presets')
+      .getState()
+      .presets.find((p) => p._id === presetId)
+    setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
+  }
+
+  const clear = () => {
+    setState({ ...initPreset })
+  }
+
+  const upsert = async (opts?: {
+    quiet?: boolean
+    onCreated?: (preset: AppSchema.UserGenPreset) => void
+    onUpdated?: (preset: AppSchema.UserGenPreset) => void
+  }) => {
+    const form = getPresetForm(state)
+    if (state._id && !isDefaultPreset(state._id)) {
+      getStore('presets').updatePreset(state._id, form, {
+        quiet: opts?.quiet,
+        onSuccess: opts?.onUpdated,
+      })
+      return
+    }
+
+    getStore('presets').createPreset(form, opts?.onCreated)
+  }
+
+  const updateAndSave = async (
+    update: Partial<PresetState>,
+    opts?: {
+      quiet?: boolean
+      onSuccess?: (preset: AppSchema.GenSettings) => void
+    }
+  ) => {
+    if (!state._id || state._id === 'new' || isDefaultPreset(state._id)) return
+
+    getStore('presets').updatePreset(state._id, update, {
+      quiet: opts?.quiet,
+      onSuccess: opts?.onSuccess,
+    })
+  }
+
+  createEffect(
+    on(
+      () =>
+        (state._id || '') +
+        state.service! +
+        state.thirdPartyFormat! +
+        state.presetMode! +
+        state.providerId!,
+      (id) => {
+        const ctx = getPresetContext(state)
+        setContext(ctx)
+
+        const next = createHides(state, context)
+        setHides(next)
+      }
+    )
+  )
+
+  return [state, { setState, hides, load, clear, upsert, update: updateAndSave, context }] as const
 }
 
 export function getClientPresetConnection(
@@ -108,45 +191,6 @@ export type PresetContext = {
   provider?: AppSchema.Provider
   service?: AIAdapter
   format?: ThirdPartyFormat
-}
-
-export function getPresetEditor() {
-  const [appctx] = useAppContext()
-  const [store, setStore] = createStore(initPreset)
-  const [context, setContext] = createStore<PresetContext>({})
-  const [hide, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
-    createHides(store, context)
-  )
-
-  createEffect(
-    on(
-      () => `${appctx.preset?._id}`,
-      () => {
-        if (store._id === appctx.preset?._id) return
-        setStore({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...appctx.preset })
-      }
-    )
-  )
-
-  createEffect(
-    on(
-      () =>
-        (store._id || '') +
-        store.service! +
-        store.thirdPartyFormat! +
-        store.presetMode! +
-        store.providerId!,
-      (id) => {
-        const ctx = getPresetContext(store)
-        setContext(ctx)
-
-        const next = createHides(store, context)
-        setHides(next)
-      }
-    )
-  )
-
-  return [store, setStore, hide, context] as const
 }
 
 function getPresetContext(
