@@ -20,6 +20,7 @@ import { getPresetForm, PresetTab, usePresetContext } from '/web/store/preset-co
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
+
   hideTabs?: PresetTab[]
   close?: () => void
   footer?: (children: JSX.Element) => void
@@ -32,7 +33,7 @@ export const ModeGenSettings: Component<{
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, { setState }] = usePresetContext()
+  const [store, { setState, load }] = usePresetContext()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -67,12 +68,11 @@ export const ModeGenSettings: Component<{
           return
         }
 
-        const preset = state.presets.find((p) => p._id === id)
-        if (preset) {
-          setState({ providerId: '', thirdPartyKeySet: false, ...preset })
-          presetStore.getPresetModelList(preset, user.user?.providers || [], true)
+        if (store._id === id) {
           return
         }
+
+        load(id)
       }
     )
   )

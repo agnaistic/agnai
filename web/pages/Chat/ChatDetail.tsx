@@ -39,6 +39,7 @@ import { EVENTS, events } from '/web/emitter'
 import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
 import { MessageMeta } from './components/MessageMeta'
+import { usePresetContext } from '/web/store/preset-context'
 
 export { ChatDetail as default }
 
@@ -58,6 +59,7 @@ const ChatDetail: Component = () => {
   }))
 
   const [ctx] = useAppContext()
+  const [_, { loadChat: loadPreset }] = usePresetContext()
 
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
@@ -271,8 +273,11 @@ const ChatDetail: Component = () => {
     events.emit(EVENTS.chatOpened, params.id)
     if (params.id !== chats.chat?._id) {
       chatStore.openChat(params.id, {
-        onDone: (success) => {
-          if (success) return
+        onDone: (success, chat) => {
+          if (success && chat) {
+            loadPreset(chat)
+            return
+          }
 
           // If the chat fails to load, return to the chat list
           nav('/chats')

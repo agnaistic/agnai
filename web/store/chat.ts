@@ -225,7 +225,10 @@ export const chatStore = createStore<ChatState>('chat', {
     async *openChat(
       _,
       id: string,
-      opts?: { clear?: boolean; onDone?: (success: boolean) => void }
+      opts?: {
+        clear?: boolean
+        onDone?: (success: boolean, chat: AppSchema.Chat | undefined) => void
+      }
     ) {
       const clear = opts?.clear ?? true
       if (clear) {
@@ -237,7 +240,11 @@ export const chatStore = createStore<ChatState>('chat', {
 
       yield { loaded: true }
 
-      if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
+      if (res.error) {
+        toastStore.error(`Failed to retrieve conversation: ${res.error}`)
+        opts?.onDone?.(false, undefined)
+      }
+
       if (res.result) {
         // pipelineApi.chatEmbed(res.result.chat, res.result.messages)
 
@@ -284,9 +291,8 @@ export const chatStore = createStore<ChatState>('chat', {
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
         }
+        opts?.onDone?.(!!res.result, res.result.chat)
       }
-
-      opts?.onDone?.(!!res.result)
     },
     setAutoReplyAs({ active }, charId: string | undefined) {
       if (!active) return

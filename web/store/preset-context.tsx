@@ -9,6 +9,7 @@ import { getPresetConnection } from '/common/providers'
 import { isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
+import { getClientPreset } from '../shared/adapter'
 
 export type PresetProps = {
   disabled?: boolean
@@ -107,11 +108,23 @@ export function usePresetContext() {
     createHides(state, context)
   )
 
+  const loadChat = (chat: AppSchema.Chat) => {
+    const preset = getClientPreset(chat)
+    if (preset?.preset._id) {
+      load(preset.preset._id)
+    }
+  }
+
   const load = (presetId: string) => {
-    const preset = getStore('presets')
-      .getState()
-      .presets.find((p) => p._id === presetId)
+    const presets = getStore('presets').getState().presets
+    const user = getStore('user').getState().user
+    let preset = presets.find((p) => p._id === presetId)
+
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
+
+    if (preset) {
+      getStore('presets').getPresetModelList(preset, user?.providers || [], true)
+    }
   }
 
   const clear = () => {
@@ -168,7 +181,10 @@ export function usePresetContext() {
     )
   )
 
-  return [state, { setState, hides, load, clear, upsert, update: updateAndSave, context }] as const
+  return [
+    state,
+    { setState, hides, load, loadChat, clear, upsert, update: updateAndSave, context },
+  ] as const
 }
 
 export function getClientPresetConnection(

@@ -64,7 +64,7 @@ export function getUserPreset(presetId?: string): Partial<AppSchema.GenSettings>
 
 export function getClientPreset(chat?: AppSchema.Chat): PresetInfo | undefined {
   const user = userStore.getState()
-  const presets = presetStore((s) => s.presets)
+  const presets = presetStore.getState().presets
 
   if (!chat || !user.user) return
 
