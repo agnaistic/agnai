@@ -48,7 +48,8 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
   const service = subscription?.preset?.service || opts.conn.service
 
   if (service !== 'agnaistic') {
-    return getThirdPartyPayload(opts, stops)
+    const payload = getThirdPartyPayload(opts, stops)
+    return payload
   }
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined

@@ -21,11 +21,13 @@ import {
 import {
   Accessor,
   Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
   JSX,
   Match,
+  on,
   onCleanup,
   onMount,
   Show,
@@ -55,6 +57,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
+import { ComponentEmitter } from '/web/shared/util'
 
 type MessageProps = {
   msg: SplitMessage
@@ -483,12 +486,20 @@ const Message: Component<MessageProps> = (props) => {
                   >
                     <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
                   </Show>
-                  <p
-                    class={`rendered-markdown pr-1 ${content().class}`}
-                    data-bot-message={!props.msg.userId}
-                    data-user-message={!!props.msg.userId}
-                    innerHTML={content().message}
-                  />
+                  <Show
+                    when={content().generating && +ctx.ui.textSpeed! > 0}
+                    fallback={
+                      <p
+                        class={`rendered-markdown pr-1 ${content().class}`}
+                        data-bot-message={!props.msg.userId}
+                        data-user-message={!!props.msg.userId}
+                        innerHTML={content().message}
+                      />
+                    }
+                  >
+                    <Typewriter text={content().message} speed={ctx.ui.textSpeed} />
+                  </Show>
+
                   <Show when={content().generating}>
                     <span class="flex h-8 w-12 items-center justify-center">
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
@@ -816,6 +827,61 @@ const MessageOptions: Component<{
       </Show>
     </div>
   )
+}
+
+export const Typewriter: Component<{
+  text: string
+
+  speed?: number
+  reset?: ComponentEmitter<'reset'>
+}> = (props) => {
+  const [text, setText] = createSignal('')
+  const [getTimer, setTimer] = createSignal<NodeJS.Timeout>()
+
+  const callback = () => setText('')
+
+  const markup = createMemo(() => {
+    const curr = text()
+    return markdown.makeHtml(curr)
+  })
+
+  const startTimer = () => {
+    const prev = getTimer()
+    if (prev) clearInterval(prev)
+
+    const speed = 1000 / (props.speed ?? 20)
+    const textTimer = setInterval(() => {
+      const prev = text()
+      if (prev === props.text) return
+      const next = props.text.slice(0, prev.length + 1)
+      setText(next)
+    }, speed)
+    setTimer(textTimer)
+  }
+
+  onMount(() => {
+    if (props.reset) {
+      props.reset.on('reset', callback)
+    }
+
+    startTimer()
+  })
+
+  createEffect(
+    on(
+      () => props.speed,
+      (nextSpeed) => {
+        startTimer()
+      }
+    )
+  )
+
+  onCleanup(() => {
+    clearInterval(getTimer()!)
+    props.reset?.off(callback)
+  })
+
+  return <p class={`rendered-markdown streaming-markdown pr-1`} data-partial innerHTML={markup()} />
 }
 
 const MessageOption: Component<{

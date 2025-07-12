@@ -1,57 +1,80 @@
-import { Component, For, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { chatStore, presetStore, settingStore, userStore } from '/web/store'
-import { CustomOption, CustomSelect } from '../CustomSelect'
+import { Component, For, Show, createEffect, createMemo, on } from 'solid-js'
+import { chatStore, presetStore, settingStore, toastStore, userStore } from '/web/store'
+import { CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import {
   SubscriptionModelLevel,
   SubscriptionModelOption,
   SubscriptionTier,
 } from '/common/types/presets'
-import { ChevronDown } from 'lucide-solid'
 import { SubCTA } from '/web/Navigation'
-import { applyStoreProperty, createEmitter } from '../util'
+import { createEmitter } from '../util'
 import { isDefaultPreset } from '/common/default-preset'
-import { Field } from './Fields'
 import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
+import { usePresetContext } from '/web/store/preset-context'
 
 const MODEL_NAMES = new Map<string, string>()
 
-export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
+export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = (props) => {
+  const [preset, { setState, upsert }] = usePresetContext()
+  const [appctx] = useAppContext()
   const state = userStore((s) => ({ tiers: s.tiers }))
+  const models = settingStore((s) => ({ list: s.config.subs || [] }))
+
+  const fallback = createMemo(() => {
+    const fb = models.list.find((m) => m.preset.isDefaultSub)
+    return fb?._id
+  })
 
   const cats = useModelCategories()
-  const [ctx] = useAppContext()
 
   const onSave = (value: string) => {
+    const models = preset.providerModels || {}
+    const next = { ...models, agnaistic: value }
+    setState('providerModels', next)
+
     if (props.noSave) {
-      const next = applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', value)
-      props.setter('registered', next)
       return
     }
-    presetStore.updateRegisterPresetProp(props.state._id, 'agnaistic', 'subscriptionId', value)
-    props.setter(
-      'registered',
-      applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', value)
-    )
+
+    presetStore.updatePreset(preset._id, { providerModels: next })
   }
 
   createEffect(
     on(
-      () => ctx.preset?.registered?.agnaistic?.subscriptionId,
+      () => preset?.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId,
       (id) => {
-        if (!ctx.preset?._id || !id) return
-        if (ctx.preset._id !== props.state._id) return
+        if (!id) return
 
-        const curr = props.state.registered?.agnaistic?.subscriptionId
+        if (isDefaultPreset(preset._id)) {
+          upsert({
+            quiet: true,
+            onCreated: (preset) => {
+              if (!props.page) {
+                toastStore.success('Preset created')
+                return
+              }
+
+              const chatId = appctx.chat?._id
+              if (!chatId) return
+              chatStore.assignChatPreset(chatId, preset._id)
+            },
+            onUpdated: () => {
+              toastStore.success('Preset updated')
+            },
+          })
+          return
+        }
+
+        if (!preset?._id || !id) return
+        if (preset._id !== preset._id) return
+
+        const curr =
+          preset.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId
         if (id === curr) return
-
-        props.setter(
-          'registered',
-          applyStoreProperty(props.state.registered, 'agnaistic.subscriptionId', id)
-        )
       }
     )
   )
@@ -59,7 +82,7 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
   const emitter = createEmitter('close')
 
   const label = createMemo(() => {
-    const id = props.state.registered?.agnaistic?.subscriptionId
+    const id = preset.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId
     let opt = cats().all.find((v) => v.value === id)
 
     if (!opt) {
@@ -79,12 +102,13 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
         disabled={opt.disabled}
         requires={opt.requires}
         tiers={state.tiers}
+        page={props.page}
       />
     )
   })
 
   return (
-    <Show when={props.context.service === 'agnaistic'}>
+    <Show when={preset.providerId === 'agnaistic' || preset.service === 'agnaistic'}>
       <div class="flex items-center gap-2">
         <CustomSelect
           size="sm"
@@ -100,10 +124,13 @@ export const AgnaisticSettings: Field<{ noSave: boolean }> = (props) => {
           search={isFoundModel}
           categories={cats().categories}
           onSelect={(ev) => onSave(ev.value)}
-          selected={props.state.registered?.agnaistic?.subscriptionId}
+          selected={
+            preset.providerModels?.agnaistic ??
+            preset.registered?.agnaistic?.subscriptionId ??
+            fallback()
+          }
           closeSub={emitter.on}
-        />{' '}
-        <span class="text-500 text-xs italic">(Available: {cats().all.length})</span>
+        />
       </div>
     </Show>
   )
@@ -160,89 +187,6 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
         </For>
       </div>
     </RootModal>
-  )
-}
-
-export const AgnaisticModel: Component = (props) => {
-  const [ctx] = useAppContext()
-
-  const [selected, setSelected] = createSignal(ctx.preset?.registered?.agnaistic?.subscriptionId)
-  const cats = useModelCategories()
-
-  createEffect(
-    on(
-      () => ctx.preset?.registered?.agnaistic?.subscriptionId,
-      (id) => {
-        setSelected(id)
-      }
-    )
-  )
-
-  const onSave = (opt: CustomOption) => {
-    const chat = chatStore.getState().active
-
-    if (isDefaultPreset(ctx.preset?._id)) {
-      const create = {
-        ...ctx.preset,
-        name: `My Preset`,
-        service: 'agnaistic' as const,
-        chatId: chat?.chat._id,
-        registered: {
-          agnaistic: {
-            subscriptionId: opt.value,
-          },
-        },
-      }
-
-      presetStore.createPreset(create, (preset) => {
-        if (!ctx.chat?._id) return
-        chatStore.setChat(ctx.chat._id, { genPreset: preset._id, genSettings: undefined })
-      })
-      return
-    }
-
-    presetStore.updatePreset(ctx.preset?._id!, {
-      registered: { ...ctx.preset?.registered, agnaistic: { subscriptionId: opt.value } },
-    })
-  }
-
-  const label = createMemo(() => {
-    const id = selected()
-    let opt = cats().all.find((v) => v.value === id)
-
-    if (!opt) {
-      opt = cats().all.find((v) => v.sub.preset.isDefaultSub)
-    }
-
-    return (
-      <>
-        <span class="font-bold">Model:</span> {opt?.sub.name || 'Default'} <ChevronDown size={12} />
-      </>
-    )
-  })
-
-  const emitter = createEmitter('close')
-
-  return (
-    <Show when={ctx.preset} fallback={null}>
-      <CustomSelect
-        size="sm"
-        buttonLabel={label()}
-        modalTitle={
-          <div class="flex w-full flex-col">
-            <div>Select a Model</div>
-            <div class="flex justify-center">
-              <SubCTA onClick={emitter.emit.close}>Subscribe for higher quality models</SubCTA>
-            </div>
-          </div>
-        }
-        categories={cats().categories}
-        onSelect={onSave}
-        selected={selected()}
-        closeSub={emitter.on}
-        search={isFoundModel}
-      />
-    </Show>
   )
 }
 
@@ -367,6 +311,7 @@ const ModelLabel: Component<{
   disabled: boolean
   nodesc?: boolean
   tiers: AppSchema.SubscriptionTier[]
+  page?: string
 }> = (props) => {
   const context = createMemo(() =>
     props.limit ? props.limit.maxContextLength : props.sub.preset.maxContextLength!
@@ -432,7 +377,10 @@ const ModelLabel: Component<{
       <div class="flex items-center justify-between gap-1">
         <div class="min-w-fit font-bold">{props.sub.name}</div>
         <div class="text-700 flex flex-wrap gap-1 text-xs">
-          <Show when={maxes().length} fallback={<>{Math.floor(context() / 1000)}K</>}>
+          <Show
+            when={maxes().length && !props.page}
+            fallback={<>{Math.floor(context() / 1000)}K</>}
+          >
             <For each={maxes()}>{(max) => <>{max}</>}</For>
           </Show>
         </div>

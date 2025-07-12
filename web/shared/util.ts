@@ -11,6 +11,7 @@ import { getRootRgb } from './colors'
 import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
 import { PresetState } from '../store/preset-context'
+import { v4 } from 'uuid'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -38,9 +39,10 @@ export async function random<T extends keyof Chance.Chance>(kind: T, opts: Chanc
 export type ComponentEmitter<T extends string> = {
   emit: { [key in T]: (...args: any[]) => void }
   on: ComponentSubscriber<T>
+  off: (id: string | Function) => boolean
 }
 
-export type ComponentSubscriber<T> = (event: T, callback: (...args: any[]) => any) => void
+export type ComponentSubscriber<T> = (event: T, callback: (...args: any[]) => any) => string
 
 export function getAbsolutePosition(ele: HTMLElement) {
   let curr = ele
@@ -58,10 +60,32 @@ export function getAbsolutePosition(ele: HTMLElement) {
 
 export function createEmitter<T extends string>(...events: T[]) {
   let emit: any = {}
-  const listeners: Array<{ event: T; callback: (...args: any[]) => void }> = []
+  const listeners: Array<{ id: string; event: T; callback: (...args: any[]) => void }> = []
 
   const on = (event: T, callback: (...args: any[]) => void) => {
-    listeners.push({ event, callback })
+    const id = v4()
+    listeners.push({ event, callback, id })
+    return id
+  }
+
+  const off = (id: string | Function) => {
+    if (typeof id === 'string') {
+      const index = listeners.findIndex((l) => l.id === id)
+      if (index > -1) {
+        listeners.splice(index, 1)
+        return true
+      }
+    }
+
+    if (typeof id === 'function') {
+      const index = listeners.findIndex((l) => l.callback === id)
+      if (index > -1) {
+        listeners.splice(index, 1)
+        return true
+      }
+    }
+
+    return false
   }
 
   for (const event of events) {
@@ -77,7 +101,7 @@ export function createEmitter<T extends string>(...events: T[]) {
     emit = undefined
   })
 
-  return { emit, on } as ComponentEmitter<T>
+  return { emit, on, off } as ComponentEmitter<T>
 }
 
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {

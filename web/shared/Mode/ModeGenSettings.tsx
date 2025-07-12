@@ -3,7 +3,7 @@ import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Sh
 import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
-import { toastStore, userStore } from '../../store'
+import { toastStore } from '../../store'
 import { presetStore } from '../../store'
 import { getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
@@ -13,9 +13,9 @@ import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
-import { deepClone } from '/common/util'
 import Divider from '../Divider'
 import { getPresetForm, PresetTab, usePresetContext } from '/web/store/preset-context'
+import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
@@ -26,14 +26,13 @@ export const ModeGenSettings: Component<{
   footer?: (children: JSX.Element) => void
 }> = (props) => {
   let ref: any
-  const user = userStore()
   const pane = usePane()
   const state = presetStore(({ presets }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, { setState, load }] = usePresetContext()
+  const [store, { setState, load, clear }] = usePresetContext()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -62,9 +61,9 @@ export const ModeGenSettings: Component<{
         if (!id) return
 
         if (isDefaultPreset(id)) {
+          clear()
           const clone = deepClone(defaultPresets[id])
-          presetStore.getPresetModelList(clone, user.user?.providers || [], true)
-          setState(clone)
+          setState({ ...clone, _id: id })
           return
         }
 

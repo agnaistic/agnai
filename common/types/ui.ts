@@ -66,6 +66,7 @@ export type UISettings = {
   avatarCorners: AvatarCornerRadius
   font: FontSetting
   imageWrap: boolean
+  textSpeed?: number
 
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
@@ -157,7 +158,7 @@ export const defaultUIsettings: UISettings = {
     chatEmphasisColor: '--text-600',
     chatQuoteColor: '--text-800',
     chatQuoteEmphasisColor: '--text-800',
-    chatQuoteEmphasisWeight: 'unset',    
+    chatQuoteEmphasisWeight: 'unset',
   },
 
   msgOptsInline: {

@@ -106,15 +106,7 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
     <>
       <Switch>
         <Match when={component() === 'agnaistic' || !component()}>
-          <AgnaisticSettings
-            state={state}
-            context={context}
-            page={props.page}
-            setter={setState}
-            sub={props.sub}
-            hides={{}}
-            noSave={false}
-          />
+          <AgnaisticSettings page={props.page} noSave={false} />
         </Match>
         <Match when={component() === 'novel'}>
           <NovelAIModel state={state} context={context} page={props.page} setter={setState} />

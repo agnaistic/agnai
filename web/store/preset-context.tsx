@@ -62,10 +62,10 @@ export function getSubPresetForm(state: PresetState) {
   return { ...form, kind: 'subscription-setting' as const }
 }
 
-export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
+export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   userId: string
   disabled: boolean
-} = {
+} => ({
   _id: '',
   ...agnaiPresets.agnai,
   reasoning: { enabled: false, effort: 'medium', exclude: true, start: '', end: '', maxTokens: 0 },
@@ -89,14 +89,15 @@ export const initPreset: Omit<AppSchema.SubscriptionModel, 'kind'> & {
   modelFormat: 'None',
   providerId: '',
   providerModels: {},
-}
+  registered: {},
+})
 
 const noop: SetStoreFunction<PresetState> = (...args: any[]) => {}
 
-const PresetContext = createContext([initPreset, noop] as const)
+const PresetContext = createContext([initPreset(), noop] as const)
 
 export function PresetProvider(props: { children: any }) {
-  const [store, setStore] = createStore(initPreset)
+  const [store, setStore] = createStore(initPreset())
 
   return <PresetContext.Provider value={[store, setStore]}>{props.children}</PresetContext.Provider>
 }
@@ -109,26 +110,29 @@ export function usePresetContext() {
   )
 
   const loadChat = (chat: AppSchema.Chat) => {
+    console.log('[p_ctx] load-by-chat called')
     const preset = getClientPreset(chat)
-    if (preset?.preset._id) {
-      load(preset.preset._id)
-    }
+    load(preset?.preset)
   }
 
-  const load = (presetId: string) => {
+  const loadPresetId = (presetId: string) => {
+    console.log('[p_ctx] load-by-id called')
     const presets = getStore('presets').getState().presets
-    const user = getStore('user').getState().user
     let preset = presets.find((p) => p._id === presetId)
+    load(preset)
+  }
 
+  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
+    console.log('[p_ctx] load called')
+    if (!preset) return
+
+    const user = getStore('user').getState().user
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
-
-    if (preset) {
-      getStore('presets').getPresetModelList(preset, user?.providers || [], true)
-    }
+    getStore('presets').getPresetModelList(preset, user?.providers || [], true)
   }
 
   const clear = () => {
-    setState({ ...initPreset })
+    setState({ ...initPreset() })
   }
 
   const upsert = async (opts?: {
@@ -145,7 +149,11 @@ export function usePresetContext() {
       return
     }
 
-    getStore('presets').createPreset(form, opts?.onCreated)
+    getStore('presets').createPreset(form, (created) => {
+      if (!created) return
+      load(created)
+      opts?.onCreated?.(created)
+    })
   }
 
   const updateAndSave = async (
@@ -181,9 +189,25 @@ export function usePresetContext() {
     )
   )
 
+  createEffect(() => {
+    const id = state._id.slice(0, 5)
+    const modelId = state.providerModels?.agnaistic || 'none'
+    const isdef = isDefaultPreset(state._id)
+    console.log(`[agnai:${id}]`, modelId, isdef ? 'true' : 'false')
+  })
+
   return [
     state,
-    { setState, hides, load, loadChat, clear, upsert, update: updateAndSave, context },
+    {
+      setState,
+      hides,
+      load: loadPresetId,
+      loadChat,
+      clear,
+      upsert,
+      update: updateAndSave,
+      context,
+    },
   ] as const
 }
 
