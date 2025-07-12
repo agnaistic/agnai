@@ -487,7 +487,7 @@ const Message: Component<MessageProps> = (props) => {
                     <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
                   </Show>
                   <Show
-                    when={content().generating && +ctx.ui.textSpeed! > 0}
+                    when={props.last && +ctx.ui.textSpeed! > 0}
                     fallback={
                       <p
                         class={`rendered-markdown pr-1 ${content().class}`}
@@ -497,7 +497,11 @@ const Message: Component<MessageProps> = (props) => {
                       />
                     }
                   >
-                    <Typewriter text={content().message} speed={ctx.ui.textSpeed} />
+                    <Typewriter
+                      text={content().message}
+                      speed={ctx.ui.textSpeed}
+                      generating={!!content().generating}
+                    />
                   </Show>
 
                   <Show when={content().generating}>
@@ -833,6 +837,7 @@ export const Typewriter: Component<{
   text: string
   class?: string
   speed?: number
+  generating?: boolean
   reset?: ComponentEmitter<'reset'>
 }> = (props) => {
   const [text, setText] = createSignal('')
@@ -869,6 +874,18 @@ export const Typewriter: Component<{
   onMount(() => {
     if (props.reset) {
       props.reset.on('reset', callback)
+    }
+
+    // Always stream when no 'generating' flag is passed
+    if (props.generating === undefined) {
+      startTimer()
+      return
+    }
+
+    // Case 1. Generating is always `false`: The message was fetched from history rather than generated
+    if (!props.generating) {
+      setText(props.text)
+      return
     }
 
     startTimer()

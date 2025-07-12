@@ -206,8 +206,8 @@ const UISettings: Component<{}> = () => {
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
 
-      <Card bg="hl-500">
-        <div class="flex w-full flex-col gap-1">
+      <Card border>
+        <div class="flex w-full flex-col">
           <div class="flex gap-1">
             <InlineRangeInput
               label="Text Speed"
