@@ -12,7 +12,7 @@ const BookList: Component<{
 
   return (
     <>
-      <ChubNavigation buttons={state.books.length >= 48} page="books" />
+      <ChubNavigation page="books" />
       <Show when={state.booksLoading}>
         <div class="flex w-full justify-center">
           <Loading />

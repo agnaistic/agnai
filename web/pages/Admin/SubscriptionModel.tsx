@@ -26,8 +26,8 @@ import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
 import PresetSettings from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
-import { getPresetEditor, getSubPresetForm } from '/web/shared/PresetSettings/types'
 import { defaultPresets, isDefaultPreset, presetDefaults } from '/common/default-preset'
+import { getSubPresetForm, usePresetContext } from '/web/store/preset-context'
 
 const emptyPreset: AppSchema.GenSettings = {
   ...presetDefaults,
@@ -70,7 +70,7 @@ export const SubscriptionModel: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
   const [replacing, setReplacing] = createSignal(false)
-  const [state, setState, hides, context] = getPresetEditor()
+  const [state, { setState }] = usePresetContext()
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -356,14 +356,7 @@ export const SubscriptionModel: Component = () => {
                   onChange={(ev) => setState('tokenizer', ev.value)}
                 />
 
-                <PresetSettings
-                  disabled={params.id === 'default'}
-                  store={state}
-                  setter={setState}
-                  hides={hides}
-                  context={context}
-                  noSave
-                />
+                <PresetSettings disabled={params.id === 'default'} noSave />
                 <div class="flex flex-row justify-end">
                   <Show when={state._id}>
                     <Button disabled={presets.saving} onClick={onSave}>

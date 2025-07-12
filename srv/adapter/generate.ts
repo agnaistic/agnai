@@ -214,6 +214,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     gen: conn.preset,
     log: opts.log,
     lines: [],
+    promptLines: [],
     members: [],
     guest: opts.guest,
     user: opts.user,
@@ -441,13 +442,14 @@ export async function createChatStream(
     log,
     members: opts.members.concat(opts.sender),
     prompt: assembled.prompt,
-    messages: validateChatMessages(messages),
+    messages: gen.skipRoleMerging ? messages : validateChatMessages(messages),
     parts: assembled.parts,
     sender: opts.sender,
     mappedSettings,
     user: opts.user,
     guest: guestSocketId,
-    lines: assembled.lines,
+    lines: assembled.unparsedLines, // assembled.lines.map((l) => l.line),
+    promptLines: assembled.lines,
     isThirdParty,
     replyAs: opts.replyAs,
     characters: opts.characters,
@@ -462,7 +464,6 @@ export async function createChatStream(
     contextSize: assembled.length,
     signal: opts.signal,
     attachments: opts.attachments,
-    indexes: opts.indexes,
     hasAttachments: opts.hasAttachments,
   })
 
@@ -474,6 +475,7 @@ export async function createChatStream(
     size,
     length: assembled.length,
     json: !!jsonSchema || !!opts.jsonSchema,
+    conn,
   }
 }
 

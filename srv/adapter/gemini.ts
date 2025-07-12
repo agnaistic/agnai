@@ -179,7 +179,11 @@ export const handleGemini: ModelAdapter = async function* (opts) {
       return
     }
 
-    const text = ai.candidates?.[0].content?.parts?.[0]?.text || ai.text || ''
+    const choice = ai.candidates?.[0]
+    const meta = { stop: choice?.finishReason, model: googleModel }
+    const text = choice?.content?.parts?.[0]?.text || ai.text || ''
+    yield { meta }
+
     accum += text
   } else {
     const ai = await client.models
@@ -203,7 +207,12 @@ export const handleGemini: ModelAdapter = async function* (opts) {
         return
       }
 
-      const candidate = tick.candidates?.[0].content?.parts?.[0] || {}
+      const choice = tick.candidates?.[0]
+      const candidate = choice?.content?.parts?.[0] || {}
+
+      if (choice?.finishReason) {
+        yield { meta: { stop: choice.finishReason, model: googleModel } }
+      }
 
       const thought = candidate.thought as boolean
       const text = candidate.text || tick.text

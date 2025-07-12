@@ -13,6 +13,7 @@ import { UserSettings } from './util'
 import { FormLabel } from '/web/shared/FormLabel'
 import Select from '/web/shared/Select'
 import { EMBED_MODELS_OPTS } from '/web/store/embeddings'
+import { Copy } from '/web/shared/Copy'
 
 const AISettings: Component<{
   state: UserSettings
@@ -27,10 +28,15 @@ const AISettings: Component<{
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
 
-  const revealKey = () => {
-    userStore.revealApiKey((key) => {
+  const revealKey = async () => {
+    const prev = apiKey()
+    if (prev && !prev.includes('***')) return prev
+
+    await userStore.revealApiKey((key) => {
       setApiKey(key)
     })
+
+    return apiKey()
   }
 
   const generateKey = () => {
@@ -120,34 +126,36 @@ const AISettings: Component<{
             options={presetOptions()}
             selected={props.state.defaultPreset}
             setPresetId={(ev) => props.setter('defaultPreset', ev)}
-          />
+          >
+            <Show when={props.state.defaultPreset}>
+              <Copy text={props.state.defaultPreset!} size={24} />
+            </Show>
+          </PresetSelect>
 
-          <TextInput
-            fieldName="apiKeyPlaceholder"
-            helperText={
-              <div class="text-900 flex gap-1">
-                <Show when={apiKey().includes('***')}>
-                  <Button size="pill" onClick={revealKey}>
-                    Reveal Key
-                  </Button>
-                </Show>
-                <Show when={apiKey() === 'Not set'}>
-                  <Button size="pill" onClick={generateKey}>
-                    Generate Key
-                  </Button>
-                </Show>
-                <Show when={apiKey() !== 'Not set'}>
-                  <Button size="pill" onClick={generateKey}>
-                    Regenerate Key
-                  </Button>
-                </Show>
-              </div>
-            }
-            label="API Key"
-            readonly
-            placeholder="API Key Hidden"
-            value={apiKey()}
-          />
+          <div class="flex items-center gap-1">
+            <FormLabel label="API Key" />
+            <Show when={apiKey().includes('***')}>
+              <Button size="pill" onClick={revealKey}>
+                Reveal Key
+              </Button>
+            </Show>
+            <Show when={apiKey() === 'Not set'}>
+              <Button size="pill" onClick={generateKey}>
+                Generate Key
+              </Button>
+            </Show>
+            <Show when={apiKey() !== 'Not set'}>
+              <Button size="pill" onClick={generateKey}>
+                Regenerate Key
+              </Button>
+            </Show>
+          </div>
+          <div class="flex items-center gap-1">
+            <TextInput readonly placeholder="API Key Hidden" value={apiKey()} />
+            <Show when={apiKey() !== ''}>
+              <Copy text={apiKey()} onClick={revealKey} size={24} />
+            </Show>
+          </div>
         </SolidCard>
       </Show>
 
@@ -176,5 +184,5 @@ const ApiAccessHelp = neat`
   **Instructions**:
   1. Select your \`API Access Preset\`: This preset will be used for your API calls. Change this on your settings page.
   2. Generate your API Key.
-  3. Use the API URL \`https://api.agnai.chat\` and your generated API key.
+  3. Use the API URL \`https://api.agnai.chat\` or \`https://api.agnai.chat/v1\` and your generated API key.
 `

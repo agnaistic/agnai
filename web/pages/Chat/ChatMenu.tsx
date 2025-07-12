@@ -22,8 +22,10 @@ import {
   Info,
   Image,
 } from 'lucide-solid'
-import { AgnaisticModel } from '/web/shared/PresetSettings/Agnaistic'
 import { startTour } from '/web/tours'
+import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
+import { PresetProvider } from '../Settings/Provider'
+import { createEmitter } from '/web/shared/util'
 
 type NavProps = {
   ctx: ContextState
@@ -78,11 +80,9 @@ const ChatNav: Component<NavProps> = (props) => {
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
 
-  const canModel = createMemo(() => {
-    return props.ctx.service === 'agnaistic'
-  })
-
   const size = 20
+
+  const openProviders = createEmitter('open')
 
   return (
     <>
@@ -128,11 +128,10 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
       </Show>
 
-      <Show when={canModel()}>
-        <div class="flex w-full justify-center">
-          <AgnaisticModel />
-        </div>
-      </Show>
+      <div class="flex flex-col gap-1">
+        <PresetProvider page="menu" openSub={openProviders.on}></PresetProvider>
+        <ThirdPartyModel page="mode" />
+      </div>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Nav.Item

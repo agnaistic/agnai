@@ -20,7 +20,7 @@ import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { remapImageContent, stripImageContent, toChatMessages } from './template-chat-payload'
+import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
@@ -69,11 +69,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     return
   }
 
-  const hasKey = isThirdParty
-    ? !!(gen.thirdPartyKey || user.thirdPartyPassword)
-    : !!user.claudeApiKey
-
-  if (!hasKey && !base.changed) {
+  const apiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.claudeApiKey
+  if (!apiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
@@ -105,18 +102,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     payload.max_tokens = gen.maxTokens
     const messages = opts.messages || []
 
-    remapImageContent(messages, (image) => {
-      const mime = getMimeTypeBase64(image)
-      return {
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: mime.mimeType,
-          data: mime.data,
-        },
-      }
-    })
-
     const system = messages
       .filter((m) => m.role === 'system')
       .map((m) => m.content)
@@ -127,6 +112,25 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   } else {
     payload.max_tokens_to_sample = gen.maxTokens
     payload.prompt = await createClaudePrompt(opts)
+  }
+
+  if (payload.messages) {
+    remapMessages(payload.messages, {
+      text: (text) => {
+        return { type: 'text', text }
+      },
+      image: (image) => {
+        const mime = getMimeTypeBase64(image)
+        return {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: mime.mimeType,
+            data: mime.data,
+          },
+        }
+      },
+    })
   }
 
   /**
@@ -192,13 +196,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'Content-Type': 'application/json',
     'anthropic-version': apiVersion,
   }
-
-  const useThirdPartyPassword = gen.providerId
-  const apiKey = useThirdPartyPassword
-    ? gen.thirdPartyKey || user.thirdPartyPassword
-    : !isThirdParty
-    ? user.claudeApiKey
-    : null
 
   const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : ''
   if (key) {
@@ -502,7 +499,11 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
       return msgs
     }
 
-    last.content += '\n\n' + msg.content
+    if (last.content === '...') {
+      last.content = ''
+    }
+
+    last.content += ('\n\n' + msg.content).trim()
     return msgs
   }, [] as CompletionItem[])
 

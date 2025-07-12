@@ -3,35 +3,36 @@ import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Sh
 import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
-import { toastStore, userStore } from '../../store'
+import { toastStore } from '../../store'
 import { presetStore } from '../../store'
 import { getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
-import { Card, TitleCard } from '/web/shared/Card'
+import { TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
-import { getPresetEditor, getPresetForm, PresetTab } from '../PresetSettings/types'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
+import Divider from '../Divider'
+import { getPresetForm, PresetTab, usePresetContext } from '/web/store/preset-context'
 import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
+
   hideTabs?: PresetTab[]
   close?: () => void
   footer?: (children: JSX.Element) => void
 }> = (props) => {
   let ref: any
-  const user = userStore()
   const pane = usePane()
   const state = presetStore(({ presets }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, setStore, hides, context] = getPresetEditor()
+  const [store, { setState, load, clear }] = usePresetContext()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -60,18 +61,17 @@ export const ModeGenSettings: Component<{
         if (!id) return
 
         if (isDefaultPreset(id)) {
+          clear()
           const clone = deepClone(defaultPresets[id])
-          presetStore.getPresetModelList(clone, user.user?.providers || [], true)
-          setStore(clone)
+          setState({ ...clone, _id: id })
           return
         }
 
-        const preset = state.presets.find((p) => p._id === id)
-        if (preset) {
-          setStore({ providerId: '', thirdPartyKeySet: false, ...preset })
-          presetStore.getPresetModelList(preset, user.user?.providers || [], true)
+        if (store._id === id) {
           return
         }
+
+        load(id)
       }
     )
   )
@@ -131,7 +131,7 @@ export const ModeGenSettings: Component<{
 
       presetStore.updatePreset(presetId, update as any, {
         onSuccess: (next) => {
-          setStore(next)
+          setState(next)
           if (pane() === 'popup') {
             props.close?.()
           }
@@ -169,53 +169,45 @@ export const ModeGenSettings: Component<{
   return (
     <div class="text-sm">
       <form ref={ref} class="flex flex-col gap-4">
-        <Card class="flex flex-col gap-2">
-          <PresetSelect
-            options={presetOptions()}
-            selected={selected()}
-            setPresetId={(val) => {
-              setSelected(val)
-              props.onPresetChanged(val)
-            }}
-          />
-
-          <ServiceWarning preset={activePreset()} />
-          <Show when={isDefaultPreset(selected())}>
-            <TitleCard type="orange">
-              You are using a built-in preset which cannot be modified. Modifying this will create a
-              new preset and assign it to your chat.
-            </TitleCard>
-          </Show>
-
-          <TextInput
-            fieldName="name"
-            value={store.name}
-            label={
-              <div class="flex gap-2">
-                <div>Preset Name</div>{' '}
-                <div
-                  class="icon-button select-none text-sm"
-                  style={{ transition: '0.3s' }}
-                  classList={{ '!text-green-500': clicked() }}
-                  onClick={() => copy(store._id)}
-                >
-                  Copy ID {clicked() ? '✓' : ''}
-                </div>
-              </div>
-            }
-            onChange={(ev) => setStore('name', ev.currentTarget.value)}
-          />
-        </Card>
-
-        <PresetSettings
-          store={store}
-          setter={setStore}
-          context={context}
-          hideTabs={props.hideTabs}
-          hides={hides}
-          noSave={false}
-          page="mode"
+        <PresetSelect
+          options={presetOptions()}
+          selected={selected()}
+          setPresetId={(val) => {
+            setSelected(val)
+            props.onPresetChanged(val)
+          }}
         />
+
+        <ServiceWarning preset={activePreset()} />
+        <Show when={isDefaultPreset(selected())}>
+          <TitleCard type="orange">
+            You are using a built-in preset which cannot be modified. Modifying this will create a
+            new preset and assign it to your chat.
+          </TitleCard>
+        </Show>
+
+        <TextInput
+          fieldName="name"
+          value={store.name}
+          label={
+            <div class="flex gap-2">
+              <div>Preset Name</div>{' '}
+              <div
+                class="icon-button select-none text-sm"
+                style={{ transition: '0.3s' }}
+                classList={{ '!text-green-500': clicked() }}
+                onClick={() => copy(store._id)}
+              >
+                Copy ID {clicked() ? '✓' : ''}
+              </div>
+            </div>
+          }
+          onChange={(ev) => setState('name', ev.currentTarget.value)}
+        />
+
+        <Divider class="!my-1" />
+
+        <PresetSettings hideTabs={props.hideTabs} noSave={false} page="mode" />
       </form>
     </div>
   )

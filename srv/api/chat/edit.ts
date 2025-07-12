@@ -153,7 +153,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
   const update: Partial<AppSchema.ChatMessage> = {
-    imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
+    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
     msg: body.msg ?? prev.msg.msg,
     retries: body.retries,
     extras: body.extras || prev.msg.extras,
@@ -169,8 +169,8 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     type: 'message-edited',
     chatId: prev.chat._id,
     messageId: params.id,
-    imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
-    message: body.msg || prev.msg.msg,
+    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
+    message: body.msg ?? prev.msg.msg,
     extras: body.extras || prev.msg.extras,
   })
 

@@ -85,6 +85,7 @@ export const CreateCharacterForm: Component<{
   const [forceNew, setForceNew] = createSignal<boolean>(false)
 
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
+
   const [image, setImage] = createSignal<string | undefined>()
   const [openPreset, setOpenPreset] = createSignal(false)
   const [presetFooter, setPresetFooter] = createSignal<JSX.Element>()

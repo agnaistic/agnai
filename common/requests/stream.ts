@@ -332,8 +332,6 @@ export async function* fetchStream(
                 accum += token
                 yield { token: suffix + token, index }
               }
-            } else {
-              opts?.log?.info({ json }, `[${format || 'fetch'}] cannot get token`)
             }
 
             const meta: any = {}

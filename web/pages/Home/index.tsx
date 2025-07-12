@@ -118,14 +118,7 @@ const HomePage: Component = () => {
                   Official Guides
                 </Pill>
               </a>
-              <A href="/guides/novel">
-                <Pill inverse>NovelAI</Pill>
-              </A>
-              <a>
-                <Pill inverse onClick={() => setSub(Sub.Horde)} ariaRole="link">
-                  Horde
-                </Pill>
-              </a>
+
               <A href="/guides/memory">
                 <Pill inverse>Memory Book</Pill>
               </A>

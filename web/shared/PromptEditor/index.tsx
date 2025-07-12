@@ -16,9 +16,9 @@ import Sortable from '../Sortable'
 import { SelectTemplate } from './SelectTemplate'
 import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
-import { PresetState, SetPresetState } from '../PresetSettings/types'
 import { Interp, Optionals, placeholders, v2placeholders, Placeholder } from './types'
 import { DefinitionsModal } from './Definitions'
+import { PresetState, SetPresetState } from '/web/store/preset-context'
 
 const PromptEditor: Component<
   {
@@ -222,7 +222,12 @@ const PromptEditor: Component<
       </Show>
 
       <Show when={props.fieldName === 'gaslight' && !!props.state?.promptTemplateId}>
-        <TextInput readonly fieldName="promptTemplateName" value={`Template: ${templateName()}`} />
+        <TextInput
+          class="!border-0"
+          readonly
+          fieldName="promptTemplateName"
+          value={`Template: ${templateName()}`}
+        />
       </Show>
 
       <PromptSuggestions
@@ -232,7 +237,7 @@ const PromptEditor: Component<
         jsonValues={{ example: '', 'example with spaces': '', response: '' }}
       />
       <textarea
-        class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl px-4 py-2 font-mono text-sm"
+        class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl border border-[var(--bg-600)] px-4 py-2 font-mono !text-xs"
         classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}

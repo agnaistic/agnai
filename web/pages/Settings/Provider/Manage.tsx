@@ -20,6 +20,8 @@ import OpenRouterOauth from '../OpenRouterOauth'
 import { userStore } from '/web/store'
 
 export const ManageProvider: Component<{
+  onCreated?: (provider: AppSchema.Provider) => void
+  onUpdated?: (provider: AppSchema.Provider) => void
   user: AppSchema.User | undefined
   show: boolean
   close: () => void
@@ -122,11 +124,17 @@ export const ManageProvider: Component<{
       body.format = def.detail.formats[fmt]
     }
 
-    getStore('user').saveProvider(body, (success) => {
+    getStore('user').saveProvider(body, (success, next) => {
       setLoading(false)
+      if (!success) return
+      props.close()
 
-      if (success) {
-        props.close()
+      if (!next) return
+      const wasCreated = !body._id && next._id
+      if (wasCreated) {
+        props.onCreated?.(next)
+      } else {
+        props.onUpdated?.(next)
       }
     })
   }
@@ -160,6 +168,7 @@ export const ManageProvider: Component<{
     if (!props.provider?._id) return
     getStore('user').deleteProvider(props.provider._id, (success) => {
       if (!success) return
+      props.close()
     })
   }
 
@@ -290,7 +299,7 @@ export const ManageProvider: Component<{
           }}
         />
 
-        <Show when={isCustom()}>
+        <Show when={isCustom() || isSelf()}>
           <div class="flex w-full items-center justify-center">
             <Button size="sm" onClick={testConnection} disabled={!url().trim()}>
               Test Connection

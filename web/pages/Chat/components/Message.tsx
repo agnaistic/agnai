@@ -27,6 +27,7 @@ import {
   For,
   JSX,
   Match,
+  on,
   onCleanup,
   onMount,
   Show,
@@ -36,29 +37,19 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import {
-  chatStore,
-  userStore,
-  msgStore,
-  toastStore,
-  ChatState,
-  VoiceState,
-  settingStore,
-} from '../../../store'
+import { chatStore, userStore, msgStore, ChatState, VoiceState, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
 import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
-import TextInput from '/web/shared/TextInput'
-import { Card, Pill } from '/web/shared/Card'
+import { Pill } from '/web/shared/Card'
 import { DropMenu } from '/web/shared/DropMenu'
 import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { RelativeSpinner } from '/web/shared/Loading'
-import { LogProbs } from './LogProbs'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
 import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
@@ -66,7 +57,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import Modal from '/web/shared/Modal'
+import { ComponentEmitter } from '/web/shared/util'
 
 type MessageProps = {
   msg: SplitMessage
@@ -495,12 +486,24 @@ const Message: Component<MessageProps> = (props) => {
                   >
                     <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
                   </Show>
-                  <p
-                    class={`rendered-markdown pr-1 ${content().class}`}
-                    data-bot-message={!props.msg.userId}
-                    data-user-message={!!props.msg.userId}
-                    innerHTML={content().message}
-                  />
+                  <Show
+                    when={props.last && +ctx.ui.textSpeed! > 0}
+                    fallback={
+                      <p
+                        class={`rendered-markdown pr-1 ${content().class}`}
+                        data-bot-message={!props.msg.userId}
+                        data-user-message={!!props.msg.userId}
+                        innerHTML={content().message}
+                      />
+                    }
+                  >
+                    <Typewriter
+                      text={content().message}
+                      speed={ctx.ui.textSpeed}
+                      generating={!!content().generating}
+                    />
+                  </Show>
+
                   <Show when={content().generating}>
                     <span class="flex h-8 w-12 items-center justify-center">
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
@@ -830,6 +833,87 @@ const MessageOptions: Component<{
   )
 }
 
+export const Typewriter: Component<{
+  text: string
+  class?: string
+  speed?: number
+  generating?: boolean
+  reset?: ComponentEmitter<'reset'>
+}> = (props) => {
+  const [text, setText] = createSignal('')
+  const [getTimer, setTimer] = createSignal<NodeJS.Timeout>()
+
+  const callback = () => setText('')
+
+  const markup = createMemo(() => {
+    const curr = text()
+    return markdown.makeHtml(curr)
+  })
+
+  const startTimer = () => {
+    const prev = getTimer()
+    if (prev) clearInterval(prev)
+
+    const setting = props.speed ?? 0
+    let speed = 1000 / setting
+    const textTimer = setInterval(() => {
+      const prev = text()
+      if (prev === props.text) return
+
+      if (setting <= 0) {
+        setText(props.text)
+        return
+      }
+
+      const next = props.text.slice(0, prev.length + 1)
+      setText(next)
+    }, speed)
+    setTimer(textTimer)
+  }
+
+  onMount(() => {
+    if (props.reset) {
+      props.reset.on('reset', callback)
+    }
+
+    // Always stream when no 'generating' flag is passed
+    if (props.generating === undefined) {
+      startTimer()
+      return
+    }
+
+    // Case 1. Generating is always `false`: The message was fetched from history rather than generated
+    if (!props.generating) {
+      setText(props.text)
+      return
+    }
+
+    startTimer()
+  })
+
+  createEffect(
+    on(
+      () => props.speed,
+      (nextSpeed) => {
+        startTimer()
+      }
+    )
+  )
+
+  onCleanup(() => {
+    clearInterval(getTimer()!)
+    props.reset?.off(callback)
+  })
+
+  return (
+    <p
+      class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
+      data-partial
+      innerHTML={markup()}
+    />
+  )
+}
+
 const MessageOption: Component<{
   schema?: ButtonSchema
   class?: string
@@ -872,7 +956,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
     msgStore.retry(split.chatId, original._id)
   } else {
-    msgStore.createImage(split._id)
+    msgStore.createImage({ sourceMsgId: split._id })
   }
 }
 
@@ -889,7 +973,8 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  // we sanizize user input to prevent XSS attacks, allowing only following HTML Tags see ALLOWED_TAGS below
+  // we sanizize user input to prevent XSS attacks
+  // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
   let html = makeTextLookNice(
     markdown
       .makeHtml(parseMessage(text, ctx, isUser, adapter))
@@ -998,138 +1083,16 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-export const MessageMeta: Component = () => {
-  const [ctx] = useAppContext()
-  const state = msgStore((s) => ({ msg: s.metadata, graph: s.graph }))
-  const [prompt, setPrompt] = createSignal(state.msg?.imagePrompt || '')
-
-  const close = () => {
-    msgStore.setState({ metadata: undefined })
-  }
-
-  createEffect(() => {
-    if (!state.msg) return
-    setPrompt(state.msg.imagePrompt || '')
-  })
-
-  const updateImagePrompt = () => {
-    if (!state.msg) return
-    msgStore.editMessageProp(state.msg?._id, { imagePrompt: prompt() }, () => {
-      toastStore.success('Image prompt updated')
-    })
-  }
-
-  const descendants = createMemo(() => {
-    if (!state.msg) return []
-    const self = state.graph.tree[state.msg._id]
-    if (!self) return []
-
-    return Array.from(self.children.values())
-  })
-
-  const depth = createMemo(() => {
-    if (!state.msg) return -1
-    return state.graph.tree[state.msg._id]?.depth || -1
-  })
-
-  return (
-    <Modal show={!!state.msg} close={close} title="Message Info" maxWidth="half">
-      <div class="flex w-full flex-col gap-2">
-        <Card>
-          <LogProbs msg={state.msg!} />
-          <table class="text-sm">
-            <Show when={state.msg!.adapter}>
-              <tr>
-                <td class="pr-2">
-                  <b>Adapter</b>
-                </td>
-                <td>{state.msg!.adapter}</td>
-              </tr>
-            </Show>
-            <Show when={depth() >= 0}>
-              <tr>
-                <td>
-                  <b>depth</b>
-                </td>
-                <td>#{depth() + 1}</td>
-              </tr>
-            </Show>
-            <Show when={descendants().length > 0 && ctx.flags.debug}>
-              <tr>
-                <td>
-                  <b>descendants</b>
-                </td>
-                <td>
-                  {descendants()
-                    .map((d) => d.slice(0, 4))
-                    .join(', ')}
-                </td>
-              </tr>
-            </Show>
-            <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
-              {([key, value]) => (
-                <tr>
-                  <td class="pr-2">
-                    <b>{key}</b>
-                  </td>
-                  <td>{value as string}</td>
-                </tr>
-              )}
-            </For>
-          </table>
-        </Card>
-
-        <Card>
-          <TextInput
-            helperText={
-              <>
-                <div class="flex items-center gap-1">
-                  Image Prompt -{' '}
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={updateImagePrompt}
-                    disabled={prompt() === state.msg!.imagePrompt}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={() => msgStore.generateImagePrompt((summary) => setPrompt(summary))}
-                    disabled={!!ctx.waiting}
-                  >
-                    Generate
-                  </Button>
-                </div>
-              </>
-            }
-            parentClass="text-sm"
-            isMultiline
-            value={prompt()}
-            onChange={(ev) => setPrompt(ev.currentTarget.value)}
-          />
-        </Card>
-
-        <Show when={ctx.promptHistory[state.msg!._id]}>
-          <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
-            <Show
-              when={typeof ctx.promptHistory[state.msg!._id] === 'string'}
-              fallback={JSON.stringify(ctx.promptHistory[state.msg!._id], null, 2)}
-            >
-              {ctx.promptHistory[state.msg!._id]}
-            </Show>
-          </pre>
-        </Show>
-      </div>
-    </Modal>
-  )
-}
-
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
   if (msg._id === 'partial-response') return false
-  return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
+
+  return (
+    !!msg.adapter ||
+    !!history ||
+    (!!msg.meta && Object.keys(msg.meta).length >= 1) ||
+    msg.imagePrompt
+  )
 }
 
 function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
@@ -1219,33 +1182,69 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 
   if (!content) return { thoughts, content }
 
+  const init = {
+    start: content.indexOf(open),
+    end: content.indexOf(close),
+  }
+
+  // No thoughts, skip everything
+  if (init.start === -1 && init.end === -1) {
+    return { thoughts: [], content }
+  }
+
   while (true) {
     const start = content.indexOf(open)
     const end = content.indexOf(close)
 
-    // No starting tag
-    if (start < 0) {
-      // No end tag either, do nothing
-      if (end < 0) break
+    // Both present, but end comes before start
+    if (start > -1 && end > -1 && start > end) {
+      let pre = content.slice(0, end)
+      let thought = content.slice(start + len.open)
+      const nextEnd = thought.indexOf(close)
 
-      // We have an end tag, so capture everything from the start as a thought
-      const thought = content.slice(0, end)
+      // There is another end tag
+      if (nextEnd > -1) {
+        const innerThought = thought.slice(0, nextEnd)
+        const post = thought.slice(nextEnd + len.close)
+        content = `${pre.trim()}\n${post.trim()}`
+        thought = innerThought
+        thoughts.push(thought)
+        continue
+      }
+
       thoughts.push(thought)
-      content = content.slice(end + len.close)
-      break
+      return { content: pre, thoughts }
     }
 
-    if (end > start) {
-      const actualStart = Math.max(start, 0)
-      const thought = content.slice(actualStart + len.open, end)
+    // Both tags present
+    if (start > -1 && end > -1) {
+      const pre = content.slice(0, start)
+      const post = content.slice(end + len.close)
+      const thought = content.slice(start + len.open, end)
       thoughts.push(thought)
-      content = content.slice(end + len.close)
+      content = `${pre.trim()}\n${post.trim()}`
       continue
     }
 
-    const thought = content.slice(start + len.open)
-    thoughts.push(thought)
-    content = ''
+    // Only opening tag
+    if (start > -1) {
+      const pre = content.slice(0, start)
+      const thought = content.slice(start + len.open)
+      content = pre
+      thoughts.push(thought)
+      break
+    }
+
+    // Only closing tag
+    if (end > -1) {
+      const post = content.slice(end + len.close)
+      const thought = content.slice(0, end)
+      thoughts.push(thought)
+      content = post
+      break
+    }
+
+    // Should never get here
     break
   }
 
@@ -1254,27 +1253,31 @@ function extractReasoning(content: string, tags: AppSchema.UserGenPreset['reason
 
 const Reasoning: Component<{ thoughts: string[]; expanded?: boolean }> = (props) => {
   return (
-    <For each={props.thoughts}>
-      {(thought) => <Thought expanded={props.expanded}>{thought}</Thought>}
-    </For>
+    <Show when={props.thoughts.length}>
+      <Thought expanded={props.expanded} text={props.thoughts.join('\n\n')} />
+    </Show>
   )
 }
 
-const Thought: Component<{ expanded?: boolean; children: any }> = (props) => {
+const Thought: Component<{ expanded?: boolean; text: string }> = (props) => {
   const [open, setOpen] = createSignal(props.expanded ?? false)
 
+  const html = createMemo(() => markdown.makeHtml(props.text))
+
   return (
-    <div class="flex flex-col gap-1">
-      <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
-        Thought{' '}
-        <Show when={open()} fallback={'+'}>
-          -
+    <Show when={!!props.text.trim()}>
+      <div class="flex flex-col gap-1">
+        <div class="text-500 cursor-pointer text-sm" onClick={() => setOpen(!open())}>
+          Thought{' '}
+          <Show when={open()} fallback={'+'}>
+            -
+          </Show>
+        </div>
+        <Show when={open()}>
+          <div class="text-600" innerHTML={html()}></div>
         </Show>
       </div>
-      <Show when={open()}>
-        <span class="text-600">{props.children}</span>
-      </Show>
-    </div>
+    </Show>
   )
 }
 

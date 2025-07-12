@@ -1,5 +1,4 @@
 import { Component, Show, createMemo } from 'solid-js'
-import { PresetTabProps } from './types'
 import TextInput from '../TextInput'
 import { ToggleButton } from '../Button'
 import RangeInput from '../RangeInput'
@@ -10,9 +9,12 @@ import { SubscriptionModelLevel } from '/common/types/presets'
 import { Card } from '../Card'
 import PromptEditor from '../PromptEditor'
 import { ThirdPartyFormat } from '/common/adapters'
+import { PresetTabProps } from '/web/store/preset-context'
 
 export type FieldProps = Omit<PresetTabProps, 'tab'>
-export type Field<T = {}> = Component<FieldProps & T>
+export type Field<T = {}, TOnly extends keyof FieldProps = keyof FieldProps> = Component<
+  Pick<FieldProps, TOnly> & T
+>
 
 export const PresetMode: Field = (props) => {
   return (
@@ -248,7 +250,6 @@ export const ModelFormat: Field = (props) => {
       (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={MODEL_FORMATS}
         value={props.state.modelFormat || 'None'}
-        recommend={props.sub?.preset.modelFormat}
         onChange={(ev) => props.setter('modelFormat', ev.value as any)}
       />
     </>

@@ -15,7 +15,7 @@ import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
-import Message, { MessageMeta } from './components/Message'
+import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
@@ -38,6 +38,8 @@ import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
 import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
+import { MessageMeta } from './components/MessageMeta'
+import { usePresetContext } from '/web/store/preset-context'
 
 export { ChatDetail as default }
 
@@ -57,6 +59,7 @@ const ChatDetail: Component = () => {
   }))
 
   const [ctx] = useAppContext()
+  const [_, { loadChat: loadPreset }] = usePresetContext()
 
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
@@ -270,8 +273,11 @@ const ChatDetail: Component = () => {
     events.emit(EVENTS.chatOpened, params.id)
     if (params.id !== chats.chat?._id) {
       chatStore.openChat(params.id, {
-        onDone: (success) => {
-          if (success) return
+        onDone: (success, chat) => {
+          if (success && chat) {
+            loadPreset(chat)
+            return
+          }
 
           // If the chat fails to load, return to the chat list
           nav('/chats')
@@ -366,7 +372,7 @@ const ChatDetail: Component = () => {
         const msg = msgs.msgs[last]
         if (!msg) return
         if (msg.adapter === 'image') {
-          msgStore.createImage(msg._id)
+          msgStore.createImage({ sourceMsgId: msg._id })
         } else if (msg.characterId) {
           msgStore.retry(msg.chatId, msg._id)
         } else {
@@ -395,7 +401,7 @@ const ChatDetail: Component = () => {
 
       if (ev.key === 'p' || ev.key === 'KeyP') {
         ev.preventDefault()
-        msgStore.createImage()
+        msgStore.createImage({})
       }
     }
 

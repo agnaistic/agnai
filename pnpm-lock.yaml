@@ -128,6 +128,9 @@ importers:
       svgo:
         specifier: ^3.3.2
         version: 3.3.2
+      symmetry:
+        specifier: ^0.6.1
+        version: 0.6.1
       throng:
         specifier: ^5.0.0
         version: 5.0.0
@@ -4756,6 +4759,9 @@ packages:
     resolution: {integrity: sha512-OoohrmuUlBs8B8o6MB2Aevn+pRIH9zDALSR+6hhqVfa6fRwG/Qw9VUMSMW9VNg2CFc/MTIfabtdOVl9ODIJjpw==}
     engines: {node: '>=14.0.0'}
     hasBin: true
+
+  symmetry@0.6.1:
+    resolution: {integrity: sha512-pWFAm2vqVz1qOmb0ZRFq+QVa4vzyJGwm3BcTD5SX7y0kUZvTLeBmQngeeSWXfdRUG0dmBbwYxLRlpgbtUFVcDg==}
 
   tailwindcss@3.4.17:
     resolution: {integrity: sha512-w33E2aCvSDP0tW9RZuNXadXlkHXqFzSkQew/aIa2i/Sj8fThxwovwlXHSPXTbAHwEIhBFXAedUhP2tueAKP8Og==}
@@ -10412,6 +10418,8 @@ snapshots:
       css-what: 6.1.0
       csso: 5.0.5
       picocolors: 1.1.1
+
+  symmetry@0.6.1: {}
 
   tailwindcss@3.4.17:
     dependencies:

@@ -23,7 +23,7 @@ export type CustomOption = {
 }
 
 export const CustomSelect: Component<{
-  buttonLabel: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
+  buttonLabel?: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
   onSelect: (opt: CustomOption) => void
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
@@ -40,17 +40,27 @@ export const CustomSelect: Component<{
   selected: any | undefined
   hide?: boolean
   parentClass?: string
+  buttonParentClass?: string
+  buttonClass?: string
   classList?: Record<string, boolean>
-  emitter?: ComponentSubscriber<'close'>
   search?: (value: string, search: string) => boolean
   disabled?: boolean
+  footer?: any
+  children?: any
+
+  closeSub?: ComponentSubscriber<'close'>
+  openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
 
   onMount(() => {
-    if (props.emitter) {
-      props.emitter('close', () => setOpen(false))
+    if (props.closeSub) {
+      props.closeSub('close', () => setOpen(false))
+    }
+
+    if (props.openSub) {
+      props.openSub('open', () => setOpen(true))
     }
   })
 
@@ -111,25 +121,32 @@ export const CustomSelect: Component<{
       class={`max-w-full ${props.parentClass || ''}`}
       classList={{ ...props.classList, hidden: props.hide ?? false }}
     >
-      <div class="flex flex-col text-sm">
+      <div class={'flex flex-col text-sm ' + props.buttonParentClass || ''}>
         <FormLabel label={props.label} helperText={props.helperText} />
 
-        <Button
-          schema={props.schema}
-          size={props.size}
-          alignLeft
-          onClick={() => setOpen(true)}
-          class="w-fit"
-          disabled={props.disabled}
-        >
-          {buttonLabel()}
-        </Button>
+        <div class="flex gap-1">
+          <Show when={props.buttonLabel}>
+            <Button
+              schema={props.schema}
+              size={props.size}
+              alignLeft
+              onClick={() => setOpen(true)}
+              class={props.buttonClass || ''}
+              // class="w-fit max-w-fit"
+              disabled={props.disabled}
+            >
+              {buttonLabel()}
+            </Button>
+          </Show>
+          {props.children}
+        </div>
       </div>
       <RootModal
         show={open()}
         close={() => setOpen(false)}
         title={props.modalTitle}
         maxHeight={props.maxHeight}
+        footer={props.footer}
       >
         <div class="flex flex-col gap-4">
           <Show when={props.search}>

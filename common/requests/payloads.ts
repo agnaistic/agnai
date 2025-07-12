@@ -120,7 +120,12 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     gen.temp = 0.75
   }
 
-  if (format === 'openai' || format === 'openai-chat' || format === 'openai-chatv2') {
+  if (
+    format === 'openai' ||
+    format === 'openai-chat' ||
+    format === 'openai-chatv2' ||
+    format === 'kobold'
+  ) {
     const model = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
     const body: any = {

@@ -15,9 +15,10 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
     if (!user.sub) return false
 
     const userLevel = user.admin ? Infinity : user.userLevel
-    const sub = cfg.subs.find(
-      (sub) => sub._id === props.preset?.registered?.agnaistic?.subscriptionId
-    )
+    const subId =
+      props.preset?.providerModels?.agnaistic || props.preset?.registered?.agnaistic?.subscriptionId
+
+    const sub = cfg.subs.find((sub) => sub._id === subId)
 
     if (!sub) return false
     const ineligible = userLevel < sub.level

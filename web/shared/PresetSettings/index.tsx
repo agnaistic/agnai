@@ -2,7 +2,6 @@ import { Component, createEffect, createMemo, createSignal, For, on, onMount, Sh
 import { Option } from '../Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../../common/adapters'
 import { presetStore, settingStore } from '../../store'
-import { Card } from '../Card'
 import { getUsableServices, storage } from '../util'
 import { createStore } from 'solid-js/store'
 import Accordian from '../Accordian'
@@ -11,14 +10,6 @@ import { getServiceTempConfig } from '../adapter'
 import Tabs from '../Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { usePaneManager } from '../hooks'
-import {
-  HideState,
-  PresetContext,
-  PresetProps,
-  PresetState,
-  PresetTab,
-  SetPresetState,
-} from './types'
 import { GeneralSettings } from './General'
 import { RegisteredSettings } from './Registered'
 import { PromptSettings } from './Prompt'
@@ -28,24 +19,20 @@ import { MemorySettings } from './Memory'
 import { PresetMode } from './Fields'
 import { PresetProvider } from '/web/pages/Settings/Provider'
 import { ThirdPartyModel } from './ThirdPartyModel'
+import Divider from '../Divider'
+import { PresetProps, PresetTab, usePresetContext } from '/web/store/preset-context'
 
 export { PresetSettings as default }
 
 type TempSetting = AdapterSetting & { value: any }
 
-const PresetSettings: Component<
-  PresetProps & {
-    noSave: boolean
-    store: PresetState
-    context: PresetContext
-    setter: SetPresetState
-    hides: HideState
-  }
-> = (props) => {
+const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => {
   const settings = settingStore()
   const pane = usePaneManager()
   const [search, setSearch] = useSearchParams()
   const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
+
+  const [store, { setState: setter, hides, context }] = usePresetContext()
 
   const services = createMemo<Option[]>(() => {
     const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
@@ -54,29 +41,28 @@ const PresetSettings: Component<
 
   createEffect(
     on(
-      () => (props.store.service || '') + services().length,
+      () => (store.service || '') + services().length,
       () => {
         if (props.disabled) return
-        if (props.store.service) return
+        if (store.service) return
         if (!services().length) return
-        if (props.store._id) return
+        if (store._id) return
 
-        props.setter('service', services()[0].value as any)
+        setter('service', services()[0].value as any)
       }
     )
   )
 
   const sub = createMemo(() => {
-    if (props.store.service !== 'agnaistic') return
-    const match = settings.config.subs.find(
-      (sub) => sub._id === props.store.registered?.agnaistic?.subscriptionId
-    )
+    if (store.service !== 'agnaistic') return
+    const subId = store.providerModels?.agnaistic || store.registered?.agnaistic?.subscriptionId
+    const match = settings.config.subs.find((sub) => sub._id === subId)
 
     return match
   })
 
   const tabs = createMemo(() => {
-    if (!props.hideTabs && props.store.presetMode === 'simple') {
+    if (!props.hideTabs && store.presetMode === 'simple') {
       return ['General', 'Prompt']
     }
 
@@ -91,43 +77,32 @@ const PresetSettings: Component<
 
   return (
     <div class="flex flex-col gap-4">
-      <Card class="flex flex-col gap-2">
-        <PresetProvider
-          state={props.store}
-          hides={props.hides}
-          setter={props.setter}
-          page={props.page}
-          sub={sub()}
-          context={props.context}
-        />
+      <div class="flex flex-col gap-2">
+        <PresetProvider page={props.page} />
 
-        <ThirdPartyModel
-          state={props.store}
-          hides={props.hides}
-          setter={props.setter}
-          page={props.page}
-          sub={sub()}
-          context={props.context}
-        />
+        <ThirdPartyModel page={props.page} sub={sub()} />
+
+        <Divider class="!my-2" />
 
         <PresetMode
-          state={props.store}
-          setter={props.setter}
-          hides={props.hides}
+          state={store}
+          setter={setter}
+          hides={hides}
           sub={sub()}
           page={props.page}
-          context={props.context}
+          context={context}
         />
 
         <RegisteredSettings
-          service={props.context.service}
-          setter={props.setter}
-          state={props.store}
-          mode={props.store.presetMode}
+          service={context.service}
+          setter={setter}
+          state={store}
+          mode={store.presetMode}
         />
-      </Card>
+      </div>
+
       <Show when={pane.showing()}>
-        <TempSettings service={props.context.service} />
+        <TempSettings service={context.service} />
       </Show>
       <Tabs
         select={(ev) => {
@@ -138,53 +113,53 @@ const PresetSettings: Component<
         tabs={tabs()}
       />
       <GeneralSettings
-        state={props.store}
-        hides={props.hides}
-        setter={props.setter}
+        state={store}
+        hides={hides}
+        setter={setter}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={props.context}
+        context={context}
       />
 
       <PromptSettings
-        state={props.store}
-        hides={props.hides}
-        setter={props.setter}
+        state={store}
+        hides={hides}
+        setter={setter}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={props.context}
+        context={context}
       />
 
       <MemorySettings
-        state={props.store}
-        hides={props.hides}
-        setter={props.setter}
+        state={store}
+        hides={hides}
+        setter={setter}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={props.context}
+        context={context}
       />
 
       <SliderSettings
-        state={props.store}
-        hides={props.hides}
-        setter={props.setter}
+        state={store}
+        hides={hides}
+        setter={setter}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={props.context}
+        context={context}
       />
 
       <ToggleSettings
-        state={props.store}
-        hides={props.hides}
-        setter={props.setter}
+        state={store}
+        hides={hides}
+        setter={setter}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={props.context}
+        context={context}
       />
     </div>
   )

@@ -10,9 +10,9 @@ import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
 import { isChatPage } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
-import { PresetTabProps } from './types'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
+import { PresetTabProps } from '/web/store/preset-context'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)
@@ -44,7 +44,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Prompt' }}>
       <div class="flex flex-col items-center gap-2">
-        <Card class="flex w-full flex-col gap-4">
+        <div class="flex w-full flex-col gap-4">
           <CharacterSchema
             characterId={jsonCharId()}
             presetId={props.state._id}
@@ -242,7 +242,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               onChange={(ev) => props.setter('ignoreCharacterUjb', ev)}
             />
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   )

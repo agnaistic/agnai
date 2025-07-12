@@ -19,6 +19,7 @@ export const PresetSelect: Component<{
   setPresetId: (id: string) => void
   warning?: JSX.Element
   selected?: string
+  children?: any
 }> = (props) => {
   const [filter, setFilter] = createSignal('')
   const custom = createMemo(() =>
@@ -82,7 +83,7 @@ export const PresetSelect: Component<{
           <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
         </Show>
 
-        <div class="flex w-full gap-2">
+        <div class="flex w-full items-center gap-2">
           <Button onClick={() => setShowSelectModal(true)} class="w-fit">
             <strong>{selectedLabel()}</strong>
           </Button>
@@ -90,6 +91,8 @@ export const PresetSelect: Component<{
           <Button onClick={downloadPreset} disabled={!props.selected}>
             <DownloadIcon size={20} />
           </Button>
+
+          <Show when={props.children}>{props.children}</Show>
         </div>
 
         {props.warning ?? <></>}

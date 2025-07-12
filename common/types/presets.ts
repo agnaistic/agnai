@@ -95,6 +95,10 @@ export interface UserGenPreset extends GenSettings {
   userId: string
 }
 
+export type PresetParser =
+  | { type: 'replace'; from: string; to: string }
+  | { type: 'remove'; text: string }
+
 export interface GenSettings {
   name: string
   description?: string
@@ -148,6 +152,7 @@ export interface GenSettings {
   banEosToken?: boolean
   tokenHealing?: boolean
 
+  skipRoleMerging?: boolean
   disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]
@@ -239,6 +244,8 @@ export interface GenSettings {
   registered?: { [key in AIAdapter]?: Record<string, any> }
 
   updatedAt?: string
+
+  parsers?: PresetParser[]
 }
 
 export interface PromptTemplate {

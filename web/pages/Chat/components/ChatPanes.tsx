@@ -24,8 +24,8 @@ import { wait } from '/common/util'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import ChatSettings from '../ChatSettings'
 import ChatMemoryModal from './MemoryModal'
-import { getClientPreset } from '/web/shared/adapter'
 import { usePaneManager } from '/web/shared/hooks'
+import { usePresetContext } from '/web/store/preset-context'
 
 export { ChatPanes as default }
 
@@ -54,6 +54,7 @@ export const useValidChatPane = () => {
 const ChatPanes: Component<{}> = (props) => {
   const params = useParams()
   const pane = usePaneManager()
+  const [preset] = usePresetContext()
 
   const chars = characterStore((s) => ({
     chatBots: s.characters.list,
@@ -69,8 +70,6 @@ const ChatPanes: Component<{}> = (props) => {
       tempBots: Object.values(s.active?.chat?.tempCharacters! || {}),
     }
   })
-
-  const clientPreset = createMemo(() => getClientPreset(chats.chat)?.preset)
 
   const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
   const [editId, setEditId] = createSignal<string>()
@@ -179,7 +178,7 @@ const ChatPanes: Component<{}> = (props) => {
         <Match when={pane.pane() === 'preset'}>
           <Convertible close={closePane} footer={paneFooter()}>
             <ModeGenSettings
-              presetId={clientPreset()?._id}
+              presetId={preset._id}
               onPresetChanged={onPresetChanged}
               close={closePane}
               footer={setPaneFooter}

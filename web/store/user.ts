@@ -327,14 +327,22 @@ export const userStore = createStore<UserState>(
     async *saveProvider(
       { user },
       provider: AppSchema.Provider,
-      onDone?: (success: boolean) => void
+      onDone?: (success: boolean, result?: AppSchema.Provider) => void
     ) {
       const res = await usersApi.saveProvider(provider)
-      onDone?.(!!res.result)
+
       if (res.result) {
+        const update = provider._id
+          ? res.result.providers.find((p: AppSchema.Provider) => p._id === provider._id)
+          : res.result.providers.slice(-1)[0]
+
+        yield { user: { ...user!, providers: res.result.providers } }
+        onDone?.(!!res.result, update)
         toastStore.success(provider._id ? 'Provider updated' : 'Provider created')
-        return { user: { ...user!, providers: res.result.providers } }
+        return
       }
+
+      onDone?.(false)
     },
     async *deleteProvider({ user }, providerId: string, onDone?: (success: boolean) => void) {
       const res = await usersApi.deleteProvider(providerId)

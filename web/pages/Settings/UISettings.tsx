@@ -3,11 +3,11 @@ import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import RangeInput from '../../shared/RangeInput'
+import RangeInput, { InlineRangeInput } from '../../shared/RangeInput'
 import Select from '../../shared/Select'
-import { createDebounce, toDropdownItems } from '../../shared/util'
+import { createDebounce, createEmitter, toDropdownItems } from '../../shared/util'
 import { characterStore, settingStore, userStore } from '../../store'
-import Message from '../Chat/components/Message'
+import Message, { Typewriter } from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -84,6 +84,8 @@ const UISettings: Component<{}> = () => {
       }
     )
   )
+
+  const twReset = createEmitter('reset')
 
   return (
     <>
@@ -166,16 +168,6 @@ const UISettings: Component<{}> = () => {
       <Divider />
       <h3 class="text-md font-bold">Chat Settings</h3>
 
-      <Card>
-        <FormLabel
-          label="Inline Message Options"
-          helperText="Enable which message options appear 'inline' in a message. The rest will reside in the 'more options' drop menu"
-        ></FormLabel>
-        <Show when={inline().length > 0}>
-          <Sortable items={inline()} onChange={updateInline} />
-        </Show>
-      </Card>
-
       <Toggle
         fieldName="imageWrap"
         label="Avatar Wrap Around"
@@ -214,13 +206,43 @@ const UISettings: Component<{}> = () => {
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
 
-      <Toggle
+      <Card border>
+        <div class="flex w-full flex-col">
+          <div class="flex gap-1">
+            <InlineRangeInput
+              label="Text Speed"
+              parentClass="w-full"
+              // helperMarkdown='Speed of the "typewriter" effect when receiving new messages. Set to `0` to disable.'
+              value={state.ui.textSpeed ?? 0}
+              min={0}
+              max={100}
+              step={1}
+              onChange={(ev) => {
+                userStore.tryUI({ textSpeed: ev })
+                twReset.emit.reset()
+              }}
+            />
+            <Button size="sm" class="!py-2">
+              Save
+            </Button>
+          </div>
+          <FormLabel helperMarkdown="Control the speed that text streams in. Set to `0` to disable." />
+
+          <Typewriter
+            class="!text-700 text-sm"
+            text="There are ten types of people in the world. Those who understand binary and those who don't."
+            speed={state.ui.textSpeed}
+            reset={twReset}
+          />
+        </div>
+      </Card>
+      {/* <Toggle
         fieldName="contextWindowLine"
         label="Show context window delineator"
         helperText="Shows a dotted line above which messages are no longer inserted in the prompt"
         value={state.ui.contextWindowLine}
         onChange={(ev) => userStore.saveUI({ contextWindowLine: ev })}
-      />
+      /> */}
 
       <Select
         fieldName="chatMode"
@@ -455,6 +477,16 @@ const UISettings: Component<{}> = () => {
       />
 
       <Divider />
+
+      <FormLabel
+        label="Inline Message Options"
+        helperText="Enable which message options appear 'inline' in a message. The rest will reside in the 'more options' drop menu"
+      ></FormLabel>
+      <Show when={inline().length > 0}>
+        <Sortable items={inline()} onChange={updateInline} />
+      </Show>
+
+      <Divider />
       <div class="text-lg font-bold">Preview</div>
       <Show when={chars.characters.list.length > 0}>
         <div class="bg-600 flex w-full flex-col gap-2 rounded-md p-2">
@@ -479,7 +511,7 @@ const UISettings: Component<{}> = () => {
               editing={false}
               msg={toUserMsg(
                 state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How abot we have some *fun* today?"',
+                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"',
                 { _id: '2' }
               )}
               onRemove={noop}

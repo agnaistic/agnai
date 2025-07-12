@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo, onMount } from 'solid-js'
+import { Component, For, createMemo, onMount } from 'solid-js'
 import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Search } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
 import { Combobox } from '/web/shared/Combobox'
 
-const ChubNavigation: Component<{ buttons: boolean; page: 'books' | 'chars' }> = (props) => {
+const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
   const state = chubStore()
 
   const update = (page?: number) => {
@@ -46,47 +46,46 @@ const ChubNavigation: Component<{ buttons: boolean; page: 'books' | 'chars' }> =
           <Button onClick={() => update(1)}>
             <Search size={16} />
           </Button>
-          <Show when={props.buttons}>
-            <Button
-              schema="secondary"
-              class="rounded-xl"
-              onClick={() => {
-                if (state.page > 1) {
-                  chubStore.setPage(state.page - 1)
-                  update()
-                }
-              }}
-            >
-              <ArrowLeft size={16} />
-            </Button>
 
-            <div class="w-12">
-              <TextInput
-                class="py-1"
-                fieldName="number"
-                value={state.page}
-                onChange={(ev) => {
-                  const n = +ev.currentTarget.value
-                  if (!isNaN(n) && n !== 0) {
-                    chubStore.setPage(n)
-                    update()
-                  }
-                }}
-              />
-            </div>
-            <Button
-              schema="secondary"
-              class="rounded-xl"
-              onClick={() => {
-                if (state.chars.length % 48 == 0) {
-                  chubStore.setPage(state.page + 1)
+          <Button
+            schema="secondary"
+            class="rounded-xl"
+            onClick={() => {
+              if (state.page > 1) {
+                chubStore.setPage(state.page - 1)
+                update()
+              }
+            }}
+          >
+            <ArrowLeft size={16} />
+          </Button>
+
+          <div class="w-12">
+            <TextInput
+              class="py-1"
+              fieldName="number"
+              value={state.page}
+              onChange={(ev) => {
+                const n = +ev.currentTarget.value
+                if (!isNaN(n) && n !== 0) {
+                  chubStore.setPage(n)
                   update()
                 }
               }}
-            >
-              <ArrowRight size={16} />
-            </Button>
-          </Show>
+            />
+          </div>
+          <Button
+            schema="secondary"
+            class="rounded-xl"
+            onClick={() => {
+              // if (state.chars.length % 48 == 0) {
+              // }
+              chubStore.setPage(state.page + 1)
+              update()
+            }}
+          >
+            <ArrowRight size={16} />
+          </Button>
         </div>
 
         <Tags />
@@ -103,8 +102,8 @@ const Tags: Component = () => {
   const addTag = (tag: string) => {
     const next = tags().concat(tag.trim()).join(',')
     chubStore.setTags(next)
+    chubStore.setPage(1)
     chubStore.getEntities()
-    update()
   }
 
   const remove = (index: number) => {
@@ -155,7 +154,7 @@ const Tags: Component = () => {
               small
               type="hl"
               inverse
-              class="px-0.5 py-0.5 !text-sm hover:cursor-pointer"
+              class="px-1 py-0.5 !text-xs hover:cursor-pointer"
               onClick={() => remove(i())}
             >
               {tag}

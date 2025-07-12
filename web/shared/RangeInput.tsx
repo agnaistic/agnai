@@ -154,7 +154,7 @@ const RangeInput: Component<{
 }
 
 export const InlineRangeInput: Component<{
-  fieldName: string
+  fieldName?: string
   value: number
   min: number
   max: number
@@ -224,7 +224,7 @@ export const InlineRangeInput: Component<{
 
   return (
     <div
-      class={`bg-800 flex items-center gap-2 rounded-xl px-2 ${props.parentClass || ''}`}
+      class={`bg-800 flex items-center gap-2 rounded-xl ${props.parentClass || ''}`}
       classList={{ hidden: props.hide ?? false }}
     >
       <Show when={props.label}>

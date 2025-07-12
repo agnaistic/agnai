@@ -3,10 +3,10 @@ import RangeInput from '../RangeInput'
 import { defaultPresets } from '../../../common/presets'
 import { Card } from '../Card'
 import { A } from '@solidjs/router'
-import { PresetTabProps } from './types'
 import { HelpModal } from '../Modal'
 import { ListInput } from '../ListInput'
 import { presetDefaults } from '/common/default-preset'
+import { PresetTabProps } from '/web/store/preset-context'
 
 export const SliderSettings: Component<PresetTabProps> = (props) => {
   return (

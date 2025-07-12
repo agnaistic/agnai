@@ -69,6 +69,7 @@ export const config = {
   assetUrl: env('ASSET_URL', ''),
   cdnHostname: env('CDN_HOSTNAME', ''),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
+  assetUploadUrl: env('ASSET_UPLOAD_URL', ''),
   extraFolder: env('EXTRA_FOLDER', ''),
   billing: {
     private: env('STRIPE_PRIVATE_KEY', ''),

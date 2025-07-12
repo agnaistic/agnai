@@ -68,6 +68,7 @@ export type UISettings = {
   avatarCorners: AvatarCornerRadius
   font: FontSetting
   imageWrap: boolean
+  textSpeed?: number
 
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number

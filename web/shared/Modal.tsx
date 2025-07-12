@@ -117,7 +117,7 @@ const Modal: Component<Props> = (props) => {
 
               {/* 132px is the height of the title + footer*/}
               <div
-                class={`${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}
+                class={`${minHeight()} overflow-y-auto p-2 pt-0 text-lg`}
                 classList={{
                   'h-full': props.maxHeight,
                   'modal-content': !!props.footer,

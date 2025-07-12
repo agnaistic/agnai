@@ -16,6 +16,7 @@ import { presetStore } from './presets'
 import { getChatPreset } from '/common/prompt'
 import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
+import { PresetProvider } from './preset-context'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -65,6 +66,7 @@ export type ContextState = {
   service: AIAdapter | undefined
   format: ThirdPartyFormat | undefined
   detail?: ProviderDefinition
+  providers?: AppSchema.Provider[]
 }
 
 const initial: ContextState = {
@@ -163,9 +165,10 @@ export function ContextProvider(props: { children: any }) {
 
   const subModel = createMemo(() => {
     const p = preset()
-    if (!p?.registered?.agnaistic?.subscriptionId) return
+    const subId = p?.providerModels?.agnaistic || p?.registered?.agnaistic?.subscriptionId
+    if (!subId) return
 
-    const subModel = cfg.config.subs.find((s) => s._id === p.registered?.agnaistic?.subscriptionId)
+    const subModel = cfg.config.subs.find((s) => s._id === subId)
     if (!subModel) return
 
     return subModel
@@ -213,12 +216,17 @@ export function ContextProvider(props: { children: any }) {
       format: detail?.conn?.format,
       detail: detail?.conn.detail,
       ui: users.ui,
+      providers: users.user?.providers,
     }
 
     setState(next)
   })
 
-  return <AppContext.Provider value={[state, setState]}>{props.children}</AppContext.Provider>
+  return (
+    <AppContext.Provider value={[state, setState]}>
+      <PresetProvider>{props.children}</PresetProvider>
+    </AppContext.Provider>
+  )
 }
 
 export function useAppContext() {

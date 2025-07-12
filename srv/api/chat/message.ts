@@ -282,7 +282,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
     }
 
-    const { stream, ...metadata } = chatStream
+    const { stream, conn, ...metadata } = chatStream
 
     adapter = metadata.adapter
 
@@ -291,7 +291,12 @@ export const generateMessageV2 = handle(async (req, res) => {
       char: metadata.size,
       len: metadata.length,
     }
-    log.setBindings({ adapter })
+    log.setBindings({
+      adp: adapter,
+      svc: conn.service,
+      fmt: conn.format,
+      prv: conn.provider?.provider,
+    })
 
     try {
       const responseVar = getResponseVariable(body)

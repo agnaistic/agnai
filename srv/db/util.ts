@@ -7,7 +7,7 @@ import { defaultChars } from '../../common/characters'
 const ALGO = 'aes-192-cbc'
 const KEY = crypto.scryptSync(config.jwtSecret, 'salt', 24)
 const KEY_LB = crypto.scryptSync(`${config.jwtSecret}\n`, 'salt', 24)
-// const KEY_TRIM = crypto.scryptSync(`${config.jwtSecret}\\n`, 'salt', 24)
+const KEY_TRIM = crypto.scryptSync(`${config.jwtSecret}\\n`, 'salt', 24)
 
 export function now() {
   return new Date().toISOString()
@@ -42,10 +42,10 @@ export function decryptText(text: string, noError?: boolean) {
     throw new Error('IV not found')
   }
 
-  // try {
-  //   const decipher = crypto.createDecipheriv(ALGO, KEY_TRIM as any, Buffer.from(iv, 'hex') as any)
-  //   return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
-  // } catch (ex) {}
+  try {
+    const decipher = crypto.createDecipheriv(ALGO, KEY_TRIM as any, Buffer.from(iv, 'hex') as any)
+    return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8')
+  } catch (ex) {}
 
   try {
     const decipher = crypto.createDecipheriv(ALGO, KEY as any, Buffer.from(iv, 'hex') as any)

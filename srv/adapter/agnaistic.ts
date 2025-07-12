@@ -47,7 +47,7 @@ export async function getSubscriptionPreset(
   let warning: string | undefined = undefined
 
   const fallback = await store.subs.getDefaultSubscription()
-  const subId = gen.registered?.agnaistic?.subscriptionId
+  const subId = gen.providerModels?.agnaistic || gen.registered?.agnaistic?.subscriptionId
   let preset = subId ? await store.subs.getSubscription(subId) : fallback
 
   if (guest && preset?.allowGuestUsage === false) {
@@ -258,7 +258,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const body = getServicePayload(opts, allStops)
-  if (opts.hasAttachments && opts.subscription.preset.subVisionModel) {
+  const hasImages = opts.hasAttachments && opts.subscription.preset.subVisionModel
+  const isChatModel = opts.subscription.preset.modelFormat === 'None'
+  if (hasImages || isChatModel) {
     body.messages = opts.messages
   }
 
