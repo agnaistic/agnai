@@ -280,7 +280,8 @@ function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
   if (preset.service !== 'agnaistic') return preset
 
   const subs = getStore('settings').getState().config.subs
-  const match = subs.find((sub) => sub._id === preset.registered?.agnaistic?.subscriptionId)
+  const modelId = preset.providerModels?.agnaistic || preset.registered?.agnaistic?.subscriptionId
+  const match = subs.find((sub) => sub._id === modelId)
   if (!match) return preset
 
   return {

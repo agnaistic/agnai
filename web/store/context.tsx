@@ -165,9 +165,10 @@ export function ContextProvider(props: { children: any }) {
 
   const subModel = createMemo(() => {
     const p = preset()
-    if (!p?.registered?.agnaistic?.subscriptionId) return
+    const subId = p?.providerModels?.agnaistic || p?.registered?.agnaistic?.subscriptionId
+    if (!subId) return
 
-    const subModel = cfg.config.subs.find((s) => s._id === p.registered?.agnaistic?.subscriptionId)
+    const subModel = cfg.config.subs.find((s) => s._id === subId)
     if (!subModel) return
 
     return subModel

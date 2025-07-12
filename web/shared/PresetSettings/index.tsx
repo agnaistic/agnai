@@ -55,9 +55,8 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
 
   const sub = createMemo(() => {
     if (store.service !== 'agnaistic') return
-    const match = settings.config.subs.find(
-      (sub) => sub._id === store.registered?.agnaistic?.subscriptionId
-    )
+    const subId = store.providerModels?.agnaistic || store.registered?.agnaistic?.subscriptionId
+    const match = settings.config.subs.find((sub) => sub._id === subId)
 
     return match
   })

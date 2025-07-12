@@ -384,7 +384,8 @@ setContextLimitStrategy((user, gen) => {
   const { sub } = getStore('user').getState()
   if (!gen || gen.service !== 'agnaistic') return
 
-  const tier = subs.find((sub) => sub._id === gen.registered?.agnaistic?.subscriptionId || '')
+  const modelId = gen.providerModels?.agnaistic ?? gen.registered?.agnaistic?.subscriptionId ?? ''
+  const tier = subs.find((sub) => sub._id === modelId)
   if (!tier) return
 
   const level = user.admin ? Infinity : sub?.level ?? -1
