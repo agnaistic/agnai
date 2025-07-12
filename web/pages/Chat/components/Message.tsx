@@ -831,7 +831,7 @@ const MessageOptions: Component<{
 
 export const Typewriter: Component<{
   text: string
-
+  class?: string
   speed?: number
   reset?: ComponentEmitter<'reset'>
 }> = (props) => {
@@ -849,10 +849,17 @@ export const Typewriter: Component<{
     const prev = getTimer()
     if (prev) clearInterval(prev)
 
-    const speed = 1000 / (props.speed ?? 20)
+    const setting = props.speed ?? 0
+    let speed = 1000 / setting
     const textTimer = setInterval(() => {
       const prev = text()
       if (prev === props.text) return
+
+      if (setting <= 0) {
+        setText(props.text)
+        return
+      }
+
       const next = props.text.slice(0, prev.length + 1)
       setText(next)
     }, speed)
@@ -881,7 +888,13 @@ export const Typewriter: Component<{
     props.reset?.off(callback)
   })
 
-  return <p class={`rendered-markdown streaming-markdown pr-1`} data-partial innerHTML={markup()} />
+  return (
+    <p
+      class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
+      data-partial
+      innerHTML={markup()}
+    />
+  )
 }
 
 const MessageOption: Component<{

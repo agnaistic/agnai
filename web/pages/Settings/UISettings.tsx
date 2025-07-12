@@ -226,8 +226,10 @@ const UISettings: Component<{}> = () => {
               Save
             </Button>
           </div>
+          <FormLabel helperMarkdown="Control the speed that text streams in. Set to `0` to disable." />
 
           <Typewriter
+            class="!text-700 text-sm"
             text="There are ten types of people in the world. Those who understand binary and those who don't."
             speed={state.ui.textSpeed}
             reset={twReset}
