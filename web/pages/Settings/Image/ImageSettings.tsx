@@ -1,7 +1,7 @@
 import { Match, Show, Switch, createEffect, createMemo, on, onMount } from 'solid-js'
 import { SD_SAMPLER } from '../../../../common/image'
 import Divider from '../../../shared/Divider'
-import RangeInput from '../../../shared/RangeInput'
+import { InlineRangeInput } from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../../store'
@@ -19,6 +19,7 @@ import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './Servi
 import { FormLabel } from '/web/shared/FormLabel'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { getPresetOptions } from '/web/shared/adapter'
+import Accordian from '/web/shared/Accordian'
 
 const init: ImageSettings = {
   cfg: 7,
@@ -95,7 +96,7 @@ export const ImageSettingsModal = () => {
   onMount(() => settingStore.getServerConfig())
 
   const tabs = createMemo(() => {
-    const tabs = ['App']
+    const tabs = ['Shared']
     if (isChat()) {
       if (entity.chat) tabs.push('Chat')
       if (entity.char) tabs.push('Character')
@@ -114,7 +115,7 @@ export const ImageSettingsModal = () => {
 
   const currentImgSource = createMemo(() => {
     switch (tab.current()) {
-      case 'App':
+      case 'Shared':
         return 'settings'
 
       case 'Chat':
@@ -148,7 +149,7 @@ export const ImageSettingsModal = () => {
       { label: 'Horde', value: 'horde' },
       { label: 'NovelAI', value: 'novel' },
       { label: 'Stable Diffusion', value: 'sd' },
-    ]
+    ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
 
     if (canUseImages()) {
       list.push({ label: 'Agnaistic', value: 'agnai' })
@@ -187,7 +188,7 @@ export const ImageSettingsModal = () => {
 
   const cfg = createMemo(() => {
     switch (tab.current()) {
-      case 'App':
+      case 'Shared':
         return user.user?.images
 
       case 'Chat':
@@ -221,9 +222,9 @@ export const ImageSettingsModal = () => {
     >
       <form class="flex flex-col gap-4">
         <Switch>
-          <Match when={tab.current() === 'App'}>
+          <Match when={tab.current() === 'Shared'}>
             <SolidCard type="hl">
-              <div>App Settings</div>
+              <div>Shared Settings</div>
               <Show when={!isChat()}>
                 <div class="text-500 text-sm italic">
                   Note: <b>Chat</b> and <b>Character</b> image settings are only available when a
@@ -270,34 +271,43 @@ export const ImageSettingsModal = () => {
           </div>
         </Show>
 
-        <PresetSelect
-          label="Summary Preset"
-          helperText="Choose which service and model is used for creating summaries for chat images"
-          options={presetOptions()}
-          setPresetId={(id) => setStore('summaryPresetId', id)}
-          selected={store.summaryPresetId}
-          fieldName="summaryPresetId"
-        />
+        <Accordian title="Summary Settings" titleClickOpen open={false}>
+          <PresetSelect
+            label="Summary Preset"
+            helperText="Choose which service and model is used for creating summaries for chat images"
+            options={presetOptions()}
+            setPresetId={(id) => setStore('summaryPresetId', id)}
+            selected={store.summaryPresetId}
+            fieldName="summaryPresetId"
+          />
 
-        <TextInput
-          fieldName="summaryPrompt"
-          label="Summary Prompt"
-          isMultiline
-          helperText='When summarising the chat to an image caption, this is the "prompt" is used summarise your conversation into an image prompt.'
-          placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
-          value={store.summaryPrompt}
-          onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
-        />
+          <Toggle
+            fieldName="summariseChat"
+            label="Summarise Chat"
+            helperText="Use your AI service to summarise the chat into an image prompt."
+            value={store.summariseChat}
+            onChange={(ev) => setStore('summariseChat', ev)}
+          />
 
-        <Toggle
-          fieldName="summariseChat"
-          label="Summarise Chat"
-          helperText="Use your AI service to summarise the chat into an image prompt."
-          value={store.summariseChat}
-          onChange={(ev) => setStore('summariseChat', ev)}
-        />
+          <TextInput
+            fieldName="summaryPrompt"
+            label="Summary Prompt"
+            isMultiline
+            helperText='When summarising the chat to an image caption, this is the "prompt" is used summarise your conversation into an image prompt.'
+            placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
+            value={store.summaryPrompt}
+            onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
+          />
+        </Accordian>
 
-        <Divider />
+        <Select
+          fieldName="imageType"
+          items={imageTypes()}
+          value={store.type ?? 'horde'}
+          onChange={(value) => setStore('type', value.value as any)}
+          class="!py-1"
+          inline
+        />
 
         <Show when={canUseImages() && store.type === 'agnai'}>
           <FormLabel
@@ -361,7 +371,7 @@ export const ImageSettingsModal = () => {
           <HordeSettings cfg={store} setter={setStore} />
         </div>
 
-        <div class={tab.current() === 'App' && store.type === 'sd' ? subclass : 'hidden'}>
+        <div class={tab.current() === 'Shared' && store.type === 'sd' ? subclass : 'hidden'}>
           <SDSettings cfg={store} setter={setStore} />
         </div>
 
@@ -371,20 +381,13 @@ export const ImageSettingsModal = () => {
 
         <Divider />
 
-        <Select
-          fieldName="imageType"
-          items={imageTypes()}
-          value={store.type ?? 'horde'}
-          onChange={(value) => setStore('type', value.value as any)}
-        />
-
         <Show when={store.type === 'agnai'}>
           <SolidCard bg="rose-600">
             Refer to the recommended settings when using Agnaistic image models
           </SolidCard>
         </Show>
 
-        <RangeInput
+        <InlineRangeInput
           fieldName="imageSteps"
           min={5}
           max={128}
@@ -394,46 +397,44 @@ export const ImageSettingsModal = () => {
           onChange={(ev) => setStore('steps', ev)}
         />
 
-        <RangeInput
+        <InlineRangeInput
           fieldName="imageClipSkip"
           min={0}
           max={4}
           step={1}
           value={store.clipSkip ?? agnaiModel()?.init.clipSkip ?? 0}
           label="Clip Skip"
-          helperText="The larger the image, the less that can be retained in your local cache."
           onChange={(ev) => setStore('clipSkip', ev)}
         />
 
-        <RangeInput
+        <InlineRangeInput
           fieldName="imageWidth"
           min={256}
           max={1280}
           step={128}
           value={store.width ?? agnaiModel()?.init.width ?? 1024}
           label="Image Width"
-          helperText="The larger the image, the less that can be retained in your local cache."
           onChange={(ev) => setStore('width', ev)}
         />
 
-        <RangeInput
+        <InlineRangeInput
           fieldName="imageHeight"
           min={256}
           max={1280}
           step={128}
           value={store.height ?? agnaiModel()?.init.height ?? 1024}
           label="Image Height"
-          helperText="The larger the image, the less that can be retain in your local cache."
           onChange={(ev) => setStore('height', ev)}
         />
 
-        <TextInput
+        <InlineRangeInput
           fieldName="imageCfg"
           value={store.cfg ?? agnaiModel()?.init.cfg ?? 9}
           label="Guidance Scale"
-          type="number"
-          helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
-          onChange={(ev) => setStore('cfg', +ev.currentTarget.value)}
+          min={1}
+          max={10}
+          step={0.2}
+          onChange={(ev) => setStore('cfg', ev)}
         />
 
         <TextInput
@@ -483,7 +484,7 @@ export const ImageSettingsModal = () => {
 
 async function save(tab: string, store: ImageSettings, entity: any) {
   switch (tab) {
-    case 'App': {
+    case 'Shared': {
       await userStore.updatePartialConfig({ images: store })
       return
     }

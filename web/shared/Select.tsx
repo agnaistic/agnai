@@ -61,21 +61,22 @@ const Select: Component<{
         'flex gap-2 items-center': props.inline,
       }}
     >
-      <FormLabel
-        label={
-          <span>
-            <label class="form-label">{props.label}</label>
-            <Show when={recommend() !== undefined}>
-              <span class="text-xs italic text-gray-500">
-                &nbsp;({props.recommendLabel || 'Recommended'}: {recommend()?.toString()})
-              </span>
-            </Show>
-          </span>
-        }
-        helperText={props.helperText}
-        helperMarkdown={props.helperMarkdown}
-      />
-
+      <Show when={props.label || props.helperText || props.helperMarkdown}>
+        <FormLabel
+          label={
+            <span>
+              <label class="form-label">{props.label}</label>
+              <Show when={recommend() !== undefined}>
+                <span class="text-xs italic text-gray-500">
+                  &nbsp;({props.recommendLabel || 'Recommended'}: {recommend()?.toString()})
+                </span>
+              </Show>
+            </span>
+          }
+          helperText={props.helperText}
+          helperMarkdown={props.helperMarkdown}
+        />
+      </Show>
       <div class="flex items-center gap-1">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select

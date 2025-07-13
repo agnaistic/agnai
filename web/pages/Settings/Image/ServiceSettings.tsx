@@ -23,14 +23,16 @@ export const NovelSettings: Component<{
 }> = (props) => {
   const state = userStore()
 
-  const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({ label: key, value }))
+  const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({
+    label: `Model: ${key}`,
+    value,
+  }))
   const samplers = Object.entries(NOVEL_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
+    label: `Sampler: ${value}`,
     value: key,
   }))
   return (
     <>
-      <div class="text-xl">NovelAI</div>
       <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
         <div class="font-bold text-red-600">
           You do not have a valid NovelAI key set. You will not be able to generate images using
@@ -49,6 +51,8 @@ export const NovelSettings: Component<{
         fieldName="novelUndesiredContent"
         label="Undesired Content"
         helperMarkdown="Add `nsfw` to your negative prompt to omit NSFW content"
+        inline
+        class="!py-1"
         items={[
           { label: 'Heavy', value: '0' },
           { label: 'Light', value: '1' },
@@ -61,14 +65,16 @@ export const NovelSettings: Component<{
       <Select
         fieldName="novelImageModel"
         items={models}
-        label="Model"
+        inline
+        class="!py-1"
         value={props.cfg?.novel?.model}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.model', ev.value))}
       />
       <Select
         fieldName="novelSampler"
         items={samplers}
-        label="Sampler"
+        inline
+        class="!py-1"
         value={props.cfg?.novel?.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.sampler', ev.value))}
       />
@@ -99,7 +105,7 @@ export const HordeSettings: Component<{
     const items = Array.from(map.entries())
       .sort(([, l], [, r]) => (l > r ? -1 : l === r ? 0 : 1))
       .map(([name, count]) => ({
-        label: `${name} (${count})`,
+        label: `Model: ${name} (${count})`,
         value: name,
       }))
     return items
@@ -111,23 +117,24 @@ export const HordeSettings: Component<{
   })
 
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
+    label: `Sampler: ${value}`,
     value: key,
   }))
   return (
     <>
-      <div class="text-xl">Horde</div>
       <Select
         fieldName="hordeImageModel"
         items={models()}
-        label="Model"
+        inline
+        class="!py-1"
         value={props.cfg.horde?.model || 'stable_diffusion'}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.model', ev.value))}
       />
       <Select
         fieldName="hordeSampler"
         items={samplers}
-        label="Sampler"
+        class="!py-1"
+        inline
         value={props.cfg.horde?.sampler || SD_SAMPLER['DPM++ 2M']}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.sampler', ev.value))}
       />
@@ -140,12 +147,11 @@ export const SDSettings: Component<{
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
+    label: `Sampler: ${value}`,
     value: key,
   }))
   return (
     <>
-      <div class="text-xl">Stable Diffusion</div>
       <TextInput
         fieldName="sdUrl"
         label="Stable Diffusion WebUI URL"
@@ -159,7 +165,8 @@ export const SDSettings: Component<{
       <Select
         fieldName="sdSampler"
         items={samplers}
-        label="Sampler"
+        inline
+        class="!py-1"
         value={props.cfg.sd?.sampler || SD_SAMPLER['DPM++ 2M']}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.sampler', ev.value))}
       />
@@ -177,7 +184,7 @@ export const AgnaiSettings: Component<{
       loras: s.loras,
       embeddings: s.embeddings,
       models,
-      names: models.map((m) => ({ label: m.desc.trim(), value: m.id || m.name })),
+      names: models.map((m) => ({ label: `Model: ${m.desc.trim()}`, value: m.id || m.name })),
     }
   })
 
@@ -204,7 +211,7 @@ export const AgnaiSettings: Component<{
 
   const samplers = createMemo(() => {
     return Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-      label: value,
+      label: `Sampler: ${value}`,
       value: key,
     }))
   })
@@ -284,7 +291,6 @@ export const AgnaiSettings: Component<{
 
   return (
     <>
-      <div class="text-xl">Agnaistic</div>
       <Show when={settings.models.length === 0}>
         <i>No additional options available</i>
       </Show>
