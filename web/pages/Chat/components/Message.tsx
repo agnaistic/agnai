@@ -841,7 +841,7 @@ export const Typewriter: Component<{
   reset?: ComponentEmitter<'reset'>
 }> = (props) => {
   const [text, setText] = createSignal('')
-  const [getTimer, setTimer] = createSignal<NodeJS.Timeout>()
+  const [getTimer, setTimer] = createSignal<{ timer: NodeJS.Timeout; speed: number }>()
 
   const callback = () => setText('')
 
@@ -851,12 +851,14 @@ export const Typewriter: Component<{
   })
 
   const startTimer = () => {
-    const prev = getTimer()
-    if (prev) clearInterval(prev)
-
     const setting = props.speed ?? 0
+    const prev = getTimer()
+    if (prev && prev.speed !== setting) {
+      clearInterval(prev.timer)
+    }
+
     let speed = 1000 / setting
-    const textTimer = setInterval(() => {
+    const timer = setInterval(() => {
       const prev = text()
       if (prev === props.text) return
 
@@ -868,7 +870,7 @@ export const Typewriter: Component<{
       const next = props.text.slice(0, prev.length + 1)
       setText(next)
     }, speed)
-    setTimer(textTimer)
+    setTimer({ timer, speed: setting })
   }
 
   onMount(() => {
@@ -893,15 +895,16 @@ export const Typewriter: Component<{
 
   createEffect(
     on(
-      () => props.speed,
-      (nextSpeed) => {
+      () => ({ speed: props.speed, text: props.text }),
+      () => {
         startTimer()
       }
     )
   )
 
   onCleanup(() => {
-    clearInterval(getTimer()!)
+    const timer = getTimer()
+    clearInterval(timer?.timer!)
     props.reset?.off(callback)
   })
 
