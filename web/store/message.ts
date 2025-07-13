@@ -1401,6 +1401,7 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 })
 
 const updateMsgSub = (body: {
+  type: string
   chatId: string
   messageId: string
   imagePrompt?: string
@@ -1425,8 +1426,9 @@ const updateMsgSub = (body: {
   }
   const nextMsgs = replace(body.messageId, msgs, next)
 
-  const wait =
-    waiting?.chatId === body.chatId || waiting?.messageId === body.messageId ? undefined : waiting
+  const isSame = waiting?.chatId === body.chatId && waiting.messageId === body.messageId
+  const isEdit = body.type === 'message-edited' || body.type === 'message-swapped'
+  const wait = isEdit ? waiting : isSame ? undefined : waiting
 
   msgStore.setState({
     msgs: nextMsgs,

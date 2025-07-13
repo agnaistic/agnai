@@ -16,6 +16,7 @@ export interface Provider {
   url: string
   key: string
   keySet?: boolean
+  userKey?: string
 }
 
 export interface SubscriptionTier {

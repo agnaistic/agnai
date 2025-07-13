@@ -125,7 +125,7 @@ export const presetStore = createStore<PresetState>(
 
           const models =
             detail.category === 'self'
-              ? await presetApi.getLocalModelList({ url, key: provider.key })
+              ? await presetApi.getLocalModelList({ url, key: provider.userKey || provider.key })
               : await presetApi.getPresetModelList({
                   id: preset._id || '',
                   providerId: preset.providerId,

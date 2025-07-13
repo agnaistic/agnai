@@ -87,7 +87,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
       },
       { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
       { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },
-      { type: 'format', name: 'Other', url: '', value: 'openai-chatv2' },
+      { type: 'format', name: 'Other (OpenAI Compatible)', url: '', value: 'openai-chatv2' },
     ],
   },
 }

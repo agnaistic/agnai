@@ -283,7 +283,7 @@ export const ManageProvider: Component<{
 
         <Select
           items={formatOptions()}
-          label="Request Format"
+          label={'Request Format'}
           value={format()}
           onChange={(ev) => onFormatChange(ev.value)}
           hide={formatOptions().length <= 1}

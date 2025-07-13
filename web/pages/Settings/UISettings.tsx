@@ -222,7 +222,11 @@ const UISettings: Component<{}> = () => {
                 twReset.emit.reset()
               }}
             />
-            <Button size="sm" class="!py-2">
+            <Button
+              size="sm"
+              class="!py-2"
+              onClick={() => userStore.saveUI({ textSpeed: state.ui.textSpeed })}
+            >
               Save
             </Button>
           </div>

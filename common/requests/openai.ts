@@ -46,9 +46,14 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     'Content-Type': 'application/json',
   }
 
-  if (gen.userThirdPartyKey) {
-    headers.Authorization = `Bearer ${gen.userThirdPartyKey}`
-    headers['x-api-key'] = `${gen.userThirdPartyKey}`
+  const provider = gen.providerId
+    ? opts.user.providers?.find((p) => p._id === gen.providerId)
+    : null
+  const key = provider?.userKey || gen.userThirdPartyKey
+
+  if (key) {
+    headers.Authorization = `Bearer ${key}`
+    headers['x-api-key'] = `${key}`
   }
 
   const urlPath = gen.thirdPartyFormat === 'openai' ? `/completions` : `/chat/completions`
