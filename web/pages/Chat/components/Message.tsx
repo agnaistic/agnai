@@ -852,12 +852,15 @@ export const Typewriter: Component<{
 
   const startTimer = () => {
     const setting = props.speed ?? 0
+    let speed = 1000 / setting
+    console.log(`[tw] set to ${speed}ms`)
     const prev = getTimer()
-    if (prev && prev.speed !== setting) {
+
+    if (prev && prev.speed === setting) return
+    if (prev?.timer) {
       clearInterval(prev.timer)
     }
 
-    let speed = 1000 / setting
     const timer = setInterval(() => {
       const prev = text()
       if (prev === props.text) return
@@ -895,7 +898,7 @@ export const Typewriter: Component<{
 
   createEffect(
     on(
-      () => ({ speed: props.speed, text: props.text }),
+      () => ({ speed: props.speed }),
       () => {
         startTimer()
       }
