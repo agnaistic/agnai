@@ -31,11 +31,13 @@ import { Toggle } from '/web/shared/Toggle'
 import Tabs from '/web/shared/Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { Saga } from '/common/types'
+import { usePresetContext } from '/web/store/preset-context'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const SidePane: Component<{ show: (show: boolean) => void }> = (props) => {
   const pane = usePaneManager()
+  const [preset, setters] = usePresetContext({ anonymous: true })
 
   const state = sagaStore((s) => s.state)
 
@@ -45,10 +47,17 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
 
   const updatePane = (pane: string) => {
     switch (pane) {
-      case 'prompt':
-      case 'preset':
+      case 'prompt': {
         props.show(true)
         return
+      }
+      case 'preset': {
+        if (state.presetId) {
+          setters.load(state.presetId)
+        }
+        props.show(true)
+        return
+      }
     }
 
     props.show(false)
@@ -70,6 +79,8 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
       <Match when={pane.pane() === 'preset'}>
         <Convertible close={closePane} footer={paneFooter()}>
           <ModeGenSettings
+            preset={preset}
+            setters={setters}
             footer={setPaneFooter}
             presetId={state.presetId}
             close={closePane}
