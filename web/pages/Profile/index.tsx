@@ -413,46 +413,37 @@ const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (pro
     userStore.deleteAccount()
   }
 
-  rootModalStore.addModal({
-    id: 'delete-account-modal',
-    element: (
-      <Modal
-        title="Delete Account"
-        show={props.show}
-        close={props.close}
-        footer={
-          <>
-            <Button schema="secondary" onClick={props.close}>
-              Cancel
-            </Button>
-          </>
-        }
-        ariaLabel="Delete account"
-        ariaDescription="Warning: This window deletes your current account"
-      >
-        <div class="flex flex-col items-center gap-2">
-          <TitleCard type="rose" class="font-bold">
-            This is irreversible! Your account cannot be recovered if it is deleted.
-          </TitleCard>
-
-          <p>Enter your username then click "Confirm" to confirm the deletion of your account</p>
-
-          <TextInput
-            fieldName="delete-username"
-            onChange={(ev) => setUsername(ev.currentTarget.value)}
-            placeholder="Username"
-          />
-          <Button
-            disabled={username() !== state.user?.username}
-            schema="red"
-            onClick={deleteAccount}
-          >
-            Confirm Deletion
+  return (
+    <RootModal
+      title="Delete Account"
+      show={props.show}
+      close={props.close}
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            Cancel
           </Button>
-        </div>
-      </Modal>
-    ),
-  })
+        </>
+      }
+      ariaLabel="Delete account"
+      ariaDescription="Warning: This window deletes your current account"
+    >
+      <div class="flex flex-col items-center gap-2">
+        <TitleCard type="rose" class="font-bold">
+          This is irreversible! Your account cannot be recovered if it is deleted.
+        </TitleCard>
 
-  return null
+        <p>Enter your username then click "Confirm" to confirm the deletion of your account</p>
+
+        <TextInput
+          fieldName="delete-username"
+          onChange={(ev) => setUsername(ev.currentTarget.value)}
+          placeholder="Username"
+        />
+        <Button disabled={username() !== state.user?.username} schema="red" onClick={deleteAccount}>
+          Confirm Deletion
+        </Button>
+      </div>
+    </RootModal>
+  )
 }
