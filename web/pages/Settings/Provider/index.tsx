@@ -148,7 +148,7 @@ export const PresetProvider: Component<{
       props.state.providerId === '' && props.state.service === 'agnaistic'
         ? 'agnaistic'
         : props.state.providerId
-    if (id === 'agnaistic') return `Agnaistic ${props.state.providerId}`
+    if (id === 'agnaistic') return `Agnaistic`
 
     const match = services().find((s) => s.value === id)
     return match?.label || '???'
