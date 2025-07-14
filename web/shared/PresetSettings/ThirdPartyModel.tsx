@@ -22,29 +22,24 @@ import { round } from '/common/util'
 import { createEmitter } from '../util'
 import { useAppContext } from '/web/store/context'
 import { SubscriptionModelOption } from '/common/types/presets'
-import {
-  PresetContext,
-  PresetState,
-  SetPresetState,
-  usePresetContext,
-} from '/web/store/preset-context'
+import { PresetFuncs, PresetState } from '/web/store/preset-context'
 
 type SelectorProps = {
   state: PresetState
-  setter: SetPresetState
-  context: PresetContext
+  setters: PresetFuncs
   page: string | undefined
 }
 type Selector = Component<SelectorProps>
 
-export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
-  props
-) => {
-  const [state, { setState, context }] = usePresetContext()
-
+export const ThirdPartyModel: Component<{
+  state: PresetState
+  setters: PresetFuncs
+  page?: string
+  sub?: SubscriptionModelOption
+}> = (props) => {
   const component = createMemo(() => {
-    if (!state.providerId && context.service) {
-      switch (context.service) {
+    if (!props.state.providerId && props.setters.context.service) {
+      switch (props.setters.context.service) {
         case 'claude':
         case 'claude-v2':
           return 'claude-external'
@@ -52,22 +47,22 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
         case 'novel':
         case 'openrouter':
         case 'openrouter-completion':
-          return context.service
+          return props.setters.context.service
       }
 
-      switch (context.format) {
+      switch (props.setters.context.format) {
         case 'gemini':
-          return context.format
+          return props.setters.context.format
       }
     }
 
-    switch (context.service) {
+    switch (props.setters.context.service) {
       case 'horde':
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
       case 'agnaistic':
-        return context.service
+        return props.setters.context.service
 
       case 'openai':
       case 'claude':
@@ -77,12 +72,12 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
 
     // If there is no provider, it's a legacy preset
     // Therefore, if it isn't set to third-party, don't return a component
-    if (!context.provider && context.service !== 'kobold') return ''
+    if (!props.setters.context.provider && props.setters.context.service !== 'kobold') return ''
 
-    switch (context.format) {
+    switch (props.setters.context.format) {
       case 'featherless':
       case 'arli':
-        return context.format
+        return props.setters.context.format
 
       case 'claude':
         return 'claude-external'
@@ -106,32 +101,37 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
     <>
       <Switch>
         <Match when={component() === 'agnaistic' || !component()}>
-          <AgnaisticSettings page={props.page} noSave={false} />
+          <AgnaisticSettings
+            state={props.state}
+            setters={props.setters}
+            page={props.page}
+            noSave={false}
+          />
         </Match>
         <Match when={component() === 'novel'}>
-          <NovelAIModel state={state} context={context} page={props.page} setter={setState} />
+          <NovelAIModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
-          <OpenRouterModels state={state} context={context} page={props.page} setter={setState} />
+          <OpenRouterModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
 
         <Match when={component() === 'featherless'}>
-          <FeatherlessModels state={state} context={context} page={props.page} setter={setState} />
+          <FeatherlessModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'claude-external'}>
-          <ClaudeModel state={state} context={context} page={props.page} setter={setState} />
+          <ClaudeModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'compat'}>
-          <CompatModel state={state} context={context} page={props.page} setter={setState} />
+          <CompatModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'arli'}>
-          <ArliModels state={state} context={context} page={props.page} setter={setState} />
+          <ArliModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'gemini'}>
-          <GoogleModels state={state} context={context} page={props.page} setter={setState} />
+          <GoogleModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'horde'}>
-          <HordeModels state={state} context={context} page={props.page} setter={setState} />
+          <HordeModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when>{null}</Match>
       </Switch>
@@ -155,7 +155,7 @@ const CompatModel: Selector = (props) => {
   )
 
   const onModelSelect = (value: string) => {
-    props.setter({ mistralModel: '', googleModel: '', claudeModel: '' })
+    props.setters.setState({ mistralModel: '', googleModel: '', claudeModel: '' })
     // Only change immediately save the preset in chat pages
     setProviderModel(props, value)
   }
@@ -945,7 +945,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 function setProviderModel(
-  { state, setter, page }: SelectorProps,
+  { state, setters, page }: SelectorProps,
   model: string,
   extras?: Partial<PresetState>
 ) {
@@ -958,7 +958,7 @@ function setProviderModel(
 
   update.providerModels = models
 
-  setter(update)
+  setters.setState(update)
 
   if (state._id && page === 'mode') {
     presetStore.updatePreset(state._id, update, {

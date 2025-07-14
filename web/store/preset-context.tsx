@@ -12,20 +12,20 @@ import { isValidServiceSetting } from '../shared/util'
 import { getClientPreset } from '../shared/adapter'
 
 export type PresetProps = {
-  disabled?: boolean
-  service?: AIAdapter
-  disableService?: boolean
-  hideTabs?: PresetTab[]
+  state: PresetState
+  setters: PresetFuncs
   page?: string
+
+  disabled?: boolean
+  //   service?: AIAdapter
+  hideTabs?: PresetTab[]
 }
 
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
 
 export type PresetTabProps = {
   state: PresetState
-  context: PresetContext
-  setter: SetPresetState
-  hides: HideState
+  setters: PresetFuncs
   sub: SubscriptionModelOption | undefined
   tab: string
   page: string | undefined
@@ -102,8 +102,11 @@ export function PresetProvider(props: { children: any }) {
   return <PresetContext.Provider value={[store, setStore]}>{props.children}</PresetContext.Provider>
 }
 
-export function usePresetContext() {
-  const [state, setState] = useContext(PresetContext)
+export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
+
+export function usePresetContext(opts?: { anonymous: boolean }) {
+  const [state, setState] = opts?.anonymous ? createStore(initPreset()) : useContext(PresetContext)
+
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
     createHides(state, context)

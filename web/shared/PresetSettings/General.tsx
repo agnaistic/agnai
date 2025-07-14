@@ -27,24 +27,17 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
-      <ModelFormat
-        state={props.state}
-        hides={props.hides}
-        setter={props.setter}
-        sub={props.sub}
-        page={props.page}
-        context={props.context}
-      />
+      <ModelFormat state={props.state} setters={props.setters} sub={props.sub} page={props.page} />
 
       <Toggle
         fieldName="localRequests"
         label="Use Local Requests"
         helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
-        service={props.context.service}
-        format={props.context.format}
-        hide={props.hides.localRequests || !!props.state.providerId}
+        service={props.setters.context.service}
+        format={props.setters.context.format}
+        hide={props.setters.hides.localRequests || !!props.state.providerId}
         value={props.state.localRequests}
-        onChange={(ev) => props.setter('localRequests', ev)}
+        onChange={(ev) => props.setters.setState('localRequests', ev)}
       />
 
       <Toggle
@@ -52,13 +45,13 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         label="Disable Auto-URL"
         helperText="No paths will be added to your URL."
         value={props.state.thirdPartyUrlNoSuffix}
-        service={props.context.service}
+        service={props.setters.context.service}
         hide={
-          props.hides.thirdPartyFormat ||
-          props.context.format === 'featherless' ||
-          props.context.format === 'arli'
+          props.setters.hides.thirdPartyFormat ||
+          props.setters.context.format === 'featherless' ||
+          props.setters.context.format === 'arli'
         }
-        onChange={(ev) => props.setter('thirdPartyUrlNoSuffix', ev)}
+        onChange={(ev) => props.setters.setState('thirdPartyUrlNoSuffix', ev)}
       />
 
       {/* <Show when={props.context.service === 'horde'}>
@@ -71,7 +64,12 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
       </Show> */}
 
       <div class="flex flex-col gap-2">
-        <Show when={props.context.service === 'kobold' && props.context.format === 'aphrodite'}>
+        <Show
+          when={
+            props.setters.context.service === 'kobold' &&
+            props.setters.context.format === 'aphrodite'
+          }
+        >
           <RangeInput
             fieldName="swipesPerGeneration"
             label="Swipes Per Generation"
@@ -81,28 +79,24 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
             step={1}
             value={props.state.swipesPerGeneration || 1}
             disabled={props.state.disabled}
-            onChange={(ev) => props.setter('swipesPerGeneration', ev)}
+            onChange={(ev) => props.setters.setState('swipesPerGeneration', ev)}
           />
         </Show>
 
         <ResponseLength
           state={props.state}
-          hides={props.hides}
-          setter={props.setter}
+          setters={props.setters}
           sub={props.sub}
           subMax={subMax()}
           page={props.page}
-          context={props.context}
         />
 
         <ContextSize
           state={props.state}
-          hides={props.hides}
-          setter={props.setter}
+          setters={props.setters}
           sub={props.sub}
           subMax={subMax()}
           page={props.page}
-          context={props.context}
         />
 
         <Temperature {...props} />
@@ -118,7 +112,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           aiSetting={'minP'}
           recommended={props.sub?.preset.minP}
-          onChange={(ev) => props.setter('minP', ev)}
+          onChange={(ev) => props.setters.setState('minP', ev)}
         />
 
         <Toggle
@@ -127,32 +121,23 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           helperText="Stream the response as it is generated"
           value={props.state.streamResponse ?? false}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('streamResponse', ev)}
+          onChange={(ev) => props.setters.setState('streamResponse', ev)}
         />
         <StoppingStrings
           state={props.state}
-          hides={props.hides}
-          setter={props.setter}
+          setters={props.setters}
           sub={props.sub}
           page={props.page}
-          context={props.context}
         />
         <Toggle
           fieldName="disableNameStops"
           label="Disable Name Stops"
           helperText="Disable automatic character names stopping strings"
           value={props.state.disableNameStops}
-          onChange={(ev) => props.setter('disableNameStops', ev)}
+          onChange={(ev) => props.setters.setState('disableNameStops', ev)}
         />
 
-        <PhraseBias
-          state={props.state}
-          hides={props.hides}
-          setter={props.setter}
-          sub={props.sub}
-          page={props.page}
-          context={props.context}
-        />
+        <PhraseBias state={props.state} setters={props.setters} sub={props.sub} page={props.page} />
       </div>
     </div>
   )

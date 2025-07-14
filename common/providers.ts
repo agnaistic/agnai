@@ -145,9 +145,13 @@ export function getPresetConnection(
   providers: AppSchema.Provider[] | undefined
 ) {
   const copy = { ...preset }
+  const provider = providers?.find((p) => p._id === preset.providerId)
+  const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
 
   const isAgnai =
-    preset.providerId === 'agnaistic' || (!preset.providerId && preset.service === 'agnaistic')
+    !validProviderId ||
+    preset.providerId === 'agnaistic' ||
+    (!preset.providerId && preset.service === 'agnaistic')
 
   if (isAgnai) {
     copy.service = 'agnaistic'
@@ -164,8 +168,6 @@ export function getPresetConnection(
       key: '',
     }
   }
-
-  const provider = providers?.find((p) => p._id === preset.providerId)
 
   if (provider) {
     const conn = getProviderConnection(provider)

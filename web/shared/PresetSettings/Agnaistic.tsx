@@ -14,12 +14,16 @@ import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
-import { usePresetContext } from '/web/store/preset-context'
+import { PresetFuncs, PresetState } from '/web/store/preset-context'
 
 const MODEL_NAMES = new Map<string, string>()
 
-export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = (props) => {
-  const [preset, { setState, upsert }] = usePresetContext()
+export const AgnaisticSettings: Component<{
+  state: PresetState
+  setters: PresetFuncs
+  noSave: boolean
+  page?: string
+}> = (props) => {
   const [appctx] = useAppContext()
   const state = userStore((s) => ({ tiers: s.tiers }))
   const models = settingStore((s) => ({ list: s.config.subs || [] }))
@@ -32,25 +36,26 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
   const cats = useModelCategories()
 
   const onSave = (value: string) => {
-    const models = preset.providerModels || {}
+    const models = props.state.providerModels || {}
     const next = { ...models, agnaistic: value }
-    setState('providerModels', next)
+    props.setters.setState('providerModels', next)
 
     if (props.noSave) {
       return
     }
 
-    presetStore.updatePreset(preset._id, { providerModels: next })
+    presetStore.updatePreset(props.state._id, { providerModels: next })
   }
 
   createEffect(
     on(
-      () => preset?.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId,
+      () =>
+        props.state?.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId,
       (id) => {
         if (!id) return
 
-        if (isDefaultPreset(preset._id)) {
-          upsert({
+        if (isDefaultPreset(props.state._id)) {
+          props.setters.upsert({
             quiet: true,
             onCreated: (preset) => {
               if (!props.page) {
@@ -60,7 +65,7 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
 
               const chatId = appctx.chat?._id
               if (!chatId) return
-              chatStore.assignChatPreset(chatId, preset._id)
+              chatStore.assignChatPreset(chatId, props.state._id)
             },
             onUpdated: () => {
               toastStore.success('Preset updated')
@@ -69,11 +74,11 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
           return
         }
 
-        if (!preset?._id || !id) return
-        if (preset._id !== preset._id) return
+        if (!props.state?._id || !id) return
+        if (props.state._id !== props.state._id) return
 
         const curr =
-          preset.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId
+          props.state.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId
         if (id === curr) return
       }
     )
@@ -82,7 +87,8 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
   const emitter = createEmitter('close')
 
   const label = createMemo(() => {
-    const id = preset.providerModels?.agnaistic ?? preset.registered?.agnaistic?.subscriptionId
+    const id =
+      props.state.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId
     let opt = cats().all.find((v) => v.value === id)
 
     if (!opt) {
@@ -108,7 +114,7 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
   })
 
   return (
-    <Show when={preset.providerId === 'agnaistic' || preset.service === 'agnaistic'}>
+    <Show when={props.state.providerId === 'agnaistic' || props.state.service === 'agnaistic'}>
       <div class="flex items-center gap-2">
         <CustomSelect
           size="sm"
@@ -125,8 +131,8 @@ export const AgnaisticSettings: Component<{ noSave: boolean; page?: string }> = 
           categories={cats().categories}
           onSelect={(ev) => onSave(ev.value)}
           selected={
-            preset.providerModels?.agnaistic ??
-            preset.registered?.agnaistic?.subscriptionId ??
+            props.state.providerModels?.agnaistic ??
+            props.state.registered?.agnaistic?.subscriptionId ??
             fallback()
           }
           closeSub={emitter.on}

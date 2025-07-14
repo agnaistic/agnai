@@ -54,7 +54,7 @@ export const useValidChatPane = () => {
 const ChatPanes: Component<{}> = (props) => {
   const params = useParams()
   const pane = usePaneManager()
-  const [preset] = usePresetContext()
+  const [preset, setters] = usePresetContext()
 
   const chars = characterStore((s) => ({
     chatBots: s.characters.list,
@@ -178,6 +178,8 @@ const ChatPanes: Component<{}> = (props) => {
         <Match when={pane.pane() === 'preset'}>
           <Convertible close={closePane} footer={paneFooter()}>
             <ModeGenSettings
+              preset={preset}
+              setters={setters}
               presetId={preset._id}
               onPresetChanged={onPresetChanged}
               close={closePane}

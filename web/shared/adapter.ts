@@ -127,10 +127,12 @@ export function getPresetLabel(preset: AppSchema.GenSettings) {
   const conn = getPresetConnection(preset, providers)
 
   const prefix = conn.provider?.name || conn.detail?.name || ADAPTER_LABELS[conn.service!]
+  const catLabel = getProviderCategoryLabel(conn.category)
+
   return {
     prefix,
     type: conn.category,
-    category: getProviderCategoryLabel(conn.category),
+    category: catLabel,
     desc: preset.name || 'Unnamed',
     conn,
   }

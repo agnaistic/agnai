@@ -25,8 +25,7 @@ export const GenerationPresetsPage: Component = () => {
   const nav = useNavigate()
   const [selecting, setSelecting] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
-
-  const [store, { setState, load, upsert }] = usePresetContext()
+  const [store, setters] = usePresetContext({ anonymous: true })
 
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
@@ -54,7 +53,7 @@ export const GenerationPresetsPage: Component = () => {
       }
 
       if (presets.importing) {
-        setState({
+        setters.setState({
           ...presets.importing,
           _id: '',
           name: presets.importing.name ? `${presets.importing.name} - Imported` : 'Imported Preset',
@@ -67,11 +66,11 @@ export const GenerationPresetsPage: Component = () => {
         ? defaultPresets[query.preset]
         : presets.presets.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
-      setState({ ...emptyPreset, ...preset, _id: '' })
+      setters.setState({ ...emptyPreset, ...preset, _id: '' })
       return
     } else if (params.id === 'default') {
       if (!isDefaultPreset(query.preset)) return
-      setState({
+      setters.setState({
         ...emptyPreset,
         ...defaultPresets[query.preset],
         _id: '',
@@ -81,7 +80,7 @@ export const GenerationPresetsPage: Component = () => {
     }
 
     if (params.id && store._id !== params.id) {
-      load(params.id)
+      setters.load(params.id)
       console.log(`[preset] changing to ${params.id}`)
       // return
     }
@@ -102,16 +101,16 @@ export const GenerationPresetsPage: Component = () => {
 
   const deletePreset = () => {
     presetStore.deletePreset(store._id, () => nav('/presets'))
-    setState(emptyPreset)
+    setters.setState(emptyPreset)
   }
 
   const onSave = (ev?: any) => {
     ev?.preventDefault()
     if (presets.saving) return
-    upsert({
+    setters.upsert({
       onCreated: (newPreset) => {
         nav(`/presets/${newPreset._id}`)
-        setState(newPreset)
+        setters.setState(newPreset)
       },
     })
   }
@@ -157,12 +156,12 @@ export const GenerationPresetsPage: Component = () => {
                 helperText="A name or short description of your preset"
                 placeholder="Preset name"
                 value={store.name}
-                onChange={(ev) => setState('name', ev.currentTarget.value)}
+                onChange={(ev) => setters.setState('name', ev.currentTarget.value)}
                 required
                 parentClass="mb-2"
               />
 
-              <PresetSettings noSave />
+              <PresetSettings state={store} setters={setters} noSave />
             </div>
             <Show when={store.userId !== 'SYSTEM'}>
               <div class="flex flex-row justify-end">

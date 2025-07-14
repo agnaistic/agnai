@@ -15,13 +15,13 @@ export const PhraseBias: Field = (props) => {
 
   const add = () => {
     const next = (props.state.phraseBias || []).concat({ seq: '', bias: 0 })
-    props.setter('phraseBias', next)
+    props.setters.setState('phraseBias', next)
   }
 
   const remove = (idx: number) => {
     const curr = props.state.phraseBias || []
     const next = curr.slice(0, idx).concat(curr.slice(idx + 1))
-    props.setter('phraseBias', next)
+    props.setters.setState('phraseBias', next)
   }
 
   const change = (prop: 'bias' | 'seq', index: number, value: any) => {
@@ -30,7 +30,7 @@ export const PhraseBias: Field = (props) => {
       const update = { ...t, [prop]: value }
       return update
     })
-    props.setter('phraseBias', next)
+    props.setters.setState('phraseBias', next)
   }
 
   return (
@@ -84,13 +84,13 @@ export const PhraseBias: Field = (props) => {
 export const StoppingStrings: Field = (props) => {
   const addString = () => {
     const next = (props.state.stopSequences || []).concat('')
-    props.setter('stopSequences', next)
+    props.setters.setState('stopSequences', next)
   }
 
   const removeString = (i: number) => {
     const next = (props.state.stopSequences || []).slice()
     next.splice(i, 1)
-    props.setter('stopSequences', next)
+    props.setters.setState('stopSequences', next)
   }
 
   return (
@@ -118,7 +118,7 @@ export const StoppingStrings: Field = (props) => {
                   const next = props.state.stopSequences!.map((t, idx) =>
                     idx === i ? ev.currentTarget.value : t
                   )
-                  props.setter('stopSequences', next)
+                  props.setters.setState('stopSequences', next)
                 }}
               />
               <Button class="icon-button" schema="clear" onClick={() => removeString(i)}>
