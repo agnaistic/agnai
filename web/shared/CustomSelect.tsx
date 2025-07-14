@@ -89,13 +89,14 @@ export const CustomSelect: Component<{
   const filteredOpts = createMemo(() => {
     if (!props.options) return
 
-    const input = filter().trim()
+    const input = filter().trim().toLowerCase()
     if (!input) return props.options
 
     return props.options.filter((opt) =>
       typeof opt.label === 'string'
-        ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
-        : props.search?.(opt.value, input)
+        ? props.search?.(opt.label.toLowerCase(), input) ||
+          props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+        : props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
     )
   })
 
