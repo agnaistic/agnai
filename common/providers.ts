@@ -149,9 +149,9 @@ export function getPresetConnection(
   const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
 
   const isAgnai =
-    !validProviderId ||
-    preset.providerId === 'agnaistic' ||
-    (!preset.providerId && preset.service === 'agnaistic')
+    !validProviderId || // Provider preset, but invalid provider ID
+    preset.providerId === 'agnaistic' || // Provider preset
+    (!preset.providerId && preset.service === 'agnaistic') // Legacy preset
 
   if (isAgnai) {
     copy.service = 'agnaistic'

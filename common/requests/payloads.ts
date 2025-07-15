@@ -121,6 +121,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   }
 
   if (
+    !format ||
     format === 'openai' ||
     format === 'openai-chat' ||
     format === 'openai-chatv2' ||
