@@ -3,14 +3,16 @@ import { Component, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { chatStore, msgStore } from '../../store'
+import { resolveChatPath } from '/common/chat'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
   const chats = chatStore.getState()
   const msgs = msgStore.getState()
 
   const json = createMemo(() => {
+    const graph = msgs.graph
     const chat = chats.active?.chat
-    const messages = msgs.messageHistory.concat(msgs.msgs)
+    const messages = resolveChatPath(graph.tree, msgs.msgs.slice(-1)[0]._id)
 
     const json = {
       name: 'Exported',
@@ -25,7 +27,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
         extras: msg.extras,
         ooc: msg.ooc,
         values: msg.values,
-        parent: msg.parent ? msg.msg.slice(0, 8) : undefined,
+        parent: msg.parent ? msg.parent.slice(0, 8) : undefined,
         handle: msg.characterId
           ? chats.allChars.map[msg.characterId!]?.name
           : msg.userId
