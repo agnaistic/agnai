@@ -23,6 +23,13 @@ export const NovelSettings: Component<{
 }> = (props) => {
   const state = userStore()
 
+  const isKeySet = createMemo(() => {
+    const provider = state.user?.providers?.find((p) => p.provider === 'known-novel')
+
+    const isSet = !!provider?.keySet || !!state.user?.novelApiKey
+    return isSet
+  })
+
   const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({
     label: `Model: ${key}`,
     value,
@@ -33,7 +40,7 @@ export const NovelSettings: Component<{
   }))
   return (
     <>
-      <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
+      <Show when={!isKeySet()}>
         <div class="font-bold text-red-600">
           You do not have a valid NovelAI key set. You will not be able to generate images using
           Novel.
