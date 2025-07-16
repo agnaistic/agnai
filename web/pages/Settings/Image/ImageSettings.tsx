@@ -95,23 +95,26 @@ export const ImageSettingsModal = () => {
 
   onMount(() => settingStore.getServerConfig())
 
-  const tabs = createMemo(() => {
-    const tabs = ['Shared']
-    if (isChat()) {
-      if (entity.chat) tabs.push('Chat')
-      if (entity.char) tabs.push('Character')
-    }
-    return tabs
-  })
-
-  const tab = useTabs(
-    tabs(),
+  const tab = useTabs<string[]>(
+    [],
     isChat() && entity.chat?.imageSource === 'chat'
       ? 1
       : entity.chat?.imageSource?.includes('character')
       ? 2
       : 0
   )
+  createEffect(() => {
+    const tabs = ['Shared']
+
+    if (entity.chat && isChat()) tabs.push('Chat')
+    if (entity.char && isChat()) tabs.push('Character')
+
+    return tab.update(tabs)
+  })
+
+  const currentChatImageSrc = createMemo(() => {
+    return entity.chat?.imageSource || 'settings'
+  })
 
   const currentImgSource = createMemo(() => {
     switch (tab.current()) {
@@ -225,12 +228,19 @@ export const ImageSettingsModal = () => {
           <Match when={tab.current() === 'Shared'}>
             <SolidCard type="hl">
               <div>Shared Settings</div>
-              <Show when={!isChat()}>
-                <div class="text-500 text-sm italic">
+              <div class="text-500 text-sm italic">
+                <Show
+                  when={!isChat()}
+                  fallback={
+                    <>
+                      <b>Global/Default</b> Image Settings
+                    </>
+                  }
+                >
                   Note: <b>Chat</b> and <b>Character</b> image settings are only available when a
                   chat is open.
-                </div>
-              </Show>
+                </Show>
+              </div>
             </SolidCard>
           </Match>
           <Match when={tab.current() === 'Character'}>
@@ -247,7 +257,7 @@ export const ImageSettingsModal = () => {
           </Match>
         </Switch>
 
-        <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
+        <Tabs tabs={tab.tabs()} select={tab.select} selected={tab.selected} />
 
         <Show when={isChat()}>
           <div class="flex flex-col gap-1">
@@ -266,7 +276,12 @@ export const ImageSettingsModal = () => {
                 )
               }
             >
-              Use {tab.current()} Settings
+              <Show
+                when={currentChatImageSrc() === currentImgSource()}
+                fallback={`Use ${tab.current()} Settings`}
+              >
+                Use {tab.current()} Settings (Active)
+              </Show>
             </Button>
           </div>
         </Show>

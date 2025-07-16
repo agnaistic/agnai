@@ -70,7 +70,7 @@ export const SubscriptionModel: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
   const [replacing, setReplacing] = createSignal(false)
-  const [state, setters] = usePresetContext()
+  const [state, setters] = usePresetContext({ anonymous: true })
 
   const onEdit = (preset: AppSchema.SubscriptionModel) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -104,18 +104,11 @@ export const SubscriptionModel: Component = () => {
         updateTitle(`Create subscription`)
       }
 
-      const template = isDefaultPreset(query.preset)
-        ? defaultPresets[query.preset]
-        : presets.subs.find((p) => p._id === query.preset)
-      const preset = template ? { ...template } : { ...emptyPreset }
-      setters.setState({
-        ...emptyPreset,
-        ...preset,
-        _id: '',
-        subApiKey: '',
-        subDisabled: false,
-        allowGuestUsage: false,
-      })
+      const importing = presets.subs.find((p) => p._id === query.preset)
+      setters.clear()
+      if (importing) {
+        setters.setState({ ...importing })
+      }
       return
     } else if (params.id === 'default') {
       if (!isDefaultPreset(query.preset)) return

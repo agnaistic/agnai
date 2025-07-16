@@ -149,7 +149,7 @@ const ChatNav: Component<NavProps> = (props) => {
           <Settings size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item
-          onClick={() => settingStore.imageSettings(true)}
+          onClick={() => settingStore.imageGeneration(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >

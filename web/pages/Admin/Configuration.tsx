@@ -102,7 +102,7 @@ const ServerConfiguration: Component = () => {
         </Match>
 
         <Match when>
-          <Tabs tabs={tab.tabs} select={tab.select} selected={tab.selected} />
+          <Tabs tabs={tab.tabs()} select={tab.select} selected={tab.selected} />
 
           <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'General' }}>

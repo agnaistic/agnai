@@ -1,6 +1,7 @@
 type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings
 
 export type BaseImageSettings = {
+  presetId?: string
   type: ImageType['type']
 
   summaryPresetId?: string

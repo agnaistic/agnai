@@ -36,7 +36,7 @@ export const ProfileModal: Component = () => {
     const name = search.profile_tab || ''
     if (!name) return
 
-    const index = tabs.tabs.findIndex((t) => t.toLowerCase() === name.toLowerCase())
+    const index = tabs.tabs().findIndex((t) => t.toLowerCase() === name.toLowerCase())
     if (index > -1) {
       tabs.select(index)
     }

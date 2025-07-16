@@ -57,6 +57,7 @@ export type SettingState = {
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
   showSettings: boolean
+  showImgGen: boolean
   showImgSettings: boolean
 
   slotsLoaded: boolean
@@ -114,6 +115,7 @@ const initState: SettingState = {
   arliai: { models: [], classes: {} },
   flags: getFlags(),
   showSettings: false,
+  showImgGen: false,
   showImgSettings: false,
   slotsLoaded: false,
   slots: { publisherId: '' },
@@ -184,6 +186,13 @@ export const settingStore = createStore<SettingState>(
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings
       return { showSettings: next }
+    },
+    imageGeneration({ showImgGen }, next?: boolean) {
+      if (next === undefined) {
+        return { showImgGen: !showImgGen }
+      }
+
+      return { showImgGen: next }
     },
     imageSettings({ showImgSettings }, next?: boolean) {
       if (next === undefined) {

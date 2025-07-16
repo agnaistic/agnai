@@ -267,7 +267,8 @@ const TextInput: Component<Props> = (props) => {
               'rounded-l-none': !!props.prelabel,
               ...props.classList,
             }}
-            onkeyup={(ev) => {
+            onKeyUp={(ev) => {
+              ev.preventDefault()
               updateCount()
               props.onKeyUp?.(ev)
             }}
@@ -304,7 +305,7 @@ const TextInput: Component<Props> = (props) => {
                 'border-[var(--bg-600)]': props.variant === 'outline',
                 ...props.classList,
               }}
-              onkeyup={(ev) => {
+              onKeyUp={(ev) => {
                 updateCount()
                 props.onKeyUp?.(ev)
               }}

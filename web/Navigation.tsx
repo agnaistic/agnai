@@ -459,7 +459,7 @@ const NavIcons: Component<{
         </Item>
 
         <Item
-          onClick={() => settingStore.imageSettings(true)}
+          onClick={() => settingStore.imageGeneration(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >

@@ -88,7 +88,11 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   drySequenceBreakers: [],
   modelFormat: 'None',
   providerId: '',
+  subVisionModel: false,
+  isDefaultSub: false,
+  subServiceUrl: 'https://',
   providerModels: {},
+  tokenizer: '',
   registered: {},
 })
 

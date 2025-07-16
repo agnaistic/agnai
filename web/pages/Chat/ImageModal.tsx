@@ -1,11 +1,13 @@
 import { Component, For, createMemo } from 'solid-js'
-import { NoTitleModal } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import { settingStore } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
 
 export const ImageModal: Component = (props) => {
   const state = settingStore()
+
+  const url = createMemo(() => (state.showImage?.url ? getAssetUrl(state.showImage?.url!) : ''))
 
   const footer = createMemo(() => {
     if (!state.showImage?.options?.length) return null
@@ -24,7 +26,7 @@ export const ImageModal: Component = (props) => {
   })
 
   return (
-    <NoTitleModal
+    <Modal
       show={!!state.showImage}
       close={settingStore.clearImage}
       maxWidth="half"
@@ -38,8 +40,8 @@ export const ImageModal: Component = (props) => {
       }
     >
       <div class="flex justify-center p-4">
-        <img class="rounded-md" src={getAssetUrl(state.showImage!.url!)} />
+        <img class="rounded-md" src={url()} />
       </div>
-    </NoTitleModal>
+    </Modal>
   )
 }

@@ -392,7 +392,7 @@ export const CreateCharacterForm: Component<{
                 setSearch({ char_tab: id })
               }}
               selected={tabs.selected}
-              tabs={tabs.tabs}
+              tabs={tabs.tabs()}
             />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Persona' }}>

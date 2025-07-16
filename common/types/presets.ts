@@ -261,8 +261,6 @@ export interface PromptTemplate {
 }
 
 export interface ImageSamplers {
-  model: string
-
   sampler: string
   steps: number
   clipSkip: number
@@ -279,24 +277,27 @@ export interface ImageSamplers {
   ucPreset: string
   qualityTags: boolean
 }
-export interface ImagePreset {
+export interface ImagePreset extends ImageSamplers {
   _id: string
-  kind: 'image-preset'
-  providerId: string
   userId: string
+  kind: 'image-preset'
 
   name: string
   description: string
 
-  samplers: ImageSamplers
+  providerId: string
+  providerModels?: Record<string, { id: string }>
 }
 
 export type ImageHost = 'agnaistic' | 'novel' | 'sdapi' | 'horde'
 
 export type ImageProvider = {
-  format: ImageHost
+  type: ImageHost
   name: string
 
   url: string
+
   key: string
+  userKey?: string //
+  keySet?: boolean
 }

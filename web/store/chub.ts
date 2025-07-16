@@ -154,6 +154,7 @@ export const chubStore = createStore<ChubState>(
 
 export function createOnEnter(callback: Function) {
   return (ev: KeyboardEvent) => {
+    ev.preventDefault?.()
     if (ev.key !== 'Enter') return
     callback()
   }
