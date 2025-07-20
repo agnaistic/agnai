@@ -9,7 +9,7 @@ import TextInput from '/web/shared/TextInput'
 import { isChatPage, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
-import { ArrowLeft, ArrowRight, SettingsIcon, SparkleIcon } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon, WandSparkles } from 'lucide-solid'
 import { createEmitter } from '/web/shared/util'
 
 // type GenState = {
@@ -59,6 +59,11 @@ export const GenerateImageModal: Component = () => {
 
   const close = () => getStore('settings').imageGeneration(false)
 
+  const cleanPrompt = () => {
+    const next = state.prompt.replace(/[^0-9a-z_\-,\s\.]/gi, '').trim()
+    setters.update({ prompt: next })
+  }
+
   return (
     <RootModal
       show={settings.show}
@@ -91,23 +96,30 @@ export const GenerateImageModal: Component = () => {
         </div>
       }
     >
-      <div class="grid h-full min-h-0 w-full gap-1" style={{ 'grid-auto-rows': '64px 1fr' }}>
+      <div class="grid h-full min-h-0 w-full gap-1" style={{ 'grid-auto-rows': 'auto 1fr' }}>
         <section class="w-full">
-          <div class="flex w-full gap-1">
+          <div class="flex w-full flex-col gap-1">
             <TextInput
               parentClass="w-full !h-[64px]"
-              class="!h-[64px] !py-1"
+              class="!h-[64px] !py-1 !text-sm"
               prelabel="Prompt"
               value={state.prompt}
               onChange={(ev) => setters.update('prompt', ev.currentTarget.value)}
               isMultiline
               textarea={{ rows: 2 }}
             />
-            <Show when={canGeneratePrompt()}>
-              <Button size="md" disabled={loading()} onClick={generatePrompt}>
-                <SparkleIcon size={20} />
+
+            <div class="flex w-full justify-end gap-2">
+              <Button size="sm" onClick={cleanPrompt}>
+                <BrushCleaning size={20} />
+                Clean
               </Button>
-            </Show>
+              <Show when={canGeneratePrompt()}>
+                <Button size="sm" disabled={loading()} onClick={generatePrompt}>
+                  <WandSparkles size={20} />
+                </Button>
+              </Show>
+            </div>
           </div>
         </section>
 
