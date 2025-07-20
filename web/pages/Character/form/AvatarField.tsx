@@ -1,5 +1,4 @@
 import { Component, Match, Show, Switch } from 'solid-js'
-import { Card } from '/web/shared/Card'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { CharEditor } from '../editor'
 import { ReelControl } from './ReelControl'

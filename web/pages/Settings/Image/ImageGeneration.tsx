@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { RootModal } from '/web/shared/Modal'
 import { getStore } from '/web/store/create'
 import { imageApi } from '/web/store/data/image'
@@ -21,7 +21,7 @@ export const GenerateImageModal: Component = () => {
   const isChat = isChatPage()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
   const reel = useImageCache(`img-gen-${user.id}`, { clean: true })
-  const [store, setStore] = createCachedStore<GenState>('img-gen-config')
+  const [store, _setStore] = createCachedStore<GenState>('img-gen-config')
   const emitter = createEmitter('width')
   const [state, setters] = useImageContext({ prompt: store.lastPrompt })
   const settings = getStore('settings')((s) => ({ show: s.showImgGen }))

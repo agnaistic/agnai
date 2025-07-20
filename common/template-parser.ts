@@ -5,26 +5,31 @@ import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
-import { HistoryLine } from '/srv/adapter/type'
+import { ChatRole, HistoryLine } from '/srv/adapter/type'
 
 type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
 let DEBUG = false
 const SAMPLE_CHAT_LP = `__lp_sample_chat__`
 
-type InternalFlags = { sample_chat?: boolean; pre_render?: boolean; is_final?: boolean }
+type InternalState = {
+  sample_chat?: boolean
+  pre_render?: boolean
+  is_final?: boolean
+  messages: Array<{ role: ChatRole; content: string }>
+}
 
 export type TemplateOpts = {
   continue?: boolean
   parts?: Partial<PromptPlaceholders>
-  chat: AppSchema.Chat
+  chat?: AppSchema.Chat
 
   isPart?: boolean
 
-  char: AppSchema.Character
+  char?: AppSchema.Character
   replyAs?: AppSchema.Character
   impersonate?: AppSchema.Character
-  sender: AppSchema.Profile
+  sender?: AppSchema.Profile
 
   lines?: string[]
   history?: HistoryLine[]
@@ -60,7 +65,7 @@ export type TemplateOpts = {
   inserts?: Map<number, string>
   lowpriority?: Array<{ id: string; content: string }>
 
-  jsonValues: Record<string, any> | undefined
+  jsonValues?: Record<string, any> | undefined
 }
 
 const parser = loadParser()
@@ -82,7 +87,7 @@ function loadParser() {
 const HISTORY_MARKER = '__history__marker__'
 
 type PNode =
-  | SystemNode
+  | RoleBlockNode
   | PlaceHolder
   | ConditionNode
   | IteratorNode
@@ -90,7 +95,10 @@ type PNode =
   | LowPriorityNode
   | string
 
-type SystemNode = { kind: 'system-block'; value: string }
+type RoleBlockNode =
+  | { kind: 'system-block'; value: string }
+  | { kind: 'assistant-block'; value: string }
+  | { kind: 'instruct-block'; value: string }
 
 type PlaceHolder = {
   kind: 'placeholder'
@@ -201,12 +209,13 @@ export async function parseTemplate(
   /** Raw history lines, no iterator parsing, just `name: msg` format */
   addedLines: string[]
   sections: NonNullable<TemplateOpts['sections']>
+  blocks: Array<{ role: ChatRole; content: string }>
 }> {
   if (opts.limit) {
     opts.limit.output = {}
   }
 
-  const flags: InternalFlags = { pre_render: true }
+  const flags: InternalState = { pre_render: true, messages: [] }
 
   const sections: TemplateOpts['sections'] = {
     flags: {},
@@ -376,10 +385,11 @@ export async function parseTemplate(
     sections,
     history: historyLines,
     addedLines,
+    blocks: flags.messages,
   }
 }
 
-function readInserts(opts: TemplateOpts, ast: PNode[], flags: InternalFlags): void {
+function readInserts(opts: TemplateOpts, ast: PNode[], flags: InternalState): void {
   if (opts.inserts) return
 
   const inserts = ast.filter(
@@ -402,7 +412,7 @@ function readInserts(opts: TemplateOpts, ast: PNode[], flags: InternalFlags): vo
   }
 }
 
-function render(template: string, opts: TemplateOpts, flags: InternalFlags, existingAst?: PNode[]) {
+function render(template: string, opts: TemplateOpts, flags: InternalState, existingAst?: PNode[]) {
   try {
     const orig = existingAst ?? (parser.parse(template, {}) as PNode[])
     const ast: PNode[] = []
@@ -469,7 +479,7 @@ function render(template: string, opts: TemplateOpts, flags: InternalFlags, exis
   }
 }
 
-function renderNodes(nodes: PNode[], opts: TemplateOpts, flags: InternalFlags) {
+function renderNodes(nodes: PNode[], opts: TemplateOpts, flags: InternalState) {
   const output: string[] = []
   for (const node of nodes) {
     const text = renderNode(node, opts, flags)
@@ -478,7 +488,7 @@ function renderNodes(nodes: PNode[], opts: TemplateOpts, flags: InternalFlags) {
   return output.join('')
 }
 
-function renderNode(node: PNode, opts: TemplateOpts, flags: InternalFlags, conditionText?: string) {
+function renderNode(node: PNode, opts: TemplateOpts, flags: InternalState, conditionText?: string) {
   if (typeof node === 'string') {
     return node
   }
@@ -487,7 +497,29 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalFlags, condi
     case 'system-block': {
       const subAst = parser.parse(node.value)
       const result = renderNodes(subAst, opts, flags)
+
+      if (!flags.pre_render && !flags.is_final) {
+        flags.messages.push({ role: 'system', content: result })
+      }
       return `<system>${result}</system>`
+    }
+
+    case 'instruct-block': {
+      const subAst = parser.parse(node.value)
+      const result = renderNodes(subAst, opts, flags)
+      if (!flags.pre_render && !flags.is_final) {
+        flags.messages.push({ role: 'user', content: result })
+      }
+      return `<user>${result}</user>`
+    }
+
+    case 'assistant-block': {
+      const subAst = parser.parse(node.value)
+      const result = renderNodes(subAst, opts, flags)
+      if (!flags.pre_render && !flags.is_final) {
+        flags.messages.push({ role: 'assistant', content: result })
+      }
+      return `<bot>${result}</bot>`
     }
 
     case 'placeholder': {
@@ -522,7 +554,7 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalFlags, condi
  * This somewhat  grungy string manipulation but unavoidable with the way prompt
  * segments get turned into strings at the same time as their tokens are counted.
  */
-function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts, flags: InternalFlags) {
+function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts, flags: InternalState) {
   const output: string[] = []
   for (const child of node.children) {
     const result = renderNode(child, opts, flags)
@@ -538,7 +570,7 @@ function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts, flags: Int
 function renderProp(
   node: CNode,
   opts: TemplateOpts,
-  flags: InternalFlags,
+  flags: InternalState,
   entity: unknown,
   idx: number
 ) {
@@ -638,7 +670,7 @@ function renderCondition(
   node: ConditionNode,
   children: ConditionNode['children'],
   opts: TemplateOpts,
-  flags: InternalFlags
+  flags: InternalState
 ) {
   if (opts.repeatable) return ''
 
@@ -694,14 +726,14 @@ function getEntities(holder: IterableHolder, opts: TemplateOpts) {
     case 'bots':
       return Object.values(opts.characters || {}).filter((b) => {
         if (!b) return false
-        if (b._id === (opts.replyAs || opts.char)._id) return false
+        if (b._id === (opts.replyAs || opts.char)?._id) return false
         if (b.deletedAt) return false
 
         // Exclude temp characters that have been disabled/removed
         if (b._id.startsWith('temp-') && b.favorite === false) return false
 
         // Exclude non-temp characters that have been removed from the chat
-        if (!b._id.startsWith('temp-') && !opts.chat.characters?.[b._id]) return false
+        if (!b._id.startsWith('temp-') && !opts.chat?.characters?.[b._id]) return false
         return true
       })
     case 'chat_embed':
@@ -716,7 +748,7 @@ function renderIterator(
   holder: IterableHolder,
   children: CNode[],
   opts: TemplateOpts,
-  flags: InternalFlags
+  flags: InternalState
 ) {
   if (opts.repeatable) return ''
   let isHistory = holder === 'history'
@@ -805,7 +837,7 @@ function replaceSections(
 function renderEntityCondition(
   nodes: CNode[],
   opts: TemplateOpts,
-  flags: InternalFlags,
+  flags: InternalState,
   entity: unknown,
   idx: number
 ) {
@@ -822,7 +854,7 @@ function renderEntityCondition(
 function getPlaceholder(
   node: PlaceHolder | ConditionNode,
   opts: TemplateOpts,
-  flags: InternalFlags,
+  flags: InternalState,
   conditionText?: string
 ) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
@@ -845,7 +877,7 @@ function getPlaceholder(
       return conditionText || ''
 
     case 'char':
-      return ((opts.replyAs || opts.char).name || '').trim()
+      return ((opts.replyAs || opts.char)?.name || '').trim()
 
     case 'user':
       return (opts.impersonate?.name || opts.sender?.handle || 'You').trim()
@@ -864,7 +896,7 @@ function getPlaceholder(
     }
 
     case 'scenario':
-      return opts.parts?.scenario || opts.chat.scenario || opts.char.scenario || ''
+      return opts.parts?.scenario || opts.chat?.scenario || opts.char?.scenario || ''
 
     case 'memory':
       return opts.parts?.memory || ''
@@ -907,7 +939,7 @@ function getPlaceholder(
     }
 
     case 'chat_age':
-      return elapsedSince(opts.chat.createdAt)
+      return elapsedSince(opts.chat?.createdAt || new Date())
 
     case 'idle_duration':
       return lastMessage(opts.lastMessage || '')
@@ -981,7 +1013,7 @@ function handleDice(node: DiceExpr) {
 function fillSection(
   opts: TemplateOpts,
   marker: Section | undefined,
-  interal: InternalFlags,
+  interal: InternalState,
   result: string | undefined
 ) {
   if (interal.pre_render) return
@@ -995,8 +1027,8 @@ function fillSection(
   const cleaned = result
     .replace(/\r\n/g, '\n')
     .replace(/\n\n+/g, '\n\n')
-    .replace(/{{user}}/gi, opts.impersonate?.name || opts.sender.handle || 'Ypu')
-    .replace(/{{char}}/gi, opts.replyAs?.name || opts.char.name)
+    .replace(/{{user}}/gi, opts.impersonate?.name || opts.sender?.handle || 'You')
+    .replace(/{{char}}/gi, opts.replyAs?.name || opts.char?.name || '')
 
   const isSystem = marker?.includes('system')
   if (!flags.system && isSystem) {

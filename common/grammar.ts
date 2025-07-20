@@ -25,17 +25,27 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(SystemBlock / BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(SystemBlock / AssistantBlock / InstructBlock / BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / DiceRoll) CL {
 	return { kind: 'placeholder', value: i }
 }
 
-/** System Blocks */
-SystemBlock "system-block" = OpenSystem text:BlockText+ CloseSystem { return { kind: 'system-block', value: text.join('') } }
+/** Role Blocks */
+SystemBlock "system-block" = OpenSystem text:SystemBlockText+ CloseSystem { return { kind: 'system-block', value: text.join('') } }
 OpenSystem "open-system" = "<system>"i
-CloseSystem "open-system" = "</system>"i
-BlockText "block-text" = !(CloseSystem) ch:. { return ch }
+CloseSystem "close-system" = "</system>"i
+SystemBlockText "block-text" = !(CloseSystem) ch:. { return ch }
+
+AssistantBlock "assistant-block" = OpenAssistant text:AssistantBlockText+ CloseAssistant { return { kind: 'assistant-block', value: text.join('') } }
+OpenAssistant "open-assistant" = "<assistant>"i
+CloseAssistant "close-assistant" = "</assistant>"i
+AssistantBlockText "block-text" = !(CloseAssistant) ch:. { return ch }
+
+InstructBlock "instruct-block" = OpenInstruct text:InstructionBlockText+ CloseInstruct { return { kind: 'instruct-block', value: text.join('') } }
+OpenInstruct "open-instruct" = "<instruct>"i
+CloseInstruct "close-instruct" = "</instruct>"i
+InstructionBlockText "block-text" = !(CloseInstruct) ch:. { return ch }
 
 BotIterator "bot-iterator" = OP "#each" WS loop:Bots CL children:(BotChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
