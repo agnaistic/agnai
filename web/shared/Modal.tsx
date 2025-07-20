@@ -6,6 +6,7 @@ import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
 import { Portal } from 'solid-js/web'
 import { useMobileDetect } from './hooks'
+import { PartialEmitter } from './util'
 
 interface Props {
   title?: string | JSX.Element
@@ -15,6 +16,7 @@ interface Props {
   footer?: JSX.Element
   maxWidth?: 'full' | 'half'
   maxHeight?: boolean
+  disableResize?: boolean
   fixedHeight?: boolean
   transparent?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
@@ -24,13 +26,19 @@ interface Props {
   dismissable?: boolean
   ariaLabel?: string
   ariaDescription?: string
+
+  emitter?: PartialEmitter<'width'>
 }
 
 const Modal: Component<Props> = (props) => {
   const mobile = useMobileDetect()
   const [full, setFull] = createSignal(false)
 
-  const toggleFull = () => setFull((f) => !f)
+  const toggleFull = () => {
+    const next = !full()
+    setFull((f) => next)
+    props.emitter?.emit.width?.(next)
+  }
 
   const width = createMemo(() => {
     if (!props.maxWidth && !full()) return `sm:max-w-lg`
@@ -75,7 +83,11 @@ const Modal: Component<Props> = (props) => {
                       tabs={props.tabs?.tabs?.()!}
                     />
                     <div class="flex items-center gap-2">
-                      <a class="icon-button" classList={{ hidden: mobile() }} onClick={toggleFull}>
+                      <a
+                        class="icon-button"
+                        classList={{ hidden: mobile() || props.disableResize }}
+                        onClick={toggleFull}
+                      >
                         <FullscreenIcon />
                       </a>
                       <Show when={props.dismissable !== false}>
@@ -117,8 +129,9 @@ const Modal: Component<Props> = (props) => {
 
               {/* 132px is the height of the title + footer*/}
               <div
-                class={`${minHeight()} overflow-y-auto p-2 pt-0 text-lg`}
+                class={`overflow-y-auto p-2 pt-0 text-lg`}
                 classList={{
+                  'modal-height-fixed': !!minHeight(),
                   'h-full': props.maxHeight,
                   'modal-content': !!props.footer,
                   'modal-content-footerless': !props.footer,
@@ -233,6 +246,8 @@ export const RootModal: Component<Props> = (props) => {
         dismissable={props.dismissable}
         ariaLabel={props.ariaLabel}
         ariaDescription={props.ariaDescription}
+        emitter={props.emitter}
+        disableResize={props.disableResize}
       >
         {props.children}
       </Modal>

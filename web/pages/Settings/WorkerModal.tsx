@@ -34,7 +34,7 @@ const WorkerModal: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Specify AI Horde Workers"
+      title="Select Horde Workers"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>

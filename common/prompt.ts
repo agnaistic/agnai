@@ -1,17 +1,16 @@
 import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, getAdapter, GOOGLE_LIMITS } from './adapters'
+import { AIAdapter, GOOGLE_LIMITS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
-import { defaultPresets, getFallbackPreset } from './presets'
+import { getFallbackPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
-import { isDefaultPreset } from './default-preset'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 
@@ -668,7 +667,7 @@ function createPostPrompt(
 ) {
   const post = []
 
-  if (opts.kind === 'chat-query') {
+  if (!opts.kind || opts.kind === 'chat-query') {
     post.push(`Query Response:`)
   } else {
     post.push(`${opts.replyAs.name}:`)
@@ -861,50 +860,6 @@ function fillPlaceholders(opts: {
   const msg = text.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
-}
-
-export function getChatPreset(
-  chat: AppSchema.Chat,
-  user: AppSchema.User,
-  userPresets: AppSchema.UserGenPreset[]
-): Partial<AppSchema.UserGenPreset> {
-  /**
-   * Order of precedence:
-   * 1. chat.genPreset
-   * 2. user.defaultPreset
-   * 3. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
-   * 4. built-in fallback preset (horde)
-   */
-
-  // #1
-  if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset))
-      return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
-
-    const preset = userPresets.find((preset) => preset._id === chat.genPreset)
-    if (preset) return preset
-  }
-
-  // #2
-  const defaultId = user.defaultPreset
-  if (defaultId) {
-    if (isDefaultPreset(defaultId)) return { _id: defaultId, ...defaultPresets[defaultId] }
-    const preset = userPresets.find((preset) => preset._id === defaultId)
-    if (preset) return preset
-  }
-
-  // #3
-  const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
-  const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
-
-  if (fallbackId) {
-    if (isDefaultPreset(fallbackId)) return { _id: fallbackId, ...defaultPresets[fallbackId] }
-    const preset = userPresets.find((preset) => preset._id === fallbackId)
-    if (preset) return preset
-  }
-
-  // #4
-  return getFallbackPreset(adapter || 'horde')
 }
 
 type LimitStrategy = (

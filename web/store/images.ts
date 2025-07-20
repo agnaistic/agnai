@@ -4,10 +4,12 @@ import { imageApi } from './data/image'
 
 const store = lf.createInstance({ name: `agnai-images` })
 
+type ImageMeta = { id?: string; prompt?: string }
+
 type ImageReel = {
   id: string
 
-  addImage(base64: string, id?: string): Promise<string[]>
+  addImage(base64: string, meta?: ImageMeta): Promise<string[]>
   removeImage(imageId: string): Promise<string[]>
   getImage(imageId: string): Promise<string | undefined>
   getImageIds(): Promise<string[]>
@@ -34,8 +36,8 @@ async function getImageIds(collection: string): Promise<string[]> {
   return ids as string[]
 }
 
-async function addImage(collection: string, image: string, id?: string): Promise<string[]> {
-  const imageId = `${collection}-${id ?? v4().slice(0, 5)}`
+async function addImage(collection: string, image: string, meta?: ImageMeta): Promise<string[]> {
+  const imageId = `${collection}-${meta?.id ?? v4().slice(0, 5)}`
 
   if (!image.startsWith('data:')) {
     image = (await imageApi.getImageData(image)) || image

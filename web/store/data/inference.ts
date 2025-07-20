@@ -19,6 +19,7 @@ export const genApi = {
 
 type InferenceOpts = {
   prompt: string
+  messages?: Array<{ role: string; content: any }>
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
@@ -138,6 +139,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       requestId,
       user,
       prompt,
+      messages: opts.messages,
       imageData: opts.image,
       jsonSchema: opts.jsonSchema,
       settings: { ...preset, stream: true },

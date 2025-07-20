@@ -200,7 +200,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'ollama': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.hasAttachments ? opts.messages : opts.messages
       const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })

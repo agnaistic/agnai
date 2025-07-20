@@ -19,10 +19,9 @@ import {
   RotateCcw,
   ChevronLeft,
   Pencil,
-  Info,
   Image,
+  ImagePlus,
 } from 'lucide-solid'
-import { startTour } from '/web/tours'
 import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
@@ -150,6 +149,13 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
         <Nav.Item
           onClick={() => settingStore.imageGeneration(true)}
+          ariaLabel="Image Generation"
+          tooltip="Image Generation"
+        >
+          <ImagePlus size={size} aria-hidden="true" />
+        </Nav.Item>
+        <Nav.Item
+          onClick={() => settingStore.imageSettings(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >
@@ -163,9 +169,6 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash size={size} />
-        </Nav.Item>
-        <Nav.Item onClick={() => startTour('chat', true)} tooltip="Chat Guide" menuOpen>
-          <Info size={size} />
         </Nav.Item>
       </div>
     </>

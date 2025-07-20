@@ -36,13 +36,21 @@ export async function random<T extends keyof Chance.Chance>(kind: T, opts: Chanc
   return ''
 }
 
+export type InvokeEmitter = (...args: any[]) => void
+
+export type PartialEmitter<T extends string> = {
+  emit: { [key in T]?: InvokeEmitter }
+  on: ComponentSubscriber<any>
+  off: (id: string | Function) => boolean
+}
+
 export type ComponentEmitter<T extends string> = {
-  emit: { [key in T]: (...args: any[]) => void }
+  emit: { [key in T]: InvokeEmitter }
   on: ComponentSubscriber<T>
   off: (id: string | Function) => boolean
 }
 
-export type ComponentSubscriber<T> = (event: T, callback: (...args: any[]) => any) => string
+export type ComponentSubscriber<T> = (event: T, callback: InvokeEmitter) => string
 
 export function getAbsolutePosition(ele: HTMLElement) {
   let curr = ele
@@ -60,9 +68,9 @@ export function getAbsolutePosition(ele: HTMLElement) {
 
 export function createEmitter<T extends string>(...events: T[]) {
   let emit: any = {}
-  const listeners: Array<{ id: string; event: T; callback: (...args: any[]) => void }> = []
+  const listeners: Array<{ id: string; event: T; callback: InvokeEmitter }> = []
 
-  const on = (event: T, callback: (...args: any[]) => void) => {
+  const on = (event: T, callback: InvokeEmitter) => {
     const id = v4()
     listeners.push({ event, callback, id })
     return id

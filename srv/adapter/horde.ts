@@ -31,6 +31,10 @@ export const handleHorde: ModelAdapter = async function* ({
       ? toArray(gen.thirdPartyModel?.split(','))
       : toArray(user.hordeModel)
 
+    const userWorkers = gen.providerId
+      ? toArray(gen.providerSettings?.[gen.providerId]?.workers)
+      : toArray(user.hordeWorkers)
+
     const modelsMatch = models
       .filter((m) => {
         const lowered = m.name.toLowerCase()
@@ -42,6 +46,7 @@ export const handleHorde: ModelAdapter = async function* ({
       .map((m) => m.name)
 
     user.hordeModel = modelsMatch.length > 0 ? userModels : 'any'
+    user.hordeWorkers = userWorkers
 
     const result = await horde.generateText({ ...user, hordeKey: key }, gen, prompt, opts.log)
     const sanitised = sanitise(result.text)

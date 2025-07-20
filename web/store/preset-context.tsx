@@ -10,6 +10,7 @@ import { isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { getClientPreset } from '../shared/adapter'
+import { toastStore } from './toasts'
 
 export type PresetProps = {
   state: PresetState
@@ -118,8 +119,16 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = (chat: AppSchema.Chat) => {
     console.log('[p_ctx] load-by-chat called')
-    const preset = getClientPreset(chat)
-    load(preset?.preset)
+    const preset = getClientPreset(chat)?.preset
+
+    // If the chat has no preset configured, we need to assign one
+    if (chat?._id && !chat.genPreset && preset?._id) {
+      getStore('chat').assignChatPreset(chat._id, preset._id, () =>
+        toastStore.info('Assigned to chat')
+      )
+    }
+
+    load(preset)
   }
 
   const loadPresetId = (presetId: string) => {
@@ -130,7 +139,6 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
-    console.log('[p_ctx] load called')
     if (!preset) return
 
     const user = getStore('user').getState().user

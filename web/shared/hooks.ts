@@ -1,4 +1,4 @@
-import { Accessor, JSX, Signal, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
+import { Accessor, JSX, Signal, createEffect, createMemo, on, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
 import { ModalOptions, rootModalStore } from '../store/root-modal'
 import { useLocation, useSearchParams } from '@solidjs/router'
@@ -9,7 +9,7 @@ import { getAssetUrl, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
-import { tryParse } from '/common/util'
+import { inline, tryParse } from '/common/util'
 
 const PANE_BREAKPOINT = 1280
 
@@ -240,8 +240,8 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
     setState({ pos: pos, image, imageId: state.images[pos] })
   }
 
-  const addImage = async (base64: string, id?: string) => {
-    const images = await reel.addImage(base64, id)
+  const addImage = async (base64: string, meta?: { id?: string; prompt?: string }) => {
+    const images = await reel.addImage(base64, meta)
 
     setState({
       images: images.map(cleanIds),
@@ -339,6 +339,24 @@ export function useDraft(id: string) {
 export function clearDraft(id: string) {
   const key = `chat:${id}:draft`
   localStorage.removeItem(key)
+}
+
+export function createCachedStore<T extends Record<string, any>>(id: string, initialValue?: T) {
+  const init = getStoredValue(id, initialValue || {})
+
+  const [store, setStore] = createStore<T>(init)
+
+  createEffect(
+    on(
+      () => ({ ...store }),
+      (next) => {
+        console.log(`[store:${id}] updated ${inline(next)}`)
+        setStoredValue(id, next)
+      }
+    )
+  )
+
+  return [store, setStore] as const
 }
 
 export function useLocalStorage<T = any>(id: string, initialValue: T) {

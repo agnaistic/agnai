@@ -29,7 +29,7 @@ const parts: Record<
     post: ``,
   }),
   appearance: () => ({
-    instruction: `Extremely brief and comma-separated (50 words or fewer) list of descriptors of the character's gender, eye color, hair color, height, clothes, body, physical location and surroundings`,
+    instruction: `Very brief and comma-separated list of BOORU TAGS of the character's gender, eye color, hair color, height, clothes, body, physical location and surroundings\n: Booru Tags:`,
     post: ``,
   }),
   trait: (_, trait) => ({

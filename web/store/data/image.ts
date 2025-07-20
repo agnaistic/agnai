@@ -16,6 +16,8 @@ import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
+import { ChatRole } from '/srv/adapter/type'
+import { replaceTags } from '/common/presets/templates'
 
 type GenerateOpts = {
   chatId?: string
@@ -294,16 +296,31 @@ async function getChatSummary(
     encoder: await getEncoder(),
   }
 
+  const messages: Array<{ role: ChatRole; content: string }> = [
+    { role: 'system', content: summaryPrompt },
+  ]
+
   let template = getSummaryTemplate(settings.service!, summaryPrompt)
 
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
   const parsed = await parseTemplate(template, opts)
+
+  for (const line of parsed.history) {
+    messages.push({
+      role: line.role === 'user' ? 'user' : 'assistant',
+      content: replaceTags(line.line, settings.modelFormat || 'None'),
+    })
+  }
+
+  messages.push({ role: 'assistant', content: 'Image Caption:' })
+
   const prompt = parsed.parsed
   const response = await genApi.inferenceStream(
     {
       prompt,
       settings,
+      messages,
     },
     onTick
   )

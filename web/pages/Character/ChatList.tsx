@@ -347,7 +347,7 @@ const Chats: Component<{
         show={!!showDelete()}
         close={() => setDelete('')}
         confirm={confirmDelete}
-        message="Are you sure wish to delete the conversation?"
+        message="Are you sure you wish to delete the conversation?"
       />
     </div>
   )

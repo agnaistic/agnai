@@ -413,7 +413,7 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
 })
 
 export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req }, res) => {
-  assertValid({ ...validInference, requestId: 'string' }, body)
+  assertValid({ ...validInference, messages: 'any?', requestId: 'string' }, body)
 
   if (userId) {
     if (!req.authed) throw errors.Unauthorized
@@ -426,6 +426,7 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
     user: body.user!,
     log,
     prompt: body.prompt,
+    messages: body.messages,
     settings: body.settings,
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,

@@ -46,7 +46,7 @@ import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
-import { GenerateImageModal } from './pages/Settings/Image/GenerateImage'
+import { GenerateImageModal } from './pages/Settings/Image/ImageGeneration'
 
 const App: Component = () => {
   const state = userStore()

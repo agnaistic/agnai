@@ -825,6 +825,10 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
 
   const { adapter } = getAdapter(chat, user, body.settings)
   const settings = await getGenerationSettings(user, chat, adapter).then((gen) => {
+    if (gen.src) {
+      req.log.setBindings({ g_src: gen.src, g_id: chat.genPreset })
+    }
+
     mapPresetsToAdapter(gen, adapter)
     return gen
   })

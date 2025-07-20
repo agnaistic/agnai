@@ -15,7 +15,7 @@ import { CLAUDE_LABELS, CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
-import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
+import { HordeWorkerModal, toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
 import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
 import { round } from '/common/util'
@@ -824,6 +824,7 @@ const GoogleModels: Selector = (props) => {
 
 const HordeModels: Selector = (props) => {
   const [show, setShow] = createSignal(false)
+  const [showWorkers, setShowWorkers] = createSignal(false)
   const cfg = settingStore((s) => ({
     models: s.models.slice().map(toHordeModelItem),
   }))
@@ -833,7 +834,12 @@ const HordeModels: Selector = (props) => {
     settingStore.getHordeWorkers()
   }
 
-  const [selected, setSelected] = createSignal<Option[]>()
+  const [selected, setSelected] = createSignal<string[]>(
+    props.state.providerModels?.[props.state.providerId || 'na']?.split(',') || []
+  )
+  const [selectedWorkers, setSelectedWorkers] = createSignal<string[]>(
+    props.state.providerSettings?.[props.state.providerId || 'na']?.workers
+  )
 
   const open = () => {
     setShow(true)
@@ -842,8 +848,10 @@ const HordeModels: Selector = (props) => {
 
   const save = () => {
     const models = selected()
+    const workers = selectedWorkers()
+
     if (models) {
-      setProviderModel(props, models.map((m) => m.value).join(','))
+      setProviderModel(props, models.join(','), { providerSettings: { workers } })
     }
     setShow(false)
   }
@@ -857,20 +865,24 @@ const HordeModels: Selector = (props) => {
     return list
   })
 
+  const currentWorkers = createMemo(() => {
+    const list = props.state.providerSettings?.[props.state.providerId || 'na']?.workers || []
+    return list
+  })
+
   return (
     <>
       <div class="flex items-center gap-2">
         <Button class="w-fit" size="sm" onClick={open}>
-          Select Model(s)
+          <Show when={currentModels().length} fallback="Select Model(s)">
+            {currentModels().length} Model(s) Selected
+          </Show>
         </Button>
-        <Show when={currentModels().length}>
-          <div class="text-500">{currentModels().length} models selected</div>
-        </Show>
       </div>
       <RootModal
         show={show()}
         close={close}
-        title="Specify AI Horde Models"
+        title="Select Horde Models"
         footer={
           <>
             <Button schema="secondary" onClick={close}>
@@ -883,16 +895,19 @@ const HordeModels: Selector = (props) => {
         }
       >
         <div class="flex flex-col gap-4 text-sm">
+          <div class="flex w-full justify-center">
+            <Button size="sm" onClick={() => setShowWorkers(true)}>
+              Select Worker(s)
+            </Button>
+          </div>
+
           <MultiDropdown
             class="min-h-[6rem]"
             fieldName="workers"
             items={cfg.models}
             label="Select Model(s)"
             onChange={setSelected}
-            values={
-              selected()?.map((s) => s.value) ||
-              props.state.providerModels?.[props.state.providerId || 'na']?.split(',')
-            }
+            values={selected()}
           />
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -907,6 +922,12 @@ const HordeModels: Selector = (props) => {
           </div>
         </div>
       </RootModal>
+      <HordeWorkerModal
+        show={showWorkers()}
+        close={() => setShowWorkers(false)}
+        initial={selectedWorkers() || currentWorkers()}
+        save={(workers) => setSelectedWorkers(workers.map((w) => w.value))}
+      />
     </>
   )
 }
@@ -951,12 +972,16 @@ function setProviderModel(
 ) {
   const update: Partial<PresetState> = extras ?? {}
   update.thirdPartyModel = model
+
+  const settings = state.providerSettings ? { ...state.providerSettings } : {}
   const models = state.providerModels ? { ...state.providerModels } : {}
   if (state.providerId) {
     models[state.providerId] = model
+    settings[state.providerId] = update.providerSettings || settings[state.providerId]
   }
 
   update.providerModels = models
+  update.providerSettings = settings
 
   setters.setState(update)
 

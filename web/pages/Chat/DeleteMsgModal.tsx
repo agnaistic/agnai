@@ -48,14 +48,14 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
       }
     >
       <Show when={state.msg?.adapter !== 'image'}>
-        Are you sure wish to delete the one or the last {count()} messages?
+        Are you sure you wish to delete the one or the last {count()} messages?
         <Show when={count() > 1}>
           <br />
           Deleteing "one" will delete the selected message only.
         </Show>
       </Show>
       <Show when={state.msg?.adapter === 'image'}>
-        Are you sure wish to delete 1 image message?
+        Are you sure you wish to delete 1 image message?
       </Show>
     </Modal>
   )

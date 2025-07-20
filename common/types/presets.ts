@@ -201,6 +201,8 @@ export interface GenSettings {
   presencePenalty?: number
 
   providerModels?: Record<string, string>
+  providerSettings?: Record<string, any>
+
   oaiModel?: string
   novelModel?: string
   claudeModel?: string

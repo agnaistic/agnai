@@ -264,7 +264,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
 
     if (base64) {
       const id = original ? 'original' : v4()
-      await cache.addImage(base64, id)
+      await cache.addImage(base64, { id })
       if (original) {
         setImageId(`avatars-${id}`)
       }

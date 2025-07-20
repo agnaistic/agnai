@@ -1,5 +1,40 @@
+import { defaultPresets, isDefaultPreset } from '/common/default-preset'
+import { getFallbackPreset } from '/common/presets'
 import { AppSchema } from '/common/types'
 import { getStore } from '/web/store/create'
+
+export function getChatPreset(
+  chat: AppSchema.Chat,
+  user: AppSchema.User,
+  userPresets: AppSchema.UserGenPreset[]
+): Partial<AppSchema.UserGenPreset> {
+  /**
+   * Order of precedence:
+   * 1. chat.genPreset
+   * 2. user.defaultPreset
+   * 3. built-in fallback preset (horde)
+   */
+
+  // #1
+  if (chat.genPreset) {
+    if (isDefaultPreset(chat.genPreset))
+      return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
+
+    const preset = userPresets.find((preset) => preset._id === chat.genPreset)
+    if (preset) return preset
+  }
+
+  // #2
+  const defaultId = user.defaultPreset
+  if (defaultId) {
+    if (isDefaultPreset(defaultId)) return { _id: defaultId, ...defaultPresets[defaultId] }
+    const preset = userPresets.find((preset) => preset._id === defaultId)
+    if (preset) return preset
+  }
+
+  // #3
+  return getFallbackPreset('agnaistic')
+}
 
 /**
  * Retrieve the unique set of active bots for a conversation
