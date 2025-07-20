@@ -207,6 +207,7 @@ Object {
   },
   "template": Object {
     "addedLines": Array [],
+    "blocks": Array [],
     "history": Array [
       Object {
         "id": undefined,
