@@ -499,7 +499,7 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalState, condi
       const result = renderNodes(subAst, opts, flags)
 
       if (!flags.pre_render && !flags.is_final) {
-        flags.messages.push({ role: 'system', content: result })
+        flags.messages.push({ role: 'system', content: result.trim() })
       }
       return `<system>${result}</system>`
     }
@@ -508,7 +508,7 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalState, condi
       const subAst = parser.parse(node.value)
       const result = renderNodes(subAst, opts, flags)
       if (!flags.pre_render && !flags.is_final) {
-        flags.messages.push({ role: 'user', content: result })
+        flags.messages.push({ role: 'user', content: result.trim() })
       }
       return `<user>${result}</user>`
     }
@@ -517,7 +517,7 @@ function renderNode(node: PNode, opts: TemplateOpts, flags: InternalState, condi
       const subAst = parser.parse(node.value)
       const result = renderNodes(subAst, opts, flags)
       if (!flags.pre_render && !flags.is_final) {
-        flags.messages.push({ role: 'assistant', content: result })
+        flags.messages.push({ role: 'assistant', content: result.trim() })
       }
       return `<bot>${result}</bot>`
     }

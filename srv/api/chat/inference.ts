@@ -444,13 +444,18 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
 
   await obtainLock(sendId, 15)
 
-  send(sendId, { type: 'inference-prompt', prompt: body.prompt })
+  let promptSent = false
 
   try {
     for await (const gen of stream) {
       if (typeof gen === 'string') {
         response = gen
         continue
+      }
+
+      if ('prompt' in gen) {
+        send(sendId, { type: 'inference-prompt', prompt: gen.prompt })
+        promptSent = true
       }
 
       if ('meta' in gen) {
@@ -472,6 +477,10 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
         send(sendId, { type: 'inference-warning', requestId, warning: gen.warning })
         continue
       }
+    }
+
+    if (!promptSent) {
+      send(sendId, { type: 'inference-prompt', prompt: body.prompt })
     }
   } catch (ex: any) {
     if (ex instanceof StatusError) {

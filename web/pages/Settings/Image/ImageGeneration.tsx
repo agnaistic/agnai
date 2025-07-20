@@ -6,24 +6,23 @@ import { ImageHost, ImageSamplers } from '/common/types/presets'
 import { SD_SAMPLER } from '/common/image'
 import { createStore } from 'solid-js/store'
 import TextInput from '/web/shared/TextInput'
-import { createCachedStore, isChatPage, useImageCache } from '/web/shared/hooks'
+import { isChatPage, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
 import { ArrowLeft, ArrowRight, SettingsIcon, SparkleIcon } from 'lucide-solid'
 import { createEmitter } from '/web/shared/util'
 
-type GenState = {
-  fullWidth: boolean
-  lastPrompt: string
-}
+// type GenState = {
+//   fullWidth: boolean
+//   lastPrompt: string
+// }
 
 export const GenerateImageModal: Component = () => {
   const isChat = isChatPage()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
   const reel = useImageCache(`img-gen-${user.id}`, { clean: true })
-  const [store, _setStore] = createCachedStore<GenState>('img-gen-config')
   const emitter = createEmitter('width')
-  const [state, setters] = useImageContext({ prompt: store.lastPrompt })
+  const [state, setters] = useImageContext({ prompt: '' })
   const settings = getStore('settings')((s) => ({ show: s.showImgGen }))
 
   const [loading, setLoading] = createSignal(false)
@@ -64,7 +63,7 @@ export const GenerateImageModal: Component = () => {
     <RootModal
       show={settings.show}
       close={close}
-      maxWidth={store.fullWidth ? 'full' : 'half'}
+      maxWidth="full"
       fixedHeight
       disableResize
       emitter={emitter}
@@ -119,7 +118,7 @@ export const GenerateImageModal: Component = () => {
             </div>
           </Show>
           <Show when={!!reel.state.image}>
-            <img class="h-full max-h-fit w-full object-cover" src={reel.state.image} />
+            <img class="h-full max-h-fit object-cover" src={reel.state.image} />
           </Show>
         </section>
       </div>

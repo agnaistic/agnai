@@ -16,8 +16,6 @@ import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
-import { ChatRole } from '/srv/adapter/type'
-import { replaceTags } from '/common/presets/templates'
 
 type GenerateOpts = {
   chatId?: string
@@ -296,31 +294,18 @@ async function getChatSummary(
     encoder: await getEncoder(),
   }
 
-  const messages: Array<{ role: ChatRole; content: string }> = [
-    { role: 'system', content: summaryPrompt },
-  ]
-
   let template = getSummaryTemplate(settings.service!, summaryPrompt)
 
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
   const parsed = await parseTemplate(template, opts)
 
-  for (const line of parsed.history) {
-    messages.push({
-      role: line.role === 'user' ? 'user' : 'assistant',
-      content: replaceTags(line.line, settings.modelFormat || 'None'),
-    })
-  }
-
-  messages.push({ role: 'assistant', content: 'Image Caption:' })
-
   const prompt = parsed.parsed
   const response = await genApi.inferenceStream(
     {
       prompt,
       settings,
-      messages,
+      messages: parsed.blocks,
     },
     onTick
   )
@@ -342,45 +327,26 @@ function getSummaryTemplate(service: AIAdapter, summaryPrompt?: string) {
       { ${prompt} }`
     }
 
-    case 'openai':
-    case 'openrouter':
-    case 'claude':
-    case 'scale': {
-      const prompt =
-        summaryPrompt ||
-        `Write an image caption of the current scene including the character's appearance`
-      return neat`
-      {{personality}}
-      
-      (System note: Start of conversation)
-      {{history}}
-      
-      {{ujb}}
-      (System: ${prompt})
-      Image caption:`
-    }
-
-    case 'ooba':
-    case 'kobold':
-    case 'agnaistic': {
+    default: {
       const prompt =
         summaryPrompt ||
         `Write an image caption of the current scene using physical descriptions without names.`
       return neat`
       <system>Below is an instruction that describes a task. Write a response that completes the request.</system>
 
+      <instruct>
       {{char}}'s Persona: {{personality}}
 
       The scenario of the conversation: {{scenario}}
 
-      Then the roleplay chat begins.
+      Then the roleplay chat begins.</instruct>
   
       {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
       {{/each}}
 
-      <user>${prompt}</user>
+      <instruct>${prompt}</instruct>
 
-      <bot>Image caption:`
+      <assistant>Image caption:</assistant>`
     }
   }
 }
