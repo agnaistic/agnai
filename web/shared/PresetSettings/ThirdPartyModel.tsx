@@ -6,7 +6,6 @@ import { getStore } from '/web/store/create'
 import { presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { CustomOption, CustomSelect } from '../CustomSelect'
-import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
 import { RefreshCcw, Save, X } from 'lucide-solid'
@@ -395,7 +394,7 @@ const ArliModels: Selector = (props) => {
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, state.classes)} {match.status}
+          {arliContext(match, state.classes)} {match.status}
         </span>
       </span>
     )
@@ -493,16 +492,56 @@ const ArliModels: Selector = (props) => {
 
 let FILTERED_CACHE: Record<string, boolean> = {}
 
+type FLModel = {
+  id: string
+  name: string
+  owned_by: string
+  updated_at: string
+  model_class: string
+  context_length: number
+  max_completion_tokens: number
+  available_on_current_plan: boolean
+  status: 'active' | 'not_deployed' | 'pending_deploy'
+  health?: 'OFFLINE' | 'UNHEALTHY' | 'HEALTHY'
+}
+
 const FeatherlessModels: Selector = (props) => {
-  const state = settingStore((s) => s.featherless)
+  const state = getStore('presets')((s) => ({
+    list: s.presetModels.list,
+    data: (s.presetModels.data || []) as FLModel[],
+  }))
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
+
+  const availableClasses = createMemo(() => {
+    const seen = new Set<string>()
+    const list = state.data
+      .reduce((prev, curr) => {
+        if (!curr.model_class || seen.has(curr.model_class)) return prev
+        seen.add(curr.model_class)
+        prev.push({ label: curr.model_class, ctx: curr.context_length })
+        return prev
+      }, [] as Array<{ label: string; ctx: number }>)
+      .map(({ label, ctx }) => ({
+        label: `${label} - ${Math.round(ctx / 1024)}k`,
+        value: label,
+        ctx,
+      }))
+      .sort((l, r) => l.label.localeCompare(r.label))
+
+    const map = list.reduce((prev, curr) => {
+      prev[curr.value] = { label: curr.value, ctx: curr.ctx }
+      return prev
+    }, {} as Record<string, { ctx: number; label: string }>)
+
+    return { list, map }
+  })
 
   const label = createMemo(() => {
     const id = props.state.providerId
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
-    const match = state.models.find((s) => s.id === id)
+    const match = state.data.find((s) => s.id === id)
     if (!match) return 'Model - None selected'
 
     return (
@@ -510,7 +549,7 @@ const FeatherlessModels: Selector = (props) => {
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, state.classes)} {match.status}
+          {flaiContext(match, availableClasses().map)} {match.status}
         </span>
       </span>
     )
@@ -524,9 +563,11 @@ const FeatherlessModels: Selector = (props) => {
 
     const categories: Record<string, { name: string; options: CustomOption[] }> = {}
 
-    for (const model of state.models) {
+    for (const model of state.data) {
       // Skip models that cannot be used
-      if (model.status !== 'active') continue
+      if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
+        continue
+      }
 
       // If classes are being filtered by the user, skip classes that aren't selected
       if (modelClasses.size > 0 && !modelClasses.has(model.model_class)) continue
@@ -543,12 +584,13 @@ const FeatherlessModels: Selector = (props) => {
           >
             <div class="ellipsis">{model.id}</div>
             <div class="text-500 text-xs">
-              {model.model_class} - {flaiContext(model, state.classes)} {model.status}
+              {model.model_class} - {flaiContext(model, availableClasses().map)} {model.status}
             </div>
           </div>
         ),
         value: model.id,
-        disabled: model.status !== 'active',
+        disabled:
+          model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY',
       })
     }
 
@@ -558,20 +600,14 @@ const FeatherlessModels: Selector = (props) => {
 
   onMount(() => {
     FILTERED_CACHE = {}
-    if (!state.models.length) {
-      settingStore.getFeatherless()
-    }
   })
 
   const search = (value: string, input: string) => {
-    const cleanedInput = input.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
-    const cleanedValue = value.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
-    const res = cleanedInput
-      .split(' ')
-      .map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+    const cleanedInput = input.toLowerCase()
+    const cleanedValue = value.toLowerCase()
 
-    for (const re of res) {
-      const match = cleanedValue.match(re)
+    for (const re of cleanedInput.split(' ')) {
+      const match = cleanedValue.includes(re)
       if (!match) {
         FILTERED_CACHE[value] = false
         return false
@@ -583,15 +619,17 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classes = createMemo(() => {
-    const list = Object.entries(state.classes)
-      .map(([label, { ctx }]) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
+    const list = availableClasses().list
+
+    list
+      .map(({ label, ctx }) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
       .sort((l, r) => l.label.localeCompare(r.label))
     return [{ label: 'All', value: '' }].concat(list)
   })
 
   const availables = createMemo(() => {
     const map: Record<string, number> = {}
-    for (const model of state.models) {
+    for (const model of state.data) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
       }
@@ -601,7 +639,7 @@ const FeatherlessModels: Selector = (props) => {
         continue
       }
 
-      if (model.status === 'active') {
+      if (!model.status || model.status === 'active') {
         map[model.model_class]++
       }
     }
@@ -932,17 +970,15 @@ const HordeModels: Selector = (props) => {
   )
 }
 
-function flaiContext(
-  model: FeatherlessModel,
-  classes: Record<string, { ctx: number; res: number }>
-) {
-  const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
+function flaiContext(model: FLModel, classes: Record<string, { ctx: number }>) {
+  const ctx =
+    model.context_length || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 
   return `${Math.round(ctx / 1024)}K`
 }
 
-function arliContext(model: ArliModel, classes: Record<string, { ctx: number; res: number }>) {
+function arliContext(model: ArliModel, classes: Record<string, { ctx: number }>) {
   const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 

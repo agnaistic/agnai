@@ -92,9 +92,12 @@ export async function deleteUserPresetKey(presetId: string) {
   return localApi.result({ success: true })
 }
 
-const MODEL_LIST_CACHE = new Map<string, string[]>()
+const MODEL_LIST_CACHE = new Map<string, { models: string[]; data?: any[] }>()
 
-async function getLocalModelList(opts: { url: string; key?: string }): Promise<string[]> {
+async function getLocalModelList(opts: {
+  url: string
+  key?: string
+}): Promise<{ models: string[]; data?: any[] }> {
   try {
     const headers: any = {}
 
@@ -111,9 +114,15 @@ async function getLocalModelList(opts: { url: string; key?: string }): Promise<s
       models.push(model.id)
     }
 
-    return models.sort((l, r) => l.localeCompare(r))
+    models.sort((l, r) => l.localeCompare(r))
+
+    // if (models.length) {
+    //   MODEL_LIST_CACHE.set(opts.url, { models, result: res.data })
+    // }
+
+    return { models, data: res?.data }
   } catch (ex: any) {
-    return []
+    return { models: [] }
   }
 }
 
@@ -123,7 +132,7 @@ async function getPresetModelList(opts: {
   providerId?: string
   key?: string
   useCache?: boolean
-}): Promise<string[]> {
+}): Promise<{ models: string[]; data?: any[] }> {
   if (opts.useCache) {
     const cache = MODEL_LIST_CACHE.get(opts.url)
     if (cache) return cache
@@ -138,7 +147,7 @@ async function getPresetModelList(opts: {
 
   if (res.error) {
     toastStore.error(`Could not get models: ${res.error}`)
-    return []
+    return { models: [] }
   }
 
   if (res.result) {
@@ -149,9 +158,9 @@ async function getPresetModelList(opts: {
   }
 
   models.sort((l, r) => l.localeCompare(r))
-  MODEL_LIST_CACHE.set(opts.url, models)
+  MODEL_LIST_CACHE.set(opts.url, { models, data: res.result?.data })
 
-  return models
+  return { models, data: res.result?.data }
 }
 
 async function getTemplates() {

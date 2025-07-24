@@ -19,6 +19,7 @@ type PresetState = {
   saving: boolean
   presetModels: {
     list: string[]
+    data?: any[]
     url: string
   }
   modelsLoading: boolean
@@ -123,7 +124,7 @@ export const presetStore = createStore<PresetState>(
             return { presetModels: { list: [], url: '' } }
           }
 
-          const models =
+          const result =
             detail.category === 'self'
               ? await presetApi.getLocalModelList({ url, key: provider.userKey || provider.key })
               : await presetApi.getPresetModelList({
@@ -133,7 +134,7 @@ export const presetStore = createStore<PresetState>(
                   key: '',
                 })
 
-          return { presetModels: { list: models, url } }
+          return { presetModels: { list: result.models, url, data: result.data } }
         }
 
         const known = getSafeProviderDetail(
@@ -150,7 +151,7 @@ export const presetStore = createStore<PresetState>(
           return { presetModels: { list: [], url: '' } }
         }
 
-        const models = preset.localRequests
+        const result = preset.localRequests
           ? await presetApi.getLocalModelList({ url, key: preset.userThirdPartyKey })
           : await presetApi.getPresetModelList({
               id: preset._id || '',
@@ -160,7 +161,7 @@ export const presetStore = createStore<PresetState>(
               useCache,
             })
 
-        return { presetModels: { list: models, url } }
+        return { presetModels: { list: result.models, data: result.data, url } }
       } finally {
         yield { modelsLoading: false }
       }
