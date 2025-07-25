@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { RootModal } from '/web/shared/Modal'
 import { getStore } from '/web/store/create'
 import { imageApi } from '/web/store/data/image'
@@ -23,7 +23,7 @@ export const GenerateImageModal: Component = () => {
   const reel = useImageCache(`img-gen-${user.id}`, { clean: true })
   const emitter = createEmitter('width')
   const [state, setters] = useImageContext({ prompt: '' })
-  const settings = getStore('settings')((s) => ({ show: s.showImgGen }))
+  const settings = getStore('settings')((s) => ({ ...s.imggen }))
 
   const [loading, setLoading] = createSignal(false)
 
@@ -57,12 +57,22 @@ export const GenerateImageModal: Component = () => {
     })
   }
 
-  const close = () => getStore('settings').imageGeneration(false)
+  const close = () => getStore('settings').closeImageGen()
 
   const cleanPrompt = () => {
     const next = state.prompt.replace(/[^0-9a-z_\-,\s\.]/gi, '').trim()
     setters.update({ prompt: next })
   }
+
+  createEffect(
+    on(
+      () => settings.show,
+      (show) => {
+        if (!show) return
+        setters.update({ prompt: settings.prompt || '' })
+      }
+    )
+  )
 
   return (
     <RootModal
@@ -89,6 +99,12 @@ export const GenerateImageModal: Component = () => {
           <Button size="sm" onClick={generate}>
             Generate
           </Button>
+
+          <Show when={settings.action}>
+            <Button size="sm" onClick={() => settings.action?.handler(reel.state.image)}>
+              {settings.action?.text || ''}
+            </Button>
+          </Show>
 
           <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.next}>
             <ArrowRight size={20} />

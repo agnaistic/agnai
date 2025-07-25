@@ -57,8 +57,16 @@ export type SettingState = {
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
   showSettings: boolean
-  showImgGen: boolean
   showImgSettings: boolean
+
+  imggen: {
+    show: boolean
+    prompt?: string
+    action?: {
+      text: string
+      handler: (image: string) => void
+    }
+  }
 
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
@@ -115,8 +123,8 @@ const initState: SettingState = {
   arliai: { models: [], classes: {} },
   flags: getFlags(),
   showSettings: false,
-  showImgGen: false,
   showImgSettings: false,
+  imggen: { show: false },
   slotsLoaded: false,
   slots: { publisherId: '' },
   overlay: false,
@@ -187,12 +195,20 @@ export const settingStore = createStore<SettingState>(
       const next = show ?? !showSettings
       return { showSettings: next }
     },
-    imageGeneration({ showImgGen }, next?: boolean) {
-      if (next === undefined) {
-        return { showImgGen: !showImgGen }
+    openImageGen: (
+      _,
+      opts?: { prompt?: string; handler?: { text: string; handler: (image: string) => void } }
+    ) => {
+      return {
+        imggen: {
+          show: true,
+          prompt: opts?.prompt || '',
+          action: opts?.handler,
+        },
       }
-
-      return { showImgGen: next }
+    },
+    closeImageGen: () => {
+      return { imggen: { show: false } }
     },
     imageSettings({ showImgSettings }, next?: boolean) {
       if (next === undefined) {

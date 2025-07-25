@@ -10,10 +10,16 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
   props
 ) => {
   const createAvatar = async () => {
-    const base64 = await props.editor.createAvatar()
-    if (!base64) return
-
-    await props.editor.imageCache.addImage(base64, { id: `${v4()}.png` })
+    settingStore.openImageGen({
+      prompt: props.editor.state.appearance || '',
+      handler: {
+        text: 'Send to Editor',
+        handler: async (image) => {
+          await props.editor.imageCache.addImage(image, { id: `${v4()}.png` })
+          settingStore.closeImageGen()
+        },
+      },
+    })
   }
 
   const size = 14
