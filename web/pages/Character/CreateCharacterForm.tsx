@@ -341,6 +341,7 @@ export const CreateCharacterForm: Component<{
 
             <div class="flex justify-end gap-2 text-[1em]">
               <Button
+                size="sm"
                 onClick={() => {
                   const presetId = user.user?.chargenPreset || user.user?.defaultPreset
                   if (presetId) presetSetters.load(presetId)
@@ -351,16 +352,17 @@ export const CreateCharacterForm: Component<{
               >
                 <SlidersVertical size={24} /> Preset
               </Button>
-              <Button onClick={() => setImport(true)}>
+              <Button size="sm" onClick={() => setImport(true)}>
                 <Import /> Import
               </Button>
 
-              <Button onClick={() => setConverted(editor.convert())}>
+              <Button size="sm" onClick={() => setConverted(editor.convert())}>
                 <Download /> Export
               </Button>
 
               <Show when={state.edit}>
                 <Button
+                  size="sm"
                   onClick={() => {
                     setForceNew(true)
                     editor.clear()
@@ -373,6 +375,7 @@ export const CreateCharacterForm: Component<{
 
               <Show when={!state.edit}>
                 <Button
+                  size="sm"
                   schema="warning"
                   onClick={() => {
                     settingStore.openConfirm({
