@@ -347,9 +347,7 @@ const OpenRouterModels: Selector = (props) => {
         size="sm"
         modalTitle="Select a Model"
         options={openRouterModels()}
-        search={(value, search) => {
-          return value.toLowerCase().includes(search)
-        }}
+        search={tokenizedSearch}
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.openRouterModel?.id
@@ -788,7 +786,7 @@ const ClaudeModel: Selector = (props) => {
       onSelect={(ev) => {
         setProviderModel(props, ev.value, { claudeModel: ev.value })
       }}
-      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      search={tokenizedSearch}
       buttonLabel={label()}
       closeSub={emitter.on}
       footer={SelectorFooter}
@@ -844,7 +842,7 @@ const GoogleModels: Selector = (props) => {
         </div>
       }
       options={options()}
-      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      search={tokenizedSearch}
       onSelect={(opt) => {
         setProviderModel(props, opt.value, { googleModel: opt.value })
       }}
