@@ -11,6 +11,7 @@ import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
 import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon, WandSparkles } from 'lucide-solid'
 import { createEmitter } from '/web/shared/util'
+import { cleanPrompt } from '/common/util'
 
 // type GenState = {
 //   fullWidth: boolean
@@ -59,8 +60,8 @@ export const GenerateImageModal: Component = () => {
 
   const close = () => getStore('settings').closeImageGen()
 
-  const cleanPrompt = () => {
-    const next = state.prompt.replace(/[^0-9a-z_\-,\s\.]/gi, '').trim()
+  const onCleanPrompt = () => {
+    const next = cleanPrompt(state.prompt)
     setters.update({ prompt: next })
   }
 
@@ -126,7 +127,7 @@ export const GenerateImageModal: Component = () => {
             />
 
             <div class="flex w-full justify-end gap-2">
-              <Button size="sm" onClick={cleanPrompt}>
+              <Button size="sm" onClick={onCleanPrompt}>
                 <BrushCleaning size={20} />
                 Clean
               </Button>

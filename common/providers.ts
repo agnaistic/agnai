@@ -239,7 +239,11 @@ export function assertProviderDetail(provider: string) {
 export function getSafeProviderDetail(provider: string) {
   const id = getAlias(provider)
   const category = id.split('-')[0] as ProviderCategory
-  const type = id.replace('known-', '').replace('self-', '').replace('custom-', '')
+  let type = id.replace('known-', '').replace('self-', '').replace('custom-', '')
+
+  if (KNOWN_ALIASES[type]) {
+    type = KNOWN_ALIASES[type]
+  }
 
   switch (category) {
     case 'custom': {
@@ -255,6 +259,10 @@ export function getSafeProviderDetail(provider: string) {
     case 'agnai':
       return { category, type: category, defail: undefined }
   }
+}
+
+const KNOWN_ALIASES: Record<string, string> = {
+  'openrouter-completion': 'openrouter',
 }
 
 export function getProviderLabel(provider: AppSchema.Provider) {

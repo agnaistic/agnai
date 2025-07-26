@@ -6,6 +6,7 @@ import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
 import { LogProbs } from './LogProbs'
 import Modal from '/web/shared/Modal'
+import { cleanPrompt } from '/common/util'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
@@ -114,6 +115,15 @@ export const MessageMeta: Component = () => {
                     disabled={!!ctx.waiting}
                   >
                     Generate
+                  </Button>
+                  <Button
+                    size="sm"
+                    schema="secondary"
+                    onClick={() => {
+                      setPrompt(cleanPrompt(prompt()))
+                    }}
+                  >
+                    Clean
                   </Button>
                 </div>
               </>
