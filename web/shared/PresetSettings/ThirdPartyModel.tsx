@@ -1,5 +1,5 @@
 import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { FLAI_CONTEXTS, GOOGLE_MODELS } from '/common/adapters'
+import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { getStore } from '/web/store/create'
@@ -296,27 +296,12 @@ const NovelAIModel: Selector = (props) => {
 
 const OpenRouterModels: Selector = (props) => {
   const cfg = getStore('settings')()
-
-  const label = createMemo(() => {
-    const id = props.state.providerId
-      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
-      : props.state.openRouterModel?.id
-
-    const match = cfg.config.openRouter.models.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
-
-    return (
-      <span title={`${match.id}, ${(match.id || '...').toLowerCase()}`}>
-        {match.id}
-        <span class="text-500 ml-1 text-xs">{Math.round(match.context_length / 1024)}K</span>
-      </span>
-    )
-  })
+  const models = getStore('presets')((s) => ({ ...s.presetModels }))
 
   const openRouterModels = createMemo(() => {
-    if (!cfg.config.openRouter.models) return []
+    const list: OpenRouterModel[] = models.data || []
 
-    const options = cfg.config.openRouter.models
+    const options = list
       .map((model) => ({
         value: model.id,
         model: model,
@@ -340,6 +325,25 @@ const OpenRouterModels: Selector = (props) => {
     return options
   })
 
+  const label = createMemo(() => {
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.openRouterModel?.id
+
+    const match = openRouterModels().find((s) => s.value === id)
+    if (!match) {
+      if (cfg.flags.debug) return `Model - None selected (${id})`
+      return 'Model - None selected'
+    }
+
+    return (
+      <span title={`${match.model.id}, ${(match.model.id || '...').toLowerCase()}`}>
+        {match.model.id}
+        <span class="text-500 ml-1 text-xs">{Math.round(match.model.context_length / 1024)}K</span>
+      </span>
+    )
+  })
+
   return (
     <div class="flex w-full items-center gap-1">
       <CustomSelect
@@ -354,9 +358,9 @@ const OpenRouterModels: Selector = (props) => {
         }
         disabled={props.state.disabled}
         onSelect={(ev) => {
-          const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
+          const model = openRouterModels().find((m) => m.value === ev.value)
           if (model) {
-            setProviderModel(props, model?.id, { openRouterModel: model })
+            setProviderModel(props, model?.model.id, { openRouterModel: model.model })
           }
         }}
         buttonLabel={label()}
@@ -385,7 +389,9 @@ const ArliModels: Selector = (props) => {
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.arliModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
+    if (!match) {
+      return 'Model - None selected'
+    }
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>

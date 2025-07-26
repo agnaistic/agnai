@@ -686,6 +686,7 @@ export const CreateCharacterForm: Component<{
             close={() => setOpenPreset(false)}
             hideTabs={['Memory', 'Prompt']}
             footer={setPresetFooter}
+            page="char"
           />
         </RootModal>
       </Show>

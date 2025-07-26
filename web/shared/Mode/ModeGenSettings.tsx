@@ -3,7 +3,6 @@ import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Sh
 import { defaultPresets, isDefaultPreset } from '../../../common/default-preset'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../Button'
-import { toastStore } from '../../store'
 import { presetStore } from '../../store'
 import { getPresetOptions } from '../adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
@@ -14,13 +13,7 @@ import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 import Divider from '../Divider'
-import {
-  getPresetForm,
-  PresetFuncs,
-  PresetState,
-  PresetTab,
-  usePresetContext,
-} from '/web/store/preset-context'
+import { getPresetForm, PresetFuncs, PresetState, PresetTab } from '/web/store/preset-context'
 import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
@@ -28,7 +21,7 @@ export const ModeGenSettings: Component<{
   setters: PresetFuncs
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
-
+  page: string
   hideTabs?: PresetTab[]
   close?: () => void
   footer?: (children: JSX.Element) => void
@@ -40,7 +33,6 @@ export const ModeGenSettings: Component<{
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const [store, { setState, load, clear }] = usePresetContext()
   const [clicked, setClicked] = createSignal(false)
 
   const presetOptions = createMemo(() =>
@@ -69,17 +61,17 @@ export const ModeGenSettings: Component<{
         if (!id) return
 
         if (isDefaultPreset(id)) {
-          clear()
+          props.setters.clear()
           const clone = deepClone(defaultPresets[id])
-          setState({ ...clone, _id: id })
+          props.setters.setState({ ...clone, _id: id })
           return
         }
 
-        if (store._id === id) {
+        if (props.preset._id === id) {
           return
         }
 
-        load(id)
+        props.setters.load(id)
       }
     )
   )
@@ -98,7 +90,7 @@ export const ModeGenSettings: Component<{
 
   const onSave = () => {
     const presetId = selected()
-    const update = getPresetForm(store)
+    const update = getPresetForm(props.preset)
 
     if (isDefaultPreset(presetId)) {
       const original = defaultPresets[presetId] as AppSchema.GenSettings
@@ -132,14 +124,9 @@ export const ModeGenSettings: Component<{
     }
 
     if (!isDefaultPreset(presetId)) {
-      if (!update.service) {
-        toastStore.error(`You must select an AI service before saving`)
-        return
-      }
-
       presetStore.updatePreset(presetId, update as any, {
         onSuccess: (next) => {
-          setState(next)
+          props.setters.setState(next)
           if (pane() === 'popup') {
             props.close?.()
           }
@@ -196,7 +183,7 @@ export const ModeGenSettings: Component<{
 
         <TextInput
           fieldName="name"
-          value={store.name}
+          value={props.preset.name}
           label={
             <div class="flex gap-2">
               <div>Preset Name</div>{' '}
@@ -204,13 +191,13 @@ export const ModeGenSettings: Component<{
                 class="icon-button select-none text-sm"
                 style={{ transition: '0.3s' }}
                 classList={{ '!text-green-500': clicked() }}
-                onClick={() => copy(store._id)}
+                onClick={() => copy(props.preset._id)}
               >
                 Copy ID {clicked() ? '✓' : ''}
               </div>
             </div>
           }
-          onChange={(ev) => setState('name', ev.currentTarget.value)}
+          onChange={(ev) => props.setters.setState('name', ev.currentTarget.value)}
         />
 
         <Divider class="!my-1" />
@@ -220,7 +207,7 @@ export const ModeGenSettings: Component<{
           setters={props.setters}
           hideTabs={props.hideTabs}
           noSave={false}
-          page="mode"
+          page={props.page}
         />
       </form>
     </div>

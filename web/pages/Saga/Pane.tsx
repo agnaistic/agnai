@@ -79,6 +79,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
       <Match when={pane.pane() === 'preset'}>
         <Convertible close={closePane} footer={paneFooter()}>
           <ModeGenSettings
+            page="mode"
             preset={preset}
             setters={setters}
             footer={setPaneFooter}
