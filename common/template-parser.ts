@@ -6,6 +6,7 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 import { ChatRole, HistoryLine } from '/srv/adapter/type'
+import { replaceTags } from './presets/templates'
 
 type Section = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
 
@@ -376,6 +377,23 @@ export async function parseTemplate(
   }
 
   const length = await opts.limit?.encoder?.(output)
+
+  const historyMsgIndex = flags.messages.findIndex(
+    (m) => m.role === 'system' && m.content === HISTORY_MARKER
+  )
+  if (historyMsgIndex >= 0) {
+    const nextMsgs = flags.messages
+      .slice(0, historyMsgIndex)
+      .concat(
+        historyLines.map((h, i) => ({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: replaceTags(h.line, 'None'),
+        }))
+      )
+      .concat(flags.messages.slice(historyMsgIndex + 1))
+
+    flags.messages = nextMsgs
+  }
 
   return {
     parsed: output,
@@ -810,6 +828,9 @@ function renderIterator(
     if (opts.sections) {
       opts.sections.flags.history = true
       opts.sections.warnings.noHistory = false
+    }
+    if (flags.messages) {
+      flags.messages.push({ role: 'system', content: HISTORY_MARKER })
     }
     return id
   }

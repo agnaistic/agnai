@@ -13,7 +13,10 @@ import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { ImageButton, settingStore } from '/web/store/settings'
 import { getMessageImages, msgStore } from '/web/store/message'
-import { Pencil, PlusCircle } from 'lucide-solid'
+import { Pencil, PlusCircle, X } from 'lucide-solid'
+import { MessageImagePrompt } from './MessageMeta'
+import Button from '/web/shared/Button'
+import { ICON_SIZES } from '/web/icons/AppIcon'
 
 type MessageImage = {
   src: string
@@ -24,6 +27,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   props
 ) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
+  const [showPrompt, setShowPrompt] = createSignal(false)
 
   const reloadImages = () => {
     loadImages(props.msg, setImages)
@@ -49,48 +53,64 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   })
 
   return (
-    <div class="flex flex-wrap gap-2" classList={{ hidden: images().length === 0 }}>
-      <For each={images()}>
-        {(img, pos) => (
-          <img
-            class="mt-2 max-h-12 max-w-[unset] cursor-pointer rounded-md sm:max-h-16"
-            src={getAssetUrl(img.src)}
-            onClick={() =>
-              settingStore.showImage({
-                src: {
-                  type: 'collection',
-                  id: `message-images-${props.msg._id}`,
-                  initial: pos(),
-                  prompt: props.msg.imagePrompt,
-                },
-                actions: imageButtons(),
-                onClose: reloadImages,
-              })
-            }
-          />
-        )}
-      </For>
-
-      <Show when={images().length || !!props.msg.imagePrompt}>
-        <div class="ml-2 flex items-center gap-3">
-          <div
-            class="icon-button"
-            onClick={() =>
-              msgStore.createImage({
-                sourceMsgId: props.msg._id,
-                append: true,
-              })
-            }
-          >
-            <PlusCircle size={16} />
-          </div>
-
-          <div class="icon-button m" onClick={props.onEditClick}>
-            <Pencil size={16} />
-          </div>
-        </div>
+    <>
+      <Show when={showPrompt()}>
+        <MessageImagePrompt msg={props.msg}>
+          <Button size="sm" onClick={() => setShowPrompt(false)}>
+            <X size={ICON_SIZES.PILL} />
+          </Button>
+        </MessageImagePrompt>
       </Show>
-    </div>
+
+      <div class="flex flex-wrap gap-2" classList={{ hidden: images().length === 0 }}>
+        <For each={images()}>
+          {(img, pos) => (
+            <img
+              class="mt-2 max-h-12 max-w-[unset] cursor-pointer rounded-md sm:max-h-16"
+              src={getAssetUrl(img.src)}
+              onClick={() =>
+                settingStore.showImage({
+                  src: {
+                    type: 'collection',
+                    id: `message-images-${props.msg._id}`,
+                    initial: pos(),
+                    prompt: props.msg.imagePrompt,
+                  },
+                  actions: imageButtons(),
+                  onClose: reloadImages,
+                })
+              }
+            />
+          )}
+        </For>
+
+        <Show when={images().length || !!props.msg.imagePrompt}>
+          <div class="ml-2 flex items-center gap-3">
+            <div
+              class="icon-button"
+              onClick={() =>
+                msgStore.createImage({
+                  sourceMsgId: props.msg._id,
+                  append: true,
+                })
+              }
+            >
+              <PlusCircle size={16} />
+            </div>
+
+            <div
+              class="icon-button m"
+              onClick={() => {
+                setShowPrompt(true)
+                // props.onEditClick()
+              }}
+            >
+              <Pencil size={16} />
+            </div>
+          </div>
+        </Show>
+      </div>
+    </>
   )
 }
 
