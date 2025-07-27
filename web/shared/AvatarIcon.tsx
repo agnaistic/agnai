@@ -124,7 +124,7 @@ const AvatarIcon: Component<Props> = (props) => {
     if (!props.openable) return
     const img = avatar()
     if (!img) return
-    settingStore.showImage(img)
+    settingStore.showImage({ src: { type: 'url', id: img } })
   }
 
   return (

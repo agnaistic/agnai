@@ -96,7 +96,7 @@ export const ChatFooter: Component<{
                 <img
                   src={image}
                   class="h-[40px] cursor-pointer rounded-md"
-                  onClick={() => settingStore.showImage(image)}
+                  onClick={() => settingStore.showImage({ src: { type: 'url', id: image } })}
                 />
               )}
             </For>
