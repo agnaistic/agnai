@@ -191,6 +191,7 @@ export const PresetProvider: Component<{
               </div>
             </Show>
           }
+          buttonClass="break-all"
           buttonLabel={label()}
           options={services()}
           onSelect={(ev) => changeProvider(ev.value)}

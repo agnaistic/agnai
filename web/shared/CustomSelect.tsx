@@ -122,7 +122,7 @@ export const CustomSelect: Component<{
       class={`max-w-full ${props.parentClass || ''}`}
       classList={{ ...props.classList, hidden: props.hide ?? false }}
     >
-      <div class={'flex flex-col text-sm ' + props.buttonParentClass || ''}>
+      <div class={'flex flex-col text-sm ' + (props.buttonParentClass || '')}>
         <FormLabel label={props.label} helperText={props.helperText} />
 
         <div class="flex gap-1">
