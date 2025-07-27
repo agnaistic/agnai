@@ -231,26 +231,24 @@ export const HelpModal: Component<{
 
 export const RootModal: Component<Props> = (props) => {
   return (
-    <Portal>
-      <Modal
-        show={props.show}
-        close={props.close}
-        title={props.title}
-        footer={props.footer}
-        maxHeight={props.maxHeight}
-        maxWidth={props.maxWidth}
-        tabs={props.tabs}
-        onSubmit={props.onSubmit}
-        fixedHeight={props.fixedHeight}
-        transparent={props.transparent}
-        dismissable={props.dismissable}
-        ariaLabel={props.ariaLabel}
-        ariaDescription={props.ariaDescription}
-        emitter={props.emitter}
-        disableResize={props.disableResize}
-      >
-        {props.children}
-      </Modal>
-    </Portal>
+    <Modal
+      show={props.show}
+      close={props.close}
+      title={props.title}
+      footer={props.footer}
+      maxHeight={props.maxHeight}
+      maxWidth={props.maxWidth}
+      tabs={props.tabs}
+      onSubmit={props.onSubmit}
+      fixedHeight={props.fixedHeight}
+      transparent={props.transparent}
+      dismissable={props.dismissable}
+      ariaLabel={props.ariaLabel}
+      ariaDescription={props.ariaDescription}
+      emitter={props.emitter}
+      disableResize={props.disableResize}
+    >
+      {props.children}
+    </Modal>
   )
 }
