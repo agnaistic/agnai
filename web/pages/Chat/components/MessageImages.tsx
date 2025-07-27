@@ -1,20 +1,23 @@
-import { Component, createEffect, createSignal, For, on, onMount, Setter, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  onMount,
+  Setter,
+  Show,
+} from 'solid-js'
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
-import { settingStore } from '/web/store/settings'
-import { deleteCachedMessageImage, getMessageImages, msgStore } from '/web/store/message'
+import { ImageButton, settingStore } from '/web/store/settings'
+import { getMessageImages, msgStore } from '/web/store/message'
 import { Pencil, PlusCircle } from 'lucide-solid'
-import { ButtonSchema } from '/web/shared/Button'
 
 type MessageImage = {
   src: string
   btn?: ImageButton
-}
-
-type ImageButton = {
-  schema: ButtonSchema
-  text: string
-  onClick: () => void
 }
 
 export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick: () => void }> = (
@@ -22,22 +25,48 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
 ) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
 
-  createEffect(
-    on(
-      () => props.msg.extras,
-      () => loadImages(props.msg, setImages)
-    )
-  )
-  onMount(() => loadImages(props.msg, setImages))
+  const reloadImages = () => {
+    loadImages(props.msg, setImages)
+  }
+
+  createEffect(on(() => props.msg.extras, reloadImages))
+
+  onMount(reloadImages)
+
+  const imageButtons = createMemo(() => {
+    const btns: ImageButton[] = [
+      {
+        text: 'Save Prompt',
+        schema: 'primary',
+        onClick: (ents) => {
+          if (!ents) return
+          msgStore.editMessageProp(props.msg._id, { imagePrompt: ents.prompt })
+        },
+      },
+    ]
+
+    return btns
+  })
 
   return (
     <div class="flex flex-wrap gap-2" classList={{ hidden: images().length === 0 }}>
       <For each={images()}>
-        {(img) => (
+        {(img, pos) => (
           <img
             class="mt-2 max-h-12 max-w-[unset] cursor-pointer rounded-md sm:max-h-16"
             src={getAssetUrl(img.src)}
-            onClick={() => settingStore.showImage(img.src, img.btn ? [img.btn] : [])}
+            onClick={() =>
+              settingStore.showImage({
+                src: {
+                  type: 'collection',
+                  id: `message-images-${props.msg._id}`,
+                  initial: pos(),
+                  prompt: props.msg.imagePrompt,
+                },
+                actions: imageButtons(),
+                onClose: reloadImages,
+              })
+            }
           />
         )}
       </For>
@@ -85,18 +114,8 @@ async function loadImages(msg: AppSchema.ChatMessage, setter: Setter<MessageImag
       if (seen.has(extra)) continue
       seen.add(extra)
 
-      const btn: ImageButton = {
-        schema: 'red',
-        text: 'Delete Image',
-        onClick: async () => {
-          await deleteCachedMessageImage(msg._id, extra)
-          settingStore.clearImage()
-          loadImages(msg, setter)
-        },
-      }
-
       const img = await storage.getItem(extra)
-      if (img) next.push({ src: img, btn })
+      if (img) next.push({ src: img })
       continue
     }
 

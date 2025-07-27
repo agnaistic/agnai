@@ -1,12 +1,12 @@
-import * as lf from 'localforage'
 import { v4 } from 'uuid'
 import { imageApi } from './data/image'
+import { storage } from '../shared/util'
 
-const store = lf.createInstance({ name: `agnai-images` })
+// const store = lf.createInstance({ name: `agnai-images` })
 
 type ImageMeta = { id?: string; prompt?: string }
 
-type ImageReel = {
+export type ImageReel = {
   id: string
 
   addImage(base64: string, meta?: ImageMeta): Promise<string[]>
@@ -17,18 +17,21 @@ type ImageReel = {
 }
 
 export function createImageCache(collection: string): ImageReel {
-  return {
+  const body: ImageReel = {
     id: collection,
-    getImageIds: () => getImageIds(collection),
-    addImage: (base64, id) => addImage(collection, base64, id),
-    getImage: (imageId) => getImage(collection, imageId),
-    removeImage: (imageId) => removeImage(collection, imageId),
-    removeAll: () => removeAll(collection),
+    getImageIds: () => getImageIds(body.id),
+    addImage: (base64, id) => addImage(body.id, base64, id),
+    getImage: (imageId) => getImage(body.id, imageId),
+    removeImage: (imageId) => removeImage(body.id, imageId),
+    removeAll: () => removeAll(body.id),
   }
+
+  return body
 }
 
 async function getImageIds(collection: string): Promise<string[]> {
-  const json = await store.getItem(`${collection}_images`)
+  console.log(`[img-cache] loading ${collection}`)
+  const json = await storage.getItem(`${collection}`)
   if (!json) return []
 
   const ids = JSON.parse(json as string)
@@ -37,29 +40,34 @@ async function getImageIds(collection: string): Promise<string[]> {
 }
 
 async function addImage(collection: string, image: string, meta?: ImageMeta): Promise<string[]> {
-  const imageId = `${collection}-${meta?.id ?? v4().slice(0, 5)}`
+  const cacheId = `cache:${meta?.id || v4()}`
 
   if (!image.startsWith('data:')) {
     image = (await imageApi.getImageData(image)) || image
   }
 
-  await store.setItem(imageId, image)
-  const ids = await getImageIds(collection).then((images) => images.filter((id) => id !== imageId))
+  await storage.setItem(cacheId, image)
+  const ids = await getImageIds(collection).then((images) => images.filter((id) => id !== cacheId))
 
-  ids.push(imageId)
+  ids.push(cacheId)
   return saveImageIds(collection, ids)
 }
 
 async function getImage(collection: string, imageId: string): Promise<string | undefined> {
+  if (imageId.startsWith('cache:')) {
+    const image = await storage.getItem(imageId)
+    if (image) return image
+  }
+
   const id = imageId.startsWith(`${collection}-`) ? imageId : `${collection}-${imageId}`
-  const image = await store.getItem(id)
+  const image = await storage.getItem(id)
   if (!image) return
 
   return image as string
 }
 
 async function removeImage(collection: string, imageId: string): Promise<string[]> {
-  await store.removeItem(`${collection}-${imageId}`)
+  await storage.removeItem(`${collection}-${imageId}`)
   const ids = await getImageIds(collection)
   const next = ids.filter((id) => id !== imageId)
   return saveImageIds(collection, next)
@@ -69,13 +77,13 @@ async function removeAll(collection: string) {
   const ids = await getImageIds(collection)
 
   for (const id of ids) {
-    await store.removeItem(`${collection}-${id}`)
+    await storage.removeItem(`${collection}-${id}`)
   }
 
   return saveImageIds(collection, [])
 }
 
 async function saveImageIds(collection: string, ids: string[]) {
-  await store.setItem(`${collection}_images`, JSON.stringify(ids))
+  await storage.setItem(`${collection}`, JSON.stringify(ids))
   return ids
 }

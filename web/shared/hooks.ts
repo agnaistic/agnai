@@ -9,7 +9,7 @@ import { getAssetUrl, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
-import { inline, tryParse } from '/common/util'
+import { clamp, inline, tryParse } from '/common/util'
 
 const PANE_BREAKPOINT = 1280
 
@@ -75,6 +75,7 @@ export function useWindowSize(): {
 export type ImageCache = ReturnType<typeof useImageCache>
 
 type ImageCacheOpts = {
+  initial?: number
   clean?: boolean
   include?: string[]
 }
@@ -180,6 +181,8 @@ export function useCharacterBg(src: 'layout' | 'page') {
   return bg
 }
 
+export type ImageCacheHook = ReturnType<typeof useImageCache>
+
 export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
   const reel = createImageCache(collection)
 
@@ -206,11 +209,42 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
       return
     }
 
-    const current = images.length - 1
+    const current = clamp(
+      opts.initial !== undefined ? opts.initial : images.length - 1,
+      images.length - 1,
+      0
+    )
     const image = await reel.getImage(images[current])
+    console.log(`[reel] init pos #${current}, initial: ${opts.initial}`)
 
     setState({ pos: current, image, images: images.map(cleanIds), imageId: images[current] })
   })
+
+  const load = async (collectionId: string, initial?: number) => {
+    if (collectionId) {
+      // Already loaded
+      if (collectionId === reel.id) return
+
+      setState('id', collectionId)
+      reel.id = collectionId
+    }
+
+    const images = await reel.getImageIds()
+    setState({ images })
+    await pos(initial ?? 0)
+  }
+
+  const pos = async (position: number) => {
+    if (position >= state.images.length) {
+      position = 0
+    } else if (position < 0) {
+      position = state.images.length - 1
+    }
+
+    const image = await reel.getImage(state.images[position])
+    console.log(`[reel] loading #${position}, valid: ${!!image}`)
+    setState({ pos: position, image, imageId: state.images[position] })
+  }
 
   const next = async () => {
     let pos = -1
@@ -256,18 +290,18 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
 
     // Automatically load the deleted image's ancestor if it is available
     if (imageId === state.imageId) {
-      let pos = -1
+      let nextPos = -1
       if (images[state.pos]) {
-        pos = state.pos
+        nextPos = state.pos
       } else if (state.pos > 0 && images[state.pos - 1]) {
-        pos = state.pos - 1
+        nextPos = state.pos - 1
       } else if (images[0]) {
-        pos = 0
+        nextPos = 0
       }
 
-      if (pos >= 0) {
-        const image = await reel.getImage(images[pos])
-        setState({ images: images.map(cleanIds), image, pos, imageId: images[pos] })
+      if (nextPos >= 0) {
+        const image = await reel.getImage(images[nextPos])
+        setState({ images: images.map(cleanIds), image, pos: nextPos, imageId: images[nextPos] })
       } else {
         setState({ images: images.map(cleanIds), pos: 0, image: '', imageId: '' })
       }
@@ -280,6 +314,8 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
 
   return {
     state,
+    load,
+    position: pos,
     next,
     prev,
     addImage,

@@ -177,7 +177,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
   const presets = presetStore()
   const settings = settingStore()
 
-  const cache = useImageCache('avatars', { clean: true })
+  const cache = useImageCache('avatars-images', { clean: true })
 
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditorState>({ ...initState })

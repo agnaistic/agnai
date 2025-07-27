@@ -11,13 +11,26 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
-import { canUsePane, isMobile } from '../shared/hooks'
+import { canUsePane, ImageCacheHook, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
 import { JSX } from 'solid-js'
 import { FileInputResult } from '../shared/FileInput'
+
+export type ImageSource = {
+  type: 'collection' | 'url'
+  id: string
+  initial?: number
+  prompt?: string
+}
+
+export type ImageButton = {
+  schema: ButtonSchema
+  text: string
+  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
+}
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -45,8 +58,9 @@ export type SettingState = {
     books: AppSchema.MemoryBook[]
   }
   showImage?: {
-    url: string
-    options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }>
+    src: ImageSource
+    options: ImageButton[]
+    onClose?: () => void
   }
 
   loras: Array<{ id: string; name: string; tags: Record<string, number> }>
@@ -56,6 +70,7 @@ export type SettingState = {
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
+
   showSettings: boolean
   showImgSettings: boolean
 
@@ -383,12 +398,8 @@ export const settingStore = createStore<SettingState>(
       storage.localSetItem('agnai-anonymize', JSON.stringify(!anonymize))
       return { anonymize: !anonymize }
     },
-    showImage(
-      _,
-      image: string,
-      options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }> = []
-    ) {
-      return { showImage: { url: image, options } }
+    showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
+      return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
     },
     clearImage() {
       return { showImage: undefined }
