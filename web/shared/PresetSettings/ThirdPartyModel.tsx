@@ -948,7 +948,10 @@ const HordeModels: Selector = (props) => {
             fieldName="workers"
             items={cfg.models}
             label="Select Model(s)"
-            onChange={setSelected}
+            onChange={(next) => {
+              console.log(next)
+              setSelected(next.map((n) => n.value))
+            }}
             values={selected()}
           />
           <div class="flex items-center justify-between gap-4">
