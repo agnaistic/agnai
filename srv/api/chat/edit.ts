@@ -143,6 +143,9 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       extras: ['string?'],
       retries: ['string?'],
       json: 'any?',
+      characterId: 'string?',
+      userId: 'string?',
+      name: 'string?',
     },
     body
   )
@@ -158,6 +161,9 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     retries: body.retries,
     extras: body.extras || prev.msg.extras,
     json: body.json || prev.msg.json,
+    characterId: body.characterId ?? prev.msg.characterId,
+    userId: body.userId ?? prev.msg.userId,
+    name: body.name ?? prev.msg.name,
   }
 
   const message = await store.msgs.editMessage(params.id, {
