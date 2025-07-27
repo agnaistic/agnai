@@ -3,7 +3,7 @@ import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import type { Option } from './Select'
-import { Component, createEffect, JSX, onCleanup } from 'solid-js'
+import { Component, createEffect, createMemo, JSX, onCleanup } from 'solid-js'
 import type { UserState } from '../store'
 import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
@@ -750,6 +750,23 @@ export function deepCloneAndRemoveFields<T, K extends keyof T>(
 
 export function asyncFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve))
+}
+
+export function useUsableServices() {
+  const users = getStore('user')()
+  const cfg = getStore('settings')()
+
+  const services = createMemo(() => {
+    const list: AIAdapter[] = []
+
+    for (const service of cfg.config.adapters) {
+      if (isUsableService(service, cfg.config, users.user)) list.push(service)
+    }
+
+    return list
+  })
+
+  return services
 }
 
 export function getUsableServices() {

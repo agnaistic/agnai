@@ -133,12 +133,13 @@ async function getPresetModelList(opts: {
   key?: string
   useCache?: boolean
 }): Promise<{ models: string[]; data?: any[] }> {
+  const isGuest = !isLoggedIn()
   if (opts.useCache) {
     const cache = MODEL_LIST_CACHE.get(opts.url)
     if (cache) return cache
   }
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
-    id: opts.id,
+    id: isGuest ? '' : opts.id,
     providerId: opts.providerId,
     url: opts.url,
     key: opts.key,

@@ -8,7 +8,7 @@ import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
 import { assertProviderDetail } from '../../../../common/providers'
 import { Field } from '/web/shared/PresetSettings/Fields'
-import { ComponentSubscriber, createEmitter, getUsableServices } from '/web/shared/util'
+import { ComponentSubscriber, createEmitter, useUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
@@ -26,6 +26,7 @@ export const PresetProvider: Component<{
   const [open, setOpen] = createSignal(false)
   const [openLegacy, setOpenLegacy] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.Provider>()
+  const usableServices = useUsableServices()
 
   const showEdit = createMemo(
     () => !!props.state.providerId && props.state.providerId !== 'agnaistic'
@@ -55,7 +56,7 @@ export const PresetProvider: Component<{
 
     providers.sort(sortAlpha)
 
-    const list = getUsableServices()
+    const list = usableServices()
     const subs = list.some((l) => l === 'agnaistic')
 
     if (subs) {
@@ -252,8 +253,9 @@ export const PresetProvider: Component<{
 }
 
 const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (props) => {
+  const useableServices = useUsableServices()
   const services = createMemo(() => {
-    const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = useableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     return list
   })
 

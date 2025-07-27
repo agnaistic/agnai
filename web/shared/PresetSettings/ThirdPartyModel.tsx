@@ -312,8 +312,8 @@ const OpenRouterModels: Selector = (props) => {
               <span class="text-500 ml-1 text-sm">{Math.round(model.context_length / 1024)}K</span>
             </div>
             <div class="text-500 flex gap-2 text-xs">
-              <div>${round(+model.pricing.prompt * 1_000_000, 2).toFixed(2)} In</div>
-              <div>${round(+model.pricing.completion * 1_000_000, 2).toFixed(2)} Out</div>
+              <div>${round(+(model.pricing?.prompt || 0) * 1_000_000, 2).toFixed(2)} In</div>
+              <div>${round(+(model.pricing?.completion || 0) * 1_000_000, 2).toFixed(2)} Out</div>
             </div>
           </div>
         ),
