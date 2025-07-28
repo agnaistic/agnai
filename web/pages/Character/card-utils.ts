@@ -44,9 +44,9 @@ export async function extractCardData(file: File) {
   if (!extractor) {
     throw Error('Failed parsing character card image: No known extractor')
   }
-  const data = await extractor(buffer)
 
   try {
+    const data = await extractor(buffer)
     return JSON.parse(data) as ImageCard
   } catch (ex: any) {
     throw new Error(`Failed parsing card data as JSON: ${ex.message}`)

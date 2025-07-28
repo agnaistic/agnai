@@ -12,6 +12,7 @@ export const Combobox: Component<{
   items: ComboItem[]
   onClick: (item: ComboItem) => void
   onEnter?: (text: string) => void
+  onClearClicked?: () => void
   selected?: string[]
   autoClose?: boolean
 }> = (props) => {
@@ -75,6 +76,7 @@ export const Combobox: Component<{
           onClick={() => {
             setText('')
             setOpen(false)
+            props.onClearClicked?.()
           }}
         >
           <X size={16} />

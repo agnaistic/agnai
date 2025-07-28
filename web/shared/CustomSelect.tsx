@@ -46,6 +46,9 @@ export const CustomSelect: Component<{
   search?: (value: string, search: string) => boolean
   disabled?: boolean
   footer?: any
+
+  preoptions?: JSX.Element
+  postoptions?: JSX.Element
   children?: any
 
   closeSub?: ComponentSubscriber<'close'>
@@ -159,6 +162,8 @@ export const CustomSelect: Component<{
               value={filter()}
             />
           </Show>
+
+          {props.preoptions}
 
           <Show when={!!props.categories && !!props.header}>{props.header}</Show>
 

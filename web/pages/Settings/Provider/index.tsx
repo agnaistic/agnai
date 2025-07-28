@@ -164,32 +164,34 @@ export const PresetProvider: Component<{
           modalTitle="Select Provider"
           size="sm"
           label={
-            <Show when={props.page === 'mode'}>
-              <div class="flex w-full items-center gap-2 pb-1">
-                <div>Service</div>
-                <HelpModal
-                  title="Providers"
-                  cta={
-                    <button class="icon-button flex gap-1">
-                      <Info size={16} />
-                    </button>
-                  }
-                >
-                  <div class="flex flex-col gap-3">
-                    <p>Providers are used to connect to your preferred AI models.</p>
-                    <Markdown
-                      text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
-                    />
-                    <Markdown
-                      text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
-                    />
-                    <Markdown
-                      text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your props.state.`}
-                    />
-                  </div>
-                </HelpModal>
-              </div>
-            </Show>
+            <>
+              <Show when={props.page === 'mode'}>
+                <div class="flex w-full items-center gap-2 pb-1">
+                  <div>Service</div>
+                  <HelpModal
+                    title="Providers"
+                    cta={
+                      <button class="icon-button flex gap-1">
+                        <Info size={16} />
+                      </button>
+                    }
+                  >
+                    <div class="flex flex-col gap-3">
+                      <p>Providers are used to connect to your preferred AI models.</p>
+                      <Markdown
+                        text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
+                      />
+                      <Markdown
+                        text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
+                      />
+                      <Markdown
+                        text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your props.state.`}
+                      />
+                    </div>
+                  </HelpModal>
+                </div>
+              </Show>
+            </>
           }
           buttonClass="break-all"
           buttonLabel={label()}
@@ -197,6 +199,14 @@ export const PresetProvider: Component<{
           onSelect={(ev) => changeProvider(ev.value)}
           openSub={props.openSub}
           closeSub={emitter.on}
+          preoptions={
+            <div class="flex justify-end">
+              <Button size="sm" onClick={newProvider}>
+                <PlusIcon size={16} />
+                New
+              </Button>
+            </div>
+          }
           footer={
             <>
               <Button schema="secondary" onClick={emitter.emit.close}>
@@ -235,11 +245,14 @@ export const PresetProvider: Component<{
       <ManageProvider
         user={state.user}
         show={open()}
-        close={() => setOpen(false)}
-        provider={editing()}
-        onCreated={(provider) => {
-          changeProvider(provider._id)
+        close={(reason, provider) => {
+          setOpen(false)
+          emitter.emit.close()
+          if (provider) {
+            changeProvider(provider._id)
+          }
         }}
+        provider={editing()}
       />
       <EditConnectionDetails
         state={props.state}
