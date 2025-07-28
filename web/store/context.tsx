@@ -256,6 +256,10 @@ function canAttachImage(
     aphrodite: true,
     tabby: true,
     featherless: true,
+    arli: true,
+    claude: true,
+    mistral: true,
+    koboldcpp: true,
   }
 
   return !!conn.format && !!supportedFormats[conn.format]

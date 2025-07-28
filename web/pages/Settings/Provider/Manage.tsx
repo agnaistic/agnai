@@ -24,7 +24,10 @@ export const ManageProvider: Component<{
   onUpdated?: (provider: AppSchema.Provider) => void
   user: AppSchema.User | undefined
   show: boolean
-  close: () => void
+  close: (
+    reason: 'cancel' | 'updated' | 'created' | 'deleted',
+    provider?: AppSchema.Provider
+  ) => void
   provider?: AppSchema.Provider
 }> = (props) => {
   const [tested, setTested] = createSignal<boolean>()
@@ -127,11 +130,11 @@ export const ManageProvider: Component<{
     getStore('user').saveProvider(body, (success, next) => {
       setLoading(false)
       if (!success) return
-      props.close()
-
+      const reason = !next ? 'cancel' : !body._id && next._id ? 'created' : 'updated'
+      props.close(reason, next)
       if (!next) return
-      const wasCreated = !body._id && next._id
-      if (wasCreated) {
+
+      if (reason === 'created') {
         props.onCreated?.(next)
       } else {
         props.onUpdated?.(next)
@@ -168,7 +171,7 @@ export const ManageProvider: Component<{
     if (!props.provider?._id) return
     getStore('user').deleteProvider(props.provider._id, (success) => {
       if (!success) return
-      props.close()
+      props.close('deleted')
     })
   }
 
@@ -223,7 +226,7 @@ export const ManageProvider: Component<{
   return (
     <RootModal
       show={props.show}
-      close={props.close}
+      close={() => props.close('cancel')}
       title={`${props.provider?._id ? 'Update Provider' : 'Create Provider'}`}
       footer={
         <div class="flex w-full justify-between">
@@ -235,7 +238,7 @@ export const ManageProvider: Component<{
             </Show>
           </div>
           <div class="flex gap-2">
-            <Button schema="secondary" onClick={props.close} disabled={loading()}>
+            <Button schema="secondary" onClick={() => props.close('cancel')} disabled={loading()}>
               Cancel
             </Button>
             <Button schema="success" onClick={save} disabled={loading() || !provider()}>

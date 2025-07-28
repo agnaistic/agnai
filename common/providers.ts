@@ -333,6 +333,8 @@ export function getProviderConnection(provider: AppSchema.Provider) {
   }
 
   return {
+    id: provider._id,
+    name: provider.name,
     detail,
     category,
     label: getProviderCategoryLabel(category),
