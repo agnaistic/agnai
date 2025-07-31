@@ -28,6 +28,8 @@ interface Props {
   ariaDescription?: string
 
   emitter?: PartialEmitter<'width'>
+
+  contentClass?: string
 }
 
 const Modal: Component<Props> = (props) => {
@@ -129,7 +131,7 @@ const Modal: Component<Props> = (props) => {
 
               {/* 132px is the height of the title + footer*/}
               <div
-                class={`overflow-y-auto p-2 pt-0 text-lg`}
+                class={`overflow-y-auto p-2 pt-0 text-lg ${props.contentClass || ''}`}
                 classList={{
                   'modal-height-fixed': !!minHeight(),
                   'h-full': props.maxHeight,
@@ -232,6 +234,7 @@ export const HelpModal: Component<{
 export const RootModal: Component<Props> = (props) => {
   return (
     <Modal
+      contentClass={props.contentClass}
       show={props.show}
       close={props.close}
       title={props.title}

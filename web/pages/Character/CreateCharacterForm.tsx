@@ -468,12 +468,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="scenario"
                   label={
                     <>
-                      <Regenerate
-                        field={'scenario'}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                        class="tour-gen-field"
-                      />
+                      <Regenerate field={'scenario'} editor={editor} class="tour-gen-field" />
                       Scenario{' '}
                     </>
                   }
@@ -492,11 +487,7 @@ export const CreateCharacterForm: Component<{
                     label={
                       <div class="flex items-center gap-1">
                         <Show when={editor.state.personaKind === 'text'}>
-                          <Regenerate
-                            field={'persona'}
-                            editor={editor}
-                            allowed={editor.canGuidance}
-                          />
+                          <Regenerate field={'persona'} editor={editor} />
                         </Show>
                         Personality
                       </div>
@@ -535,7 +526,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="greeting"
                   label={
                     <>
-                      <Regenerate field={'greeting'} editor={editor} allowed={editor.canGuidance} />
+                      <Regenerate field={'greeting'} editor={editor} />
                       Greeting{' '}
                     </>
                   }
@@ -559,11 +550,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="sampleChat"
                   label={
                     <>
-                      <Regenerate
-                        field={'sampleChat'}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                      />
+                      <Regenerate field={'sampleChat'} editor={editor} />
                       Sample Conversation{' '}
                     </>
                   }

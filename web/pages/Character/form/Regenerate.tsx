@@ -1,4 +1,4 @@
-import { Component, Match, Switch } from 'solid-js'
+import { Component } from 'solid-js'
 import { CharEditor } from '../editor'
 import Tooltip from '/web/shared/Tooltip'
 import { WandSparkles } from 'lucide-solid'
@@ -9,7 +9,6 @@ export const Regenerate: Component<{
   field: string
   trait?: string
   editor: CharEditor
-  allowed: boolean
   class?: string
 }> = (props) => {
   return (
@@ -18,26 +17,20 @@ export const Regenerate: Component<{
       position="right"
       disable={props.editor.canGenerate()}
     >
-      <Switch>
-        <Match when={!props.allowed}>{null}</Match>
-
-        <Match when={props.allowed}>
-          <Button
-            size="sm"
-            class={`inline-block ${props.class || ''}`}
-            onClick={() => {
-              if (!props.editor.canGenerate()) {
-                toastStore.warn(`Fill in the Name and Description to generate`)
-                return
-              }
-              props.editor.generateField(props.field, props.trait)
-            }}
-            disabled={props.editor.generating()}
-          >
-            <WandSparkles size={16} />
-          </Button>
-        </Match>
-      </Switch>
+      <Button
+        size="sm"
+        class={`inline-block ${props.class || ''}`}
+        onClick={() => {
+          if (!props.editor.canGenerate()) {
+            toastStore.warn(`Fill in the Name and Description to generate`)
+            return
+          }
+          props.editor.generateField(props.field, props.trait)
+        }}
+        disabled={props.editor.generating()}
+      >
+        <WandSparkles size={16} />
+      </Button>
     </Tooltip>
   )
 }

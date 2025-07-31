@@ -87,11 +87,7 @@ export const AvatarField: Component<{
             />
             <div class="relative flex w-full gap-2">
               <div class="absolute right-2 top-1">
-                <Regenerate
-                  field={'appearance'}
-                  editor={props.editor}
-                  allowed={props.editor.canGuidance}
-                />
+                <Regenerate field={'appearance'} editor={props.editor} />
               </div>
               <TextInput
                 isMultiline

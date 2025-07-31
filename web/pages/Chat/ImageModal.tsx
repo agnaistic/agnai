@@ -15,7 +15,7 @@ import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon, WandSparkles } from 'lucide-solid'
 import { cleanPrompt } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { imageApi } from '/web/store/data/image'
@@ -139,7 +139,7 @@ const ImageCollectionModal: Component<{
     setPrompt(cleaned)
   }
 
-  const generate = async () => {
+  const generateImage = async () => {
     if (loading()) return
 
     const imagePrompt = prompt()
@@ -158,11 +158,19 @@ const ImageCollectionModal: Component<{
     }
   }
 
+  const generatePrompt = () => {
+    getStore('messages').generateImagePrompt({
+      onSummary: (summary) => setPrompt(summary),
+      onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+    })
+  }
+
   return (
     <Modal
       show={!!props.collection}
       close={close}
       maxWidth="full"
+      fixedHeight
       title={
         <div class="flex items-center gap-2">
           <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
@@ -177,7 +185,7 @@ const ImageCollectionModal: Component<{
             <ArrowLeft size={20} />
           </Button>
 
-          <Button size="sm" onClick={generate} disabled={loading()}>
+          <Button size="sm" onClick={generateImage} disabled={loading()}>
             Generate
           </Button>
 
@@ -203,12 +211,12 @@ const ImageCollectionModal: Component<{
         </div>
       }
     >
-      <div class="grid h-full min-h-0 w-full gap-1" style={{ 'grid-auto-rows': 'auto 1fr' }}>
+      <div class="flex h-full w-full flex-col gap-1">
         <section class="w-full">
           <div class="flex w-full flex-col gap-1">
             <TextInput
               parentClass="w-full !h-[64px]"
-              class="!h-[64px] !py-1 !text-sm"
+              class="!h-[64px] !max-h-[64px] !py-1 !text-sm"
               prelabel="Prompt"
               value={prompt()}
               onChange={(ev) => setPrompt(ev.currentTarget.value)}
@@ -217,6 +225,9 @@ const ImageCollectionModal: Component<{
             />
 
             <div class="flex w-full justify-end gap-2">
+              <Button size="sm" onClick={generatePrompt}>
+                <WandSparkles size={20} />
+              </Button>
               <Button size="sm" onClick={onCleanPrompt}>
                 <BrushCleaning size={20} />
                 Clean
@@ -225,14 +236,14 @@ const ImageCollectionModal: Component<{
           </div>
         </section>
 
-        <section class="flex min-h-0 justify-center">
+        <section class="flex max-h-[calc(100%-100px)] justify-center">
           <Show when={loading()}>
             <div class="bg-900 absolute right-1/2 top-1/2 rounded-lg p-2">
               <RelativeSpinner />
             </div>
           </Show>
           <Show when={!!reel.state.image}>
-            <img class="h-full max-h-fit object-cover" src={reel.state.image} />
+            <img class="min-h-0 object-contain" src={reel.state.image} />
           </Show>
         </section>
       </div>

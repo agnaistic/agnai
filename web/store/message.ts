@@ -15,7 +15,7 @@ import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/tex
 import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
-import { exclude, findOne, replace } from '/common/util'
+import { exclude, findOne, inline, replace } from '/common/util'
 import {
   ChatTree,
   removeChatTreeNodes,
@@ -1103,7 +1103,7 @@ subscribe(
     const prev = msgs.find((msg) => msg._id === body.messageId)
     const char = prev?.characterId ? characters.map[prev?.characterId] : undefined
 
-    console.log('[wait] msg-retry')
+    console.log(`[wait] msg-retry ${inline({ ...body, message: '...', retries: undefined })}`)
     msgStore.setState({
       partial: undefined,
       retrying: undefined,
@@ -1133,7 +1133,7 @@ subscribe(
     const nextMsgs = replace(body.messageId, msgs, nextMsg)
     const replacement = { ...prev, ...nextMsg }
 
-    console.log('[wait] msg-retry:2')
+    console.log(`[wait] msg-retry:2 ${inline({ ...body, message: '...', retries: undefined })}`)
     msgStore.setState({
       partial: undefined,
       retrying: undefined,

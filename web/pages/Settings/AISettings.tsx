@@ -68,7 +68,7 @@ const AISettings: Component<{
       <FormLabel
         label={
           <div class="flex flex-wrap items-center gap-1">
-            <div>Enable Embeddings/Long-Term Memory</div>
+            <div>Embeddings/Long-Term Memory</div>
             <Select
               parentClass="text-sm py-1 px-2"
               items={EMBED_MODELS_OPTS}
@@ -150,7 +150,7 @@ const AISettings: Component<{
               </Button>
             </Show>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="flex w-full items-center gap-1">
             <TextInput readonly placeholder="API Key Hidden" value={apiKey()} />
             <Show when={apiKey() !== ''}>
               <Copy text={apiKey()} onClick={revealKey} size={24} />

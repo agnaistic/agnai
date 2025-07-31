@@ -453,7 +453,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
     avatar: imageData,
     generating,
     canGenerate,
-    canGuidance: genOptions().length > 0,
     generateField: genField,
     generateAvatar,
     imageCache: cache,

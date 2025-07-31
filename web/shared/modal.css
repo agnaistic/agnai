@@ -6,6 +6,8 @@
 
 .modal-height-fixed {
   min-height: calc(var(--window-height) - 148px);
+  max-height: calc(var(--window-height) - 148px);
+  height: calc(var(--window-height) - 148px);
   /* min-height: calc(80vh - 132px);
   min-height: calc(80dvh - 132px); */
 }
