@@ -909,7 +909,7 @@ function getPlaceholder(
       if (!flags.sample_chat) {
         flags.sample_chat = true
         opts.lowpriority ??= []
-        opts.lowpriority.push({ id: '??' + SAMPLE_CHAT_LP, content: text })
+        opts.lowpriority.push({ id: SAMPLE_CHAT_LP, content: text })
         return SAMPLE_CHAT_LP
       }
 

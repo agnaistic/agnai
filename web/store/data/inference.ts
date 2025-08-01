@@ -110,7 +110,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
 
   if (!user) {
     toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
+    return localApi.result({ response: '' })
   }
 
   let preset = getInferencePreset(settings)
@@ -119,12 +119,12 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   }
 
   prompt = replaceUniversalTags(prompt, preset.modelFormat)
-  const lazy = lazyPromise()
+  const lazy = lazyPromise<{ response: string }>()
 
   const tickWrapper: TickHandler = (res, state) => {
     if (state === 'done') {
       if (typeof res !== 'string') lazy.resolve(res)
-      else lazy.resolve({ result: { response: res } })
+      else lazy.resolve({ response: res })
     }
 
     onTick?.(res, state)
@@ -161,12 +161,16 @@ export function lazyPromise<T = any>() {
   const parts = {
     resolve: (result: T) => {},
     reject: (error: any) => {},
-    promise: {} as any as Promise<T>,
+    promise: {} as any as Promise<{ result?: T; error?: any }>,
   }
 
-  parts.promise = new Promise<T>((resolve, reject) => {
-    parts.resolve = resolve
-    parts.reject = reject
+  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, _reject) => {
+    parts.resolve = (result: any) => {
+      resolve({ result, error: undefined })
+    }
+    parts.reject = (error: any) => {
+      resolve({ result: undefined, error })
+    }
   })
 
   return parts

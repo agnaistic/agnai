@@ -79,7 +79,7 @@ export const LabelButton: Component<{
 }> = (props) => (
   <label
     for={props.for}
-    class={`select-none items-center` + (props.class || '')}
+    class={`cursor-pointer select-none items-center ` + (props.class || '')}
     classList={{
       ...props.classList,
       [kinds[props.schema || 'primary']]: true,

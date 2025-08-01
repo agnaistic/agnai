@@ -353,9 +353,9 @@ const InputBar: Component<{
       <Button
         schema="clear"
         onClick={onMoreClick}
-        class="tour-message-actions h-full bg-[var(--bg-800)] px-2 py-2"
+        class="tour-message-actions mt-1 h-full bg-[var(--bg-800)] px-2 py-2"
       >
-        <MoreHorizontal class="icon-button" />
+        <MoreHorizontal class="icon-button" size={18} />
       </Button>
 
       <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">

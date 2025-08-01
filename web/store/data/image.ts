@@ -16,6 +16,7 @@ import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
+import { extractReasoning } from '/common/reasoning'
 
 type GenerateOpts = {
   chatId?: string
@@ -273,7 +274,15 @@ async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHa
       `\n${imageEntities.summary || ''}`
     )
     const result = await getChatSummary(settings, imageEntities.summary, onTick)
-    const summary = result.result?.response
+
+    if (result.result?.response) {
+      const { content } = extractReasoning(result.result.response)
+      if (content) {
+        result.result.response = content
+      }
+    }
+
+    const summary = result?.result?.response
 
     console.log('Image caption: ', summary)
     return result
@@ -307,7 +316,11 @@ async function getChatSummary(
       settings,
       messages: parsed.blocks,
     },
-    onTick
+    (text, state) => {
+      if (!onTick) return
+      const { content } = extractReasoning(text)
+      onTick(content.trim(), state)
+    }
   )
 
   return response
