@@ -59,6 +59,7 @@ import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
 import { ComponentEmitter } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
+import { SendFunc } from './InputBar'
 
 type MessageProps = {
   msg: SplitMessage
@@ -73,7 +74,7 @@ type MessageProps = {
   children?: any
   retrying?: AppSchema.ChatMessage
   partial?: string
-  sendMessage: (msg: string, ooc: boolean) => void
+  sendMessage: SendFunc
   isPaneOpen: boolean
   showHiddenEvents?: boolean
   textBeforeGenMore?: string
@@ -961,7 +962,7 @@ const MessageOption: Component<{
 
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
-    msgStore.retry(split.chatId, original._id)
+    msgStore.retry({ chatId: split.chatId, msgId: original._id })
   } else {
     msgStore.createImage({ sourceMsgId: split._id })
   }

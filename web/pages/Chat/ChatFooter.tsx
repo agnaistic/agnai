@@ -4,7 +4,7 @@ import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
-import InputBar from './components/InputBar'
+import InputBar, { SendFunc } from './components/InputBar'
 import { ContextState } from '/web/store/context'
 import { AppSchema } from '/common/types'
 
@@ -14,7 +14,7 @@ export const ChatFooter: Component<{
   pills: AppSchema.Character[]
   swipe: number
   requestMessage: (chatId: string) => void
-  sendMessage: (message: string, ooc: boolean, onSucces?: () => void) => void
+  sendMessage: SendFunc
 }> = (props) => {
   const user = userStore()
   const msgs = msgStore((s) => ({ waiting: s.waiting, attachments: s.attachments }))

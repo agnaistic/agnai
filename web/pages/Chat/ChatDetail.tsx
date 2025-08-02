@@ -40,6 +40,7 @@ import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
 import { MessageMeta } from './components/MessageMeta'
 import { usePresetContext } from '/web/store/preset-context'
+import { SendFunc } from './components/InputBar'
 
 export { ChatDetail as default }
 
@@ -288,12 +289,12 @@ const ChatDetail: Component = () => {
     }
   })
 
-  const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
-    if (isDevCommand(message)) {
-      switch (message) {
+  const sendMessage: SendFunc = (opts) => {
+    if (isDevCommand(opts.msg)) {
+      switch (opts.msg) {
         case '/devCycleAvatarSettings':
           devCycleAvatarSettings(user)
-          onSuccess?.()
+          opts.onSuccess?.()
           return
 
         case '/devShowHiddenEvents':
@@ -303,9 +304,19 @@ const ChatDetail: Component = () => {
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const kind = ooc ? 'ooc' : chats.replyAs || ctx.activeBots.length <= 1 ? 'send' : 'send-noreply'
-    if (!ooc) setSwipe(0)
-    msgStore.send(chats.chat?._id!, message, kind, onSuccess)
+    const kind = opts.ooc
+      ? 'ooc'
+      : chats.replyAs || ctx.activeBots.length <= 1
+      ? 'send'
+      : 'send-noreply'
+    if (!opts.ooc) setSwipe(0)
+
+    msgStore.send({
+      chatId: chats.chat?._id!,
+      msg: opts.msg,
+      mode: kind,
+      onSuccess: opts.onSuccess,
+    })
     return
   }
 
@@ -338,7 +349,7 @@ const ChatDetail: Component = () => {
   })
 
   const generateFirst = () => {
-    msgStore.retry(chats.chat?._id!)
+    msgStore.retry({ chatId: chats.chat?._id! })
   }
 
   const characterPills = createMemo(() => {
@@ -374,7 +385,7 @@ const ChatDetail: Component = () => {
         if (msg.adapter === 'image') {
           msgStore.createImage({ sourceMsgId: msg._id })
         } else if (msg.characterId) {
-          msgStore.retry(msg.chatId, msg._id)
+          msgStore.retry({ chatId: msg.chatId, msgId: msg._id })
         } else {
           msgStore.resend(msg.chatId, msg._id)
         }

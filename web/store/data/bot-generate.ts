@@ -38,7 +38,7 @@ export const botGen = {
   getActivePromptOptions,
 }
 
-export type GenerateOpts = { signal: AbortController } & /**
+export type GenerateOpts = { signal: AbortController; hint?: string } & /**
  * A user sending a new message
  */ (
   | { kind: 'send'; text: string }
@@ -216,6 +216,7 @@ async function getActivePromptOptions(
   opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
 ) {
   const { active } = getStore('chat').getState()
+  const promptState = getStore('prompt').getState()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')
@@ -251,6 +252,10 @@ async function getActivePromptOptions(
 
   const { lines } = await getLinesForPrompt(promptOpts, encoder)
   const parts = await buildPromptPlaceholders(promptOpts, lines, encoder)
+
+  parts.props = {
+    hint: promptState.hint,
+  }
 
   return { lines, parts, entities, props }
 }
@@ -322,6 +327,7 @@ async function createActiveChatPrompt(
       resolvedScenario,
       jsonValues: props.json,
       contextBuffer: entities.settings.maxTokens,
+      props: entities.props,
     },
     encoder
   )

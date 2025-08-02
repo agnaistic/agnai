@@ -387,7 +387,7 @@ export async function parseTemplate(
       .concat(
         historyLines.map((h, i) => ({
           role: h.role === 'user' ? 'user' : 'assistant',
-          content: replaceTags(h.line, 'None'),
+          content: replaceTags(h.line.trim(), 'None'),
         }))
       )
       .concat(flags.messages.slice(historyMsgIndex + 1))
@@ -470,7 +470,6 @@ function render(template: string, opts: TemplateOpts, flags: InternalState, exis
       const parent = ast[i]
 
       const result = renderNode(parent, opts, flags)
-
       const marker = getMarker(opts, parent, prevMarker)
 
       // Nested ifs to correctly narrow types
@@ -736,7 +735,15 @@ function renderCondition(
     return SAMPLE_CHAT_LP
   }
 
-  return output.join('')
+  const finalized = output.join('')
+
+  // If the condition result is a 'block', we need to process it to populate the blocks
+  const ast = finalized ? parser.parse(finalized) : []
+  for (const child of ast) {
+    renderNode(child, opts, flags)
+  }
+
+  return finalized
 }
 
 function getEntities(holder: IterableHolder, opts: TemplateOpts) {
@@ -882,7 +889,12 @@ function getPlaceholder(
 
   if (node.value.startsWith('json.')) {
     const name = node.value.slice(5)
-    return opts.jsonValues?.[name] || ''
+    return opts.jsonValues?.[name] || opts.parts?.props?.[name] || ''
+  }
+
+  if (node.value.startsWith('var.')) {
+    const name = node.value.slice(4)
+    return opts.jsonValues?.[name] || opts.parts?.props?.[name] || ''
   }
 
   if (opts.isPart && !SAFE_PART_HOLDERS[node.value]) {
@@ -932,7 +944,7 @@ function getPlaceholder(
       return opts.parts?.ujb || ''
 
     case 'json':
-      return opts.jsonValues?.[node.values] || ''
+      return opts.jsonValues?.[node.values] || opts.parts?.props?.[node.values] || ''
 
     case 'post': {
       if (opts.sections) {

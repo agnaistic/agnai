@@ -45,6 +45,9 @@ export type PromptPlaceholders = {
 
   chatEmbeds: string[]
   userEmbeds: string[]
+
+  /** User-specified extras */
+  props?: Record<string, string>
 }
 
 export type Prompt = {
@@ -88,6 +91,7 @@ export type PromptOpts = {
   modelFormat?: ModelFormat
   jsonValues: Record<string, any> | undefined
   contextBuffer?: number
+  props?: Record<string, string>
 }
 
 export type BuildPromptOpts = {
@@ -252,6 +256,8 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     encoder
   )
 
+  parts.props = opts.props
+
   const prompt = await injectPlaceholders(template, {
     opts,
     parts,
@@ -283,7 +289,7 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
-  let { parsed, inserts, length, sections, linesAddedCount, history, addedLines } =
+  let { parsed, inserts, length, sections, linesAddedCount, history, addedLines, blocks } =
     await injectPlaceholders(template, {
       opts,
       parts: opts.parts,
@@ -312,6 +318,8 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
     length,
     sections,
     linesAddedCount,
+
+    blocks,
   }
 }
 
@@ -491,6 +499,7 @@ type PromptPartsOptions = Pick<
   | 'chatEmbeds'
   | 'userEmbeds'
   | 'resolvedScenario'
+  | 'props'
 >
 
 export async function buildPromptPlaceholders(
@@ -517,6 +526,7 @@ export async function buildPromptPlaceholders(
     allPersonas: [],
     chatEmbeds: [],
     userEmbeds: [],
+    props: opts.props,
   }
 
   const personalities = new Set([replyAs._id])

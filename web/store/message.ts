@@ -508,30 +508,30 @@ export const msgStore = createStore<MsgState>(
       yield { msgs: page, messageHistory: path }
     },
 
-    async *retry({ msgs, activeCharId }, chatId: string, messageId?: string) {
-      if (!chatId) {
+    async *retry({ msgs, activeCharId }, opts: { chatId: string; msgId?: string }) {
+      if (!opts.chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
       }
 
       if (msgs.length === 0) {
-        msgStore.request(chatId, activeCharId)
+        msgStore.request(opts.chatId, activeCharId)
         return
       }
 
-      const msg = messageId ? msgs.find((msg) => msg._id === messageId)! : msgs[msgs.length - 1]
+      const msg = opts.msgId ? msgs.find((msg) => msg._id === opts.msgId)! : msgs[msgs.length - 1]
       const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
       const characterId = replace?.characterId || activeCharId
       const signal = new AbortController()
       yield {
         partial: '',
-        waiting: { signal, chatId, mode: 'retry', characterId },
+        waiting: { signal, chatId: opts.chatId, mode: 'retry', characterId },
         retrying: replace,
       }
 
       const res = await botGen
-        .generate({ signal, kind: 'retry', messageId })
+        .generate({ signal, kind: 'retry', messageId: opts.msgId })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -589,11 +589,11 @@ export const msgStore = createStore<MsgState>(
       }
 
       const msg = msgs[msgIndex]
-      msgStore.send(chatId, msg.msg, 'retry', undefined)
+      msgStore.send({ chatId, msg: msg.msg, mode: 'retry' })
     },
 
     async *selfGenerate({ activeChatId }) {
-      msgStore.send(activeChatId, '', 'self', undefined)
+      msgStore.send({ chatId: activeChatId, msg: '', mode: 'self' })
     },
 
     *queue({ queue }, chatId: string, message: string, mode: SendModes) {
@@ -643,13 +643,10 @@ export const msgStore = createStore<MsgState>(
 
     async *send(
       { activeCharId, waiting },
-      chatId: string,
-      message: string,
-      mode: SendModes,
-      onSuccess?: () => void
+      opts: { chatId: string; msg: string; mode: SendModes; onSuccess?: () => void }
     ) {
       if (waiting) return
-      if (!chatId) {
+      if (!opts.chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
@@ -661,14 +658,17 @@ export const msgStore = createStore<MsgState>(
 
       let res: { result?: any; error?: string }
 
-      yield { partial: '', waiting: { signal, chatId, mode, characterId: replyingCharId } }
+      yield {
+        partial: '',
+        waiting: { signal, chatId: opts.chatId, mode: opts.mode, characterId: replyingCharId },
+      }
       let input = ''
 
-      switch (mode) {
+      switch (opts.mode) {
         case 'self':
         case 'retry':
           res = await botGen
-            .generate({ signal, kind: mode })
+            .generate({ signal, kind: opts.mode })
             .catch((err) => ({ error: err.message, result: undefined }))
           break
 
@@ -680,7 +680,7 @@ export const msgStore = createStore<MsgState>(
         case 'send-noreply':
         case 'send-event:ooc':
           res = await botGen
-            .generate({ signal, kind: mode, text: message })
+            .generate({ signal, kind: opts.mode, text: opts.msg })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result.generating) {
             console.log('[wait] send no-gen')
@@ -689,12 +689,20 @@ export const msgStore = createStore<MsgState>(
 
           input = res.result?.input
           if (input) {
-            yield { waiting: { signal, chatId, mode, characterId: replyingCharId, input } }
+            yield {
+              waiting: {
+                signal,
+                chatId: opts.chatId,
+                mode: opts.mode,
+                characterId: replyingCharId,
+                input,
+              },
+            }
           }
           break
 
         default:
-          res = { error: `Unknown mode ${mode}`, result: undefined }
+          res = { error: `Unknown mode ${opts.mode}`, result: undefined }
       }
 
       if (res.error) {
@@ -704,7 +712,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (res.result) {
-        onSuccess?.()
+        opts.onSuccess?.()
 
         if (res.result.created) {
           onMessageReceived({
@@ -720,8 +728,8 @@ export const msgStore = createStore<MsgState>(
           partial: '',
           waiting: {
             signal,
-            chatId,
-            mode,
+            chatId: opts.chatId,
+            mode: opts.mode,
             characterId: replyingCharId,
             messageId: res.result.messageId,
             input,
@@ -933,7 +941,12 @@ function processQueue() {
   const remaining = queue.slice(1)
   msgStore.setState({ queue: remaining })
 
-  msgStore.send(first.chatId, first.message, first.mode, () => processQueue())
+  msgStore.send({
+    chatId: first.chatId,
+    msg: first.message,
+    mode: first.mode,
+    onSuccess: () => processQueue(),
+  })
 }
 
 /**
