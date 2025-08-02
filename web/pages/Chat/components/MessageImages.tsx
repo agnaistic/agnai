@@ -30,7 +30,9 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   const [showPrompt, setShowPrompt] = createSignal(false)
 
   const reloadImages = () => {
-    loadImages(props.msg, setImages)
+    loadImages(props.msg, (imgs) => {
+      setImages(imgs)
+    })
   }
 
   createEffect(on(() => props.msg.extras, reloadImages))

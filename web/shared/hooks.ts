@@ -215,7 +215,6 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
       0
     )
     const image = await reel.getImage(images[current])
-    console.log(`[reel] init pos #${current}, initial: ${opts.initial}`)
 
     setState({ pos: current, image, images: images.map(cleanIds), imageId: images[current] })
   })

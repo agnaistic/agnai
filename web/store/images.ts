@@ -67,6 +67,10 @@ async function getImage(collection: string, imageId: string): Promise<string | u
 }
 
 async function removeImage(collection: string, imageId: string): Promise<string[]> {
+  if (imageId.startsWith('cache:')) {
+    await storage.removeItem(imageId)
+  }
+
   await storage.removeItem(`${collection}-${imageId}`)
   const ids = await getImageIds(collection)
   const next = ids.filter((id) => id !== imageId)

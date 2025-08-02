@@ -81,7 +81,6 @@ export const GenerationPresetsPage: Component = () => {
 
     if (params.id && store._id !== params.id) {
       setters.load(params.id)
-      console.log(`[preset] changing to ${params.id}`)
       // return
     }
 

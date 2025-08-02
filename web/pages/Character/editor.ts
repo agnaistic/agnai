@@ -167,7 +167,6 @@ const [updateCache] = createDebounce(async (state: EditorState) => {
   }
 
   await storage.setItem(EDITOR_CACHE_KEY, JSON.stringify(next))
-  console.log('[editor] cache updated', id)
 }, 500)
 
 export type CharEditor = ReturnType<typeof useCharEditor>
