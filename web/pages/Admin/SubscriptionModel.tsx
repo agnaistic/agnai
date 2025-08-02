@@ -107,7 +107,7 @@ export const SubscriptionModel: Component = () => {
       const importing = presets.subs.find((p) => p._id === query.preset)
       setters.clear()
       if (importing) {
-        setters.setState({ ...importing })
+        setters.setState({ ...importing, _id: '' })
       }
       return
     } else if (params.id === 'default') {

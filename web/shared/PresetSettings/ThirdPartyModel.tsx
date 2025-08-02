@@ -1000,6 +1000,7 @@ function setProviderModel(
   model: string,
   extras?: Partial<PresetState>
 ) {
+  console.log(`[model updated] ${model}`)
   const update: Partial<PresetState> = extras ?? {}
   update.thirdPartyModel = model
 
