@@ -139,6 +139,14 @@ const ImageCollectionModal: Component<{
     setPrompt(cleaned)
   }
 
+  const removeImage = async () => {
+    const pos = await reel.removeImage(reel.state.imageId)
+
+    if (pos === -1) {
+      close()
+    }
+  }
+
   const generateImage = async () => {
     if (loading()) return
 
@@ -189,7 +197,7 @@ const ImageCollectionModal: Component<{
             Generate
           </Button>
 
-          <Button size="sm" schema="error" onClick={() => reel.removeImage(reel.state.imageId)}>
+          <Button size="sm" schema="error" onClick={removeImage}>
             Delete Image
           </Button>
 

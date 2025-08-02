@@ -290,6 +290,11 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
 
     // Automatically load the deleted image's ancestor if it is available
     if (imageId === state.imageId) {
+      if (state.images.length === 1) {
+        setState({ images: [], imageId: '', image: '', pos: 0 })
+        return -1
+      }
+
       let nextPos = -1
       if (images[state.pos]) {
         nextPos = state.pos
@@ -306,7 +311,7 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
         setState({ images: images.map(cleanIds), pos: 0, image: '', imageId: '' })
       }
 
-      return
+      return nextPos
     }
 
     setState({ images: images.map(cleanIds) })
