@@ -26,7 +26,14 @@ export type NewUser = {
 
 export async function ensureInitialUser() {
   const user = await db('user').findOne({ kind: 'user', username: config.init.username })
-  if (user) return
+  const reset = !!process.env.RESET_PASSWORD
+  if (user && !reset) return
+
+  if (user && reset) {
+    await store.users.resetPassword(user?._id, config.init.password)
+    logger.info(config.init, 'Reset initial user')
+    return
+  }
 
   await createUser(
     {

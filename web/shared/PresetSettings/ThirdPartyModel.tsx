@@ -140,17 +140,13 @@ export const ThirdPartyModel: Component<{
 
 const CompatModel: Selector = (props) => {
   const emitter = createEmitter('close')
-  const state = getStore('user')((s) => ({ providers: s.user?.providers || [] }))
-  const models = getStore('presets')((s) => ({
-    list: s.presetModels.list,
-    url: s.presetModels.url,
-    loading: s.modelsLoading,
-  }))
 
   const [customId, setCustomId] = createSignal('')
 
   const modelList = createMemo(() =>
-    [{ label: 'None', value: '' }].concat(models.list.map((value) => ({ label: value, value })))
+    [{ label: 'None', value: '' }].concat(
+      props.setters.models.list.map((value) => ({ label: value, value }))
+    )
   )
 
   const onModelSelect = (value: string) => {
@@ -161,7 +157,7 @@ const CompatModel: Selector = (props) => {
 
   const warning = createMemo(() => {
     if (!props.state.providerId) return
-    if (models.loading) return
+    if (props.setters.models.loading) return
     if (modelList().length <= 1) return
 
     const modelId =
@@ -179,7 +175,7 @@ const CompatModel: Selector = (props) => {
           closeSub={emitter.on}
           modalTitle={
             <div class="flex flex-col gap-2">
-              <div>Select a Model: {new URL(models.url).host || '...'}</div>
+              <div>Select a Model: {new URL(props.setters.models.url).host || '...'}</div>
 
               <div class="flex gap-2">
                 <TextInput
@@ -219,16 +215,11 @@ const CompatModel: Selector = (props) => {
             props.state.thirdPartyModel ||
             'Model - None selected'
           }
-          disabled={models.loading}
-          footer={SelectorFooter}
+          disabled={props.setters.models.loading}
+          footer={<SelectorFooter setters={props.setters} />}
         />
 
-        <Button
-          size="sm"
-          onClick={() =>
-            getStore('presets').getPresetModelList(props.state, state.providers, false)
-          }
-        >
+        <Button size="sm" onClick={() => props.setters.refreshModels()}>
           <RefreshCcw size={20} />
         </Button>
       </div>
@@ -296,10 +287,9 @@ const NovelAIModel: Selector = (props) => {
 
 const OpenRouterModels: Selector = (props) => {
   const cfg = getStore('settings')()
-  const models = getStore('presets')((s) => ({ ...s.presetModels }))
 
   const openRouterModels = createMemo(() => {
-    const list: OpenRouterModel[] = models.data || []
+    const list: OpenRouterModel[] = props.setters.models.data || []
 
     const options = list
       .map((model) => ({
@@ -364,7 +354,7 @@ const OpenRouterModels: Selector = (props) => {
           }
         }}
         buttonLabel={label()}
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="flex">
@@ -478,7 +468,7 @@ const ArliModels: Selector = (props) => {
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] || props.state.arliModel
         }
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="flex">
@@ -510,16 +500,12 @@ type FLModel = {
 }
 
 const FeatherlessModels: Selector = (props) => {
-  const state = getStore('presets')((s) => ({
-    list: s.presetModels.list,
-    data: (s.presetModels.data || []) as FLModel[],
-  }))
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
 
   const availableClasses = createMemo(() => {
     const seen = new Set<string>()
-    const list = state.data
+    const list = (props.setters.models.data as FLModel[])
       .reduce((prev, curr) => {
         if (!curr.model_class || seen.has(curr.model_class)) return prev
         seen.add(curr.model_class)
@@ -545,7 +531,7 @@ const FeatherlessModels: Selector = (props) => {
     const id = props.state.providerId
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
-    const match = state.data.find((s) => s.id === id)
+    const match = props.setters.models.data.find((s) => s.id === id)
     if (!match) return 'Model - None selected'
 
     return (
@@ -567,7 +553,7 @@ const FeatherlessModels: Selector = (props) => {
 
     const categories: Record<string, { name: string; options: CustomOption[] }> = {}
 
-    for (const model of state.data) {
+    for (const model of props.setters.models.data) {
       // Skip models that cannot be used
       if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
         continue
@@ -633,7 +619,7 @@ const FeatherlessModels: Selector = (props) => {
 
   const availables = createMemo(() => {
     const map: Record<string, number> = {}
-    for (const model of state.data) {
+    for (const model of props.setters.models.data) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
       }
@@ -716,7 +702,7 @@ const FeatherlessModels: Selector = (props) => {
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.featherlessModel
         }
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="">
@@ -795,7 +781,7 @@ const ClaudeModel: Selector = (props) => {
       search={tokenizedSearch}
       buttonLabel={label()}
       closeSub={emitter.on}
-      footer={SelectorFooter}
+      footer={<SelectorFooter setters={props.setters} />}
     />
   )
 }
@@ -859,7 +845,7 @@ const GoogleModels: Selector = (props) => {
         props.state.googleModel ||
         props.state.thirdPartyModel
       }
-      footer={SelectorFooter}
+      footer={<SelectorFooter setters={props.setters} />}
     />
   )
 }
@@ -1036,14 +1022,12 @@ function setProviderModel(
   }
 }
 
-const SelectorFooter: Component<{ children?: any }> = () => {
+const SelectorFooter: Component<{ children?: any; setters: PresetFuncs }> = (props) => {
   const [ctx] = useAppContext()
   return (
     <>
       <Show when={ctx.preset}>
-        <Button
-          onClick={() => presetStore.getPresetModelList(ctx.preset!, ctx.providers || [], false)}
-        >
+        <Button onClick={() => props.setters.refreshModels()}>
           <RefreshCcw size={20} />
           Refresh
         </Button>

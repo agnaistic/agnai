@@ -11,6 +11,7 @@ import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { getClientPreset } from '../shared/adapter'
 import { toastStore } from './toasts'
+import { presetApi } from './data/presets'
 
 export type PresetProps = {
   state: PresetState
@@ -111,6 +112,12 @@ export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
   const [state, setState] = opts?.anonymous ? createStore(initPreset()) : useContext(PresetContext)
+  const [models, setModels] = createStore({
+    list: [] as string[],
+    data: [] as any[],
+    loading: false,
+    url: '',
+  })
 
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
@@ -138,12 +145,27 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     load(preset)
   }
 
-  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
+  const load = async (preset: Partial<AppSchema.GenSettings> | undefined) => {
     if (!preset) return
 
-    const user = getStore('user').getState().user
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
-    getStore('presets').getPresetModelList(preset, user?.providers || [], true)
+    await loadModels({ preset })
+  }
+
+  const loadModels = async (opts?: {
+    preset?: Partial<AppSchema.GenSettings>
+    refresh?: boolean
+  }) => {
+    setModels('loading', true)
+
+    try {
+      const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.refresh)
+      if (models) {
+        setModels({ list: models?.list || [], data: models?.data || [], url: models.url })
+      }
+    } finally {
+      setModels('loading', false)
+    }
   }
 
   const clear = () => {
@@ -182,7 +204,10 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     getStore('presets').updatePreset(state._id, update, {
       quiet: opts?.quiet,
-      onSuccess: opts?.onSuccess,
+      onSuccess: (next) => {
+        opts?.onSuccess?.(next)
+        loadModels({ preset: next })
+      },
     })
   }
 
@@ -214,6 +239,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   return [
     state,
     {
+      models,
       setState,
       hides,
       load: loadPresetId,
@@ -221,6 +247,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       clear,
       upsert,
       update: updateAndSave,
+      refreshModels: () => loadModels(),
       context,
     },
   ] as const

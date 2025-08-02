@@ -5,6 +5,9 @@ import { loadItem, localApi } from './storage'
 import { now, replace } from '/common/util'
 import { joinUrl } from '/common/requests/util'
 import { toastStore } from '../toasts'
+import { storage } from '/web/shared/util'
+import { getStore } from '../create'
+import { getSafeProviderDetail } from '/common/providers'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -22,6 +25,7 @@ export const presetApi = {
   deleteUserPresetKey,
   getLocalModelList,
   getPresetModelList,
+  getModelListByPreset,
 }
 
 export async function getPresets() {
@@ -92,8 +96,6 @@ export async function deleteUserPresetKey(presetId: string) {
   return localApi.result({ success: true })
 }
 
-const MODEL_LIST_CACHE = new Map<string, { models: string[]; data?: any[] }>()
-
 async function getLocalModelList(opts: {
   url: string
   key?: string
@@ -126,6 +128,75 @@ async function getLocalModelList(opts: {
   }
 }
 
+async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, refresh = false) {
+  if (preset.providerId === 'agnaistic') return
+  if (!preset.providerId && preset.service === 'agnaistic') return
+
+  const providers = getStore('user').getState().user?.providers || []
+  const provider = preset.providerId
+    ? providers.find((p) => p._id === preset.providerId)
+    : undefined
+  const detail = getSafeProviderDetail(provider?.provider || '')
+
+  let url = preset.thirdPartyUrl || ''
+  let key = preset.thirdPartyKey || ''
+
+  if (provider && detail) {
+    switch (detail.category) {
+      case 'self':
+      case 'custom':
+        url = provider.url || detail.detail.url || ''
+        break
+
+      case 'known':
+        url = detail.detail.url || ''
+        break
+    }
+
+    if (!url) {
+      return { list: [], url: '', data: [] }
+    }
+
+    const result =
+      detail.category === 'self'
+        ? await presetApi.getLocalModelList({ url, key: provider.userKey || provider.key })
+        : await presetApi.getPresetModelList({
+            id: preset._id || '',
+            providerId: preset.providerId,
+            url,
+            key: '',
+          })
+
+    return { list: result.models, url, data: result.data }
+  }
+
+  const known = getSafeProviderDetail(
+    preset.service === 'kobold' ? `known-${preset.thirdPartyFormat}` : `known-${preset.service}`
+  )
+
+  if (known?.detail?.url) {
+    url = known.detail.url
+  }
+
+  if (!url) {
+    return { list: [], url: '', data: [] }
+  }
+
+  const result = preset.localRequests
+    ? await presetApi.getLocalModelList({ url, key: preset.userThirdPartyKey })
+    : await presetApi.getPresetModelList({
+        id: preset._id || '',
+        url,
+        // We pass this for presets that are un-saved
+        key,
+        useCache: !refresh,
+      })
+
+  return { list: result.models, data: result.data, url }
+}
+
+const MODELS_LOADED = new Set<string>()
+
 async function getPresetModelList(opts: {
   id: string
   url: string
@@ -133,11 +204,14 @@ async function getPresetModelList(opts: {
   key?: string
   useCache?: boolean
 }): Promise<{ models: string[]; data?: any[] }> {
+  const alreadySeen = MODELS_LOADED.has(opts.url)
   const isGuest = !isLoggedIn()
+
   if (opts.useCache) {
-    const cache = MODEL_LIST_CACHE.get(opts.url)
+    const cache = await getCachedModelList(opts.url, alreadySeen)
     if (cache) return cache
   }
+
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
     id: isGuest ? '' : opts.id,
     providerId: opts.providerId,
@@ -159,9 +233,28 @@ async function getPresetModelList(opts: {
   }
 
   models.sort((l, r) => l.localeCompare(r))
-  MODEL_LIST_CACHE.set(opts.url, { models, data: res.result?.data })
+
+  const ttl = Date.now() + 60000 * 30 // 30 minutes
+
+  MODELS_LOADED.add(opts.url)
+  await storage.setItem(
+    `model-list-${opts.url}`,
+    JSON.stringify({ ttl, models, data: res.result?.data })
+  )
 
   return { models, data: res.result?.data }
+}
+
+async function getCachedModelList(url: string, ignoreTtl: boolean = false) {
+  const key = `model-list-${url}`
+  const cached = await storage.getItem(key)
+  if (!cached) return
+
+  try {
+    const json = JSON.parse(cached) as { models: string[]; data: any[]; ttl: number }
+    if (json && ignoreTtl) return json
+    if (json.ttl > Date.now()) return json
+  } catch (ex) {}
 }
 
 async function getTemplates() {

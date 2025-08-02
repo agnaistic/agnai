@@ -119,7 +119,6 @@ export const PresetProvider: Component<{
         quiet: true,
         onSuccess: () => {
           getStore('toasts').success('Provider changed')
-          getStore('presets').getPresetModelList(props.state, state.providers, true)
         },
       }
     )
