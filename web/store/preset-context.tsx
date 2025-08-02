@@ -98,26 +98,32 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   registered: {},
 })
 
-const noop: SetStoreFunction<PresetState> = (...args: any[]) => {}
+const initModels = (): ModelState => ({ url: '', loading: false, list: [], data: [] })
 
-const PresetContext = createContext([initPreset(), noop] as const)
+const noopPreset: SetStoreFunction<PresetState> = (...args: any[]) => {}
+const noopModels: SetStoreFunction<ModelState> = (...args: any[]) => {}
+
+const PresetContext = createContext([initPreset(), noopPreset, initModels(), noopModels] as const)
+
+type ModelState = { list: string[]; url: string; loading: boolean; data: any[] }
 
 export function PresetProvider(props: { children: any }) {
   const [store, setStore] = createStore(initPreset())
+  const [models, setModels] = createStore(initModels())
 
-  return <PresetContext.Provider value={[store, setStore]}>{props.children}</PresetContext.Provider>
+  return (
+    <PresetContext.Provider value={[store, setStore, models, setModels]}>
+      {props.children}
+    </PresetContext.Provider>
+  )
 }
 
 export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
-  const [state, setState] = opts?.anonymous ? createStore(initPreset()) : useContext(PresetContext)
-  const [models, setModels] = createStore({
-    list: [] as string[],
-    data: [] as any[],
-    loading: false,
-    url: '',
-  })
+  const [state, setState, models, setModels] = opts?.anonymous
+    ? [...createStore(initPreset()), ...createStore(initModels())]
+    : useContext(PresetContext)
 
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(

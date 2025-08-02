@@ -6,7 +6,7 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput, { InlineRangeInput } from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { createDebounce, createEmitter, toDropdownItems } from '../../shared/util'
-import { characterStore, settingStore, userStore } from '../../store'
+import { characterStore, promptStore, settingStore, userStore } from '../../store'
 import Message, { Typewriter } from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
@@ -35,6 +35,7 @@ const UISettings: Component<{}> = () => {
   const state = userStore()
   const chars = characterStore()
   const settings = settingStore()
+  const prompts = promptStore()
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
@@ -167,6 +168,13 @@ const UISettings: Component<{}> = () => {
 
       <Divider />
       <h3 class="text-md font-bold">Chat Settings</h3>
+
+      <Toggle
+        label="Response Hints"
+        helperText="Add a hint to your message to guide the response"
+        value={prompts.hintsEnabled}
+        onChange={(ev) => promptStore.toggleHints(ev)}
+      />
 
       <Toggle
         fieldName="imageWrap"

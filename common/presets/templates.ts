@@ -148,6 +148,8 @@ Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
 {{/each}}
 
+{{#if vars.hint}}<instruct>(Hint: {{vars.hint}})</instruct>{{//if}}
+
 <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
 {{#if system_prompt}}{{value}}{{else}}Write "{{char}}'s" next reply in a fictional roleplay chat between "{{user}}" and "{{char}}".{{/else}}
@@ -303,6 +305,8 @@ Then the roleplay chat begins.<|im_end|>
   
   {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
   {{/each}}
+
+  {{#if vars.hint}}<instruct>(Hint: {{vars.hint}})</instruct>{{//if}}
   
   <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
 }

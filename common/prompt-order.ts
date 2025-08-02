@@ -97,7 +97,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
     {{#each msg}}{{#if .isbot}}<bot>{{/if}}{{#if .isuser}}<user>{{/if}}{{.name}}: {{.msg}}{{#if .isbot}}</bot>{{/if}}{{#if .isuser}}</user>{{/if}}{{/each}}`,
-    post: neat`<bot>{{#if ujb}}({{value}}) {{/if}}{{post}}`,
+    post: neat`{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
+    
+    <bot>{{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Alpaca: {
     system_prompt: `### System:\n{{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}`,

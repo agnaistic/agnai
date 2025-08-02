@@ -18,6 +18,7 @@ const IMPERSONATE_KEY = 'agnai-impersonate'
 type CharacterState = {
   loading?: boolean
   hordeStatus?: HordeCheck
+  defaultImpersonateId: string
   impersonating?: AppSchema.Character
   characters: {
     loaded: number
@@ -78,6 +79,7 @@ const initState: CharacterState = {
     blob: null,
     loading: false,
   },
+  defaultImpersonateId: storage.localGetItem(IMPERSONATE_KEY) || '',
   impersonating: undefined,
 }
 
@@ -141,13 +143,12 @@ export const characterStore = createStore<CharacterState>(
       }
     },
 
+    defaultImpersonate: (_, charId: string) => {
+      storage.localSetItem(IMPERSONATE_KEY, charId || '')
+      return { defaultImpersonateId: charId || '' }
+    },
+
     async impersonate({ activeChatId }, char?: AppSchema.Character) {
-      const hasDefault = storage.localGetItem(IMPERSONATE_KEY)
-
-      if (!hasDefault || !activeChatId) {
-        storage.localSetItem(IMPERSONATE_KEY, char?._id || '')
-      }
-
       if (activeChatId) {
         setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
       }

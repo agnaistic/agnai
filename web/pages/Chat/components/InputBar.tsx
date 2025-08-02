@@ -264,16 +264,18 @@ const InputBar: Component<{
 
   return (
     <>
-      <div class="flex w-full justify-center">
-        <div class="w-full sm:w-1/2">
-          <TextInput
-            parentClass="!p-0.5 text-sm"
-            placeholder="Response hint... 🗭"
-            value={prompt.hint}
-            onChange={(ev) => promptStore.hint(ev.currentTarget.value)}
-          />
+      <Show when={prompt.hintsEnabled}>
+        <div class="flex w-full justify-center pb-0.5">
+          <div class="w-full sm:w-1/2">
+            <TextInput
+              parentClass="!p-0.5 text-sm"
+              placeholder="Response hint... 🗭"
+              value={prompt.hint}
+              onChange={(ev) => promptStore.hint(ev.currentTarget.value)}
+            />
+          </div>
         </div>
-      </div>
+      </Show>
 
       <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
         <Show when={ctx.waiting?.signal && !api.isCdnApi()}>

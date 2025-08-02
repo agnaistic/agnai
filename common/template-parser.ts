@@ -887,7 +887,7 @@ function getPlaceholder(
 ) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
-  if (node.value.startsWith('json.')) {
+  if (node.value.startsWith('json.') || node.value.startsWith('vars.')) {
     const name = node.value.slice(5)
     return opts.jsonValues?.[name] || opts.parts?.props?.[name] || ''
   }

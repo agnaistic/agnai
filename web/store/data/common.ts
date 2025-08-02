@@ -91,7 +91,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   const promptState = getStore('prompt').getState()
 
   const props = {
-    hint: promptState.hint,
+    hint: promptState.hintsEnabled ? promptState.hint : '',
   }
 
   if (isLoggedIn()) {

@@ -298,20 +298,19 @@ export const ImageSettingsModal = () => {
             </div>
           </Show>
 
-          <Accordian title="Summary Settings" titleClickOpen open={false}>
-            <PresetSelect
-              label="Summary Preset"
-              helperText="Choose which service and model is used for creating summaries for chat images"
-              options={presetOptions()}
-              setPresetId={(id) => setStore('summaryPresetId', id)}
-              selected={store.summaryPresetId}
-              fieldName="summaryPresetId"
-            >
-              <Button disabled={!store.summaryPresetId} onClick={editPresetClicked}>
-                <Pencil size={20} />
-              </Button>
-            </PresetSelect>
+          <PresetSelect
+            label={<span class="!text-lg">Summary Preset</span>}
+            helperText="Choose which service and model is used for creating summaries for chat images"
+            options={presetOptions()}
+            setPresetId={(id) => setStore('summaryPresetId', id)}
+            selected={store.summaryPresetId}
+          >
+            <Button disabled={!store.summaryPresetId} onClick={editPresetClicked}>
+              <Pencil size={20} />
+            </Button>
+          </PresetSelect>
 
+          <Accordian title="Summary Settings" titleClickOpen open={false}>
             <Toggle
               fieldName="summariseChat"
               label="Summarise Chat"

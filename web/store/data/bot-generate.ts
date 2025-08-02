@@ -254,7 +254,7 @@ async function getActivePromptOptions(
   const parts = await buildPromptPlaceholders(promptOpts, lines, encoder)
 
   parts.props = {
-    hint: promptState.hint,
+    hint: promptState.hintsEnabled ? promptState.hint : '',
   }
 
   return { lines, parts, entities, props }
