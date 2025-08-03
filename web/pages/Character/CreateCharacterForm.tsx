@@ -42,7 +42,7 @@ import { SpriteModal } from './form/SpriteModal'
 import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
 import { usePresetContext } from '/web/store/preset-context'
-import { PageSpinner, Spinner } from '/web/shared/Loading'
+import { PageSpinner } from '/web/shared/Loading'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },

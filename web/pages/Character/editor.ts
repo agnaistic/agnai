@@ -4,14 +4,7 @@ import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { fromAttrs, toAttrs } from '/web/shared/PersonaAttributes'
-import {
-  NewCharacter,
-  characterStore,
-  presetStore,
-  settingStore,
-  toastStore,
-  userStore,
-} from '/web/store'
+import { NewCharacter, characterStore, toastStore, userStore } from '/web/store'
 import { generateField } from './generate-char'
 import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
@@ -168,10 +161,6 @@ const [updateCache] = createDebounce(async (state: EditorState) => {
 export type CharEditor = ReturnType<typeof useCharEditor>
 
 export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: string }) {
-  const user = userStore()
-  const presets = presetStore()
-  const settings = settingStore()
-
   const cache = useImageCache('avatars-images', { clean: true })
 
   const [original, setOriginal] = createSignal(editing)
