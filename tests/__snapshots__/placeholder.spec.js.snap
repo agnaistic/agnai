@@ -4,6 +4,11 @@ exports[`Placeholder tests will not include duplicates in {{all_personalities}} 
 Object {
   "addedLines": Array [],
   "blocks": Array [],
+  "flags": Object {
+    "is_final": true,
+    "messages": Array [],
+    "pre_render": false,
+  },
   "history": Array [],
   "inserts": Map {},
   "length": undefined,

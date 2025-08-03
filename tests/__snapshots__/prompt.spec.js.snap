@@ -96,7 +96,7 @@ OtherBot:"
 exports[`Prompt building will exclude sample chat when gaslight contains sample chat placeholder 1`] = `
 "OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-This is how OtherBot should talk: __lp_sample_chat__
+This is how OtherBot should talk: SAMPLECHAT OtherBot
 MainChar: FIRST
 ChatOwner: SECOND
 MainChar: ORIGINAL
@@ -197,6 +197,7 @@ Object {
       "OtherBot:",
     ],
     "prefill": "",
+    "props": undefined,
     "sampleChat": Array [
       "SAMPLECHAT OtherBot",
     ],
@@ -208,6 +209,11 @@ Object {
   "template": Object {
     "addedLines": Array [],
     "blocks": Array [],
+    "flags": Object {
+      "is_final": true,
+      "messages": Array [],
+      "pre_render": false,
+    },
     "history": Array [
       Object {
         "id": undefined,
