@@ -83,6 +83,12 @@ export function jsonToCharacter(json: any): NewCharacter {
       sampleChat: json.mes_example,
       scenario: json.scenario,
       originalAvatar: undefined,
+      alternateGreetings: ensureArray(json.data.alternate_greetings).filter(
+        (v) => typeof v === 'string'
+      ),
+      characterBook: Array.isArray(json.data?.character_book?.entries)
+        ? characterBookToNative(json.data.character_book)
+        : undefined,
     }
   }
 
@@ -108,7 +114,7 @@ export function jsonToCharacter(json: any): NewCharacter {
       systemPrompt: v2.system_prompt,
       postHistoryInstructions: v2.post_history_instructions,
       tags: Array.isArray(v2.tags) ? v2.tags : [],
-      alternateGreetings: Array.isArray(v2.alternate_greetings) ? v2.alternate_greetings : [],
+      alternateGreetings: ensureArray(v2.alternate_greetings).filter((v) => typeof v === 'string'),
       extensions: ext,
     }
   }
@@ -225,4 +231,10 @@ function sanitiseCharacter<T>(char: T): T {
   }
 
   return char
+}
+
+function ensureArray<T = any>(value?: any): T[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  return []
 }
