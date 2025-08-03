@@ -94,7 +94,11 @@ export const characterStore = createStore<CharacterState>(
     async *getCharacter(
       { characters },
       characterId: string,
-      opts?: { chat?: AppSchema.Chat; cb?: (char: AppSchema.Character) => void }
+      opts?: {
+        chat?: AppSchema.Chat
+        cb?: (char: AppSchema.Character) => void
+        onDone?: (success: boolean, char?: AppSchema.Character) => void
+      }
     ) {
       if (opts?.chat?.tempCharacters && characterId.startsWith('temp-')) {
         const char = opts.chat.tempCharacters[characterId]
@@ -108,10 +112,12 @@ export const characterStore = createStore<CharacterState>(
       const res = await charsApi.getCharacterDetail(characterId)
       if (res.result) {
         yield { editing: res.result }
+        opts?.onDone?.(true, res.result)
         opts?.cb?.(res.result)
       }
 
       if (res.error) {
+        opts?.onDone?.(false)
         return toastStore.error(res.error)
       }
     },

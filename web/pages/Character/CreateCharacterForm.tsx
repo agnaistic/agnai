@@ -42,6 +42,7 @@ import { SpriteModal } from './form/SpriteModal'
 import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
 import { usePresetContext } from '/web/store/preset-context'
+import { PageSpinner, Spinner } from '/web/shared/Loading'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -68,6 +69,7 @@ export const CreateCharacterForm: Component<{
 }> = (props) => {
   let spriteRef: any
 
+  const [charLoading, setCharLoading] = createSignal(false)
   const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
   const user = userStore()
@@ -154,7 +156,13 @@ export const CreateCharacterForm: Component<{
     startTour('char')
 
     if (srcId()) {
-      characterStore.getCharacter(srcId(), { chat: props.chat })
+      setCharLoading(true)
+      characterStore.getCharacter(srcId(), {
+        chat: props.chat,
+        onDone: () => {
+          setCharLoading(false)
+        },
+      })
     }
 
     /* Character importing from CharacterHub */
@@ -286,11 +294,7 @@ export const CreateCharacterForm: Component<{
   const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
 
   return (
-    <Page
-      classList={{
-        'p-0': !isPage,
-      }}
-    >
+    <Page classList={{ 'p-0': !isPage }}>
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           title={`${
@@ -309,6 +313,9 @@ export const CreateCharacterForm: Component<{
             </>
           }
         />
+      </Show>
+      <Show when={charLoading()}>
+        <PageSpinner />
       </Show>
       <form class="relative text-base">
         <div class="flex flex-col gap-4">
