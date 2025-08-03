@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { msgStore, toastStore } from '../../../store'
+import { msgStore, settingStore, toastStore } from '../../../store'
 import Button from '/web/shared/Button'
 import { useAppContext } from '/web/store/context'
 import TextInput from '/web/shared/TextInput'
@@ -8,6 +8,7 @@ import { LogProbs } from './LogProbs'
 import Modal from '/web/shared/Modal'
 import { cleanPrompt } from '/common/util'
 import { AppSchema } from '/common/types'
+import { SquareArrowOutUpRight } from 'lucide-solid'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
@@ -145,6 +146,12 @@ export const MessageImagePrompt: Component<{ msg: AppSchema.ChatMessage; childre
           >
             Clean
           </Button>
+          <div
+            class="icon-button"
+            onClick={() => settingStore.showMessageImages({ id: props.msg._id, position: 0 })}
+          >
+            <SquareArrowOutUpRight size={20} />
+          </div>
           {props.children}
         </div>
       }

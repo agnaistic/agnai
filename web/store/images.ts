@@ -9,7 +9,7 @@ type ImageMeta = { id?: string; prompt?: string }
 export type ImageReel = {
   id: string
 
-  addImage(base64: string, meta?: ImageMeta): Promise<string[]>
+  addImage(base64: string, meta?: ImageMeta): Promise<{ ids: string[]; cacheId: string }>
   removeImage(imageId: string): Promise<string[]>
   getImage(imageId: string): Promise<string | undefined>
   getImageIds(): Promise<string[]>
@@ -39,7 +39,11 @@ async function getImageIds(collection: string): Promise<string[]> {
   return ids as string[]
 }
 
-async function addImage(collection: string, image: string, meta?: ImageMeta): Promise<string[]> {
+async function addImage(
+  collection: string,
+  image: string,
+  meta?: ImageMeta
+): Promise<{ ids: string[]; cacheId: string }> {
   const cacheId = `cache:${meta?.id || v4()}`
 
   if (!image.startsWith('data:')) {
@@ -50,7 +54,8 @@ async function addImage(collection: string, image: string, meta?: ImageMeta): Pr
   const ids = await getImageIds(collection).then((images) => images.filter((id) => id !== cacheId))
 
   ids.push(cacheId)
-  return saveImageIds(collection, ids)
+  const nextIds = await saveImageIds(collection, ids)
+  return { ids: nextIds, cacheId: cacheId }
 }
 
 async function getImage(collection: string, imageId: string): Promise<string | undefined> {

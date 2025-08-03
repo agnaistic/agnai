@@ -298,6 +298,17 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
+    localEditMessageProp({ msgs, graph }, msgId: string, update: Partial<AppSchema.ChatMessage>) {
+      const prev = findOne(msgId, msgs)
+      if (!prev) return
+
+      const next = { ...prev, ...update, voiceUrl: undefined }
+      const nextMsgs = replace(msgId, msgs, next)
+      const tree = updateChatTreeNode(graph.tree, next)
+
+      return { msgs: nextMsgs, graph: { ...graph, tree } }
+    },
+
     async *removeMessageImage({ msgs }, msgId: string, position: number) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)

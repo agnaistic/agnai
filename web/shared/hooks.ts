@@ -274,14 +274,16 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
   }
 
   const addImage = async (base64: string, meta?: { id?: string; prompt?: string }) => {
-    const images = await reel.addImage(base64, meta)
+    const result = await reel.addImage(base64, meta)
 
     setState({
-      images: images.map(cleanIds),
-      pos: images.length - 1,
-      imageId: images[images.length - 1],
+      images: result.ids.map(cleanIds),
+      pos: result.ids.length - 1,
+      imageId: result.ids[result.ids.length - 1],
       image: base64,
     })
+
+    return result
   }
 
   const removeImage = async (imageId: string) => {

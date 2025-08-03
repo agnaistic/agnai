@@ -20,7 +20,8 @@ import { JSX } from 'solid-js'
 import { FileInputResult } from '../shared/FileInput'
 
 export type ImageSource = {
-  type: 'collection' | 'url'
+  type: 'collection' | 'url' | 'message'
+  messageId?: string
   id: string
   initial?: number
   prompt?: string
@@ -400,6 +401,19 @@ export const settingStore = createStore<SettingState>(
     },
     showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
       return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
+    },
+    showMessageImages(_, opts: { id: string; position?: number }) {
+      return {
+        showImage: {
+          src: {
+            type: 'message',
+            id: `message-images-${opts.id}`,
+            initial: opts.position,
+            messageId: opts.id,
+          },
+          options: [],
+        },
+      }
     },
     clearImage() {
       return { showImage: undefined }
