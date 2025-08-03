@@ -46,6 +46,8 @@ export type SDSettings = {
   type: 'sd'
   sampler: string
   url: string
+
+  providerId?: string
 }
 
 export type AgnaiSettings = {

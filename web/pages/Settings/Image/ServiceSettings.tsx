@@ -16,6 +16,8 @@ import Button, { ToggleButton } from '/web/shared/Button'
 import { Info, X } from 'lucide-solid'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
+import { useProviderList } from '../Provider/hooks'
+import { CustomSelect } from '/web/shared/CustomSelect'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -149,19 +151,29 @@ export const HordeSettings: Component<{
   )
 }
 
+const SD_SAMPLERS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
+  label: `Sampler: ${value}`,
+  value: key,
+}))
+
 export const SDSettings: Component<{
   cfg: ImageSettings
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
-  const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: `Sampler: ${value}`,
-    value: key,
-  }))
+  const [providers] = useProviderList()
+  const providerLabel = createMemo(() => {
+    if (!props.cfg?.sd?.providerId) return 'None Selected'
+
+    const selected = providers().find((p) => p.value === props.cfg.sd.providerId)
+    if (!selected) return 'None Selected'
+
+    return selected.label
+  })
   return (
     <>
       <TextInput
         fieldName="sdUrl"
-        label="Stable Diffusion WebUI URL"
+        label="SD WebUI URL"
         helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
         placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
         value={props.cfg.sd?.url}
@@ -169,9 +181,18 @@ export const SDSettings: Component<{
           props.setter(applyStoreProperty(props.cfg, 'sd.url', ev.currentTarget.value))
         }
       />
+
+      <CustomSelect
+        onSelect={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.providerId', ev.value))}
+        selected={props.cfg?.sd?.providerId}
+        helperText="Use API Key from a Provider"
+        options={providers()}
+        buttonLabel={providerLabel()}
+      />
+
       <Select
         fieldName="sdSampler"
-        items={samplers}
+        items={SD_SAMPLERS}
         inline
         class="!py-1"
         value={props.cfg.sd?.sampler || SD_SAMPLER['DPM++ 2M']}

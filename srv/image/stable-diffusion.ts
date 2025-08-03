@@ -89,26 +89,34 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
 async function getConfig(opts: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
+  headers: Record<string, string>
   params?: string
   model?: AppSchema.ImageModel
   temp?: AppSchema.ImageModel
 }> {
   const { user, settings, override } = opts
   const type = settings?.type || user.images?.type
+  const headers: Record<string, string> = {}
 
   // Stable Diffusion URL always comes from user settings
   const userHost = user.images?.sd.url || defaultSettings.url
   if (type !== 'agnai') {
-    return { kind: 'user', host: userHost }
+    const providerId = user.images?.sd.providerId
+    const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : null
+    if (provider?.key) {
+      headers.Authorization = `Bearer ${provider.key}`
+    }
+
+    return { kind: 'user', host: userHost, headers }
   }
 
   const srv = await store.admin.getServerConfiguration()
   if (!srv.imagesEnabled || !srv.imagesHost) {
-    return { kind: 'user', host: userHost }
+    return { kind: 'user', host: userHost, headers }
   }
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
-  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost }
+  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost, headers }
 
   const models = getAgnaiModels(srv.imagesModels)
 
@@ -121,7 +129,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   const model = models.length === 1 ? models[0] : match ?? models[0]
 
   if (!temp && !model) {
-    return { kind: 'user', host: userHost }
+    return { kind: 'user', host: userHost, headers }
   }
 
   const params = [
@@ -138,6 +146,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     params: `?${params.join('&')}`,
     model: temp || model,
     temp,
+    headers,
   }
 
   if (!cfg.host) {

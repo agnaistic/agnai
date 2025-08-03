@@ -6,7 +6,6 @@ import Select from '/web/shared/Select'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
-import { assertProviderDetail } from '../../../../common/providers'
 import { Field } from '/web/shared/PresetSettings/Fields'
 import { ComponentSubscriber, createEmitter, useUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
@@ -14,6 +13,7 @@ import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
 import { CustomSelect } from '/web/shared/CustomSelect'
 import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { useProviderList } from './hooks'
 
 export const PresetProvider: Component<{
   state: PresetState
@@ -23,10 +23,10 @@ export const PresetProvider: Component<{
 }> = (props) => {
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
 
+  const [providers] = useProviderList()
   const [open, setOpen] = createSignal(false)
   const [openLegacy, setOpenLegacy] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.Provider>()
-  const usableServices = useUsableServices()
 
   const showEdit = createMemo(
     () => !!props.state.providerId && props.state.providerId !== 'agnaistic'
@@ -39,29 +39,7 @@ export const PresetProvider: Component<{
   })
 
   const services = createMemo(() => {
-    const providers = state.providers.map((p) => {
-      const detail = assertProviderDetail(p.provider)
-      if (detail.category === 'custom') {
-        if (p.name) return { label: `Custom - ${p.name}`, value: p._id }
-        const hostname = tryGetHostname(p.url)
-        return { label: `Custom - ${hostname}`, value: p._id }
-      }
-
-      if (detail.category === 'known') {
-        return { label: 'Provider - ' + detail.detail.name, value: p._id }
-      }
-
-      return { label: `Local - ${p.name || detail?.detail?.name || p.provider} `, value: p._id }
-    })
-
-    providers.sort(sortAlpha)
-
-    const list = usableServices()
-    const subs = list.some((l) => l === 'agnaistic')
-
-    if (subs) {
-      providers.unshift({ label: 'Agnaistic', value: 'agnaistic' })
-    }
+    const list = providers()
 
     const label = [
       ADAPTER_LABELS[props.state.service!] || '',
@@ -71,10 +49,10 @@ export const PresetProvider: Component<{
       .join('/')
 
     if (props.state.service !== 'agnaistic') {
-      providers.push({ label: 'Legacy: ' + label, value: '' })
+      list.push({ label: 'Legacy: ' + label, value: '' })
     }
 
-    return providers
+    return list
   })
 
   // If a provider is deleted, the props.state.providerId may still refer to it
@@ -429,20 +407,6 @@ const ThirdPartyKey: Field = (props) => {
       />
     </>
   )
-}
-
-function sortAlpha(l: { label: string }, r: { label: string }) {
-  return l.label.localeCompare(r.label)
-}
-
-function tryGetHostname(url: string) {
-  if (!url.trim()) return 'Untitled'
-
-  try {
-    return new URL(url).host
-  } catch (ex) {
-    return 'Untitled (Invalid URL)'
-  }
 }
 
 const Markdown: Component<{ text: string }> = (props) => (

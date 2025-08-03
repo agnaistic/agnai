@@ -18,6 +18,7 @@ type InternalState = {
   pre_render?: boolean
   is_final?: boolean
   messages: Array<{ role: ChatRole; content: string }>
+  hint_seen?: boolean
 }
 
 export type TemplateOpts = {
@@ -171,6 +172,7 @@ type Holder =
   | 'system_prompt'
   | 'random'
   | 'json'
+  | 'user-var'
   | 'value'
 
 type RepeatableHolder = Extract<
@@ -211,6 +213,7 @@ export async function parseTemplate(
   addedLines: string[]
   sections: NonNullable<TemplateOpts['sections']>
   blocks: Array<{ role: ChatRole; content: string }>
+  flags: InternalState
 }> {
   if (opts.limit) {
     opts.limit.output = {}
@@ -404,6 +407,7 @@ export async function parseTemplate(
     history: historyLines,
     addedLines,
     blocks: flags.messages,
+    flags,
   }
 }
 
@@ -887,14 +891,14 @@ function getPlaceholder(
 ) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
-  if (node.value.startsWith('json.') || node.value.startsWith('vars.')) {
-    const name = node.value.slice(5)
-    return opts.jsonValues?.[name] || opts.parts?.props?.[name] || ''
+  if (node.value.startsWith('json.')) {
+    const name = node.value.replace('json.', '')
+    return opts.jsonValues?.[name] || ''
   }
 
-  if (node.value.startsWith('var.')) {
-    const name = node.value.slice(4)
-    return opts.jsonValues?.[name] || opts.parts?.props?.[name] || ''
+  if (node.value.startsWith('var.') || node.value.startsWith('vars.')) {
+    const name = node.value.replace('var.', '').replace('vars.', '')
+    return opts.parts?.props?.[name] || ''
   }
 
   if (opts.isPart && !SAFE_PART_HOLDERS[node.value]) {
@@ -943,8 +947,13 @@ function getPlaceholder(
     case 'ujb':
       return opts.parts?.ujb || ''
 
+    case 'user-var': {
+      if (node.values === 'hint') flags.hint_seen = true
+      return opts.parts?.props?.[node.values] || ''
+    }
+
     case 'json':
-      return opts.jsonValues?.[node.values] || opts.parts?.props?.[node.values] || ''
+      return opts.jsonValues?.[node.values] || ''
 
     case 'post': {
       if (opts.sections) {

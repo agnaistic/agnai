@@ -387,40 +387,6 @@ type InjectOpts = {
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
 
-  /**
-   * This is currently disabled:
-   * Models behave far too differently to insert sample chat using this method.
-   * The formatting used here is far too opinionated.
-   * Simple and Basic prompting w/ Prompt Formatting should have already solved this issue.
-   * Advanced users authoring their own templates do so at their own peril.
-   */
-  // Basic templates can exclude example dialogue
-  // const validate =
-  //   opts.settings?.useAdvancedPrompt !== 'no-validation' &&
-  //   opts.settings?.useAdvancedPrompt !== 'basic'
-
-  // Automatically inject example conversation if not included in the prompt
-  /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
-  // const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
-  // const sampleChat = parts.sampleChat?.join('\n')
-  // if (!template.match(HOLDERS.sampleChat) && sampleChat && hist && validate) {
-  //   const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
-
-  //   const svc = opts.settings?.service
-  //   const postSample =
-  //     svc === 'openai' || svc === 'openrouter' || svc === 'scale' || svc === 'openrouter-completion'
-  //       ? SAMPLE_CHAT_MARKER
-  //       : '<START>'
-
-  //   const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
-  //     .replace(BOT_REPLACE, opts.replyAs.name)
-  //     .replace(SELF_REPLACE, sender)
-  //   if (hist.order === 'asc') next.unshift(msg)
-  //   else next.push(msg)
-
-  //   hist.lines = next
-  // }
-
   const templateOpts = {
     ...opts,
     continue: opts.kind === 'continue',

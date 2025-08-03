@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import * as proc from 'child_process'
 import * as path from 'path'
 import * as os from 'os'
 import { mkdirpSync } from 'mkdirp'
-import { copyFileSync, readdirSync, statSync } from 'fs'
+import { copyFileSync, readdirSync } from 'fs'
 const argv = require('minimist')(process.argv.slice(2))
 
 const pkg = require('../package.json')
@@ -112,9 +111,6 @@ async function start() {
     process.env.PUBLIC_TUNNEL = 'true'
   }
   const runApi = all || !pipeline
-  const runPipeline = all || pipeline
-
-  if (runPipeline) await startPipeline()
   if (runApi) require('./start')
 }
 
@@ -175,57 +171,5 @@ function getFileList(dir: string) {
     return files
   } catch (ex) {
     return []
-  }
-}
-
-async function startPipeline() {
-  process.env.PIPELINE_PROXY = 'true'
-
-  const pip = path.resolve(folders.pipeline, 'bin/pip')
-  const poetry = path.resolve(folders.pipeline, 'bin/poetry')
-  const poetryExists = fileExists(poetry)
-
-  if (!poetryExists) {
-    console.log('Installing pipeline features... This may take some time')
-    await execAsync(`python3 -m venv ${folders.pipeline}`)
-    await execAsync(`${pip} install poetry==1.4.1`)
-  }
-
-  console.log('Ensuring pipeline dependencies are up to date...')
-  // await execAsync(`${poetry} show`)
-  await execAsync(`${poetry} install --no-interaction --no-ansi`)
-
-  console.log('Starting Pipeline API...')
-  execAsync(`${poetry} run python ${folders.root}/model/app.py`)
-}
-
-async function execAsync(command: string) {
-  console.log(command)
-  const cmd = proc.exec(command, { cwd: folders.root })
-
-  cmd.stdout?.on('data', console.log)
-  cmd.stderr?.on('data', console.error)
-  cmd.stderr?.on('error', console.error)
-
-  return new Promise((resolve, reject) => {
-    cmd.on('error', (err) => {
-      console.error(err)
-      reject(err)
-    })
-
-    cmd.on('exit', (code) => {
-      if (code !== 0 && code !== 1) reject(code)
-      else resolve(code)
-    })
-  })
-}
-
-function fileExists(file: string) {
-  try {
-    const stat = statSync(file)
-    stat.isFile()
-    return true
-  } catch (ex) {
-    return false
   }
 }

@@ -124,7 +124,8 @@ ChatEmbedRef = OP prop:ChatEmbedProperty CL {return { kind: 'chat-embed-prop', p
 BotRef = OP prop:BotProperty CL {return { kind: 'bot-prop', prop } }
 HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } }
 
-JsonSchemaValue "json-schema-value" = ("json."i / "var."i / "vars."i) prop:Word { return { kind: 'json', values: prop } }
+JsonSchemaValue "json-schema-value" = ("json."i) prop:Word { return { kind: 'json', values: prop } }
+UserVariableValue "user-variable-value" = ("var."i / "vars."i) prop:Word { return { kind: 'user-var', values: prop } }
 
 ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { return prop.toLowerCase() }
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
