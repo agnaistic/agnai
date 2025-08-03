@@ -83,7 +83,7 @@ export function jsonToCharacter(json: any): NewCharacter {
       sampleChat: json.mes_example,
       scenario: json.scenario,
       originalAvatar: undefined,
-      alternateGreetings: ensureArray(json.data.alternate_greetings).filter(
+      alternateGreetings: ensureArray(json.data?.alternate_greetings).filter(
         (v) => typeof v === 'string'
       ),
       characterBook: Array.isArray(json.data?.character_book?.entries)

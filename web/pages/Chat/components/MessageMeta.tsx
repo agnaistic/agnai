@@ -148,7 +148,10 @@ export const MessageImagePrompt: Component<{ msg: AppSchema.ChatMessage; childre
           </Button>
           <div
             class="icon-button"
-            onClick={() => settingStore.showMessageImages({ id: props.msg._id, position: 0 })}
+            onClick={() => {
+              settingStore.showMessageImages({ id: props.msg._id, position: 0 })
+              close()
+            }}
           >
             <SquareArrowOutUpRight size={20} />
           </div>
