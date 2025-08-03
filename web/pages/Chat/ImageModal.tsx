@@ -1,14 +1,4 @@
-import {
-  Component,
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-} from 'solid-js'
+import { Component, For, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
 import Modal from '../../shared/Modal'
 import { ImageButton, ImageSource, msgStore, settingStore } from '../../store'
 import { getAssetUrl } from '../../shared/util'
