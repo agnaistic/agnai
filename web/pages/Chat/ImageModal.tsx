@@ -271,13 +271,13 @@ const ImageCollectionModal: Component<{
             />
 
             <div class="flex w-full justify-end gap-2">
-              <Button size="sm" onClick={generatePrompt} disabled={state.promptLoading}>
+              <Button onClick={generatePrompt} disabled={state.promptLoading}>
                 <Show when={!state.promptLoading} fallback={<RelativeSpinner size={20} />}>
                   <WandSparkles size={20} />
                 </Show>
               </Button>
 
-              <Button size="sm" onClick={onCleanPrompt}>
+              <Button onClick={onCleanPrompt}>
                 <BrushCleaning size={20} />
               </Button>
 
