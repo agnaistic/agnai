@@ -148,7 +148,7 @@ Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
 {{/each}}
 
-{{#if vars.hint}}<instruct>(Hint: {{vars.hint}})</instruct>{{//if}}
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
 
 <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
   Alpaca: neat`
@@ -176,6 +176,8 @@ Then the roleplay chat between "{{char}}" and "{{user}}" begins.
 
 {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
 {{/each}}
+
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
 
 ### Response:
 {{#if ujb}}({{value}}) {{/if}}{{post}}`,
@@ -220,6 +222,7 @@ How {{char}} speaks:
 ***
 Summary: {{scenario}}
 {{history}}
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
 {{#if ujb}}{ {{value}} }{{/if}}
 {{post}}`,
   Pyg: neat`
@@ -236,7 +239,8 @@ Summary: {{scenario}}
 <START>
 {{history}}
 
-{{#if ujb}}{{ujb}
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
+{{#if ujb}}{{ujb}}
 {{/if}}
 {{post}}`,
   Metharme: neat`
@@ -256,6 +260,9 @@ Summary: {{scenario}}
 
 {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
 {{/each}}
+
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
+
 {{#if ujb}}<|system|>{{ujb}}
 {{/if}}
 <|model|>{{post}}`,
@@ -277,6 +284,9 @@ Then the roleplay chat begins.<|im_end|>
 {{#each msg}}<|im_start|>[{{.name}}]
 {{.msg}}<|im_end|>
 {{/each}}
+
+{{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
+
 <|im_start|>[{{char}}]
 {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   'Gemini Starter': neat`
@@ -306,7 +316,7 @@ Then the roleplay chat begins.<|im_end|>
   {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
   {{/each}}
 
-  {{#if vars.hint}}<instruct>(Hint: {{vars.hint}})</instruct>{{//if}}
+  {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}
   
   <bot>{{#if ujb}}({{ujb}}) {{/if}}{{post}}`,
 }

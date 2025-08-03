@@ -106,7 +106,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
-    {{/each}}`,
+    {{/each}}
+
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: `### Response:\n{{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Vicuna: {
@@ -114,7 +116,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
-    {{/each}}`,
+    {{/each}}
+    
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: `ASSISTANT: {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Mistral: {
@@ -122,7 +126,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}[INST] {{.name}}: {{.msg}} [/INST]{{/if}}
-    {{/each}}`,
+    {{/each}}
+    
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: `{{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   Metharme: {
@@ -130,7 +136,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
     {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
-    {{/each}}`,
+    {{/each}}
+    
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: `<|model|>{{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
   ChatML: {
@@ -144,7 +152,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     example_dialogue: neat`{{#if example_dialogue}}How "{{char}}" speaks:\n{{example_dialogue}}\n{{/if}}`,
     history: neat`Then the roleplay chat between {{user}} and {{char}} begins.
     
-    {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}\n{{.name}}: {{.msg}}<|im_end|>{{/each}}`,
+    {{#each msg}}<|im_start|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}\n{{.name}}: {{.msg}}<|im_end|>{{/each}}
+    
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: neat`<|im_start|>assistant
     {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
@@ -159,7 +169,9 @@ export const formatHolders: Record<string, Record<string, string>> = {
     example_dialogue: neat`{{#if example_dialogue}}How "{{char}}" speaks:\n{{example_dialogue}}\n{{/if}}`,
     history: neat`Then the roleplay chat between "{{user}}" and "{{char}}" begins.
     
-    {{#each msg}}<|start_header_id|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}{{.name}}: {{.msg}}<|eot_id|>{{/each}}`,
+    {{#each msg}}<|start_header_id|>{{#if .isbot}}assistant{{/if}}{{#if .isuser}}user{{/if}}{{.name}}: {{.msg}}<|eot_id|>{{/each}}
+    
+    {{#if vars.hint}}(Hint: {{vars.hint}}){{/if}}`,
     post: neat`<|start_header_id|>assistant
     {{#if ujb}}({{value}}) {{/if}}{{post}}`,
   },
