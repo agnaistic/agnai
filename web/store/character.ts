@@ -102,8 +102,15 @@ export const characterStore = createStore<CharacterState>(
     ) {
       if (opts?.chat?.tempCharacters && characterId.startsWith('temp-')) {
         const char = opts.chat.tempCharacters[characterId]
-        if (!char) return toastStore.error(`Temp character not found`)
-        return { editing: char }
+        if (!char) {
+          opts.onDone?.(false)
+          return toastStore.error(`Temp character not found`)
+        }
+
+        opts.cb?.(char)
+        opts.onDone?.(true, char)
+        yield { editing: char }
+        return
       }
 
       const previous = characters.list.find((c) => c._id === characterId)
