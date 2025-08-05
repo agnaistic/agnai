@@ -32,7 +32,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   return (
     <>
       <Show when={showPrompt()}>
-        <MessageImagePrompt msg={props.msg}>
+        <MessageImagePrompt msg={props.msg} close={() => setShowPrompt(false)}>
           <Button size="sm" onClick={() => setShowPrompt(false)}>
             <X size={ICON_SIZES.PILL} />
           </Button>

@@ -1,6 +1,6 @@
 import { Component, For, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
 import Modal from '../../shared/Modal'
-import { ImageButton, ImageSource, msgStore, settingStore } from '../../store'
+import { ImageButton, ImageSource, msgStore, promptStore, settingStore } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { useImageCache } from '/web/shared/hooks'
@@ -108,7 +108,13 @@ const ImageCollectionModal: Component<{
   onClose?: () => void
 }> = (props) => {
   const reel = useImageCache(props.collection, { initial: props.initial })
-  const [state, update] = createStore({ loading: false, prompt: '', promptLoading: false })
+
+  const persist = promptStore()
+  const [state, update] = createStore({
+    loading: false,
+    prompt: '',
+    promptLoading: false,
+  })
 
   const saveMessagePrompt = () => {
     if (!props.messageId) return
@@ -191,6 +197,7 @@ const ImageCollectionModal: Component<{
   const generatePrompt = () => {
     update('promptLoading', true)
     getStore('messages').generateImagePrompt({
+      question: persist.imageHint,
       onSummary: (summary) => {
         update({ prompt: summary, promptLoading: false })
       },
@@ -250,6 +257,11 @@ const ImageCollectionModal: Component<{
       <div class="flex h-full w-full flex-col gap-1">
         <section class="w-full">
           <div class="flex w-full flex-col gap-1">
+            <TextInput
+              placeholder={'(Optional) What to focus on?'}
+              value={persist.imageHint}
+              onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+            />
             <TextInput
               parentClass="w-full !h-[64px]"
               class="!h-[64px] !max-h-[64px] !py-1 !text-sm"

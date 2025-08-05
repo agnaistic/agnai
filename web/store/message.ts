@@ -844,7 +844,7 @@ export const msgStore = createStore<MsgState>(
 
     async *generateImagePrompt(
       { activeChatId, activeCharId, msgs },
-      callbacks: { onSummary?: (summary: string) => void; onTick?: TickHandler }
+      opts: { onSummary?: (summary: string) => void; onTick?: TickHandler; question?: string }
     ) {
       const messageId = msgs.slice(-1)[0]._id
 
@@ -864,13 +864,15 @@ export const msgStore = createStore<MsgState>(
         },
       }
 
-      const res = await imageApi.generateImagePrompt(callbacks.onTick)
+      const res = await imageApi.generateImagePrompt({
+        onTick: opts.onTick,
+        question: opts.question,
+      })
 
-      console.log('[wait] gen-img-prompt')
       yield { waiting: undefined }
       if (res.result?.response) {
         console.log(`Image Prompt:\n${res.result.response}`)
-        callbacks.onSummary?.(res.result?.response)
+        opts.onSummary?.(res.result?.response)
         return
       }
 

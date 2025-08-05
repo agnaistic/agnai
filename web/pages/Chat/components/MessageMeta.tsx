@@ -79,7 +79,7 @@ export const MessageMeta: Component = () => {
         </Card>
 
         <Card>
-          <MessageImagePrompt msg={state.msg!} />
+          <MessageImagePrompt msg={state.msg!} close={close} />
         </Card>
 
         <Show when={ctx.promptHistory[state.msg!._id]}>
@@ -97,9 +97,11 @@ export const MessageMeta: Component = () => {
   )
 }
 
-export const MessageImagePrompt: Component<{ msg: AppSchema.ChatMessage; children?: any }> = (
-  props
-) => {
+export const MessageImagePrompt: Component<{
+  msg: AppSchema.ChatMessage
+  close: () => void
+  children?: any
+}> = (props) => {
   const [ctx] = useAppContext()
 
   const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
@@ -150,7 +152,7 @@ export const MessageImagePrompt: Component<{ msg: AppSchema.ChatMessage; childre
             class="icon-button"
             onClick={() => {
               settingStore.showMessageImages({ id: props.msg._id, position: 0 })
-              close()
+              props.close()
             }}
           >
             <SquareArrowOutUpRight size={20} />
