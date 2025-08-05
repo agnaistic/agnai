@@ -267,12 +267,15 @@ const InputBar: Component<{
     <>
       <Show when={prompt.hintsEnabled}>
         <div class="flex w-full justify-center pb-0.5">
-          <div class="flex flex-1 justify-center gap-0.5 overflow-auto sm:w-1/2 sm:max-w-[50%]">
+          <div class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]">
             <TextInput
               parentClass="!p-0.5 text-sm flex flex-1"
               placeholder="Response hint... 🗭"
               value={prompt.hint}
               onChange={(ev) => promptStore.hint(ev.currentTarget.value)}
+              isMultiline
+              class="max-h-[80px]"
+              growup
             />
             <div class="icon-button flex w-fit items-center" onClick={() => promptStore.hint('')}>
               <X size={20} />
@@ -331,6 +334,7 @@ const InputBar: Component<{
         <TextInput
           fieldName="chatInput"
           isMultiline
+          growup
           spellcheck
           lang={props.char?.culture}
           ref={ref! as any}

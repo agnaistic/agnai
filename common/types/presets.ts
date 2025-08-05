@@ -14,6 +14,7 @@ export interface Provider {
   /** User-provided name */
   name: string
   url: string
+
   key: string
   keySet?: boolean
   userKey?: string

@@ -150,9 +150,15 @@ export async function getThirdPartyModels(url: string, key: string) {
       .then((res) => res.json())
       .catch((err) => ({ err }))
 
-    if (Array.isArray(res?.data) && 'err' in res === false) {
-      res.url = url
-      return res
+    if (res && 'err' in res === false) {
+      if (Array.isArray(res)) {
+        return { data: res, url }
+      }
+
+      if (Array.isArray(res?.data)) {
+        res.url = url
+        return res
+      }
     }
   }
   const autoUrl = joinUrl(url, 'v1')
@@ -160,9 +166,15 @@ export async function getThirdPartyModels(url: string, key: string) {
     .then((res) => res.json())
     .catch((err) => ({ err }))
 
-  if (Array.isArray(res?.data) && 'err' in res === false) {
-    res.url = autoUrl
-    return res
+  if (res && 'err' in res === false) {
+    if (Array.isArray(res?.data)) {
+      res.url = autoUrl
+      return res
+    }
+
+    if (Array.isArray(res)) {
+      return { data: res, url: autoUrl }
+    }
   }
 
   return

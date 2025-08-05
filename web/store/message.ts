@@ -3,7 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { createDebounce, getAssetUrl, storage } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
-import { publish, subscribe } from './socket'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { msgsApi } from './data/messages'
 import { imageApi } from './data/image'
@@ -922,14 +922,14 @@ export const msgStore = createStore<MsgState>(
   }
 })
 
-setInterval(() => {
-  const { waiting, retrying, graph } = msgStore.getState()
-  const id = waiting?.messageId || retrying?._id
-  if (!id) return
-  if (!retrying && graph.tree[id]) return
+// setInterval(() => {
+//   const { waiting, retrying, graph } = msgStore.getState()
+//   const id = waiting?.messageId || retrying?._id
+//   if (!id) return
+//   if (!retrying && graph.tree[id]) return
 
-  publish({ type: 'message-ready', messageId: id, updatedAt: retrying?.updatedAt })
-}, 4000)
+//   publish({ type: 'message-ready', messageId: id, updatedAt: retrying?.updatedAt })
+// }, 4000)
 
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)

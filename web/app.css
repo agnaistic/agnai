@@ -149,3 +149,21 @@
 .shepherd-text {
   color: var(--text-900) !important;
 }
+
+.variable-textarea-container {
+  z-index: 10;
+  align-items: flex-end;
+  max-height: 40px;
+}
+
+.variable-textarea {
+  height: 40px;
+  max-height: 40px;
+}
+
+.variable-textarea:focus {
+  field-sizing: content !important;
+  height: unset !important;
+  max-height: 100px !important;
+  border: 1px solid var(--bg-500) !important;
+}

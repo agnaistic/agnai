@@ -23,8 +23,6 @@ export const presetApi = {
   updateTemplate,
   deleteTemplate,
   deleteUserPresetKey,
-  getLocalModelList,
-  getPresetModelList,
   getModelListByPreset,
 }
 
@@ -109,11 +107,14 @@ async function getLocalModelList(opts: {
     }
 
     const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
+    const list = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []
     const models: string[] = []
 
-    for (const model of res.data) {
-      if (!model || typeof model.id !== 'string') continue
-      models.push(model.id)
+    if (list) {
+      for (const model of res.data) {
+        if (!model || typeof model.id !== 'string') continue
+        models.push(model.id)
+      }
     }
 
     models.sort((l, r) => l.localeCompare(r))
@@ -159,8 +160,8 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
 
     const result =
       detail.category === 'self'
-        ? await presetApi.getLocalModelList({ url, key: provider.userKey || provider.key })
-        : await presetApi.getPresetModelList({
+        ? await getLocalModelList({ url, key: provider.userKey || provider.key })
+        : await getPresetModelList({
             id: preset._id || '',
             providerId: preset.providerId,
             url,
@@ -183,8 +184,8 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
   }
 
   const result = preset.localRequests
-    ? await presetApi.getLocalModelList({ url, key: preset.userThirdPartyKey })
-    : await presetApi.getPresetModelList({
+    ? await getLocalModelList({ url, key: preset.userThirdPartyKey })
+    : await getPresetModelList({
         id: preset._id || '',
         url,
         // We pass this for presets that are un-saved

@@ -102,7 +102,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         name: 'response',
         type: 'object',
         strict: true,
-        // name: 'response',
         schema: {
           strict: true,
           properties: fields,

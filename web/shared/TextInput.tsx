@@ -45,6 +45,9 @@ type Props = {
   hide?: boolean
   variant?: 'outline'
 
+  /** Specificy `parentClass.max-height` when using this */
+  growup?: boolean
+
   adornment?: JSX.Element
 
   /** Do not update the input value if the value property receives a new value */
@@ -107,6 +110,7 @@ const TextInput: Component<Props> = (props) => {
   })
 
   const resize = () => {
+    if (props.growup || props.static) return
     if (inputRef?.value === '') {
       setHeight(MIN_HEIGHT + 'px')
       return
@@ -116,6 +120,8 @@ const TextInput: Component<Props> = (props) => {
 
     if (inputRef) {
       const next = +inputRef.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : inputRef.scrollHeight
+      const curr = height()
+      if (curr === `${next}px`) return
       setHeight(next + 'px')
     }
   }
@@ -139,7 +145,7 @@ const TextInput: Component<Props> = (props) => {
 
   createEffect(() => {
     if (!inputRef) return
-    if (props.isMultiline) {
+    if (props.isMultiline && !props.growup) {
       value()
       resize()
     }
@@ -180,6 +186,7 @@ const TextInput: Component<Props> = (props) => {
       classList={{
         'flex gap-0': !!props.prelabel && !props.isMultiline,
         hidden: props.parentClass?.includes('hidden') || props.hide,
+        'variable-textarea-container': props.growup,
       }}
     >
       <Show when={props.prelabel && !props.isMultiline}>
@@ -231,6 +238,7 @@ const TextInput: Component<Props> = (props) => {
               'py-2': !props.class?.includes('py-'),
               'border-0.25': props.variant === 'outline',
               'border-[var(--bg-600)]': props.variant === 'outline',
+              'variable-textarea': !!props.growup,
               ...props.classList,
             }}
             disabled={props.disabled}
