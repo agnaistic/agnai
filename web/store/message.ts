@@ -212,6 +212,23 @@ export const msgStore = createStore<MsgState>(
     //   return { attachments: { ...attachments, [chatId]: { image: base64 } } }
     // },
     addAttachment({ attachments }, msgId: string, attachment: MsgAttachment[]) {
+      const existing = attachments[msgId]
+      const newAttachments: MsgAttachment[] = []
+
+      for (const attach of attachment) {
+        if (!existing) {
+          newAttachments.push(attach)
+          continue
+        }
+
+        for (const exist of existing) {
+          if (exist.image === attach.image) continue
+          newAttachments.push(attach)
+        }
+      }
+
+      if (!newAttachments.length) return
+
       const next = { ...attachments }
       if (!next[msgId]) {
         next[msgId] = []
@@ -219,7 +236,7 @@ export const msgStore = createStore<MsgState>(
         next[msgId] = next[msgId].slice()
       }
 
-      next[msgId].push(...attachment)
+      next[msgId].push(...newAttachments)
       // events.emit('msg-attachment', next[msgId])
       return { attachments: next }
     },

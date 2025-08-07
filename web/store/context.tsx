@@ -41,6 +41,7 @@ export type ContextState = {
   impersonate?: AppSchema.Character
   user?: AppSchema.User
   profile?: AppSchema.Profile
+  chatProfiles?: AppSchema.Profile[]
   flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
@@ -202,6 +203,7 @@ export function ContextProvider(props: { children: any }) {
       replyAs: chats.active?.replyAs,
       user: users.user,
       profile: users.profile,
+      chatProfiles: chats.chatProfiles,
       handle: handle(),
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,

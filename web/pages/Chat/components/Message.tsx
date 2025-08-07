@@ -62,7 +62,7 @@ import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
 
 type MessageProps = {
-  msg: SplitMessage
+  messageId: string
   last?: boolean
   swipe?: string | false
   confirmSwipe?: () => void
@@ -81,6 +81,11 @@ type MessageProps = {
   voice?: VoiceState
   firstInserted?: boolean
   index: number
+
+  content: string
+  characterId?: string
+  userId?: string
+  handle?: string
 }
 
 const anonNames = new Map<string, number>()
@@ -105,11 +110,53 @@ const Message: Component<MessageProps> = (props) => {
   const state = chatStore()
   const [edit, setEdit] = createSignal(false)
   const [editSender, setEditSender] = createSignal<string>()
-  const isBot = !!props.msg.characterId
-  const isUser = !!props.msg.userId
+
+  const msg = createMemo((): AppSchema.ChatMessage & { handle?: string } => {
+    const treeMsg = ctx.chatTree[props.messageId]?.msg
+    if (treeMsg) return treeMsg
+
+    return {
+      kind: 'chat-message',
+      _id: props.messageId,
+      userId: props.userId || '',
+      characterId: props.characterId || '',
+      chatId: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      msg: '',
+      retries: [],
+    }
+  })
+
+  const handle = createMemo(() => {
+    const message = msg()
+
+    const characterId = props.characterId || message.characterId
+    const userId = props.userId || message.userId
+
+    if (characterId) {
+      const char = ctx.allBots[characterId] || ctx.tempMap[characterId]
+      if (char) return char.name || message.handle || ''
+    }
+
+    if (userId) {
+      const profile =
+        userId === ctx.profile?.userId
+          ? ctx.profile
+          : ctx.chatProfiles?.find((m) => m.userId === userId) || ctx.profile
+
+      return profile?.handle || 'You'
+    }
+
+    return 'You'
+  })
+
+  const isBot = createMemo(() => !!props.characterId || !!msg()?.characterId)
+  const isUser = createMemo(() => !!props.userId || !!msg().userId)
+
   const [img, setImg] = createSignal('h-full')
   const opts = createSignal(false)
-  const [jsonValues, setJsonValues] = createSignal(props.msg.json?.values || {})
+  const [jsonValues, setJsonValues] = createSignal(msg().json?.values || {})
 
   const showOpt = createSignal(false)
 
@@ -124,25 +171,31 @@ const Message: Component<MessageProps> = (props) => {
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
   const content = createMemo(() => {
-    const msgV2 = getMessageContent(ctx, props, state)
+    const message = msg()
+
+    const msgV2 = getMessageContent(ctx, props, state, {
+      ...message,
+      msg: props.content,
+    })
     return msgV2
   })
 
   const saveEdit = () => {
+    const message = msg()
     const senderJson = editSender()
     const sender = senderJson ? JSON.parse(senderJson) : {}
 
-    if (props.msg.json) {
+    if (message.json) {
       const json = jsonValues()
       const update = getJsonUpdate(
         ctx.preset?.jsonSource === 'character'
-          ? ctx.activeMap[props.msg.characterId!]?.json
+          ? ctx.activeMap[message.characterId!]?.json
           : ctx.preset?.json,
         json
       )
 
       if (update) {
-        msgStore.editMessageProp(props.msg._id, {
+        msgStore.editMessageProp(message._id, {
           ...update,
           ...sender,
         })
@@ -154,7 +207,7 @@ const Message: Component<MessageProps> = (props) => {
 
     if (!editRef) return
 
-    msgStore.editMessageProp(props.msg._id, {
+    msgStore.editMessageProp(message._id, {
       msg: editRef.innerText,
       ...sender,
     })
@@ -165,24 +218,26 @@ const Message: Component<MessageProps> = (props) => {
 
   const startEdit = () => {
     setEdit(true)
+    const message = msg()
 
-    if (!props.msg.characterId) {
-      setEditSender(JSON.stringify({ userId: props.msg.userId }))
+    if (!message.characterId) {
+      setEditSender(JSON.stringify({ userId: message.userId }))
     } else {
-      setEditSender(JSON.stringify({ characterId: props.msg.characterId }))
+      setEditSender(JSON.stringify({ characterId: message.characterId }))
     }
     if (editRef) {
-      editRef.innerText = props.msg.msg
+      editRef.innerText = message.msg
     }
     editRef?.focus()
   }
 
   const alt = createMemo(() => {
+    const message = msg()
     const percent = `${ctx.ui.chatAlternating ?? 0}%`
     return {
       width: `calc(100% - ${ctx.ui.chatAlternating ?? 0}%)`,
-      'margin-right': ctx.user?._id === props.msg.userId ? percent : undefined,
-      'margin-left': ctx.user?._id !== props.msg.userId ? percent : undefined,
+      'margin-right': ctx.user?._id === message.userId ? percent : undefined,
+      'margin-left': ctx.user?._id !== message.userId ? percent : undefined,
     }
   })
 
@@ -226,7 +281,7 @@ const Message: Component<MessageProps> = (props) => {
 
     if (ctx.profile && ctx.user) {
       opts.push({
-        label: `Profile: ${ctx.profile?.handle || 'You'}`,
+        label: `Profile: ${ctx.profile?.handle || ''}`,
         value: JSON.stringify({ userId: ctx.user._id }),
       })
     }
@@ -235,7 +290,7 @@ const Message: Component<MessageProps> = (props) => {
   })
 
   const editMessageMeta = () => {
-    msgStore.setMetadataMsg(props.msg)
+    msgStore.setMetadataMsg(msg())
     // rootModalStore.info(
     //   'Message Information',
     //   <Meta
@@ -251,31 +306,31 @@ const Message: Component<MessageProps> = (props) => {
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
-      data-sender={props.msg.characterId ? 'bot' : 'user'}
-      data-bot={props.msg.characterId ? ctx.char?.name : ''}
-      data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : props.msg.name}
+      data-sender={msg().characterId ? 'bot' : 'user'}
+      data-bot={msg().characterId ? ctx.char?.name : ''}
+      data-user={msg().userId ? state.memberIds[msg().userId || '']?.handle : msg().name}
       data-last={props.last?.toString()}
       data-lastsplit="true"
       style={true ? {} : alt()}
       classList={{
-        'bg-chat-bot': !props.msg.ooc && !props.msg.userId,
-        'bg-chat-user': !props.msg.ooc && !!props.msg.userId,
-        'bg-chat-ooc': !!props.msg.ooc,
+        'bg-chat-bot': !msg().ooc && !msg().userId,
+        'bg-chat-user': !msg().ooc && !!msg().userId,
+        'bg-chat-ooc': !!msg().ooc,
         unblur: showOpt[0](),
       }}
     >
-      <div class={`flex w-full`} classList={{ 'opacity-50': !!props.msg.ooc }}>
+      <div class={`flex w-full`} classList={{ 'opacity-50': !!msg().ooc }}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
           <div class="break-words">
             <span
               class={`float-left pr-3`}
               style={{ 'min-height': user.ui.imageWrap ? '' : img() }}
-              data-bot-avatar={isBot}
-              data-user-avatar={isUser}
+              data-bot-avatar={isBot()}
+              data-user-avatar={isUser()}
             >
               <Switch>
                 <Match when={user.ui.avatarSize === 'hide'}>{null}</Match>
-                <Match when={props.msg.event === 'world' || props.msg.event === 'ooc'}>
+                <Match when={msg().event === 'world' || msg().event === 'ooc'}>
                   <div
                     class={`avatar-${format().size} flex shrink-0 items-center justify-center pt-3`}
                   >
@@ -295,9 +350,9 @@ const Message: Component<MessageProps> = (props) => {
                   </div>
                 </Match>
 
-                <Match when={ctx.allBots[props.msg.characterId!]}>
+                <Match when={ctx.allBots[msg().characterId!]}>
                   <CharacterAvatar
-                    char={ctx.allBots[props.msg.characterId!]}
+                    char={ctx.allBots[msg().characterId!]}
                     format={format()}
                     openable
                     bot
@@ -305,11 +360,11 @@ const Message: Component<MessageProps> = (props) => {
                   />
                 </Match>
 
-                <Match when={!props.msg.characterId}>
+                <Match when={!msg().characterId}>
                   <AvatarIcon
                     format={format()}
                     Icon={DownloadCloud}
-                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    avatarUrl={state.memberIds[msg().userId!]?.avatar}
                     anonymize={ctx.anonymize}
                   />
                 </Match>
@@ -318,7 +373,7 @@ const Message: Component<MessageProps> = (props) => {
                   <AvatarIcon
                     format={format()}
                     Icon={DownloadCloud}
-                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    avatarUrl={state.memberIds[msg().userId!]?.avatar}
                     anonymize={ctx.anonymize}
                   />
                 </Match>
@@ -333,7 +388,7 @@ const Message: Component<MessageProps> = (props) => {
                   'sm:flex-row': !props.isPaneOpen,
                   'sm:gap-0': !props.isPaneOpen,
                   'sm:items-end': !props.isPaneOpen,
-                  italic: props.msg.ooc,
+                  italic: msg().ooc,
                 }}
               >
                 <Show
@@ -354,42 +409,38 @@ const Message: Component<MessageProps> = (props) => {
                     class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
                     // Necessary to override text-md and text-lg's line height, for proper alignment
                     style="line-height: 1;"
-                    data-bot-name={isBot}
-                    data-user-name={isUser}
+                    data-bot-name={isBot()}
+                    data-user-name={isUser()}
                     classList={{
-                      hidden: !!props.msg.event,
+                      hidden: !!msg().event,
                       'sm:text-base': props.isPaneOpen,
                       'sm:text-lg': !props.isPaneOpen,
                     }}
                   >
-                    {ctx.anonymize && !props.msg.characterId
-                      ? getAnonName(props.msg.userId!)
-                      : props.msg.handle}
+                    {ctx.anonymize && !msg().characterId
+                      ? getAnonName(msg().userId!)
+                      : handle() || 'You'}
                   </b>
                 </Show>
 
                 <span
                   classList={{ invisible: ctx.anonymize }}
                   class={`message-date text-600 flex items-center text-xs leading-none`}
-                  data-bot-time={isBot}
-                  data-user-time={isUser}
+                  data-bot-time={isBot()}
+                  data-user-time={isUser()}
                 >
-                  {new Date(props.msg.createdAt).toLocaleString()}
+                  {new Date(msg().createdAt).toLocaleString()}
                   <Show when={ctx.flags.debug}>
                     <tr>
                       <td class="pr-2">
                         <b>id</b>
                       </td>
                       <td>
-                        id:{props.msg._id.slice(0, 4)} up:{props.msg.parent?.slice(0, 4)}
+                        id:{msg()._id.slice(0, 4)} up:{msg().parent?.slice(0, 4)}
                       </td>
                     </tr>
                   </Show>
-                  <Show
-                    when={
-                      ctx.flags.debug || canShowMeta(props.msg, ctx.promptHistory[props.msg._id])
-                    }
-                  >
+                  <Show when={ctx.flags.debug || canShowMeta(msg(), ctx.promptHistory[msg()._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={editMessageMeta}
@@ -411,7 +462,7 @@ const Message: Component<MessageProps> = (props) => {
                   <MessageOptions
                     index={props.index}
                     ui={user.ui}
-                    msg={props.msg}
+                    msg={msg()}
                     edit={edit}
                     startEdit={startEdit}
                     onRemove={props.onRemove}
@@ -465,8 +516,8 @@ const Message: Component<MessageProps> = (props) => {
             </span>
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
-                <Match when={props.msg.adapter === 'image'}>
-                  <MessageImages msg={props.msg} onEditClick={editMessageMeta} />
+                <Match when={msg().adapter === 'image'}>
+                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
                 </Match>
 
                 <Match when={!edit()}>
@@ -493,8 +544,8 @@ const Message: Component<MessageProps> = (props) => {
                     fallback={
                       <p
                         class={`rendered-markdown pr-1 ${content().class}`}
-                        data-bot-message={!props.msg.userId}
-                        data-user-message={!!props.msg.userId}
+                        data-bot-message={!msg().userId}
+                        data-user-message={!!msg().userId}
                         innerHTML={content().message}
                       />
                     }
@@ -511,7 +562,7 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
                   </Show>
-                  <Show when={ctx.waiting?.image && ctx.waiting.messageId === props.msg._id}>
+                  <Show when={ctx.waiting?.image && ctx.waiting.messageId === msg()._id}>
                     <div class="flex w-full justify-center">
                       <RelativeSpinner speed={imageSpeed()} />{' '}
                       <span
@@ -523,12 +574,12 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
 
-                  <MessageImages msg={props.msg} onEditClick={editMessageMeta} />
-                  <MessageAttachments msg={props.msg} ctx={ctx} />
+                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
+                  <MessageAttachments msg={msg()} ctx={ctx} />
 
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
-                      <For each={props.msg.actions}>
+                      <For each={msg().actions}>
                         {(item) => (
                           <Button
                             size="sm"
@@ -543,8 +594,8 @@ const Message: Component<MessageProps> = (props) => {
                   </Show>
                 </Match>
 
-                <Match when={edit() && props.msg.json}>
-                  <JsonEdit msg={props.msg} update={(next) => setJsonValues(next)} />
+                <Match when={edit() && msg().json}>
+                  <JsonEdit msg={msg()} update={(next) => setJsonValues(next)} />
                 </Match>
                 <Match when={edit()}>
                   <div
@@ -1064,13 +1115,18 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   )
 }
 
-function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
-  const isRetry = props.retrying?._id === props.msg._id
-  const isPartial = props.msg._id === 'partial-response'
+function getMessageContent(
+  ctx: ContextState,
+  props: MessageProps,
+  state: ChatState,
+  msg: AppSchema.ChatMessage & { handle?: string }
+) {
+  const isRetry = props.retrying?._id === msg._id
+  const isPartial = msg._id === 'partial-response'
 
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(
-      props.partial ? props.partial : props.msg.msg,
+      props.partial ? props.partial : msg.msg,
       ctx.preset?.reasoning
     )
     if (props.partial) {
@@ -1083,7 +1139,7 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
       }
     }
 
-    if (isPartial && props.msg.msg) {
+    if (isPartial && msg.msg) {
       return {
         type: 'partial' as const,
         message: renderMessage(ctx, content, false, 'partial'),
@@ -1102,11 +1158,11 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
     }
   }
 
-  const { thoughts, content } = extractReasoning(props.msg.msg, ctx.preset?.reasoning)
+  const { thoughts, content } = extractReasoning(msg.msg, ctx.preset?.reasoning)
   let message = content
 
   if (props.last && props.swipe) message = props.swipe
-  if (props.msg.event && !props.showHiddenEvents) {
+  if (msg.event && !props.showHiddenEvents) {
     message = message.replace(/\(OOC:.+\)/, '')
   }
 
@@ -1114,13 +1170,13 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
     message = state.chatProfiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
   }
 
-  if (ctx.trimSentences && !props.msg.userId) {
+  if (ctx.trimSentences && !msg.userId) {
     message = trimSentence(message)
   }
 
   return {
     type: 'message' as const,
-    message: renderMessage(ctx, message, !!props.msg.userId, props.msg.adapter),
+    message: renderMessage(ctx, message, !!msg.userId, msg.adapter),
     thoughts,
     class: 'not-streaming',
   }

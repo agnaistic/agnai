@@ -118,33 +118,11 @@ const ChatDetail: Component = () => {
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
   const chatMsgs = createMemo(() => {
-    const self = user.profile
-    const messages = msgs.msgs.map((msg) => {
-      if (msg.characterId) {
-        if (msg.characterId === ctx.impersonate?._id) {
-          return { ...msg, handle: ctx.impersonate.name }
-        }
-
-        const handle = ctx.allBots[msg.characterId] || ctx.tempMap[msg.characterId]
-        if (handle) {
-          return { ...msg, handle: handle?.name || msg.handle }
-        }
-      }
-
-      if (msg.userId) {
-        const profile =
-          msg.userId === self?.userId
-            ? self
-            : chats.members.find((m) => m.userId === msg.userId) || self
-        return { ...msg, handle: profile?.handle || 'You' }
-      }
-
-      return msg
-    })
-
     if (!chats.chat || !chats.char) return []
+
     const doShowHiddenEvents = showHiddenEvents()
-    return messages.filter((msg) => {
+
+    return msgs.msgs.filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
@@ -496,7 +474,8 @@ const ChatDetail: Component = () => {
                 <>
                   <Message
                     index={i}
-                    msg={msg()}
+                    messageId={msg()._id}
+                    content={msg().msg}
                     editing={chats.opts.editing}
                     last={i === indexOfLastRPMessage()}
                     onRemove={() => setRemoveId(msg()._id)}
@@ -534,7 +513,10 @@ const ChatDetail: Component = () => {
                 {(msg) => (
                   <Message
                     index={-1}
-                    msg={msg}
+                    messageId={msg._id}
+                    content={msg.msg}
+                    characterId={msg.characterId}
+                    userId={msg.userId}
                     onRemove={() => {}}
                     editing={false}
                     sendMessage={sendMessage}

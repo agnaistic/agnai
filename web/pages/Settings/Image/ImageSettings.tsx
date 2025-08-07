@@ -564,17 +564,17 @@ export function useCurrentChatImageSettings() {
   }))
 
   const cfg = createMemo(() => {
-    if (!isChat() || !entity.chat) return user.cfg
+    if (!isChat() || !entity.chat) return { chatId: undefined, ...user.cfg }
 
     if (
       !entity.chat.imageSource ||
       entity.chat.imageSource === 'chat' ||
       !entity.char?.imageSettings
     ) {
-      return entity.chat.imageSettings
+      return { chatId: entity.chat._id, ...entity.chat.imageSettings }
     }
 
-    return entity.char.imageSettings
+    return { chatId: entity.chat._id, ...entity.char.imageSettings }
   })
 
   return cfg

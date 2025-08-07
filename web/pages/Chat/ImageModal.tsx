@@ -1,9 +1,16 @@
 import { Component, For, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
 import Modal from '../../shared/Modal'
-import { ImageButton, ImageSource, msgStore, promptStore, settingStore } from '../../store'
+import {
+  ConfirmAction,
+  ImageButton,
+  ImageSource,
+  msgStore,
+  promptStore,
+  settingStore,
+} from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
-import { useImageCache } from '/web/shared/hooks'
+import { isChatPage, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import {
   ArrowLeft,
@@ -20,6 +27,7 @@ import { getStore } from '/web/store/create'
 import { createStore } from 'solid-js/store'
 import { useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
 import { Copy } from '/web/shared/Copy'
+import { downloadImage } from '../Character/util'
 
 export const ImageModal: Component = () => {
   const state = settingStore()
@@ -140,6 +148,31 @@ const ImageCollectionModal: Component<{
     return cleaned
   })
 
+  const attachImage = () => {
+    const chatId = imageSettings().chatId
+
+    const btns: ConfirmAction[] = []
+
+    if (chatId) {
+      btns.push({
+        text: 'To Unsent',
+        schema: 'primary',
+        onClick: () => msgStore.addAttachment(chatId, [{ type: 'image', image: reel.state.image }]),
+      })
+    }
+
+    if (props.messageId) {
+      btns.push({
+        text: 'To Current',
+        schema: 'primary',
+        onClick: () =>
+          msgStore.addAttachment(props.messageId!, [{ type: 'image', image: reel.state.image }]),
+      })
+    }
+
+    settingStore.openConfirm({ message: 'Add Message Attachment', actions: btns })
+  }
+
   createEffect(
     on(
       () => props.collection,
@@ -243,8 +276,31 @@ const ImageCollectionModal: Component<{
             Generate
           </Button>
 
-          <Button size="sm" schema="error" onClick={removeImage}>
-            Delete Image
+          <Button
+            size="sm"
+            schema="error"
+            onClick={removeImage}
+            disabled={!reel.state.images.length}
+          >
+            Delete
+          </Button>
+
+          <Button
+            size="sm"
+            schema="primary"
+            disabled={!reel.state.image}
+            onClick={() => downloadImage({ name: reel.state.imageId, image: reel.state.image })}
+          >
+            Download
+          </Button>
+
+          <Button
+            size="sm"
+            schema="primary"
+            disabled={!reel.state.image || !props.messageId}
+            onClick={attachImage}
+          >
+            Attach
           </Button>
 
           <For each={props.actions}>

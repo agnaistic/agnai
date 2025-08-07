@@ -33,6 +33,12 @@ export type ImageButton = {
   onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
 }
 
+export type ConfirmAction = {
+  schema?: ButtonSchema
+  text: string | JSX.Element
+  onClick: () => void
+}
+
 export type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean
@@ -91,6 +97,7 @@ export type SettingState = {
   confirm?: {
     title?: string
     message: string | JSX.Element
+    actions?: ConfirmAction[]
     onConfirm?: () => void
   }
 
@@ -193,9 +200,21 @@ export const settingStore = createStore<SettingState>(
     },
     openConfirm(
       {},
-      opts: { message: string | JSX.Element; title?: string; onConfirm?: () => void }
+      opts: {
+        message: string | JSX.Element
+        title?: string
+        onConfirm?: () => void
+        actions?: ConfirmAction[]
+      }
     ) {
-      return { confirm: { message: opts.message, title: opts.title, onConfirm: opts.onConfirm } }
+      return {
+        confirm: {
+          message: opts.message,
+          title: opts.title,
+          onConfirm: opts.onConfirm,
+          actions: opts.actions,
+        },
+      }
     },
     closeConfirm({ confirm }, confirmed: boolean) {
       if (!confirm) return

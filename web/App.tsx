@@ -253,6 +253,20 @@ const Layout: Component<{ children?: any }> = (props) => {
           close={() => settingStore.closeConfirm(false)}
           footer={
             <>
+              <For each={cfg.confirm?.actions || []}>
+                {(btn) => (
+                  <Button
+                    schema={btn.schema}
+                    onClick={() => {
+                      btn.onClick()
+                      settingStore.closeConfirm(true)
+                    }}
+                  >
+                    {btn.text}
+                  </Button>
+                )}
+              </For>
+
               <Show
                 when={cfg.confirm?.onConfirm}
                 fallback={<Button onClick={() => settingStore.closeConfirm(false)}>Close</Button>}
