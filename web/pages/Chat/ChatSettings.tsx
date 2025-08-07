@@ -334,9 +334,9 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery('Generate a name for this conversation', (msg) =>
+                  msgStore.chatQuery('Generate a name for this conversation', (msg, state) => {
                     setEdit('name', msg)
-                  )
+                  })
                 }
               >
                 <Wand />

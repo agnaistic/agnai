@@ -334,7 +334,6 @@ const InputBar: Component<{
         <TextInput
           fieldName="chatInput"
           isMultiline
-          growup
           spellcheck
           lang={props.char?.culture}
           ref={ref! as any}
