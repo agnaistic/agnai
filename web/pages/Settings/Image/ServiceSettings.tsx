@@ -1,4 +1,14 @@
-import { Component, For, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import {
+  Component,
+  For,
+  Index,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import {
   NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
@@ -10,14 +20,15 @@ import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import { ImageSettings } from '/common/types/image-schema'
 import { SetStoreFunction } from 'solid-js/store'
-import { applyStoreProperty } from '/web/shared/util'
+import { applyStoreProperty, createEmitter } from '/web/shared/util'
 import { Toggle } from '/web/shared/Toggle'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, X } from 'lucide-solid'
+import { Info, RefreshCcw, X } from 'lucide-solid'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
 import { useProviderList } from '../Provider/hooks'
-import { CustomSelect } from '/web/shared/CustomSelect'
+import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
+import { imageApi } from '/web/store/data/image'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -160,7 +171,9 @@ export const SDSettings: Component<{
   cfg: ImageSettings
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
+  const emitter = createEmitter('open')
   const [providers] = useProviderList()
+  const [models, setModels] = createSignal<CustomOption[]>([])
   const providerLabel = createMemo(() => {
     if (!props.cfg?.sd?.providerId) return 'None Selected'
 
@@ -169,6 +182,23 @@ export const SDSettings: Component<{
 
     return selected.label
   })
+
+  const loadModels = async () => {
+    if (!props.cfg.sd.url) return
+    const result = await imageApi.getSDModelList({
+      url: props.cfg.sd.url,
+      providerId: props.cfg.sd.providerId,
+    })
+
+    const options = result.models.map((model) => ({ label: model.title, value: model.title }))
+    options.unshift({ label: 'Automatic', value: '' })
+    setModels(options)
+  }
+
+  onMount(() => {
+    emitter.on('open', loadModels)
+  })
+
   return (
     <>
       <TextInput
@@ -189,6 +219,19 @@ export const SDSettings: Component<{
         options={providers()}
         buttonLabel={providerLabel()}
       />
+
+      <div class="flex items-center gap-1">
+        <CustomSelect
+          listener={emitter.emit}
+          onSelect={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.model', ev.value))}
+          selected={props.cfg.sd.model}
+          options={models()}
+          buttonLabel={props.cfg.sd.model || 'Automatic'}
+        />
+        <div class="icon-button" onClick={loadModels}>
+          <RefreshCcw />
+        </div>
+      </div>
 
       <Select
         fieldName="sdSampler"

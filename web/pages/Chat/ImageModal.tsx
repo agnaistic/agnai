@@ -18,6 +18,8 @@ import { RelativeSpinner } from '/web/shared/Loading'
 import { imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
 import { createStore } from 'solid-js/store'
+import { useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
+import { Copy } from '/web/shared/Copy'
 
 export const ImageModal: Component = () => {
   const state = settingStore()
@@ -108,6 +110,7 @@ const ImageCollectionModal: Component<{
   onClose?: () => void
 }> = (props) => {
   const reel = useImageCache(props.collection, { initial: props.initial })
+  const imageSettings = useCurrentChatImageSettings()
 
   const persist = promptStore()
   const [state, update] = createStore({
@@ -127,6 +130,14 @@ const ImageCollectionModal: Component<{
     }
 
     return 'Image: 0/0'
+  })
+
+  const fullImagePrompt = createMemo(() => {
+    const cfg = imageSettings()
+    const parts = [cfg?.prefix, state.prompt, cfg?.suffix].filter((c) => !!c?.trim()).join(', ')
+    const cleaned = cleanPrompt(parts)
+
+    return cleaned
   })
 
   createEffect(
@@ -256,7 +267,7 @@ const ImageCollectionModal: Component<{
     >
       <div class="flex h-full w-full flex-col gap-1">
         <section class="w-full">
-          <div class="flex w-full flex-col gap-1">
+          <div class="flex w-full flex-col justify-center gap-1">
             <TextInput
               placeholder={'(Optional) What to focus on?'}
               value={persist.imageHint}
@@ -272,7 +283,9 @@ const ImageCollectionModal: Component<{
               textarea={{ rows: 2 }}
             />
 
-            <div class="flex w-full justify-end gap-2">
+            <div class="flex w-full items-center justify-end gap-2">
+              <Copy text={fullImagePrompt()} />
+
               <Button onClick={generatePrompt} disabled={state.promptLoading}>
                 <Show when={!state.promptLoading} fallback={<RelativeSpinner size={20} />}>
                   <WandSparkles size={20} />

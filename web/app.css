@@ -105,7 +105,7 @@
 }
 
 .helper-text {
-  @apply mt-[-0.125rem] pb-1 text-sm text-[var(--text-600)];
+  @apply mt-[-0.125rem] text-sm text-[var(--text-600)];
 }
 
 .spinner {

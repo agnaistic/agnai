@@ -48,6 +48,7 @@ export const imageApi = {
   generateImageAsync,
   dataURLtoFile,
   getImageData,
+  getSDModelList,
   ALLOWED_TYPES,
 }
 
@@ -60,6 +61,27 @@ export async function generateImagePrompt(opts?: { onTick?: TickHandler; questio
   })
 
   return summary
+}
+
+const SD_MODEL_CACHE = new Map<string, SDModel[]>()
+
+type SDModel = { title: string; model_name: string; filename: string }
+
+export async function getSDModelList(
+  opts: { url: string; key?: string; providerId?: string },
+  force?: boolean
+) {
+  if (!force && SD_MODEL_CACHE.has(opts.url)) {
+    const models = SD_MODEL_CACHE.get(opts.url)!
+    return { models }
+  }
+
+  const res = await api.post<{ models: SDModel[] }>('/chat/sd-models', opts)
+  if (res.result) {
+    return res.result
+  }
+
+  return { models: [] }
 }
 
 export async function generateImage(

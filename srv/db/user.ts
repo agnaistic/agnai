@@ -88,6 +88,7 @@ export async function saveUserProvider(
         provider: prv.provider,
         format: prv.format,
         userKey: undefined,
+        disableAutoUrl: !!prv.disableAutoUrl,
       }
     })
 
@@ -100,6 +101,7 @@ export async function saveUserProvider(
     _id: v4(),
     name: prv.name,
     url: prv.url,
+    disableAutoUrl: !!prv.disableAutoUrl,
     provider: prv.provider,
     format: prv.format,
     key,

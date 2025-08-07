@@ -5,20 +5,36 @@ import CharacterSelectList, { CharacterSelectItem } from '/web/shared/CharacterS
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import PageHeader from '/web/shared/PageHeader'
-import { HeartPlus } from 'lucide-solid'
+import { HeartPlus, X } from 'lucide-solid'
+import { isChatPage } from '/web/shared/hooks'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  const isChat = isChatPage()
+
   const state = characterStore((s) => ({
     chars: s.characters,
     chatId: s.activeChatId,
     defaultId: s.defaultImpersonateId,
+    impersonating: s.impersonating,
   }))
   const user = userStore()
 
   const onSelect = (char?: AppSchema.Character) => {
-    characterStore.impersonate(char)
+    const match = char ? state.chars.list.find((c) => c._id === char?._id) : undefined
+
+    characterStore.impersonate(match || char)
     props.close()
   }
+
+  const clearImpersonate = () => {
+    characterStore.defaultImpersonate('')
+  }
+
+  const currentChar = createMemo(() => {
+    if (!isChat()) return
+    if (!state.impersonating) return
+    return { ...state.impersonating, name: `${state.impersonating.name} (Current)` }
+  })
 
   const defaultChar = createMemo(() => {
     if (!state.defaultId) return
@@ -31,6 +47,18 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
       description: 'Default for new conversations',
     }
     return next
+  })
+
+  const options = createMemo(() => {
+    const curr = currentChar()
+    const items = state.chars.list
+      .filter((ch) => ch.userId === user.user?._id)
+      .map((char) => {
+        if (curr?._id !== char._id) return char
+        return { ...char, name: `${char.name} (Current)` }
+      })
+
+    return items
   })
 
   return (
@@ -56,14 +84,19 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
         <div class="flex w-full justify-center">
           <Button onClick={() => onSelect()}>Use My Profile</Button>
         </div>
+
         <Show when={!!defaultChar()}>
-          <CharacterSelectItem char={defaultChar()!} onClick={onSelect} />
+          <CharacterSelectItem
+            char={defaultChar()!}
+            onClick={onSelect}
+            adornment={() => (
+              <div class="icon-button" onClick={clearImpersonate}>
+                <X />
+              </div>
+            )}
+          />
         </Show>
-        <CharacterSelectList
-          items={state.chars.list.filter((ch) => ch.userId === user.user?._id)}
-          onSelect={onSelect}
-          adornment={DefaultToggle}
-        />
+        <CharacterSelectList items={options()} onSelect={onSelect} adornment={DefaultToggle} />
       </div>
     </RootModal>
   )

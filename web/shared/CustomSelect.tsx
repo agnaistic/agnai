@@ -8,12 +8,13 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
   onMount,
 } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
-import { ComponentSubscriber } from './util'
+import { ComponentSubscriber, PartialListener } from './util'
 import TextInput from './TextInput'
 
 export type CustomOption = {
@@ -51,20 +52,34 @@ export const CustomSelect: Component<{
   postoptions?: JSX.Element
   children?: any
 
+  listener?: PartialListener<'close' | 'open'>
   closeSub?: ComponentSubscriber<'close'>
   openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
+  const [unsubs, setUnsubs] = createSignal<Function[]>([])
 
   onMount(() => {
     if (props.closeSub) {
-      props.closeSub('close', () => setOpen(false))
+      const unsub = props.closeSub('close', () => setOpen(false))
+      setUnsubs((v) => v.concat(unsub))
     }
 
     if (props.openSub) {
-      props.openSub('open', () => setOpen(true))
+      const unsub = props.openSub('open', () => setOpen(true))
+      setUnsubs((v) => v.concat(unsub))
     }
+
+    props.listener?.open?.()
+  })
+
+  onCleanup(() => {
+    for (const unsub of unsubs()) {
+      unsub()
+    }
+
+    props.listener?.close?.()
   })
 
   createEffect(() => {

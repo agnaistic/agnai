@@ -44,13 +44,17 @@ export type PartialEmitter<T extends string> = {
   off: (id: string | Function) => boolean
 }
 
+export type PartialListener<T extends string> = PartialEmitter<T>['emit']
+
 export type ComponentEmitter<T extends string> = {
   emit: { [key in T]: InvokeEmitter }
   on: ComponentSubscriber<T>
   off: (id: string | Function) => boolean
 }
 
-export type ComponentSubscriber<T> = (event: T, callback: InvokeEmitter) => string
+type UnsubFunc = () => void
+
+export type ComponentSubscriber<T> = (event: T, callback: InvokeEmitter) => UnsubFunc
 
 export function getAbsolutePosition(ele: HTMLElement) {
   let curr = ele
@@ -70,10 +74,20 @@ export function createEmitter<T extends string>(...events: T[]) {
   let emit: any = {}
   const listeners: Array<{ id: string; event: T; callback: InvokeEmitter }> = []
 
+  const unsubscribe = (id: string) => {
+    const index = listeners.findIndex((i) => i.id === id)
+    if (index === -1) return
+
+    listeners.splice(index, 1)
+  }
+
   const on = (event: T, callback: InvokeEmitter) => {
     const id = v4()
     listeners.push({ event, callback, id })
-    return id
+
+    const unsub = () => unsubscribe(id)
+
+    return unsub
   }
 
   const off = (id: string | Function) => {

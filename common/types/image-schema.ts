@@ -46,6 +46,7 @@ export type SDSettings = {
   type: 'sd'
   sampler: string
   url: string
+  model?: string
 
   providerId?: string
 }

@@ -18,6 +18,7 @@ import { Cable, Check, Ellipsis, X } from 'lucide-solid'
 import Select from '/web/shared/Select'
 import OpenRouterOauth from '../OpenRouterOauth'
 import { userStore } from '/web/store'
+import { Toggle } from '/web/shared/Toggle'
 
 export const ManageProvider: Component<{
   onCreated?: (provider: AppSchema.Provider) => void
@@ -37,6 +38,7 @@ export const ManageProvider: Component<{
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
   const [format, setFormat] = createSignal('')
+  const [autourl, setAutourl] = createSignal(false)
 
   const state = presetStore((s) => ({ testLoading: s.testLoading }))
 
@@ -89,6 +91,7 @@ export const ManageProvider: Component<{
     setUrl(props.provider?.url || '')
     setName(props.provider?.name || '')
     setKey('')
+    setAutourl(props.provider?.disableAutoUrl ?? false)
 
     if (!props.provider?.provider || !props.provider.format) return
 
@@ -121,6 +124,7 @@ export const ManageProvider: Component<{
       key: key(),
       provider: provider(),
       url: url(),
+      disableAutoUrl: autourl(),
     }
 
     if (fmt >= 0 && def.detail?.formats) {
@@ -258,7 +262,7 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="Label"
+          helperText="Label"
           placeholder="Custom label for this provider"
           value={name()}
           onChange={(ev) => setName(ev.currentTarget.value)}
@@ -266,7 +270,7 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="URL"
+          helperText="URL"
           placeholder="https://..."
           value={url()}
           onChange={(ev) => {
@@ -277,16 +281,24 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="API Key"
+          helperText="API Key"
           type="password"
           placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
           onChange={(ev) => setKey(ev.currentTarget.value)}
           value={key()}
         />
 
+        <Show when={isCustom()}>
+          <Toggle
+            helperText="Disable Auto-URL"
+            value={autourl()}
+            onChange={(ev) => setAutourl(ev)}
+          />
+        </Show>
+
         <Select
           items={formatOptions()}
-          label={'Request Format'}
+          helperText={'Request Format'}
           value={format()}
           onChange={(ev) => onFormatChange(ev.value)}
           hide={formatOptions().length <= 1}

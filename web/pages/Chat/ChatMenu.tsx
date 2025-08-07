@@ -26,6 +26,7 @@ import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
 import { usePresetContext } from '/web/store/preset-context'
+import { getStore } from '/web/store/create'
 
 type NavProps = {
   ctx: ContextState
@@ -84,6 +85,17 @@ const ChatNav: Component<NavProps> = (props) => {
   const size = 20
 
   const openProviders = createEmitter('open')
+
+  const openMessageImages = () => {
+    const last = getStore('messages').getState().msgs.slice(-1)[0]
+
+    if (!last) {
+      settingStore.openImageGen()
+      return
+    }
+
+    settingStore.showMessageImages({ id: last._id, position: 0 })
+  }
 
   return (
     <>
@@ -148,7 +160,7 @@ const ChatNav: Component<NavProps> = (props) => {
           <Settings size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item
-          onClick={() => settingStore.openImageGen()}
+          onClick={openMessageImages}
           ariaLabel="Image Generation"
           tooltip="Image Generation"
         >

@@ -2,7 +2,7 @@ import { Accessor, Component, JSX, Show, createMemo } from 'solid-js'
 import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
-import { getAsCssVar, getRgbaFromVar, getSettingColor } from './colors'
+import { getAsCssVar, getRgbaFromVar, getRootVariable, getSettingColor } from './colors'
 
 type Size = 'sm' | 'md' | 'lg'
 
@@ -153,6 +153,7 @@ export const TitleCard: Component<{
   ariaRole?: JSX.AriaAttributes['role']
   ariaLabel?: string
   contentClass?: string
+  glow?: string | true
   bg?: string
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
@@ -166,10 +167,18 @@ export const TitleCard: Component<{
       ? (getRgbaFromVar(props.bg, 1)?.background as string)
       : `var(--${type}-${base})`
 
+    const glowColor =
+      props.glow === true
+        ? `0 0px 16px var(--${type}-${base + mod})`
+        : props.glow
+        ? `0 0px 16px ${getRootVariable(props.glow)}`
+        : undefined
+
     return {
       'background-color': bgColor,
       border: `1px solid var(--${type}-${base + mod})`,
       'border-radius': '0.375rem',
+      'box-shadow': glowColor,
     }
   })
 
