@@ -163,7 +163,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const url =
-    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) || base.url.includes('/completion')
+    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) ||
+    base.url.includes('/completion') ||
+    opts.conn.provider?.disableAutoUrl
       ? base.url
       : useChat
       ? joinUrl(base.url, 'chat/completions')
