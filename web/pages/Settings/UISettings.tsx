@@ -1,5 +1,4 @@
 import { Component, Show, createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
-import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -475,13 +474,9 @@ const UISettings: Component<{}> = () => {
           <Message
             index={-1}
             editing={false}
-            msg={toBotMsg(
-              chars.characters.list[0],
-              '*I wave excitedly* Hello world!\nHow are you today?',
-              {
-                _id: '1',
-              }
-            )}
+            messageId={'example-msg-1'}
+            content={'*I wave excitedly* Hello world!\nHow are you today?'}
+            characterId={chars.characters.list[0]?._id}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
@@ -491,11 +486,10 @@ const UISettings: Component<{}> = () => {
             <Message
               index={-1}
               editing={false}
-              msg={toUserMsg(
-                state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"',
-                { _id: '2' }
-              )}
+              messageId={'example-msg-2'}
+              content='*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"'
+              characterId={chars.impersonating?._id}
+              userId={state.user?._id}
               onRemove={noop}
               sendMessage={() => {}}
               isPaneOpen={false}
