@@ -328,6 +328,7 @@ const ImageCollectionModal: Component<{
               placeholder={'(Optional) What to focus on?'}
               value={persist.imageHint}
               onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+              class="!text-sm"
             />
             <TextInput
               parentClass="w-full !h-[64px]"
