@@ -10,7 +10,7 @@ import {
 } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
-import { isChatPage, useImageCache } from '/web/shared/hooks'
+import { useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import {
   ArrowLeft,

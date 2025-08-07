@@ -174,11 +174,15 @@ export const characterStore = createStore<CharacterState>(
       chatId?: string
     ) {
       const fallback = storage.localGetItem(IMPERSONATE_KEY) || ''
-      let id = activeChatId
-        ? getStoredValue(`${chatId || activeChatId}-impersonate`, fallback)
-        : fallback
 
-      if (!id) return
+      const idUsed = chatId ? 'chat-id' : activeChatId ? 'active-id' : 'none'
+
+      let id =
+        idUsed === 'none'
+          ? fallback
+          : getStoredValue(`${chatId || activeChatId}-impersonate`, fallback)
+
+      if (!id) return { impersonating: undefined }
 
       const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
       return { impersonating }
