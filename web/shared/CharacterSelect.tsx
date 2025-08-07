@@ -3,7 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { DropMenu } from './DropMenu'
 import { CharacterAvatar } from './AvatarIcon'
 import Button from './Button'
-import { ChevronDown, Users } from 'lucide-solid'
+import { ChevronDown, Dices, Users } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import CharacterSelectList from './CharacterSelectList'
 
@@ -21,6 +21,7 @@ const CharacterSelect: Component<{
   value?: AppSchema.Character | string
   disabled?: boolean
   class?: string
+  random?: boolean
 
   /** Ignore the active chat - Do not promote current characters to the top of the list */
   ignoreActive?: boolean
@@ -38,10 +39,19 @@ const CharacterSelect: Component<{
     setOpts(false)
   }
 
+  const selectRandom = () => {
+    const index = Math.floor(Math.random() * props.items.length)
+    const item = props.items[index]
+
+    if (item) {
+      onChange(item)
+    }
+  }
+
   return (
     <>
       <FormLabel label={props.label} helperText={props.helperText} />
-      <div class="relative">
+      <div class="relative flex items-center gap-1">
         <Button
           schema="secondary"
           class={`relative rounded-xl ${props.class}`}
@@ -67,6 +77,12 @@ const CharacterSelect: Component<{
             <ChevronDown />
           </span>
         </Button>
+        <Show when={props.random && props.items.length > 1}>
+          <Button size="md" schema="bordered" onClick={selectRandom}>
+            <Dices size={16} />
+          </Button>
+        </Show>
+
         <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
           <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
             <CharacterSelectList

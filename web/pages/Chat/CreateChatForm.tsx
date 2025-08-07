@@ -223,6 +223,7 @@ const CreateChatForm: Component<{
                 helperText="The conversation's main character"
                 onChange={(c) => setSelected(c?._id)}
                 ignoreActive
+                random
               />
             </Card>
           </Show>
