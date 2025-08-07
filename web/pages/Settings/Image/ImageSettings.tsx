@@ -281,11 +281,7 @@ export const ImageSettingsModal = () => {
                 size="sm"
                 class="w-fit"
                 onClick={() =>
-                  chatStore.editChat(
-                    entity.chat?._id!,
-                    { imageSource: currentImgSource() },
-                    undefined
-                  )
+                  chatStore.editChat(entity.chat?._id!, { imageSource: currentImgSource() })
                 }
               >
                 <Show
@@ -540,7 +536,7 @@ async function save(tab: string, store: ImageSettings, entity: any) {
     }
 
     case 'Chat': {
-      chatStore.editChat(entity.chat?._id!, { imageSettings: store }, undefined)
+      chatStore.editChat(entity.chat?._id!, { imageSettings: store })
       return
     }
 

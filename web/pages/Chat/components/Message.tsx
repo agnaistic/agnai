@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   Braces,
   ImagePlus,
+  Eye,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -710,7 +711,7 @@ const MessageOptions: Component<{
         class: 'prompt-btn',
         outer: props.ui.msgOptsInline.prompt,
         show: !!props.msg.characterId && props.msg.adapter !== 'image',
-        onClick: () => !props.partial && chatStore.computePrompt(props.msg, true),
+        onClick: () => !props.partial && chatStore.computePrompt(props.msg),
         icon: Terminal,
       },
 
@@ -775,6 +776,16 @@ const MessageOptions: Component<{
             { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
             (files) => attachImages(props.msg._id, files)
           ),
+      },
+
+      visible: {
+        key: 'visible',
+        class: '',
+        icon: Eye,
+        label: 'Visibility',
+        show: true,
+        outer: props.ui.msgOptsInline.visible,
+        onClick: () => chatStore.toggleMsgVisibility(props.msg._id),
       },
 
       trash: {

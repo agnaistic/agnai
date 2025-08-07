@@ -26,6 +26,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       postHistoryInstructions: 'string?',
       imageSource: 'string?',
       imageSettings: 'any?',
+      invisible: 'any?',
     },
     body,
     true
@@ -54,6 +55,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     scenarioStates: body.scenarioStates ?? prev.scenarioStates,
     imageSource: (body.imageSource as any) ?? prev.imageSource,
     imageSettings: body.imageSettings,
+    invisible: body.invisible ?? prev.invisible,
   }
 
   if (body.useOverrides === false) {
@@ -146,6 +148,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       characterId: 'string?',
       userId: 'string?',
       name: 'string?',
+      invisible: 'any?',
     },
     body
   )
@@ -161,6 +164,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     retries: body.retries,
     extras: body.extras || prev.msg.extras,
     json: body.json || prev.msg.json,
+    invisible: body.invisible ?? prev.msg.invisible,
     characterId: body.characterId ?? prev.msg.characterId,
     userId: body.userId ?? prev.msg.userId,
     name: body.name ?? prev.msg.name,

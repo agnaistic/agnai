@@ -473,126 +473,131 @@ export async function buildPromptPlaceholders(
   lines: string[] | HistoryLine[],
   encoder: TokenCounter
 ) {
-  const { chat, char, replyAs } = opts
-  const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
+  try {
+    const { chat, char, replyAs } = opts
+    const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
-  const replace = (value: string, botName?: string) =>
-    placeholderReplace(value, botName || opts.replyAs.name, sender)
+    const replace = (value: string, botName?: string) =>
+      placeholderReplace(value, botName || opts.replyAs.name, sender)
 
-  const parts: PromptPlaceholders = {
-    systemPrompt: opts.settings?.systemPrompt || '',
-    persona: replace(
-      formatCharacter(
-        replyAs.name,
-        replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
-      )
-    ),
-    prefill: opts.settings?.prefill || '',
-    post: [],
-    allPersonas: [],
-    chatEmbeds: [],
-    userEmbeds: [],
-    props: opts.props,
-  }
-
-  const personalities = new Set([replyAs._id])
-
-  if (opts.impersonate?.persona) {
-    parts.impersonality = replace(
-      formatCharacter(
-        opts.impersonate.name,
-        opts.impersonate.persona,
-        opts.impersonate.persona.kind
-      )
-    )
-  }
-
-  for (const bot of Object.values(opts.characters || {})) {
-    if (!bot) continue
-    if (personalities.has(bot._id)) continue
-    if (bot._id === opts.impersonate?._id) continue
-
-    const temp = opts.chat.tempCharacters?.[bot._id]
-    if (temp?.deletedAt || temp?.favorite === false) continue
-
-    if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
-      continue
+    const parts: PromptPlaceholders = {
+      systemPrompt: opts.settings?.systemPrompt || '',
+      persona: replace(
+        formatCharacter(
+          replyAs.name,
+          replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+        )
+      ),
+      prefill: opts.settings?.prefill || '',
+      post: [],
+      allPersonas: [],
+      chatEmbeds: [],
+      userEmbeds: [],
+      props: opts.props,
     }
 
-    personalities.add(bot._id)
-    parts.allPersonas.push(
-      `${bot.name}'s personality: ${replace(
-        formatCharacter(bot.name, bot.persona, bot.persona.kind),
-        bot.name
-      )}`
+    const personalities = new Set([replyAs._id])
+
+    if (opts.impersonate?.persona) {
+      parts.impersonality = replace(
+        formatCharacter(
+          opts.impersonate.name,
+          opts.impersonate.persona,
+          opts.impersonate.persona.kind
+        )
+      )
+    }
+
+    for (const bot of Object.values(opts.characters || {})) {
+      if (!bot) continue
+      if (personalities.has(bot._id)) continue
+      if (bot._id === opts.impersonate?._id) continue
+
+      const temp = opts.chat.tempCharacters?.[bot._id]
+      if (temp?.deletedAt || temp?.favorite === false) continue
+
+      if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
+        continue
+      }
+
+      personalities.add(bot._id)
+      parts.allPersonas.push(
+        `${bot.name}'s personality: ${replace(
+          formatCharacter(bot.name, bot.persona, bot.persona.kind),
+          bot.name
+        )}`
+      )
+    }
+
+    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+    // replyAs instead of the main character
+    // (we always use the main character's scenario, not replyAs)
+    parts.scenario = replace(opts.resolvedScenario, char.name)
+
+    const sampleChat =
+      replyAs._id === char._id && !!chat.overrides
+        ? chat.sampleChat ?? replyAs.sampleChat
+        : replyAs.sampleChat
+
+    parts.sampleChat = (sampleChat || '')
+      .split('\n')
+      .filter(removeEmpty)
+      // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+      .map((text) => replace(text))
+
+    if (chat.greeting) {
+      parts.greeting = replace(chat.greeting)
+    } else {
+      parts.greeting = replace(char.greeting)
+    }
+
+    const post = createPostPrompt(opts)
+
+    if (opts.continue) {
+      post.unshift(`${char.name}: ${opts.continue}`)
+    }
+
+    const books: AppSchema.MemoryBook[] = []
+    if (replyAs.characterBook) books.push(replyAs.characterBook)
+    if (opts.book) books.push(opts.book)
+
+    parts.memory = await buildMemoryPrompt(
+      { ...opts, books, lines: lines.map((l) => (typeof l === 'string' ? l : l.msg)) },
+      encoder
     )
+
+    const supplementary = getSupplementaryParts(opts, replyAs)
+    parts.ujb = supplementary.ujb
+    parts.systemPrompt = supplementary.system
+
+    parts.post = post.map((post) => replace(post))
+
+    if (opts.userEmbeds) {
+      const embeds = opts.userEmbeds.map((line) => line.text)
+      const { adding: fit } = await fillPromptWithLines({
+        encoder,
+        tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
+        context: '',
+        lines: embeds,
+      })
+      parts.userEmbeds = fit.map((l) => l.line)
+    }
+
+    if (opts.chatEmbeds) {
+      const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
+      const { adding: fit } = await fillPromptWithLines({
+        encoder,
+        tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
+        context: '',
+        lines: embeds,
+      })
+      parts.chatEmbeds = fit.map((l) => l.line)
+    }
+
+    return parts
+  } catch (ex) {
+    throw ex
   }
-
-  // we use the BOT_REPLACE here otherwise later it'll get replaced with the
-  // replyAs instead of the main character
-  // (we always use the main character's scenario, not replyAs)
-  parts.scenario = replace(opts.resolvedScenario, char.name)
-
-  parts.sampleChat = (
-    replyAs._id === char._id && !!chat.overrides
-      ? chat.sampleChat ?? replyAs.sampleChat
-      : replyAs.sampleChat
-  )
-    .split('\n')
-    .filter(removeEmpty)
-    // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-    .map((text) => replace(text))
-
-  if (chat.greeting) {
-    parts.greeting = replace(chat.greeting)
-  } else {
-    parts.greeting = replace(char.greeting)
-  }
-
-  const post = createPostPrompt(opts)
-
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
-  const books: AppSchema.MemoryBook[] = []
-  if (replyAs.characterBook) books.push(replyAs.characterBook)
-  if (opts.book) books.push(opts.book)
-
-  parts.memory = await buildMemoryPrompt(
-    { ...opts, books, lines: lines.map((l) => (typeof l === 'string' ? l : l.msg)) },
-    encoder
-  )
-
-  const supplementary = getSupplementaryParts(opts, replyAs)
-  parts.ujb = supplementary.ujb
-  parts.systemPrompt = supplementary.system
-
-  parts.post = post.map((post) => replace(post))
-
-  if (opts.userEmbeds) {
-    const embeds = opts.userEmbeds.map((line) => line.text)
-    const { adding: fit } = await fillPromptWithLines({
-      encoder,
-      tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
-      context: '',
-      lines: embeds,
-    })
-    parts.userEmbeds = fit.map((l) => l.line)
-  }
-
-  if (opts.chatEmbeds) {
-    const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const { adding: fit } = await fillPromptWithLines({
-      encoder,
-      tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
-      context: '',
-      lines: embeds,
-    })
-    parts.chatEmbeds = fit.map((l) => l.line)
-  }
-
-  return parts
 }
 
 function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {
@@ -709,7 +714,24 @@ export async function getLinesForPrompt(
     return { _id: msg._id, msg: filled, role: author.role }
   }
 
-  const history = messages.map(formatMsg)
+  /**
+   * Message Visibility Filtering
+   */
+  const filtered = messages.filter((msg) => {
+    if (!msg.invisible && !opts.chat.invisible) return true
+
+    if (msg.invisible) {
+      if (msg.invisible[opts.replyAs._id]) return false
+      return true
+    }
+
+    // Chat Defaults - ignored if message flags are present
+    if (opts.chat.invisible?.[opts.replyAs._id]) return false
+
+    return true
+  })
+
+  const history = filtered.map(formatMsg)
 
   const { adding: lines } = await fillPromptWithLines({
     encoder,

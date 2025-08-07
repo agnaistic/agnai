@@ -94,6 +94,10 @@ export function formatCharacter(
   persona: AppSchema.Persona,
   kind?: AppSchema.Persona['kind']
 ) {
+  if (!kind && !persona?.kind) {
+    return `[Character not fully loaded]`
+  }
+
   switch (kind || persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)

@@ -41,6 +41,7 @@ import { canStartTour, startTour } from '/web/tours'
 import { MessageMeta } from './components/MessageMeta'
 import { usePresetContext } from '/web/store/preset-context'
 import { SendFunc } from './components/InputBar'
+import { MessageVisibility } from './components/Visibility'
 
 export { ChatDetail as default }
 
@@ -70,6 +71,7 @@ const ChatDetail: Component = () => {
     opts: s.opts,
     ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
     linesAddedCount: s.prompt?.template.linesAddedCount,
+    msgVisibility: s.msgVisibility,
   }))
 
   const msgs = msgStore((s) => ({
@@ -552,6 +554,9 @@ const ChatDetail: Component = () => {
       </Show>
 
       <MessageMeta />
+      <Show when={chats.msgVisibility?.id}>
+        <MessageVisibility ctx={ctx} messageId={chats.msgVisibility?.id!} />
+      </Show>
 
       <Show
         when={

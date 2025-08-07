@@ -43,7 +43,7 @@ export type ChatState = {
   // chatBots: AppSchema.Character[]
   // chatBotMap: Record<string, AppSchema.Character>
   memberIds: { [userId: string]: AppSchema.Profile }
-  prompt?: Prompt
+  prompt?: Prompt & { msg: AppSchema.ChatMessage }
   opts: {
     modal?: ChatModal
     editing: boolean
@@ -54,6 +54,10 @@ export type ChatState = {
     options: 'mobile' | 'main' | false
   }
   promptHistory: Record<string, any>
+
+  msgVisibility?: {
+    id: string
+  }
 }
 
 export type ChatRightPane =
@@ -331,6 +335,10 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    toggleMsgVisibility(_, messageId?: string) {
+      return { msgVisibility: messageId ? { id: messageId } : undefined }
+    },
+
     async *editChatBackground({ active }, image: File) {
       if (!active) return
       const base64 = await imageApi.getImageData(image)
@@ -362,10 +370,9 @@ export const chatStore = createStore<ChatState>('chat', {
       { char, allChats, active },
       id: string,
       update: Partial<AppSchema.Chat>,
-      useOverrides: boolean | undefined,
-      onSuccess?: () => void
+      opts?: { useOverrides?: boolean; quiet?: boolean; onSuccess?: () => void }
     ) {
-      const res = await chatsApi.editChat(id, { ...update, useOverrides })
+      const res = await chatsApi.editChat(id, { ...update, useOverrides: opts?.useOverrides })
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
         return
@@ -375,8 +382,11 @@ export const chatStore = createStore<ChatState>('chat', {
         res.result.background = active?.chat.background
         res.result.localSettings = active?.chat.localSettings
 
-        onSuccess?.()
-        toastStore.success('Updated chat settings')
+        opts?.onSuccess?.()
+
+        if (!opts?.quiet) {
+          toastStore.success('Updated chat settings')
+        }
 
         yield { allChats: allChats.map((ch) => (ch._id === id ? res.result! : ch)) }
 
@@ -619,10 +629,10 @@ export const chatStore = createStore<ChatState>('chat', {
       await api.get(`/chat/${chatId}/summary`)
     },
 
-    async computePrompt({ active }, msg: AppSchema.ChatMessage, shown: boolean) {
+    async computePrompt({ active }, msg: AppSchema.ChatMessage, perspective?: AppSchema.Character) {
       if (!active) return
 
-      const { msgs } = msgStore.getState()
+      const { msgs, messageHistory } = msgStore.getState()
       const entities = await getPromptEntities()
 
       const encoder = await getEncoder()
@@ -642,9 +652,9 @@ export const chatStore = createStore<ChatState>('chat', {
           impersonate: entities.impersonating,
           modelFormat: entities.settings.modelFormat,
           lastMessage: entities.lastMessage?.date || '',
-          replyAs,
+          replyAs: perspective || replyAs,
           sender: entities.profile,
-          messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+          messages: messageHistory.concat(msgs).filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
           resolvedScenario,
@@ -658,7 +668,7 @@ export const chatStore = createStore<ChatState>('chat', {
       //   : prompt.template.parsed
       // prompt.template.parsed = parsed
 
-      return { prompt: { ...prompt, shown } }
+      return { prompt: { ...prompt, msg, shown: true } }
     },
 
     closePrompt() {

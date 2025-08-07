@@ -52,6 +52,7 @@ export type MessageOption =
   | 'prompt'
   | 'schema-regen'
   | 'attach'
+  | 'visible'
 
 export type UISettings = {
   theme: string
@@ -169,5 +170,6 @@ export const defaultUIsettings: UISettings = {
     attach: { outer: false, pos: 6 },
     trash: { outer: false, pos: 4 },
     'schema-regen': { outer: false, pos: 5 },
+    visible: { outer: false, pos: 3.9 },
   },
 }

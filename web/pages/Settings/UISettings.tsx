@@ -28,6 +28,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   trash: 'Delete',
   attach: 'Attach',
   'schema-regen': 'Retry Schema',
+  visible: 'Visibility',
 }
 
 const UISettings: Component<{}> = () => {

@@ -70,11 +70,13 @@ export const presetStore = createStore<PresetState>(
       if (!opts.url) return
       yield { testLoading: true }
       const res = await api.post('/user/preset-test', opts)
+
       if (res.result) {
         cb(!!res.result.success, res.result.url || '')
       } else {
         cb(false, '')
       }
+
       yield { testLoading: false }
     },
     setImportPreset(_, preset?: AppSchema.UserGenPreset) {

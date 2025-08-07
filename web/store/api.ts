@@ -3,6 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
+import { TickHandler } from '/common/prompt'
 
 let socketId = ''
 
@@ -194,6 +195,7 @@ export async function fetchSSE(opts: {
   onData?: (event: any) => void
   onDone?: () => void
   onError?: (err: any) => void
+  onTick?: TickHandler
 }) {
   const { path, headers, body, signal } = opts
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
@@ -233,16 +235,21 @@ export async function fetchSSE(opts: {
 
         if (!event) {
           opts.onError?.(error)
+          opts.onTick?.(error, 'error')
         } else if (typeof event === 'string') {
           opts.onError?.(`Local request failed: ${event}`)
+          opts.onTick?.(event, 'error')
         } else if (event.error) {
           if (typeof event.error === 'string') {
             opts.onError?.(`Local request failed: ${event.error}`)
+            opts.onTick?.(event.error, 'error')
           } else if (event.error?.message) {
             opts.onError?.(`Local request failed: ${event.error.message}`)
+            opts.onTick?.(event.error.message, 'error')
           }
         } else {
           opts.onError?.(error)
+          opts.onTick?.(error, 'error')
         }
         return
       }
@@ -263,6 +270,7 @@ export async function fetchSSE(opts: {
         event.type = event.event
       }
       opts.onData?.(event)
+      opts.onTick?.(event, 'partial')
     }
   })
 
