@@ -213,19 +213,15 @@ export const msgStore = createStore<MsgState>(
     // },
     addAttachment({ attachments }, msgId: string, attachment: MsgAttachment[]) {
       const existing = attachments[msgId]
-      const newAttachments: MsgAttachment[] = []
-
-      for (const attach of attachment) {
-        if (!existing) {
-          newAttachments.push(attach)
-          continue
-        }
+      const newAttachments: MsgAttachment[] = attachment.filter((attach) => {
+        if (!existing) return true
 
         for (const exist of existing) {
-          if (exist.image === attach.image) continue
-          newAttachments.push(attach)
+          if (exist.image === attach.image) return false
         }
-      }
+
+        return true
+      })
 
       if (!newAttachments.length) return
 
