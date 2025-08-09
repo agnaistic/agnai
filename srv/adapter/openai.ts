@@ -154,10 +154,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   if (body.messages) {
-    log.debug(
-      { ...body, messages: stripImageContent(body.messages), prompt: undefined },
-      'OpenAI payload'
-    )
+    log.debug({ ...body, messages: undefined, prompt: undefined }, 'OpenAI payload')
   } else {
     log.debug(body, 'OpenAI payload')
   }

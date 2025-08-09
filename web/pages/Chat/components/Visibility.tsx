@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, For, onMount } from 'solid-js'
+import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import { ContextState } from '/web/store/context'
 import Modal from '/web/shared/Modal'
 import { chatStore, msgStore } from '/web/store'
@@ -6,6 +6,7 @@ import { useParticipantList } from '../MemberModal'
 import { AppSchema } from '/common/types'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
+import { Pill, SolidCard } from '/web/shared/Card'
 
 export const MessageVisibility: Component<{ ctx: ContextState; messageId: string }> = (props) => {
   const lists = useParticipantList()
@@ -37,9 +38,17 @@ export const MessageVisibility: Component<{ ctx: ContextState; messageId: string
     close()
   }
 
+  const showWarning = createMemo(() => {
+    const body = flags()
+    const keys = Object.keys(body)
+
+    return keys.length === 0
+  })
+
   return (
     <Modal
       show={!!message()}
+      title="Message Visibility"
       close={close}
       footer={
         <>
@@ -53,11 +62,21 @@ export const MessageVisibility: Component<{ ctx: ContextState; messageId: string
         </>
       }
     >
+      <Show when={showWarning()}>
+        <div class="flex justify-center">
+          <Pill class="!py-1" type="premium">
+            Using defaults from Chat Settings
+          </Pill>
+        </div>
+      </Show>
       <p>
-        <b>Green - </b> Can see this message when replying
+        <b>Green</b>: Can see this message when replying
       </p>
 
       <div class="flex flex-wrap gap-2">
+        <Button onClick={() => setFlags({})} size="md">
+          Use Defaults
+        </Button>
         <For each={lists().chars}>
           {(char) => (
             <VisibilityToggle

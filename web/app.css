@@ -167,3 +167,10 @@
   max-height: 100px !important;
   border: 1px solid var(--bg-500) !important;
 }
+
+.text-outline {
+  text-shadow: var(--outline-thickness) 0 var(--outline-shadow) var(--text-100),
+    0 var(--outline-thickness-rev) var(--outline-shadow) var(--text-100),
+    0 var(--outline-thickness) var(--outline-shadow) var(--text-100),
+    var(--outline-thickness-rev) 0 var(--outline-shadow) var(--text-100);
+}

@@ -194,6 +194,7 @@ export async function* fetchStream(
   const flags = {
     reason_started: false,
     reason_ended: false,
+    errored: false,
   }
 
   try {
@@ -204,6 +205,13 @@ export async function* fetchStream(
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
           opts?.log?.warn({ buffer }, '[fetch] incomplete buffer')
+
+          // End of reader processing, if we have an error and we get here, we need to respond with a fallback error message
+          if (flags.errored) {
+            yield { error: `Unknown error encountered - Status code ${response.status}` }
+            return
+          }
+
           return
         }
 
@@ -225,11 +233,11 @@ export async function* fetchStream(
 
       let chunk = decoder.decode(value)
 
-      // if (DEBUG) {
-      //   console.log(
-      //     `[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`
-      //   )
-      // }
+      if (DEBUG) {
+        console.log(
+          `[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`
+        )
+      }
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
@@ -247,42 +255,56 @@ export async function* fetchStream(
         chunk = opts.prechunk(chunk)
       }
 
+      buffer += chunk
+
       try {
-        const error = tryParse(chunk)
-        const isError = isErrorCode || !!error?.error
-        if (isError && error) {
-          // OpenRouter provider errors
-          const suberror = tryParse(error?.error?.metadata?.raw)
-          const providerError =
-            suberror?.detail ||
-            suberror?.message ||
-            suberror?.error?.message ||
-            error?.error?.metadata?.raw
+        const json = tryStrictParse(chunk) || tryStrictParse(buffer)
+        const isError = isErrorCode || !!json?.error
 
-          const msg = error?.error?.message || error?.message || `status code ${response.status}`
-
-          const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
-
-          opts?.log?.error(
-            { err: error, chunk: error ? undefined : chunk, url: response.url, msg: finalMsg },
-            `Request failed with error ${response.status}`
-          )
-
-          yield {
-            error: `${finalMsg}`,
-            errorObj: error ? error : chunk,
+        if (isError) {
+          flags.errored = true
+          const error = processError(json)
+          if (error) {
+            opts?.log?.error(
+              {
+                err: error,
+                chunk: error ? undefined : chunk,
+                url: response.url,
+                msg: error.message,
+              },
+              `Request failed with error ${response.status}`
+            )
+            yield { error: error.message, errorObj: json }
+            return
           }
-          return
         }
       } catch (ex) {}
-
-      buffer += chunk
 
       let match = processBuffer(buffer)
 
       while (match) {
         const data = match.match
         const json = tryParse(data)
+
+        // In an error scenario, only attempt to extract the error payload in the stream
+        if (flags.errored) {
+          const error = processError(json)
+          if (error) {
+            opts?.log?.error(
+              {
+                err: error,
+                chunk: error ? undefined : chunk,
+                url: response.url,
+                msg: error.message,
+              },
+              `Request failed with error ${response.status}`
+            )
+            yield { error: error.message, errorObj: json }
+            return
+          }
+          continue
+        }
+
         if (json) {
           if (format === 'raw') {
             yield json
@@ -441,6 +463,26 @@ function processBuffer(buffer: string) {
 // }
 // testBuffer()
 
+function processError(json: any) {
+  if (!json) return
+
+  // OpenRouter provider errors
+  const suberror = tryParse(json?.error?.metadata?.raw)
+  const providerError =
+    suberror?.detail || suberror?.message || suberror?.error?.message || json?.error?.metadata?.raw
+
+  // Generic errors
+  const msg = json?.error?.message || json?.message
+
+  if (!providerError && !msg) {
+    return
+  }
+
+  const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
+
+  return { message: finalMsg }
+}
+
 function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   const choice = json?.choices?.[0]
   const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
@@ -458,5 +500,14 @@ function tryParse(value: any) {
     return obj
   } catch (ex) {
     return {}
+  }
+}
+
+function tryStrictParse(value: any) {
+  try {
+    const obj = JSON.parse(value)
+    return obj
+  } catch (ex) {
+    return
   }
 }

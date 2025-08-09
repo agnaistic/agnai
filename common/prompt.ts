@@ -720,7 +720,8 @@ export async function getLinesForPrompt(
   const filtered = messages.filter((msg) => {
     if (!msg.invisible && !opts.chat.invisible) return true
 
-    if (msg.invisible) {
+    // If there are no keys, fallback to the chat defaults
+    if (msg.invisible && Object.keys(msg.invisible).length > 0) {
       if (msg.invisible[opts.replyAs._id]) return false
       return true
     }

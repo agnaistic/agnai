@@ -87,21 +87,24 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             hide={props.state.presetMode === 'simple'}
           />
 
-          <Accordian title="Reasoning" titleClickOpen class="flex flex-col gap-1" open={false}>
-            <div class="flex w-full justify-between font-bold">
-              <div>Enabled</div>
-              <Toggle
-                value={props.state.reasoning?.enabled ?? false}
-                onChange={(ev) =>
-                  props.setters.setState('reasoning', { ...props.state.reasoning, enabled: ev })
-                }
-              />
-            </div>
-
-            <div
-              class="flex flex-col gap-1"
-              classList={{ hidden: !props.state.reasoning?.enabled }}
-            >
+          <Accordian
+            title={
+              <div class="flex justify-between">
+                <div>Reasoning</div>
+                <div>
+                  <Toggle
+                    value={props.state.reasoning?.enabled ?? false}
+                    onChange={(ev) =>
+                      props.setters.setState('reasoning', { ...props.state.reasoning, enabled: ev })
+                    }
+                  />
+                </div>
+              </div>
+            }
+            class="flex flex-col gap-1"
+            open={false}
+          >
+            <div class="flex flex-col gap-1">
               <FormLabel
                 label="Reasoning Effort"
                 helperText="Typically the amount of your response length to use for reasoning"
