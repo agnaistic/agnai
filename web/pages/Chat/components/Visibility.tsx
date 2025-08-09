@@ -6,7 +6,7 @@ import { useParticipantList } from '../MemberModal'
 import { AppSchema } from '/common/types'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
-import { Pill, SolidCard } from '/web/shared/Card'
+import { Pill } from '/web/shared/Card'
 
 export const MessageVisibility: Component<{ ctx: ContextState; messageId: string }> = (props) => {
   const lists = useParticipantList()
