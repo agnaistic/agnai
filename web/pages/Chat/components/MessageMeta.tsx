@@ -116,7 +116,7 @@ export const MessageImagePrompt: Component<{
   return (
     <TextInput
       helperText={
-        <div class="flex items-center gap-1.5">
+        <div class="mb-0.5 flex items-center gap-1.5">
           Image Prompt -{' '}
           <Button
             size="pill"

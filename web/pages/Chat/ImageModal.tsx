@@ -2,6 +2,7 @@ import { Component, For, Match, Show, Switch, createEffect, createMemo, on } fro
 import Modal from '../../shared/Modal'
 import {
   ConfirmAction,
+  hydrateMessageImages,
   ImageButton,
   ImageSource,
   msgStore,
@@ -209,6 +210,10 @@ const ImageCollectionModal: Component<{
 
   const removeImage = async () => {
     await reel.removeImage(reel.state.imageId)
+
+    if (props.messageId) {
+      hydrateMessageImages(props.messageId)
+    }
   }
 
   const generateImage = async () => {

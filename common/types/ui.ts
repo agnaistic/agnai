@@ -53,6 +53,7 @@ export type MessageOption =
   | 'schema-regen'
   | 'attach'
   | 'visible'
+  | 'gen-image'
 
 export type UISettings = {
   theme: string
@@ -171,5 +172,6 @@ export const defaultUIsettings: UISettings = {
     trash: { outer: false, pos: 4 },
     'schema-regen': { outer: false, pos: 5 },
     visible: { outer: false, pos: 3.9 },
+    'gen-image': { outer: false, pos: 3.8 },
   },
 }
