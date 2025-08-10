@@ -230,7 +230,8 @@ export const presetStore = createStore<PresetState>(
         }
       }
     },
-    async getTemplates() {
+    async getTemplates({ templates }, useCache?: boolean) {
+      if (useCache && templates.length) return
       const res = await presetApi.getTemplates()
       if (res.result) {
         return { templates: res.result.templates }

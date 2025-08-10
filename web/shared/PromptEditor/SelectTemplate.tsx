@@ -209,7 +209,7 @@ export const SelectTemplate: Component<{
               parentClass="w-full"
             />
             <Button>
-              <RefreshCcw onClick={presetStore.getTemplates} />
+              <RefreshCcw onClick={() => presetStore.getTemplates()} />
             </Button>
           </div>
           <div class="h-min-[6rem]">

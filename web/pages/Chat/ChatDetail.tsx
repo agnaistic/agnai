@@ -13,7 +13,7 @@ import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
-import { characterStore, chatStore, settingStore, userStore } from '../../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
@@ -257,6 +257,7 @@ const ChatDetail: Component = () => {
         onDone: (success, chat) => {
           if (success && chat) {
             loadPreset(chat)
+            presetStore.getTemplates(true)
             return
           }
 

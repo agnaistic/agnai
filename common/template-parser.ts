@@ -19,6 +19,7 @@ type InternalState = {
   is_final?: boolean
   messages: Array<{ role: ChatRole; content: string }>
   hint_seen?: boolean
+  iterate_char?: AppSchema.Character
 }
 
 export type TemplateOpts = {
@@ -789,6 +790,12 @@ function renderIterator(
 
   let idx = 0
   for (const entity of entities) {
+    if (holder === 'bots') {
+      flags.iterate_char = entity as any
+    } else {
+      flags.iterate_char = undefined
+    }
+
     idx++
     let curr = ''
     for (const child of children) {
@@ -830,7 +837,13 @@ function renderIterator(
         }
       }
     }
-    if (curr) output.push(curr)
+    if (curr.trim()) {
+      const subAst = parser.parse(curr)
+      const rendered = renderNodes(subAst, opts, flags)
+      output.push(rendered)
+    }
+
+    flags.iterate_char = undefined
   }
 
   if (isHistory && opts.limit?.output) {
@@ -914,7 +927,7 @@ function getPlaceholder(
       return conditionText || ''
 
     case 'char':
-      return ((opts.replyAs || opts.char)?.name || '').trim()
+      return ((flags.iterate_char || opts.replyAs || opts.char)?.name || '').trim()
 
     case 'user':
       return (opts.impersonate?.name || opts.sender?.handle || 'You').trim()
