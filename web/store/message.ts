@@ -125,20 +125,13 @@ export async function getMessageImages(messageId: string) {
   return cached as string[]
 }
 
-export async function deleteCachedMessageImage(messageId: string, cacheId: string) {
-  await storage.removeItem(cacheId)
-  const ids = await getMessageImages(messageId)
-  const filtered = ids.filter((i) => i !== cacheId)
-
-  await storage.setItem(`message-images-${messageId}`, JSON.stringify(filtered))
-
-  console.log(`[cache] image deleted: `, cacheId)
-}
-
 async function addMessageImage(messageId: string, cacheId: string) {
   const prev = await getMessageImages(messageId)
   if (prev.includes(cacheId)) return
-  await storage.setItem(`message-images-${messageId}`, JSON.stringify(prev.concat(cacheId)))
+
+  const next = prev.concat(cacheId)
+  await storage.setItem(`message-images-${messageId}`, JSON.stringify(next))
+  await hydrateMessageImages(messageId)
 }
 
 export const msgStore = createStore<MsgState>(
@@ -300,13 +293,8 @@ export const msgStore = createStore<MsgState>(
 
       if (res.result) {
         const next = { ...prev, ...update, voiceUrl: undefined }
-        const nextMsgs = replace(msgId, msgs, next)
-        const tree = updateChatTreeNode(graph.tree, next)
+        updateMessageInState(msgId, next)
 
-        yield {
-          msgs: nextMsgs,
-          graph: { ...graph, tree },
-        }
         onSuccess?.()
       }
     },
@@ -336,20 +324,16 @@ export const msgStore = createStore<MsgState>(
             return
           }
 
-          const msg = extras.shift()
-          msgStore.editMessageProp(msgId, { msg, extras })
+          msgStore.editMessageProp(msgId, { msg: extras[0], extras: extras.slice(1) })
           return
         }
 
-        extras.splice(position - 1, 1)
-        msgStore.editMessageProp(msgId, { extras })
+        msgStore.editMessageProp(msgId, { extras: extras.toSpliced(position - 1, 1) })
         return
       }
 
       // non-image messages only have images in `.extras`
-      extras.splice(position, 1)
-
-      msgStore.editMessageProp(msgId, { extras })
+      msgStore.editMessageProp(msgId, { extras: extras.toSpliced(position, 1) })
       return
     },
 
@@ -1669,3 +1653,40 @@ subscribe('horde-status', { status: 'any' }, (body) => {
   if (!waiting?.image) return
   msgStore.setState({ hordeStatus: body.status })
 })
+
+export async function hydrateMessageImages(messageId: string) {
+  if (!messageId) return
+  const { msgs } = msgStore.getState()
+  const curr = findOne(messageId, msgs)
+  if (!curr) return
+
+  const cached = await getMessageImages(messageId)
+  const next: string[] = cached
+  updateMessageInState(messageId, { extras: next })
+
+  // Case 1. Initial load or first image
+  // if (!curr.extras?.length) {
+  //   next.push(...cached)
+  // }
+
+  // Case 2.
+}
+
+function updateMessageInState(messageId: string, updates: Partial<AppSchema.ChatMessage>) {
+  const { msgs, messageHistory, graph } = msgStore.getState()
+
+  const main = findOne(messageId, msgs)
+  const hist = findOne(messageId, messageHistory)
+
+  if (!main && !hist) return
+
+  const nextMsg = main ? { ...main, ...updates } : { ...hist!, ...updates }
+  const next = replace(messageId, main ? msgs : messageHistory, nextMsg)
+  const nextGraph = updateChatTreeNode(graph.tree, nextMsg)
+
+  if (main) {
+    msgStore.setState({ msgs: next, graph: { tree: nextGraph, root: graph.root } })
+  } else {
+    msgStore.setState({ messageHistory: next, graph: { tree: nextGraph, root: graph.root } })
+  }
+}

@@ -1,8 +1,8 @@
-import { Component, createEffect, createSignal, For, on, onMount, Setter, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, on, onMount, Show } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { ImageButton, settingStore } from '/web/store/settings'
-import { getMessageImages, msgStore } from '/web/store/message'
+import { hydrateMessageImages, msgStore } from '/web/store/message'
 import { Pencil, PlusCircle, X } from 'lucide-solid'
 import { MessageImagePrompt } from './MessageMeta'
 import Button from '/web/shared/Button'
@@ -19,15 +19,30 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   const [images, setImages] = createSignal<MessageImage[]>([])
   const [showPrompt, setShowPrompt] = createSignal(false)
 
-  const reloadImages = () => {
-    loadImages(props.msg, (imgs) => {
-      setImages(imgs)
-    })
-  }
+  createEffect(
+    on(
+      () => props.msg.extras,
+      async (extras) => {
+        const next: MessageImage[] = []
 
-  createEffect(on(() => props.msg.extras, reloadImages))
+        let index = 0
+        for (const img of extras || []) {
+          const src = img.startsWith('cache:') ? await storage.getItem(img) : img
+          if (!src) {
+            index++
+            continue
+          }
 
-  onMount(reloadImages)
+          const btn = toImageDeleteButton(props.msg._id, ++index)
+          next.push({ src, btn })
+        }
+
+        setImages(next)
+      }
+    )
+  )
+
+  onMount(() => hydrateMessageImages(props.msg._id))
 
   return (
     <>
@@ -70,7 +85,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
             </div>
 
             <div
-              class="icon-button m"
+              class="icon-button"
               onClick={() => {
                 setShowPrompt(true)
                 // props.onEditClick()
@@ -83,58 +98,6 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
       </div>
     </>
   )
-}
-
-async function loadImages(msg: AppSchema.ChatMessage, setter: Setter<MessageImage[]>) {
-  if (!msg._id) return
-
-  const next: MessageImage[] = []
-  const extras = (msg.extras || []).slice()
-  const cached = await getMessageImages(msg._id)
-  const seen = new Set<string>()
-
-  if (msg.adapter === 'image' && (msg.msg.startsWith('http') || msg.msg.startsWith('cache:'))) {
-    const btn = toImageDeleteButton(msg._id, 0)
-    next.push({ src: msg.msg, btn })
-  }
-
-  for (const extra of cached) {
-    if (typeof extra !== 'string') continue
-
-    if (extra.startsWith('cache:')) {
-      if (seen.has(extra)) continue
-      seen.add(extra)
-
-      const img = await storage.getItem(extra)
-      if (img) next.push({ src: img })
-      continue
-    }
-
-    if (extra.includes('data:image')) {
-      next.push({ src: extra })
-      continue
-    }
-  }
-
-  let position = msg.adapter === 'image' ? 1 : 0
-  for (const extra of extras) {
-    const btn = toImageDeleteButton(msg._id, position)
-    if (extra.startsWith('cache:')) {
-      if (seen.has(extra)) continue
-      seen.add(extra)
-      const img = await storage.getItem(extra)
-      if (img) next.push({ src: img, btn })
-
-      position++
-      continue
-    }
-
-    next.push({ src: extra, btn })
-    position++
-    continue
-  }
-
-  setter(next)
 }
 
 function toImageDeleteButton(msgId: string, position: number) {

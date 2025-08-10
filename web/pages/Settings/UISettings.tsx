@@ -29,6 +29,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   attach: 'Attach',
   'schema-regen': 'Retry Schema',
   visible: 'Visibility',
+  'gen-image': ' Gen Image',
 }
 
 const UISettings: Component<{}> = () => {

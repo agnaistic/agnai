@@ -682,9 +682,9 @@ const MessageOptions: Component<{
 }> = (props) => {
   let menuParent: any
 
-  const closer = (action: () => void) => {
+  const closer = (action: (msg: AppSchema.ChatMessage) => void) => {
     return () => {
-      action()
+      action(props.msg)
       props.showMore[1](false)
     }
   }
@@ -699,7 +699,7 @@ const MessageOptions: Component<{
         outer: { outer: boolean; pos: number }
         label: string
         class: string
-        onClick: () => void
+        onClick: (self: AppSchema.ChatMessage) => void
         show: boolean
         schema?: ButtonSchema
         icon: (props: LucideProps) => JSX.Element
@@ -797,6 +797,16 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
+      },
+
+      'gen-image': {
+        key: 'gen-image',
+        label: 'Gen Image',
+        show: true,
+        outer: props.ui.msgOptsInline['gen-image'],
+        onClick: (msg) => msgStore.createImage({ sourceMsgId: msg._id }),
+        icon: ImagePlus,
+        class: '',
       },
     }
 

@@ -144,7 +144,6 @@ const CompatModel: Selector = (props) => {
   const [customId, setCustomId] = createSignal('')
 
   const modelList = createMemo(() => {
-    console.log(`[compat:ml] ${props.setters.models.list}`)
     const list = props.setters.models.list.map((value) => ({ label: value, value }))
 
     return [{ label: 'None', value: '' }].concat(list)

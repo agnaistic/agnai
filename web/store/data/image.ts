@@ -89,6 +89,14 @@ export async function generateImage(
   callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
 ) {
   const entities = await getPromptEntities()
+
+  if (opts.messageId) {
+    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
+    if (index >= 0) {
+      entities.messages = entities.messages.slice(0, index + 1)
+    }
+  }
+
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
     : await createSummarizedImagePrompt({
