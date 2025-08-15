@@ -1,8 +1,12 @@
 import { AppSchema } from './types'
 
-export function extractReasoning(content: string, tags?: AppSchema.UserGenPreset['reasoning']) {
-  const open = tags?.start || '<think>'
-  const close = tags?.end || '</think>'
+export function extractReasoning(
+  content: string,
+  opts?: { tags?: AppSchema.UserGenPreset['reasoning']; display?: 'all' | 'post' | 'pre' }
+) {
+  const display = opts?.display || 'all'
+  const open = opts?.tags?.start || '<think>'
+  const close = opts?.tags?.end || '</think>'
 
   if (!open || !close) return { thoughts: [], content }
 
@@ -32,6 +36,7 @@ export function extractReasoning(content: string, tags?: AppSchema.UserGenPreset
     // Both present, but end comes before start
     if (start > -1 && end > -1 && start > end) {
       let pre = content.slice(0, end)
+
       let thought = content.slice(start + len.open)
       const nextEnd = thought.indexOf(close)
 
@@ -55,7 +60,22 @@ export function extractReasoning(content: string, tags?: AppSchema.UserGenPreset
       const post = content.slice(end + len.close)
       const thought = content.slice(start + len.open, end)
       thoughts.push(thought)
-      content = `${pre.trim()}\n${post.trim()}`
+
+      // Case 1. Only display pre-thought text
+      if (display === 'pre') {
+        return { content: pre, thoughts }
+      }
+
+      // Case 2. Only display post-thought text
+      if (display === 'post') {
+        content = post.trim()
+      }
+
+      // Case 3. Display all non-thought (pre and post) text
+      else {
+        content = `${pre.trim()}\n${post.trim()}`
+      }
+
       continue
     }
 

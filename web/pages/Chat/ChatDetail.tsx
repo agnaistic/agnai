@@ -1,14 +1,5 @@
 import './chat-detail.css'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  Index,
-  onCleanup,
-  Show,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
@@ -119,16 +110,69 @@ const ChatDetail: Component = () => {
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
+  const waitingMsg = createMemo(() => {
+    if (!msgs.waiting) return
+    if (msgs.retrying) return
+
+    const userId = msgs.waiting.userId
+    const charId = msgs.waiting.characterId
+    const profile =
+      user.profile?.userId === userId || !userId
+        ? user.profile
+        : chats.members.find((ch) => ch.userId === userId)
+    const char = charId ? ctx.allBots[charId] : undefined
+
+    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
+
+    const waitingMsgs = {
+      input: null as AppSchema.ChatMessage | null,
+      response: null as AppSchema.ChatMessage | null,
+    }
+
+    if (msgs.waiting.input) {
+      waitingMsgs.input = emptyMsg({
+        id: 'partial-input',
+        charId: ctx.impersonate?._id,
+        userId: user.user?._id,
+        message: msgs.waiting.input || '',
+        handle: ctx.impersonate?.name || profile?.handle || 'You',
+      })
+    }
+
+    waitingMsgs.response = emptyMsg({
+      id: 'partial-response',
+      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
+      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+      message: msgs.partial || '',
+      adapter: 'partial-response',
+      handle: handle || 'You',
+    })
+
+    return waitingMsgs
+  })
+
   const chatMsgs = createMemo(() => {
     if (!chats.chat || !chats.char) return []
 
     const doShowHiddenEvents = showHiddenEvents()
 
-    return msgs.msgs.filter((msg) => {
+    const filtered = msgs.msgs.filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
     })
+
+    const waiting = waitingMsg()
+
+    if (waiting?.input) {
+      filtered.push(waiting.input)
+    }
+
+    if (waiting?.response) {
+      filtered.push(waiting.response)
+    }
+
+    return filtered
   })
 
   onCleanup(() => {
@@ -167,49 +211,6 @@ const ChatDetail: Component = () => {
   })
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
-
-  const waitingMsg = createMemo(() => {
-    if (!msgs.waiting) return
-    if (msgs.retrying) return
-    if (msgs.waiting.image) return
-
-    const userId = msgs.waiting.userId
-    const charId = msgs.waiting.characterId
-    const profile =
-      user.profile?.userId === userId || !userId
-        ? user.profile
-        : chats.members.find((ch) => ch.userId === userId)
-    const char = charId ? ctx.allBots[charId] : undefined
-
-    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
-
-    const waitingMsgs: AppSchema.ChatMessage[] = []
-
-    if (msgs.waiting.input) {
-      waitingMsgs.push(
-        emptyMsg({
-          id: 'partial-input',
-          charId: ctx.impersonate?._id,
-          userId: user.user?._id,
-          message: msgs.waiting.input || '',
-          handle: ctx.impersonate?.name || profile?.handle || 'You',
-        })
-      )
-    }
-
-    waitingMsgs.push(
-      emptyMsg({
-        id: 'partial-response',
-        charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
-        userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
-        message: msgs.partial || '',
-        adapter: 'partial-response',
-        handle: handle || 'You',
-      })
-    )
-
-    return waitingMsgs
-  })
 
   const clearModal = () => {
     chatStore.option({ options: false, modal: 'none' })
@@ -491,6 +492,8 @@ const ChatDetail: Component = () => {
                     tts={tts()}
                     retrying={msgs.retrying}
                     partial={msgs.partial}
+                    characterId={msg().characterId}
+                    userId={msg().userId}
                     sendMessage={sendMessage}
                     isPaneOpen={pane.showing()}
                     textBeforeGenMore={msgs.textBeforeGenMore}
@@ -511,24 +514,6 @@ const ChatDetail: Component = () => {
                 </>
               )}
             </Index>
-            <Show when={waitingMsg()?.length}>
-              <For each={waitingMsg()}>
-                {(msg) => (
-                  <Message
-                    index={-1}
-                    messageId={msg._id}
-                    content={msg.msg}
-                    characterId={msg.characterId}
-                    userId={msg.userId}
-                    onRemove={() => {}}
-                    editing={false}
-                    sendMessage={sendMessage}
-                    isPaneOpen={pane.showing()}
-                    partial={msg._id === 'partial-response' ? msg.msg : ''}
-                  />
-                )}
-              </For>
-            </Show>
           </div>
         </section>
       </ModeDetail>

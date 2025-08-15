@@ -754,18 +754,26 @@ function renderCondition(
 function getEntities(holder: IterableHolder, opts: TemplateOpts) {
   switch (holder) {
     case 'bots':
-      return Object.values(opts.characters || {}).filter((b) => {
-        if (!b) return false
-        if (b._id === (opts.replyAs || opts.char)?._id) return false
-        if (b.deletedAt) return false
+      const chars: AppSchema.Character[] = []
+
+      // Include the main character when the replying character _is not_ the main character
+      if (opts.replyAs && opts.char && opts.replyAs._id !== opts.char._id) {
+        chars.push(opts.char)
+      }
+
+      for (const char of Object.values(opts.characters || {})) {
+        if (!char) continue
+        if (char._id === (opts.replyAs || opts.char)?._id) continue
+        if (char.deletedAt) continue
 
         // Exclude temp characters that have been disabled/removed
-        if (b._id.startsWith('temp-') && b.favorite === false) return false
+        if (char._id.startsWith('temp-') && char.favorite === false) continue
 
         // Exclude non-temp characters that have been removed from the chat
-        if (!b._id.startsWith('temp-') && !opts.chat?.characters?.[b._id]) return false
-        return true
-      })
+        if (!char._id.startsWith('temp-') && !opts.chat?.characters?.[char._id]) continue
+        chars.push(char)
+      }
+      return chars
     case 'chat_embed':
       return opts.parts?.chatEmbeds || []
     case 'history':

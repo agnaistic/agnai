@@ -28,9 +28,11 @@ export const PresetProvider: Component<{
   const [openLegacy, setOpenLegacy] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.Provider>()
 
-  const showEdit = createMemo(
-    () => !!props.state.providerId && props.state.providerId !== 'agnaistic'
-  )
+  const showEdit = createMemo(() => {
+    if (props.state.providerId === 'agnaistic') return false
+    if (!props.state.providerId && props.state.service === 'agnaistic') return false
+    return true
+  })
 
   const selectedProvider = createMemo(() => {
     if (!props.state.providerId || props.state.providerId === 'agnaistic') return
@@ -198,7 +200,7 @@ export const PresetProvider: Component<{
           }
         >
           <Show when={props.page === 'mode'}>
-            <Show when={props.state.providerId === ''}>
+            <Show when={props.state.providerId === '' && props.state.service !== 'agnaistic'}>
               <Button size="sm" onClick={editLegacy}>
                 <WifiPen size={16} />
                 Edit

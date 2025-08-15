@@ -12,10 +12,12 @@ import {
 } from 'lucide-solid'
 import {
   Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
   Match,
+  on,
   onCleanup,
   Setter,
   Show,
@@ -232,6 +234,13 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
+  createEffect(
+    on(
+      () => props.chat._id,
+      (id) => promptStore.loadHint(id)
+    )
+  )
+
   const onFile = async (files: FileInputResult[]) => {
     setDragging(false)
     setMenu(false)
@@ -272,12 +281,17 @@ const InputBar: Component<{
               parentClass="!p-0.5 text-sm flex flex-1"
               placeholder="Response hint... 🗭"
               value={prompt.hint}
-              onChange={(ev) => promptStore.hint(ev.currentTarget.value)}
+              onChange={(ev) =>
+                promptStore.hint({ chatId: props.chat._id, text: ev.currentTarget.value })
+              }
               isMultiline
               class="max-h-[80px]"
               growup
             />
-            <div class="icon-button flex w-fit items-center" onClick={() => promptStore.hint('')}>
+            <div
+              class="icon-button flex w-fit items-center"
+              onClick={() => promptStore.hint({ chatId: props.chat._id, text: '' })}
+            >
               <X size={20} />
             </div>
           </div>

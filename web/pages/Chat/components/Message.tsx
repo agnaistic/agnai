@@ -243,7 +243,7 @@ const Message: Component<MessageProps> = (props) => {
   })
 
   const imageSpeed = createMemo(() => {
-    const next = ctx.waiting?.image ?? 1
+    const next = ctx.imgWaiting?.pos ?? 1
     return next
   })
 
@@ -541,7 +541,7 @@ const Message: Component<MessageProps> = (props) => {
                     <Reasoning expanded={ctx.ui.expandReasoning} thoughts={content().thoughts} />
                   </Show>
                   <Show
-                    when={props.last && +ctx.ui.textSpeed! > 0}
+                    when={(content().generating || props.last) && +ctx.ui.textSpeed! > 0}
                     fallback={
                       <p
                         class={`rendered-markdown pr-1 ${content().class}`}
@@ -563,7 +563,7 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
                   </Show>
-                  <Show when={ctx.waiting?.image && ctx.waiting.messageId === msg()._id}>
+                  <Show when={ctx.imgWaiting?.pos && ctx.imgWaiting.messageId === msg()._id}>
                     <div class="flex w-full justify-center">
                       <RelativeSpinner speed={imageSpeed()} />{' '}
                       <span
@@ -914,14 +914,14 @@ export const Typewriter: Component<{
   generating?: boolean
   reset?: ComponentEmitter<'reset'>
 }> = (props) => {
-  const [text, setText] = createSignal('')
+  const [length, setLength] = createSignal(0)
   const [getTimer, setTimer] = createSignal<{ timer: NodeJS.Timeout; speed: number }>()
 
-  const callback = () => setText('')
+  const callback = () => setLength(0)
 
   const markup = createMemo(() => {
-    const curr = text()
-    return markdown.makeHtml(curr)
+    const curr = length()
+    return markdown.makeHtml(props.text.slice(0, curr))
   })
 
   const startTimer = () => {
@@ -936,16 +936,15 @@ export const Typewriter: Component<{
     }
 
     const timer = setInterval(() => {
-      const prev = text()
-      if (prev === props.text) return
+      const prev = length()
+      if (prev === props.text.length) return
 
       if (setting <= 0) {
-        setText(props.text)
+        setLength(prev + 1)
         return
       }
 
-      const next = props.text.slice(0, prev.length + 1)
-      setText(next)
+      setLength(prev + 1)
     }, speed)
     setTimer({ timer, speed: setting })
   }
@@ -963,7 +962,7 @@ export const Typewriter: Component<{
 
     // Case 1. Generating is always `false`: The message was fetched from history rather than generated
     if (!props.generating) {
-      setText(props.text)
+      setLength(props.text.length)
       return
     }
 
@@ -986,11 +985,13 @@ export const Typewriter: Component<{
   })
 
   return (
-    <p
-      class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
-      data-partial
-      innerHTML={markup()}
-    />
+    <>
+      <p
+        class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
+        data-partial
+        innerHTML={markup()}
+      />
+    </>
   )
 }
 
@@ -1146,10 +1147,9 @@ function getMessageContent(
   const isPartial = msg._id === 'partial-response'
 
   if (isRetry || isPartial) {
-    const { thoughts, content } = extractReasoning(
-      props.partial ? props.partial : msg.msg,
-      ctx.preset?.reasoning
-    )
+    const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
+      tags: ctx.preset?.reasoning,
+    })
     if (props.partial) {
       return {
         type: 'partial' as const,
@@ -1179,7 +1179,7 @@ function getMessageContent(
     }
   }
 
-  const { thoughts, content } = extractReasoning(msg.msg, ctx.preset?.reasoning)
+  const { thoughts, content } = extractReasoning(msg.msg, { tags: ctx.preset?.reasoning })
   let message = content
 
   if (props.last && props.swipe) message = props.swipe

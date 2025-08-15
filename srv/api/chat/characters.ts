@@ -82,7 +82,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       systemPrompt: 'string?',
       postHistoryInstructions: 'string?',
       alternateGreetings: 'any?',
-      characterBook: 'string?',
+      characterBook: 'any?',
       visualType: 'string?',
       sprite: 'any?',
       culture: 'string?',
@@ -121,7 +121,12 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     postHistoryInstructions: body.postHistoryInstructions,
     systemPrompt: body.systemPrompt,
     alternateGreetings: body.alternateGreetings ? toArray(body.alternateGreetings) : undefined,
-    characterBook: body.characterBook ? JSON.parse(body.characterBook) : undefined,
+    characterBook:
+      typeof body.characterBook === 'string'
+        ? JSON.parse(body.characterBook)
+        : typeof body.characterBook === 'object'
+        ? body.characterBook
+        : undefined,
     visualType: body.visualType,
     sprite: body.sprite,
     culture: body.culture,

@@ -56,6 +56,7 @@ export type ContextState = {
   promptHistory: any
   chatTree: ChatTree
   waiting?: MsgState['waiting']
+  imgWaiting?: MsgState['imgWaiting']
   status?: MsgState['hordeStatus']
   attachments: MsgState['attachments']
   canUseAttachments: boolean
@@ -209,6 +210,7 @@ export function ContextProvider(props: { children: any }) {
       promptHistory: chats.promptHistory,
       chatTree: msgs.graph.tree,
       waiting: msgs.waiting,
+      imgWaiting: msgs.imgWaiting,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,
       canUseAttachments: canAttachImage(detail?.conn, subModel()),

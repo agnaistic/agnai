@@ -98,7 +98,7 @@ const Select: Component<{
                   value={item.value}
                   selected={props.value === item.value}
                 >
-                  {item.label}
+                  {item.label ?? item.value}
                 </option>
               )}
             </For>

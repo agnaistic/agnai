@@ -9,6 +9,7 @@ import { getUserSubscriptionTier } from '/common/util'
 import { getCachedTiers } from '../db/subscriptions'
 import { config } from '../config'
 import { fixImagePrompt } from '/common/image-prompt'
+import { decryptText } from '../db/util'
 
 const defaultSettings: SDSettings = {
   type: 'sd',
@@ -106,7 +107,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     const providerId = settings?.sd.providerId || user.images?.sd.providerId
     const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : null
     if (provider?.key) {
-      headers.Authorization = `Bearer ${provider.key}`
+      headers.Authorization = `Bearer ${decryptText(provider.key, true)}`
     }
 
     return { kind: 'user', host: userHost, headers }

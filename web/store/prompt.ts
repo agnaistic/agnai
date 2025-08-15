@@ -3,6 +3,7 @@ import { createStore } from './create'
 
 export type PromptState = {
   hintsEnabled: boolean
+  hintId: string
   hint: string
   imageHint: string
 }
@@ -16,6 +17,7 @@ const KEYS = {
 export const promptStore = createStore<PromptState>(
   'prompt',
   {
+    hintId: '',
     hint: storage.localGetItem(KEYS.LAST_HINT) || '',
     hintsEnabled: storage.localGetItem(KEYS.HINTS_ENABLED) === 'true',
 
@@ -28,9 +30,24 @@ export const promptStore = createStore<PromptState>(
       storage.localSetItem(KEYS.HINTS_ENABLED, JSON.stringify(next))
       return { hintsEnabled: next }
     },
-    hint: (_, text: string) => {
-      storage.localSetItem(KEYS.LAST_HINT, text)
-      return { hint: (text || '').trim() }
+    loadHint: (_, chatId: string) => {
+      const hint = storage.localGetItem(hintKey(chatId)) || ''
+      if (hint) {
+        return { hintId: chatId, hint }
+      }
+
+      const legacy = storage.localGetItem(KEYS.LAST_HINT)
+      if (!legacy) {
+        return { hintId: chatId, hint: '' }
+      }
+
+      storage.localRemoveItem(KEYS.LAST_HINT)
+      storage.localSetItem(hintKey(chatId), legacy)
+      return { hintId: chatId, hint: legacy }
+    },
+    hint: (_, opts: { chatId: string; text: string }) => {
+      storage.localSetItem(hintKey(opts.chatId), opts.text)
+      return { hintId: opts.chatId, hint: opts.text }
     },
     imageHint: (_, text: string) => {
       storage.localSetItem(KEYS.LAST_IMAGE_HINT, text)
@@ -38,3 +55,7 @@ export const promptStore = createStore<PromptState>(
     },
   }
 })
+
+function hintKey(chatId: string) {
+  return `${KEYS.LAST_HINT}_${chatId}`
+}

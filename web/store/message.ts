@@ -3,7 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { createDebounce, getAssetUrl, storage } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
-import { subscribe } from './socket'
+import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { msgsApi } from './data/messages'
 import { imageApi } from './data/image'
@@ -56,6 +56,7 @@ export type MsgState = {
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: {
+    started: number
     signal?: AbortController
     chatId: string
     mode?: GenerateOpts['kind']
@@ -63,8 +64,16 @@ export type MsgState = {
     userId?: string
     characterId: string
     messageId?: string
-    image?: number
   }
+
+  imgWaiting?: {
+    chatId: string
+    characterId?: string
+    messageId?: string
+    signal: AbortController
+    pos: number
+  }
+
   nextLoading: boolean
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
@@ -449,6 +458,7 @@ export const msgStore = createStore<MsgState>(
           chatId,
           mode: 'continue',
           characterId: replace.characterId!,
+          started: Date.now(),
         },
         retrying: replace,
       }
@@ -485,7 +495,10 @@ export const msgStore = createStore<MsgState>(
       }
 
       const signal = new AbortController()
-      yield { partial: undefined, waiting: { signal, chatId, mode: 'request', characterId } }
+      yield {
+        partial: undefined,
+        waiting: { signal, chatId, mode: 'request', characterId, started: Date.now() },
+      }
 
       const res = await botGen
         .generate({ signal, kind: 'request', characterId })
@@ -534,7 +547,7 @@ export const msgStore = createStore<MsgState>(
       const signal = new AbortController()
       yield {
         partial: '',
-        waiting: { signal, chatId: opts.chatId, mode: 'retry', characterId },
+        waiting: { signal, chatId: opts.chatId, mode: 'retry', characterId, started: Date.now() },
         retrying: replace,
       }
 
@@ -573,7 +586,7 @@ export const msgStore = createStore<MsgState>(
       const signal = new AbortController()
       yield {
         partial: '',
-        waiting: { signal, chatId, mode: 'retry', characterId },
+        waiting: { signal, chatId, mode: 'retry', characterId, started: Date.now() },
         retrying: replace,
       }
 
@@ -668,7 +681,13 @@ export const msgStore = createStore<MsgState>(
 
       yield {
         partial: '',
-        waiting: { signal, chatId: opts.chatId, mode: opts.mode, characterId: replyingCharId },
+        waiting: {
+          signal,
+          chatId: opts.chatId,
+          mode: opts.mode,
+          characterId: replyingCharId,
+          started: Date.now(),
+        },
       }
       let input = ''
 
@@ -704,6 +723,7 @@ export const msgStore = createStore<MsgState>(
                 mode: opts.mode,
                 characterId: replyingCharId,
                 input,
+                started: Date.now(),
               },
             }
           }
@@ -741,6 +761,7 @@ export const msgStore = createStore<MsgState>(
             characterId: replyingCharId,
             messageId: res.result.messageId,
             input,
+            started: Date.now(),
           },
         }
       }
@@ -856,8 +877,8 @@ export const msgStore = createStore<MsgState>(
           chatId: activeChatId,
           mode: 'send',
           characterId: activeCharId,
-          image: 1,
           messageId,
+          started: Date.now(),
         },
       }
 
@@ -877,22 +898,22 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *createImage(
-      { msgs, activeChatId, activeCharId, waiting },
+      { msgs, activeChatId, activeCharId, imgWaiting },
       opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler }
     ) {
-      if (waiting) return
+      if (imgWaiting) return
 
       const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
 
       yield {
         hordeStatus: undefined,
-        waiting: {
+        imgWaiting: {
           chatId: activeChatId,
-          mode: 'send',
           characterId: activeCharId,
-          image: 1,
+          pos: 1,
           messageId,
+          signal: new AbortController(),
         },
       }
 
@@ -905,34 +926,54 @@ export const msgStore = createStore<MsgState>(
         },
         {
           onDone: () => {
-            const { waiting } = msgStore.getState()
-            const next = (waiting?.image || 1) + 1
-            msgStore.setState({ waiting: { ...waiting!, image: next } })
+            const { imgWaiting } = msgStore.getState()
+            const next = (imgWaiting?.pos || 1) + 1
+            msgStore.setState({ imgWaiting: { ...imgWaiting!, pos: next } })
           },
           onTick: opts.onTick,
         }
       )
       if (res.error) {
         console.log('[wait] create-img err')
-        yield { waiting: undefined }
+        yield { imgWaiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
       }
     },
   }
 })
 
-// setInterval(() => {
-//   const { waiting, retrying, graph } = msgStore.getState()
-//   const id = waiting?.messageId || retrying?._id
-//   if (!id) return
-//   if (!retrying && graph.tree[id]) return
-
-//   publish({ type: 'message-ready', messageId: id, updatedAt: retrying?.updatedAt })
-// }, 4000)
-
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)
 }, 500)
+
+let msgCheckPoll: NodeJS.Timeout | null = null
+
+function startMessageChecking() {
+  if (msgCheckPoll) return
+
+  msgCheckPoll = setInterval(checkForMessage, 4000)
+}
+
+function stopMessageChecking() {
+  if (!msgCheckPoll) return
+  clearInterval(msgCheckPoll)
+  msgCheckPoll = null
+}
+
+function checkForMessage() {
+  const { waiting, retrying, graph } = msgStore.getState()
+  if (!waiting) return
+
+  const id = waiting.messageId || retrying?._id
+  if (!id) return
+  if (!retrying && graph.tree[id]) return
+
+  publish({
+    type: 'message-ready',
+    messageId: id,
+    updatedAt: new Date(waiting.started).toISOString(),
+  })
+}
 
 msgStore.subscribe((state) => {
   if (state.partial) return
@@ -1016,7 +1057,7 @@ async function handleImage(body: {
     console.log('[wait] handle-img')
     msgStore.setState({
       msgs: nextMsgs,
-      waiting: undefined,
+      imgWaiting: undefined,
     })
   }
 }
@@ -1567,7 +1608,13 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
   msgStore.setState({
     partial: '',
     retrying: replace,
-    waiting: { signal: waiting?.signal, chatId: body.chatId, mode: 'retry', characterId: '' },
+    waiting: {
+      signal: waiting?.signal,
+      chatId: body.chatId,
+      mode: 'retry',
+      characterId: '',
+      started: Date.now(),
+    },
     lastInference: undefined,
   })
 })
@@ -1586,6 +1633,7 @@ subscribe(
         mode: body.mode as any,
         userId: body.senderId,
         characterId: body.characterId,
+        started: Date.now(),
       },
       partial: '',
       lastInference: undefined,
@@ -1648,9 +1696,9 @@ subscribe(
 )
 
 subscribe('horde-status', { status: 'any' }, (body) => {
-  const waiting = msgStore.getState().waiting
+  const waiting = msgStore.getState().imgWaiting
 
-  if (!waiting?.image) return
+  if (!waiting?.pos) return
   msgStore.setState({ hordeStatus: body.status })
 })
 

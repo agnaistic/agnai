@@ -15,6 +15,7 @@ import { Save, X } from 'lucide-solid'
 import { Card } from '/web/shared/Card'
 import Sortable, { SortItem } from '/web/shared/Sortable'
 import { defaultUIsettings } from '/common/types/ui'
+import { neat } from '/common/util'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -200,6 +201,19 @@ const UISettings: Component<{}> = () => {
         onChange={(next) => userStore.saveUI({ expandReasoning: next })}
       />
 
+      <Select
+        items={[
+          { value: '', label: 'Default (All)' },
+          { value: 'all', label: 'All' },
+          { value: 'post', label: 'After Thought' },
+          { value: 'pre', label: 'Before Thought' },
+        ]}
+        label="Display Thoughts"
+        helperMarkdown={neat`When thoughts are in the middle of a response, which thoughts should be kept`}
+        value={state.ui.displayReasoning}
+        onChange={(next) => userStore.saveUI({ displayReasoning: next.value as any })}
+      />
+
       <Toggle
         value={settings.anonymize}
         label="Anonymize Chat"
@@ -215,7 +229,7 @@ const UISettings: Component<{}> = () => {
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
 
-      <Card border>
+      <Card border class="!my-1 !px-2 !py-1">
         <div class="flex w-full flex-col">
           <div class="flex gap-1">
             <InlineRangeInput

@@ -84,6 +84,7 @@ export type UISettings = {
   logPromptsToBrowserConsole: boolean
   contextWindowLine: boolean
   expandReasoning?: boolean
+  displayReasoning?: 'all' | 'pre' | 'post'
 
   embeddingModel?: string
   captionModel?: string
