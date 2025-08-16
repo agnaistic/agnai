@@ -948,6 +948,8 @@ const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.Chat
 
 let msgCheckPoll: NodeJS.Timeout | null = null
 
+subscribe('')
+
 function startMessageChecking() {
   if (msgCheckPoll) return
 
@@ -975,7 +977,12 @@ function checkForMessage() {
   })
 }
 
-msgStore.subscribe((state) => {
+msgStore.subscribe((state, prev) => {
+  // When message-waiting ends, stop polling for a message update
+  if (!state.waiting && prev.waiting) {
+    stopMessageChecking()
+  }
+
   if (state.partial) return
   if (state.waiting) return
   if (!state.activeChatId) return
@@ -1638,6 +1645,8 @@ subscribe(
       partial: '',
       lastInference: undefined,
     })
+
+    startMessageChecking()
   }
 )
 

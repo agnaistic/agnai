@@ -208,8 +208,8 @@ const UISettings: Component<{}> = () => {
           { value: 'post', label: 'After Thought' },
           { value: 'pre', label: 'Before Thought' },
         ]}
-        label="Display Thoughts"
-        helperMarkdown={neat`When thoughts are in the middle of a response, which thoughts should be kept`}
+        label="Mid-Reasoning Behavior"
+        helperMarkdown={neat`When reasoning is in the middle of a response, which utterance (i.e., non-thought) should be kept`}
         value={state.ui.displayReasoning}
         onChange={(next) => userStore.saveUI({ displayReasoning: next.value as any })}
       />

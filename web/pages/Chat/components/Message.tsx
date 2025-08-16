@@ -1149,6 +1149,7 @@ function getMessageContent(
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
       tags: ctx.preset?.reasoning,
+      display: ctx.ui.displayReasoning,
     })
     if (props.partial) {
       return {
@@ -1179,7 +1180,10 @@ function getMessageContent(
     }
   }
 
-  const { thoughts, content } = extractReasoning(msg.msg, { tags: ctx.preset?.reasoning })
+  const { thoughts, content } = extractReasoning(msg.msg, {
+    tags: ctx.preset?.reasoning,
+    display: ctx.ui.displayReasoning,
+  })
   let message = content
 
   if (props.last && props.swipe) message = props.swipe
