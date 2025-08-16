@@ -1,5 +1,6 @@
 import {
   Component,
+  For,
   Match,
   Show,
   Switch,
@@ -15,20 +16,22 @@ import Select from '../../shared/Select'
 import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { chatStore, msgStore, presetStore, scenarioStore, toastStore, userStore } from '../../store'
-import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
-import { Image, Sparkles, Wand } from 'lucide-solid'
+import { Sparkles, Wand } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
 import { generateField, MinCharacter } from '../Character/generate-char'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { isDefaultPreset } from '/common/default-preset'
+import { FormLabel } from '/web/shared/FormLabel'
+import { useParticipantList } from './MemberModal'
+import { VisibilityToggle } from './components/Visibility'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -69,11 +72,15 @@ const ChatSettings: Component<{
 }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
   const [generating, setGenerating] = createSignal('')
+  const [flags, setFlags] = createSignal<Record<string, boolean>>({})
   const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
+
   const user = userStore()
   const presets = presetStore((s) => s.presets)
   const scenarioState = scenarioStore()
+
   const pane = usePane()
+  const lists = useParticipantList()
 
   const saveBackgroundImage = async (files: FileInputResult[]) => {
     if (!files?.length) return
@@ -108,12 +115,15 @@ const ChatSettings: Component<{
       () => [state.chat, state.char] as const,
       ([chat, char]) => {
         if (!chat || !char) return
+        setFlags(state.chat?.invisible ? { ...state.chat.invisible } : {})
         setEdit(getInitState(chat, char))
       }
     )
   )
 
-  onMount(() => scenarioStore.getAll())
+  onMount(() => {
+    scenarioStore.getAll()
+  })
 
   createEffect(() => {
     setEdit('scenarioId', state.chat?.scenarioIds?.[0] || '')
@@ -195,6 +205,14 @@ const ChatSettings: Component<{
     })
   }
 
+  const toggle = (charId: string) => {
+    const next = { ...flags() }
+    const flag = next[charId] === undefined ? true : !next[charId]
+    next[charId] = flag
+    setFlags(next)
+    chatStore.editChat(state.chat?._id!, { invisible: next }, { quiet: true })
+  }
+
   const onSave = () => {
     const payload = {
       name: edit.name,
@@ -211,10 +229,13 @@ const ChatSettings: Component<{
       scenarioIds: edit.scenarioId ? [edit.scenarioId] : [],
       scenarioStates: edit.scenarioStates,
     }
-    chatStore.editChat(state.chat?._id!, payload, edit.useOverrides, () => {
-      if (pane() !== 'pane') {
-        props.close()
-      }
+    chatStore.editChat(state.chat?._id!, payload, {
+      useOverrides: edit.useOverrides,
+      onSuccess: () => {
+        if (pane() !== 'pane') {
+          props.close()
+        }
+      },
     })
   }
 
@@ -222,7 +243,7 @@ const ChatSettings: Component<{
     const char = state.char
     if (!char) return
 
-    chatStore.editChat(state.chat?._id!, {}, false)
+    chatStore.editChat(state.chat?._id!, {})
   }
 
   const Footer = (
@@ -334,9 +355,9 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery('Generate a name for this conversation', (msg) =>
+                  msgStore.chatQuery('Generate a name for this conversation', (msg, state) => {
                     setEdit('name', msg)
-                  )
+                  })
                 }
               >
                 <Wand />
@@ -460,12 +481,36 @@ const ChatSettings: Component<{
       <Divider />
 
       <FormLabel
-        label="Image Generation Settings"
-        helperMarkdown="These settings will be used to for image generation if the `Image Source` is set `Chat`"
+        label="Default Message Visibility"
+        helperText="When the Message has not had visibility edited"
       />
-      <div class="flex gap-2">
-        Image Settings have moved: Click the <Image size={16} />
-        in the main menu
+
+      <div>
+        <p>
+          <b>Green - </b> Can see this message when replying
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <For each={lists().chars}>
+            {(char) => (
+              <VisibilityToggle
+                char={char}
+                invisible={!!flags()[char._id]}
+                onClick={() => toggle(char._id)}
+              />
+            )}
+          </For>
+
+          <For each={lists().tempsActive}>
+            {(char) => (
+              <VisibilityToggle
+                char={char}
+                invisible={!!flags()[char._id]}
+                onClick={() => toggle(char._id)}
+              />
+            )}
+          </For>
+        </div>
       </div>
     </form>
   )

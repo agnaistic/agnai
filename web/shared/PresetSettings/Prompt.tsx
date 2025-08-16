@@ -4,7 +4,6 @@ import Select from '../Select'
 import { Toggle } from '../Toggle'
 import { chatStore } from '../../store'
 import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
-import { Card } from '../Card'
 import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
@@ -13,6 +12,7 @@ import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
 import { PresetTabProps } from '/web/store/preset-context'
+import Accordian from '../Accordian'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)
@@ -49,7 +49,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             characterId={jsonCharId()}
             presetId={props.state._id}
             update={(schema) => {
-              props.setter('json', schema)
+              props.setters.setState('json', schema)
             }}
             inherit={props.state.json}
           >
@@ -60,12 +60,12 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 { label: 'Source: Character', value: 'character' },
               ]}
               value={props.state.jsonSource}
-              onChange={(ev) => props.setter('jsonSource', ev.value as any)}
+              onChange={(ev) => props.setters.setState('jsonSource', ev.value as any)}
             />
             <ToggleButton
               fieldName="jsonEnabled"
               value={props.state.jsonEnabled}
-              onChange={(ev) => props.setter('jsonEnabled', ev)}
+              onChange={(ev) => props.setters.setState('jsonEnabled', ev)}
             >
               <Show when={props.state.json} fallback="Disabled">
                 <span class="text-900">Enabled</span>
@@ -83,25 +83,28 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               { label: 'Advanced', value: 'no-validation' },
             ]}
             value={props.state.useAdvancedPrompt || 'no-validation'}
-            onChange={(ev) => props.setter('useAdvancedPrompt', ev.value as any)}
+            onChange={(ev) => props.setters.setState('useAdvancedPrompt', ev.value as any)}
             hide={props.state.presetMode === 'simple'}
           />
 
-          <Card border class="flex flex-col gap-1">
-            <div class="flex w-full justify-between font-bold">
-              <div>Reasoning</div>
-              <Toggle
-                value={props.state.reasoning?.enabled ?? false}
-                onChange={(ev) =>
-                  props.setter('reasoning', { ...props.state.reasoning, enabled: ev })
-                }
-              />
-            </div>
-
-            <div
-              class="flex flex-col gap-1"
-              classList={{ hidden: !props.state.reasoning?.enabled }}
-            >
+          <Accordian
+            title={
+              <div class="flex justify-between">
+                <div>Reasoning</div>
+                <div>
+                  <Toggle
+                    value={props.state.reasoning?.enabled ?? false}
+                    onChange={(ev) =>
+                      props.setters.setState('reasoning', { ...props.state.reasoning, enabled: ev })
+                    }
+                  />
+                </div>
+              </div>
+            }
+            class="flex flex-col gap-1"
+            open={false}
+          >
+            <div class="flex flex-col gap-1">
               <FormLabel
                 label="Reasoning Effort"
                 helperText="Typically the amount of your response length to use for reasoning"
@@ -117,7 +120,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                   ]}
                   value={props.state.reasoning?.effort || 'low'}
                   onChange={(ev) =>
-                    props.setter('reasoning', { ...props.state.reasoning, effort: ev.value })
+                    props.setters.setState('reasoning', {
+                      ...props.state.reasoning,
+                      effort: ev.value,
+                    })
                   }
                 />
                 <Show when={props.state.reasoning?.effort === 'custom'}>
@@ -126,7 +132,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                     label="Tokens"
                     value={props.state.reasoning?.maxTokens ?? props.state.maxTokens * 0.2}
                     onChange={(ev) =>
-                      props.setter('reasoning', { ...props.state.reasoning, maxTokens: ev })
+                      props.setters.setState('reasoning', {
+                        ...props.state.reasoning,
+                        maxTokens: ev,
+                      })
                     }
                     parentClass="w-full"
                     min={0}
@@ -138,41 +147,26 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
 
               {reasonWarning()}
 
-              {/* <div class="flex w-full justify-start gap-1">
-                <TextInput
-                  type="number"
-                  prelabel="Max Tokens"
-                  value={props.state.reasoning?.maxTokens ?? 0}
-                  onChange={(ev) =>
-                    props.setter('reasoning', {
-                      ...props.state.reasoning,
-                      maxTokens: +ev.currentTarget.value,
-                    })
-                  }
-                />
-              </div> */}
               <Toggle
                 label="Exclude Reasoning Tokens"
                 value={props.state.reasoning?.exclude ?? true}
                 onChange={(ev) =>
-                  props.setter('reasoning', { ...props.state.reasoning, exclude: ev })
+                  props.setters.setState('reasoning', { ...props.state.reasoning, exclude: ev })
                 }
               />
 
               <ReasoningTags
                 state={props.state}
-                setter={props.setter}
-                hides={props.hides}
+                setters={props.setters}
                 sub={props.sub}
                 page={props.page}
-                context={props.context}
               />
             </div>
-          </Card>
+          </Accordian>
 
           <BasicPromptTemplate
             state={props.state}
-            setter={props.setter}
+            setters={props.setters}
             hide={props.state.useAdvancedPrompt !== 'basic' || props.state.presetMode === 'simple'}
           />
 
@@ -181,7 +175,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             value={props.state.gaslight!}
             state={props.state}
             onChange={(ev) =>
-              props.setter({ promptTemplateId: ev.templateId, gaslight: ev.prompt })
+              props.setters.setState({ promptTemplateId: ev.templateId, gaslight: ev.prompt })
             }
             placeholder={defaultTemplate}
             disabled={props.state.disabled}
@@ -206,10 +200,10 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             }
             value={props.state.prefixNameAppend ?? true}
             disabled={props.state.disabled}
-            service={props.context.service}
-            format={props.context.format}
-            hide={props.hides.prefixNameAppend}
-            onChange={(ev) => props.setter('prefixNameAppend', ev)}
+            service={props.setters.context.service}
+            format={props.setters.context.format}
+            hide={props.setters.hides.prefixNameAppend}
+            onChange={(ev) => props.setters.setState('prefixNameAppend', ev)}
           />
           <TextInput
             label="Bot Response Prefilling"
@@ -223,23 +217,23 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             value={props.state.prefill ?? ''}
             disabled={props.state.disabled}
             class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-            hide={props.hides.prefill}
-            onChange={(ev) => props.setter('prefill', ev.currentTarget.value)}
+            hide={props.setters.hides.prefill}
+            onChange={(ev) => props.setters.setState('prefill', ev.currentTarget.value)}
           />
           <div class="flex flex-wrap gap-4">
             <Toggle
               label="Override Character System Prompt"
               value={props.state.ignoreCharacterSystemPrompt ?? false}
               disabled={props.state.disabled}
-              hide={props.hides.ignoreCharacterSystemPrompt}
-              onChange={(ev) => props.setter('ignoreCharacterSystemPrompt', ev)}
+              hide={props.setters.hides.ignoreCharacterSystemPrompt}
+              onChange={(ev) => props.setters.setState('ignoreCharacterSystemPrompt', ev)}
             />
             <Toggle
               label="Override Character Jailbreak"
               value={props.state.ignoreCharacterUjb ?? false}
               disabled={props.state.disabled}
-              hide={props.hides.ignoreCharacterUjb}
-              onChange={(ev) => props.setter('ignoreCharacterUjb', ev)}
+              hide={props.setters.hides.ignoreCharacterUjb}
+              onChange={(ev) => props.setters.setState('ignoreCharacterUjb', ev)}
             />
           </div>
         </div>

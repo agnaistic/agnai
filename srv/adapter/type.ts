@@ -74,7 +74,7 @@ export type GenerateRequestV2 = {
   sender: AppSchema.Profile
 
   parts: PromptPlaceholders
-  lines: string[]
+
   history?: HistoryLine[]
 
   linesCount?: number
@@ -88,11 +88,7 @@ export type GenerateRequestV2 = {
   resolvedScenario?: string
 
   jsonSchema?: JsonField[]
-  reschemaPrompt?: string
   jsonValues?: Record<string, any>
-
-  /** Base64 */
-  imageData?: string
 
   /** Base64 attachments */
   attachments?: RequestAttachments
@@ -116,6 +112,11 @@ export type GenerateRequestV2 = {
   response?: string
   eventStream?: boolean
   subscription?: SubscriptionPreset
+
+  /** Deprecated fields */
+  lines: string[] /** Deprecated */
+  imageData?: string /** Deprecated */
+  reschemaPrompt?: string /** Deprecated */
 }
 
 export type GenerateOptions = {

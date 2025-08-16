@@ -1,31 +1,21 @@
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { msgStore, toastStore } from '../../../store'
+import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { msgStore, settingStore, toastStore } from '../../../store'
 import Button from '/web/shared/Button'
 import { useAppContext } from '/web/store/context'
 import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
 import { LogProbs } from './LogProbs'
 import Modal from '/web/shared/Modal'
+import { cleanPrompt } from '/common/util'
+import { AppSchema } from '/common/types'
+import { SquareArrowOutUpRight } from 'lucide-solid'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
   const state = msgStore((s) => ({ msg: s.metadata, graph: s.graph }))
-  const [prompt, setPrompt] = createSignal(state.msg?.imagePrompt || '')
 
   const close = () => {
     msgStore.setState({ metadata: undefined })
-  }
-
-  createEffect(() => {
-    if (!state.msg) return
-    setPrompt(state.msg.imagePrompt || '')
-  })
-
-  const updateImagePrompt = () => {
-    if (!state.msg) return
-    msgStore.editMessageProp(state.msg?._id, { imagePrompt: prompt() }, () => {
-      toastStore.success('Image prompt updated')
-    })
   }
 
   const descendants = createMemo(() => {
@@ -89,40 +79,7 @@ export const MessageMeta: Component = () => {
         </Card>
 
         <Card>
-          <TextInput
-            helperText={
-              <>
-                <div class="flex items-center gap-1">
-                  Image Prompt -{' '}
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={updateImagePrompt}
-                    disabled={prompt() === state.msg!.imagePrompt}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    schema="secondary"
-                    onClick={() =>
-                      msgStore.generateImagePrompt({
-                        onSummary: (summary) => setPrompt(summary),
-                        onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
-                      })
-                    }
-                    disabled={!!ctx.waiting}
-                  >
-                    Generate
-                  </Button>
-                </div>
-              </>
-            }
-            parentClass="text-sm"
-            isMultiline
-            value={prompt()}
-            onChange={(ev) => setPrompt(ev.currentTarget.value)}
-          />
+          <MessageImagePrompt msg={state.msg!} close={close} />
         </Card>
 
         <Show when={ctx.promptHistory[state.msg!._id]}>
@@ -137,5 +94,76 @@ export const MessageMeta: Component = () => {
         </Show>
       </div>
     </Modal>
+  )
+}
+
+export const MessageImagePrompt: Component<{
+  msg: AppSchema.ChatMessage
+  close: () => void
+  children?: any
+}> = (props) => {
+  const [ctx] = useAppContext()
+
+  const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
+
+  const updateImagePrompt = () => {
+    if (!props.msg) return
+    msgStore.editMessageProp(props.msg?._id, { imagePrompt: prompt() }, () => {
+      toastStore.success('Image prompt updated')
+    })
+  }
+
+  return (
+    <TextInput
+      helperText={
+        <div class="mb-0.5 flex items-center gap-1.5">
+          Image Prompt -{' '}
+          <Button
+            size="pill"
+            schema="secondary"
+            onClick={updateImagePrompt}
+            disabled={prompt() === props.msg.imagePrompt}
+          >
+            Save
+          </Button>
+          <Button
+            size="pill"
+            schema="secondary"
+            onClick={() =>
+              msgStore.generateImagePrompt({
+                onSummary: (summary) => setPrompt(summary),
+                onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+              })
+            }
+            disabled={!!ctx.waiting}
+          >
+            Generate
+          </Button>
+          <Button
+            size="pill"
+            schema="secondary"
+            onClick={() => {
+              setPrompt(cleanPrompt(prompt()))
+            }}
+          >
+            Clean
+          </Button>
+          <div
+            class="icon-button"
+            onClick={() => {
+              settingStore.showMessageImages({ id: props.msg._id, position: 0 })
+              props.close()
+            }}
+          >
+            <SquareArrowOutUpRight size={20} />
+          </div>
+          {props.children}
+        </div>
+      }
+      parentClass="text-sm"
+      isMultiline
+      value={prompt()}
+      onChange={(ev) => setPrompt(ev.currentTarget.value)}
+    />
   )
 }

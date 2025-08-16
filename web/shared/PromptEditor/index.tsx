@@ -18,7 +18,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 import { Interp, Optionals, placeholders, v2placeholders, Placeholder } from './types'
 import { DefinitionsModal } from './Definitions'
-import { PresetState, SetPresetState } from '/web/store/preset-context'
+import { PresetFuncs, PresetState } from '/web/store/preset-context'
 
 const PromptEditor: Component<
   {
@@ -296,7 +296,7 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
 
 export const BasicPromptTemplate: Component<{
   state: PresetState
-  setter: SetPresetState
+  setters: PresetFuncs
   hide?: boolean
 }> = (props) => {
   const isMobile = createMemo(() => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
@@ -330,7 +330,7 @@ export const BasicPromptTemplate: Component<{
         <Sortable
           items={items()}
           onChange={(next) =>
-            props.setter(
+            props.setters.setState(
               'promptOrder',
               next.map((n) => ({ placeholder: n.value as string, enabled: !!n.enabled }))
             )

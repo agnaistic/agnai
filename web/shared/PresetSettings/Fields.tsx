@@ -28,7 +28,7 @@ export const PresetMode: Field = (props) => {
           { label: 'Advanced', value: 'advanced' },
           { label: 'Simple', value: 'simple' },
         ]}
-        onChange={(ev) => props.setter('presetMode', ev.value as any)}
+        onChange={(ev) => props.setters.setState('presetMode', ev.value as any)}
       />
     </div>
   )
@@ -47,7 +47,7 @@ export const ResponseLength: Field<{
       step={1}
       value={props.state.maxTokens}
       disabled={props.state.disabled}
-      onChange={(val) => props.setter('maxTokens', val)}
+      onChange={(val) => props.setters.setState('maxTokens', val)}
       recommended={props.subMax.maxTokens}
       recommendLabel="Max"
     />
@@ -82,7 +82,7 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
               onText="On"
               offText="Off"
               value={props.state.useMaxContext}
-              onChange={(ev) => props.setter('useMaxContext', ev)}
+              onChange={(ev) => props.setters.setState('useMaxContext', ev)}
             >
               Use Max If Known:
             </ToggleButton>
@@ -92,18 +92,18 @@ export const ContextSize: Field<{ subMax: Partial<SubscriptionModelLevel> }> = (
           <>
             <p>
               The amount of infomation sent to the model to generate a response.{' '}
-              <Show when={props.context.service !== 'agnaistic'}>
+              <Show when={props.setters.context.service !== 'agnaistic'}>
                 Check your AI service for the maximum context size.
               </Show>
             </p>
           </>
         }
         min={16}
-        max={props.context.service === 'claude' ? 200000 : 32000}
+        max={props.setters.context.service === 'claude' ? 200000 : 32000}
         step={1}
         value={props.state.maxContextLength || 8192}
         disabled={props.state.disabled}
-        onChange={(ev) => props.setter('maxContextLength', ev)}
+        onChange={(ev) => props.setters.setState('maxContextLength', ev)}
       />
     </>
   )
@@ -125,7 +125,7 @@ export const ReasoningTags: Field = (props) => {
           placeholder="<think>"
           value={props.state.reasoning?.start || ''}
           onChange={(ev) =>
-            props.setter('reasoning', {
+            props.setters.setState('reasoning', {
               ...props.state.reasoning,
               start: ev.currentTarget.value,
             })
@@ -138,7 +138,7 @@ export const ReasoningTags: Field = (props) => {
           placeholder="</think>"
           value={props.state.reasoning?.end || ''}
           onChange={(ev) =>
-            props.setter('reasoning', {
+            props.setters.setState('reasoning', {
               ...props.state.reasoning,
               end: ev.currentTarget.value,
             })
@@ -151,7 +151,7 @@ export const ReasoningTags: Field = (props) => {
 
 export const SystemPrompt: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.hides.systemPrompt ?? false }}>
+    <Card classList={{ hidden: props.setters.hides.systemPrompt ?? false }}>
       <FormLabel
         label="System Prompt"
         helperText={<>The task the AI is performing. Leave blank if uncertain.</>}
@@ -162,7 +162,7 @@ export const SystemPrompt: Field = (props) => {
         placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
         value={props.state.systemPrompt ?? ''}
         disabled={props.state.disabled}
-        onChange={(ev) => props.setter('systemPrompt', ev.prompt!)}
+        onChange={(ev) => props.setters.setState('systemPrompt', ev.prompt!)}
       />
     </Card>
   )
@@ -170,7 +170,7 @@ export const SystemPrompt: Field = (props) => {
 
 export const Jailbreak: Field = (props) => {
   return (
-    <Card classList={{ hidden: props.hides.ultimeJailbreak ?? false }}>
+    <Card classList={{ hidden: props.setters.hides.ultimeJailbreak ?? false }}>
       <FormLabel
         label="Jailbreak (UJB)"
         helperText={
@@ -193,7 +193,7 @@ export const Jailbreak: Field = (props) => {
         placeholder="Respond succinctly using slang"
         value={props.state.ultimeJailbreak ?? ''}
         disabled={props.state.disabled}
-        onChange={(ev) => props.setter('ultimeJailbreak', ev.prompt!)}
+        onChange={(ev) => props.setters.setState('ultimeJailbreak', ev.prompt!)}
       />
     </Card>
   )
@@ -225,7 +225,7 @@ export const JinjaTemplate: Field = (props) => {
             onText="Enabled"
             offText="Disabled"
             value={props.state.jinjaEnabled ?? false}
-            onChange={(ev) => props.setter('jinjaEnabled', ev)}
+            onChange={(ev) => props.setters.setState('jinjaEnabled', ev)}
           />
         </div>
       }
@@ -233,8 +233,8 @@ export const JinjaTemplate: Field = (props) => {
       If left blank, one will be generated for you."
       value={props.state.jinjaTemplate || ''}
       disabled={props.state.disabled}
-      hide={!props.context.format || !allowed[props.context.format]}
-      onChange={(ev) => props.setter('jinjaTemplate', ev.currentTarget.value)}
+      hide={!props.setters.context.format || !allowed[props.setters.context.format]}
+      onChange={(ev) => props.setters.setState('jinjaTemplate', ev.currentTarget.value)}
       isMultiline
     />
   )
@@ -250,7 +250,7 @@ export const ModelFormat: Field = (props) => {
       (I.e. \`<user>...</user>, <bot>...</bot>\`)`}
         items={MODEL_FORMATS}
         value={props.state.modelFormat || 'None'}
-        onChange={(ev) => props.setter('modelFormat', ev.value as any)}
+        onChange={(ev) => props.setters.setState('modelFormat', ev.value as any)}
       />
     </>
   )
@@ -271,7 +271,7 @@ export const Temperature: Field = (props) => {
         aiSetting={'temp'}
         recommended={props.sub?.preset.temp}
         onChange={(ev) => {
-          props.setter('temp', ev)
+          props.setters.setState('temp', ev)
         }}
       />
     </>

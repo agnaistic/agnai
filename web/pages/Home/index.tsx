@@ -95,11 +95,12 @@ const HomePage: Component = () => {
         <Show when={cfg.config.patreon}>
           <TitleCard
             type="hl"
+            glow="hl-500"
             class="flex w-full items-center"
             ariaRole="region"
             ariaLabel="Models"
           >
-            Agnaistic now hosts its own models! Use them for free by using the{' '}
+            Agnaistic now hosts its own models! Get started for free by using the{' '}
             <span class="font-bold">&nbsp;Agnaistic&nbsp;</span> service in your presets
           </TitleCard>
         </Show>
@@ -348,7 +349,7 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
                 <div class="text-lg font-bold" role="heading">
                   {item.title}
                 </div>
-                <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>
+                {/* <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div> */}
               </div>
               <div
                 class="rendered-markdown bg-900 rounded-b-md p-2"

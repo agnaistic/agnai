@@ -17,9 +17,9 @@ import { createStore } from 'solid-js/store'
 import { toUserStoreObject } from './util'
 
 const settingTabs: Record<Tab, string> = {
-  ai: 'AI Settings',
-  ui: 'UI Settings',
-  voice: 'Voice Settings',
+  ai: 'AI',
+  ui: 'UI',
+  voice: 'Voice',
   guest: 'Guest Data',
   subscription: 'Subscription',
 }
@@ -39,6 +39,7 @@ export const SettingsModal = () => {
   const [footer, setFooter] = createSignal<any>()
   return (
     <RootModal
+      title="Settings"
       show={state.showSettings}
       close={() => settingStore.modal(false)}
       fixedHeight
@@ -54,6 +55,15 @@ export const SettingsModal = () => {
     >
       <Settings footer={setFooter} />
     </RootModal>
+  )
+}
+
+export const SettingsPage = () => {
+  return (
+    <Page>
+      <PageHeader noDivider />
+      <Settings />
+    </Page>
   )
 }
 
@@ -115,17 +125,8 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   )
 
   return (
-    <Page>
-      <PageHeader
-        subtitle={
-          <Show when={!!version}>
-            <em>v.{version}</em>
-          </Show>
-        }
-        noDivider
-      />
-
-      <div class="my-2">
+    <>
+      <div class="my-2 flex flex-col gap-0.5">
         <Tabs
           tabs={tabs.map((t) => settingTabs[t])}
           selected={tab}
@@ -134,6 +135,11 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
             setQuery({ tab: id })
           }}
         />
+        <Show when={!!version}>
+          <div>
+            <em>v.{version}</em>
+          </div>
+        </Show>
       </div>
       <form autocomplete="off">
         <div class="flex flex-col gap-4">
@@ -167,7 +173,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
           <div class="flex justify-end gap-2 pt-4">{footer}</div>
         </Show>
       </form>
-    </Page>
+    </>
   )
 }
 

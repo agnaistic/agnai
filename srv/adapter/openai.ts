@@ -24,6 +24,25 @@ export type Completion<T = Inference> = {
   error?: { message: string }
 }
 
+const REASONING_MODELS: Record<string, boolean> = {
+  'gpt-5': true,
+  'gpt-5-2025-08-07': true,
+  'gpt-5-mini': true,
+  'gpt-5-mini-2025-08-07': true,
+  'gpt-5-nano': true,
+  'gpt-5-nano-2025-08-07': true,
+  o1: true,
+  'o1-2024-12-17': true,
+  o3: true,
+  'o3-2025-04-16': true,
+  'o3-mini': true,
+  'o3-mini-2025-01-31': true,
+  'o4-mini': true,
+  'o4-mini-2025-04-16': true,
+  'o4-mini-deep-research': true,
+  'o4-mini-deep-research-2025-06-26': true,
+}
+
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
@@ -52,11 +71,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: stops,
   }
 
-  // if (oaiModel.match(/o[1-9]/)) {
-  //   body.max_completion_tokens = maxResponseLength
-  //   delete body.max_tokens
-  //   delete body.temperature
-  // }
+  if (REASONING_MODELS[oaiModel]) {
+    body.max_completion_tokens = maxResponseLength
+    delete body.max_tokens
+    delete body.stop
+    body.temperature = 1
+  }
 
   // if (gen.service !== 'openai') {
   //   body.min_p = gen.minP
@@ -102,7 +122,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         name: 'response',
         type: 'object',
         strict: true,
-        // name: 'response',
         schema: {
           strict: true,
           properties: fields,
@@ -155,16 +174,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   if (body.messages) {
-    log.debug(
-      { ...body, messages: stripImageContent(body.messages), prompt: undefined },
-      'OpenAI payload'
-    )
+    log.debug({ ...body, messages: undefined, prompt: undefined }, 'OpenAI payload')
   } else {
     log.debug(body, 'OpenAI payload')
   }
 
   const url =
-    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) || base.url.includes('/completion')
+    (!gen.providerId && !!gen.thirdPartyUrlNoSuffix) ||
+    base.url.includes('/completion') ||
+    opts.conn.provider?.disableAutoUrl
       ? base.url
       : useChat
       ? joinUrl(base.url, 'chat/completions')

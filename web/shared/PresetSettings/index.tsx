@@ -20,7 +20,7 @@ import { PresetMode } from './Fields'
 import { PresetProvider } from '/web/pages/Settings/Provider'
 import { ThirdPartyModel } from './ThirdPartyModel'
 import Divider from '../Divider'
-import { PresetProps, PresetTab, usePresetContext } from '/web/store/preset-context'
+import { PresetProps, PresetTab } from '/web/store/preset-context'
 
 export { PresetSettings as default }
 
@@ -32,8 +32,6 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
   const [search, setSearch] = useSearchParams()
   const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))
 
-  const [store, { setState: setter, hides, context }] = usePresetContext()
-
   const services = createMemo<Option[]>(() => {
     const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     return list
@@ -41,28 +39,29 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
 
   createEffect(
     on(
-      () => (store.service || '') + services().length,
+      () => (props.state.service || '') + services().length,
       () => {
         if (props.disabled) return
-        if (store.service) return
+        if (props.state.service) return
         if (!services().length) return
-        if (store._id) return
+        if (props.state._id) return
 
-        setter('service', services()[0].value as any)
+        props.setters.setState('service', services()[0].value as any)
       }
     )
   )
 
   const sub = createMemo(() => {
-    if (store.service !== 'agnaistic') return
-    const subId = store.providerModels?.agnaistic || store.registered?.agnaistic?.subscriptionId
+    if (props.state.service !== 'agnaistic') return
+    const subId =
+      props.state.providerModels?.agnaistic || props.state.registered?.agnaistic?.subscriptionId
     const match = settings.config.subs.find((sub) => sub._id === subId)
 
     return match
   })
 
   const tabs = createMemo(() => {
-    if (!props.hideTabs && store.presetMode === 'simple') {
+    if (!props.hideTabs && props.state.presetMode === 'simple') {
       return ['General', 'Prompt']
     }
 
@@ -78,31 +77,28 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
   return (
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
-        <PresetProvider page={props.page} />
+        <PresetProvider state={props.state} setters={props.setters} page={props.page} />
 
-        <ThirdPartyModel page={props.page} sub={sub()} />
+        <ThirdPartyModel
+          state={props.state}
+          setters={props.setters}
+          page={props.page}
+          sub={sub()}
+        />
 
         <Divider class="!my-2" />
 
-        <PresetMode
-          state={store}
-          setter={setter}
-          hides={hides}
-          sub={sub()}
-          page={props.page}
-          context={context}
-        />
+        <PresetMode state={props.state} setters={props.setters} sub={sub()} page={props.page} />
 
         <RegisteredSettings
-          service={context.service}
-          setter={setter}
-          state={store}
-          mode={store.presetMode}
+          service={props.setters.context.service}
+          setters={props.setters}
+          state={props.state}
         />
       </div>
 
       <Show when={pane.showing()}>
-        <TempSettings service={context.service} />
+        <TempSettings service={props.setters.context.service} />
       </Show>
       <Tabs
         select={(ev) => {
@@ -113,53 +109,43 @@ const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => 
         tabs={tabs()}
       />
       <GeneralSettings
-        state={store}
-        hides={hides}
-        setter={setter}
+        state={props.state}
+        setters={props.setters}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={context}
       />
 
       <PromptSettings
-        state={store}
-        hides={hides}
-        setter={setter}
+        state={props.state}
+        setters={props.setters}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={context}
       />
 
       <MemorySettings
-        state={store}
-        hides={hides}
-        setter={setter}
+        state={props.state}
+        setters={props.setters}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={context}
       />
 
       <SliderSettings
-        state={store}
-        hides={hides}
-        setter={setter}
+        state={props.state}
+        setters={props.setters}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={context}
       />
 
       <ToggleSettings
-        state={store}
-        hides={hides}
-        setter={setter}
+        state={props.state}
+        setters={props.setters}
         sub={sub()}
         tab={tabName()}
         page={props.page}
-        context={context}
       />
     </div>
   )

@@ -162,7 +162,7 @@ const CreateScenario: Component = () => {
         show={!!showDelete()}
         close={() => setShowDelete(false)}
         confirm={confirmDelete}
-        message="Are you sure wish to delete this scenario?"
+        message="Are you sure you wish to delete this scenario?"
       />
 
       <ExportScenarioModal

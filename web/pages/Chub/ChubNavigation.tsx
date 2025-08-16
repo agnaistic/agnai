@@ -5,6 +5,7 @@ import Button from '../../shared/Button'
 import { ArrowLeft, ArrowRight, Search } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
 import { Combobox } from '/web/shared/Combobox'
+import { useSearchParams } from '@solidjs/router'
 
 const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
   const state = chubStore()
@@ -98,10 +99,12 @@ export default ChubNavigation
 
 const Tags: Component = () => {
   const state = chubStore()
+  const [search, setSearch] = useSearchParams()
 
   const addTag = (tag: string) => {
     const next = tags().concat(tag.trim()).join(',')
     chubStore.setTags(next)
+    setSearch({ c_tags: next })
     chubStore.setPage(1)
     chubStore.getEntities()
   }
@@ -110,6 +113,8 @@ const Tags: Component = () => {
     const curr = tags()
     const next = curr.toSpliced(index, 1)
     chubStore.setTags(next.join(','))
+    setSearch({ c_tags: next.join(',') })
+
     update()
   }
 
@@ -138,11 +143,24 @@ const Tags: Component = () => {
     return list
   })
 
+  onMount(() => {
+    if (state.tags) {
+      setSearch({ c_tags: state.tags })
+      return
+    }
+
+    const tags = search.c_tags || ''
+    if (!tags) return
+
+    chubStore.setTags(tags)
+  })
+
   return (
     <div class="flex gap-2">
       <Combobox
         items={officialTags()}
         onClick={(item) => addTag(item.value)}
+        onClearClicked={() => chubStore.setTags('')}
         autoClose
         placeholder="Tags..."
       />

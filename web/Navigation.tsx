@@ -8,7 +8,7 @@ import {
   HeartHandshake,
   HelpCircle,
   Image,
-  Info,
+  ImagePlus,
   LogIn,
   MailQuestion,
   Menu,
@@ -65,7 +65,6 @@ import { navStore } from './subnav'
 import { getRgbaFromVar } from './shared/colors'
 import { CallToAction } from './shared/CallToAction'
 import Button from './shared/Button'
-import { clearTours } from './tours'
 
 const Navigation: Component = () => {
   let parent: any
@@ -459,6 +458,14 @@ const NavIcons: Component<{
         </Item>
 
         <Item
+          onClick={() => settingStore.openImageGen()}
+          ariaLabel="Image Generation"
+          tooltip="Image Generation"
+        >
+          <ImagePlus aria-hidden="true" />
+        </Item>
+
+        <Item
           onClick={() => settingStore.imageSettings(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
@@ -519,17 +526,6 @@ const NavIcons: Component<{
             <DiscordDarkIcon />
           </Show>
         </ExternalLink>
-
-        <Item
-          onClick={() => {
-            clearTours()
-            window.location.href = location.origin
-          }}
-        >
-          <Tooltip tip="Show Welcome Tours" position="top">
-            <Info />
-          </Tooltip>
-        </Item>
       </div>
     </>
   )

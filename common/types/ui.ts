@@ -54,6 +54,8 @@ export type MessageOption =
   | 'prompt'
   | 'schema-regen'
   | 'attach'
+  | 'visible'
+  | 'gen-image'
 
 export type UISettings = {
   theme: string
@@ -84,6 +86,7 @@ export type UISettings = {
   logPromptsToBrowserConsole: boolean
   contextWindowLine: boolean
   expandReasoning?: boolean
+  displayReasoning?: 'all' | 'pre' | 'post'
 
   embeddingModel?: string
   captionModel?: string
@@ -177,5 +180,7 @@ export const defaultUIsettings: UISettings = {
     attach: { outer: false, pos: 6 },
     trash: { outer: false, pos: 4 },
     'schema-regen': { outer: false, pos: 5 },
+    visible: { outer: false, pos: 3.9 },
+    'gen-image': { outer: false, pos: 3.8 },
   },
 }

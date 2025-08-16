@@ -8,7 +8,6 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
-import { getSafeProviderDetail } from '/common/providers'
 import { replace } from '/common/util'
 
 type PresetState = {
@@ -17,11 +16,6 @@ type PresetState = {
   templates: AppSchema.PromptTemplate[]
   subs: AppSchema.SubscriptionModel[]
   saving: boolean
-  presetModels: {
-    list: string[]
-    url: string
-  }
-  modelsLoading: boolean
   testLoading: boolean
 }
 
@@ -30,11 +24,6 @@ const initState: PresetState = {
   templates: [],
   subs: [],
   saving: false,
-  presetModels: {
-    list: [],
-    url: '',
-  },
-  modelsLoading: false,
   testLoading: false,
 }
 
@@ -81,89 +70,14 @@ export const presetStore = createStore<PresetState>(
       if (!opts.url) return
       yield { testLoading: true }
       const res = await api.post('/user/preset-test', opts)
+
       if (res.result) {
         cb(!!res.result.success, res.result.url || '')
       } else {
         cb(false, '')
       }
+
       yield { testLoading: false }
-    },
-    async *getPresetModelList(
-      _,
-      preset: Partial<AppSchema.UserGenPreset>,
-      providers: AppSchema.Provider[],
-      useCache?: boolean
-    ) {
-      if (preset.providerId === 'agnaistic') return
-      if (!preset.providerId && preset.service === 'agnaistic') return
-
-      const provider = preset.providerId
-        ? providers.find((p) => preset.providerId === p._id)
-        : undefined
-      const detail = getSafeProviderDetail(provider?.provider || '')
-
-      yield { modelsLoading: true }
-      let url = preset.thirdPartyUrl || ''
-      let key = preset.thirdPartyKey || ''
-
-      try {
-        if (provider && detail) {
-          switch (detail.category) {
-            case 'self':
-            case 'custom':
-              url = provider.url || detail.detail.url || ''
-              break
-
-            case 'known':
-              url = detail.detail.url || ''
-              break
-          }
-
-          if (!url) {
-            return { presetModels: { list: [], url: '' } }
-          }
-
-          const models =
-            detail.category === 'self'
-              ? await presetApi.getLocalModelList({ url, key: provider.key })
-              : await presetApi.getPresetModelList({
-                  id: preset._id || '',
-                  providerId: preset.providerId,
-                  url,
-                  key: '',
-                })
-
-          return { presetModels: { list: models, url } }
-        }
-
-        const known = getSafeProviderDetail(
-          preset.service === 'kobold'
-            ? `known-${preset.thirdPartyFormat}`
-            : `known-${preset.service}`
-        )
-
-        if (known?.detail?.url) {
-          url = known.detail.url
-        }
-
-        if (!url) {
-          return { presetModels: { list: [], url: '' } }
-        }
-
-        const models = preset.localRequests
-          ? await presetApi.getLocalModelList({ url, key: preset.userThirdPartyKey })
-          : await presetApi.getPresetModelList({
-              id: preset._id || '',
-              url,
-              // We pass this for presets that are un-saved
-              key,
-              useCache,
-            })
-
-        return { presetModels: { list: models, url } }
-      } finally {
-        yield { modelsLoading: false }
-      }
     },
     setImportPreset(_, preset?: AppSchema.UserGenPreset) {
       return { importing: preset }
@@ -316,7 +230,8 @@ export const presetStore = createStore<PresetState>(
         }
       }
     },
-    async getTemplates() {
+    async getTemplates({ templates }, useCache?: boolean) {
+      if (useCache && templates.length) return
       const res = await presetApi.getTemplates()
       if (res.result) {
         return { templates: res.result.templates }

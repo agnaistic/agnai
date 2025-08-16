@@ -121,6 +121,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   }
 
   if (
+    !format ||
     format === 'openai' ||
     format === 'openai-chat' ||
     format === 'openai-chatv2' ||
@@ -136,6 +137,11 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       max_tokens: gen.maxTokens,
       top_p: gen.topP ?? 1,
       stop: getStoppingStrings(opts, opts.settings, stops),
+    }
+
+    const effort = getReasoningEffort(gen)
+    if (effort) {
+      body.reasoning_effort = effort
     }
 
     if (gen.presencePenalty) {
@@ -624,4 +630,17 @@ export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelForma
   {%- endif %}
 {%- endfor %}`
   return template
+}
+
+function getReasoningEffort(gen: Partial<AppSchema.GenSettings>) {
+  const cfg = gen.reasoning
+  if (!cfg?.enabled) return
+  if (cfg.effort !== 'custom') return cfg.effort
+
+  if (!cfg.maxTokens || cfg.maxTokens < 0 || isNaN(cfg.maxTokens) || !gen.maxTokens) return
+  const percent = cfg.maxTokens / gen.maxTokens
+
+  if (percent >= 0.65) return 'high'
+  if (percent >= 0.35) return 'medium'
+  return 'low'
 }

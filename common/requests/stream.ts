@@ -1,6 +1,6 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
-import { round } from '../util'
+import { inline, round } from '../util'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -191,6 +191,12 @@ export async function* fetchStream(
     return
   }
 
+  const flags = {
+    reason_started: false,
+    reason_ended: false,
+    errored: false,
+  }
+
   try {
     while (true) {
       const { done, value } = await reader.read()
@@ -199,6 +205,13 @@ export async function* fetchStream(
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
           opts?.log?.warn({ buffer }, '[fetch] incomplete buffer')
+
+          // End of reader processing, if we have an error and we get here, we need to respond with a fallback error message
+          if (flags.errored) {
+            yield { error: `Unknown error encountered - Status code ${response.status}` }
+            return
+          }
+
           return
         }
 
@@ -242,42 +255,56 @@ export async function* fetchStream(
         chunk = opts.prechunk(chunk)
       }
 
+      buffer += chunk
+
       try {
-        const error = tryParse(chunk)
-        const isError = isErrorCode || !!error?.error
-        if (isError && error) {
-          // OpenRouter provider errors
-          const suberror = tryParse(error?.error?.metadata?.raw)
-          const providerError =
-            suberror?.detail ||
-            suberror?.message ||
-            suberror?.error?.message ||
-            error?.error?.metadata?.raw
+        const json = tryStrictParse(chunk) || tryStrictParse(buffer)
+        const isError = isErrorCode || !!json?.error
 
-          const msg = error?.error?.message || error?.message || `status code ${response.status}`
-
-          const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
-
-          opts?.log?.error(
-            { err: error, chunk: error ? undefined : chunk, url: response.url, msg: finalMsg },
-            `Request failed with error ${response.status}`
-          )
-
-          yield {
-            error: `${finalMsg}`,
-            errorObj: error ? error : chunk,
+        if (isError) {
+          flags.errored = true
+          const error = processError(json)
+          if (error) {
+            opts?.log?.error(
+              {
+                err: error,
+                chunk: error ? undefined : chunk,
+                url: response.url,
+                msg: error.message,
+              },
+              `Request failed with error ${response.status}`
+            )
+            yield { error: error.message, errorObj: json }
+            return
           }
-          return
         }
       } catch (ex) {}
-
-      buffer += chunk
 
       let match = processBuffer(buffer)
 
       while (match) {
         const data = match.match
         const json = tryParse(data)
+
+        // In an error scenario, only attempt to extract the error payload in the stream
+        if (flags.errored) {
+          const error = processError(json)
+          if (error) {
+            opts?.log?.error(
+              {
+                err: error,
+                chunk: error ? undefined : chunk,
+                url: response.url,
+                msg: error.message,
+              },
+              `Request failed with error ${response.status}`
+            )
+            yield { error: error.message, errorObj: json }
+            return
+          }
+          continue
+        }
+
         if (json) {
           if (format === 'raw') {
             yield json
@@ -307,31 +334,77 @@ export async function* fetchStream(
 
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 
-            if (reasoning !== undefined) {
-              let prefix = ''
-              if (!thoughts) prefix += '<think>'
+            /**
+             * Reasoning can come before and after the response
+             * We need to make sure that we concatenate properly in both circumstances
+             * When yielding, only yield the new tokens
+             */
+            const isMultigen = index && index > 0
+
+            if (isMultigen) {
+              if (!gens[index]) gens[index] = ''
+              gens[index] += token || ''
+            }
+
+            const hasReason = reasoning !== undefined
+            const hasTokens = token !== undefined && !isMultigen
+            let type = ''
+
+            if (hasReason) flags.reason_started = true
+
+            // Main case 1.
+            if (hasReason && hasTokens) {
+              let prefix = thoughts ? '' : '<think>'
+              let suffix = thoughts ? '</think>' : ''
+
+              if (suffix) {
+                flags.reason_ended = true
+              }
+
+              thoughts += prefix + reasoning + suffix
+
+              // Case: Reasoning after the response
+              // Having a prefix means it's the first reasoning tokens
+              if (prefix) {
+                type = '1.1'
+                accum += token
+                yield { token: token + prefix + reasoning + suffix }
+              }
+
+              // Case: Reasoning before response
+              else {
+                type = '1.2'
+                accum += token
+                yield { token: prefix + reasoning + suffix + token }
+              }
+            }
+
+            // Main case 2.
+            if (hasReason && !hasTokens) {
+              type = '2'
+              let prefix = thoughts ? '' : '<think>'
               thoughts += prefix + reasoning
               yield { token: prefix + reasoning }
             }
 
-            if (token !== undefined) {
-              if (index > 0) {
-                if (!gens[index]) gens[index] = ''
-                gens[index] += token
-              } else {
-                if (DEBUG) {
-                  console.log(`[fetch] token: ${token}`)
-                }
-                // When we flip from reasoning to the response, we want to append a closing think tag
-                let suffix = ''
-                if (thoughts && !accum) {
-                  suffix = '</think>'
-                  thoughts += suffix
-                }
-
-                accum += token
-                yield { token: suffix + token, index }
+            // Main case 3.
+            if (!hasReason && hasTokens) {
+              type = '3'
+              let suffix = flags.reason_started && !flags.reason_ended ? '</think>' : ''
+              if (suffix) {
+                flags.reason_ended = true
               }
+
+              accum += suffix + token
+              yield { token: suffix + token }
+            }
+
+            if (DEBUG) {
+              const choice = json.choices?.[0]
+              if (choice) console.log(`#${type} `, inline(choice))
+              else console.log(`#${type} `, inline(json))
+              // if (token) console.log(`[token:${type}] ${token.trim()}`)
+              // if (reasoning) console.log(`[think:${type}] ${reasoning.trim()}`)
             }
 
             const meta: any = {}
@@ -390,6 +463,26 @@ function processBuffer(buffer: string) {
 // }
 // testBuffer()
 
+function processError(json: any) {
+  if (!json) return
+
+  // OpenRouter provider errors
+  const suberror = tryParse(json?.error?.metadata?.raw)
+  const providerError =
+    suberror?.detail || suberror?.message || suberror?.error?.message || json?.error?.metadata?.raw
+
+  // Generic errors
+  const msg = json?.error?.message || json?.message
+
+  if (!providerError && !msg) {
+    return
+  }
+
+  const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
+
+  return { message: finalMsg }
+}
+
 function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   const choice = json?.choices?.[0]
   const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
@@ -407,5 +500,14 @@ function tryParse(value: any) {
     return obj
   } catch (ex) {
     return {}
+  }
+}
+
+function tryStrictParse(value: any) {
+  try {
+    const obj = JSON.parse(value)
+    return obj
+  } catch (ex) {
+    return
   }
 }

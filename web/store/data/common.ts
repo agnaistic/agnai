@@ -4,10 +4,9 @@ import { getStore } from '../create'
 import { toastStore } from '../toasts'
 import { loadItem } from './storage'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
-import { getChatPreset } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { deepClone } from '/common/util'
-import { getBotsForChat } from '/web/pages/Chat/util'
+import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
 import { MsgState } from '../message'
@@ -31,6 +30,7 @@ export type PromptEntities = {
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
   scenarios?: AppSchema.ScenarioBook[]
   attachments?: MsgState['attachments']
+  props: Record<string, string>
 }
 
 export function getInferencePreset(
@@ -88,11 +88,18 @@ export async function getImagePromptEntities(entities: PromptEntities) {
 }
 
 export async function getPromptEntities(): Promise<PromptEntities> {
+  const promptState = getStore('prompt').getState()
+
+  const props = {
+    hint: promptState.hintsEnabled ? promptState.hint : '',
+  }
+
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
     if (!entities) throw new Error(`Could not collate data for prompting`)
     return {
       ...entities,
+      props,
       messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
       lastMessage: getLastUserMessage(entities.messages),
     }
@@ -102,6 +109,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   if (!entities) throw new Error(`Could not collate data for prompting`)
   return {
     ...entities,
+    props,
     messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
     lastMessage: getLastUserMessage(entities.messages),
   }

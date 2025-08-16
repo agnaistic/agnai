@@ -2,7 +2,8 @@ import { Component, For, JSX, Match, Switch, createMemo, createSignal } from 'so
 import Select from './Select'
 
 export type TabHook<T extends string[] = string[]> = {
-  tabs: T
+  tabs: () => T
+  update: (tabs: T) => void
   set: (tab: T[number]) => void
   select: (tab: number) => void
   selected: () => number
@@ -59,19 +60,26 @@ const Tabs: Component<{
 
 export default Tabs
 
-export function useTabs<T extends string[] = string[]>(tabs: T, initial: number = 0): TabHook<T> {
+export function useTabs<T extends string[] = string[]>(
+  initalTabs: T,
+  initial: number = 0
+): TabHook<T> {
+  const [tabs, updateTabs] = createSignal(initalTabs)
   const [tab, setTabs] = createSignal(initial)
   const current = createMemo(() => {
-    return tabs[tab()]
+    const list = tabs()
+    return list[tab()]
   })
 
   const setTab = (tab: T[number]) => {
-    const index = tabs.findIndex((t) => t === tab)
+    const list = tabs()
+    const index = list.findIndex((t) => t === tab)
     setTabs(index)
   }
 
   return {
     tabs,
+    update: (next: T) => updateTabs(next as any),
     selected: tab,
     select: setTabs,
     set: setTab,

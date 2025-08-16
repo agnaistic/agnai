@@ -87,6 +87,7 @@ export const ToggleButtons: Component<{
   items: Option[]
   onChange: (opt: Option) => void
   selected: string
+  class?: string
 }> = (props) => {
   const selected = createMemo(() => {
     const idx = props.items.findIndex((opt) => opt.value === props.selected)
@@ -102,7 +103,9 @@ export const ToggleButtons: Component<{
             <button
               type="button"
               value={props.selected}
-              class="flex items-center justify-center rounded-none border-[1px] border-[var(--hl-800)] py-2"
+              class={`flex items-center justify-center rounded-none border-[1px] border-[var(--hl-800)] py-2 ${
+                props.class || ''
+              }`}
               classList={{
                 'btn-primary': selected() === i(),
                 'btn-hollow': selected() !== i(),

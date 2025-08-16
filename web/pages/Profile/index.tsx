@@ -18,7 +18,6 @@ import TextInput from '../../shared/TextInput'
 import { setComponentPageTitle } from '../../shared/util'
 import { adminStore, settingStore, toastStore, userStore } from '../../store'
 import { Pill, TitleCard } from '/web/shared/Card'
-import { rootModalStore } from '/web/store/root-modal'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import { SubscriptionPage } from './SubscriptionPage'
 import { useTabs } from '/web/shared/Tabs'
@@ -37,7 +36,7 @@ export const ProfileModal: Component = () => {
     const name = search.profile_tab || ''
     if (!name) return
 
-    const index = tabs.tabs.findIndex((t) => t.toLowerCase() === name.toLowerCase())
+    const index = tabs.tabs().findIndex((t) => t.toLowerCase() === name.toLowerCase())
     if (index > -1) {
       tabs.select(index)
     }
@@ -413,46 +412,37 @@ const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (pro
     userStore.deleteAccount()
   }
 
-  rootModalStore.addModal({
-    id: 'delete-account-modal',
-    element: (
-      <Modal
-        title="Delete Account"
-        show={props.show}
-        close={props.close}
-        footer={
-          <>
-            <Button schema="secondary" onClick={props.close}>
-              Cancel
-            </Button>
-          </>
-        }
-        ariaLabel="Delete account"
-        ariaDescription="Warning: This window deletes your current account"
-      >
-        <div class="flex flex-col items-center gap-2">
-          <TitleCard type="rose" class="font-bold">
-            This is irreversible! Your account cannot be recovered if it is deleted.
-          </TitleCard>
-
-          <p>Enter your username then click "Confirm" to confirm the deletion of your account</p>
-
-          <TextInput
-            fieldName="delete-username"
-            onChange={(ev) => setUsername(ev.currentTarget.value)}
-            placeholder="Username"
-          />
-          <Button
-            disabled={username() !== state.user?.username}
-            schema="red"
-            onClick={deleteAccount}
-          >
-            Confirm Deletion
+  return (
+    <RootModal
+      title="Delete Account"
+      show={props.show}
+      close={props.close}
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            Cancel
           </Button>
-        </div>
-      </Modal>
-    ),
-  })
+        </>
+      }
+      ariaLabel="Delete account"
+      ariaDescription="Warning: This window deletes your current account"
+    >
+      <div class="flex flex-col items-center gap-2">
+        <TitleCard type="rose" class="font-bold">
+          This is irreversible! Your account cannot be recovered if it is deleted.
+        </TitleCard>
 
-  return null
+        <p>Enter your username then click "Confirm" to confirm the deletion of your account</p>
+
+        <TextInput
+          fieldName="delete-username"
+          onChange={(ev) => setUsername(ev.currentTarget.value)}
+          placeholder="Username"
+        />
+        <Button disabled={username() !== state.user?.username} schema="red" onClick={deleteAccount}>
+          Confirm Deletion
+        </Button>
+      </div>
+    </RootModal>
+  )
 }

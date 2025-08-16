@@ -6,26 +6,30 @@ import { agnaiPresets } from '/common/presets/agnaistic'
 import { createContext, createEffect, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection } from '/common/providers'
-import { isDefaultPreset } from '/common/default-preset'
+import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { getClientPreset } from '../shared/adapter'
+import { toastStore } from './toasts'
+import { presetApi } from './data/presets'
+import { deepClone } from '/common/util'
+import { getFallbackPreset } from '/common/presets'
 
 export type PresetProps = {
-  disabled?: boolean
-  service?: AIAdapter
-  disableService?: boolean
-  hideTabs?: PresetTab[]
+  state: PresetState
+  setters: PresetFuncs
   page?: string
+
+  disabled?: boolean
+  //   service?: AIAdapter
+  hideTabs?: PresetTab[]
 }
 
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
 
 export type PresetTabProps = {
   state: PresetState
-  context: PresetContext
-  setter: SetPresetState
-  hides: HideState
+  setters: PresetFuncs
   sub: SubscriptionModelOption | undefined
   tab: string
   page: string | undefined
@@ -88,47 +92,112 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   drySequenceBreakers: [],
   modelFormat: 'None',
   providerId: '',
+  subVisionModel: false,
+  isDefaultSub: false,
+  subServiceUrl: 'https://',
   providerModels: {},
+  tokenizer: '',
   registered: {},
 })
 
-const noop: SetStoreFunction<PresetState> = (...args: any[]) => {}
+const initModels = (): ModelState => ({ url: '', loading: false, list: [], data: [] })
 
-const PresetContext = createContext([initPreset(), noop] as const)
+const noopPreset: SetStoreFunction<PresetState> = (...args: any[]) => {}
+const noopModels: SetStoreFunction<ModelState> = (...args: any[]) => {}
+
+const PresetContext = createContext([initPreset(), noopPreset, initModels(), noopModels] as const)
+
+type ModelState = { list: string[]; url: string; loading: boolean; data: any[] }
 
 export function PresetProvider(props: { children: any }) {
   const [store, setStore] = createStore(initPreset())
+  const [models, setModels] = createStore(initModels())
 
-  return <PresetContext.Provider value={[store, setStore]}>{props.children}</PresetContext.Provider>
+  return (
+    <PresetContext.Provider value={[store, setStore, models, setModels]}>
+      {props.children}
+    </PresetContext.Provider>
+  )
 }
 
-export function usePresetContext() {
-  const [state, setState] = useContext(PresetContext)
+export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
+
+export function usePresetContext(opts?: { anonymous: boolean }) {
+  const [state, setState, models, setModels] = opts?.anonymous
+    ? [...createStore(initPreset()), ...createStore(initModels())]
+    : useContext(PresetContext)
+
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
     createHides(state, context)
   )
 
-  const loadChat = (chat: AppSchema.Chat) => {
+  const loadChat = async (chat: AppSchema.Chat) => {
     console.log('[p_ctx] load-by-chat called')
-    const preset = getClientPreset(chat)
-    load(preset?.preset)
-  }
+    let preset = getClientPreset(chat)?.preset
 
-  const loadPresetId = (presetId: string) => {
-    console.log('[p_ctx] load-by-id called')
-    const presets = getStore('presets').getState().presets
-    let preset = presets.find((p) => p._id === presetId)
+    if (!preset) {
+      const remote = await loadPresetId(chat.genPreset || '')
+      preset = remote
+    }
+
+    // If the chat has no preset configured, we need to assign one
+    if (chat?._id && !chat.genPreset && preset?._id) {
+      getStore('chat').assignChatPreset(chat._id, preset._id, () =>
+        toastStore.info('Assigned to chat')
+      )
+    }
+
     load(preset)
   }
 
-  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
-    console.log('[p_ctx] load called')
-    if (!preset) return
+  const loadPresetId = async (presetId: string) => {
+    console.log('[p_ctx] load-by-id called')
 
-    const user = getStore('user').getState().user
+    if (isDefaultPreset(presetId)) {
+      const fallback = { _id: presetId, ...deepClone(defaultPresets[presetId]) }
+      load(fallback)
+      return fallback
+    }
+
+    const presets = getStore('presets').getState().presets
+    let preset = presets.find((p) => p._id === presetId)
+
+    if (!preset) {
+      const remote = await presetApi.getPreset(presetId)
+      if (remote.result) {
+        load(remote.result)
+        return remote.result
+      }
+
+      const fallback = getFallbackPreset('agnaistic')
+      load(fallback)
+      return fallback
+    }
+
+    load(preset)
+    return preset
+  }
+
+  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
-    getStore('presets').getPresetModelList(preset, user?.providers || [], true)
+    loadModels({ preset })
+  }
+
+  const loadModels = async (opts?: {
+    preset?: Partial<AppSchema.GenSettings>
+    refresh?: boolean
+  }) => {
+    setModels('loading', true)
+
+    try {
+      const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.refresh)
+      if (models) {
+        setModels({ list: models?.list || [], data: models?.data || [], url: models.url })
+      }
+    } finally {
+      setModels('loading', false)
+    }
   }
 
   const clear = () => {
@@ -167,7 +236,10 @@ export function usePresetContext() {
 
     getStore('presets').updatePreset(state._id, update, {
       quiet: opts?.quiet,
-      onSuccess: opts?.onSuccess,
+      onSuccess: (next) => {
+        opts?.onSuccess?.(next)
+        loadModels({ preset: next })
+      },
     })
   }
 
@@ -199,6 +271,7 @@ export function usePresetContext() {
   return [
     state,
     {
+      models,
       setState,
       hides,
       load: loadPresetId,
@@ -206,6 +279,7 @@ export function usePresetContext() {
       clear,
       upsert,
       update: updateAndSave,
+      refreshModels: () => loadModels(),
       context,
     },
   ] as const

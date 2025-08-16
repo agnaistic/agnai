@@ -1,9 +1,9 @@
-import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import { Option } from '../../../shared/Select'
-import { Save, X } from 'lucide-solid'
+import { Check, Save, X } from 'lucide-solid'
 import { RootModal } from '../../../shared/Modal'
 import MultiDropdown from '../../../shared/MultiDropdown'
 import { HordeModel, HordeWorker } from '../../../../common/adapters'
@@ -142,7 +142,7 @@ const HordeAISettings: Component<{
       </div>
 
       <ModelModal show={showModels()} close={() => setShowModels(false)} save={onSaveHordeModels} />
-      <WorkerModal show={show()} close={() => setShow(false)} save={onSaveHordeWorkers} />
+      <HordeWorkerModal show={show()} close={() => setShow(false)} save={onSaveHordeWorkers} />
     </>
   )
 }
@@ -232,14 +232,14 @@ const ModelModal: Component<{
     <RootModal
       show={props.show}
       close={props.close}
-      title="Specify AI Horde Models"
+      title="Select Horde Models"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
             <X /> Cancel
           </Button>
           <Button onClick={save}>
-            <Save /> Select Model(s)
+            <Save /> Save
           </Button>
         </>
       }
@@ -264,9 +264,10 @@ const ModelModal: Component<{
   )
 }
 
-const WorkerModal: Component<{
+export const HordeWorkerModal: Component<{
   show: boolean
   close: () => void
+  initial?: string[]
   save: (items: Option[]) => void
 }> = (props) => {
   const cfg = settingStore((s) => ({
@@ -277,11 +278,24 @@ const WorkerModal: Component<{
 
   const [selected, setSelected] = createSignal<Option[]>()
 
+  createEffect(
+    on(
+      () => props.show,
+      (showing) => {
+        if (!showing) return
+
+        const set = new Set(props.initial || [])
+        const curr = cfg.workers.filter((w) => set.has(w.value))
+        setSelected(curr)
+      }
+    )
+  )
+
   const save = () => {
     if (selected()) {
       props.save(selected()!)
     } else if (state.user?.hordeWorkers) {
-      props.save(cfg.workers.filter((w) => state.user?.hordeWorkers!.includes(w.value)))
+      props.save([])
     }
 
     props.close()
@@ -291,14 +305,14 @@ const WorkerModal: Component<{
     <RootModal
       show={props.show}
       close={props.close}
-      title="Specify AI Horde Workers"
+      title="Select Horde Workers"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
             <X /> Cancel
           </Button>
           <Button onClick={save}>
-            <Save /> Select Workers
+            <Check /> Accept
           </Button>
         </>
       }

@@ -9,6 +9,7 @@ type V1Model = {
   model_class: string
   context_length: number
   max_completion_tokens: number
+  available_on_current_plan: boolean
 }
 
 export type FeatherlessModel = {
@@ -20,14 +21,9 @@ export type FeatherlessModel = {
 
   ctx: number
   res: number
+  plan: boolean
 
-  created_at?: string
-  updated_at?: string
-  owned_by?: string
-  avg_rating?: number
-  total_reviews?: number
-  favorites?: number
-  downloads?: number
+  created?: string
 }
 
 let modelCache: FeatherlessModel[] = []
@@ -47,24 +43,6 @@ async function getModelList() {
       },
       method: 'GET',
     })
-    const res = await fetch('https://api.featherless.ai/feather/models?page=1&perPage=5000', {
-      headers: {
-        accept: '*/*',
-      },
-      method: 'GET',
-    })
-
-    if (res.status && res.status > 200) {
-      const body = await res.json()
-      logger.warn({ body, status: res.status }, `Featherless model list failed`)
-      return
-    }
-
-    if (models.status && models.status > 200) {
-      const body = await models.json()
-      logger.warn({ body, status: models.status }, `Featherless model list failed`)
-      return
-    }
 
     const map = await models.json().then((res) => {
       const list = res?.data as V1Model[]
@@ -84,10 +62,10 @@ async function getModelList() {
       return map
     })
 
-    const json = (await res.json()) as { items: FeatherlessModel[] }
+    const classes = await getModelClasses()
 
-    if (json.items.length) {
-      for (const item of json.items) {
+    if (classes?.length) {
+      for (const item of classes) {
         delete item.favorites
         delete item.downloads
         delete item.total_reviews
@@ -101,13 +79,53 @@ async function getModelList() {
         }
       }
 
-      modelCache = json.items
+      modelCache = classes
     }
 
-    return json
+    return classes
   } catch (ex) {
     logger.warn({ err: ex }, `Featherless model list failed`)
   }
+}
+
+async function getModelClasses() {
+  let page = 1
+  const all: any[] = []
+
+  while (true) {
+    try {
+      const res = await fetch(`https://api.featherless.ai/feather/models?page=${page}&perPage=50`, {
+        headers: {
+          accept: '*/*',
+        },
+        method: 'GET',
+      })
+
+      if (res.status > 200) {
+        const json = await res.json()
+        logger.warn(
+          { result: json },
+          `Featherless model classes failed: ${res.status} ${res.statusText}`
+        )
+        return
+      }
+
+      const json = await res.json()
+      const items = json?.items
+
+      if (items.length) {
+        all.push(...items)
+      }
+
+      if (items.length < 50) break
+      page++
+    } catch (ex: any) {
+      logger.warn(`Featherless model classes failed: ${ex.message || ex}`)
+      return
+    }
+  }
+
+  return all
 }
 
 getModelList()

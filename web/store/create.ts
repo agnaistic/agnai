@@ -13,6 +13,7 @@ import type { adminStore } from './admin'
 import type { presetStore } from './presets'
 import type { scenarioStore } from './scenario'
 import type { audioStore } from './audio'
+import type { promptStore } from './prompt'
 
 type StoreMap = {
   user: typeof userStore
@@ -27,6 +28,7 @@ type StoreMap = {
   presets: typeof presetStore
   scenario: typeof scenarioStore
   audio: typeof audioStore
+  prompt: typeof promptStore
 }
 
 type HandlerReturn<S> =
@@ -83,7 +85,11 @@ type HandlerArgs<T> = T extends (first: any, ...args: infer U) => any ? U : neve
 
 type StateSetter<S> = (next: Partial<S>) => Promise<void>
 
-export function createStore<State extends {}>(name: string, init: State) {
+export function createStore<State extends {}>(
+  name: string,
+  init: State,
+  opts?: { quiet?: boolean }
+) {
   let setter: any
   let getter: any
 
@@ -103,7 +109,7 @@ export function createStore<State extends {}>(name: string, init: State) {
 
     const wrappedSetter = (next: any) => {
       if (!next) return
-      send(`[OUT] ${name}`, { type: 'setter' }, { ...getter(), ...next })
+      if (!opts?.quiet) send(`[OUT] ${name}`, { type: 'setter' }, { ...getter(), ...next })
       setter(next)
     }
 
@@ -113,14 +119,14 @@ export function createStore<State extends {}>(name: string, init: State) {
       wrapped[key] = async (...args: any[]) => {
         const prev = getter()
         const result = handler(getter(), ...args)
-        send(`[ IN] ${name}`, { type: key, args }, prev)
+        if (!opts?.quiet) send(`[ IN] ${name}`, { type: key, args }, prev)
         if (!result) return
 
         if (isPromise<State>(result)) {
           const nextState = await result.catch(() => null)
           if (!nextState) return
           const next = { ...getter(), ...nextState }
-          send(`[OUT] ${name}`, { type: key, args }, next)
+          if (!opts?.quiet) send(`[OUT] ${name}`, { type: key, args }, next)
           setter(next)
           return
         }
@@ -133,14 +139,14 @@ export function createStore<State extends {}>(name: string, init: State) {
             if (done === undefined) return
             if (!nextState) return
             const next = { ...getter(), ...nextState }
-            send(`[OUT] ${name}`, { type: key, args }, next)
+            if (!opts?.quiet) send(`[OUT] ${name}`, { type: key, args }, next)
             setter(next)
             if (done) return
           } while (true)
         }
 
         const next = { ...getter(), ...result }
-        send(`[OUT] ${name}`, { type: key, args }, next)
+        if (!opts?.quiet) send(`[OUT] ${name}`, { type: key, args }, next)
         setter(next)
       }
     }

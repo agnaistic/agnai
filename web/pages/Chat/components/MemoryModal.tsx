@@ -83,17 +83,13 @@ const ChatMemoryModal: Component<{
 
   const useMemoryBook = (nextId?: string) => {
     if (!props.chat?._id) return
-    chatStore.editChat(
-      props.chat._id,
-      { memoryId: nextId === undefined ? state._id : nextId },
-      undefined
-    )
+    chatStore.editChat(props.chat._id, { memoryId: nextId === undefined ? state._id : nextId })
   }
 
   const useUserEmbed = () => {
     if (!props.chat?._id) return
     const id = embedId()
-    chatStore.editChat(props.chat._id, { userEmbedId: id }, undefined)
+    chatStore.editChat(props.chat._id, { userEmbedId: id })
 
     if (id) {
       embedApi.loadDocument(id)

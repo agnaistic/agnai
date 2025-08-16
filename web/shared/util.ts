@@ -3,7 +3,7 @@ import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
 import type { Option } from './Select'
-import { Component, createEffect, JSX, onCleanup } from 'solid-js'
+import { Component, createEffect, createMemo, JSX, onCleanup } from 'solid-js'
 import type { UserState } from '../store'
 import { AppSchema, UI } from '/common/types'
 import { deepClone } from '/common/util'
@@ -36,13 +36,25 @@ export async function random<T extends keyof Chance.Chance>(kind: T, opts: Chanc
   return ''
 }
 
+export type InvokeEmitter = (...args: any[]) => void
+
+export type PartialEmitter<T extends string> = {
+  emit: { [key in T]?: InvokeEmitter }
+  on: ComponentSubscriber<any>
+  off: (id: string | Function) => boolean
+}
+
+export type PartialListener<T extends string> = PartialEmitter<T>['emit']
+
 export type ComponentEmitter<T extends string> = {
-  emit: { [key in T]: (...args: any[]) => void }
+  emit: { [key in T]: InvokeEmitter }
   on: ComponentSubscriber<T>
   off: (id: string | Function) => boolean
 }
 
-export type ComponentSubscriber<T> = (event: T, callback: (...args: any[]) => any) => string
+type UnsubFunc = () => void
+
+export type ComponentSubscriber<T> = (event: T, callback: InvokeEmitter) => UnsubFunc
 
 export function getAbsolutePosition(ele: HTMLElement) {
   let curr = ele
@@ -60,12 +72,22 @@ export function getAbsolutePosition(ele: HTMLElement) {
 
 export function createEmitter<T extends string>(...events: T[]) {
   let emit: any = {}
-  const listeners: Array<{ id: string; event: T; callback: (...args: any[]) => void }> = []
+  const listeners: Array<{ id: string; event: T; callback: InvokeEmitter }> = []
 
-  const on = (event: T, callback: (...args: any[]) => void) => {
+  const unsubscribe = (id: string) => {
+    const index = listeners.findIndex((i) => i.id === id)
+    if (index === -1) return
+
+    listeners.splice(index, 1)
+  }
+
+  const on = (event: T, callback: InvokeEmitter) => {
     const id = v4()
     listeners.push({ event, callback, id })
-    return id
+
+    const unsub = () => unsubscribe(id)
+
+    return unsub
   }
 
   const off = (id: string | Function) => {
@@ -742,6 +764,23 @@ export function deepCloneAndRemoveFields<T, K extends keyof T>(
 
 export function asyncFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve))
+}
+
+export function useUsableServices() {
+  const users = getStore('user')()
+  const cfg = getStore('settings')()
+
+  const services = createMemo(() => {
+    const list: AIAdapter[] = []
+
+    for (const service of cfg.config.adapters) {
+      if (isUsableService(service, cfg.config, users.user)) list.push(service)
+    }
+
+    return list
+  })
+
+  return services
 }
 
 export function getUsableServices() {

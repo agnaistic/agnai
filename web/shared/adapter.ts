@@ -1,4 +1,4 @@
-import { getChatPreset, getContextLimit } from '../../common/prompt'
+import { getContextLimit } from '../../common/prompt'
 import { presetStore, userStore } from '../store'
 import { AppSchema } from '../../common/types/schema'
 import { defaultPresets, isDefaultPreset } from '../../common/default-preset'
@@ -7,6 +7,7 @@ import { ADAPTER_LABELS, AIAdapter, AdapterSetting, getAdapter } from '../../com
 import { storage } from './util'
 import { getPresetConnection, getProviderCategoryLabel, getProviderLabel } from '/common/providers'
 import { getStore } from '../store/create'
+import { getChatPreset } from '../pages/Chat/util'
 
 const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
   novel: [
@@ -127,10 +128,12 @@ export function getPresetLabel(preset: AppSchema.GenSettings) {
   const conn = getPresetConnection(preset, providers)
 
   const prefix = conn.provider?.name || conn.detail?.name || ADAPTER_LABELS[conn.service!]
+  const catLabel = getProviderCategoryLabel(conn.category)
+
   return {
     prefix,
     type: conn.category,
-    category: getProviderCategoryLabel(conn.category),
+    category: catLabel,
     desc: preset.name || 'Unnamed',
     conn,
   }

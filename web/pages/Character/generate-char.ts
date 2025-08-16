@@ -1,3 +1,4 @@
+import { parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
 import { neat } from '/common/util'
 import { getUserPreset } from '/web/shared/adapter'
@@ -26,23 +27,23 @@ const parts: Record<
 > = {
   scenario: () => ({
     instruction: `Detailed description of the scene that the character is in`,
-    post: ``,
+    post: `Scenario:`,
   }),
   appearance: () => ({
-    instruction: `Extremely brief and comma-separated (50 words or fewer) list of descriptors of the character's gender, eye color, hair color, height, clothes, body, physical location and surroundings`,
-    post: ``,
+    instruction: `Very brief and comma-separated list of BOORU TAGS of the character's gender, eye color, hair color, height, clothes, body, physical location and surroundings`,
+    post: `Booru Tags:`,
   }),
   trait: (_, trait) => ({
     instruction: `Provide a description of {{name}}'s "${trait}" personality trait`,
-    post: ``,
+    post: `${trait}:`,
   }),
   persona: () => ({
     instruction: `Provide an outline of the personality and typical behavior of {{name}}`,
-    post: ``,
+    post: `Personality:`,
   }),
   greeting: () => ({
     instruction: `Provide {{name}}'s first opening dialogue and actions in the scene`,
-    post: ``,
+    post: `{{nme}}'s Greeting:`,
   }),
   sampleChat: () => ({ instruction: `Provide an example of {{name}}'s dialogue and actions` }),
 }
@@ -83,7 +84,7 @@ export async function generateField(opts: {
           const value = char[field]
           if (!value) return ''
           const { instruction } = handler(field)
-          return `<user>${instruction}</user>\n<bot>${value}</bot>`
+          return `<instruct>${instruction}</instruct>\n<assistant>${value}</assistant>`
 
         case 'persona':
           return toPersonaInfix(char.persona, trait)
@@ -94,31 +95,36 @@ export async function generateField(opts: {
     .filter((p) => !!p.trim())
     .join('\n\n')
 
-  const { instruction } = handler(prop, trait)
-
-  const suffix = `<user>${instruction}</user>\n<bot>`
+  const { instruction, post } = handler(prop, trait)
 
   const prompt = neat`
   <system>You are a character generator. Provide information and attributes about the following character.</system>
 
-  Character's name:
-  ${char.name}
+  <instruct>Character's name:</instruct>
+  <assistant>${char.name}</assistant>
 
-  Character's description:
-  ${char.description || ''}
+  <instruct>Character's description:</instruct>
+  <assistant>${char.description || ''}</assistant>
 
   ${infix}
 
-  ${suffix}`
-    .replace(/{{name}}/g, char.name)
-    .replace(/\n\n+/g, '\n\n')
+  <instruct>${instruction}</instruct>
+  
+  <assistant>${post || 'Response:'}</assistant>`.replace(/{{name}}/g, char.name)
 
   const { user } = userStore.getState()
 
   const settings = getUserPreset(user?.chargenPreset || user?.defaultPreset)
 
+  const { blocks } = await parseTemplate(prompt, {})
+
   genApi.inferenceStream(
-    { prompt, overrides: { stopSequences: ['[/INST]', '###', '<|', '</s>'] }, settings },
+    {
+      prompt,
+      messages: blocks,
+      overrides: { stopSequences: ['[/INST]', '###', '<|', '</s>'] },
+      settings,
+    },
     tick
   )
 }
@@ -130,7 +136,7 @@ function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string)
     if (!text) return ''
     const { instruction } = handler('persona')
     const suffix = `${text}`
-    return `<user>${instruction}</user>\n<bot>${suffix}</bot>`
+    return `<instruct>${instruction}</instruct>\n<assistant>${suffix}</assistant>`
   }
 
   const prompt = Object.entries(persona.attributes)
@@ -143,7 +149,7 @@ function toPersonaInfix(persona: AppSchema.Character['persona'], trait?: string)
     .map(([key, value]) => {
       const { instruction } = handler('persona', key)
       const suffix = `${value}`
-      return `<user>${instruction}</user>\n<bot>${suffix}</bot>`
+      return `<instruct>${instruction}</instruct>\n<assistant>${suffix}</assistant>`
     })
     .join('\n\n')
 

@@ -87,7 +87,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
       },
       { type: 'format', name: 'LocalAI', value: 'openai-chatv2', url: 'http://localhost:8080/v1' },
       { type: 'format', value: 'ooba', url: 'http://localhost:7860/v1' },
-      { type: 'format', name: 'Other', url: '', value: 'openai-chatv2' },
+      { type: 'format', name: 'Other (OpenAI Compatible)', url: '', value: 'openai-chatv2' },
     ],
   },
 }
@@ -145,9 +145,13 @@ export function getPresetConnection(
   providers: AppSchema.Provider[] | undefined
 ) {
   const copy = { ...preset }
+  const provider = providers?.find((p) => p._id === preset.providerId)
+  const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
 
   const isAgnai =
-    preset.providerId === 'agnaistic' || (!preset.providerId && preset.service === 'agnaistic')
+    !validProviderId || // Provider preset, but invalid provider ID
+    preset.providerId === 'agnaistic' || // Provider preset
+    (!preset.providerId && preset.service === 'agnaistic') // Legacy preset
 
   if (isAgnai) {
     copy.service = 'agnaistic'
@@ -164,8 +168,6 @@ export function getPresetConnection(
       key: '',
     }
   }
-
-  const provider = providers?.find((p) => p._id === preset.providerId)
 
   if (provider) {
     const conn = getProviderConnection(provider)
@@ -237,7 +239,11 @@ export function assertProviderDetail(provider: string) {
 export function getSafeProviderDetail(provider: string) {
   const id = getAlias(provider)
   const category = id.split('-')[0] as ProviderCategory
-  const type = id.replace('known-', '').replace('self-', '').replace('custom-', '')
+  let type = id.replace('known-', '').replace('self-', '').replace('custom-', '')
+
+  if (KNOWN_ALIASES[type]) {
+    type = KNOWN_ALIASES[type]
+  }
 
   switch (category) {
     case 'custom': {
@@ -253,6 +259,10 @@ export function getSafeProviderDetail(provider: string) {
     case 'agnai':
       return { category, type: category, defail: undefined }
   }
+}
+
+const KNOWN_ALIASES: Record<string, string> = {
+  'openrouter-completion': 'openrouter',
 }
 
 export function getProviderLabel(provider: AppSchema.Provider) {
@@ -323,6 +333,8 @@ export function getProviderConnection(provider: AppSchema.Provider) {
   }
 
   return {
+    id: provider._id,
+    name: provider.name,
     detail,
     category,
     label: getProviderCategoryLabel(category),

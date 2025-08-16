@@ -6,14 +6,13 @@ import { chatStore } from './chat'
 import { AppSchema, UI } from '/common/types'
 import { userStore } from './user'
 import { toMap } from '../shared/util'
-import { getActiveBots } from '../pages/Chat/util'
+import { getActiveBots, getChatPreset } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
 import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { presetStore } from './presets'
-import { getChatPreset } from '/common/prompt'
 import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
 import { PresetProvider } from './preset-context'
@@ -42,6 +41,7 @@ export type ContextState = {
   impersonate?: AppSchema.Character
   user?: AppSchema.User
   profile?: AppSchema.Profile
+  chatProfiles?: AppSchema.Profile[]
   flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
@@ -56,6 +56,7 @@ export type ContextState = {
   promptHistory: any
   chatTree: ChatTree
   waiting?: MsgState['waiting']
+  imgWaiting?: MsgState['imgWaiting']
   status?: MsgState['hordeStatus']
   attachments: MsgState['attachments']
   canUseAttachments: boolean
@@ -134,7 +135,9 @@ export function ContextProvider(props: { children: any }) {
     const temps = Object.values(chats.active?.chat.tempCharacters || {})
 
     const all = chars.characters.list.concat(curr).concat(temps)
-    return toMap(all)
+    const map = toMap(all)
+
+    return map
   })
 
   const activeBots = createMemo<AppSchema.Character[]>(() => {
@@ -201,11 +204,13 @@ export function ContextProvider(props: { children: any }) {
       replyAs: chats.active?.replyAs,
       user: users.user,
       profile: users.profile,
+      chatProfiles: chats.chatProfiles,
       handle: handle(),
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
       chatTree: msgs.graph.tree,
       waiting: msgs.waiting,
+      imgWaiting: msgs.imgWaiting,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,
       canUseAttachments: canAttachImage(detail?.conn, subModel()),
@@ -257,6 +262,10 @@ function canAttachImage(
     aphrodite: true,
     tabby: true,
     featherless: true,
+    arli: true,
+    claude: true,
+    mistral: true,
+    koboldcpp: true,
   }
 
   return !!conn.format && !!supportedFormats[conn.format]

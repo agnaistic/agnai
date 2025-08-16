@@ -15,14 +15,20 @@ const FileInput: Component<{
   onUpdate?: (files: FileInputResult[]) => void
   parentClass?: string
 }> = (props) => {
-  const onFile = async (list: FileList | null) => {
-    if (!props.onUpdate) return
-    if (!list) {
-      return props.onUpdate([])
-    }
+  let inputRef: HTMLInputElement
 
-    const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
-    props.onUpdate(files)
+  const onFile = async (list: FileList | null) => {
+    try {
+      if (!props.onUpdate) return
+      if (!list) {
+        return props.onUpdate([])
+      }
+
+      const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
+      props.onUpdate(files)
+    } finally {
+      inputRef.value = ''
+    }
   }
 
   return (
@@ -30,6 +36,7 @@ const FileInput: Component<{
       <FormLabel label={props.label} helperText={props.helperText} />
       <input
         ref={(ref) => {
+          inputRef = ref
           props.ref?.(ref)
         }}
         id={props.fieldName}

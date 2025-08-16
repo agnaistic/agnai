@@ -7,6 +7,7 @@ import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
 import { imageApi } from '/web/store/data/image'
+import { IMAGE_FORMATS } from './port'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -141,6 +142,24 @@ export function toCharacterMap(bots: AppSchema.Character[]) {
     {}
   )
   return map
+}
+
+export async function downloadImage(opts: { name: string; image: string }) {
+  const dataurl = await imageToDataURL(opts.image)
+  const anchor = document.createElement('a')
+  anchor.href = dataurl
+
+  const ext = opts.name.split('.').slice(-1)[0]
+
+  if (IMAGE_FORMATS[ext]) {
+    anchor.download = opts.name
+  } else {
+    const ext = getExt(dataurl)
+    anchor.download = `${opts.name}.${ext.ext === 'unknown' ? 'png' : ext.ext}`
+  }
+
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
 }
 
 export async function downloadCharCard(input: string | AppSchema.Character, format: string) {

@@ -1,10 +1,20 @@
-import { ArchiveRestore, ArrowBigLeft, Crown, Eye, EyeOff, Mail, Plus, Trash } from 'lucide-solid'
+import {
+  ArchiveRestore,
+  ArrowBigLeft,
+  Crown,
+  Eye,
+  EyeOff,
+  HatGlasses,
+  Mail,
+  Plus,
+  Trash,
+} from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, toastStore, userStore } from '../../store'
+import { characterStore, chatStore, msgStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { isLoggedIn } from '/web/store/api'
@@ -116,42 +126,11 @@ const ParticipantsList: Component<{
   edit: (charId: string) => void
 }> = (props) => {
   const self = userStore()
-  const chars = characterStore()
   const state = chatStore()
 
+  const lists = useParticipantList()
+
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
-
-  const charMembers = createMemo<AppSchema.Character[]>(() => {
-    const active = getActiveBots(
-      state.active?.chat!,
-      chars.characters.map,
-      state.active?.chat.tempCharacters || {}
-    )
-
-    const needsImpersonate =
-      chars.impersonating && active.every((a) => a._id !== chars.impersonating?._id)
-    if (needsImpersonate) {
-      active.unshift(chars.impersonating!)
-    }
-
-    active.sort((left, right) => left.name.localeCompare(right.name))
-
-    return active
-  })
-
-  const temps = createMemo(() => {
-    const chat = state.active?.chat
-    if (!chat) return { active: [], inactive: [], deleted: [] }
-
-    if (!chat.tempCharacters) return { active: [], inactive: [], deleted: [] }
-
-    const all = Object.values(chat.tempCharacters)
-    const active = all.filter((char) => char.favorite !== false && !char.deletedAt)
-    const inactive = all.filter((char) => char.favorite === false && !char.deletedAt)
-    const deleted = all.filter((ch) => !!ch.deletedAt)
-
-    return { active, inactive, deleted }
-  })
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
@@ -162,12 +141,6 @@ const ParticipantsList: Component<{
     chatStore.uninviteUser(state.active?.chat._id, member.userId)
   }
 
-  const users = createMemo(() => {
-    if (!self.profile) return []
-    const participants = state.active?.participantIds?.map((id) => state.memberIds[id]) || []
-    return [self.profile].concat(participants.sort((a, b) => a.handle.localeCompare(b.handle)))
-  })
-
   const removeChar = (charId: string) => {
     if (!state.active?.chat) return
     chatStore.removeCharacter(state.active.chat._id, charId)
@@ -175,7 +148,7 @@ const ParticipantsList: Component<{
 
   return (
     <>
-      <For each={users()}>
+      <For each={lists().users}>
         {(member) => (
           <UserParticipant
             member={member}
@@ -185,7 +158,7 @@ const ParticipantsList: Component<{
           />
         )}
       </For>
-      <For each={charMembers()}>
+      <For each={lists().chars}>
         {(char) => (
           <CharacterParticipant
             char={char}
@@ -197,12 +170,12 @@ const ParticipantsList: Component<{
         )}
       </For>
 
-      <Show when={temps().active.length > 0 || temps().inactive.length > 0}>
+      <Show when={lists().tempsActive.length > 0 || lists().tempsInactive.length > 0}>
         <Divider />
         <h3>Temporary Characters</h3>
       </Show>
 
-      <For each={temps().active}>
+      <For each={lists().tempsActive}>
         {(char) => (
           <CharacterParticipant
             chat={state.active?.chat}
@@ -215,11 +188,11 @@ const ParticipantsList: Component<{
         )}
       </For>
 
-      <Show when={temps().active.length > 0 || temps().inactive.length > 0}>
+      <Show when={lists().tempsActive.length > 0 || lists().tempsInactive.length > 0}>
         <Divider />
       </Show>
 
-      <For each={temps().inactive}>
+      <For each={lists().tempsInactive}>
         {(char) => (
           <CharacterParticipant
             chat={state.active?.chat}
@@ -232,13 +205,13 @@ const ParticipantsList: Component<{
         )}
       </For>
 
-      <Show when={temps().deleted.length > 0}>
+      <Show when={lists().tempsDeleted.length > 0}>
         <Accordian
           open={false}
           title={<span class="text-600">Deleted Temporary Characters</span>}
           class="bg-800"
         >
-          <For each={temps().deleted}>
+          <For each={lists().tempsDeleted}>
             {(char) => (
               <CharacterParticipant
                 chat={state.active?.chat}
@@ -444,48 +417,132 @@ const CharacterParticipant: Component<{
         </div>
       </div>
 
-      <Show when={!isTemp()}>
-        <Show when={!props.canRemove}>
-          <Button schema="clear" onClick={() => {}} disabled>
-            <Trash size={16} class="opacity-50" />
+      <div class="flex gap-2">
+        <Show when={!isTemp()}>
+          <Button schema="clear" onClick={() => characterStore.impersonate(props.char)}>
+            <HatGlasses size={16} />{' '}
           </Button>
+          <Show when={!props.canRemove}>
+            <Button schema="clear" onClick={() => {}} disabled>
+              <Trash size={16} class="opacity-50" />
+            </Button>
+          </Show>
+          <Show when={props.canRemove}>
+            <Button schema="clear" onClick={() => props.remove(props.char._id)}>
+              <Trash size={16} />
+            </Button>
+          </Show>
         </Show>
-        <Show when={props.canRemove}>
-          <Button schema="clear" onClick={() => props.remove(props.char._id)}>
-            <Trash size={16} />
-          </Button>
-        </Show>
-      </Show>
 
-      <Show when={props.chat && isTemp()}>
-        <div class="flex gap-2">
+        <Show when={props.chat && isTemp()}>
           <Show when={!props.char.deletedAt && props.char.favorite !== false}>
-            <Button schema="clear" class="px-2" size="sm" onClick={() => toggleTempChar(false)}>
+            <Button schema="clear" class="px-2" onClick={() => toggleTempChar(false)}>
               <Eye size={16} />
             </Button>
           </Show>
 
           <Show when={!props.char.deletedAt && props.char.favorite === false}>
-            <Button schema="clear" class="px-2" size="sm" onClick={() => toggleTempChar(true)}>
+            <Button schema="clear" class="px-2" onClick={() => toggleTempChar(true)}>
               <EyeOff size={16} color="var(--bg-500)" />
             </Button>
           </Show>
 
+          <Button schema="clear" onClick={() => characterStore.impersonate(props.char)}>
+            <HatGlasses size={16} />{' '}
+          </Button>
+
           <Show when={!props.char.deletedAt}>
-            <Button schema="clear" class="px-2" size="sm" onClick={() => deleteTempChar()}>
+            <Button schema="clear" class="px-2" onClick={() => deleteTempChar()}>
               <Trash size={16} />
             </Button>
           </Show>
 
           <Show when={!!props.char.deletedAt}>
-            <Button schema="clear" class="px-2" size="sm" onClick={() => restoreTempChar()}>
+            <Button schema="clear" class="px-2" onClick={() => restoreTempChar()}>
               <ArchiveRestore size={16} />
             </Button>
           </Show>
-        </div>
-      </Show>
+        </Show>
+      </div>
     </div>
   )
 }
 
 export default MemberModal
+
+export function useParticipantList(forChat?: boolean) {
+  const self = userStore((s) => ({ profile: s.profile }))
+  const msgs = msgStore((s) => ({ msgs: s.msgs, messageHistory: s.messageHistory }))
+  const chars = characterStore((s) => ({
+    impersonating: s.impersonating,
+    characters: forChat ? s.chatChars : s.characters,
+  }))
+  const state = chatStore((s) => ({ active: s.active, memberIds: s.memberIds }))
+
+  const charMembers = createMemo<AppSchema.Character[]>(() => {
+    const active = getActiveBots(
+      state.active?.chat!,
+      chars.characters.map,
+      state.active?.chat.tempCharacters || {}
+    )
+
+    const needsImpersonate =
+      chars.impersonating && active.every((a) => a._id !== chars.impersonating?._id)
+    if (needsImpersonate) {
+      active.unshift(chars.impersonating!)
+    }
+
+    const ids = new Set(active.map((chr) => chr._id))
+
+    for (const msg of msgs.messageHistory.concat(msgs.msgs)) {
+      if (!msg.characterId) continue
+      if (state.active?.chat.tempCharacters?.[msg.characterId]) continue
+      if (ids.has(msg.characterId)) continue
+
+      const char = chars.characters.map[msg.characterId]
+      if (!char) continue
+      active.push(char)
+      ids.add(char._id)
+    }
+
+    active.sort((left, right) => left.name.localeCompare(right.name))
+
+    return active
+  })
+
+  const temps = createMemo(() => {
+    const chat = state.active?.chat
+    if (!chat) return { active: [], inactive: [], deleted: [] }
+
+    if (!chat.tempCharacters) return { active: [], inactive: [], deleted: [] }
+
+    const all = Object.values(chat.tempCharacters)
+    const active = all.filter((char) => char.favorite !== false && !char.deletedAt)
+    const inactive = all.filter((char) => char.favorite === false && !char.deletedAt)
+    const deleted = all.filter((ch) => !!ch.deletedAt)
+
+    return { active, inactive, deleted }
+  })
+
+  const users = createMemo(() => {
+    if (!self.profile) return []
+    const participants = state.active?.participantIds?.map((id) => state.memberIds[id]) || []
+    return [self.profile].concat(participants.sort((a, b) => a.handle.localeCompare(b.handle)))
+  })
+
+  const lists = createMemo(() => {
+    const temp = temps()
+    const map = {
+      chars: charMembers(),
+      users: users(),
+
+      tempsActive: temp.active,
+      tempsInactive: temp.inactive,
+      tempsDeleted: temp.deleted,
+    }
+
+    return map
+  })
+
+  return lists
+}

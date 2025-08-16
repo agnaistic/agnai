@@ -297,6 +297,7 @@ export const REPLICATE_MODEL_TYPES = {
 
 export type OpenRouterModel = {
   id: string
+  description: string
   pricing: { prompt: string; completion: string }
   context_length: number
 }

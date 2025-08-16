@@ -74,7 +74,7 @@ async function getActiveTemplateParts() {
   const { active } = chatStore.getState()
 
   const signal = new AbortController()
-  const { parts, entities, props } = await botGen.getActivePromptOptions({
+  const { parts, entities, props, lines } = await botGen.getActivePromptOptions({
     signal,
     kind: 'summary',
   })
@@ -94,6 +94,8 @@ async function getActiveTemplateParts() {
     parts,
     sender: entities.profile,
     jsonValues: props.json,
+    impersonate: entities.impersonating,
+    history: lines,
   }
 
   return opts

@@ -82,6 +82,23 @@ export const CharacterFolderView: Component<
     return css
   })
 
+  const charsMap = createMemo(() => {
+    const map = {
+      fav: {} as Record<string, AppSchema.Character>,
+      list: {} as Record<string, AppSchema.Character>,
+    }
+
+    for (const char of props.favorites) {
+      map.fav[char._id] = char
+    }
+
+    for (const char of props.characters) {
+      map.list[char._id] = char
+    }
+
+    return map
+  })
+
   const faveChars = createMemo(() => {
     const name = toFolderSlug(folder())
     const faves = props.favorites.filter((ch) => name === toFolderSlug(ch.folder || ''))
@@ -102,6 +119,7 @@ export const CharacterFolderView: Component<
 
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
+    const map = charsMap()
     for (const char of chars.allChars.list) {
       let folder = toFolderSlug(char.folder || '')
       const depth = folder.match(/\//g)?.length ?? 0
@@ -120,7 +138,7 @@ export const CharacterFolderView: Component<
         }
       } while (true)
 
-      if (props.characters.some((ch) => ch._id === char._id)) {
+      if (map.fav[char._id] || map.list[char._id]) {
         tree[folder].list.push(char)
       }
     }
@@ -255,7 +273,9 @@ const FolderContents: Component<{
           'text-[var(--hl-500)]': drop.isActiveDroppable,
           underline: drop.isActiveDroppable,
         }}
-        onClick={() => (props.folder.list.length > 0 ? props.select(props.folder.path) : undefined)}
+        onClick={() =>
+          props.folder.list.length >= 0 ? props.select(props.folder.path) : undefined
+        }
         ref={(ref) => drop(ref)}
       >
         <Show when={props.current !== toFolderSlug(props.folder.path)}>

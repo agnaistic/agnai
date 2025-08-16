@@ -9,6 +9,7 @@ import { getUserSubscriptionTier } from '/common/util'
 import { getCachedTiers } from '../db/subscriptions'
 import { config } from '../config'
 import { fixImagePrompt } from '/common/image-prompt'
+import { decryptText } from '../db/util'
 
 const defaultSettings: SDSettings = {
   type: 'sd',
@@ -41,6 +42,8 @@ export type SDRequest = {
   draft_mode?: boolean
   loras?: string[]
   lora_strengths?: Record<string, { model: number; clip: number }>
+
+  override_settings?: Record<string, any>
 }
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
@@ -89,26 +92,34 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
 async function getConfig(opts: ImageRequestOpts): Promise<{
   kind: 'user' | 'agnai'
   host: string
+  headers: Record<string, string>
   params?: string
   model?: AppSchema.ImageModel
   temp?: AppSchema.ImageModel
 }> {
   const { user, settings, override } = opts
   const type = settings?.type || user.images?.type
+  const headers: Record<string, string> = {}
 
   // Stable Diffusion URL always comes from user settings
-  const userHost = user.images?.sd.url || defaultSettings.url
+  const userHost = settings?.sd?.url || user.images?.sd.url || defaultSettings.url
   if (type !== 'agnai') {
-    return { kind: 'user', host: userHost }
+    const providerId = settings?.sd.providerId || user.images?.sd.providerId
+    const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : null
+    if (provider?.key) {
+      headers.Authorization = `Bearer ${decryptText(provider.key, true)}`
+    }
+
+    return { kind: 'user', host: userHost, headers }
   }
 
   const srv = await store.admin.getServerConfiguration()
   if (!srv.imagesEnabled || !srv.imagesHost) {
-    return { kind: 'user', host: userHost }
+    return { kind: 'user', host: userHost, headers }
   }
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
-  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost }
+  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost, headers }
 
   const models = getAgnaiModels(srv.imagesModels)
 
@@ -121,7 +132,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   const model = models.length === 1 ? models[0] : match ?? models[0]
 
   if (!temp && !model) {
-    return { kind: 'user', host: userHost }
+    return { kind: 'user', host: userHost, headers }
   }
 
   const params = [
@@ -138,6 +149,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     params: `?${params.join('&')}`,
     model: temp || model,
     temp,
+    headers,
   }
 
   if (!cfg.host) {
@@ -159,6 +171,7 @@ function getPayload(
 
   const loras: string[] = []
   const lora_strengths: NonNullable<SDRequest['lora_strengths']> = {}
+  const override_settings: SDRequest['override_settings'] = {}
 
   if (kind === 'agnai' && opts.settings?.agnai.loras?.length) {
     for (const lora of opts.settings?.agnai.loras) {
@@ -168,6 +181,10 @@ function getPayload(
       loras.push(lora.id)
       lora_strengths[lora.id] = { model: lora.modelStrength, clip: lora.clipStrength }
     }
+  }
+
+  if (kind !== 'agnai' && opts.settings?.sd.model) {
+    override_settings.sd_model_checkpoint = opts.settings.sd.model
   }
 
   const payload: SDRequest = {
@@ -190,13 +207,14 @@ function getPayload(
       Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
     steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
-    save_images: false,
+    save_images: true,
     send_images: true,
     model_override: temp ? temp.override : model?.override,
     denoise: temp ? temp.init.denoise : model?.init.denoise,
     draft_mode: opts.settings?.agnai?.draftMode,
     loras,
     lora_strengths,
+    override_settings,
   }
 
   if (model) {

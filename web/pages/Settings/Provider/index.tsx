@@ -6,88 +6,71 @@ import Select from '/web/shared/Select'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { AppSchema } from '/common/types'
-import { assertProviderDetail } from '../../../../common/providers'
 import { Field } from '/web/shared/PresetSettings/Fields'
-import { ComponentSubscriber, createEmitter, getUsableServices } from '/web/shared/util'
+import { ComponentSubscriber, createEmitter, useUsableServices } from '/web/shared/util'
 import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters'
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
 import { CustomSelect } from '/web/shared/CustomSelect'
-import { usePresetContext } from '/web/store/preset-context'
+import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { useProviderList } from './hooks'
 
 export const PresetProvider: Component<{
+  state: PresetState
+  setters: PresetFuncs
   page?: string
   openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
-  const [preset, { setState, hides, update }] = usePresetContext()
-
   const state = getStore('user')((s) => ({ user: s.user, providers: s.user?.providers || [] }))
 
+  const [providers] = useProviderList()
   const [open, setOpen] = createSignal(false)
   const [openLegacy, setOpenLegacy] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.Provider>()
 
-  const showEdit = createMemo(() => !!preset.providerId && preset.providerId !== 'agnaistic')
+  const showEdit = createMemo(() => {
+    if (props.state.providerId === 'agnaistic') return false
+    if (!props.state.providerId && props.state.service === 'agnaistic') return false
+    return true
+  })
 
   const selectedProvider = createMemo(() => {
-    if (!preset.providerId || preset.providerId === 'agnaistic') return
-    const match = state.providers.find((p) => p._id === preset.providerId)
+    if (!props.state.providerId || props.state.providerId === 'agnaistic') return
+    const match = state.providers.find((p) => p._id === props.state.providerId)
     return match
   })
 
   const services = createMemo(() => {
-    const providers = state.providers.map((p) => {
-      const detail = assertProviderDetail(p.provider)
-      if (detail.category === 'custom') {
-        if (p.name) return { label: `Custom - ${p.name}`, value: p._id }
-        const hostname = tryGetHostname(p.url)
-        return { label: `Custom - ${hostname}`, value: p._id }
-      }
-
-      if (detail.category === 'known') {
-        return { label: 'Provider - ' + detail.detail.name, value: p._id }
-      }
-
-      return { label: `Local - ${p.name || detail?.detail?.name || p.provider} `, value: p._id }
-    })
-
-    providers.sort(sortAlpha)
-
-    const list = getUsableServices()
-    const subs = list.some((l) => l === 'agnaistic')
-
-    if (subs) {
-      providers.unshift({ label: 'Agnaistic', value: 'agnaistic' })
-    }
+    const list = providers()
 
     const label = [
-      ADAPTER_LABELS[preset.service!] || '',
-      preset.service === 'kobold' ? FORMAT_LABEL[preset.thirdPartyFormat!] || '' : '',
+      ADAPTER_LABELS[props.state.service!] || '',
+      props.state.service === 'kobold' ? FORMAT_LABEL[props.state.thirdPartyFormat!] || '' : '',
     ]
       .filter((v) => !!v)
       .join('/')
 
-    if (preset.service !== 'agnaistic') {
-      providers.push({ label: 'Legacy: ' + label, value: '' })
+    if (props.state.service !== 'agnaistic') {
+      list.push({ label: 'Legacy: ' + label, value: '' })
     }
 
-    return providers
+    return list
   })
 
-  // If a provider is deleted, the preset.providerId may still refer to it
+  // If a provider is deleted, the props.state.providerId may still refer to it
   // Soft-set the providerId to 'legacy', or maybe the first provider in the list?
   createEffect(
     on(
-      () => `${preset.providerId} ${state.user?.providers?.length}`,
+      () => `${props.state.providerId} ${state.user?.providers?.length}`,
       () => {
-        if (!preset.providerId || preset.providerId === 'agnaistic') return
+        if (!props.state.providerId || props.state.providerId === 'agnaistic') return
         if (!state.user?.providers) return
 
         // However we need to deal with the race condition of receiving a new provider
-        const exists = state.user.providers.find((p) => p._id === preset.providerId)
+        const exists = state.user.providers.find((p) => p._id === props.state.providerId)
         if (exists) return
 
-        setState('providerId', '')
+        props.setters.setState('providerId', '')
       }
     )
   )
@@ -104,19 +87,18 @@ export const PresetProvider: Component<{
   }
 
   const changeProvider = (id: string) => {
-    setState('providerId', id)
+    props.setters.setState('providerId', id)
 
     if (props.page !== 'mode' && props.page !== 'menu') {
       return
     }
 
-    update(
+    props.setters.update(
       { providerId: id },
       {
         quiet: true,
         onSuccess: () => {
           getStore('toasts').success('Provider changed')
-          getStore('presets').getPresetModelList(preset, state.providers, true)
         },
       }
     )
@@ -143,8 +125,10 @@ export const PresetProvider: Component<{
 
   const label = createMemo(() => {
     const id =
-      preset.providerId === '' && preset.service === 'agnaistic' ? 'agnaistic' : preset.providerId
-    if (id === 'agnaistic') return 'Agnaistic'
+      props.state.providerId === '' && props.state.service === 'agnaistic'
+        ? 'agnaistic'
+        : props.state.providerId
+    if (id === 'agnaistic') return `Agnaistic`
 
     const match = services().find((s) => s.value === id)
     return match?.label || '???'
@@ -159,38 +143,49 @@ export const PresetProvider: Component<{
           modalTitle="Select Provider"
           size="sm"
           label={
-            <Show when={props.page === 'mode'}>
-              <div class="flex w-full items-center gap-2 pb-1">
-                <div>Service</div>
-                <HelpModal
-                  title="Providers"
-                  cta={
-                    <button class="icon-button flex gap-1">
-                      <Info size={16} />
-                    </button>
-                  }
-                >
-                  <div class="flex flex-col gap-3">
-                    <p>Providers are used to connect to your preferred AI models.</p>
-                    <Markdown
-                      text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
-                    />
-                    <Markdown
-                      text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
-                    />
-                    <Markdown
-                      text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your preset.`}
-                    />
-                  </div>
-                </HelpModal>
-              </div>
-            </Show>
+            <>
+              <Show when={props.page === 'mode'}>
+                <div class="flex w-full items-center gap-2 pb-1">
+                  <div>Service</div>
+                  <HelpModal
+                    title="Providers"
+                    cta={
+                      <button class="icon-button flex gap-1">
+                        <Info size={16} />
+                      </button>
+                    }
+                  >
+                    <div class="flex flex-col gap-3">
+                      <p>Providers are used to connect to your preferred AI models.</p>
+                      <Markdown
+                        text={`Click **\`+ New\`** to create a new provider and fill in the information.`}
+                      />
+                      <Markdown
+                        text={`**Format**\nIf you prompted to select a **Format** and you are not sure one to use, select \`Chat\`.`}
+                      />
+                      <Markdown
+                        text={`**Important**: Make sure the correct provider is chosen in the dropdown below in your props.state.`}
+                      />
+                    </div>
+                  </HelpModal>
+                </div>
+              </Show>
+            </>
           }
+          buttonClass="break-all"
           buttonLabel={label()}
           options={services()}
           onSelect={(ev) => changeProvider(ev.value)}
           openSub={props.openSub}
           closeSub={emitter.on}
+          preoptions={
+            <div class="flex justify-end">
+              <Button size="sm" onClick={newProvider}>
+                <PlusIcon size={16} />
+                New
+              </Button>
+            </div>
+          }
           footer={
             <>
               <Button schema="secondary" onClick={emitter.emit.close}>
@@ -199,13 +194,13 @@ export const PresetProvider: Component<{
             </>
           }
           selected={
-            preset.providerId === '' && preset.service === 'agnaistic'
+            props.state.providerId === '' && props.state.service === 'agnaistic'
               ? 'agnaistic'
-              : preset.providerId
+              : props.state.providerId
           }
         >
           <Show when={props.page === 'mode'}>
-            <Show when={preset.providerId === ''}>
+            <Show when={props.state.providerId === '' && props.state.service !== 'agnaistic'}>
               <Button size="sm" onClick={editLegacy}>
                 <WifiPen size={16} />
                 Edit
@@ -229,16 +224,20 @@ export const PresetProvider: Component<{
       <ManageProvider
         user={state.user}
         show={open()}
-        close={() => setOpen(false)}
-        provider={editing()}
-        onCreated={(provider) => {
-          changeProvider(provider._id)
+        close={(reason, provider) => {
+          setOpen(false)
+          emitter.emit.close()
+          if (provider) {
+            changeProvider(provider._id)
+          }
         }}
+        provider={editing()}
       />
       <EditConnectionDetails
-        state={preset}
-        setter={setState}
-        hides={hides}
+        state={props.state}
+        setters={props.setters}
+        page={props.page}
+        sub={undefined}
         show={openLegacy()}
         close={() => setOpenLegacy(false)}
       />
@@ -246,12 +245,10 @@ export const PresetProvider: Component<{
   )
 }
 
-const EditConnectionDetails: Field<
-  { show: boolean; close: () => void },
-  'state' | 'setter' | 'hides'
-> = (props) => {
+const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (props) => {
+  const useableServices = useUsableServices()
   const services = createMemo(() => {
-    const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = useableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     return list
   })
 
@@ -266,7 +263,7 @@ const EditConnectionDetails: Field<
   })
 
   const cancel = () => {
-    props.setter({ thirdPartyUrl: url(), thirdPartyKey: key() })
+    props.setters.setState({ thirdPartyUrl: url(), thirdPartyKey: key() })
     props.close()
   }
 
@@ -331,8 +328,7 @@ const EditConnectionDetails: Field<
           }
           value={props.state.service}
           items={services()}
-          onChange={(ev) => props.setter('service', ev.value as any)}
-          // disabled={props.disabled || props.disableService}
+          onChange={(ev) => props.setters.setState('service', ev.value as any)}
         />
 
         <Select
@@ -342,17 +338,29 @@ const EditConnectionDetails: Field<
           items={thirdPartyFormats()}
           value={props.state.thirdPartyFormat}
           hide={props.state.service !== 'kobold'}
-          onChange={(ev) => props.setter('thirdPartyFormat', ev.value as ThirdPartyFormat)}
+          onChange={(ev) =>
+            props.setters.setState('thirdPartyFormat', ev.value as ThirdPartyFormat)
+          }
         />
 
-        <ThirdPartyUrl {...props} />
-        <ThirdPartyKey {...props} />
+        <ThirdPartyUrl
+          state={props.state}
+          setters={props.setters}
+          page={props.page}
+          sub={props.sub}
+        />
+        <ThirdPartyKey
+          state={props.state}
+          setters={props.setters}
+          page={props.page}
+          sub={props.sub}
+        />
       </div>
     </RootModal>
   )
 }
 
-const ThirdPartyUrl: Field<{}, 'state' | 'hides' | 'setter'> = (props) => {
+const ThirdPartyUrl: Field = (props) => {
   return (
     <TextInput
       fieldName="thirdPartyUrl"
@@ -362,18 +370,18 @@ const ThirdPartyUrl: Field<{}, 'state' | 'hides' | 'setter'> = (props) => {
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
       hide={
-        props.hides.thirdPartyUrl ||
+        props.setters.hides.thirdPartyUrl ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini' ||
         props.state.thirdPartyFormat === 'arli'
       }
-      onChange={(ev) => props.setter('thirdPartyUrl', ev.currentTarget.value)}
+      onChange={(ev) => props.setters.setState('thirdPartyUrl', ev.currentTarget.value)}
     />
   )
 }
 
-const ThirdPartyKey: Field<{}, 'state' | 'setter'> = (props) => {
+const ThirdPartyKey: Field = (props) => {
   return (
     <>
       <TextInput
@@ -397,24 +405,10 @@ const ThirdPartyKey: Field<{}, 'state' | 'setter'> = (props) => {
         type="password"
         placeholder={props.state.thirdPartyKeySet ? 'Key is set' : 'E.g. sk-...'}
         // hide={props.hides.thirdPartyKey}
-        onChange={(ev) => props.setter('thirdPartyKey', ev.currentTarget.value)}
+        onChange={(ev) => props.setters.setState('thirdPartyKey', ev.currentTarget.value)}
       />
     </>
   )
-}
-
-function sortAlpha(l: { label: string }, r: { label: string }) {
-  return l.label.localeCompare(r.label)
-}
-
-function tryGetHostname(url: string) {
-  if (!url.trim()) return 'Untitled'
-
-  try {
-    return new URL(url).host
-  } catch (ex) {
-    return 'Untitled (Invalid URL)'
-  }
 }
 
 const Markdown: Component<{ text: string }> = (props) => (

@@ -1,17 +1,16 @@
 import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, getAdapter, GOOGLE_LIMITS } from './adapters'
+import { AIAdapter, GOOGLE_LIMITS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
-import { defaultPresets, getFallbackPreset } from './presets'
+import { getFallbackPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
-import { isDefaultPreset } from './default-preset'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 
@@ -46,6 +45,9 @@ export type PromptPlaceholders = {
 
   chatEmbeds: string[]
   userEmbeds: string[]
+
+  /** User-specified extras */
+  props?: Record<string, string>
 }
 
 export type Prompt = {
@@ -89,6 +91,7 @@ export type PromptOpts = {
   modelFormat?: ModelFormat
   jsonValues: Record<string, any> | undefined
   contextBuffer?: number
+  props?: Record<string, string>
 }
 
 export type BuildPromptOpts = {
@@ -253,6 +256,8 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
     encoder
   )
 
+  parts.props = opts.props
+
   const prompt = await injectPlaceholders(template, {
     opts,
     parts,
@@ -284,7 +289,7 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
-  let { parsed, inserts, length, sections, linesAddedCount, history, addedLines } =
+  let { parsed, inserts, length, sections, linesAddedCount, history, addedLines, blocks } =
     await injectPlaceholders(template, {
       opts,
       parts: opts.parts,
@@ -313,6 +318,8 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
     length,
     sections,
     linesAddedCount,
+
+    blocks,
   }
 }
 
@@ -379,40 +386,6 @@ type InjectOpts = {
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
-
-  /**
-   * This is currently disabled:
-   * Models behave far too differently to insert sample chat using this method.
-   * The formatting used here is far too opinionated.
-   * Simple and Basic prompting w/ Prompt Formatting should have already solved this issue.
-   * Advanced users authoring their own templates do so at their own peril.
-   */
-  // Basic templates can exclude example dialogue
-  // const validate =
-  //   opts.settings?.useAdvancedPrompt !== 'no-validation' &&
-  //   opts.settings?.useAdvancedPrompt !== 'basic'
-
-  // Automatically inject example conversation if not included in the prompt
-  /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
-  // const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
-  // const sampleChat = parts.sampleChat?.join('\n')
-  // if (!template.match(HOLDERS.sampleChat) && sampleChat && hist && validate) {
-  //   const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
-
-  //   const svc = opts.settings?.service
-  //   const postSample =
-  //     svc === 'openai' || svc === 'openrouter' || svc === 'scale' || svc === 'openrouter-completion'
-  //       ? SAMPLE_CHAT_MARKER
-  //       : '<START>'
-
-  //   const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
-  //     .replace(BOT_REPLACE, opts.replyAs.name)
-  //     .replace(SELF_REPLACE, sender)
-  //   if (hist.order === 'asc') next.unshift(msg)
-  //   else next.push(msg)
-
-  //   hist.lines = next
-  // }
 
   const templateOpts = {
     ...opts,
@@ -492,6 +465,7 @@ type PromptPartsOptions = Pick<
   | 'chatEmbeds'
   | 'userEmbeds'
   | 'resolvedScenario'
+  | 'props'
 >
 
 export async function buildPromptPlaceholders(
@@ -499,125 +473,131 @@ export async function buildPromptPlaceholders(
   lines: string[] | HistoryLine[],
   encoder: TokenCounter
 ) {
-  const { chat, char, replyAs } = opts
-  const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
+  try {
+    const { chat, char, replyAs } = opts
+    const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
-  const replace = (value: string, botName?: string) =>
-    placeholderReplace(value, botName || opts.replyAs.name, sender)
+    const replace = (value: string, botName?: string) =>
+      placeholderReplace(value, botName || opts.replyAs.name, sender)
 
-  const parts: PromptPlaceholders = {
-    systemPrompt: opts.settings?.systemPrompt || '',
-    persona: replace(
-      formatCharacter(
-        replyAs.name,
-        replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
-      )
-    ),
-    prefill: opts.settings?.prefill || '',
-    post: [],
-    allPersonas: [],
-    chatEmbeds: [],
-    userEmbeds: [],
-  }
-
-  const personalities = new Set([replyAs._id])
-
-  if (opts.impersonate?.persona) {
-    parts.impersonality = replace(
-      formatCharacter(
-        opts.impersonate.name,
-        opts.impersonate.persona,
-        opts.impersonate.persona.kind
-      )
-    )
-  }
-
-  for (const bot of Object.values(opts.characters || {})) {
-    if (!bot) continue
-    if (personalities.has(bot._id)) continue
-    if (bot._id === opts.impersonate?._id) continue
-
-    const temp = opts.chat.tempCharacters?.[bot._id]
-    if (temp?.deletedAt || temp?.favorite === false) continue
-
-    if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
-      continue
+    const parts: PromptPlaceholders = {
+      systemPrompt: opts.settings?.systemPrompt || '',
+      persona: replace(
+        formatCharacter(
+          replyAs.name,
+          replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+        )
+      ),
+      prefill: opts.settings?.prefill || '',
+      post: [],
+      allPersonas: [],
+      chatEmbeds: [],
+      userEmbeds: [],
+      props: opts.props,
     }
 
-    personalities.add(bot._id)
-    parts.allPersonas.push(
-      `${bot.name}'s personality: ${replace(
-        formatCharacter(bot.name, bot.persona, bot.persona.kind),
-        bot.name
-      )}`
+    const personalities = new Set([replyAs._id])
+
+    if (opts.impersonate?.persona) {
+      parts.impersonality = replace(
+        formatCharacter(
+          opts.impersonate.name,
+          opts.impersonate.persona,
+          opts.impersonate.persona.kind
+        )
+      )
+    }
+
+    for (const bot of Object.values(opts.characters || {})) {
+      if (!bot) continue
+      if (personalities.has(bot._id)) continue
+      if (bot._id === opts.impersonate?._id) continue
+
+      const temp = opts.chat.tempCharacters?.[bot._id]
+      if (temp?.deletedAt || temp?.favorite === false) continue
+
+      if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
+        continue
+      }
+
+      personalities.add(bot._id)
+      parts.allPersonas.push(
+        `${bot.name}'s personality: ${replace(
+          formatCharacter(bot.name, bot.persona, bot.persona.kind),
+          bot.name
+        )}`
+      )
+    }
+
+    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+    // replyAs instead of the main character
+    // (we always use the main character's scenario, not replyAs)
+    parts.scenario = replace(opts.resolvedScenario, char.name)
+
+    const sampleChat =
+      replyAs._id === char._id && !!chat.overrides
+        ? chat.sampleChat ?? replyAs.sampleChat
+        : replyAs.sampleChat
+
+    parts.sampleChat = (sampleChat || '')
+      .split('\n')
+      .filter(removeEmpty)
+      // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+      .map((text) => replace(text))
+
+    if (chat.greeting) {
+      parts.greeting = replace(chat.greeting)
+    } else {
+      parts.greeting = replace(char.greeting)
+    }
+
+    const post = createPostPrompt(opts)
+
+    if (opts.continue) {
+      post.unshift(`${char.name}: ${opts.continue}`)
+    }
+
+    const books: AppSchema.MemoryBook[] = []
+    if (replyAs.characterBook) books.push(replyAs.characterBook)
+    if (opts.book) books.push(opts.book)
+
+    parts.memory = await buildMemoryPrompt(
+      { ...opts, books, lines: lines.map((l) => (typeof l === 'string' ? l : l.msg)) },
+      encoder
     )
+
+    const supplementary = getSupplementaryParts(opts, replyAs)
+    parts.ujb = supplementary.ujb
+    parts.systemPrompt = supplementary.system
+
+    parts.post = post.map((post) => replace(post))
+
+    if (opts.userEmbeds) {
+      const embeds = opts.userEmbeds.map((line) => line.text)
+      const { adding: fit } = await fillPromptWithLines({
+        encoder,
+        tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
+        context: '',
+        lines: embeds,
+      })
+      parts.userEmbeds = fit.map((l) => l.line)
+    }
+
+    if (opts.chatEmbeds) {
+      const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
+      const { adding: fit } = await fillPromptWithLines({
+        encoder,
+        tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
+        context: '',
+        lines: embeds,
+      })
+      parts.chatEmbeds = fit.map((l) => l.line)
+    }
+
+    return parts
+  } catch (ex) {
+    throw ex
   }
-
-  // we use the BOT_REPLACE here otherwise later it'll get replaced with the
-  // replyAs instead of the main character
-  // (we always use the main character's scenario, not replyAs)
-  parts.scenario = replace(opts.resolvedScenario, char.name)
-
-  parts.sampleChat = (
-    replyAs._id === char._id && !!chat.overrides
-      ? chat.sampleChat ?? replyAs.sampleChat
-      : replyAs.sampleChat
-  )
-    .split('\n')
-    .filter(removeEmpty)
-    // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-    .map((text) => replace(text))
-
-  if (chat.greeting) {
-    parts.greeting = replace(chat.greeting)
-  } else {
-    parts.greeting = replace(char.greeting)
-  }
-
-  const post = createPostPrompt(opts)
-
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
-  const books: AppSchema.MemoryBook[] = []
-  if (replyAs.characterBook) books.push(replyAs.characterBook)
-  if (opts.book) books.push(opts.book)
-
-  parts.memory = await buildMemoryPrompt(
-    { ...opts, books, lines: lines.map((l) => (typeof l === 'string' ? l : l.msg)) },
-    encoder
-  )
-
-  const supplementary = getSupplementaryParts(opts, replyAs)
-  parts.ujb = supplementary.ujb
-  parts.systemPrompt = supplementary.system
-
-  parts.post = post.map((post) => replace(post))
-
-  if (opts.userEmbeds) {
-    const embeds = opts.userEmbeds.map((line) => line.text)
-    const { adding: fit } = await fillPromptWithLines({
-      encoder,
-      tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
-      context: '',
-      lines: embeds,
-    })
-    parts.userEmbeds = fit.map((l) => l.line)
-  }
-
-  if (opts.chatEmbeds) {
-    const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const { adding: fit } = await fillPromptWithLines({
-      encoder,
-      tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
-      context: '',
-      lines: embeds,
-    })
-    parts.chatEmbeds = fit.map((l) => l.line)
-  }
-
-  return parts
 }
 
 function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {
@@ -734,7 +714,25 @@ export async function getLinesForPrompt(
     return { _id: msg._id, msg: filled, role: author.role }
   }
 
-  const history = messages.map(formatMsg)
+  /**
+   * Message Visibility Filtering
+   */
+  const filtered = messages.filter((msg) => {
+    if (!msg.invisible && !opts.chat.invisible) return true
+
+    // If there are no keys, fallback to the chat defaults
+    if (msg.invisible && Object.keys(msg.invisible).length > 0) {
+      if (msg.invisible[opts.replyAs._id]) return false
+      return true
+    }
+
+    // Chat Defaults - ignored if message flags are present
+    if (opts.chat.invisible?.[opts.replyAs._id]) return false
+
+    return true
+  })
+
+  const history = filtered.map(formatMsg)
 
   const { adding: lines } = await fillPromptWithLines({
     encoder,
@@ -861,50 +859,6 @@ function fillPlaceholders(opts: {
   const msg = text.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
-}
-
-export function getChatPreset(
-  chat: AppSchema.Chat,
-  user: AppSchema.User,
-  userPresets: AppSchema.UserGenPreset[]
-): Partial<AppSchema.UserGenPreset> {
-  /**
-   * Order of precedence:
-   * 1. chat.genPreset
-   * 2. user.defaultPreset
-   * 3. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
-   * 4. built-in fallback preset (horde)
-   */
-
-  // #1
-  if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset))
-      return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
-
-    const preset = userPresets.find((preset) => preset._id === chat.genPreset)
-    if (preset) return preset
-  }
-
-  // #2
-  const defaultId = user.defaultPreset
-  if (defaultId) {
-    if (isDefaultPreset(defaultId)) return { _id: defaultId, ...defaultPresets[defaultId] }
-    const preset = userPresets.find((preset) => preset._id === defaultId)
-    if (preset) return preset
-  }
-
-  // #3
-  const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
-  const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
-
-  if (fallbackId) {
-    if (isDefaultPreset(fallbackId)) return { _id: fallbackId, ...defaultPresets[fallbackId] }
-    const preset = userPresets.find((preset) => preset._id === fallbackId)
-    if (preset) return preset
-  }
-
-  // #4
-  return getFallbackPreset(adapter || 'horde')
 }
 
 type LimitStrategy = (

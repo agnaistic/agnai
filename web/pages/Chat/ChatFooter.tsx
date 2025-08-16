@@ -1,10 +1,10 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { CircleX, VenetianMask } from 'lucide-solid'
+import { CircleX, Dices, VenetianMask } from 'lucide-solid'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import { characterStore, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
-import InputBar from './components/InputBar'
+import InputBar, { SendFunc } from './components/InputBar'
 import { ContextState } from '/web/store/context'
 import { AppSchema } from '/common/types'
 
@@ -13,8 +13,8 @@ export const ChatFooter: Component<{
   isOwner: boolean
   pills: AppSchema.Character[]
   swipe: number
-  requestMessage: (chatId: string) => void
-  sendMessage: (message: string, ooc: boolean, onSucces?: () => void) => void
+  requestMessage: (characterId: string) => void
+  sendMessage: SendFunc
 }> = (props) => {
   const user = userStore()
   const msgs = msgStore((s) => ({ waiting: s.waiting, attachments: s.attachments }))
@@ -55,6 +55,15 @@ export const ChatFooter: Component<{
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
+  const requestRandom = () => {
+    const index = Math.floor(Math.random() * props.pills.length)
+    const bot = props.pills[index]
+
+    if (bot) {
+      props.requestMessage(bot._id)
+    }
+  }
+
   return (
     <div class="mb-2 flex w-full flex-col">
       <Show when={isSelfRemoved()}>
@@ -86,6 +95,10 @@ export const ChatFooter: Component<{
               />
             )}
           </For>
+
+          <Button size="md" schema="bordered" onClick={requestRandom}>
+            <Dices size={16} />
+          </Button>
         </div>
       </Show>
       <Show when={!!chats.chat}>
@@ -96,7 +109,7 @@ export const ChatFooter: Component<{
                 <img
                   src={image}
                   class="h-[40px] cursor-pointer rounded-md"
-                  onClick={() => settingStore.showImage(image)}
+                  onClick={() => settingStore.showImage({ src: { type: 'url', id: image } })}
                 />
               )}
             </For>

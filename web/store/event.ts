@@ -120,11 +120,11 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           prompt: prompt,
           event: selected.event.type,
         } as ChatEvent
-        msgStore.send(
-          eventState.chatId,
-          eventState.prompt,
-          ('send-event:' + eventState.event) as any
-        )
+        msgStore.send({
+          chatId: eventState.chatId,
+          msg: eventState.prompt,
+          mode: ('send-event:' + eventState.event) as any,
+        })
 
         updateChatScenarioStates(chat, selected.event.assigns)
 

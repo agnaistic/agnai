@@ -141,6 +141,7 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     dry_allowed_length: gen.dryAllowedLength,
     dry_range: gen.dryRange,
     dry_sequence_breakers: sequenceBreakers,
+    reasoning: gen.reasoning,
   }
 
   if (opts.hasAttachments && opts.subscription?.preset?.subVisionModel) {

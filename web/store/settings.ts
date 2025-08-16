@@ -11,13 +11,33 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
-import { canUsePane, isMobile } from '../shared/hooks'
+import { canUsePane, ImageCacheHook, isMobile } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
 import { JSX } from 'solid-js'
 import { FileInputResult } from '../shared/FileInput'
+
+export type ImageSource = {
+  type: 'collection' | 'url' | 'message'
+  messageId?: string
+  id: string
+  initial?: number
+  prompt?: string
+}
+
+export type ImageButton = {
+  schema: ButtonSchema
+  text: string
+  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
+}
+
+export type ConfirmAction = {
+  schema?: ButtonSchema
+  text: string | JSX.Element
+  onClick: () => void
+}
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -45,8 +65,9 @@ export type SettingState = {
     books: AppSchema.MemoryBook[]
   }
   showImage?: {
-    url: string
-    options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }>
+    src: ImageSource
+    options: ImageButton[]
+    onClose?: () => void
   }
 
   loras: Array<{ id: string; name: string; tags: Record<string, number> }>
@@ -56,8 +77,18 @@ export type SettingState = {
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
+
   showSettings: boolean
   showImgSettings: boolean
+
+  imggen: {
+    show: boolean
+    prompt?: string
+    action?: {
+      text: string
+      handler: (image: string) => void
+    }
+  }
 
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
@@ -66,6 +97,7 @@ export type SettingState = {
   confirm?: {
     title?: string
     message: string | JSX.Element
+    actions?: ConfirmAction[]
     onConfirm?: () => void
   }
 
@@ -115,6 +147,7 @@ const initState: SettingState = {
   flags: getFlags(),
   showSettings: false,
   showImgSettings: false,
+  imggen: { show: false },
   slotsLoaded: false,
   slots: { publisherId: '' },
   overlay: false,
@@ -167,9 +200,21 @@ export const settingStore = createStore<SettingState>(
     },
     openConfirm(
       {},
-      opts: { message: string | JSX.Element; title?: string; onConfirm?: () => void }
+      opts: {
+        message: string | JSX.Element
+        title?: string
+        onConfirm?: () => void
+        actions?: ConfirmAction[]
+      }
     ) {
-      return { confirm: { message: opts.message, title: opts.title, onConfirm: opts.onConfirm } }
+      return {
+        confirm: {
+          message: opts.message,
+          title: opts.title,
+          onConfirm: opts.onConfirm,
+          actions: opts.actions,
+        },
+      }
     },
     closeConfirm({ confirm }, confirmed: boolean) {
       if (!confirm) return
@@ -184,6 +229,21 @@ export const settingStore = createStore<SettingState>(
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings
       return { showSettings: next }
+    },
+    openImageGen: (
+      _,
+      opts?: { prompt?: string; handler?: { text: string; handler: (image: string) => void } }
+    ) => {
+      return {
+        imggen: {
+          show: true,
+          prompt: opts?.prompt || '',
+          action: opts?.handler,
+        },
+      }
+    },
+    closeImageGen: () => {
+      return { imggen: { show: false } }
     },
     imageSettings({ showImgSettings }, next?: boolean) {
       if (next === undefined) {
@@ -358,12 +418,21 @@ export const settingStore = createStore<SettingState>(
       storage.localSetItem('agnai-anonymize', JSON.stringify(!anonymize))
       return { anonymize: !anonymize }
     },
-    showImage(
-      _,
-      image: string,
-      options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }> = []
-    ) {
-      return { showImage: { url: image, options } }
+    showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
+      return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
+    },
+    showMessageImages(_, opts: { id: string; position?: number }) {
+      return {
+        showImage: {
+          src: {
+            type: 'message',
+            id: `message-images-${opts.id}`,
+            initial: opts.position,
+            messageId: opts.id,
+          },
+          options: [],
+        },
+      }
     },
     clearImage() {
       return { showImage: undefined }

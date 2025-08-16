@@ -1,12 +1,11 @@
 import { Component, Show, createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
-import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput, { InlineRangeInput } from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { createDebounce, createEmitter, toDropdownItems } from '../../shared/util'
-import { characterStore, settingStore, userStore } from '../../store'
+import { characterStore, promptStore, settingStore, userStore } from '../../store'
 import Message, { Typewriter } from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
@@ -16,6 +15,7 @@ import { Save, X } from 'lucide-solid'
 import { Card } from '/web/shared/Card'
 import Sortable, { SortItem } from '/web/shared/Sortable'
 import { defaultUIsettings } from '/common/types/ui'
+import { neat } from '/common/util'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -29,12 +29,15 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   trash: 'Delete',
   attach: 'Attach',
   'schema-regen': 'Retry Schema',
+  visible: 'Visibility',
+  'gen-image': ' Gen Image',
 }
 
 const UISettings: Component<{}> = () => {
   const state = userStore()
   const chars = characterStore()
   const settings = settingStore()
+  const prompts = promptStore()
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
@@ -169,6 +172,13 @@ const UISettings: Component<{}> = () => {
       <h3 class="text-md font-bold">Chat Settings</h3>
 
       <Toggle
+        label="Response Hints"
+        helperText="Add a hint to your message to guide the response"
+        value={prompts.hintsEnabled}
+        onChange={(ev) => promptStore.toggleHints(ev)}
+      />
+
+      <Toggle
         fieldName="imageWrap"
         label="Avatar Wrap Around"
         helperText='Allow text in messages to "wrap around" avatars'
@@ -191,6 +201,19 @@ const UISettings: Component<{}> = () => {
         onChange={(next) => userStore.saveUI({ expandReasoning: next })}
       />
 
+      <Select
+        items={[
+          { value: '', label: 'Default (All)' },
+          { value: 'all', label: 'All' },
+          { value: 'post', label: 'After Thought' },
+          { value: 'pre', label: 'Before Thought' },
+        ]}
+        label="Mid-Reasoning Behavior"
+        helperMarkdown={neat`When reasoning is in the middle of a response, which utterance (i.e., non-thought) should be kept`}
+        value={state.ui.displayReasoning}
+        onChange={(next) => userStore.saveUI({ displayReasoning: next.value as any })}
+      />
+
       <Toggle
         value={settings.anonymize}
         label="Anonymize Chat"
@@ -206,7 +229,7 @@ const UISettings: Component<{}> = () => {
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
 
-      <Card border>
+      <Card border class="!my-1 !px-2 !py-1">
         <div class="flex w-full flex-col">
           <div class="flex gap-1">
             <InlineRangeInput
@@ -222,7 +245,11 @@ const UISettings: Component<{}> = () => {
                 twReset.emit.reset()
               }}
             />
-            <Button size="sm" class="!py-2">
+            <Button
+              size="sm"
+              class="!py-2"
+              onClick={() => userStore.saveUI({ textSpeed: state.ui.textSpeed })}
+            >
               Save
             </Button>
           </div>
@@ -493,13 +520,9 @@ const UISettings: Component<{}> = () => {
           <Message
             index={-1}
             editing={false}
-            msg={toBotMsg(
-              chars.characters.list[0],
-              '*I wave excitedly* Hello world!\nHow are you today?',
-              {
-                _id: '1',
-              }
-            )}
+            messageId={'example-msg-1'}
+            content={'*I wave excitedly* Hello world!\nHow are you today?'}
+            characterId={chars.characters.list[0]?._id}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
@@ -509,11 +532,10 @@ const UISettings: Component<{}> = () => {
             <Message
               index={-1}
               editing={false}
-              msg={toUserMsg(
-                state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"',
-                { _id: '2' }
-              )}
+              messageId={'example-msg-2'}
+              content='*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"'
+              characterId={chars.impersonating?._id}
+              userId={state.user?._id}
               onRemove={noop}
               sendMessage={() => {}}
               isPaneOpen={false}

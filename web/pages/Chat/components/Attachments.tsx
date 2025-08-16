@@ -31,16 +31,19 @@ export const MessageAttachments: Component<{ ctx: ContextState; msg: AppSchema.C
               class="max-h-8 cursor-pointer rounded-md sm:max-h-12"
               src={image}
               onClick={() =>
-                settingStore.showImage(image, [
-                  {
-                    schema: 'warning',
-                    text: 'Remove',
-                    onClick: () => {
-                      settingStore.clearImage()
-                      msgStore.removeAttachment(props.msg._id, index())
+                settingStore.showImage({
+                  src: { type: 'url', id: image },
+                  actions: [
+                    {
+                      schema: 'warning',
+                      text: 'Remove',
+                      onClick: () => {
+                        settingStore.clearImage()
+                        msgStore.removeAttachment(props.msg._id, index())
+                      },
                     },
-                  },
-                ])
+                  ],
+                })
               }
             />
           )}

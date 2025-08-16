@@ -1,15 +1,18 @@
-import { JSX, Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { JSX, Component, createMemo, createSignal, For, Show, createEffect, on } from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
-import { uniqBy } from '../../common/util'
 import Button from './Button'
-import { RootModal } from './Modal'
+import Modal, { RootModal } from './Modal'
 import { FormLabel } from './FormLabel'
-import { exportPreset, presetStore, settingStore, userStore } from '../store'
-import { isUsableService } from './util'
-import { defaultPresets } from '/common/default-preset'
-import { isDefaultPreset } from '/common/default-preset'
-import { DownloadIcon } from 'lucide-solid'
+import { exportPreset, presetStore, toastStore, userStore } from '../store'
+import { DownloadIcon, PlusIcon } from 'lucide-solid'
+import { AppSchema } from '/common/types'
+import { createStore } from 'solid-js/store'
+import { getStore } from '../store/create'
+import { getProviderConnection } from '/common/providers'
+import Select from './Select'
+import { ManageProvider } from '../pages/Settings/Provider/Manage'
+import { defaultPresets } from '/common/presets'
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -22,29 +25,13 @@ export const PresetSelect: Component<{
   children?: any
 }> = (props) => {
   const [filter, setFilter] = createSignal('')
+  const [newPreset, setNewPreset] = createSignal(false)
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
   )
 
   const presets = presetStore((s) => s.presets)
-  const config = settingStore((s) => s.config)
   const user = userStore((s) => ({ user: s.user }))
-
-  const builtin = createMemo(() =>
-    uniqBy(
-      props.options.filter((o) => {
-        if (o.custom) return false
-        if (!o.value) return true
-        if (!isDefaultPreset(o.value)) return false
-        const preset = defaultPresets[o.value]
-        if (!isUsableService(preset.service, config, user.user)) return false
-        return o.label.toLowerCase().includes(filter().toLowerCase())
-      }),
-      // Remove pesky duplicate builtin Horde or it's difficult to know which
-      // one the user selected
-      (o) => o.value
-    )
-  )
 
   const selectedLabel = createMemo(() => {
     const opt = props.options.find((o) => o.value === props.selected)
@@ -71,7 +58,7 @@ export const PresetSelect: Component<{
 
   return (
     <>
-      <div class="flex flex-col gap-2 py-3 text-sm">
+      <div class="flex flex-col text-sm">
         <Show
           when={props.label && props.helperText}
           fallback={<div class="text-lg">{props.label || ''}</div>}
@@ -105,27 +92,35 @@ export const PresetSelect: Component<{
         <div class="flex flex-col gap-4">
           <div class="sticky top-0">
             <TextInput
-              fieldName="__filter"
               placeholder="Type to filter presets..."
-              onKeyUp={(e) => setFilter(e.currentTarget.value)}
+              onChange={(e) => setFilter(e.currentTarget.value)}
             />
           </div>
-          <div class="flex flex-wrap gap-2 pr-3">
-            <h4>Custom presets</h4>
+          <div class="flex flex-wrap gap-2">
+            <div class="flex w-full justify-end px-2">
+              <Button size="sm" onClick={() => setNewPreset(true)}>
+                <PlusIcon size={16} />
+                New
+              </Button>
+            </div>
             <OptionList
               options={custom()}
-              onSelect={selectIdAndCloseModal}
-              selected={props.selected}
-            />
-            <h4>Built-in presets</h4>
-            <OptionList
-              options={builtin()}
               onSelect={selectIdAndCloseModal}
               selected={props.selected}
             />
           </div>
         </div>
       </RootModal>
+
+      <Show when={newPreset()}>
+        <QuickNewPreset
+          cancel={() => setNewPreset(false)}
+          success={(preset) => {
+            setNewPreset(false)
+            props.setPresetId(preset._id)
+          }}
+        />
+      </Show>
     </>
   )
 }
@@ -158,3 +153,113 @@ const OptionList: Component<{
     </div>
   </div>
 )
+
+const QuickNewPreset: Component<{
+  cancel: () => void
+  success: (preset: AppSchema.UserGenPreset) => void
+}> = (props) => {
+  const providers = getStore('user')((s) => ({
+    user: s.user,
+    conns: (s.user?.providers || []).map(getProviderConnection),
+  }))
+  const [state, setState] = createStore({ name: '', providerId: '', loading: false })
+  const [createdId, setCreatedId] = createSignal('')
+
+  const options = createMemo(() => {
+    const items = providers.conns
+      .map((prv) => ({
+        label: `${prv.name || prv.detail.name}`,
+        value: prv.id,
+      }))
+      .sort((l, r) => l.label.localeCompare(r.label))
+
+    items.unshift({ label: 'Select Provider', value: '' }, { label: 'New', value: 'new' })
+
+    return items
+  })
+
+  const createPreset = async () => {
+    if (state.providerId === 'new' || !state.providerId) {
+      toastStore.warn(`Choose a Provider then try again`)
+      return
+    }
+
+    setState('loading', true)
+
+    try {
+      await getStore('presets').createPreset(
+        {
+          ...defaultPresets.agnai,
+          name: state.name || getEmptyPresetName(),
+          providerId: state.providerId,
+          providerModels: {},
+          providerSettings: {},
+        },
+        (preset) => {
+          props.success(preset)
+        }
+      )
+    } finally {
+      setState('loading', false)
+    }
+  }
+
+  createEffect(
+    on(
+      () => options(),
+      (next) => {
+        const id = createdId()
+        if (!id) return
+
+        const match = next.find((n) => n.value === id)
+        if (!match) return
+
+        setState('providerId', id)
+        setCreatedId('')
+      }
+    )
+  )
+
+  return (
+    <>
+      <Modal show close={props.cancel} title="New Preset">
+        <div class="flex flex-col gap-2">
+          <TextInput
+            label="Preset Name"
+            placeholder="Preset Name..."
+            value={state.name}
+            onChange={(ev) => setState('name', ev.currentTarget.value)}
+          />
+          <Select
+            items={options()}
+            label="Provider"
+            value={state.providerId}
+            onChange={(ev) => setState('providerId', ev.value)}
+          />
+
+          <div class="flex justify-center">
+            <Button
+              schema="success"
+              disabled={!state.providerId || state.providerId === 'new'}
+              onClick={createPreset}
+            >
+              Create
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      <ManageProvider
+        user={providers.user}
+        close={(reason, prv) => {
+          setState('providerId', prv?._id || '')
+          setCreatedId(prv?._id || '')
+        }}
+        show={state.providerId === 'new'}
+      />
+    </>
+  )
+}
+
+function getEmptyPresetName() {
+  return `New - ${new Date().toLocaleString()}`
+}

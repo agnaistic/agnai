@@ -8,12 +8,13 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
   onMount,
 } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import Button, { ButtonSchema } from './Button'
 import { RootModal } from './Modal'
-import { ComponentSubscriber } from './util'
+import { ComponentSubscriber, PartialListener } from './util'
 import TextInput from './TextInput'
 
 export type CustomOption = {
@@ -46,22 +47,39 @@ export const CustomSelect: Component<{
   search?: (value: string, search: string) => boolean
   disabled?: boolean
   footer?: any
+
+  preoptions?: JSX.Element
+  postoptions?: JSX.Element
   children?: any
 
+  listener?: PartialListener<'close' | 'open'>
   closeSub?: ComponentSubscriber<'close'>
   openSub?: ComponentSubscriber<'open'>
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
+  const [unsubs, setUnsubs] = createSignal<Function[]>([])
 
   onMount(() => {
     if (props.closeSub) {
-      props.closeSub('close', () => setOpen(false))
+      const unsub = props.closeSub('close', () => setOpen(false))
+      setUnsubs((v) => v.concat(unsub))
     }
 
     if (props.openSub) {
-      props.openSub('open', () => setOpen(true))
+      const unsub = props.openSub('open', () => setOpen(true))
+      setUnsubs((v) => v.concat(unsub))
     }
+
+    props.listener?.open?.()
+  })
+
+  onCleanup(() => {
+    for (const unsub of unsubs()) {
+      unsub()
+    }
+
+    props.listener?.close?.()
   })
 
   createEffect(() => {
@@ -89,13 +107,14 @@ export const CustomSelect: Component<{
   const filteredOpts = createMemo(() => {
     if (!props.options) return
 
-    const input = filter().trim()
+    const input = filter().trim().toLowerCase()
     if (!input) return props.options
 
     return props.options.filter((opt) =>
       typeof opt.label === 'string'
-        ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
-        : props.search?.(opt.value, input)
+        ? props.search?.(opt.label.toLowerCase(), input) ||
+          props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+        : props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
     )
   })
 
@@ -121,7 +140,7 @@ export const CustomSelect: Component<{
       class={`max-w-full ${props.parentClass || ''}`}
       classList={{ ...props.classList, hidden: props.hide ?? false }}
     >
-      <div class={'flex flex-col text-sm ' + props.buttonParentClass || ''}>
+      <div class={'flex flex-col text-sm ' + (props.buttonParentClass || '')}>
         <FormLabel label={props.label} helperText={props.helperText} />
 
         <div class="flex gap-1">
@@ -158,6 +177,8 @@ export const CustomSelect: Component<{
               value={filter()}
             />
           </Show>
+
+          {props.preoptions}
 
           <Show when={!!props.categories && !!props.header}>{props.header}</Show>
 

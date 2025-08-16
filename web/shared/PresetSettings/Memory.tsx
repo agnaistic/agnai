@@ -15,7 +15,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           step={1}
           value={props.state.memoryContextLimit ?? 500}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('memoryContextLimit', ev)}
+          onChange={(ev) => props.setters.setState('memoryContextLimit', ev)}
         />
 
         <RangeInput
@@ -27,7 +27,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           step={1}
           value={props.state.memoryChatEmbedLimit ?? 500}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('memoryChatEmbedLimit', ev)}
+          onChange={(ev) => props.setters.setState('memoryChatEmbedLimit', ev)}
         />
 
         <RangeInput
@@ -39,7 +39,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           step={1}
           value={props.state.memoryUserEmbedLimit ?? 500}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('memoryUserEmbedLimit', ev)}
+          onChange={(ev) => props.setters.setState('memoryUserEmbedLimit', ev)}
         />
 
         <RangeInput
@@ -51,7 +51,7 @@ export const MemorySettings: Component<PresetTabProps> = (props) => {
           step={1}
           value={props.state.memoryDepth || 50}
           disabled={props.state.disabled}
-          onChange={(ev) => props.setter('memoryDepth', ev)}
+          onChange={(ev) => props.setters.setState('memoryDepth', ev)}
         />
       </div>
     </div>

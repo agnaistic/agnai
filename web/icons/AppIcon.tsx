@@ -38,3 +38,10 @@ const AppIcon: Component<IconProps & { svg: string }> = (props) => {
 }
 
 export default AppIcon
+
+export const ICON_SIZES = {
+  PILL: 12,
+  SM: 16,
+  MD: 20,
+  LG: 24,
+}

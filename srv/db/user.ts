@@ -26,7 +26,14 @@ export type NewUser = {
 
 export async function ensureInitialUser() {
   const user = await db('user').findOne({ kind: 'user', username: config.init.username })
-  if (user) return
+  const reset = !!process.env.RESET_PASSWORD
+  if (user && !reset) return
+
+  if (user && reset) {
+    await store.users.resetPassword(user?._id, config.init.password)
+    logger.info(config.init, 'Reset initial user')
+    return
+  }
 
   await createUser(
     {
@@ -80,6 +87,8 @@ export async function saveUserProvider(
         key: deleteKey ? '' : key ? key : p.key,
         provider: prv.provider,
         format: prv.format,
+        userKey: undefined,
+        disableAutoUrl: !!prv.disableAutoUrl,
       }
     })
 
@@ -92,6 +101,7 @@ export async function saveUserProvider(
     _id: v4(),
     name: prv.name,
     url: prv.url,
+    disableAutoUrl: !!prv.disableAutoUrl,
     provider: prv.provider,
     format: prv.format,
     key,
@@ -594,6 +604,10 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   if (user.providers) {
     for (const prov of user.providers) {
+      if (prov.provider.startsWith('self-') && prov.key) {
+        prov.userKey = decryptText(prov.key, true)
+      }
+
       prov.keySet = !!prov.key
       prov.key = ''
     }

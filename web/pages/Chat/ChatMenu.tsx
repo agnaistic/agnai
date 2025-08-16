@@ -19,13 +19,14 @@ import {
   RotateCcw,
   ChevronLeft,
   Pencil,
-  Info,
   Image,
+  ImagePlus,
 } from 'lucide-solid'
-import { startTour } from '/web/tours'
 import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
+import { usePresetContext } from '/web/store/preset-context'
+import { getStore } from '/web/store/create'
 
 type NavProps = {
   ctx: ContextState
@@ -76,6 +77,7 @@ export const ChatMenu: Component<{
 }
 
 const ChatNav: Component<NavProps> = (props) => {
+  const [preset, setters] = usePresetContext()
   const isOwner = createMemo(
     () => props.ctx.chat?.userId === props.ctx.user?._id && props.ctx.chat?.mode !== 'companion'
   )
@@ -83,6 +85,17 @@ const ChatNav: Component<NavProps> = (props) => {
   const size = 20
 
   const openProviders = createEmitter('open')
+
+  const openMessageImages = () => {
+    const last = getStore('messages').getState().msgs.slice(-1)[0]
+
+    if (!last) {
+      settingStore.openImageGen()
+      return
+    }
+
+    settingStore.showMessageImages({ id: last._id, position: 0 })
+  }
 
   return (
     <>
@@ -129,8 +142,13 @@ const ChatNav: Component<NavProps> = (props) => {
       </Show>
 
       <div class="flex flex-col gap-1">
-        <PresetProvider page="menu" openSub={openProviders.on}></PresetProvider>
-        <ThirdPartyModel page="mode" />
+        <PresetProvider
+          state={preset}
+          setters={setters}
+          page="menu"
+          openSub={openProviders.on}
+        ></PresetProvider>
+        <ThirdPartyModel state={preset} setters={setters} page="mode" />
       </div>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
@@ -140,6 +158,13 @@ const ChatNav: Component<NavProps> = (props) => {
           tooltip="Site Settings"
         >
           <Settings size={size} aria-hidden="true" />
+        </Nav.Item>
+        <Nav.Item
+          onClick={openMessageImages}
+          ariaLabel="Image Generation"
+          tooltip="Image Generation"
+        >
+          <ImagePlus size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item
           onClick={() => settingStore.imageSettings(true)}
@@ -156,9 +181,6 @@ const ChatNav: Component<NavProps> = (props) => {
         </Nav.Item>
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash size={size} />
-        </Nav.Item>
-        <Nav.Item onClick={() => startTour('chat', true)} tooltip="Chat Guide" menuOpen>
-          <Info size={size} />
         </Nav.Item>
       </div>
     </>

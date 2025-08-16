@@ -105,7 +105,7 @@
 }
 
 .helper-text {
-  @apply mt-[-0.125rem] pb-1 text-sm text-[var(--text-600)];
+  @apply mt-[-0.125rem] text-sm text-[var(--text-600)];
 }
 
 .spinner {
@@ -148,4 +148,29 @@
 
 .shepherd-text {
   color: var(--text-900) !important;
+}
+
+.variable-textarea-container {
+  z-index: 10;
+  align-items: flex-end;
+  max-height: 40px;
+}
+
+.variable-textarea {
+  height: 40px;
+  max-height: 40px;
+}
+
+.variable-textarea:focus {
+  field-sizing: content !important;
+  height: unset !important;
+  max-height: 100px !important;
+  border: 1px solid var(--bg-500) !important;
+}
+
+.text-outline {
+  text-shadow: var(--outline-thickness) 0 var(--outline-shadow) var(--text-100),
+    0 var(--outline-thickness-rev) var(--outline-shadow) var(--text-100),
+    0 var(--outline-thickness) var(--outline-shadow) var(--text-100),
+    var(--outline-thickness-rev) 0 var(--outline-shadow) var(--text-100);
 }

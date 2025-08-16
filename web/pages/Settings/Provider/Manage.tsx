@@ -18,13 +18,17 @@ import { Cable, Check, Ellipsis, X } from 'lucide-solid'
 import Select from '/web/shared/Select'
 import OpenRouterOauth from '../OpenRouterOauth'
 import { userStore } from '/web/store'
+import { Toggle } from '/web/shared/Toggle'
 
 export const ManageProvider: Component<{
   onCreated?: (provider: AppSchema.Provider) => void
   onUpdated?: (provider: AppSchema.Provider) => void
   user: AppSchema.User | undefined
   show: boolean
-  close: () => void
+  close: (
+    reason: 'cancel' | 'updated' | 'created' | 'deleted',
+    provider?: AppSchema.Provider
+  ) => void
   provider?: AppSchema.Provider
 }> = (props) => {
   const [tested, setTested] = createSignal<boolean>()
@@ -34,6 +38,7 @@ export const ManageProvider: Component<{
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
   const [format, setFormat] = createSignal('')
+  const [autourl, setAutourl] = createSignal(false)
 
   const state = presetStore((s) => ({ testLoading: s.testLoading }))
 
@@ -86,6 +91,7 @@ export const ManageProvider: Component<{
     setUrl(props.provider?.url || '')
     setName(props.provider?.name || '')
     setKey('')
+    setAutourl(props.provider?.disableAutoUrl ?? false)
 
     if (!props.provider?.provider || !props.provider.format) return
 
@@ -118,6 +124,7 @@ export const ManageProvider: Component<{
       key: key(),
       provider: provider(),
       url: url(),
+      disableAutoUrl: autourl(),
     }
 
     if (fmt >= 0 && def.detail?.formats) {
@@ -127,11 +134,11 @@ export const ManageProvider: Component<{
     getStore('user').saveProvider(body, (success, next) => {
       setLoading(false)
       if (!success) return
-      props.close()
-
+      const reason = !next ? 'cancel' : !body._id && next._id ? 'created' : 'updated'
+      props.close(reason, next)
       if (!next) return
-      const wasCreated = !body._id && next._id
-      if (wasCreated) {
+
+      if (reason === 'created') {
         props.onCreated?.(next)
       } else {
         props.onUpdated?.(next)
@@ -168,7 +175,7 @@ export const ManageProvider: Component<{
     if (!props.provider?._id) return
     getStore('user').deleteProvider(props.provider._id, (success) => {
       if (!success) return
-      props.close()
+      props.close('deleted')
     })
   }
 
@@ -223,7 +230,7 @@ export const ManageProvider: Component<{
   return (
     <RootModal
       show={props.show}
-      close={props.close}
+      close={() => props.close('cancel')}
       title={`${props.provider?._id ? 'Update Provider' : 'Create Provider'}`}
       footer={
         <div class="flex w-full justify-between">
@@ -235,7 +242,7 @@ export const ManageProvider: Component<{
             </Show>
           </div>
           <div class="flex gap-2">
-            <Button schema="secondary" onClick={props.close} disabled={loading()}>
+            <Button schema="secondary" onClick={() => props.close('cancel')} disabled={loading()}>
               Cancel
             </Button>
             <Button schema="success" onClick={save} disabled={loading() || !provider()}>
@@ -255,7 +262,7 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="Label"
+          helperText="Label"
           placeholder="Custom label for this provider"
           value={name()}
           onChange={(ev) => setName(ev.currentTarget.value)}
@@ -263,7 +270,7 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="URL"
+          helperText="URL"
           placeholder="https://..."
           value={url()}
           onChange={(ev) => {
@@ -274,16 +281,24 @@ export const ManageProvider: Component<{
         />
 
         <TextInput
-          label="API Key"
+          helperText="API Key"
           type="password"
           placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
           onChange={(ev) => setKey(ev.currentTarget.value)}
           value={key()}
         />
 
+        <Show when={isCustom()}>
+          <Toggle
+            helperText="Disable Auto-URL"
+            value={autourl()}
+            onChange={(ev) => setAutourl(ev)}
+          />
+        </Show>
+
         <Select
           items={formatOptions()}
-          label="Request Format"
+          helperText={'Request Format'}
           value={format()}
           onChange={(ev) => onFormatChange(ev.value)}
           hide={formatOptions().length <= 1}

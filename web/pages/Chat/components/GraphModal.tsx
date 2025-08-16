@@ -62,7 +62,8 @@ export const ChatGraphModal: Component<{
       <div class="h-32 max-h-32 min-h-32 overflow-y-scroll">
         <Show when={store.msg}>
           <Message
-            msg={store.msg!}
+            messageId={store.msg?._id!}
+            content={store.msg?.msg!}
             editing={false}
             index={0}
             isPaneOpen={false}

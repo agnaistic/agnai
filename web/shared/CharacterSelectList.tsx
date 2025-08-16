@@ -6,6 +6,7 @@ import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
 import { Pill } from './Card'
+import { isChatPage } from './hooks'
 
 export type Option<T extends string = string> = {
   label: string
@@ -19,12 +20,15 @@ const CharacterSelectList: Component<{
   emptyLabel?: string
   ignoreActive?: boolean
   onSelect: (item: AppSchema.Character | undefined) => void
+  adornment?: Component<{ char: AppSchema.Character }>
 }> = (props) => {
   const chats = chatStore()
   const [_ref, setRef] = createSignal<any>()
   const [search, setSearch] = createSignal('')
+  const chatPage = isChatPage()
 
   const current = createMemo(() => {
+    if (!chatPage()) return
     if (!chats.active?.chat || props.ignoreActive) return
 
     const chars: AppSchema.Character[] = []
@@ -93,56 +97,57 @@ const CharacterSelectList: Component<{
           <Show when={current()?.list?.length}>
             <For each={current()?.list}>
               {(item) => (
-                <div
-                  class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
-                  onClick={() => onChange(item)}
-                >
-                  <div class="ellipsis flex h-3/4 items-center gap-4">
-                    <CharacterAvatar char={item} format={{ size: 'sm', corners: 'circle' }} />
-
-                    <div class="ellipsis flex w-full flex-col">
-                      <div class="ellipsis font-bold">{item.name}</div>
-                      <div class="ellipsis">{item.description}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
-                      <Show when={item.favorite}>
-                        <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
-                      </Show>
-                    </div>
-                  </div>
-                </div>
+                <CharacterSelectItem char={item} onClick={onChange} adornment={props.adornment} />
               )}
             </For>
           </Show>
           <For each={sorted()}>
             {(item) => (
-              <div
-                class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
-                onClick={() => onChange(item)}
-              >
-                <div class="ellipsis flex h-3/4 items-center gap-4">
-                  <CharacterAvatar char={item} format={{ size: 'sm', corners: 'circle' }} />
-
-                  <div class="ellipsis flex w-full flex-col">
-                    <div class="ellipsis font-bold">{item.name}</div>
-                    <div class="ellipsis">{item.description}</div>
-                  </div>
-                </div>
-                <div>
-                  <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
-                    <Show when={item.favorite}>
-                      <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
-                    </Show>
-                  </div>
-                </div>
-              </div>
+              <CharacterSelectItem char={item} onClick={onChange} adornment={props.adornment} />
             )}
           </For>
         </div>
       </div>
     </>
+  )
+}
+
+export const CharacterSelectItem: Component<{
+  char: AppSchema.Character
+  nodesc?: boolean
+  onClick: (char: AppSchema.Character) => void
+  adornment?: Component<{ char: AppSchema.Character }>
+}> = (props) => {
+  return (
+    <div class="flex w-full max-w-full gap-2">
+      <div
+        class="bg-700 flex flex-1 cursor-pointer flex-row items-center justify-between gap-4 overflow-auto rounded-xl px-2 py-1"
+        onClick={() => props.onClick(props.char)}
+      >
+        <div class="ellipsis flex items-center gap-4">
+          <CharacterAvatar char={props.char} format={{ size: 'sm', corners: 'circle' }} />
+
+          <div class="ellipsis flex w-full flex-col">
+            <div class="ellipsis font-bold">{props.char.name}</div>
+            <div class="ellipsis" classList={{ hidden: !!props.nodesc }}>
+              {props.char.description}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+            <Show when={props.char.favorite}>
+              <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
+            </Show>
+          </div>
+        </div>
+      </div>
+      <Show when={props.adornment}>
+        <div class="flex w-fit min-w-fit items-center">
+          {props.adornment!({ char: props.char })}
+        </div>
+      </Show>
+    </div>
   )
 }
 

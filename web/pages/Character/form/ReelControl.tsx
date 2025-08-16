@@ -10,10 +10,16 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
   props
 ) => {
   const createAvatar = async () => {
-    const base64 = await props.editor.createAvatar()
-    if (!base64) return
-
-    await props.editor.imageCache.addImage(base64, `${v4()}.png`)
+    settingStore.openImageGen({
+      prompt: props.editor.state.appearance || '',
+      handler: {
+        text: 'Send to Editor',
+        handler: async (image) => {
+          await props.editor.imageCache.addImage(image, { id: `${v4()}.png` })
+          settingStore.closeImageGen()
+        },
+      },
+    })
   }
 
   const size = 14
@@ -21,6 +27,9 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
   return (
     <div class="flex flex-col items-center gap-1">
       <div class="flex w-fit gap-2">
+        <Button size="sm" onClick={createAvatar} disabled={props.loading}>
+          <ImagePlus size={16} />
+        </Button>
         <Button
           size="sm"
           disabled={props.editor.imageCache.state.images.length <= 1 || props.loading}
@@ -44,22 +53,15 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
         >
           <ArrowRight size={size} />
         </Button>
+        <Button size="sm" onClick={() => settingStore.imageSettings(true)}>
+          <Settings size={16} />
+        </Button>
       </div>
       <ModelOverride
         state={props.editor.state.imageOverride}
         setter={(override) => props.editor.update('imageOverride', override)}
       />
-      <div class="flex w-fit gap-2">
-        {/* <Button size="sm" >
-          <RotateCcw size={size} />
-        </Button> */}
-        <Button size="sm" onClick={createAvatar} disabled={props.loading}>
-          <ImagePlus size={16} /> Generate
-        </Button>
-        <Button size="sm" onClick={() => settingStore.imageSettings(true)}>
-          <Settings size={20} />
-        </Button>
-      </div>
+      {/* <div class="flex w-fit gap-2"></div> */}
     </div>
   )
 }
@@ -90,8 +92,15 @@ const ModelOverride: Component<{ state: string; setter: (override: string) => vo
   )
 
   return (
-    <Show when={(user.sub?.tier.imagesAccess || user.user?.admin) && state.models.length > 0}>
+    <Show
+      when={
+        (user.sub?.tier.imagesAccess || user.user?.admin) &&
+        state.models.length > 0 &&
+        user.user?.images?.type === 'agnai'
+      }
+    >
       <Select
+        class="!p-1"
         parentClass="text-sm"
         value={props.state}
         items={options()}

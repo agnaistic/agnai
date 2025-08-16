@@ -258,7 +258,7 @@ async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
       modelCache = models.map((m: OpenRouterModel) => ({
         id: m.id,
         context_length: m.context_length,
-        pricing: { prompt: m.pricing.prompt, completion: m.pricing.completion },
+        pricing: { prompt: m.pricing?.prompt || 0, completion: m.pricing?.completion || 0 },
       }))
     }
 

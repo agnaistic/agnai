@@ -41,6 +41,8 @@ import { AlternateGreetingsInput } from './form/AltGreetings'
 import { SpriteModal } from './form/SpriteModal'
 import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
+import { usePresetContext } from '/web/store/preset-context'
+import { PageSpinner } from '/web/shared/Loading'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -67,9 +69,11 @@ export const CreateCharacterForm: Component<{
 }> = (props) => {
   let spriteRef: any
 
+  const [charLoading, setCharLoading] = createSignal(false)
   const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
   const user = userStore()
+  const [preset, presetSetters] = usePresetContext({ anonymous: true })
 
   const isPage = props.close === undefined
 
@@ -152,7 +156,13 @@ export const CreateCharacterForm: Component<{
     startTour('char')
 
     if (srcId()) {
-      characterStore.getCharacter(srcId(), { chat: props.chat })
+      setCharLoading(true)
+      characterStore.getCharacter(srcId(), {
+        chat: props.chat,
+        onDone: () => {
+          setCharLoading(false)
+        },
+      })
     }
 
     /* Character importing from CharacterHub */
@@ -284,11 +294,7 @@ export const CreateCharacterForm: Component<{
   const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
 
   return (
-    <Page
-      classList={{
-        'p-0': !isPage,
-      }}
-    >
+    <Page classList={{ 'p-0': !isPage }}>
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           title={`${
@@ -307,6 +313,9 @@ export const CreateCharacterForm: Component<{
             </>
           }
         />
+      </Show>
+      <Show when={charLoading()}>
+        <PageSpinner />
       </Show>
       <form class="relative text-base">
         <div class="flex flex-col gap-4">
@@ -338,19 +347,29 @@ export const CreateCharacterForm: Component<{
             </Show>
 
             <div class="flex justify-end gap-2 text-[1em]">
-              <Button onClick={() => setOpenPreset(true)} class="tour-preset">
+              <Button
+                size="sm"
+                onClick={() => {
+                  const presetId = user.user?.chargenPreset || user.user?.defaultPreset
+                  if (presetId) presetSetters.load(presetId)
+                  else presetSetters.clear()
+                  setOpenPreset(true)
+                }}
+                class="tour-preset"
+              >
                 <SlidersVertical size={24} /> Preset
               </Button>
-              <Button onClick={() => setImport(true)}>
+              <Button size="sm" onClick={() => setImport(true)}>
                 <Import /> Import
               </Button>
 
-              <Button onClick={() => setConverted(editor.convert())}>
+              <Button size="sm" onClick={() => setConverted(editor.convert())}>
                 <Download /> Export
               </Button>
 
               <Show when={state.edit}>
                 <Button
+                  size="sm"
                   onClick={() => {
                     setForceNew(true)
                     editor.clear()
@@ -363,6 +382,7 @@ export const CreateCharacterForm: Component<{
 
               <Show when={!state.edit}>
                 <Button
+                  size="sm"
                   schema="warning"
                   onClick={() => {
                     settingStore.openConfirm({
@@ -382,7 +402,7 @@ export const CreateCharacterForm: Component<{
                 setSearch({ char_tab: id })
               }}
               selected={tabs.selected}
-              tabs={tabs.tabs}
+              tabs={tabs.tabs()}
             />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Persona' }}>
@@ -455,12 +475,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="scenario"
                   label={
                     <>
-                      <Regenerate
-                        field={'scenario'}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                        class="tour-gen-field"
-                      />
+                      <Regenerate field={'scenario'} editor={editor} class="tour-gen-field" />
                       Scenario{' '}
                     </>
                   }
@@ -479,11 +494,7 @@ export const CreateCharacterForm: Component<{
                     label={
                       <div class="flex items-center gap-1">
                         <Show when={editor.state.personaKind === 'text'}>
-                          <Regenerate
-                            field={'persona'}
-                            editor={editor}
-                            allowed={editor.canGuidance}
-                          />
+                          <Regenerate field={'persona'} editor={editor} />
                         </Show>
                         Personality
                       </div>
@@ -522,7 +533,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="greeting"
                   label={
                     <>
-                      <Regenerate field={'greeting'} editor={editor} allowed={editor.canGuidance} />
+                      <Regenerate field={'greeting'} editor={editor} />
                       Greeting{' '}
                     </>
                   }
@@ -546,11 +557,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="sampleChat"
                   label={
                     <>
-                      <Regenerate
-                        field={'sampleChat'}
-                        editor={editor}
-                        allowed={editor.canGuidance}
-                      />
+                      <Regenerate field={'sampleChat'} editor={editor} />
                       Sample Conversation{' '}
                     </>
                   }
@@ -667,10 +674,13 @@ export const CreateCharacterForm: Component<{
           <sub>This preset used for character generation</sub>
           <ModeGenSettings
             presetId={user.user?.chargenPreset || user.user?.defaultPreset}
+            preset={preset}
+            setters={presetSetters}
             onPresetChanged={(id) => userStore.updatePartialConfig({ chargenPreset: id })}
             close={() => setOpenPreset(false)}
             hideTabs={['Memory', 'Prompt']}
             footer={setPresetFooter}
+            page="char"
           />
         </RootModal>
       </Show>

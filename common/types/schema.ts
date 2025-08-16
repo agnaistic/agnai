@@ -296,6 +296,8 @@ export namespace AppSchema {
 
     background?: string
     localSettings?: { bgFormat?: 'contain' | 'cover' | 'auto' }
+
+    invisible?: Record<string, boolean>
   }
 
   export interface ChatMember {
@@ -338,6 +340,8 @@ export namespace AppSchema {
       history: string
       values: any
     }
+
+    invisible?: Record<string, boolean>
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'

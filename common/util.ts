@@ -261,6 +261,18 @@ export function slugify(str: string) {
     .replace(/^-+|-+$/g, '')
 }
 
+export function cleanPrompt(prompt: string) {
+  const next = prompt
+    .replace(/[^0-9a-z_\-,\s\.\(\)\[\]]/gi, '')
+    .trim()
+    .split('\n')
+    .map((line) => line.trim())
+    .join(',')
+    .replace(/ +/, ' ')
+    .replace(/,+/g, ',')
+  return next
+}
+
 // https://stackoverflow.com/a/3561711
 export function escapeRegex(string: string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')

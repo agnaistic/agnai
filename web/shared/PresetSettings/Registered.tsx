@@ -3,13 +3,12 @@ import { AppSchema } from '../../../common/types/schema'
 import { AIAdapter } from '../../../common/adapters'
 import { settingStore } from '../../store'
 import { ServiceOption } from '../../pages/Settings/components/RegisteredSettings'
-import { SetStoreFunction } from 'solid-js/store'
+import { PresetFuncs } from '/web/store/preset-context'
 
 export const RegisteredSettings: Component<{
   service?: AIAdapter
-  state?: Partial<AppSchema.GenSettings>
-  setter?: SetStoreFunction<AppSchema.GenSettings>
-  mode: AppSchema.GenSettings['presetMode']
+  state: Partial<AppSchema.GenSettings>
+  setters: PresetFuncs
 }> = (props) => {
   const state = settingStore()
 
@@ -32,14 +31,14 @@ export const RegisteredSettings: Component<{
               service={props.service!}
               field={(field) => `registered.${props.service!}.${field}`}
               value={props.state?.registered?.[props.service!]?.[opt.field]}
-              hide={props.mode === 'simple' && opt.advanced === false}
+              hide={props.state.presetMode === 'simple' && opt.advanced === false}
               onChange={(ev) => {
-                if (!props.setter || !props.state) return
+                if (!props.setters || !props.state) return
                 if (!props.service) return
                 const prev = { ...(props.state.registered as any)?.[props.service!] }
                 prev[opt.field] = ev
                 const next = { ...props.state.registered, [props.service]: prev }
-                props.setter('registered', next)
+                props.setters.setState('registered', next)
               }}
             />
           )}

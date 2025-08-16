@@ -3,18 +3,8 @@ import { SetStoreFunction, createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import { ADAPTER_LABELS } from '/common/adapters'
 import { fromAttrs, toAttrs } from '/web/shared/PersonaAttributes'
-import {
-  NewCharacter,
-  characterStore,
-  presetStore,
-  settingStore,
-  toastStore,
-  userStore,
-} from '/web/store'
-import { Option } from '/web/shared/Select'
-import { defaultPresets } from '/common/presets'
+import { NewCharacter, characterStore, toastStore, userStore } from '/web/store'
 import { generateField } from './generate-char'
 import { ImageSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
@@ -22,7 +12,6 @@ import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
 import { ResponseSchema } from '/common/types/library'
 import { createDebounce, storage } from '/web/shared/util'
-import { isDefaultPreset } from '/common/default-preset'
 
 const EDITOR_CACHE_KEY = `agnai-char-editor`
 
@@ -167,17 +156,12 @@ const [updateCache] = createDebounce(async (state: EditorState) => {
   }
 
   await storage.setItem(EDITOR_CACHE_KEY, JSON.stringify(next))
-  console.log('[editor] cache updated', id)
 }, 500)
 
 export type CharEditor = ReturnType<typeof useCharEditor>
 
 export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: string }) {
-  const user = userStore()
-  const presets = presetStore()
-  const settings = settingStore()
-
-  const cache = useImageCache('avatars', { clean: true })
+  const cache = useImageCache('avatars-images', { clean: true })
 
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditorState>({ ...initState })
@@ -193,48 +177,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
       }
     )
   )
-
-  const genOptions = createMemo(() => {
-    if (!user.user) return []
-
-    const preset = isDefaultPreset(user.user.defaultPreset)
-      ? defaultPresets[user.user.defaultPreset]
-      : presets.presets.find((p) => p._id === user.user?.defaultPreset)
-
-    const opts: Option[] = []
-
-    if (preset?.service && preset.service !== 'horde') {
-      opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
-    }
-
-    {
-      const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= user.userLevel)
-
-      for (const sub of subs) {
-        opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })
-      }
-    }
-
-    if (user.user.oaiKeySet) {
-      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
-      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
-    }
-
-    if (user.user.novelVerified) {
-      opts.push({ label: 'NovelAI - Kayra', value: 'novel/kayra-v1' })
-      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
-    }
-
-    if (preset?.service === 'kobold') {
-      opts.push({ label: 'Third Party', value: 'kobold' })
-    }
-
-    if (user.user.claudeApiKeySet) {
-      opts.push({ label: 'Claude', value: 'claude' })
-    }
-
-    return opts
-  })
 
   createEffect(async () => {
     const nextImage = cache.state.image
@@ -264,7 +206,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
 
     if (base64) {
       const id = original ? 'original' : v4()
-      await cache.addImage(base64, id)
+      await cache.addImage(base64, { id })
       if (original) {
         setImageId(`avatars-${id}`)
       }
@@ -447,13 +389,11 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
     payload,
     original,
     clear,
-    genOptions,
     createAvatar,
     receiveAvatar,
     avatar: imageData,
     generating,
     canGenerate,
-    canGuidance: genOptions().length > 0,
     generateField: genField,
     generateAvatar,
     imageCache: cache,

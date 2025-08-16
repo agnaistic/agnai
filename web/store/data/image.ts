@@ -16,6 +16,8 @@ import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
 import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
+import { extractReasoning } from '/common/reasoning'
+import { replaceTags } from '/common/presets/templates'
 
 type GenerateOpts = {
   chatId?: string
@@ -25,6 +27,7 @@ type GenerateOpts = {
   append?: boolean
   source: string
   parent?: string
+  question?: string
 
   /** If true, the Image Settings prefix and suffix won't be applied */
   noAffix?: boolean
@@ -45,14 +48,40 @@ export const imageApi = {
   generateImageAsync,
   dataURLtoFile,
   getImageData,
+  getSDModelList,
   ALLOWED_TYPES,
 }
 
-export async function generateImagePrompt(onTick?: TickHandler) {
+export async function generateImagePrompt(opts?: { onTick?: TickHandler; question?: string }) {
   const entities = await getPromptEntities()
-  const summary = await createSummarizedImagePrompt(entities, onTick)
+  const summary = await createSummarizedImagePrompt({
+    entities,
+    onTick: opts?.onTick,
+    question: opts?.question,
+  })
 
   return summary
+}
+
+const SD_MODEL_CACHE = new Map<string, SDModel[]>()
+
+type SDModel = { title: string; model_name: string; filename: string }
+
+export async function getSDModelList(
+  opts: { url: string; key?: string; providerId?: string },
+  force?: boolean
+) {
+  if (!force && SD_MODEL_CACHE.has(opts.url)) {
+    const models = SD_MODEL_CACHE.get(opts.url)!
+    return { models }
+  }
+
+  const res = await api.post<{ models: SDModel[] }>('/chat/sd-models', opts)
+  if (res.result) {
+    return res.result
+  }
+
+  return { models: [] }
 }
 
 export async function generateImage(
@@ -60,9 +89,21 @@ export async function generateImage(
   callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
 ) {
   const entities = await getPromptEntities()
+
+  if (opts.messageId) {
+    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
+    if (index >= 0) {
+      entities.messages = entities.messages.slice(0, index + 1)
+    }
+  }
+
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
-    : await createSummarizedImagePrompt(entities, callbacks?.onTick)
+    : await createSummarizedImagePrompt({
+        entities,
+        onTick: callbacks?.onTick,
+        question: opts.question,
+      })
 
   if (!result.result?.response) {
     return result
@@ -260,10 +301,16 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHandler) {
-  if (opts.user.images?.summariseChat) {
-    const imageEntities = await getImagePromptEntities(opts)
-    const settings = imageEntities.preset || opts.settings
+async function createSummarizedImagePrompt(opts: {
+  entities: PromptEntities
+  onTick?: TickHandler
+  question?: string
+}) {
+  const { entities, question, onTick } = opts
+
+  if (entities.user.images?.summariseChat) {
+    const imageEntities = await getImagePromptEntities(entities)
+    const settings = imageEntities.preset || entities.settings
 
     console.log(
       'Using',
@@ -272,21 +319,36 @@ async function createSummarizedImagePrompt(opts: PromptEntities, onTick?: TickHa
       settings.name || '',
       `\n${imageEntities.summary || ''}`
     )
-    const result = await getChatSummary(settings, imageEntities.summary, onTick)
-    const summary = result.result?.response
+    const result = await getChatSummary(settings, {
+      prompt: imageEntities.summary,
+      onTick,
+      question,
+    })
+
+    if (result.result?.response) {
+      const { content } = extractReasoning(result.result.response)
+      if (content) {
+        result.result.response = content
+      }
+    }
+
+    const summary = result?.result?.response
 
     console.log('Image caption: ', summary)
     return result
   }
 
-  const prompt = await createImagePrompt(opts)
+  const prompt = await createImagePrompt(entities)
   return localApi.result({ response: prompt, meta: {} })
 }
 
 async function getChatSummary(
   settings: Partial<AppSchema.GenSettings>,
-  summaryPrompt: string,
-  onTick?: TickHandler
+  params: {
+    prompt: string
+    question?: string
+    onTick?: TickHandler
+  }
 ) {
   const opts = await msgsApi.getActiveTemplateParts()
   opts.limit = {
@@ -294,28 +356,39 @@ async function getChatSummary(
     encoder: await getEncoder(),
   }
 
-  let template = getSummaryTemplate(settings.service!, summaryPrompt)
+  let template = getSummaryTemplate(settings.service!, {
+    prompt: params.prompt,
+    question: params.question,
+  })
 
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
   const parsed = await parseTemplate(template, opts)
-  const prompt = parsed.parsed
+
+  let prompt = parsed.parsed
+  prompt = replaceTags(prompt, settings.modelFormat || 'None')
+
   const response = await genApi.inferenceStream(
     {
       prompt,
       settings,
+      messages: parsed.blocks,
     },
-    onTick
+    (text, state) => {
+      if (!params.onTick) return
+      const { content } = extractReasoning(text)
+      params.onTick?.(content.trim(), state)
+    }
   )
 
   return response
 }
 
-function getSummaryTemplate(service: AIAdapter, summaryPrompt?: string) {
+function getSummaryTemplate(service: AIAdapter, opts?: { prompt?: string; question?: string }) {
   switch (service) {
     case 'novel': {
       const prompt =
-        summaryPrompt ||
+        opts?.prompt ||
         `Write a detailed image caption of the current scene with a description of each character's appearance`
       return neat`
       {{char}}'s personality: {{personality}}
@@ -325,45 +398,32 @@ function getSummaryTemplate(service: AIAdapter, summaryPrompt?: string) {
       { ${prompt} }`
     }
 
-    case 'openai':
-    case 'openrouter':
-    case 'claude':
-    case 'scale': {
-      const prompt =
-        summaryPrompt ||
-        `Write an image caption of the current scene including the character's appearance`
-      return neat`
-      {{personality}}
-      
-      (System note: Start of conversation)
-      {{history}}
-      
-      {{ujb}}
-      (System: ${prompt})
-      Image caption:`
-    }
+    default: {
+      let prompt =
+        opts?.prompt ||
+        neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
 
-    case 'ooba':
-    case 'kobold':
-    case 'agnaistic': {
-      const prompt =
-        summaryPrompt ||
-        `Write an image caption of the current scene using physical descriptions without names.`
-      return neat`
-      <system>Below is an instruction that describes a task. Write a response that completes the request.</system>
+      if (opts?.question) {
+        prompt += `\nSpecifically focus on: ${opts.question}`
+      }
 
+      return neat`
+      <system>Your task is to generate a Booru Tag Image Caption by summarizing the most recent moment in a roleplay scenario.
+      Generate an image caption using the details and conversation below.</system>
+
+      <instruct>
       {{char}}'s Persona: {{personality}}
 
       The scenario of the conversation: {{scenario}}
 
-      Then the roleplay chat begins.
+      Then the roleplay chat begins.</instruct>
   
       {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
       {{/each}}
 
-      <user>${prompt}</user>
+      <instruct>${prompt}</instruct>
 
-      <bot>Image caption:`
+      <assistant>Image caption:</assistant>`
     }
   }
 }

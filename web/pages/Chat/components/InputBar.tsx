@@ -7,14 +7,17 @@ import {
   PlusCircle,
   Send,
   StopCircle,
+  X,
   Zap,
 } from 'lucide-solid'
 import {
   Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
   Match,
+  on,
   onCleanup,
   Setter,
   Show,
@@ -31,6 +34,7 @@ import {
   settingStore,
   characterStore,
   ChatMessageExt,
+  promptStore,
 } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -51,6 +55,8 @@ import { resizeImage } from '/web/shared/image-resize'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
 
+export type SendFunc = (opts: { msg: string; ooc: boolean; onSuccess?: () => void }) => void
+
 const InputBar: Component<{
   chat: AppSchema.Chat
   bots: AppSchema.Character[]
@@ -60,7 +66,7 @@ const InputBar: Component<{
   showOocToggle: boolean
   ooc: boolean
   setOoc: Setter<boolean | undefined>
-  send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
+  send: SendFunc
   more: (msg: string) => void
   request: (charId: string) => void
 }> = (props) => {
@@ -68,6 +74,7 @@ const InputBar: Component<{
 
   const [ctx] = useAppContext()
 
+  const prompt = promptStore()
   const user = userStore()
   const state = msgStore((s) => ({
     lastMsg: s.msgs.reduceRight<ChatMessageExt>((prev, curr, i) => {
@@ -157,11 +164,15 @@ const InputBar: Component<{
       return toastStore.warn(`Confirm or cancel swiping before sending`)
     }
 
-    props.send(value, props.ooc, () => {
-      ref.value = ''
-      setText('')
-      setCleared(0)
-      draft.clear()
+    props.send({
+      msg: value,
+      ooc: props.ooc,
+      onSuccess: () => {
+        ref.value = ''
+        setText('')
+        setCleared(0)
+        draft.clear()
+      },
     })
   }, 100)
 
@@ -223,6 +234,13 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
+  createEffect(
+    on(
+      () => props.chat._id,
+      (id) => promptStore.loadHint(id)
+    )
+  )
+
   const onFile = async (files: FileInputResult[]) => {
     setDragging(false)
     setMenu(false)
@@ -255,216 +273,242 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
-      <Show when={ctx.waiting?.signal && !api.isCdnApi()}>
-        <button
-          class="animate-pulse cursor-pointer p-2"
-          onClick={() => {
-            console.log('Cancel clicked', !!ctx.waiting?.signal)
-            msgStore.abortMessage()
-          }}
-        >
-          <StopCircle />
-        </button>
-      </Show>
-      <Show when={props.showOocToggle}>
-        <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
-          <Show when={!props.ooc}>
-            <WizardIcon />
-          </Show>
-          <Show when={props.ooc}>
-            <NoCharacterIcon color="var(--bg-500)" />
-          </Show>
-        </div>
-      </Show>
-
-      <div class="flex h-[40px] items-center sm:hidden">
-        <a
-          href="#"
-          role="button"
-          aria-label="Open impersonation menu"
-          class="icon-button"
-          onClick={() => settingStore.toggleImpersonate(true)}
-        >
-          <AvatarIcon
-            avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
-            format={{ corners: 'circle', size: 'sm' }}
-            class="ml-1 mr-2"
-          />
-        </a>
-      </div>
-      <Show when={complete()}>
-        <AutoComplete
-          options={completeOpts()}
-          close={() => setComplete(false)}
-          onSelect={onCompleteSelect}
-          dir="up"
-          offset={44}
-        />
-      </Show>
-      <TextInput
-        fieldName="chatInput"
-        isMultiline
-        spellcheck
-        lang={props.char?.culture}
-        ref={ref! as any}
-        value={text()}
-        placeholder={placeholder()}
-        parentClass="flex w-full"
-        classList={{ 'blur-md': dragging() }}
-        class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
-        onKeyDown={(ev) => {
-          if (ev.key === '@') {
-            setComplete(true)
-          }
-
-          const canMobileSend = mob() ? user.ui.mobileSendOnEnter : true
-          if (ev.key === 'Enter' && !ev.shiftKey && canMobileSend) {
-            if (complete()) return
-            send()
-            ev.preventDefault()
-          }
-        }}
-        onChange={updateText}
-        textarea={{
-          onDragOver: (ev) => {
-            console.log('on-drag-over', ev.dataTransfer?.files?.[0]?.size)
-            setDragging(true)
-          },
-          onDragExit: () => {
-            console.log('on-drag-exit')
-            setDragging(false)
-          },
-          onDragEnd: (ev) => {
-            console.log('drag-end', ev.dataTransfer?.files?.[0]?.size)
-            setDragging(false)
-          },
-          onDrop: (ev) => {
-            ev.preventDefault()
-            console.log('onDrop', ev.dataTransfer?.files?.[0]?.size)
-            setDragging(false)
-            const file = ev.dataTransfer?.files[0]
-            if (!file) return
-
-            attach([file])
-          },
-        }}
-      />
-      <Button
-        schema="clear"
-        onClick={onMoreClick}
-        class="tour-message-actions h-full bg-[var(--bg-800)] px-2 py-2"
-      >
-        <MoreHorizontal class="icon-button" />
-      </Button>
-
-      <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
-        <div class="flex w-48 flex-col gap-2 p-2">
-          <Button
-            schema="secondary"
-            class="w-full"
-            onClick={() => {
-              setMenu(false)
-              msgStore.selfGenerate()
-            }}
-            alignLeft
-            disabled={!ctx.impersonate}
-          >
-            <MessageCircle size={18} />
-            Respond as Me
-          </Button>
-          <Show when={ctx.activeBots.length > 1}>
-            <div>Auto-reply</div>
-            <Button
-              schema="secondary"
-              size="sm"
-              onClick={() => setAutoReplyAs('')}
-              disabled={!chats.replyAs}
-            >
-              None
-            </Button>
-            <For each={ctx.activeBots}>
-              {(char) => (
-                <Button
-                  schema="secondary"
-                  size="sm"
-                  onClick={() => setAutoReplyAs(char._id)}
-                  disabled={chats.replyAs === char._id}
-                >
-                  {char.name}
-                </Button>
-              )}
-            </For>
-            <hr />
-          </Show>
-          <Show when={props.showOocToggle}>
-            <Button
-              schema="secondary"
-              size="sm"
-              class="flex items-center justify-between"
-              onClick={toggleOoc}
-            >
-              <div>Stop Bot Reply</div>
-              <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
-            </Button>
-          </Show>
-          <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
-            <ImagePlus size={18} /> Generate Image
-          </Button>
-          <Show when={!!state.lastMsg?.characterId && isOwner()}>
-            <Button schema="secondary" class="w-full" onClick={respondAgain} alignLeft>
-              <PlusCircle size={18} /> Respond Again
-            </Button>
-            <Button schema="secondary" class="w-full" onClick={more} alignLeft>
-              <PlusCircle size={18} /> Generate More
-            </Button>
-            <Show when={!!props.char?.voice?.service}>
-              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
-                <Megaphone size={18} /> Play Voice
-              </Button>
-            </Show>
-            <Show when={!!ctx.chat?.scenarioIds?.length && isOwner()}>
-              <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
-                <Zap /> Trigger Event
-              </Button>
-            </Show>
-          </Show>
-          <Show when={ctx.canUseAttachments}>
-            <FileInput
-              fieldName="imageCaption"
-              parentClass="hidden"
-              onUpdate={onFile}
-              accept="image/jpg,image/png,image/jpeg"
-              multiple
+    <>
+      <Show when={prompt.hintsEnabled}>
+        <div class="flex w-full justify-center pb-0.5">
+          <div class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]">
+            <TextInput
+              parentClass="!p-0.5 text-sm flex flex-1"
+              placeholder="Response hint... 🗭"
+              value={prompt.hint}
+              onChange={(ev) =>
+                promptStore.hint({ chatId: props.chat._id, text: ev.currentTarget.value })
+              }
+              isMultiline
+              class="max-h-[80px]"
+              growup
             />
-            <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
-              <ImageUp size={18} />
-              Attach Image
-            </LabelButton>
-          </Show>
-        </div>
-      </DropMenu>
-      <Switch>
-        <Match when={user.user?.speechtotext && (text() === '' || listening())}>
-          <div class="flex h-full items-center">
-            <SpeechRecognitionRecorder
-              culture={props.char?.culture}
-              onText={(value) => setText(value)}
-              onSubmit={() => send()}
-              cleared={cleared}
-              listening={setListening}
-              class="h-full bg-[var(--bg-800)]"
-            />
+            <div
+              class="icon-button flex w-fit items-center"
+              onClick={() => promptStore.hint({ chatId: props.chat._id, text: '' })}
+            >
+              <X size={20} />
+            </div>
           </div>
-        </Match>
+        </div>
+      </Show>
 
-        <Match when>
-          <Button schema="clear" onClick={send} class="mt-1">
-            <Send class="icon-button" size={18} />
-          </Button>
-        </Match>
-      </Switch>
-    </div>
+      <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
+        <Show when={ctx.waiting?.signal && !api.isCdnApi()}>
+          <button
+            class="animate-pulse cursor-pointer p-2"
+            onClick={() => {
+              console.log('Cancel clicked', !!ctx.waiting?.signal)
+              msgStore.abortMessage()
+            }}
+          >
+            <StopCircle />
+          </button>
+        </Show>
+        <Show when={props.showOocToggle}>
+          <div class="flex h-[40px] cursor-pointer items-center p-2" onClick={toggleOoc}>
+            <Show when={!props.ooc}>
+              <WizardIcon />
+            </Show>
+            <Show when={props.ooc}>
+              <NoCharacterIcon color="var(--bg-500)" />
+            </Show>
+          </div>
+        </Show>
+
+        <div class="flex h-[40px] items-center sm:hidden">
+          <a
+            href="#"
+            role="button"
+            aria-label="Open impersonation menu"
+            class="icon-button"
+            onClick={() => settingStore.toggleImpersonate(true)}
+          >
+            <AvatarIcon
+              avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
+              format={{ corners: 'circle', size: 'sm' }}
+              class="ml-1 mr-2"
+            />
+          </a>
+        </div>
+        <Show when={complete()}>
+          <AutoComplete
+            options={completeOpts()}
+            close={() => setComplete(false)}
+            onSelect={onCompleteSelect}
+            dir="up"
+            offset={44}
+          />
+        </Show>
+        <TextInput
+          fieldName="chatInput"
+          isMultiline
+          spellcheck
+          lang={props.char?.culture}
+          ref={ref! as any}
+          value={text()}
+          placeholder={placeholder()}
+          parentClass="flex w-full"
+          classList={{ 'blur-md': dragging() }}
+          class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+          onKeyDown={(ev) => {
+            if (ev.key === '@') {
+              setComplete(true)
+            }
+
+            const canMobileSend = mob() ? user.ui.mobileSendOnEnter : true
+            if (ev.key === 'Enter' && !ev.shiftKey && canMobileSend) {
+              if (complete()) return
+              send()
+              ev.preventDefault()
+            }
+          }}
+          onChange={updateText}
+          textarea={{
+            onDragOver: (ev) => {
+              console.log('on-drag-over', ev.dataTransfer?.files?.[0]?.size)
+              setDragging(true)
+            },
+            onDragExit: () => {
+              console.log('on-drag-exit')
+              setDragging(false)
+            },
+            onDragEnd: (ev) => {
+              console.log('drag-end', ev.dataTransfer?.files?.[0]?.size)
+              setDragging(false)
+            },
+            onDrop: (ev) => {
+              ev.preventDefault()
+              console.log('onDrop', ev.dataTransfer?.files?.[0]?.size)
+              setDragging(false)
+              const file = ev.dataTransfer?.files[0]
+              if (!file) return
+
+              attach([file])
+            },
+          }}
+        />
+        <Button
+          schema="clear"
+          onClick={onMoreClick}
+          class="tour-message-actions mt-1 h-full bg-[var(--bg-800)] px-2 py-2"
+        >
+          <MoreHorizontal class="icon-button" size={18} />
+        </Button>
+
+        <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
+          <div class="flex w-48 flex-col gap-2 p-2">
+            <Button
+              schema="secondary"
+              class="w-full"
+              onClick={() => {
+                setMenu(false)
+                msgStore.selfGenerate()
+              }}
+              alignLeft
+              disabled={!ctx.impersonate}
+            >
+              <MessageCircle size={18} />
+              Respond as Me
+            </Button>
+            <Show when={ctx.activeBots.length > 1}>
+              <div>Auto-reply</div>
+              <Button
+                schema="secondary"
+                size="sm"
+                onClick={() => setAutoReplyAs('')}
+                disabled={!chats.replyAs}
+              >
+                None
+              </Button>
+              <For each={ctx.activeBots}>
+                {(char) => (
+                  <Button
+                    schema="secondary"
+                    size="sm"
+                    onClick={() => setAutoReplyAs(char._id)}
+                    disabled={chats.replyAs === char._id}
+                  >
+                    {char.name}
+                  </Button>
+                )}
+              </For>
+              <hr />
+            </Show>
+            <Show when={props.showOocToggle}>
+              <Button
+                schema="secondary"
+                size="sm"
+                class="flex items-center justify-between"
+                onClick={toggleOoc}
+              >
+                <div>Stop Bot Reply</div>
+                <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
+              </Button>
+            </Show>
+            <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
+              <ImagePlus size={18} /> Generate Image
+            </Button>
+            <Show when={!!state.lastMsg?.characterId && isOwner()}>
+              <Button schema="secondary" class="w-full" onClick={respondAgain} alignLeft>
+                <PlusCircle size={18} /> Respond Again
+              </Button>
+              <Button schema="secondary" class="w-full" onClick={more} alignLeft>
+                <PlusCircle size={18} /> Generate More
+              </Button>
+              <Show when={!!props.char?.voice?.service}>
+                <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                  <Megaphone size={18} /> Play Voice
+                </Button>
+              </Show>
+              <Show when={!!ctx.chat?.scenarioIds?.length && isOwner()}>
+                <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
+                  <Zap /> Trigger Event
+                </Button>
+              </Show>
+            </Show>
+            <Show when={ctx.canUseAttachments}>
+              <FileInput
+                fieldName="imageCaption"
+                parentClass="hidden"
+                onUpdate={onFile}
+                accept="image/jpg,image/png,image/jpeg"
+                multiple
+              />
+              <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
+                <ImageUp size={18} />
+                Attach Image
+              </LabelButton>
+            </Show>
+          </div>
+        </DropMenu>
+        <Switch>
+          <Match when={user.user?.speechtotext && (text() === '' || listening())}>
+            <div class="flex h-full items-center">
+              <SpeechRecognitionRecorder
+                culture={props.char?.culture}
+                onText={(value) => setText(value)}
+                onSubmit={() => send()}
+                cleared={cleared}
+                listening={setListening}
+                class="h-full bg-[var(--bg-800)]"
+              />
+            </div>
+          </Match>
+
+          <Match when>
+            <Button schema="clear" onClick={send} class="mt-1">
+              <Send class="icon-button" size={18} />
+            </Button>
+          </Match>
+        </Switch>
+      </div>
+    </>
   )
 }
 

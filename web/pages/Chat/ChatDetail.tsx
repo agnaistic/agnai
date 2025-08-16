@@ -1,19 +1,10 @@
 import './chat-detail.css'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  Index,
-  onCleanup,
-  Show,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
-import { characterStore, chatStore, settingStore, userStore } from '../../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
@@ -40,6 +31,8 @@ import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
 import { MessageMeta } from './components/MessageMeta'
 import { usePresetContext } from '/web/store/preset-context'
+import { SendFunc } from './components/InputBar'
+import { MessageVisibility } from './components/Visibility'
 
 export { ChatDetail as default }
 
@@ -69,6 +62,7 @@ const ChatDetail: Component = () => {
     opts: s.opts,
     ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
     linesAddedCount: s.prompt?.template.linesAddedCount,
+    msgVisibility: s.msgVisibility,
   }))
 
   const msgs = msgStore((s) => ({
@@ -116,38 +110,69 @@ const ChatDetail: Component = () => {
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
-  const chatMsgs = createMemo(() => {
-    const self = user.profile
-    const messages = msgs.msgs.map((msg) => {
-      if (msg.characterId) {
-        if (msg.characterId === ctx.impersonate?._id) {
-          return { ...msg, handle: ctx.impersonate.name }
-        }
+  const waitingMsg = createMemo(() => {
+    if (!msgs.waiting) return
+    if (msgs.retrying) return
 
-        const handle = ctx.allBots[msg.characterId] || ctx.tempMap[msg.characterId]
-        if (handle) {
-          return { ...msg, handle: handle?.name || msg.handle }
-        }
-      }
+    const userId = msgs.waiting.userId
+    const charId = msgs.waiting.characterId
+    const profile =
+      user.profile?.userId === userId || !userId
+        ? user.profile
+        : chats.members.find((ch) => ch.userId === userId)
+    const char = charId ? ctx.allBots[charId] : undefined
 
-      if (msg.userId) {
-        const profile =
-          msg.userId === self?.userId
-            ? self
-            : chats.members.find((m) => m.userId === msg.userId) || self
-        return { ...msg, handle: profile?.handle || 'You' }
-      }
+    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
 
-      return msg
+    const waitingMsgs = {
+      input: null as AppSchema.ChatMessage | null,
+      response: null as AppSchema.ChatMessage | null,
+    }
+
+    if (msgs.waiting.input) {
+      waitingMsgs.input = emptyMsg({
+        id: 'partial-input',
+        charId: ctx.impersonate?._id,
+        userId: user.user?._id,
+        message: msgs.waiting.input || '',
+        handle: ctx.impersonate?.name || profile?.handle || 'You',
+      })
+    }
+
+    waitingMsgs.response = emptyMsg({
+      id: 'partial-response',
+      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
+      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+      message: msgs.partial || '',
+      adapter: 'partial-response',
+      handle: handle || 'You',
     })
 
+    return waitingMsgs
+  })
+
+  const chatMsgs = createMemo(() => {
     if (!chats.chat || !chats.char) return []
+
     const doShowHiddenEvents = showHiddenEvents()
-    return messages.filter((msg) => {
+
+    const filtered = msgs.msgs.filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
     })
+
+    const waiting = waitingMsg()
+
+    if (waiting?.input) {
+      filtered.push(waiting.input)
+    }
+
+    if (waiting?.response) {
+      filtered.push(waiting.response)
+    }
+
+    return filtered
   })
 
   onCleanup(() => {
@@ -187,49 +212,6 @@ const ChatDetail: Component = () => {
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
-  const waitingMsg = createMemo(() => {
-    if (!msgs.waiting) return
-    if (msgs.retrying) return
-    if (msgs.waiting.image) return
-
-    const userId = msgs.waiting.userId
-    const charId = msgs.waiting.characterId
-    const profile =
-      user.profile?.userId === userId || !userId
-        ? user.profile
-        : chats.members.find((ch) => ch.userId === userId)
-    const char = charId ? ctx.allBots[charId] : undefined
-
-    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
-
-    const waitingMsgs: AppSchema.ChatMessage[] = []
-
-    if (msgs.waiting.input) {
-      waitingMsgs.push(
-        emptyMsg({
-          id: 'partial-input',
-          charId: ctx.impersonate?._id,
-          userId: user.user?._id,
-          message: msgs.waiting.input || '',
-          handle: ctx.impersonate?.name || profile?.handle || 'You',
-        })
-      )
-    }
-
-    waitingMsgs.push(
-      emptyMsg({
-        id: 'partial-response',
-        charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
-        userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
-        message: msgs.partial || '',
-        adapter: 'partial-response',
-        handle: handle || 'You',
-      })
-    )
-
-    return waitingMsgs
-  })
-
   const clearModal = () => {
     chatStore.option({ options: false, modal: 'none' })
   }
@@ -256,7 +238,7 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     const charName = chats.char?.name
-    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
+    updateTitle(charName ? `Chat with ${charName || '...'}` : 'Chat')
 
     if (!params.id) {
       if (!chats.lastId) return nav('/character/list')
@@ -276,6 +258,7 @@ const ChatDetail: Component = () => {
         onDone: (success, chat) => {
           if (success && chat) {
             loadPreset(chat)
+            presetStore.getTemplates(true)
             return
           }
 
@@ -288,12 +271,12 @@ const ChatDetail: Component = () => {
     }
   })
 
-  const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
-    if (isDevCommand(message)) {
-      switch (message) {
+  const sendMessage: SendFunc = (opts) => {
+    if (isDevCommand(opts.msg)) {
+      switch (opts.msg) {
         case '/devCycleAvatarSettings':
           devCycleAvatarSettings(user)
-          onSuccess?.()
+          opts.onSuccess?.()
           return
 
         case '/devShowHiddenEvents':
@@ -303,9 +286,19 @@ const ChatDetail: Component = () => {
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const kind = ooc ? 'ooc' : chats.replyAs || ctx.activeBots.length <= 1 ? 'send' : 'send-noreply'
-    if (!ooc) setSwipe(0)
-    msgStore.send(chats.chat?._id!, message, kind, onSuccess)
+    const kind = opts.ooc
+      ? 'ooc'
+      : chats.replyAs || ctx.activeBots.length <= 1
+      ? 'send'
+      : 'send-noreply'
+    if (!opts.ooc) setSwipe(0)
+
+    msgStore.send({
+      chatId: chats.chat?._id!,
+      msg: opts.msg,
+      mode: kind,
+      onSuccess: opts.onSuccess,
+    })
     return
   }
 
@@ -338,7 +331,7 @@ const ChatDetail: Component = () => {
   })
 
   const generateFirst = () => {
-    msgStore.retry(chats.chat?._id!)
+    msgStore.retry({ chatId: chats.chat?._id! })
   }
 
   const characterPills = createMemo(() => {
@@ -374,7 +367,7 @@ const ChatDetail: Component = () => {
         if (msg.adapter === 'image') {
           msgStore.createImage({ sourceMsgId: msg._id })
         } else if (msg.characterId) {
-          msgStore.retry(msg.chatId, msg._id)
+          msgStore.retry({ chatId: msg.chatId, msgId: msg._id })
         } else {
           msgStore.resend(msg.chatId, msg._id)
         }
@@ -485,7 +478,8 @@ const ChatDetail: Component = () => {
                 <>
                   <Message
                     index={i}
-                    msg={msg()}
+                    messageId={msg()._id}
+                    content={msg().msg}
                     editing={chats.opts.editing}
                     last={i === indexOfLastRPMessage()}
                     onRemove={() => setRemoveId(msg()._id)}
@@ -498,6 +492,8 @@ const ChatDetail: Component = () => {
                     tts={tts()}
                     retrying={msgs.retrying}
                     partial={msgs.partial}
+                    characterId={msg().characterId}
+                    userId={msg().userId}
                     sendMessage={sendMessage}
                     isPaneOpen={pane.showing()}
                     textBeforeGenMore={msgs.textBeforeGenMore}
@@ -518,21 +514,6 @@ const ChatDetail: Component = () => {
                 </>
               )}
             </Index>
-            <Show when={waitingMsg()?.length}>
-              <For each={waitingMsg()}>
-                {(msg) => (
-                  <Message
-                    index={-1}
-                    msg={msg}
-                    onRemove={() => {}}
-                    editing={false}
-                    sendMessage={sendMessage}
-                    isPaneOpen={pane.showing()}
-                    partial={msg._id === 'partial-response' ? msg.msg : ''}
-                  />
-                )}
-              </For>
-            </Show>
           </div>
         </section>
       </ModeDetail>
@@ -559,6 +540,9 @@ const ChatDetail: Component = () => {
       </Show>
 
       <MessageMeta />
+      <Show when={chats.msgVisibility?.id}>
+        <MessageVisibility ctx={ctx} messageId={chats.msgVisibility?.id!} />
+      </Show>
 
       <Show
         when={

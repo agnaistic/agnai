@@ -25,17 +25,27 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(SystemBlock / BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(SystemBlock / AssistantBlock / InstructBlock / BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / DiceRoll) CL {
 	return { kind: 'placeholder', value: i }
 }
 
-/** System Blocks */
-SystemBlock "system-block" = OpenSystem text:BlockText+ CloseSystem { return { kind: 'system-block', value: text.join('') } }
+/** Role Blocks */
+SystemBlock "system-block" = OpenSystem text:SystemBlockText+ CloseSystem { return { kind: 'system-block', value: text.join('') } }
 OpenSystem "open-system" = "<system>"i
-CloseSystem "open-system" = "</system>"i
-BlockText "block-text" = !(CloseSystem) ch:. { return ch }
+CloseSystem "close-system" = "</system>"i
+SystemBlockText "block-text" = !(CloseSystem) ch:. { return ch }
+
+AssistantBlock "assistant-block" = OpenAssistant text:AssistantBlockText+ CloseAssistant { return { kind: 'assistant-block', value: text.join('') } }
+OpenAssistant "open-assistant" = "<assistant>"i
+CloseAssistant "close-assistant" = "</assistant>"i
+AssistantBlockText "block-text" = !(CloseAssistant) ch:. { return ch }
+
+InstructBlock "instruct-block" = OpenInstruct text:InstructionBlockText+ CloseInstruct { return { kind: 'instruct-block', value: text.join('') } }
+OpenInstruct "open-instruct" = "<instruct>"i
+CloseInstruct "close-instruct" = "</instruct>"i
+InstructionBlockText "block-text" = !(CloseInstruct) ch:. { return ch }
 
 BotIterator "bot-iterator" = OP "#each" WS loop:Bots CL children:(BotChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
@@ -114,7 +124,8 @@ ChatEmbedRef = OP prop:ChatEmbedProperty CL {return { kind: 'chat-embed-prop', p
 BotRef = OP prop:BotProperty CL {return { kind: 'bot-prop', prop } }
 HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } }
 
-JsonSchemaValue "json-schema-value" = ("json."i / "var."i) prop:Word { return { kind: 'json', values: prop } }
+JsonSchemaValue "json-schema-value" = ("json."i) prop:Word { return { kind: 'json', values: prop } }
+UserVariableValue "user-variable-value" = ("vars."i / "var."i) prop:Word { return { kind: 'user-var', values: prop } }
 
 ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { return prop.toLowerCase() }
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
@@ -176,5 +187,6 @@ Interp "interp"
   / Random
   / DiceRoll
   / JsonSchemaValue
+  / UserVariableValue
   / Value
 `

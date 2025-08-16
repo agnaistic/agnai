@@ -1,4 +1,14 @@
-import { Component, For, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import {
+  Component,
+  For,
+  Index,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import {
   NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
@@ -10,12 +20,15 @@ import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import { ImageSettings } from '/common/types/image-schema'
 import { SetStoreFunction } from 'solid-js/store'
-import { applyStoreProperty } from '/web/shared/util'
+import { applyStoreProperty, createEmitter } from '/web/shared/util'
 import { Toggle } from '/web/shared/Toggle'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, X } from 'lucide-solid'
+import { Info, RefreshCcw, X } from 'lucide-solid'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
+import { useProviderList } from '../Provider/hooks'
+import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
+import { imageApi } from '/web/store/data/image'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -23,15 +36,24 @@ export const NovelSettings: Component<{
 }> = (props) => {
   const state = userStore()
 
-  const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({ label: key, value }))
+  const isKeySet = createMemo(() => {
+    const provider = state.user?.providers?.find((p) => p.provider === 'known-novel')
+
+    const isSet = !!provider?.keySet || !!state.user?.novelApiKey
+    return isSet
+  })
+
+  const models = Object.entries(NOVEL_IMAGE_MODEL).map(([key, value]) => ({
+    label: `Model: ${key}`,
+    value,
+  }))
   const samplers = Object.entries(NOVEL_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
+    label: `Sampler: ${value}`,
     value: key,
   }))
   return (
     <>
-      <div class="text-xl">NovelAI</div>
-      <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
+      <Show when={!isKeySet()}>
         <div class="font-bold text-red-600">
           You do not have a valid NovelAI key set. You will not be able to generate images using
           Novel.
@@ -49,6 +71,8 @@ export const NovelSettings: Component<{
         fieldName="novelUndesiredContent"
         label="Undesired Content"
         helperMarkdown="Add `nsfw` to your negative prompt to omit NSFW content"
+        inline
+        class="!py-1"
         items={[
           { label: 'Heavy', value: '0' },
           { label: 'Light', value: '1' },
@@ -61,14 +85,16 @@ export const NovelSettings: Component<{
       <Select
         fieldName="novelImageModel"
         items={models}
-        label="Model"
+        inline
+        class="!py-1"
         value={props.cfg?.novel?.model}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.model', ev.value))}
       />
       <Select
         fieldName="novelSampler"
         items={samplers}
-        label="Sampler"
+        inline
+        class="!py-1"
         value={props.cfg?.novel?.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'novel.sampler', ev.value))}
       />
@@ -99,7 +125,7 @@ export const HordeSettings: Component<{
     const items = Array.from(map.entries())
       .sort(([, l], [, r]) => (l > r ? -1 : l === r ? 0 : 1))
       .map(([name, count]) => ({
-        label: `${name} (${count})`,
+        label: `Model: ${name} (${count})`,
         value: name,
       }))
     return items
@@ -111,23 +137,24 @@ export const HordeSettings: Component<{
   })
 
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
+    label: `Sampler: ${value}`,
     value: key,
   }))
   return (
     <>
-      <div class="text-xl">Horde</div>
       <Select
         fieldName="hordeImageModel"
         items={models()}
-        label="Model"
+        inline
+        class="!py-1"
         value={props.cfg.horde?.model || 'stable_diffusion'}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.model', ev.value))}
       />
       <Select
         fieldName="hordeSampler"
         items={samplers}
-        label="Sampler"
+        class="!py-1"
+        inline
         value={props.cfg.horde?.sampler || SD_SAMPLER['DPM++ 2M']}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'horde.sampler', ev.value))}
       />
@@ -135,20 +162,48 @@ export const HordeSettings: Component<{
   )
 }
 
+const SD_SAMPLERS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
+  label: `Sampler: ${value}`,
+  value: key,
+}))
+
 export const SDSettings: Component<{
   cfg: ImageSettings
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
-  const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-    label: value,
-    value: key,
-  }))
+  const emitter = createEmitter('open')
+  const [providers] = useProviderList()
+  const [models, setModels] = createSignal<CustomOption[]>([])
+  const providerLabel = createMemo(() => {
+    if (!props.cfg?.sd?.providerId) return 'None Selected'
+
+    const selected = providers().find((p) => p.value === props.cfg.sd.providerId)
+    if (!selected) return 'None Selected'
+
+    return selected.label
+  })
+
+  const loadModels = async () => {
+    if (!props.cfg.sd.url) return
+    const result = await imageApi.getSDModelList({
+      url: props.cfg.sd.url,
+      providerId: props.cfg.sd.providerId,
+    })
+
+    const options = result.models.map((model) => ({ label: model.title, value: model.title }))
+    options.unshift({ label: 'Automatic', value: '' })
+    setModels(options)
+  }
+
+  onMount(() => {
+    emitter.on('open', loadModels)
+  })
+
   return (
     <>
-      <div class="text-xl">Stable Diffusion</div>
       <TextInput
         fieldName="sdUrl"
-        label="Stable Diffusion WebUI URL"
+        label="SD WebUI URL"
         helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
         placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
         value={props.cfg.sd?.url}
@@ -156,10 +211,33 @@ export const SDSettings: Component<{
           props.setter(applyStoreProperty(props.cfg, 'sd.url', ev.currentTarget.value))
         }
       />
+
+      <CustomSelect
+        onSelect={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.providerId', ev.value))}
+        selected={props.cfg?.sd?.providerId}
+        helperText="Use API Key from a Provider"
+        options={providers()}
+        buttonLabel={providerLabel()}
+      />
+
+      <div class="flex items-center gap-1">
+        <CustomSelect
+          listener={emitter.emit}
+          onSelect={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.model', ev.value))}
+          selected={props.cfg.sd.model}
+          options={models()}
+          buttonLabel={props.cfg.sd.model || 'Automatic'}
+        />
+        <div class="icon-button" onClick={loadModels}>
+          <RefreshCcw />
+        </div>
+      </div>
+
       <Select
         fieldName="sdSampler"
-        items={samplers}
-        label="Sampler"
+        items={SD_SAMPLERS}
+        inline
+        class="!py-1"
         value={props.cfg.sd?.sampler || SD_SAMPLER['DPM++ 2M']}
         onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'sd.sampler', ev.value))}
       />
@@ -177,7 +255,7 @@ export const AgnaiSettings: Component<{
       loras: s.loras,
       embeddings: s.embeddings,
       models,
-      names: models.map((m) => ({ label: m.desc.trim(), value: m.id || m.name })),
+      names: models.map((m) => ({ label: `Model: ${m.desc.trim()}`, value: m.id || m.name })),
     }
   })
 
@@ -204,7 +282,7 @@ export const AgnaiSettings: Component<{
 
   const samplers = createMemo(() => {
     return Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
-      label: value,
+      label: `Sampler: ${value}`,
       value: key,
     }))
   })
@@ -284,7 +362,6 @@ export const AgnaiSettings: Component<{
 
   return (
     <>
-      <div class="text-xl">Agnaistic</div>
       <Show when={settings.models.length === 0}>
         <i>No additional options available</i>
       </Show>

@@ -1,12 +1,11 @@
 import { Component, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
-import { FLAI_CONTEXTS, GOOGLE_MODELS } from '/common/adapters'
+import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
 import { getStore } from '/web/store/create'
 import { presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { CustomOption, CustomSelect } from '../CustomSelect'
-import { FeatherlessModel } from '/srv/adapter/featherless'
 import { ArliModel } from '/srv/adapter/arli'
 import { Copy } from '../Copy'
 import { RefreshCcw, Save, X } from 'lucide-solid'
@@ -15,36 +14,31 @@ import { CLAUDE_LABELS, CLAUDE_MODELS } from '/common/presets/claude'
 import { AgnaisticSettings } from './Agnaistic'
 import { Pill } from '../Card'
 import Accordian from '../Accordian'
-import { toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
+import { HordeWorkerModal, toHordeModelItem } from '/web/pages/Settings/components/HordeAISettings'
 import { RootModal } from '../Modal'
 import MultiDropdown from '../MultiDropdown'
 import { round } from '/common/util'
 import { createEmitter } from '../util'
 import { useAppContext } from '/web/store/context'
 import { SubscriptionModelOption } from '/common/types/presets'
-import {
-  PresetContext,
-  PresetState,
-  SetPresetState,
-  usePresetContext,
-} from '/web/store/preset-context'
+import { PresetFuncs, PresetState } from '/web/store/preset-context'
 
 type SelectorProps = {
   state: PresetState
-  setter: SetPresetState
-  context: PresetContext
+  setters: PresetFuncs
   page: string | undefined
 }
 type Selector = Component<SelectorProps>
 
-export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModelOption }> = (
-  props
-) => {
-  const [state, { setState, context }] = usePresetContext()
-
+export const ThirdPartyModel: Component<{
+  state: PresetState
+  setters: PresetFuncs
+  page?: string
+  sub?: SubscriptionModelOption
+}> = (props) => {
   const component = createMemo(() => {
-    if (!state.providerId && context.service) {
-      switch (context.service) {
+    if (!props.state.providerId && props.setters.context.service) {
+      switch (props.setters.context.service) {
         case 'claude':
         case 'claude-v2':
           return 'claude-external'
@@ -52,22 +46,22 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
         case 'novel':
         case 'openrouter':
         case 'openrouter-completion':
-          return context.service
+          return props.setters.context.service
       }
 
-      switch (context.format) {
+      switch (props.setters.context.format) {
         case 'gemini':
-          return context.format
+          return props.setters.context.format
       }
     }
 
-    switch (context.service) {
+    switch (props.setters.context.service) {
       case 'horde':
       case 'novel':
       case 'openrouter':
       case 'openrouter-completion':
       case 'agnaistic':
-        return context.service
+        return props.setters.context.service
 
       case 'openai':
       case 'claude':
@@ -77,12 +71,12 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
 
     // If there is no provider, it's a legacy preset
     // Therefore, if it isn't set to third-party, don't return a component
-    if (!context.provider && context.service !== 'kobold') return ''
+    if (!props.setters.context.provider && props.setters.context.service !== 'kobold') return ''
 
-    switch (context.format) {
+    switch (props.setters.context.format) {
       case 'featherless':
       case 'arli':
-        return context.format
+        return props.setters.context.format
 
       case 'claude':
         return 'claude-external'
@@ -106,32 +100,37 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
     <>
       <Switch>
         <Match when={component() === 'agnaistic' || !component()}>
-          <AgnaisticSettings page={props.page} noSave={false} />
+          <AgnaisticSettings
+            state={props.state}
+            setters={props.setters}
+            page={props.page}
+            noSave={false}
+          />
         </Match>
         <Match when={component() === 'novel'}>
-          <NovelAIModel state={state} context={context} page={props.page} setter={setState} />
+          <NovelAIModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'openrouter' || component() === 'openrouter-completion'}>
-          <OpenRouterModels state={state} context={context} page={props.page} setter={setState} />
+          <OpenRouterModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
 
         <Match when={component() === 'featherless'}>
-          <FeatherlessModels state={state} context={context} page={props.page} setter={setState} />
+          <FeatherlessModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'claude-external'}>
-          <ClaudeModel state={state} context={context} page={props.page} setter={setState} />
+          <ClaudeModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'compat'}>
-          <CompatModel state={state} context={context} page={props.page} setter={setState} />
+          <CompatModel state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'arli'}>
-          <ArliModels state={state} context={context} page={props.page} setter={setState} />
+          <ArliModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'gemini'}>
-          <GoogleModels state={state} context={context} page={props.page} setter={setState} />
+          <GoogleModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when={component() === 'horde'}>
-          <HordeModels state={state} context={context} page={props.page} setter={setState} />
+          <HordeModels state={props.state} setters={props.setters} page={props.page} />
         </Match>
         <Match when>{null}</Match>
       </Switch>
@@ -141,28 +140,24 @@ export const ThirdPartyModel: Component<{ page?: string; sub?: SubscriptionModel
 
 const CompatModel: Selector = (props) => {
   const emitter = createEmitter('close')
-  const state = getStore('user')((s) => ({ providers: s.user?.providers || [] }))
-  const models = getStore('presets')((s) => ({
-    list: s.presetModels.list,
-    url: s.presetModels.url,
-    loading: s.modelsLoading,
-  }))
 
   const [customId, setCustomId] = createSignal('')
 
-  const modelList = createMemo(() =>
-    [{ label: 'None', value: '' }].concat(models.list.map((value) => ({ label: value, value })))
-  )
+  const modelList = createMemo(() => {
+    const list = props.setters.models.list.map((value) => ({ label: value, value }))
+
+    return [{ label: 'None', value: '' }].concat(list)
+  })
 
   const onModelSelect = (value: string) => {
-    props.setter({ mistralModel: '', googleModel: '', claudeModel: '' })
+    props.setters.setState({ mistralModel: '', googleModel: '', claudeModel: '' })
     // Only change immediately save the preset in chat pages
     setProviderModel(props, value)
   }
 
   const warning = createMemo(() => {
     if (!props.state.providerId) return
-    if (models.loading) return
+    if (props.setters.models.loading) return
     if (modelList().length <= 1) return
 
     const modelId =
@@ -180,7 +175,7 @@ const CompatModel: Selector = (props) => {
           closeSub={emitter.on}
           modalTitle={
             <div class="flex flex-col gap-2">
-              <div>Select a Model: {new URL(models.url).host || '...'}</div>
+              <div>Select a Model</div>
 
               <div class="flex gap-2">
                 <TextInput
@@ -220,16 +215,11 @@ const CompatModel: Selector = (props) => {
             props.state.thirdPartyModel ||
             'Model - None selected'
           }
-          disabled={models.loading}
-          footer={SelectorFooter}
+          disabled={props.setters.models.loading}
+          footer={<SelectorFooter setters={props.setters} />}
         />
 
-        <Button
-          size="sm"
-          onClick={() =>
-            getStore('presets').getPresetModelList(props.state, state.providers, false)
-          }
-        >
+        <Button size="sm" onClick={() => props.setters.refreshModels()}>
           <RefreshCcw size={20} />
         </Button>
       </div>
@@ -298,26 +288,10 @@ const NovelAIModel: Selector = (props) => {
 const OpenRouterModels: Selector = (props) => {
   const cfg = getStore('settings')()
 
-  const label = createMemo(() => {
-    const id = props.state.providerId
-      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
-      : props.state.openRouterModel?.id
-
-    const match = cfg.config.openRouter.models.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
-
-    return (
-      <span title={`${match.id}, ${(match.id || '...').toLowerCase()}`}>
-        {match.id}
-        <span class="text-500 ml-1 text-xs">{Math.round(match.context_length / 1024)}K</span>
-      </span>
-    )
-  })
-
   const openRouterModels = createMemo(() => {
-    if (!cfg.config.openRouter.models) return []
+    const list: OpenRouterModel[] = props.setters.models.data || []
 
-    const options = cfg.config.openRouter.models
+    const options = list
       .map((model) => ({
         value: model.id,
         model: model,
@@ -328,8 +302,8 @@ const OpenRouterModels: Selector = (props) => {
               <span class="text-500 ml-1 text-sm">{Math.round(model.context_length / 1024)}K</span>
             </div>
             <div class="text-500 flex gap-2 text-xs">
-              <div>${round(+model.pricing.prompt * 1_000_000, 2).toFixed(2)} In</div>
-              <div>${round(+model.pricing.completion * 1_000_000, 2).toFixed(2)} Out</div>
+              <div>${round(+(model.pricing?.prompt || 0) * 1_000_000, 2).toFixed(2)} In</div>
+              <div>${round(+(model.pricing?.completion || 0) * 1_000_000, 2).toFixed(2)} Out</div>
             </div>
           </div>
         ),
@@ -341,6 +315,25 @@ const OpenRouterModels: Selector = (props) => {
     return options
   })
 
+  const label = createMemo(() => {
+    const id = props.state.providerId
+      ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
+      : props.state.openRouterModel?.id
+
+    const match = openRouterModels().find((s) => s.value === id)
+    if (!match) {
+      if (cfg.flags.debug) return `Model - None selected (${id})`
+      return 'Model - None selected'
+    }
+
+    return (
+      <span title={`${match.model.id}, ${(match.model.id || '...').toLowerCase()}`}>
+        {match.model.id}
+        <span class="text-500 ml-1 text-xs">{Math.round(match.model.context_length / 1024)}K</span>
+      </span>
+    )
+  })
+
   return (
     <div class="flex w-full items-center gap-1">
       <CustomSelect
@@ -348,22 +341,20 @@ const OpenRouterModels: Selector = (props) => {
         size="sm"
         modalTitle="Select a Model"
         options={openRouterModels()}
-        search={(value, search) => {
-          return value.toLowerCase().includes(search)
-        }}
+        search={tokenizedSearch}
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.openRouterModel?.id
         }
         disabled={props.state.disabled}
         onSelect={(ev) => {
-          const model = cfg.config.openRouter.models?.find((m) => m.id === ev.value)
+          const model = openRouterModels().find((m) => m.value === ev.value)
           if (model) {
-            setProviderModel(props, model?.id, { openRouterModel: model })
+            setProviderModel(props, model?.model.id, { openRouterModel: model.model })
           }
         }}
         buttonLabel={label()}
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="flex">
@@ -388,14 +379,16 @@ const ArliModels: Selector = (props) => {
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.arliModel
     const match = state.models.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
+    if (!match) {
+      return 'Model - None selected'
+    }
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, state.classes)} {match.status}
+          {arliContext(match, state.classes)} {match.status}
         </span>
       </span>
     )
@@ -475,7 +468,7 @@ const ArliModels: Selector = (props) => {
         selected={
           props.state.providerModels?.[props.state.providerId || 'na'] || props.state.arliModel
         }
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="flex">
@@ -493,16 +486,52 @@ const ArliModels: Selector = (props) => {
 
 let FILTERED_CACHE: Record<string, boolean> = {}
 
+type FLModel = {
+  id: string
+  name: string
+  owned_by: string
+  updated_at: string
+  model_class: string
+  context_length: number
+  max_completion_tokens: number
+  available_on_current_plan: boolean
+  status: 'active' | 'not_deployed' | 'pending_deploy'
+  health?: 'OFFLINE' | 'UNHEALTHY' | 'HEALTHY'
+}
+
 const FeatherlessModels: Selector = (props) => {
-  const state = settingStore((s) => s.featherless)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
+
+  const availableClasses = createMemo(() => {
+    const seen = new Set<string>()
+    const list = (props.setters.models.data as FLModel[])
+      .reduce((prev, curr) => {
+        if (!curr.model_class || seen.has(curr.model_class)) return prev
+        seen.add(curr.model_class)
+        prev.push({ label: curr.model_class, ctx: curr.context_length })
+        return prev
+      }, [] as Array<{ label: string; ctx: number }>)
+      .map(({ label, ctx }) => ({
+        label: `${label} - ${Math.round(ctx / 1024)}k`,
+        value: label,
+        ctx,
+      }))
+      .sort((l, r) => l.label.localeCompare(r.label))
+
+    const map = list.reduce((prev, curr) => {
+      prev[curr.value] = { label: curr.value, ctx: curr.ctx }
+      return prev
+    }, {} as Record<string, { ctx: number; label: string }>)
+
+    return { list, map }
+  })
 
   const label = createMemo(() => {
     const id = props.state.providerId
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
-    const match = state.models.find((s) => s.id === id)
+    const match = props.setters.models.data.find((s) => s.id === id)
     if (!match) return 'Model - None selected'
 
     return (
@@ -510,7 +539,7 @@ const FeatherlessModels: Selector = (props) => {
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, state.classes)} {match.status}
+          {flaiContext(match, availableClasses().map)} {match.status}
         </span>
       </span>
     )
@@ -524,9 +553,11 @@ const FeatherlessModels: Selector = (props) => {
 
     const categories: Record<string, { name: string; options: CustomOption[] }> = {}
 
-    for (const model of state.models) {
+    for (const model of props.setters.models.data) {
       // Skip models that cannot be used
-      if (model.status !== 'active') continue
+      if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
+        continue
+      }
 
       // If classes are being filtered by the user, skip classes that aren't selected
       if (modelClasses.size > 0 && !modelClasses.has(model.model_class)) continue
@@ -543,12 +574,13 @@ const FeatherlessModels: Selector = (props) => {
           >
             <div class="ellipsis">{model.id}</div>
             <div class="text-500 text-xs">
-              {model.model_class} - {flaiContext(model, state.classes)} {model.status}
+              {model.model_class} - {flaiContext(model, availableClasses().map)} {model.status}
             </div>
           </div>
         ),
         value: model.id,
-        disabled: model.status !== 'active',
+        disabled:
+          model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY',
       })
     }
 
@@ -558,20 +590,14 @@ const FeatherlessModels: Selector = (props) => {
 
   onMount(() => {
     FILTERED_CACHE = {}
-    if (!state.models.length) {
-      settingStore.getFeatherless()
-    }
   })
 
   const search = (value: string, input: string) => {
-    const cleanedInput = input.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
-    const cleanedValue = value.replace(/[^a-z0-9_-]/gi, '').toLowerCase()
-    const res = cleanedInput
-      .split(' ')
-      .map((text) => new RegExp(text.replace(/\*/gi, '[a-z0-9]'), 'gi'))
+    const cleanedInput = input.toLowerCase()
+    const cleanedValue = value.toLowerCase()
 
-    for (const re of res) {
-      const match = cleanedValue.match(re)
+    for (const re of cleanedInput.split(' ')) {
+      const match = cleanedValue.includes(re)
       if (!match) {
         FILTERED_CACHE[value] = false
         return false
@@ -583,15 +609,17 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classes = createMemo(() => {
-    const list = Object.entries(state.classes)
-      .map(([label, { ctx }]) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
+    const list = availableClasses().list
+
+    list
+      .map(({ label, ctx }) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
       .sort((l, r) => l.label.localeCompare(r.label))
     return [{ label: 'All', value: '' }].concat(list)
   })
 
   const availables = createMemo(() => {
     const map: Record<string, number> = {}
-    for (const model of state.models) {
+    for (const model of props.setters.models.data) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
       }
@@ -601,7 +629,7 @@ const FeatherlessModels: Selector = (props) => {
         continue
       }
 
-      if (model.status === 'active') {
+      if (!model.status || model.status === 'active') {
         map[model.model_class]++
       }
     }
@@ -674,7 +702,7 @@ const FeatherlessModels: Selector = (props) => {
           props.state.providerModels?.[props.state.providerId || 'na'] ||
           props.state.featherlessModel
         }
-        footer={SelectorFooter}
+        footer={<SelectorFooter setters={props.setters} />}
       />
 
       <div class="">
@@ -750,10 +778,10 @@ const ClaudeModel: Selector = (props) => {
       onSelect={(ev) => {
         setProviderModel(props, ev.value, { claudeModel: ev.value })
       }}
-      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      search={tokenizedSearch}
       buttonLabel={label()}
       closeSub={emitter.on}
-      footer={SelectorFooter}
+      footer={<SelectorFooter setters={props.setters} />}
     />
   )
 }
@@ -806,7 +834,7 @@ const GoogleModels: Selector = (props) => {
         </div>
       }
       options={options()}
-      search={(value, search) => value.toLowerCase().includes(search.toLowerCase())}
+      search={tokenizedSearch}
       onSelect={(opt) => {
         setProviderModel(props, opt.value, { googleModel: opt.value })
       }}
@@ -817,13 +845,14 @@ const GoogleModels: Selector = (props) => {
         props.state.googleModel ||
         props.state.thirdPartyModel
       }
-      footer={SelectorFooter}
+      footer={<SelectorFooter setters={props.setters} />}
     />
   )
 }
 
 const HordeModels: Selector = (props) => {
   const [show, setShow] = createSignal(false)
+  const [showWorkers, setShowWorkers] = createSignal(false)
   const cfg = settingStore((s) => ({
     models: s.models.slice().map(toHordeModelItem),
   }))
@@ -833,7 +862,12 @@ const HordeModels: Selector = (props) => {
     settingStore.getHordeWorkers()
   }
 
-  const [selected, setSelected] = createSignal<Option[]>()
+  const [selected, setSelected] = createSignal<string[]>(
+    props.state.providerModels?.[props.state.providerId || 'na']?.split(',') || []
+  )
+  const [selectedWorkers, setSelectedWorkers] = createSignal<string[]>(
+    props.state.providerSettings?.[props.state.providerId || 'na']?.workers
+  )
 
   const open = () => {
     setShow(true)
@@ -842,8 +876,10 @@ const HordeModels: Selector = (props) => {
 
   const save = () => {
     const models = selected()
+    const workers = selectedWorkers()
+
     if (models) {
-      setProviderModel(props, models.map((m) => m.value).join(','))
+      setProviderModel(props, models.join(','), { providerSettings: { workers } })
     }
     setShow(false)
   }
@@ -857,20 +893,24 @@ const HordeModels: Selector = (props) => {
     return list
   })
 
+  const currentWorkers = createMemo(() => {
+    const list = props.state.providerSettings?.[props.state.providerId || 'na']?.workers || []
+    return list
+  })
+
   return (
     <>
       <div class="flex items-center gap-2">
         <Button class="w-fit" size="sm" onClick={open}>
-          Select Model(s)
+          <Show when={currentModels().length} fallback="Select Model(s)">
+            {currentModels().length} Model(s) Selected
+          </Show>
         </Button>
-        <Show when={currentModels().length}>
-          <div class="text-500">{currentModels().length} models selected</div>
-        </Show>
       </div>
       <RootModal
         show={show()}
         close={close}
-        title="Specify AI Horde Models"
+        title="Select Horde Models"
         footer={
           <>
             <Button schema="secondary" onClick={close}>
@@ -883,16 +923,22 @@ const HordeModels: Selector = (props) => {
         }
       >
         <div class="flex flex-col gap-4 text-sm">
+          <div class="flex w-full justify-center">
+            <Button size="sm" onClick={() => setShowWorkers(true)}>
+              Select Worker(s)
+            </Button>
+          </div>
+
           <MultiDropdown
             class="min-h-[6rem]"
             fieldName="workers"
             items={cfg.models}
             label="Select Model(s)"
-            onChange={setSelected}
-            values={
-              selected()?.map((s) => s.value) ||
-              props.state.providerModels?.[props.state.providerId || 'na']?.split(',')
-            }
+            onChange={(next) => {
+              console.log(next)
+              setSelected(next.map((n) => n.value))
+            }}
+            values={selected()}
           />
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -907,21 +953,25 @@ const HordeModels: Selector = (props) => {
           </div>
         </div>
       </RootModal>
+      <HordeWorkerModal
+        show={showWorkers()}
+        close={() => setShowWorkers(false)}
+        initial={selectedWorkers() || currentWorkers()}
+        save={(workers) => setSelectedWorkers(workers.map((w) => w.value))}
+      />
     </>
   )
 }
 
-function flaiContext(
-  model: FeatherlessModel,
-  classes: Record<string, { ctx: number; res: number }>
-) {
-  const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
+function flaiContext(model: FLModel, classes: Record<string, { ctx: number }>) {
+  const ctx =
+    model.context_length || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 
   return `${Math.round(ctx / 1024)}K`
 }
 
-function arliContext(model: ArliModel, classes: Record<string, { ctx: number; res: number }>) {
+function arliContext(model: ArliModel, classes: Record<string, { ctx: number }>) {
   const ctx = model.ctx || classes[model.model_class]?.ctx || FLAI_CONTEXTS[model.model_class]
   if (!ctx) return ''
 
@@ -945,20 +995,25 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 function setProviderModel(
-  { state, setter, page }: SelectorProps,
+  { state, setters, page }: SelectorProps,
   model: string,
   extras?: Partial<PresetState>
 ) {
+  console.log(`[model updated] ${model}`)
   const update: Partial<PresetState> = extras ?? {}
   update.thirdPartyModel = model
+
+  const settings = state.providerSettings ? { ...state.providerSettings } : {}
   const models = state.providerModels ? { ...state.providerModels } : {}
   if (state.providerId) {
     models[state.providerId] = model
+    settings[state.providerId] = update.providerSettings || settings[state.providerId]
   }
 
   update.providerModels = models
+  update.providerSettings = settings
 
-  setter(update)
+  setters.setState(update)
 
   if (state._id && page === 'mode') {
     presetStore.updatePreset(state._id, update, {
@@ -968,14 +1023,12 @@ function setProviderModel(
   }
 }
 
-const SelectorFooter: Component<{ children?: any }> = () => {
+const SelectorFooter: Component<{ children?: any; setters: PresetFuncs }> = (props) => {
   const [ctx] = useAppContext()
   return (
     <>
       <Show when={ctx.preset}>
-        <Button
-          onClick={() => presetStore.getPresetModelList(ctx.preset!, ctx.providers || [], false)}
-        >
+        <Button onClick={() => props.setters.refreshModels()}>
           <RefreshCcw size={20} />
           Refresh
         </Button>
