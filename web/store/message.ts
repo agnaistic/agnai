@@ -948,8 +948,6 @@ const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.Chat
 
 let msgCheckPoll: NodeJS.Timeout | null = null
 
-subscribe('')
-
 function startMessageChecking() {
   if (msgCheckPoll) return
 
