@@ -15,6 +15,7 @@ export type SubscriptionUpdate = Omit<AppSchema.SubscriptionModel, 'kind' | '_id
 
 export const presetApi = {
   getPresets,
+  getPreset,
   createPreset,
   editPreset,
   deletePreset,
@@ -34,6 +35,22 @@ export async function getPresets() {
 
   const presets = await loadItem('presets')
   return localApi.result({ presets })
+}
+
+export async function getPreset(id: string) {
+  if (isLoggedIn()) {
+    const res = await api.get<AppSchema.UserGenPreset>(`/user/presets/${id}`)
+    return res
+  }
+
+  const presets = await loadItem('presets')
+  const preset = presets.find((p) => p._id === id)
+
+  if (!preset) {
+    return localApi.error('Preset not found')
+  }
+
+  return localApi.result(preset)
 }
 
 export async function createPreset(preset: PresetUpdate) {

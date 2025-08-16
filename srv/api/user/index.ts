@@ -27,6 +27,7 @@ import {
   deleteUserPresetKey,
   getThirdPartyPresetModels,
   testConnectionUrl,
+  getUserPreset,
 } from './presets'
 import { hordeStats, novelLogin, openRouterModels, updateService } from './services'
 import {
@@ -78,6 +79,7 @@ router.post('/verify', verifyOauthKey)
 router.get('/init', loggedIn, getInitialLoad)
 router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)
+router.get('/presets/:id', loggedIn, getUserPreset)
 router.get('/templates', loggedIn, getPromptTemplates)
 router.delete('/presets/:id/key', loggedIn, deleteUserPresetKey)
 router.get('/config', loggedIn, getConfig)

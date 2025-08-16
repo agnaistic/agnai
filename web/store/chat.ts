@@ -252,6 +252,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         // pipelineApi.chatEmbed(res.result.chat, res.result.messages)
 
+        opts?.onDone?.(!!res.result, res.result.chat)
         storage.localSetItem('lastChatId', id)
 
         events.emit(EVENTS.receiveMsgs, {
@@ -295,7 +296,6 @@ export const chatStore = createStore<ChatState>('chat', {
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
         }
-        opts?.onDone?.(!!res.result, res.result.chat)
       }
     },
     setAutoReplyAs({ active }, charId: string | undefined) {

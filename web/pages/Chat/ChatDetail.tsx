@@ -238,7 +238,7 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     const charName = chats.char?.name
-    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
+    updateTitle(charName ? `Chat with ${charName || '...'}` : 'Chat')
 
     if (!params.id) {
       if (!chats.lastId) return nav('/character/list')

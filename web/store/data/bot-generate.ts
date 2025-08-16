@@ -187,16 +187,16 @@ export async function generateResponse(
     } rep:${request.replacing?._id?.slice(0, 4)}`
   )
 
+  if (onTick) {
+    genApi.callbacks.set(request.requestId, onTick)
+  }
+
   api.fetchSSE({
     path: `/chat/${entities.chat._id}/generate`,
     headers: getAuthHeaders(),
     body: request,
     signal: opts.signal,
   })
-
-  if (onTick) {
-    genApi.callbacks.set(request.requestId, onTick)
-  }
 
   return localApi.result({ requestId: request.requestId, generating: true, success: true })
 }

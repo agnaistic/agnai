@@ -6,12 +6,14 @@ import { agnaiPresets } from '/common/presets/agnaistic'
 import { createContext, createEffect, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection } from '/common/providers'
-import { isDefaultPreset } from '/common/default-preset'
+import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { getClientPreset } from '../shared/adapter'
 import { toastStore } from './toasts'
 import { presetApi } from './data/presets'
+import { deepClone } from '/common/util'
+import { getFallbackPreset } from '/common/presets'
 
 export type PresetProps = {
   state: PresetState
@@ -130,9 +132,14 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     createHides(state, context)
   )
 
-  const loadChat = (chat: AppSchema.Chat) => {
+  const loadChat = async (chat: AppSchema.Chat) => {
     console.log('[p_ctx] load-by-chat called')
-    const preset = getClientPreset(chat)?.preset
+    let preset = getClientPreset(chat)?.preset
+
+    if (!preset) {
+      const remote = await loadPresetId(chat.genPreset || '')
+      preset = remote
+    }
 
     // If the chat has no preset configured, we need to assign one
     if (chat?._id && !chat.genPreset && preset?._id) {
@@ -144,18 +151,37 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     load(preset)
   }
 
-  const loadPresetId = (presetId: string) => {
+  const loadPresetId = async (presetId: string) => {
     console.log('[p_ctx] load-by-id called')
+
+    if (isDefaultPreset(presetId)) {
+      const fallback = { _id: presetId, ...deepClone(defaultPresets[presetId]) }
+      load(fallback)
+      return fallback
+    }
+
     const presets = getStore('presets').getState().presets
     let preset = presets.find((p) => p._id === presetId)
+
+    if (!preset) {
+      const remote = await presetApi.getPreset(presetId)
+      if (remote.result) {
+        load(remote.result)
+        return remote.result
+      }
+
+      const fallback = getFallbackPreset('agnaistic')
+      load(fallback)
+      return fallback
+    }
+
     load(preset)
+    return preset
   }
 
-  const load = async (preset: Partial<AppSchema.GenSettings> | undefined) => {
-    if (!preset) return
-
+  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
-    await loadModels({ preset })
+    loadModels({ preset })
   }
 
   const loadModels = async (opts?: {
