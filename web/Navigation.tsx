@@ -466,14 +466,6 @@ const NavIcons: Component<{
         </Item>
 
         <Item
-          onClick={() => settingStore.imageSettings(true)}
-          ariaLabel="Image Settings"
-          tooltip="Image Settings"
-        >
-          <Image aria-hidden="true" />
-        </Item>
-
-        <Item
           ariaLabel="Toggle between light and dark mode"
           onClick={() => {
             userStore.saveUI({ mode: props.user.ui.mode === 'light' ? 'dark' : 'light' })

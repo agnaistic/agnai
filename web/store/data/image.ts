@@ -52,8 +52,20 @@ export const imageApi = {
   ALLOWED_TYPES,
 }
 
-export async function generateImagePrompt(opts?: { onTick?: TickHandler; question?: string }) {
+export async function generateImagePrompt(opts?: {
+  onTick?: TickHandler
+  question?: string
+  messageId?: string
+}) {
   const entities = await getPromptEntities()
+
+  if (opts?.messageId) {
+    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
+    if (index >= 0) {
+      entities.messages = entities.messages.slice(0, index + 1)
+    }
+  }
+
   const summary = await createSummarizedImagePrompt({
     entities,
     onTick: opts?.onTick,

@@ -885,6 +885,7 @@ export const msgStore = createStore<MsgState>(
       const res = await imageApi.generateImagePrompt({
         onTick: opts.onTick,
         question: opts.question,
+        messageId,
       })
 
       yield { waiting: undefined }

@@ -235,10 +235,14 @@ export const settingStore = createStore<SettingState>(
       opts?: { prompt?: string; handler?: { text: string; handler: (image: string) => void } }
     ) => {
       return {
-        imggen: {
-          show: true,
-          prompt: opts?.prompt || '',
-          action: opts?.handler,
+        showImage: {
+          options: [],
+          src: {
+            type: 'collection',
+            id: '', // No ID = ephemeral
+            initial: 0,
+            prompt: opts?.prompt || '',
+          },
         },
       }
     },

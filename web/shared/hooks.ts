@@ -196,10 +196,6 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
     images: [] as string[],
   })
 
-  if (opts.clean) {
-    reel.removeAll()
-  }
-
   const start = opts.clean ? reel.removeAll() : Promise.resolve()
 
   // Initialise the reel

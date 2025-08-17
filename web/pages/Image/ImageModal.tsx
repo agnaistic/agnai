@@ -116,7 +116,9 @@ const ImageCollectionModal: Component<{
   onClose?: () => void
 }> = (props) => {
   const [ctx] = useImageContext()
-  const reel = useImageCache(props.collection, { initial: props.initial })
+  const reel = useImageCache(props.collection || 'ephemeral-collection', {
+    initial: props.initial,
+  })
   const imageSettings = useCurrentChatImageSettings()
 
   const [state, update] = createStore<ImageState>({
@@ -274,7 +276,7 @@ const ImageCollectionModal: Component<{
 
   return (
     <Modal
-      show={!!props.collection}
+      show={props.collection !== undefined}
       close={close}
       maxWidth="full"
       fixedHeight
@@ -356,7 +358,9 @@ const PromptSettings: Component<{
   return (
     <div class="image-modal">
       <section class="flex flex-col gap-1" style={{ 'grid-area': 'options' }}>
-        <TextInput placeholder="Prompt Gen Hint: What to focus on?" class="!text-sm" />
+        <Show when={props.messageId}>
+          <TextInput placeholder="Prompt Gen Hint: What to focus on?" class="!text-sm" />
+        </Show>
 
         <TextInput
           parentClass="w-full !h-[80px]"
@@ -374,20 +378,21 @@ const PromptSettings: Component<{
           </Copy>
 
           <div class="flex-end flex gap-2">
-            <Button size="sm" onClick={generatePrompt} disabled={props.state.promptLoading}>
-              <Show when={!props.state.promptLoading} fallback={<RelativeSpinner size={20} />}>
-                <WandSparkles size={16} /> Prompt
-              </Show>
-            </Button>
-
-            <Button size="sm" onClick={onCleanPrompt}>
-              Fix
-            </Button>
-
             <Show when={props.messageId}>
-              <Button size="sm" onClick={saveMessagePrompt}>
-                Save
+              <Button size="sm" onClick={generatePrompt} disabled={props.state.promptLoading}>
+                <Show when={!props.state.promptLoading} fallback={<RelativeSpinner size={20} />}>
+                  <WandSparkles size={16} /> Prompt
+                </Show>
               </Button>
+              <Button size="sm" onClick={onCleanPrompt}>
+                Fix
+              </Button>
+
+              <Show when={props.messageId}>
+                <Button size="sm" onClick={saveMessagePrompt}>
+                  Save
+                </Button>
+              </Show>
             </Show>
           </div>
         </div>
