@@ -7,7 +7,6 @@ import {
   ChevronRight,
   HeartHandshake,
   HelpCircle,
-  Image,
   ImagePlus,
   LogIn,
   MailQuestion,
