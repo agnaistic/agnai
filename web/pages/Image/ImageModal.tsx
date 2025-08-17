@@ -1,3 +1,4 @@
+import './images.scss'
 import { Component, For, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
 import Modal from '../../shared/Modal'
 import {
@@ -13,22 +14,18 @@ import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BrushCleaning,
-  Save,
-  SettingsIcon,
-  WandSparkles,
-} from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
 import { cleanPrompt } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
-import { createStore } from 'solid-js/store'
+import { createStore, SetStoreFunction } from 'solid-js/store'
 import { useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
 import { Copy } from '/web/shared/Copy'
 import { downloadImage } from '../Character/util'
+import { ImageContext, useImageContext } from '../Settings/Image/image-context'
+
+type ImageState = { prompt: string; promptLoading: boolean; loading: boolean }
 
 export const ImageModal: Component = () => {
   const state = settingStore()
@@ -118,20 +115,15 @@ const ImageCollectionModal: Component<{
   actions: ImageButton[]
   onClose?: () => void
 }> = (props) => {
+  const [ctx] = useImageContext()
   const reel = useImageCache(props.collection, { initial: props.initial })
   const imageSettings = useCurrentChatImageSettings()
 
-  const persist = promptStore()
-  const [state, update] = createStore({
+  const [state, update] = createStore<ImageState>({
     loading: false,
     prompt: '',
     promptLoading: false,
   })
-
-  const saveMessagePrompt = () => {
-    if (!props.messageId) return
-    msgStore.editMessageProp(props.messageId, { imagePrompt: state.prompt })
-  }
 
   const title = createMemo(() => {
     if (reel.state.images.length) {
@@ -139,14 +131,6 @@ const ImageCollectionModal: Component<{
     }
 
     return 'Image: 0/0'
-  })
-
-  const fullImagePrompt = createMemo(() => {
-    const cfg = imageSettings()
-    const parts = [cfg?.prefix, state.prompt, cfg?.suffix].filter((c) => !!c?.trim()).join(', ')
-    const cleaned = cleanPrompt(parts)
-
-    return cleaned
   })
 
   const attachImage = () => {
@@ -203,11 +187,6 @@ const ImageCollectionModal: Component<{
     props.close()
   }
 
-  const onCleanPrompt = () => {
-    const cleaned = cleanPrompt(state.prompt)
-    update('prompt', cleaned)
-  }
-
   const removeImage = async () => {
     await reel.removeImage(reel.state.imageId)
 
@@ -243,19 +222,55 @@ const ImageCollectionModal: Component<{
     }
   }
 
-  const generatePrompt = () => {
-    update('promptLoading', true)
-    getStore('messages').generateImagePrompt({
-      question: persist.imageHint,
-      onSummary: (summary) => {
-        update({ prompt: summary, promptLoading: false })
-      },
-      onTick: (res, state) => {
-        if (state === 'partial') update('prompt', res)
-        if (state === 'done' || state === 'error') update('promptLoading', false)
-      },
-    })
-  }
+  const ImageFooter = (
+    <div class="flex h-full w-full items-end justify-center gap-2">
+      <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
+        <ArrowLeft size={20} />
+      </Button>
+
+      <Button size="sm" onClick={generateImage} disabled={state.loading}>
+        Generate
+      </Button>
+
+      <Button size="sm" schema="error" onClick={removeImage} disabled={!reel.state.images.length}>
+        <Trash size={20} />
+      </Button>
+
+      <Button
+        size="sm"
+        schema="primary"
+        disabled={!reel.state.image}
+        onClick={() => downloadImage({ name: reel.state.imageId, image: reel.state.image })}
+      >
+        <Download size={20} />
+      </Button>
+
+      <Button
+        size="sm"
+        schema="primary"
+        disabled={!reel.state.image || !props.messageId}
+        onClick={attachImage}
+      >
+        Attach
+      </Button>
+
+      <For each={props.actions}>
+        {(action) => (
+          <Button
+            size="sm"
+            schema={action.schema}
+            onClick={() => action.onClick({ prompt: state.prompt, reel })}
+          >
+            {action.text}
+          </Button>
+        )}
+      </For>
+
+      <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.next}>
+        <ArrowRight size={20} />
+      </Button>
+    </div>
+  )
 
   return (
     <Modal
@@ -268,105 +283,17 @@ const ImageCollectionModal: Component<{
           <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
             <SettingsIcon size={20} />
           </div>
-          <div>{title()}</div>
-        </div>
-      }
-      footer={
-        <div class="flex h-full w-full items-end justify-center gap-2">
-          <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
-            <ArrowLeft size={20} />
-          </Button>
-
-          <Button size="sm" onClick={generateImage} disabled={state.loading}>
-            Generate
-          </Button>
-
-          <Button
-            size="sm"
-            schema="error"
-            onClick={removeImage}
-            disabled={!reel.state.images.length}
-          >
-            Delete
-          </Button>
-
-          <Button
-            size="sm"
-            schema="primary"
-            disabled={!reel.state.image}
-            onClick={() => downloadImage({ name: reel.state.imageId, image: reel.state.image })}
-          >
-            Download
-          </Button>
-
-          <Button
-            size="sm"
-            schema="primary"
-            disabled={!reel.state.image || !props.messageId}
-            onClick={attachImage}
-          >
-            Attach
-          </Button>
-
-          <For each={props.actions}>
-            {(action) => (
-              <Button
-                size="sm"
-                schema={action.schema}
-                onClick={() => action.onClick({ prompt: state.prompt, reel })}
-              >
-                {action.text}
-              </Button>
-            )}
-          </For>
-
-          <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.next}>
-            <ArrowRight size={20} />
-          </Button>
+          <div>V2.{title()}</div>
         </div>
       }
     >
-      <div class="flex h-full w-full flex-col gap-1">
-        <section class="w-full">
-          <div class="flex w-full flex-col justify-center gap-1">
-            <TextInput
-              placeholder={'(Optional) What to focus on?'}
-              value={persist.imageHint}
-              onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
-              class="!text-sm"
-            />
-            <TextInput
-              parentClass="w-full !h-[64px]"
-              class="!h-[64px] !max-h-[64px] !py-1 !text-sm"
-              prelabel="Prompt"
-              value={state.prompt}
-              onChange={(ev) => update('prompt', ev.currentTarget.value)}
-              isMultiline
-              textarea={{ rows: 2 }}
-            />
-
-            <div class="flex w-full items-center justify-end gap-2">
-              <Copy text={fullImagePrompt()} />
-
-              <Button onClick={generatePrompt} disabled={state.promptLoading}>
-                <Show when={!state.promptLoading} fallback={<RelativeSpinner size={20} />}>
-                  <WandSparkles size={20} />
-                </Show>
-              </Button>
-
-              <Button onClick={onCleanPrompt}>
-                <BrushCleaning size={20} />
-              </Button>
-
-              <Show when={props.messageId}>
-                <Button onClick={saveMessagePrompt}>
-                  <Save size={20} />
-                </Button>
-              </Show>
-            </div>
-          </div>
-        </section>
-
+      <PromptSettings
+        ctx={ctx}
+        state={state}
+        update={update}
+        messageId={props.messageId}
+        footer={ImageFooter}
+      >
         <section class="flex max-h-[calc(100%-100px)] justify-center">
           <Show when={state.loading}>
             <div class="bg-900 absolute right-1/2 top-1/2 rounded-lg p-2">
@@ -377,8 +304,103 @@ const ImageCollectionModal: Component<{
             <img class="min-h-0 object-contain" src={reel.state.image} />
           </Show>
         </section>
-      </div>
+      </PromptSettings>
     </Modal>
+  )
+}
+
+const PromptSettings: Component<{
+  ctx: ImageContext
+  state: ImageState
+  update: SetStoreFunction<ImageState>
+  messageId: string | undefined
+  children: any
+  footer: any
+}> = (props) => {
+  const persist = promptStore()
+
+  const fullImagePrompt = createMemo(() => {
+    const cfg = props.ctx.cfg()
+    const parts = [cfg?.prefix, props.state.prompt, cfg?.suffix]
+      .filter((c) => !!c?.trim())
+      .join(', ')
+    const cleaned = cleanPrompt(parts)
+
+    return cleaned
+  })
+
+  const generatePrompt = () => {
+    props.update('promptLoading', true)
+    getStore('messages').generateImagePrompt({
+      question: persist.imageHint,
+      onSummary: (summary) => {
+        props.update({ prompt: summary, promptLoading: false })
+      },
+      onTick: (res, state) => {
+        if (state === 'partial') props.update('prompt', res)
+        if (state === 'done' || state === 'error') props.update('promptLoading', false)
+      },
+    })
+  }
+
+  const onCleanPrompt = () => {
+    const cleaned = cleanPrompt(props.state.prompt)
+    props.update('prompt', cleaned)
+  }
+
+  const saveMessagePrompt = () => {
+    if (!props.messageId) return
+    msgStore.editMessageProp(props.messageId, { imagePrompt: props.state.prompt })
+  }
+
+  return (
+    <div class="image-modal">
+      <section class="flex flex-col gap-1" style={{ 'grid-area': 'options' }}>
+        <TextInput placeholder="Prompt Gen Hint: What to focus on?" class="!text-sm" />
+
+        <TextInput
+          parentClass="w-full !h-[80px]"
+          class="!h-[80px] !max-h-[80px] !py-1 !text-sm"
+          prelabel="Prompt"
+          value={props.state.prompt}
+          onChange={(ev) => props.update('prompt', ev.currentTarget.value)}
+          isMultiline
+          textarea={{ rows: 3 }}
+        />
+
+        <div class="flex w-full items-center justify-between">
+          <Copy text={fullImagePrompt()}>
+            <span class="text-sm">Copy</span>
+          </Copy>
+
+          <div class="flex-end flex gap-2">
+            <Button size="sm" onClick={generatePrompt} disabled={props.state.promptLoading}>
+              <Show when={!props.state.promptLoading} fallback={<RelativeSpinner size={20} />}>
+                <WandSparkles size={16} /> Prompt
+              </Show>
+            </Button>
+
+            <Button size="sm" onClick={onCleanPrompt}>
+              Fix
+            </Button>
+
+            <Show when={props.messageId}>
+              <Button size="sm" onClick={saveMessagePrompt}>
+                Save
+              </Button>
+            </Show>
+          </div>
+        </div>
+      </section>
+
+      <section class="image-modal-body" style={{ 'grid-area': 'content' }}>
+        {props.children}
+      </section>
+
+      <section class="flex justify-center gap-2" style={{ 'grid-area': 'footer' }}>
+        {props.footer}
+      </section>
+    </div>
   )
 }
 

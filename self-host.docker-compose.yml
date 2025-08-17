@@ -8,10 +8,8 @@ volumes:
   distassets:
   extras:
 
-
 networks:
   backend:
-
 
 services:
   app:
@@ -35,7 +33,7 @@ services:
       - backend
 
   mongo:
-    image: mongo:6
+    image: mongo:8
     restart: always
     volumes:
       - dbdata:/data/db

@@ -3,7 +3,7 @@ import { userStore } from '/web/store'
 import { useUsableServices } from '/web/shared/util'
 import { assertProviderDetail } from '/common/providers'
 
-export function useProviderList() {
+export function useProviderList(allowNone?: boolean) {
   const state = userStore((s) => ({ providers: s.user?.providers || [] }))
 
   const usableServices = useUsableServices()
@@ -36,6 +36,10 @@ export function useProviderList() {
 
     if (subs) {
       providers.unshift({ label: 'Agnaistic', value: 'agnaistic' })
+    }
+
+    if (allowNone) {
+      providers.unshift({ label: 'None', value: '' })
     }
 
     return providers

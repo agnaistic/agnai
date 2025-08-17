@@ -1,5 +1,5 @@
 import { ClipboardCheck, ClipboardCopy } from 'lucide-solid'
-import { Component, createSignal, Match, Switch } from 'solid-js'
+import { Component, createSignal, Match, Show, Switch } from 'solid-js'
 import { RelativeSpinner } from './Loading'
 
 /**
@@ -7,9 +7,12 @@ import { RelativeSpinner } from './Loading'
  * @param props
  * @returns
  */
-export const Copy: Component<{ text: string; size?: number; onClick?: () => Promise<string> }> = (
-  props
-) => {
+export const Copy: Component<{
+  children?: any
+  text: string
+  size?: number
+  onClick?: () => Promise<string>
+}> = (props) => {
   const [loading, setLoading] = createSignal(false)
   const [clicked, setClicked] = createSignal(false)
 
@@ -34,9 +37,13 @@ export const Copy: Component<{ text: string; size?: number; onClick?: () => Prom
         <Match when={loading()}>
           <RelativeSpinner size={props.size ?? 20} />
         </Match>
+
         <Match when={!clicked()}>
-          <ClipboardCopy size={props.size ?? 20} />
+          <Show when={props.children} fallback={<ClipboardCopy size={props.size ?? 20} />}>
+            {props.children}
+          </Show>
         </Match>
+
         <Match when>
           <ClipboardCheck size={props.size ?? 20} />
         </Match>

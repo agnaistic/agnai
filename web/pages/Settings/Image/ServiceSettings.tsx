@@ -172,7 +172,7 @@ export const SDSettings: Component<{
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
   const emitter = createEmitter('open')
-  const [providers] = useProviderList()
+  const [providers] = useProviderList(true)
   const [models, setModels] = createSignal<CustomOption[]>([])
   const providerLabel = createMemo(() => {
     if (!props.cfg?.sd?.providerId) return 'None Selected'

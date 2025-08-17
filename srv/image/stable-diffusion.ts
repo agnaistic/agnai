@@ -20,17 +20,17 @@ const defaultSettings: SDSettings = {
 export type SDRequest = {
   seed: number
   sampler_name: string
-  n_iter: number
-  clip_skip: number
-  batch_size: number
+  n_iter?: number
+  clip_skip?: number
+  batch_size?: number
   steps: number
   cfg_scale: number
   width: number
   height: number
-  restore_faces: boolean
+  restore_faces?: boolean
   negative_prompt: string
-  send_images: boolean
-  save_images: boolean
+  send_images?: boolean
+  save_images?: boolean
   prompt: string
   subseed?: number
   enable_hr?: boolean
@@ -44,11 +44,14 @@ export type SDRequest = {
   lora_strengths?: Record<string, { model: number; clip: number }>
 
   override_settings?: Record<string, any>
+  sd_model_checkpoint?: string
 }
+
+type InternalConfig = Awaited<ReturnType<typeof getConfig>>
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const config = await getConfig(opts)
-  const payload = getPayload(config.kind, opts, config.model, config.temp)
+  const payload = getPayload(config, opts)
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
@@ -56,7 +59,7 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
     'post',
     `${config.host}/sdapi/v1/txt2img${config.params || ''}`,
     payload,
-    { json: true }
+    { json: true, headers: config.headers }
   ).catch((err) => ({ err }))
 
   if ('err' in result) {
@@ -96,30 +99,29 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   params?: string
   model?: AppSchema.ImageModel
   temp?: AppSchema.ImageModel
+  provider?: AppSchema.Provider
 }> {
   const { user, settings, override } = opts
   const type = settings?.type || user.images?.type
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
 
   // Stable Diffusion URL always comes from user settings
-  const userHost = settings?.sd?.url || user.images?.sd.url || defaultSettings.url
+  const userHost = getUserHostUrl(opts)
   if (type !== 'agnai') {
-    const providerId = settings?.sd.providerId || user.images?.sd.providerId
-    const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : null
-    if (provider?.key) {
-      headers.Authorization = `Bearer ${decryptText(provider.key, true)}`
+    if (userHost.key) {
+      headers.Authorization = `Bearer ${userHost.key}`
     }
 
-    return { kind: 'user', host: userHost, headers }
+    return { kind: 'user', host: userHost.url, headers, provider: userHost.provider }
   }
 
   const srv = await store.admin.getServerConfiguration()
   if (!srv.imagesEnabled || !srv.imagesHost) {
-    return { kind: 'user', host: userHost, headers }
+    return { kind: 'user', host: userHost.url, headers, provider: userHost.provider }
   }
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
-  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost, headers }
+  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost.url, headers }
 
   const models = getAgnaiModels(srv.imagesModels)
 
@@ -132,7 +134,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   const model = models.length === 1 ? models[0] : match ?? models[0]
 
   if (!temp && !model) {
-    return { kind: 'user', host: userHost, headers }
+    return { kind: 'user', host: userHost.url, provider: userHost.provider, headers }
   }
 
   const params = [
@@ -159,63 +161,10 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   return cfg
 }
 
-function getPayload(
-  kind: 'agnai' | 'user',
-  opts: ImageRequestOpts,
-  model: AppSchema.ImageModel | undefined,
-  temp: AppSchema.ImageModel | undefined
-) {
-  const sampler =
-    (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
-    defaultSettings.sampler
+function getPayload(config: InternalConfig, opts: ImageRequestOpts) {
+  const { model } = config
 
-  const loras: string[] = []
-  const lora_strengths: NonNullable<SDRequest['lora_strengths']> = {}
-  const override_settings: SDRequest['override_settings'] = {}
-
-  if (kind === 'agnai' && opts.settings?.agnai.loras?.length) {
-    for (const lora of opts.settings?.agnai.loras) {
-      if (!lora.id) continue
-      if (!lora.enabled) continue
-
-      loras.push(lora.id)
-      lora_strengths[lora.id] = { model: lora.modelStrength, clip: lora.clipStrength }
-    }
-  }
-
-  if (kind !== 'agnai' && opts.settings?.sd.model) {
-    override_settings.sd_model_checkpoint = opts.settings.sd.model
-  }
-
-  const payload: SDRequest = {
-    prompt: opts.prompt,
-    // enable_hr: true,
-    // hr_scale: 1.5,
-    // hr_second_pass_steps: 15,
-    // hr_upscaler: "",
-    clip_skip: opts.params?.clip_skip ?? opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
-    height: opts.params?.height ?? opts.settings?.height ?? model?.init.height ?? 1024,
-    width: opts.params?.width ?? opts.settings?.width ?? model?.init.width ?? 1024,
-    n_iter: 1,
-    batch_size: 1,
-    negative_prompt: opts.params?.negative ?? opts.negative,
-    sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
-    cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
-    seed:
-      opts.params?.seed ||
-      opts.settings?.seed ||
-      Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
-    steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
-    restore_faces: false,
-    save_images: true,
-    send_images: true,
-    model_override: temp ? temp.override : model?.override,
-    denoise: temp ? temp.init.denoise : model?.init.denoise,
-    draft_mode: opts.settings?.agnai?.draftMode,
-    loras,
-    lora_strengths,
-    override_settings,
-  }
+  const payload = getBasePayload(config, opts)
 
   if (model) {
     payload.steps = Math.min(+model.limit.steps, payload.steps)
@@ -270,6 +219,98 @@ function getPayload(
   return payload
 }
 
+function getBasePayload(config: InternalConfig, opts: ImageRequestOpts): SDRequest {
+  const { kind, model, temp, provider } = config
+
+  const sampler =
+    (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
+    defaultSettings.sampler
+
+  if (kind === 'agnai') {
+    const loras: string[] = []
+    const lora_strengths: NonNullable<SDRequest['lora_strengths']> = {}
+
+    for (const lora of opts.settings?.agnai.loras || []) {
+      if (!lora.id) continue
+      if (!lora.enabled) continue
+
+      loras.push(lora.id)
+      lora_strengths[lora.id] = { model: lora.modelStrength, clip: lora.clipStrength }
+    }
+
+    return {
+      prompt: opts.prompt,
+      clip_skip: opts.params?.clip_skip ?? opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
+      height: opts.params?.height ?? opts.settings?.height ?? model?.init.height ?? 1024,
+      width: opts.params?.width ?? opts.settings?.width ?? model?.init.width ?? 1024,
+      negative_prompt: opts.params?.negative ?? opts.negative,
+      sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
+      cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
+      seed:
+        opts.params?.seed ||
+        opts.settings?.seed ||
+        Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
+      steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
+      model_override: temp ? temp.override : model?.override,
+      denoise: temp ? temp.init.denoise : model?.init.denoise,
+      draft_mode: opts.settings?.agnai?.draftMode,
+      loras,
+      lora_strengths,
+      sd_model_checkpoint: kind !== 'agnai' ? opts.settings?.sd.model : undefined,
+    }
+  }
+
+  if (provider?.provider === 'known-arli') {
+    const payload: SDRequest = {
+      prompt: opts.prompt,
+      sd_model_checkpoint: opts.settings?.sd.model,
+      negative_prompt: opts.negative,
+      cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
+      batch_size: 1,
+      n_iter: 1,
+      seed: opts.params?.seed || opts.settings?.seed || -1,
+      steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
+      sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
+      send_images: true,
+      save_images: false,
+      height: opts.params?.height ?? opts.settings?.height ?? model?.init.height ?? 1024,
+      width: opts.params?.width ?? opts.settings?.width ?? model?.init.width ?? 1024,
+    }
+    return payload
+  }
+
+  return {
+    prompt: opts.prompt,
+    // enable_hr: true,
+    // hr_scale: 1.5,
+    // hr_second_pass_steps: 15,
+    // hr_upscaler: "",
+    clip_skip: opts.params?.clip_skip ?? opts.settings?.clipSkip ?? model?.init.clipSkip ?? 0,
+    height: opts.params?.height ?? opts.settings?.height ?? model?.init.height ?? 1024,
+    width: opts.params?.width ?? opts.settings?.width ?? model?.init.width ?? 1024,
+    n_iter: 1,
+    batch_size: 1,
+    negative_prompt: opts.params?.negative ?? opts.negative,
+    sampler_name: (SD_SAMPLER_REV as any)[opts.params?.sampler ?? sampler],
+    cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
+    seed:
+      opts.params?.seed ||
+      opts.settings?.seed ||
+      Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
+    steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
+    restore_faces: false,
+    save_images: true,
+    send_images: true,
+    model_override: temp ? temp.override : model?.override,
+    denoise: temp ? temp.init.denoise : model?.init.denoise,
+    draft_mode: opts.settings?.agnai?.draftMode,
+
+    override_settings: {
+      sd_model_checkpoint: opts.settings?.sd.model || undefined,
+    },
+  }
+}
+
 function getAgnaiModels(csv: AppSchema.Configuration['imagesModels']) {
   return csv
 }
@@ -309,4 +350,30 @@ function getDefaultConfig(user: AppSchema.User) {
   }
 
   return config
+}
+
+function getUserHostUrl(opts: ImageRequestOpts) {
+  const providerId = opts.settings ? opts.settings.sd.providerId : opts.user.images?.sd.providerId
+  const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : undefined
+  let key = ''
+
+  if (provider) {
+    key = provider.key ? decryptText(provider.key, true) : ''
+
+    let url = ''
+    switch (provider.provider) {
+      case 'known-arli':
+        url = 'https://api.arliai.com'
+        break
+    }
+
+    if (url) {
+      return { url, key, provider }
+    }
+  }
+
+  const userHost = opts.settings
+    ? opts.settings.sd?.url
+    : opts.user.images?.sd.url || defaultSettings.url
+  return { url: userHost, key, provider: undefined }
 }

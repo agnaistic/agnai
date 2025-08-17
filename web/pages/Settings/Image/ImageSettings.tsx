@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
+import { Match, Show, Switch, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { SD_SAMPLER } from '../../../../common/image'
 import Divider from '../../../shared/Divider'
 import { InlineRangeInput } from '../../../shared/RangeInput'
@@ -8,13 +8,12 @@ import { characterStore, chatStore, presetStore, settingStore, userStore } from 
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
-import Tabs, { useTabs } from '/web/shared/Tabs'
+import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
 import { Pencil, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
 import { ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
-import { createStore } from 'solid-js/store'
 import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './ServiceSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { PresetSelect } from '/web/shared/PresetSelect'
@@ -22,6 +21,7 @@ import { getPresetOptions } from '/web/shared/adapter'
 import Accordian from '/web/shared/Accordian'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { usePresetContext } from '/web/store/preset-context'
+import { useImageContext } from './image-context'
 
 const init: ImageSettings = {
   cfg: 7,
@@ -57,6 +57,7 @@ const init: ImageSettings = {
 }
 
 export const ImageSettingsModal = () => {
+  const [ctx] = useImageContext()
   const user = userStore()
   const settings = settingStore()
   const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
@@ -72,20 +73,9 @@ export const ImageSettingsModal = () => {
   }))
 
   const [editPreset, setEditPreset] = createSignal(false)
-  const [store, setStore] = createStore(init)
-  const [defaults, setDefaults] = createStore(
-    user.user?.imageDefaults || {
-      size: false,
-      affixes: false,
-      sampler: false,
-      negative: false,
-      guidance: false,
-      steps: false,
-    }
-  )
 
   const toggleDefaults = (next: boolean) =>
-    setDefaults({
+    ctx.updateDefaults({
       size: next,
       affixes: next,
       sampler: next,
@@ -94,52 +84,15 @@ export const ImageSettingsModal = () => {
       negative: next,
     })
 
-  const isAllEnabled = createMemo(() => Array.from(Object.values(defaults)).every((v) => !!v))
+  const isAllEnabled = createMemo(() => Array.from(Object.values(ctx.defaults)).every((v) => !!v))
 
   const isChat = isChatPage(true)
 
-  onMount(() => settingStore.getServerConfig())
-
   const editPresetClicked = () => {
-    if (!store.summaryPresetId) return
-    presetSetters.load(store.summaryPresetId)
+    if (!ctx.store.summaryPresetId) return
+    presetSetters.load(ctx.store.summaryPresetId)
     setEditPreset(true)
   }
-
-  const tab = useTabs<string[]>(
-    [],
-    isChat() && entity.chat?.imageSource === 'chat'
-      ? 1
-      : entity.chat?.imageSource?.includes('character')
-      ? 2
-      : 0
-  )
-  createEffect(() => {
-    const tabs = ['Shared']
-
-    if (entity.chat && isChat()) tabs.push('Chat')
-    if (entity.char && isChat()) tabs.push('Character')
-
-    return tab.update(tabs)
-  })
-
-  const currentChatImageSrc = createMemo(() => {
-    return entity.chat?.imageSource || 'settings'
-  })
-
-  const currentImgSource = createMemo(() => {
-    switch (tab.current()) {
-      case 'Shared':
-        return 'settings'
-
-      case 'Chat':
-        return 'chat'
-
-      case 'Character':
-      default:
-        return 'main-character'
-    }
-  })
 
   const canUseImages = createMemo(() => {
     const access = user.sub?.tier.imagesAccess || user.user?.admin
@@ -150,38 +103,16 @@ export const ImageSettingsModal = () => {
     )
   })
 
-  const agnaiModel = createMemo(() => {
-    if (!canUseImages()) return
-    if (store.type !== 'agnai') return
-
-    const id = user.user?.images?.agnai?.model
-    return settings.config.serverConfig?.imagesModels?.find((m) => m.name === id)
-  })
-
-  const imageTypes = createMemo(() => {
-    const list = [
-      { label: 'Horde', value: 'horde' },
-      { label: 'NovelAI', value: 'novel' },
-      { label: 'Stable Diffusion', value: 'sd' },
-    ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
-
-    if (canUseImages()) {
-      list.push({ label: 'Agnaistic', value: 'agnai' })
-    }
-
-    return list
-  })
-
   const presetOptions = createMemo(() =>
     getPresetOptions(presets.list, { builtin: true, base: true })
   )
 
   createEffect(
     on(
-      () => cfg(),
+      () => ctx.cfg(),
       (cfg) => {
         if (!cfg) return
-        setStore({ ...init, ...cfg })
+        ctx.update({ ...init, ...cfg })
       }
     )
   )
@@ -191,29 +122,13 @@ export const ImageSettingsModal = () => {
       () => user.user?.imageDefaults,
       (next) => {
         if (!next) return
-        setDefaults(next)
+        ctx.updateDefaults(next)
       }
     )
   )
 
   createEffect(() => {
-    userStore.updatePartialConfig({ imageDefaults: defaults }, true)
-  })
-
-  const cfg = createMemo(() => {
-    switch (tab.current()) {
-      case 'Shared':
-        return user.user?.images
-
-      case 'Chat':
-        return entity.chat?.imageSettings
-
-      case 'Character':
-        return entity.char?.imageSettings
-
-      default:
-        return user.user?.images
-    }
+    userStore.updatePartialConfig({ imageDefaults: ctx.defaults }, true)
   })
 
   const subclass = 'flex flex-col gap-4'
@@ -229,7 +144,7 @@ export const ImageSettingsModal = () => {
             <Button onClick={() => settingStore.imageSettings(false)}>
               <X /> Close
             </Button>
-            <Button onClick={() => save(tab.current(), store, entity)}>
+            <Button onClick={() => save(ctx.tab.current(), ctx.store, entity)}>
               <Save /> Save
             </Button>
           </>
@@ -237,7 +152,7 @@ export const ImageSettingsModal = () => {
       >
         <form class="flex flex-col gap-4">
           <Switch>
-            <Match when={tab.current() === 'Shared'}>
+            <Match when={ctx.tab.current() === 'Shared'}>
               <SolidCard type="hl">
                 <div>Shared Settings</div>
                 <div class="text-500 text-sm italic">
@@ -255,13 +170,13 @@ export const ImageSettingsModal = () => {
                 </div>
               </SolidCard>
             </Match>
-            <Match when={tab.current() === 'Character'}>
+            <Match when={ctx.tab.current() === 'Character'}>
               <SolidCard type="hl">
                 <div>Character Settings</div>
                 <div class="text-500 text-sm italic">Character: {entity.char?.name}</div>
               </SolidCard>
             </Match>
-            <Match when={tab.current() === 'Chat'}>
+            <Match when={ctx.tab.current() === 'Chat'}>
               <SolidCard type="hl">
                 <div>Current Chat Settings</div>
                 <div class="text-500 text-sm italic">Chatting with: {entity.char?.name}</div>
@@ -269,7 +184,7 @@ export const ImageSettingsModal = () => {
             </Match>
           </Switch>
 
-          <Tabs tabs={tab.tabs()} select={tab.select} selected={tab.selected} />
+          <Tabs tabs={ctx.tab.tabs()} select={ctx.tab.select} selected={ctx.tab.selected} />
 
           <Show when={isChat()}>
             <div class="flex flex-col gap-1">
@@ -281,14 +196,14 @@ export const ImageSettingsModal = () => {
                 size="sm"
                 class="w-fit"
                 onClick={() =>
-                  chatStore.editChat(entity.chat?._id!, { imageSource: currentImgSource() })
+                  chatStore.editChat(entity.chat?._id!, { imageSource: ctx.currentEditing() })
                 }
               >
                 <Show
-                  when={currentChatImageSrc() === currentImgSource()}
-                  fallback={`Use ${tab.current()} Settings`}
+                  when={ctx.currentSource() === ctx.currentEditing()}
+                  fallback={`Use ${ctx.tab.current()} Settings`}
                 >
-                  Use {tab.current()} Settings (Active)
+                  Use {ctx.tab.current()} Settings (Active)
                 </Show>
               </Button>
             </div>
@@ -298,10 +213,10 @@ export const ImageSettingsModal = () => {
             label={<span class="!text-lg">Summary Preset</span>}
             helperText="Choose which service and model is used for creating summaries for chat images"
             options={presetOptions()}
-            setPresetId={(id) => setStore('summaryPresetId', id)}
-            selected={store.summaryPresetId}
+            setPresetId={(id) => ctx.update('summaryPresetId', id)}
+            selected={ctx.store.summaryPresetId}
           >
-            <Button disabled={!store.summaryPresetId} onClick={editPresetClicked}>
+            <Button disabled={!ctx.store.summaryPresetId} onClick={editPresetClicked}>
               <Pencil size={20} />
             </Button>
           </PresetSelect>
@@ -311,8 +226,8 @@ export const ImageSettingsModal = () => {
               fieldName="summariseChat"
               label="Summarise Chat"
               helperText="Use your AI service to summarise the chat into an image prompt."
-              value={store.summariseChat}
-              onChange={(ev) => setStore('summariseChat', ev)}
+              value={ctx.store.summariseChat}
+              onChange={(ev) => ctx.update('summariseChat', ev)}
             />
 
             <TextInput
@@ -321,21 +236,21 @@ export const ImageSettingsModal = () => {
               isMultiline
               helperText='When summarising the chat to an image caption, this is the "prompt" is used summarise your conversation into an image prompt.'
               placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
-              value={store.summaryPrompt}
-              onChange={(ev) => setStore('summaryPrompt', ev.currentTarget.value)}
+              value={ctx.store.summaryPrompt}
+              onChange={(ev) => ctx.update('summaryPrompt', ev.currentTarget.value)}
             />
           </Accordian>
 
           <Select
             fieldName="imageType"
-            items={imageTypes()}
-            value={store.type ?? 'horde'}
-            onChange={(value) => setStore('type', value.value as any)}
+            items={ctx.hosts()}
+            value={ctx.store.type ?? 'horde'}
+            onChange={(value) => ctx.update('type', value.value as any)}
             class="!py-1"
             inline
           />
 
-          <Show when={canUseImages() && store.type === 'agnai'}>
+          <Show when={canUseImages() && ctx.store.type === 'agnai'}>
             <FormLabel
               label="Use Recommended Settings"
               helperText="Use the image model's recommended settings when available."
@@ -346,68 +261,70 @@ export const ImageSettingsModal = () => {
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.affixes}
-                onChange={(ev) => setDefaults('affixes', ev)}
+                value={ctx.defaults.affixes}
+                onChange={(ev) => ctx.updateDefaults('affixes', ev)}
               >
                 Affixes
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.size}
-                onChange={(ev) => setDefaults('size', ev)}
+                value={ctx.defaults.size}
+                onChange={(ev) => ctx.updateDefaults('size', ev)}
               >
                 Size
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.guidance}
-                onChange={(ev) => setDefaults('guidance', ev)}
+                value={ctx.defaults.guidance}
+                onChange={(ev) => ctx.updateDefaults('guidance', ev)}
               >
                 Guidance
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.steps}
-                onChange={(ev) => setDefaults('steps', ev)}
+                value={ctx.defaults.steps}
+                onChange={(ev) => ctx.updateDefaults('steps', ev)}
               >
                 Steps
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.negative}
-                onChange={(ev) => setDefaults('negative', ev)}
+                value={ctx.defaults.negative}
+                onChange={(ev) => ctx.updateDefaults('negative', ev)}
               >
                 Negative Prompt
               </ToggleButton>
               <ToggleButton
                 size="sm"
-                value={defaults.sampler}
-                onChange={(ev) => setDefaults('sampler', ev)}
+                value={ctx.defaults.sampler}
+                onChange={(ev) => ctx.updateDefaults('sampler', ev)}
               >
                 Sampler
               </ToggleButton>
             </div>
           </Show>
 
-          <div class={store.type === 'novel' ? subclass : 'hidden'}>
-            <NovelSettings cfg={store} setter={setStore} />
+          <div class={ctx.store.type === 'novel' ? subclass : 'hidden'}>
+            <NovelSettings cfg={ctx.store} setter={ctx.update} />
           </div>
 
-          <div class={store.type === 'horde' ? subclass : 'hidden'}>
-            <HordeSettings cfg={store} setter={setStore} />
+          <div class={ctx.store.type === 'horde' ? subclass : 'hidden'}>
+            <HordeSettings cfg={ctx.store} setter={ctx.update} />
           </div>
 
-          <div class={tab.current() === 'Shared' && store.type === 'sd' ? subclass : 'hidden'}>
-            <SDSettings cfg={store} setter={setStore} />
+          <div
+            class={ctx.tab.current() === 'Shared' && ctx.store.type === 'sd' ? subclass : 'hidden'}
+          >
+            <SDSettings cfg={ctx.store} setter={ctx.update} />
           </div>
 
-          <div class={store.type === 'agnai' ? subclass : 'hidden'}>
-            <AgnaiSettings cfg={store} setter={setStore} />
+          <div class={ctx.store.type === 'agnai' ? subclass : 'hidden'}>
+            <AgnaiSettings cfg={ctx.store} setter={ctx.update} />
           </div>
 
           <Divider />
 
-          <Show when={store.type === 'agnai'}>
+          <Show when={ctx.store.type === 'agnai'}>
             <SolidCard bg="rose-600">
               Refer to the recommended settings when using Agnaistic image models
             </SolidCard>
@@ -418,9 +335,9 @@ export const ImageSettingsModal = () => {
             min={5}
             max={128}
             step={1}
-            value={store.steps ?? agnaiModel()?.init.steps ?? 50}
+            value={ctx.store.steps ?? ctx.agnaiModel()?.init.steps ?? 50}
             label="Sampling Steps"
-            onChange={(ev) => setStore('steps', ev)}
+            onChange={(ev) => ctx.update('steps', ev)}
           />
 
           <InlineRangeInput
@@ -428,9 +345,9 @@ export const ImageSettingsModal = () => {
             min={0}
             max={4}
             step={1}
-            value={store.clipSkip ?? agnaiModel()?.init.clipSkip ?? 0}
+            value={ctx.store.clipSkip ?? ctx.agnaiModel()?.init.clipSkip ?? 0}
             label="Clip Skip"
-            onChange={(ev) => setStore('clipSkip', ev)}
+            onChange={(ev) => ctx.update('clipSkip', ev)}
           />
 
           <InlineRangeInput
@@ -438,9 +355,9 @@ export const ImageSettingsModal = () => {
             min={256}
             max={1280}
             step={128}
-            value={store.width ?? agnaiModel()?.init.width ?? 1024}
+            value={ctx.store.width ?? ctx.agnaiModel()?.init.width ?? 1024}
             label="Image Width"
-            onChange={(ev) => setStore('width', ev)}
+            onChange={(ev) => ctx.update('width', ev)}
           />
 
           <InlineRangeInput
@@ -448,29 +365,29 @@ export const ImageSettingsModal = () => {
             min={256}
             max={1280}
             step={128}
-            value={store.height ?? agnaiModel()?.init.height ?? 1024}
+            value={ctx.store.height ?? ctx.agnaiModel()?.init.height ?? 1024}
             label="Image Height"
-            onChange={(ev) => setStore('height', ev)}
+            onChange={(ev) => ctx.update('height', ev)}
           />
 
           <InlineRangeInput
             fieldName="imageCfg"
-            value={store.cfg ?? agnaiModel()?.init.cfg ?? 9}
+            value={ctx.store.cfg ?? ctx.agnaiModel()?.init.cfg ?? 9}
             label="Guidance Scale"
             min={1}
             max={10}
             step={0.2}
-            onChange={(ev) => setStore('cfg', ev)}
+            onChange={(ev) => ctx.update('cfg', ev)}
           />
 
           <TextInput
             fieldName="seed"
-            value={store.seed ?? 0}
+            value={ctx.store.seed ?? 0}
             label="Seed"
             type="number"
             helperText="Seed number (0 = random). Note: The seed will not be consistent across different servers."
             onChange={(ev) =>
-              setStore(
+              ctx.update(
                 'seed',
                 Math.max(0, Math.min(+ev.currentTarget.value, Number.MAX_SAFE_INTEGER))
               )
@@ -479,20 +396,20 @@ export const ImageSettingsModal = () => {
 
           <TextInput
             fieldName="imagePrefix"
-            value={store.prefix}
+            value={ctx.store.prefix}
             label="Prompt Prefix"
             helperText="(Optional) Text to prepend to your image prompt"
             placeholder={`E.g.: best quality, masterpiece`}
-            onChange={(ev) => setStore('prefix', ev.currentTarget.value)}
+            onChange={(ev) => ctx.update('prefix', ev.currentTarget.value)}
           />
 
           <TextInput
             fieldName="imageSuffix"
-            value={store.suffix}
+            value={ctx.store.suffix}
             label="Prompt Suffix"
             helperText="(Optional) Text to append to your image prompt"
             placeholder={`E.g.: full body, visible legs, dramatic lighting`}
-            onChange={(ev) => setStore('suffix', ev.currentTarget.value)}
+            onChange={(ev) => ctx.update('suffix', ev.currentTarget.value)}
           />
 
           <TextInput
@@ -500,8 +417,8 @@ export const ImageSettingsModal = () => {
             label="Negative Prompt"
             helperText="(Optional) Negative Prompt"
             placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
-            value={store.negative}
-            onChange={(ev) => setStore('negative', ev.currentTarget.value)}
+            value={ctx.store.negative}
+            onChange={(ev) => ctx.update('negative', ev.currentTarget.value)}
           />
         </form>
       </RootModal>
@@ -518,7 +435,7 @@ export const ImageSettingsModal = () => {
           preset={summaryPreset}
           setters={presetSetters}
           close={() => setEditPreset(false)}
-          presetId={store.summaryPresetId}
+          presetId={ctx.store.summaryPresetId}
           onPresetChanged={() => setEditPreset(false)}
           footer={setPresetFooter}
         />

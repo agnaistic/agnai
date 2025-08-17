@@ -35,7 +35,7 @@ import Modal from './shared/Modal'
 import { ContextProvider } from './store/context'
 import MemoryGuide from './pages/Guides/Memory'
 import NovelGuide from './pages/Guides/NovelAI'
-import { ImageModal } from './pages/Chat/ImageModal'
+import { ImageModal } from './pages/Image/ImageModal'
 import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 import { markdown } from './shared/markdown'
 import SoundsPage from './pages/Sounds'
@@ -46,7 +46,7 @@ import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
-import { GenerateImageModal } from './pages/Settings/Image/ImageGeneration'
+import { GenerateImageModal } from './pages/Image/ImageGeneration'
 
 const App: Component = () => {
   const state = userStore()
