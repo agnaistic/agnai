@@ -1057,6 +1057,13 @@ function getUIsettings(guest = false) {
     ui.msgOptsInline = UI.defaultUIsettings.msgOptsInline
   }
 
+  // When new message options are added, we must make sure they're populated
+  for (const [key, initial] of Object.entries(UI.defaultUIsettings.msgOptsInline)) {
+    const prop = key as UI.MessageOption
+    if (prop in ui.msgOptsInline) continue
+    ui.msgOptsInline[prop] = initial
+  }
+
   return ui
 }
 
