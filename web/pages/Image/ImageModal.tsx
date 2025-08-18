@@ -164,16 +164,10 @@ const ImageCollectionModal: Component<{
     on(
       () => props.collection,
       (id) => {
-        if (!id) return
-        reel.load(id, props.initial)
-      }
-    )
-  )
+        if (id) {
+          reel.load(id, props.initial)
+        }
 
-  createEffect(
-    on(
-      () => props.collection,
-      () => {
         if (props.type === 'message') {
           const msg = getGraphMessage(props.messageId)
           update('prompt', msg?.imagePrompt || '')
@@ -277,6 +271,7 @@ const ImageCollectionModal: Component<{
   return (
     <Modal
       show={props.collection !== undefined}
+      alwaysRender
       close={close}
       maxWidth="full"
       fixedHeight

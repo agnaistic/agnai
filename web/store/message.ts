@@ -1057,14 +1057,11 @@ async function handleImage(body: {
 
   const extras = (msg.extras || []).slice().concat(cacheId ? cacheId : image)
 
-  const nextMsgs = replace(messageId, msgs, { extras })
+  updateMessageInState(messageId, { extras })
 
   if (chatId === activeChatId) {
     console.log('[wait] handle-img')
-    msgStore.setState({
-      msgs: nextMsgs,
-      imgWaiting: undefined,
-    })
+    msgStore.setState({ imgWaiting: undefined })
   }
 }
 

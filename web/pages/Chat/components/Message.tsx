@@ -975,6 +975,20 @@ export const Typewriter: Component<{
     )
   )
 
+  createEffect(
+    on(
+      () => ({ gen: props.generating, text: props.text }),
+      (gen) => {
+        if (!gen) return
+
+        if (!props.text) {
+          setLength(0)
+          startTimer()
+        }
+      }
+    )
+  )
+
   onCleanup(() => {
     const timer = getTimer()
     clearInterval(timer?.timer!)
@@ -988,6 +1002,7 @@ export const Typewriter: Component<{
         data-partial
         innerHTML={markup()}
       />
+      <span class="text-500 text-sm font-bold">{props.generating ? '(true)' : '(false)'}</span>
     </>
   )
 }

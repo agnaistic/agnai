@@ -1,7 +1,7 @@
 import { createStore } from 'solid-js/store'
 import { SD_SAMPLER } from '/common/image'
 import { characterStore, chatStore, settingStore, userStore } from '/web/store'
-import { createEffect, createMemo, onMount } from 'solid-js'
+import { createEffect, createMemo } from 'solid-js'
 import { ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
@@ -160,8 +160,6 @@ export function useImageContext() {
         return user.user?.images
     }
   })
-
-  onMount(() => settingStore.getServerConfig())
 
   const save = () => {
     saveImageSettings(tab.current(), store, entity)
