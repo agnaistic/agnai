@@ -1002,7 +1002,7 @@ export const Typewriter: Component<{
         data-partial
         innerHTML={markup()}
       />
-      <span class="text-500 text-sm font-bold">{props.generating ? '(true)' : '(false)'}</span>
+      {/* <span class="text-500 text-sm font-bold">{props.generating ? '(true)' : '(false)'}</span> */}
     </>
   )
 }
