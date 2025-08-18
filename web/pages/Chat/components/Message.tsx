@@ -823,9 +823,6 @@ const MessageOptions: Component<{
   })
 
   const order = createMemo(() => {
-    open()
-    logic()
-
     return Object.entries(props.ui.msgOptsInline)
       .sort((l, r) => l[1].pos - r[1].pos)
       .map(([key, item]) => ({ key: key as UI.MessageOption, ...item }))
@@ -842,7 +839,7 @@ const MessageOptions: Component<{
           return (
             <MessageOption
               id={props.msg._id}
-              outer={def.outer.outer}
+              outer={def.outer?.outer ?? false}
               show={def.show}
               label={def.label}
               open={open()}
