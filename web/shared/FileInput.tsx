@@ -26,8 +26,9 @@ const FileInput: Component<{
 
       const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
       props.onUpdate(files)
-    } finally {
+    } catch (error) {
       inputRef.value = ''
+      throw error
     }
   }
 
