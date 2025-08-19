@@ -3,7 +3,7 @@ pushd %~dp0
 
 REM Detect if launched from shortcut
 set "fromShortcut=false"
-if /I "%~1"=="fromShortcut" set "fromShortcut=true"
+if /I "%~1"=="\fromShortcut" set "fromShortcut=true"
 
 REM Check if dotenv is installed
 where dotenv >nul 2>&1
