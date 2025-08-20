@@ -14,8 +14,15 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
       prompt: props.editor.state.appearance || '',
       handler: {
         text: 'Send to Editor',
-        handler: async (image) => {
-          await props.editor.imageCache.addImage(image, { id: `${v4()}.png` })
+        schema: 'primary',
+
+        onClick: async (image) => {
+          if (!image) return
+          props.editor.update('appearance', image?.prompt)
+
+          if (image.reel.state.image) {
+            await props.editor.imageCache.addImage(image.reel.state.image, { id: `${v4()}.png` })
+          }
           settingStore.closeImageGen()
         },
       },

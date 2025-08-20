@@ -84,7 +84,9 @@ export const AvatarField: Component<{
               fieldName="avatar"
               accept="image/png,image/jpeg,image/apng,image/gif,image/webp"
               onUpdate={props.updateFile}
-            />
+            >
+              Select Avatar Image
+            </FileInput>
             <div class="relative flex w-full gap-2">
               <div class="absolute right-2 top-1">
                 <Regenerate field={'appearance'} editor={props.editor} />

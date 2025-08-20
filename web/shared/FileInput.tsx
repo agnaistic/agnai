@@ -1,5 +1,6 @@
-import { Component, JSX } from 'solid-js'
+import { Component, createSignal, JSX, Show } from 'solid-js'
 import { FormLabel } from './FormLabel'
+import Button, { ButtonSchema } from './Button'
 
 export type FileInputResult = { file: File; content: string }
 
@@ -14,17 +15,23 @@ const FileInput: Component<{
   multiple?: boolean
   onUpdate?: (files: FileInputResult[]) => void
   parentClass?: string
+  size?: 'sm' | 'md' | 'lg' | 'pill'
+  schema?: ButtonSchema
+  children?: JSX.Element | string
 }> = (props) => {
   let inputRef: HTMLInputElement
+  const [selected, setSelected] = createSignal<FileInputResult[]>([])
 
   const onFile = async (list: FileList | null) => {
     try {
       if (!props.onUpdate) return
       if (!list) {
+        setSelected([])
         return props.onUpdate([])
       }
 
       const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
+      setSelected(files)
       props.onUpdate(files)
     } finally {
       inputRef.value = ''
@@ -34,6 +41,23 @@ const FileInput: Component<{
   return (
     <div class={`w-full ${props.parentClass || ''}`}>
       <FormLabel label={props.label} helperText={props.helperText} />
+      <Button onClick={() => inputRef.click()} size={props.size} schema={props.schema}>
+        <Show
+          when={selected().length === 0}
+          fallback={
+            <>
+              Selected:{' '}
+              {selected().length === 1
+                ? `${selected()[0].file.name}`
+                : `${selected().length} files`}
+            </>
+          }
+        >
+          <Show when={props.children} fallback={<>Select File{props.multiple ? '(s)' : ''}</>}>
+            {props.children}
+          </Show>
+        </Show>
+      </Button>
       <input
         ref={(ref) => {
           inputRef = ref
@@ -43,7 +67,7 @@ const FileInput: Component<{
         name={props.fieldName}
         type="file"
         accept={props.accept}
-        class={`w-full rounded-xl bg-[var(--bg-800)] ${props.class || ''} cursor-pointer`}
+        class={`hidden`}
         onChange={(ev) => onFile(ev.currentTarget.files)}
         {...(props.multiple ? { multiple: true } : {})}
         {...(props.required ? { required: true } : {})}

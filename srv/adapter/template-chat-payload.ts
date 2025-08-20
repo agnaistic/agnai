@@ -108,7 +108,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   //   })
   // }
 
-  messages.push({ role: 'assistant', content: `${postContent}${prefill}` })
+  messages.push({ role: 'user', content: `${postContent}${prefill}` })
 
   return { messages, assembled }
 }

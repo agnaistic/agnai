@@ -230,13 +230,10 @@ export const settingStore = createStore<SettingState>(
       const next = show ?? !showSettings
       return { showSettings: next }
     },
-    openImageGen: (
-      _,
-      opts?: { prompt?: string; handler?: { text: string; handler: (image: string) => void } }
-    ) => {
+    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton }) => {
       return {
         showImage: {
-          options: [],
+          options: opts?.handler ? [opts.handler] : [],
           src: {
             type: 'collection',
             id: '', // No ID = ephemeral
