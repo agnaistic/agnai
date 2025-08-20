@@ -151,6 +151,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           )
 
     body.messages = messages
+    const lastMsg = messages[messages.length - 1]
+
+    /**
+     * @todo provide an option for this
+     */
+    if (opts.conn.provider?.provider === 'known-deepseek' && lastMsg.role === 'assistant') {
+      lastMsg.role = 'user'
+    }
 
     yield { prompt: stripImageContent(messages) }
   } else {
