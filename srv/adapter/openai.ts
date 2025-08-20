@@ -156,7 +156,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     /**
      * @todo provide an option for this
      */
-    if (opts.conn.provider?.provider === 'known-deepseek' && lastMsg.role === 'assistant') {
+    if (opts.conn.provider?.provider === 'known-deepseek' && lastMsg?.role === 'assistant') {
       lastMsg.role = 'user'
     }
 
