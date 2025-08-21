@@ -218,7 +218,9 @@ export function useImageCache(collection: string, opts: ImageCacheOpts = {}) {
   const load = async (collectionId: string, initial?: number) => {
     if (collectionId) {
       // Already loaded
-      if (collectionId === reel.id) return
+      if (collectionId === reel.id) {
+        return
+      }
 
       setState('id', collectionId)
       reel.id = collectionId

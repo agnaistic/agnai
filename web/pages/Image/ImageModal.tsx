@@ -29,6 +29,7 @@ type ImageState = { prompt: string; promptLoading: boolean; loading: boolean }
 
 export const ImageModal: Component = () => {
   const state = settingStore()
+  const [ctx] = useImageContext()
 
   return (
     <Switch>
@@ -36,6 +37,7 @@ export const ImageModal: Component = () => {
 
       <Match when={state.showImage?.src.type !== 'url'}>
         <ImageCollectionModal
+          ctx={ctx}
           type={state.showImage?.src.type!}
           collection={state.showImage?.src.id!}
           close={() => settingStore.clearImage()}
@@ -107,6 +109,7 @@ const ImageUrlModal: Component<{
 
 const ImageCollectionModal: Component<{
   type: ImageSource['type']
+  ctx: ImageContext
   collection: string
   messageId?: string
   initial?: number
@@ -115,7 +118,6 @@ const ImageCollectionModal: Component<{
   actions: ImageButton[]
   onClose?: () => void
 }> = (props) => {
-  const [ctx] = useImageContext()
   const reel = useImageCache(props.collection || 'ephemeral-collection', {
     initial: props.initial,
   })
@@ -285,7 +287,7 @@ const ImageCollectionModal: Component<{
       }
     >
       <PromptSettings
-        ctx={ctx}
+        ctx={props.ctx}
         state={state}
         update={update}
         messageId={props.messageId}

@@ -244,6 +244,7 @@ const PromptEditor: Component<
         disabled={props.disabled || !!props.state?.promptTemplateId}
         placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
         onKeyDown={onTemplateKeyDown}
+        onPaste={onChange}
       />
 
       <div class="flex flex-wrap gap-2" classList={{ hidden: !!props.state?.promptTemplateId }}>
