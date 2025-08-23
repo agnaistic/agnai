@@ -12,6 +12,8 @@ import { getStore } from '../store/create'
 import { ADAPTER_SETTINGS } from './PresetSettings/settings'
 import { PresetState } from '../store/preset-context'
 import { v4 } from 'uuid'
+import { getChatPreset } from '../pages/Chat/util'
+import { extractReasoning } from '/common/reasoning'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -124,6 +126,18 @@ export function createEmitter<T extends string>(...events: T[]) {
   })
 
   return { emit, on, off } as ComponentEmitter<T>
+}
+
+export function getUtterableText(msg: string) {
+  const { active } = getStore('chat').getState()
+  const { ui, user } = getStore('user').getState()
+  const { presets } = getStore('presets').getState()
+
+  if (!active?.chat || !user) return
+
+  const preset = getChatPreset(active.chat, user, presets)
+  const extract = extractReasoning(msg, { tags: preset.reasoning, display: ui.displayReasoning })
+  return extract
 }
 
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {

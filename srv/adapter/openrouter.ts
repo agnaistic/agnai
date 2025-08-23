@@ -79,6 +79,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.messages = messages
     payload.system = system
   } else if (opts.messages) {
+    const last = opts.messages.slice(-1)[0]
+    if (last && payload.model === 'deepseek/deepseek-chat-v3.1') {
+      last.role = 'user'
+    }
     payload.messages = opts.messages
   } else {
     payload.prompt = opts.prompt

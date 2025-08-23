@@ -54,6 +54,7 @@ import { api } from '/web/store/api'
 import { resizeImage } from '/web/shared/image-resize'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
+import { extractReasoning } from '/common/reasoning'
 
 export type SendFunc = (opts: { msg: string; ooc: boolean; onSuccess?: () => void }) => void
 
@@ -206,9 +207,14 @@ const InputBar: Component<{
     const char = ctx.allBots[lastTextMsg.characterId]
     if (!char?.voice) return
 
+    const text = extractReasoning(lastTextMsg.msg, {
+      tags: ctx.preset?.reasoning,
+      display: ctx.ui.displayReasoning,
+    })
+
     msgStore.textToSpeech(
       lastTextMsg._id,
-      lastTextMsg.msg,
+      text.content,
       char.voice,
       props.char?.culture || defaultCulture
     )

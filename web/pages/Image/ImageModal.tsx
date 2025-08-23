@@ -32,32 +32,32 @@ export const ImageModal: Component = () => {
   const [ctx] = useImageContext()
 
   return (
-    <Switch>
-      <Match when={!state.showImage?.src.type}>{null}</Match>
+    <>
+      <ImageCollectionModal
+        ctx={ctx}
+        type={state.showImage?.src.type!}
+        collection={
+          state.showImage?.src.type === 'collection' || state.showImage?.src.type === 'message'
+            ? state.showImage?.src.id!
+            : ''
+        }
+        close={() => settingStore.clearImage()}
+        actions={state.showImage?.options!}
+        initial={state.showImage?.src.initial}
+        onClose={state.showImage?.onClose}
+        prompt={state.showImage?.src.prompt}
+        messageId={state.showImage?.src.messageId}
+      />
 
-      <Match when={state.showImage?.src.type !== 'url'}>
-        <ImageCollectionModal
-          ctx={ctx}
-          type={state.showImage?.src.type!}
-          collection={state.showImage?.src.id!}
-          close={() => settingStore.clearImage()}
-          actions={state.showImage?.options!}
-          initial={state.showImage?.src.initial}
-          onClose={state.showImage?.onClose}
-          prompt={state.showImage?.src.prompt}
-          messageId={state.showImage?.src.messageId}
-        />
-      </Match>
-
-      <Match when={state.showImage?.src.type === 'url'}>
+      <Show when={state.showImage?.src.type === 'url'}>
         <ImageUrlModal
-          url={state.showImage?.src.id!}
+          url={state.showImage?.src.type === 'url' ? state.showImage?.src.id! : ''}
           close={() => settingStore.clearImage()}
           actions={state.showImage?.options!}
           onClose={state.showImage?.onClose}
         />
-      </Match>
-    </Switch>
+      </Show>
+    </>
   )
 }
 
@@ -169,7 +169,6 @@ const ImageCollectionModal: Component<{
         if (id) {
           reel.load(id, props.initial)
         }
-
         if (props.type === 'message') {
           const msg = getGraphMessage(props.messageId)
           update('prompt', msg?.imagePrompt || '')
@@ -272,7 +271,7 @@ const ImageCollectionModal: Component<{
 
   return (
     <Modal
-      show={props.collection !== undefined}
+      show={!!props.collection}
       alwaysRender
       close={close}
       maxWidth="full"

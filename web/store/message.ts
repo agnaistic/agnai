@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { createDebounce, getAssetUrl, storage } from '../shared/util'
+import { createDebounce, getAssetUrl, getUtterableText, storage } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
 import { publish, subscribe } from './socket'
@@ -29,6 +29,8 @@ import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import { botGen, GenerateOpts } from './data/bot-generate'
 import type { MsgAttachment } from '/srv/adapter/type'
+import { getChatPreset } from '../pages/Chat/util'
+import { extractReasoning } from '/common/reasoning'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -1215,7 +1217,9 @@ subscribe(
     if (body.adapter === 'image' || !voice || !user) return
     const canSpeak = (user?.texttospeech?.enabled ?? true) && !char.voiceDisabled
     if (canSpeak && active.char.userId === user._id) {
-      msgStore.textToSpeech(body.messageId, body.message, voice, char.culture ?? defaultCulture)
+      const parsed = getUtterableText(body.message)
+      if (!parsed?.content) return
+      msgStore.textToSpeech(body.messageId, parsed.content, voice, char.culture ?? defaultCulture)
     }
   }
 )
@@ -1340,7 +1344,9 @@ async function onMessageReceived(body: {
   if (body.msg.adapter === 'image') return
 
   if (speech && !isUserMsg) {
-    msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+    const parsed = getUtterableText(msg.msg)
+    if (parsed?.content)
+      msgStore.textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
   }
 
   onCharacterMessageReceived(msg)
@@ -1694,7 +1700,11 @@ subscribe(
       },
     })
 
-    if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+    if (speech) {
+      const parsed = getUtterableText(msg.msg)
+      if (parsed?.content)
+        msgStore.textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
+    }
 
     onCharacterMessageReceived(msg)
   }

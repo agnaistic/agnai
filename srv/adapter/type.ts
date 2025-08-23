@@ -41,7 +41,11 @@ export type CompletionGenerator<T = Completion> = (opts: {
   T | undefined
 >
 
-export type CompletionItem = { role: ChatRole; content: string; name?: string }
+export type CompletionItem<T extends string = ChatRole> = {
+  role: T
+  content: string
+  name?: string
+}
 
 export type CompletionContent<T> = Array<
   { finish_reason: string; index: number } & ({ text: string } | T)

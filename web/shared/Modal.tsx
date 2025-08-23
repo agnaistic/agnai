@@ -62,8 +62,8 @@ const Modal: Component<Props> = (props) => {
     <Show when={props.show || props.alwaysRender}>
       <Portal>
         <div
-          class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center"
-          classList={{ hidden: props.alwaysRender ? !props.show : false }}
+          class={`fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center`}
+          classList={{ '!hidden': !props.show }}
         >
           <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
             <div class="absolute inset-0 bg-black" />

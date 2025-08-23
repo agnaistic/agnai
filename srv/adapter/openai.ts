@@ -1,5 +1,5 @@
 import { getOaiCompatibleUrl, joinUrl, sanitiseAndTrim } from '/common/requests/util'
-import { ChatRole, ModelAdapter } from './type'
+import { AdapterProps, ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppLog } from '../middleware'
 import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
@@ -151,14 +151,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           )
 
     body.messages = messages
-    const lastMsg = messages[messages.length - 1]
 
     /**
      * @todo provide an option for this
+     * there are some provider/model combinations that need to be 'patched' before dispatching
      */
-    if (opts.conn.provider?.provider === 'known-deepseek' && lastMsg?.role === 'assistant') {
-      lastMsg.role = 'user'
-    }
+    patchPayload(opts, body, messages)
 
     yield { prompt: stripImageContent(messages) }
   } else {
@@ -322,5 +320,33 @@ export function getCompletionContent(completion: Completion<Inference> | undefin
     return completion.choices[0].text
   } else {
     return completion?.choices?.[0]?.message?.content || ''
+  }
+}
+
+function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<string>[]) {
+  const { conn } = opts
+  if (!conn.provider) return
+
+  const lastMsg = messages[messages.length - 1]
+
+  switch (conn.provider.provider) {
+    case 'known-deepseek': {
+      if (!lastMsg) return
+      lastMsg.role = 'user'
+      return
+    }
+
+    case 'known-openrouter': {
+      if (body.model !== 'deepseek/deepseek-chat-v3.1') return
+      if (!lastMsg) return
+      lastMsg.role = 'user'
+      return
+    }
+  }
+
+  if (conn.provider.url.startsWith('https://openrouter.ai')) {
+    if (body.model !== 'deepseek/deepseek-chat-v3.1') return
+    lastMsg.role = 'user'
+    return
   }
 }
