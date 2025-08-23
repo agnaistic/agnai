@@ -29,6 +29,8 @@ import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import { botGen, GenerateOpts } from './data/bot-generate'
 import type { MsgAttachment } from '/srv/adapter/type'
+import { getChatPreset } from '../pages/Chat/util'
+import { extractReasoning } from '/common/reasoning'
 
 const SOFT_PAGE_SIZE = 20
 
