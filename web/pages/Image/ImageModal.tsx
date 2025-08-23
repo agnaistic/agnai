@@ -1,5 +1,5 @@
 import './images.scss'
-import { Component, For, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, on } from 'solid-js'
 import Modal from '../../shared/Modal'
 import {
   ConfirmAction,
