@@ -327,7 +327,7 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
   const { conn } = opts
   if (!conn.provider) return
 
-  const model: string = (body.model || '').toString()
+  const model: string = (body.model || '').toLowerCase()
   const lastMsg = messages[messages.length - 1]
 
   switch (conn.provider.provider) {
