@@ -327,6 +327,7 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
   const { conn } = opts
   if (!conn.provider) return
 
+  const model: string = (body.model || '').toString()
   const lastMsg = messages[messages.length - 1]
 
   switch (conn.provider.provider) {
@@ -344,9 +345,7 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
     }
   }
 
-  if (conn.provider.url.startsWith('https://openrouter.ai')) {
-    if (body.model !== 'deepseek/deepseek-chat-v3.1') return
+  if (model.includes('deepseek') && model.includes('v3.1')) {
     lastMsg.role = 'user'
-    return
   }
 }
