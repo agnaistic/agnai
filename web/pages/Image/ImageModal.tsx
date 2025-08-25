@@ -39,7 +39,7 @@ export const ImageModal: Component = () => {
         collection={
           state.showImage?.src.type === 'collection' || state.showImage?.src.type === 'message'
             ? state.showImage?.src.id!
-            : ''
+            : undefined
         }
         close={() => settingStore.clearImage()}
         actions={state.showImage?.options!}
@@ -110,7 +110,7 @@ const ImageUrlModal: Component<{
 const ImageCollectionModal: Component<{
   type: ImageSource['type']
   ctx: ImageContext
-  collection: string
+  collection: string | undefined
   messageId?: string
   initial?: number
   close: () => void
@@ -271,7 +271,7 @@ const ImageCollectionModal: Component<{
 
   return (
     <Modal
-      show={!!props.collection}
+      show={props.collection !== undefined}
       alwaysRender
       close={close}
       maxWidth="full"

@@ -244,7 +244,7 @@ export const settingStore = createStore<SettingState>(
       }
     },
     closeImageGen: () => {
-      return { imggen: { show: false } }
+      return { showImage: undefined }
     },
     imageSettings({ showImgSettings }, next?: boolean) {
       if (next === undefined) {
