@@ -281,7 +281,7 @@ const ImageCollectionModal: Component<{
           <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
             <SettingsIcon size={20} />
           </div>
-          <div>V2.{title()}</div>
+          <div>{title()}</div>
         </div>
       }
     >
@@ -355,7 +355,11 @@ const PromptSettings: Component<{
     <div class="image-modal">
       <section class="flex flex-col gap-1" style={{ 'grid-area': 'options' }}>
         <Show when={props.messageId}>
-          <TextInput placeholder="Prompt Gen Hint: What to focus on?" class="!text-sm" />
+          <TextInput
+            placeholder="Prompt Gen Hint: What to focus on?"
+            class="!text-sm"
+            onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+          />
         </Show>
 
         <TextInput
