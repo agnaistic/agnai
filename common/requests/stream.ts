@@ -411,6 +411,7 @@ export async function* fetchStream(
 
             getChoiceProp(json, 'model', meta)
             getChoiceProp(json, 'finish_reason', meta)
+            getChoiceProp(json, 'provider', meta)
 
             yield { meta }
           }

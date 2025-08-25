@@ -59,6 +59,7 @@ async function addImage(
 }
 
 async function getImage(collection: string, imageId: string): Promise<string | undefined> {
+  if (!imageId) return
   if (imageId.startsWith('cache:')) {
     const image = await storage.getItem(imageId)
     if (image) return image

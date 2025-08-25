@@ -164,6 +164,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
           char: opts.replyAs,
           members,
           gen: opts.gen,
+          stops: endTokens,
         }),
       }
     }

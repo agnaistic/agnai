@@ -1,10 +1,10 @@
 import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
-import { joinUrl, sanitiseAndTrim } from './util'
+import { getEndTokens, joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { stripImageContent, toChatMessages } from '/srv/adapter/template-chat-payload'
-import { toImageJinjaTemplate } from './payloads'
+import { getStoppingStrings, toImageJinjaTemplate } from './payloads'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -25,6 +25,7 @@ type Completion<T = Inference> = {
 export async function* handleOAI(opts: PayloadOpts, signal: AbortController, payload: any) {
   const gen = opts.settings!
   const options = { ...opts, gen }
+  const stops = getStoppingStrings(opts, gen)
 
   const { messages } = await toChatMessages(options, countTokens)
 
@@ -93,6 +94,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
       char: opts.replyAs,
       members: opts.members,
       gen: opts.settings || {},
+      stops,
     })
     return
   }

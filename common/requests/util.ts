@@ -36,14 +36,13 @@ type SanitiseOpts = {
   char: AppSchema.Character
   members: AppSchema.Profile[]
   gen: Partial<AppSchema.GenSettings>
+  stops?: string[]
 }
 
-export function sanitiseAndTrim({ text, char, members, gen }: SanitiseOpts) {
+export function sanitiseAndTrim({ text, char, members, gen, stops }: SanitiseOpts) {
   let parsed = sanitise(text)
 
-  const trimmed = trimResponseV2(parsed, char, members, gen, ['END_OF_DIALOG'])
-    .split(`${char.name}:`)
-    .join('')
+  const trimmed = trimResponseV2(parsed, char, members, gen, stops).split(`${char.name}:`).join('')
   return trimmed || parsed
 }
 
@@ -59,7 +58,7 @@ export function trimResponseV2(
   gen: Partial<AppSchema.GenSettings> | undefined,
   endTokens: string[] = []
 ) {
-  const allEndTokens = getEndTokens(null, members)
+  const allEndTokens = getEndTokens(null, members, endTokens)
 
   generated = generated.split(`${char.name} :`).join(`${char.name}:`)
   if (gen?.reasoning?.start) {

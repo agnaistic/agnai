@@ -32,12 +32,13 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     return
   }
 
+  const stops = getStoppingStrings(opts, opts.gen)
   const payload: any = {
     stream: opts.gen.streamResponse,
     // 256 is the OpenRouter default. We will use this.
     temperature: opts.gen.temp,
     max_tokens: opts.gen.maxTokens ?? 256,
-    stop: getStoppingStrings(opts, opts.gen),
+    stop: stops,
     top_p: opts.gen.topP,
     top_k: opts.gen.topK,
     top_a: opts.gen.topA,
@@ -167,12 +168,14 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     return
   }
 
-  yield sanitiseAndTrim({
+  const trimmed = sanitiseAndTrim({
     text,
     char: opts.replyAs,
     members: opts.members,
     gen: opts.gen,
+    stops,
   })
+  yield trimmed
 }
 
 async function* getCompletion(

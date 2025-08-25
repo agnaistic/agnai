@@ -105,6 +105,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
           char: opts.replyAs,
           members,
           gen: opts.gen,
+          stops: stop_sequence,
         }),
       }
     }

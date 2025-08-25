@@ -82,6 +82,7 @@ export const handleVenus: ModelAdapter = async function* (opts) {
             char: opts.char,
             members: opts.members,
             gen: opts.gen,
+            stops: body.stop,
           }),
         }
       }

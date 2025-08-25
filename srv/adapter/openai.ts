@@ -57,6 +57,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const stops = getStoppingStrings(opts, opts.gen)
+  const allStops = stops.slice()
+
   if (!base.changed) {
     stops.splice(4, stops.length - 4)
   }
@@ -250,6 +252,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           char,
           members,
           gen: opts.gen,
+          stops: allStops,
         }),
       }
     }
@@ -282,12 +285,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           char,
           members,
           gen: opts.gen,
+          stops: allStops,
         })
       : yield sanitiseAndTrim({
           text,
           char: opts.replyAs,
           members,
           gen: opts.gen,
+          stops: allStops,
         })
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')

@@ -333,6 +333,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
             char,
             members,
             gen: opts.gen,
+            stops: allStops,
           }),
         }
       }
@@ -353,13 +354,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
-  const trimmed = trimResponseV2(
-    parsed,
-    opts.replyAs,
-    members,
-    opts.gen,
-    Array.from(stops.values())
-  )
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, allStops)
   yield trimmed || parsed
 }
 

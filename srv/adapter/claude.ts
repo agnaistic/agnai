@@ -22,6 +22,7 @@ import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -81,6 +82,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     ? 'v2'
     : 'v1'
   const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
+  const userStops = getStoppingStrings(opts, opts.gen)
 
   const payload: any = {
     model: claudeModel,
@@ -253,6 +255,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
           char: opts.replyAs,
           members,
           gen: opts.gen,
+          stops: userStops,
         }),
       }
     }

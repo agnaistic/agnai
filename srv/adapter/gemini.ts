@@ -237,6 +237,7 @@ export const handleGemini: ModelAdapter = async function* (opts) {
           char: opts.replyAs,
           members: opts.members,
           gen: opts.gen,
+          stops: generationConfig.stopSequences,
         }),
       }
     }
