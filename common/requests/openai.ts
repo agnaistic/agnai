@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
-import { getEndTokens, joinUrl, sanitiseAndTrim } from './util'
+import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
 import { stripImageContent, toChatMessages } from '/srv/adapter/template-chat-payload'
 import { getStoppingStrings, toImageJinjaTemplate } from './payloads'
