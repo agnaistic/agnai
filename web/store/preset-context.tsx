@@ -238,7 +238,6 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       quiet: opts?.quiet,
       onSuccess: (next) => {
         opts?.onSuccess?.(next)
-        loadModels({ preset: next })
       },
     })
   }

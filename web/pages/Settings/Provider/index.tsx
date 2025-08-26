@@ -89,6 +89,8 @@ export const PresetProvider: Component<{
   const changeProvider = (id: string) => {
     props.setters.setState('providerId', id)
 
+    props.setters.refreshModels()
+
     if (props.page !== 'mode' && props.page !== 'menu') {
       return
     }

@@ -175,15 +175,16 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
       return { list: [], url: '', data: [] }
     }
 
-    const result =
-      detail.category === 'self'
-        ? await getLocalModelList({ url, key: provider.userKey || provider.key })
-        : await getPresetModelList({
-            id: preset._id || '',
-            providerId: preset.providerId,
-            url,
-            key: '',
-          })
+    const useLocal = detail.category === 'self'
+
+    const result = useLocal
+      ? await getLocalModelList({ url, key: provider.userKey || provider.key })
+      : await getPresetModelList({
+          id: preset._id || '',
+          providerId: preset.providerId,
+          url,
+          key: '',
+        })
 
     return { list: result.models, url, data: result.data }
   }
