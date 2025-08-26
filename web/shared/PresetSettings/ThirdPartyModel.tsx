@@ -378,6 +378,14 @@ const OpenRouterModels: Selector = (props) => {
               >
                 Confirm
               </Button>
+
+              <Button
+                size="sm"
+                onClick={() => props.setters.refreshModels(true)}
+                disabled={props.setters.models.loading}
+              >
+                <RefreshCcw size={20} /> Models
+              </Button>
             </div>
           </div>
         }

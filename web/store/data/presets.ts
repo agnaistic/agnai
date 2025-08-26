@@ -146,7 +146,7 @@ async function getLocalModelList(opts: {
   }
 }
 
-async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, refresh = false) {
+async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, force = false) {
   if (preset.providerId === 'agnaistic') return
   if (!preset.providerId && preset.service === 'agnaistic') return
 
@@ -208,7 +208,7 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
         url,
         // We pass this for presets that are un-saved
         key,
-        useCache: !refresh,
+        useCache: !force,
       })
 
   return { list: result.models, data: result.data, url }

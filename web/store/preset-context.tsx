@@ -193,13 +193,13 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadModels = async (opts?: {
     preset?: Partial<AppSchema.GenSettings>
-    refresh?: boolean
+    force?: boolean
   }) => {
     if (models.loading) return
     setModels('loading', true)
 
     try {
-      const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.refresh)
+      const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.force)
       if (models) {
         setModels({ list: models?.list || [], data: models?.data || [], url: models.url })
       }
@@ -286,7 +286,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       clear,
       upsert,
       update: updateAndSave,
-      refreshModels: () => loadModels(),
+      refreshModels: (force?: boolean) => loadModels({ force }),
       context,
     },
   ] as const
