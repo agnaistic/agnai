@@ -11,7 +11,14 @@ import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
 
-type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
+type CompletionContent<T = {}> = Array<
+  {
+    finish_reason: string
+    index: number
+    text?: string
+    message?: { content: string; role: ChatRole }
+  } & ({ text: string } | T)
+>
 
 export type Inference = { message: { content: string; role: ChatRole } }
 
@@ -321,10 +328,11 @@ export function getCompletionContent(completion: Completion<Inference> | undefin
     return completion
   }
 
-  if ('text' in completion?.choices?.[0]) {
-    return completion.choices[0].text
+  const choice = completion?.choices?.[0]
+  if (choice && 'text' in choice) {
+    return choice.text
   } else {
-    return completion?.choices?.[0]?.message?.content || ''
+    return choice?.message?.content || ''
   }
 }
 
