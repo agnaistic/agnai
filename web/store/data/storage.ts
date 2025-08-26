@@ -214,7 +214,14 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   }
 
   let fixed = false
+
+  const defaultPresetId = presets[0]?._id
+
   for (const chat of chats) {
+    if (!chat.genPreset && defaultPresetId) {
+      chat.genPreset = defaultPresetId
+    }
+
     if (!chat.tempCharacters) continue
     const chars = Object.entries(chat.tempCharacters)
     for (const [key, char] of chars) {
@@ -364,6 +371,7 @@ export async function loadItem<TKey extends keyof typeof KEYS>(
     }
 
     const fallback = fallbacks[key]
+
     await storage.setItem(key, JSON.stringify(fallback))
 
     return fallback

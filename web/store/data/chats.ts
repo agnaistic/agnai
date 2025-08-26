@@ -241,6 +241,7 @@ export async function getAllChats() {
     return res
   }
 
+  const presets = await loadItem('presets')
   const characters = await loadItem('characters')
   const chats = (await loadItem('chats')) as AllChat[]
 
@@ -256,6 +257,9 @@ export async function getAllChats() {
       overrides: undefined,
       useOverrides: false,
     })
+
+    chat.genPreset = presets[0]?._id
+
     await localApi.saveChats([chat])
 
     if (msg) await localApi.saveMessages(chat._id, [msg])

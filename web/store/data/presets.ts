@@ -175,7 +175,7 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, re
       return { list: [], url: '', data: [] }
     }
 
-    const useLocal = detail.category === 'self'
+    const useLocal = detail.category === 'self' || provider.provider === 'known-openrouter'
 
     const result = useLocal
       ? await getLocalModelList({ url, key: provider.userKey || provider.key })
