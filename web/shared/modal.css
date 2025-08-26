@@ -1,3 +1,26 @@
+.modal-container {
+  max-height: var(--window-height);
+  display: grid;
+  grid-template-areas:
+    'header'
+    'content'
+    'footer';
+
+  grid-template-rows: auto 1fr auto;
+}
+
+.modal-header {
+  grid-area: header;
+}
+
+.modal-content-area {
+  grid-area: content;
+}
+
+.modal-footer {
+  grid-area: footer;
+}
+
 .modal-height {
   max-height: var(--window-height);
   /* max-height: 80vh; */
@@ -5,7 +28,6 @@
 }
 
 .modal-height-fixed {
-  min-height: calc(var(--window-height) - 148px);
   max-height: calc(var(--window-height) - 148px);
   height: calc(var(--window-height) - 148px);
   /* min-height: calc(80vh - 132px);

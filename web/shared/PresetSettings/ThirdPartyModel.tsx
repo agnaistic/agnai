@@ -287,6 +287,9 @@ const NovelAIModel: Selector = (props) => {
 
 const OpenRouterModels: Selector = (props) => {
   const cfg = getStore('settings')()
+  const emitter = createEmitter('close')
+
+  const [customId, setCustomId] = createSignal('')
 
   const openRouterModels = createMemo(() => {
     const list: OpenRouterModel[] = props.setters.models.data || []
@@ -323,6 +326,7 @@ const OpenRouterModels: Selector = (props) => {
     const match = openRouterModels().find((s) => s.value === id)
     if (!match) {
       if (cfg.flags.debug) return `Model - None selected (${id})`
+      if (!!id?.trim()) return `Model - ${id}`
       return 'Model - None selected'
     }
 
@@ -350,7 +354,33 @@ const OpenRouterModels: Selector = (props) => {
       <CustomSelect
         maxHeight
         size="sm"
-        modalTitle="Select a Model"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
+
+            <div class="flex gap-2">
+              <TextInput
+                prelabel="Manual Model ID"
+                parentClass="w-full !font-normal !text-sm !h-8"
+                class=""
+                value={customId()}
+                onChange={(ev) => {
+                  setCustomId(ev.currentTarget.value)
+                }}
+              />
+              <Button
+                size="sm"
+                schema="primary"
+                onClick={() => {
+                  setProviderModel(props, customId())
+                  emitter.emit.close()
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        }
         listener={sub.emit}
         options={openRouterModels()}
         search={tokenizedSearch}

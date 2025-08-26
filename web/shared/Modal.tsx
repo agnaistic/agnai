@@ -71,7 +71,7 @@ const Modal: Component<Props> = (props) => {
             <form
               ref={autofocus}
               onSubmit={props.onSubmit || defaultSubmit}
-              class={`modal-height bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
+              class={`modal-container bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
               classList={{ 'h-full': props.maxHeight || full(), 'opacity-80': props.transparent }}
               role="dialog"
               aria-modal="true"
@@ -81,7 +81,7 @@ const Modal: Component<Props> = (props) => {
             >
               <Switch>
                 <Match when={props.tabs}>
-                  <div class="flex h-[56px] flex-row justify-between text-lg">
+                  <div class="modal-header flex h-[56px] flex-row justify-between text-lg">
                     <Tabs
                       selected={props.tabs?.selected!}
                       select={props.tabs?.select!}
@@ -110,7 +110,7 @@ const Modal: Component<Props> = (props) => {
                 </Match>
 
                 <Match when>
-                  <div class="flex w-full flex-row justify-between p-4 text-lg font-bold">
+                  <div class="modal-header flex w-full flex-row justify-between p-4 text-lg font-bold">
                     <div class="w-full">{props.title}</div>
                     <div class="flex gap-2">
                       <a class="icon-button" classList={{ hidden: mobile() }} onClick={toggleFull}>
@@ -134,7 +134,9 @@ const Modal: Component<Props> = (props) => {
 
               {/* 132px is the height of the title + footer*/}
               <div
-                class={`overflow-y-auto p-2 pt-0 text-lg ${props.contentClass || ''}`}
+                class={`modal-content-area overflow-y-auto p-2 pt-0 text-lg ${
+                  props.contentClass || ''
+                }`}
                 classList={{
                   'modal-height-fixed': !!minHeight(),
                   'h-full': props.maxHeight,
@@ -145,7 +147,9 @@ const Modal: Component<Props> = (props) => {
                 {props.children}
               </div>
               <Show when={props.footer}>
-                <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
+                <div class="modal-footer flex w-full flex-row justify-end gap-2 p-4">
+                  {props.footer}
+                </div>
               </Show>
             </form>
           </div>
