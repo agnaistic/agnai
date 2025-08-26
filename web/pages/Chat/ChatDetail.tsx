@@ -255,10 +255,9 @@ const ChatDetail: Component = () => {
     events.emit(EVENTS.chatOpened, params.id)
     if (params.id !== chats.chat?._id) {
       chatStore.openChat(params.id, {
-        onDone: (success, chat) => {
+        onDone: async (success, chat) => {
           if (success && chat) {
-            loadPreset(chat)
-            presetStore.getTemplates(true)
+            await Promise.all([loadPreset(chat), presetStore.getTemplates(true)])
             return
           }
 

@@ -17,6 +17,7 @@ type PresetState = {
   subs: AppSchema.SubscriptionModel[]
   saving: boolean
   testLoading: boolean
+  templatesLoading: boolean
 }
 
 const initState: PresetState = {
@@ -25,6 +26,7 @@ const initState: PresetState = {
   subs: [],
   saving: false,
   testLoading: false,
+  templatesLoading: false,
 }
 
 export const presetStore = createStore<PresetState>(
@@ -230,11 +232,16 @@ export const presetStore = createStore<PresetState>(
         }
       }
     },
-    async getTemplates({ templates }, useCache?: boolean) {
+    async *getTemplates({ templates, templatesLoading }, useCache?: boolean) {
       if (useCache && templates.length) return
+      if (templatesLoading) return
+
+      yield { templatesLoading: true }
       const res = await presetApi.getTemplates()
+      yield { templatesLoading: false }
       if (res.result) {
-        return { templates: res.result.templates }
+        yield { templates: res.result.templates }
+        return
       }
 
       if (res.error) {

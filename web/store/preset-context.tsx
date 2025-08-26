@@ -9,7 +9,6 @@ import { getPresetConnection } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
-import { getClientPreset } from '../shared/adapter'
 import { toastStore } from './toasts'
 import { presetApi } from './data/presets'
 import { deepClone } from '/common/util'
@@ -127,6 +126,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     ? [...createStore(initPreset()), ...createStore(initModels())]
     : useContext(PresetContext)
 
+  // const [local, setLocal] = createStore({
+  //   models: { url: '', loading: false },
+  //   preset: { id: '', loading: false },
+  // })
+
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
     createHides(state, context)
@@ -134,17 +138,20 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = async (chat: AppSchema.Chat) => {
     console.log('[p_ctx] load-by-chat called')
-    let preset = getClientPreset(chat)?.preset
 
-    if (!preset) {
-      const remote = await loadPresetId(chat.genPreset || '')
-      preset = remote
+    const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
+    let preset = await loadPresetId(chat.genPreset || '')
+
+    if (expectingUserPreset && preset._id !== chat.genPreset) {
+      toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
+      load(preset)
+      return
     }
 
     // If the chat has no preset configured, we need to assign one
     if (chat?._id && !chat.genPreset && preset?._id) {
       getStore('chat').assignChatPreset(chat._id, preset._id, () =>
-        toastStore.info('Assigned to chat')
+        toastStore.info('Assigned preset to chat')
       )
     }
 
@@ -170,7 +177,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
         return remote.result
       }
 
-      const fallback = getFallbackPreset('agnaistic')
+      const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
       load(fallback)
       return fallback
     }
@@ -188,6 +195,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     preset?: Partial<AppSchema.GenSettings>
     refresh?: boolean
   }) => {
+    if (models.loading) return
     setModels('loading', true)
 
     try {

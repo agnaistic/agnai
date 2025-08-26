@@ -334,12 +334,24 @@ const OpenRouterModels: Selector = (props) => {
     )
   })
 
+  const sub = createEmitter('open')
+
+  onMount(() => {
+    sub.on('open', () => {
+      const list = openRouterModels()
+      if (list.length > 1) return
+
+      props.setters.refreshModels()
+    })
+  })
+
   return (
     <div class="flex w-full items-center gap-1">
       <CustomSelect
         maxHeight
         size="sm"
         modalTitle="Select a Model"
+        listener={sub.emit}
         options={openRouterModels()}
         search={tokenizedSearch}
         selected={
