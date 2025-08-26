@@ -11,7 +11,6 @@ import { PartialEmitter } from './util'
 interface Props {
   title?: string | JSX.Element
   show: boolean
-  alwaysRender?: boolean
   children?: JSX.Element
   close: () => void
   footer?: JSX.Element
@@ -59,7 +58,7 @@ const Modal: Component<Props> = (props) => {
   const autofocus = (ref: HTMLFormElement) => setTimeout(() => ref.focus())
 
   return (
-    <Show when={props.show || props.alwaysRender}>
+    <Show when={props.show}>
       <Portal>
         <div
           class={`fixed inset-x-0 top-0 z-[100] items-center justify-center px-2 sm:inset-0 sm:flex sm:items-center sm:justify-center`}

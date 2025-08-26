@@ -227,7 +227,7 @@ async function getPresetModelList(opts: {
 
   if (opts.useCache) {
     const cache = await getCachedModelList(opts.url, alreadySeen)
-    if (cache) return cache
+    if (cache?.models.length) return cache
   }
 
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {

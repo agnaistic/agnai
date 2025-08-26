@@ -272,7 +272,6 @@ const ImageCollectionModal: Component<{
   return (
     <Modal
       show={props.collection !== undefined}
-      alwaysRender
       close={close}
       maxWidth="full"
       fixedHeight
@@ -359,6 +358,7 @@ const PromptSettings: Component<{
             placeholder="Prompt Gen Hint: What to focus on?"
             class="!text-sm"
             onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+            value={persist.imageHint}
           />
         </Show>
 
