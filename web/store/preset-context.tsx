@@ -3,7 +3,7 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, createEffect, useContext } from 'solid-js'
+import { createContext, createEffect, createSignal, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
@@ -139,10 +139,16 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore(createHides(state, context))
+  const [attemptedId, setAttemptedId] = createSignal('')
 
-  createEffect(() => {
-    state._id
-    state.providerId
+  createEffect(
+    on(
+      () => ({ id: state._id, providerId: state.providerId, list: user.user?.providers }),
+      () => runStateUpdate('state')
+    )
+  )
+
+  const runStateUpdate = (source: string) => {
     const list = user.user?.providers
 
     const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
@@ -155,26 +161,27 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     const hides = createHides(state, conn)
     setHides(hides)
-
-    if (models.providerId !== state.providerId) {
-      loadModels({ preset: state })
-    }
-  })
+  }
 
   const loadChat = async (chat: AppSchema.Chat) => {
+    const stack = new Error()
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
-    let preset = await loadPresetId(chat.genPreset || '')
     console.log(
       `[p_ctx] load-by-chat called\n${inline({
         c: chat._id?.slice(0, 8),
-        p: chat.genPreset?.slice(0, 8),
-        found: preset?._id === chat.genPreset,
-      })}`
+        p: chat.genPreset ? chat.genPreset?.slice(0, 8) : 'no-id',
+      })}`,
+      stack.stack
     )
 
+    if (chat.genPreset && chat.genPreset === state._id) {
+      console.log(`[p_ctx] preset already loaded`)
+      return
+    }
+
+    let preset = await loadPresetId(chat.genPreset || '')
+
     if (expectingUserPreset && preset._id !== chat.genPreset) {
-      toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
-      load(preset)
       return
     }
 
@@ -184,8 +191,6 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
         toastStore.info('Assigned preset to chat')
       )
     }
-
-    load(preset)
   }
 
   const loadPresetId = async (presetId: string) => {
@@ -200,15 +205,25 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     const presets = getStore('presets').getState().presets
     let preset = presets.find((p) => p._id === presetId)
 
-    if (!preset) {
+    if (!preset && presetId) {
       const remote = await presetApi.getPreset(presetId)
-      if (remote.result) {
+      if (remote?.result) {
         load(remote.result)
         return remote.result
       }
 
+      if (attemptedId() !== presetId) {
+        setAttemptedId(presetId)
+        toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
+      }
+    }
+
+    if (!preset) {
+      if (presetId) {
+      }
+
       const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
-      load(fallback)
+      load({ ...fallback, _id: '' })
       return fallback
     }
 
@@ -216,7 +231,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     return preset
   }
 
-  const load = (preset: Partial<AppSchema.GenSettings> | undefined) => {
+  const load = (preset: Partial<AppSchema.UserGenPreset> | undefined) => {
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
     loadModels({ preset })
   }
@@ -225,12 +240,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     preset?: Partial<AppSchema.GenSettings>
     force?: boolean
   }) => {
+    if (models.loading) return
     if (models.providerId === state.providerId && !opts?.force) return
     if (opts?.preset?.providerId) {
       setModels({ providerId: opts.preset.providerId })
     }
 
-    if (models.loading) return
     setModels('loading', true)
 
     try {
@@ -240,8 +255,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
           list: list?.list || [],
           data: list?.data || [],
           url: list.url,
-          providerId: state.providerId,
         })
+
+        if (opts?.preset) {
+          setModels('providerId', opts.preset.providerId || '')
+        }
       }
     } finally {
       setModels('loading', false)

@@ -1,5 +1,14 @@
 import './chat-detail.css'
-import { Component, createEffect, createMemo, createSignal, Index, onCleanup, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Index,
+  on,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
@@ -63,6 +72,7 @@ const ChatDetail: Component = () => {
     ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
     linesAddedCount: s.prompt?.template.linesAddedCount,
     msgVisibility: s.msgVisibility,
+    listChat: s.allChats.find((chat) => chat._id === params.id),
   }))
 
   const msgs = msgStore((s) => ({
@@ -236,14 +246,41 @@ const ChatDetail: Component = () => {
     msgStore.clearLastInference()
   })
 
+  createEffect(
+    on(
+      () => params.id,
+      () => {
+        if (!params.id) {
+          if (!chats.lastId) return nav('/character/list')
+          return nav(`/chat/${chats.lastId}`)
+        }
+
+        if (params.id !== chats.chat?._id) {
+          if (chats.listChat) {
+            presetSet.loadChat(chats.listChat)
+          }
+
+          chatStore.openChat(params.id, {
+            onDone: async (success, chat) => {
+              if (success && chat) {
+                await Promise.all([presetSet.loadChat(chat), presetStore.getTemplates(true)])
+                return
+              }
+
+              // If the chat fails to load, return to the chat list
+              nav('/chats')
+            },
+          })
+        } else {
+          characterStore.loadImpersonate()
+        }
+      }
+    )
+  )
+
   createEffect(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName || '...'}` : 'Chat')
-
-    if (!params.id) {
-      if (!chats.lastId) return nav('/character/list')
-      return nav(`/chat/${chats.lastId}`)
-    }
 
     if (charName && canStartTour('chat')) {
       settingStore.menu(true)
@@ -253,21 +290,6 @@ const ChatDetail: Component = () => {
     }
 
     events.emit(EVENTS.chatOpened, params.id)
-    if (params.id !== chats.chat?._id) {
-      chatStore.openChat(params.id, {
-        onDone: async (success, chat) => {
-          if (success && chat) {
-            await Promise.all([presetSet.loadChat(chat), presetStore.getTemplates(true)])
-            return
-          }
-
-          // If the chat fails to load, return to the chat list
-          nav('/chats')
-        },
-      })
-    } else {
-      characterStore.loadImpersonate()
-    }
   })
 
   const sendMessage: SendFunc = (opts) => {

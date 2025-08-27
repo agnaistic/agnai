@@ -413,6 +413,11 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *assignChatPreset({ active }, chatId: string, preset: string, onSuccess?: () => void) {
+      if (!preset) {
+        console.error(`Tried to assign undefined preset to chat`)
+        return
+      }
+
       const res = await chatsApi.assignChatPreset(chatId, preset)
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
