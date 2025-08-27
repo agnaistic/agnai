@@ -225,16 +225,21 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     preset?: Partial<AppSchema.GenSettings>
     force?: boolean
   }) => {
+    if (models.providerId === state.providerId && !opts?.force) return
+    if (opts?.preset?.providerId) {
+      setModels({ providerId: opts.preset.providerId })
+    }
+
     if (models.loading) return
     setModels('loading', true)
 
     try {
-      const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.force)
-      if (models) {
+      const list = await presetApi.getModelListByPreset(opts?.preset || state, opts?.force)
+      if (list) {
         setModels({
-          list: models?.list || [],
-          data: models?.data || [],
-          url: models.url,
+          list: list?.list || [],
+          data: list?.data || [],
+          url: list.url,
           providerId: state.providerId,
         })
       }

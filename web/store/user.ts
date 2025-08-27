@@ -894,9 +894,13 @@ export const userStore = createStore<UserState>(
   }
 })
 
-userStore.subscribe((nextState) => {
+userStore.subscribe(async (nextState, prevState) => {
   if (!nextState.sub) {
     return
+  }
+
+  if (nextState.user !== prevState.user) {
+    await storage.userCacheSet('user', nextState.user)
   }
 
   storage.localSetItem(CACHED_SUB_KEY, JSON.stringify(nextState.sub))

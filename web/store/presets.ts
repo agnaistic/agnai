@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { downloadJson } from '../shared/util'
+import { downloadJson, storage } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
 import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './data/presets'
@@ -40,9 +40,9 @@ export const presetStore = createStore<PresetState>(
         preset.userThirdPartyKey = preset.thirdPartyKey
         preset.thirdPartyKey = ''
       }
-    }
 
-    presetStore.setState({ presets: init.presets })
+      presetStore.setState({ presets: init.presets })
+    }
   })
 
   events.on(EVENTS.loggedOut, () => {
@@ -296,6 +296,16 @@ export const presetStore = createStore<PresetState>(
         toastStore.error(`Failed to delete template: ${res.error}`)
       }
     },
+  }
+})
+
+presetStore.subscribe(async (nextState, prevState) => {
+  if (nextState.presets !== prevState.presets && nextState.presets?.length) {
+    await storage.userCacheSet('presets', nextState.presets)
+  }
+
+  if (nextState.templates !== prevState.templates && nextState.templates?.length) {
+    await storage.userCacheSet('templates', nextState.templates)
   }
 })
 

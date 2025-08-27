@@ -151,9 +151,9 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.init, (init) => {
     chatStore.setState({
-      allChats: [],
-      allChars: { map: {}, list: [] },
-      loaded: false,
+      allChats: init.allChats || [],
+      allChars: init.allChars || { map: {}, list: [] },
+      loaded: !!init.allChats && !!init.allChars,
       lastFetched: 0,
       lastChatId: null,
     })
@@ -428,7 +428,6 @@ export const chatStore = createStore<ChatState>('chat', {
         return
       }
 
-      yield { loaded: false }
       const res = await chatsApi.getAllChats()
       yield { lastFetched: Date.now(), loaded: true, allLoading: false }
       if (res.error) {
@@ -443,12 +442,44 @@ export const chatStore = createStore<ChatState>('chat', {
           map: toMap(chars),
           list: chars,
         }
-        return {
-          allChats: res.result.chats.sort(sortDesc),
+
+        const nextAllChats = res.result.chats.sort(sortDesc)
+        yield {
+          allChats: nextAllChats,
           allChars,
           loaded: true,
           allLoading: false,
         }
+
+        await storage.userCacheSet('all-chats', nextAllChats)
+        await storage.userCacheSet('all-chars', allChars)
+      }
+    },
+    async *getAllCharacters({ allChars, lastFetched }, force?: boolean) {
+      yield { allLoading: true }
+      const diff = Date.now() - lastFetched
+
+      if (!force && diff < 30000) {
+        yield { allLoading: false }
+        return
+      }
+
+      const res = await chatsApi.getAllChats(true)
+      yield { lastFetched: Date.now(), allLoading: false }
+
+      if (res.result) {
+        const chars = res.result.characters.map((c) => ({ __type: 'list_character', ...c }))
+        events.emit(EVENTS.allChars, chars)
+        const allChars = {
+          map: toMap(chars),
+          list: chars,
+        }
+
+        yield {
+          allChars,
+          allLoading: false,
+        }
+        await storage.userCacheSet('all-chars', allChars)
       }
     },
     getBotChats: async (_, characterId: string) => {

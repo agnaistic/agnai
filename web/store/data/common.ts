@@ -5,11 +5,11 @@ import { toastStore } from '../toasts'
 import { loadItem } from './storage'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { AppSchema } from '/common/types'
-import { deepClone } from '/common/util'
+import { deepClone, trimSentence } from '/common/util'
 import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
-import { MsgState } from '../message'
+import { ChatMessageExt, MsgState } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
@@ -150,7 +150,7 @@ async function getGuestEntities() {
 
   const characters = getBotsForChat(chat, char, chatChars.map)
   const conn = getPresetConnection(settings, user.providers)
-  const messages = messageHistory.concat(msgs)
+  const messages = trimMessages(user, messageHistory.concat(msgs))
 
   return {
     chat,
@@ -168,6 +168,12 @@ async function getGuestEntities() {
     scenarios,
     attachments: getChatAttachments(chat._id, messages, attachments),
   }
+}
+
+function trimMessages(user: AppSchema.User, messages: ChatMessageExt[]) {
+  if (!user.ui?.trimSentences) return messages
+
+  return messages.map((msg) => ({ ...msg, msg: trimSentence(msg.msg) }))
 }
 
 function getChatAttachments(
@@ -210,7 +216,7 @@ function getAuthedPromptEntities() {
   const { impersonating, chatChars } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, chatChars.map)
-  const messages = messageHistory.concat(msgs)
+  const messages = trimMessages(user, messageHistory.concat(msgs))
 
   return {
     chat,

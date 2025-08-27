@@ -127,10 +127,6 @@ const CharacterChats: Component = () => {
   })
 
   onMount(() => {
-    if (!chars.loaded) {
-      characterStore.getCharacters()
-    }
-
     chatStore.getAllChats()
   })
 

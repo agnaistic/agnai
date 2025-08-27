@@ -2,7 +2,7 @@ import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { setAssetPrefix, storage } from '../shared/util'
-import { api } from './api'
+import { api, getUserId } from './api'
 import { createStore, getStore } from './create'
 import { InitEntities, usersApi } from './data/user'
 import { toastStore } from './toasts'
@@ -255,10 +255,29 @@ export const settingStore = createStore<SettingState>(
     },
     async *init({ config: prev }) {
       yield { initLoading: true }
-      const res = await usersApi.getInit()
+
+      const caches = await loadUserCachedEntities()
+      const res = await usersApi.getInit(caches)
 
       if (res.result) {
         const init = res.result as InitEntities
+
+        if (caches?.books) {
+          init.books = caches.books
+        }
+
+        if (caches?.presets) {
+          init.presets = caches.presets
+        }
+
+        if (caches?.allChars) {
+          init.allChars = caches.allChars
+        }
+
+        if (caches?.allChats) {
+          init.allChats = caches.allChats
+        }
+
         setAssetPrefix(init.config.assetPrefix)
         loadSlotConfig(init.config?.serverConfig?.slots)
 
@@ -287,6 +306,10 @@ export const settingStore = createStore<SettingState>(
           config: init.config,
           replicate: init.replicate || {},
           initLoading: false,
+        }
+
+        if (!isMaint) {
+          handlePostInit(caches)
         }
 
         const maint = init.config?.maintenance
@@ -663,3 +686,26 @@ subscribe(
     settingStore.setState({ config: { ...config, subs: next } })
   }
 )
+
+async function loadUserCachedEntities() {
+  const userId = getUserId()
+  if (!userId) return
+
+  const books = await storage.userCacheGet('books')
+  const presets = await storage.userCacheGet('presets')
+  const templates = await storage.userCacheGet('templates')
+  const allChats = await storage.userCacheGet('all-chats')
+  const allChars = await storage.userCacheGet('all-chars')
+
+  return { books, templates, presets, allChats, allChars }
+}
+
+async function handlePostInit(caches: Awaited<ReturnType<typeof loadUserCachedEntities>>) {
+  if (caches?.presets) {
+    await getStore('presets').getPresets()
+  }
+
+  if (caches?.books) {
+    await getStore('memory').getAll()
+  }
+}

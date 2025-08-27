@@ -309,7 +309,7 @@ const Characters: Component<{
       <DragDropProvider>
         <DragDropSensors />
         <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
-          <Match when={props.loading}>
+          <Match when={props.loading && props.allCharacters.length === 0}>
             <div class="flex justify-center">
               <Loading />
             </div>

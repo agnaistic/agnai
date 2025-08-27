@@ -37,9 +37,14 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 })
 
 export const getAllChats = handle(async (req) => {
-  const chats = await store.chats.getAllChats(req.userId!)
+  const chats = await store.chats.getAllChats(req.userId!, !!req.query.shallow)
   const charIds = getCharacterIds(chats)
   const characters = await store.characters.getCharacterList(Array.from(charIds), req.userId!)
+
+  if (!!req.query.shallow) {
+    return { characters }
+  }
+
   return { chats, characters }
 })
 

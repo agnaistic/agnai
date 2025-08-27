@@ -53,7 +53,7 @@ export const api = {
   getFallbackApiUrl,
 }
 
-type Query = { [key: string]: string | number }
+type Query = { [key: string]: string | number | undefined | boolean }
 
 function getFallbackApiUrl() {
   if (baseUrl.includes('prd-api.agnai.chat')) {

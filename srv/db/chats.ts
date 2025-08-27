@@ -148,7 +148,7 @@ export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
   return !!membership
 }
 
-export async function getAllChats(userId: string) {
+export async function getAllChats(userId: string, shallow?: boolean) {
   const memberships = await db('chat-member').find({ userId }).toArray()
 
   if (config.ui.chatCounts) {
@@ -201,6 +201,19 @@ export async function getAllChats(userId: string) {
     return list
   }
 
+  const project = shallow
+    ? { _id: 1, characters: 1 }
+    : {
+        _id: 1,
+        userId: 1,
+        name: 1,
+        characterId: 1,
+        characters: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        'character.name': 1,
+      }
+
   const list = await db('chat')
     .aggregate([
       {
@@ -218,16 +231,7 @@ export async function getAllChats(userId: string) {
       },
       { $unwind: { path: '$character' } },
       {
-        $project: {
-          _id: 1,
-          userId: 1,
-          name: 1,
-          characterId: 1,
-          characters: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          'character.name': 1,
-        },
+        $project: project,
       },
     ])
     .toArray()

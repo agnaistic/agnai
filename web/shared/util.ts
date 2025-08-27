@@ -14,6 +14,7 @@ import { PresetState } from '../store/preset-context'
 import { v4 } from 'uuid'
 import { getChatPreset } from '../pages/Chat/util'
 import { extractReasoning } from '/common/reasoning'
+import { getUserId, isLoggedIn } from '../store/api'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -128,6 +129,34 @@ export function createEmitter<T extends string>(...events: T[]) {
   return { emit, on, off } as ComponentEmitter<T>
 }
 
+async function userCacheGet(key: string) {
+  const prop = getUserCacheKey(key)
+  if (!prop) return
+
+  const data = await getItem(prop)
+  if (!data) return
+
+  const json = JSON.parse(data)
+  return json
+}
+
+async function userCacheSet(key: string, data: any) {
+  if (!isLoggedIn()) return
+
+  const prop = getUserCacheKey(key)
+  if (!prop) return
+
+  console.log(`[user-cache] updated: ${prop}`)
+  await setItem(prop, JSON.stringify(data))
+}
+
+function getUserCacheKey(key: string) {
+  if (!isLoggedIn()) return
+  const userId = getUserId()
+  if (!userId) return
+  return `user-${userId}_${key}`
+}
+
 export function getUtterableText(msg: string) {
   const { active } = getStore('chat').getState()
   const { ui, user } = getStore('user').getState()
@@ -194,6 +223,9 @@ export const storage = {
   localRemoveItem,
   localClear,
   test,
+
+  userCacheGet,
+  userCacheSet,
 }
 
 export function isExpired(date?: string | Date) {

@@ -235,9 +235,13 @@ export async function deleteChat(chatId: string) {
   return localApi.result<any>({ success: true })
 }
 
-export async function getAllChats() {
+export async function getAllChats(shallow?: boolean) {
   if (isLoggedIn()) {
-    const res = await api.get<{ chats: AllChat[]; characters: AppSchema.Character[] }>('/chat')
+    const query = shallow ? { shallow: 'true' } : {}
+    const res = await api.get<{ chats: AllChat[]; characters: AppSchema.Character[] }>(
+      '/chat',
+      query
+    )
     return res
   }
 

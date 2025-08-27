@@ -4,6 +4,7 @@ import { createStore } from './create'
 import { memoryApi } from './data/memory'
 import { toastStore } from './toasts'
 import { embedApi } from './embeddings'
+import { storage } from '../shared/util'
 
 export type MemoryState = {
   show: boolean
@@ -34,8 +35,21 @@ export const memoryStore = createStore<MemoryState>(
     memoryStore.setState(initState)
   })
 
-  events.on(EVENTS.init, (init) => {
-    memoryStore.setState({ books: { loaded: true, list: init.books } })
+  events.on(EVENTS.loggedIn, async () => {
+    const cache = await storage.userCacheGet('books')
+
+    if (cache) {
+      memoryStore.setState({ books: { loaded: true, list: cache } })
+      return
+    }
+  })
+
+  events.on(EVENTS.init, async (init) => {
+    if (init.books) {
+      memoryStore.setState({ books: { loaded: true, list: init.books } })
+
+      await storage.userCacheSet('books', init.books)
+    }
   })
 
   return {
@@ -50,6 +64,7 @@ export const memoryStore = createStore<MemoryState>(
       yield { loadingAll: false }
       if (res.result) {
         yield { books: { loaded: true, list: res.result.books } }
+        await storage.userCacheSet('books', res.result.books)
       }
 
       if (res.error) {
@@ -72,9 +87,11 @@ export const memoryStore = createStore<MemoryState>(
       }
 
       if (res.result) {
-        yield { books: { ...books, list: books.list.concat(res.result) } }
+        const next = books.list.concat(res.result)
+        yield { books: { ...books, list: next } }
         toastStore.success('Created memory book')
         onSuccess?.(res.result)
+        await storage.userCacheSet('books', next)
       }
     },
 
@@ -96,6 +113,7 @@ export const memoryStore = createStore<MemoryState>(
         toastStore.success(`Book updated`)
         const next = prev.map((book) => (book._id === bookId ? { ...book, ...update } : book))
         yield { books: { list: next, loaded: true } }
+        await storage.userCacheSet('books', next)
       }
     },
 
@@ -109,6 +127,7 @@ export const memoryStore = createStore<MemoryState>(
       if (res.result) {
         const next = prev.filter((book) => book._id !== bookId)
         yield { books: { list: next, loaded: true } }
+        await storage.userCacheSet('books', next)
         toastStore.success('Book deleted')
         onSuccess?.()
       }

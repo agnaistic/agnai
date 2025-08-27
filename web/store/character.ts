@@ -1,7 +1,7 @@
 import { createAppearancePrompt } from '../../common/image-prompt'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { charsApi } from './data/chars'
@@ -129,31 +129,18 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     async *getCharacters(state, force?: boolean) {
+      /**
+       * We will use the event emitter from chatStore.getAllCharacters to populate this store
+       * chatStore also prevents thrashing when force is false
+       */
       if (!force && state.loading) return
 
       const age = Date.now() - state.characters.loaded
       if (!force && age < 30000) return
 
       yield { loading: true }
-      const res = await charsApi.getCharacters()
-
-      if (res.error) {
-        yield { loading: false }
-        return toastStore.error('Failed to retrieve characters')
-      }
-
-      if (res.result) {
-        const chars = res.result.characters.map((c: any) => ({ __type: 'list_character', ...c }))
-
-        return {
-          characters: {
-            list: chars,
-            map: toMap(chars),
-            loaded: Date.now(),
-          },
-          loading: false,
-        }
-      }
+      await getStore('chat').getAllCharacters(force)
+      yield { loading: false }
     },
 
     defaultImpersonate: (_, charId: string) => {

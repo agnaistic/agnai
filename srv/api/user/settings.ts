@@ -29,11 +29,14 @@ export const getInitialLoad = handle(async ({ userId, query }) => {
     return { config: appConfig, replicate }
   }
 
+  const omitBooks = !!query['omit-books']
+  const omitPresets = !!query['omit-presets']
+
   const [profile, user, presets, books, scenarios] = await Promise.all([
     store.users.getProfile(userId!),
     getSafeUserConfig(userId!, query.seed as string),
-    store.presets.getUserPresets(userId!),
-    store.memory.getBooks(userId!),
+    !omitPresets ? store.presets.getUserPresets(userId!) : null,
+    !omitBooks ? store.memory.getBooks(userId!) : null,
     store.scenario.getScenarios(userId!),
   ])
 

@@ -16,6 +16,9 @@ export type InitEntities = {
   books: AppSchema.MemoryBook[]
   replicate: any
   scenarios: AppSchema.ScenarioBook[]
+
+  allChars?: any
+  allChats?: any
 }
 
 export const usersApi = {
@@ -37,9 +40,22 @@ export const usersApi = {
   deleteProviderKey,
 }
 
-export async function getInit() {
+export async function getInit(caches?: { presets: boolean; books: boolean; templates: boolean }) {
   if (isLoggedIn()) {
-    const res = await api.get<InitEntities>(`/user/init?seed=${HORDE_SEED}&ts=${Date.now()}`)
+    const query: any = {}
+    if (caches?.books) {
+      query['omit-books'] = 'true'
+    }
+
+    if (caches?.presets) {
+      query['omit-presets'] = 'true'
+    }
+
+    if (caches?.templates) {
+      query['omit-templates'] = 'true'
+    }
+
+    const res = await api.get<InitEntities>(`/user/init?seed=${HORDE_SEED}&ts=${Date.now()}`, query)
     return res
   }
 
