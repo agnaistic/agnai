@@ -3,7 +3,7 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, createEffect, createMemo, useContext } from 'solid-js'
+import { createContext, createEffect, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
@@ -131,25 +131,25 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     ? [...createStore(initPreset()), ...createStore(initModels())]
     : useContext(PresetContext)
 
-  const context = createMemo((): PresetContext => {
-    if (!user.user?.providers) return {}
-    const conn = getPresetConnection(state, user.user.providers)
-    return conn
-  })
+  const [context, setContext] = createStore<PresetContext>({})
+  const [hides, setHides] = createStore(createHides(state, context))
 
-  const hides = createMemo(() => {
-    const conn = context()
-    return createHides(state, conn)
-  })
+  createEffect(() => {
+    state._id
+    state.providerId
+    const list = user.user?.providers
 
-  const subModel = createMemo(() => {
     const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
     if (!subId) return
 
+    const conn = getPresetConnection(state, list)
     const subModel = cfg.config.subs.find((s) => s._id === subId)
-    if (!subModel) return
+    const attachments = canAttachImage(conn, subModel)
 
-    return subModel
+    setContext({ ...conn, sub: subModel, attachments })
+
+    const hides = createHides(state, conn)
+    setHides(hides)
   })
 
   const loadChat = async (chat: AppSchema.Chat) => {
@@ -290,10 +290,8 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       update: updateAndSave,
 
       refreshModels: (force?: boolean) => loadModels({ force }),
-      hides: hides(),
-      context: context(),
-      sub: subModel(),
-      canUseAttachments: canAttachImage(context(), subModel()),
+      hides: hides,
+      context: context,
     },
   ] as const
 }
@@ -311,6 +309,8 @@ export type PresetContext = {
   service?: AIAdapter
   format?: ThirdPartyFormat
   detail?: ProviderDefinition
+  attachments?: boolean
+  sub?: SubscriptionModelOption
 }
 
 function createHides(store: PresetState, ctx: PresetContext) {

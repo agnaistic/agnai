@@ -497,7 +497,7 @@ const ChatDetail: Component = () => {
                     isPaneOpen={pane.showing()}
                     textBeforeGenMore={msgs.textBeforeGenMore}
                     preset={_}
-                    canUseAttachments={presetSet.canUseAttachments}
+                    canUseAttachments={presetSet.context.attachments}
                     voice={
                       msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
                     }

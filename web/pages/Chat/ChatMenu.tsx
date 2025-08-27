@@ -40,7 +40,7 @@ export const ChatMenu: Component<{
   isOwner: boolean
 }> = (props) => {
   const pane = usePaneManager()
-  const [preset, { context }] = usePresetContext()
+  const [preset, setters] = usePresetContext()
 
   const togglePane = (paneType: ChatRightPane) => {
     chatStore.option({ options: false })
@@ -54,8 +54,15 @@ export const ChatMenu: Component<{
   const adapterLabel = createMemo(() => {
     if (!preset._id) return `None`
 
-    const prefix = context.provider?.name || context.detail?.name || ADAPTER_LABELS[preset.service!]
+    const prefix =
+      setters.context.provider?.name ||
+      setters.context.detail?.name ||
+      ADAPTER_LABELS[preset.service!]
     const suffix = preset.name
+
+    // return `PN:${setters.context.provider?.name || 'na'} DN:${
+    //   setters.context.provider?._id || 'na'
+    // } ${preset.providerId || 'na'} FB:${ADAPTER_LABELS[preset.service!]}`
 
     if (!prefix) return `None (${preset._id?.slice(0, 8) || '....'})`
 

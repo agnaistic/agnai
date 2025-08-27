@@ -75,7 +75,7 @@ const InputBar: Component<{
   let ref: HTMLTextAreaElement | undefined
 
   const [ctx] = useAppContext()
-  const [preset, { canUseAttachments }] = usePresetContext()
+  const [preset, setters] = usePresetContext()
 
   const prompt = promptStore()
   const user = userStore()
@@ -480,14 +480,14 @@ const InputBar: Component<{
                 </Button>
               </Show>
             </Show>
-            <Show when={canUseAttachments}>
+            <Show when={setters.context.attachments}>
               <FileInput
                 fieldName="imageCaption"
                 parentClass="hidden"
                 onUpdate={onFile}
                 accept="image/jpg,image/png,image/jpeg"
                 multiple
-                disabled={!canUseAttachments}
+                disabled={!setters.context.attachments}
               />
               <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
                 <ImageUp size={18} />
