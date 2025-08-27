@@ -285,7 +285,6 @@ const NovelAIModel: Selector = (props) => {
 }
 
 const OpenRouterModels: Selector = (props) => {
-  const cfg = getStore('settings')()
   const emitter = createEmitter('close')
 
   const [customId, setCustomId] = createSignal('')
