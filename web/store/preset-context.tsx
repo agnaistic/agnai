@@ -3,7 +3,7 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, createEffect, createMemo, on, useContext } from 'solid-js'
+import { createContext, createEffect, createMemo, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
@@ -14,6 +14,7 @@ import { presetApi } from './data/presets'
 import { deepClone, inline } from '/common/util'
 import { getFallbackPreset } from '/common/presets'
 import { settingStore } from './settings'
+import { userStore } from './user'
 
 export type PresetProps = {
   state: PresetState
@@ -124,15 +125,22 @@ export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
   const cfg = settingStore()
+  const user = userStore()
 
   const [state, setState, models, setModels] = opts?.anonymous
     ? [...createStore(initPreset()), ...createStore(initModels())]
     : useContext(PresetContext)
 
-  const [context, setContext] = createStore<PresetContext>({})
-  const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
-    createHides(state, context)
-  )
+  const context = createMemo((): PresetContext => {
+    if (!user.user?.providers) return {}
+    const conn = getPresetConnection(state, user.user.providers)
+    return conn
+  })
+
+  const hides = createMemo(() => {
+    const conn = context()
+    return createHides(state, conn)
+  })
 
   const subModel = createMemo(() => {
     const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
@@ -263,24 +271,6 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     })
   }
 
-  createEffect(
-    on(
-      () =>
-        (state._id || '') +
-        state.service! +
-        state.thirdPartyFormat! +
-        state.presetMode! +
-        state.providerId!,
-      (id) => {
-        const ctx = getPresetContext(state)
-        setContext(ctx)
-
-        const next = createHides(state, context)
-        setHides(next)
-      }
-    )
-  )
-
   createEffect(() => {
     const id = state._id.slice(0, 5)
     const modelId = state.providerModels?.agnaistic || 'none'
@@ -293,26 +283,19 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     {
       models,
       setState,
-      hides,
       load: loadPresetId,
       loadChat,
       clear,
       upsert,
       update: updateAndSave,
+
       refreshModels: (force?: boolean) => loadModels({ force }),
-      context,
+      hides: hides(),
+      context: context(),
       sub: subModel(),
-      canUseAttachments: canAttachImage(context, subModel()),
+      canUseAttachments: canAttachImage(context(), subModel()),
     },
   ] as const
-}
-
-export function getClientPresetConnection(
-  preset: Pick<AppSchema.GenSettings, 'service' | 'thirdPartyFormat' | 'providerId'>
-) {
-  const list = preset.providerId ? getStore('user').getState().user?.providers : undefined
-  const conn = getPresetConnection(preset, list)
-  return conn
 }
 
 export function getProvider(id: string | undefined) {
@@ -328,19 +311,6 @@ export type PresetContext = {
   service?: AIAdapter
   format?: ThirdPartyFormat
   detail?: ProviderDefinition
-}
-
-function getPresetContext(
-  preset: Pick<AppSchema.GenSettings, 'service' | 'thirdPartyFormat' | 'providerId'>
-): PresetContext {
-  const conn = getClientPresetConnection(preset)
-
-  return {
-    service: conn.service,
-    format: conn.format,
-    provider: conn.provider,
-    detail: conn.detail,
-  }
 }
 
 function createHides(store: PresetState, ctx: PresetContext) {

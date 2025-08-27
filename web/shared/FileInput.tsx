@@ -18,6 +18,7 @@ const FileInput: Component<{
   size?: 'sm' | 'md' | 'lg' | 'pill'
   schema?: ButtonSchema
   children?: JSX.Element | string
+  disabled?: boolean
 }> = (props) => {
   let inputRef: HTMLInputElement
   const [selected, setSelected] = createSignal<FileInputResult[]>([])
