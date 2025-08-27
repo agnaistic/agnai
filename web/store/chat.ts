@@ -92,6 +92,7 @@ export type NewChat = {
   overrides?: AppSchema.Chat['overrides']
   useOverrides: boolean
   mode?: AppSchema.Chat['mode']
+  genPreset?: string
 }
 
 const initState: ChatState = {
@@ -547,11 +548,13 @@ export const chatStore = createStore<ChatState>('chat', {
     async *quickCreateChat(
       { allChats, char },
       characterId: string,
+      presetId: string,
       onDone: (newChatId: string) => void
     ) {
       const res = await chatsApi.createChat(characterId, {
         name: new Date().toLocaleString(),
         useOverrides: false,
+        genPreset: presetId,
       })
       if (res.error) toastStore.error(`Failed to create conversation: ${res.error}`)
       if (res.result) {
@@ -826,6 +829,20 @@ subscribe(
 )
 
 type ChatOptCache = { editing: boolean; hideOoc: boolean }
+
+export function quickCreateChat(characterId: string, nav: (to: string) => void) {
+  const user = getStore('user').getState().user
+
+  const presets = getStore('presets').getState().presets
+  const preset = user?.defaultPreset ? presets.find((p) => user.defaultPreset) : undefined
+
+  if (!preset) {
+    nav(`/chats/create/${characterId || ''}`)
+    return
+  }
+
+  chatStore.quickCreateChat(characterId, preset._id, (id) => nav(`/chat/${id}`))
+}
 
 function saveOptsCache(cache: ChatOptCache) {
   const prev = getOptsCache()

@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { AllChat, characterStore, chatStore } from '../../store'
+import { AllChat, characterStore, chatStore, quickCreateChat } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
@@ -150,7 +150,7 @@ const CharacterChats: Component = () => {
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
         onClick={() => {
           if (params.id) {
-            chatStore.quickCreateChat(params.id, (id) => nav(`/chat/${id}`))
+            quickCreateChat(params.id, nav)
             return
           }
 

@@ -26,11 +26,10 @@ import { DropMenu } from '/web/shared/DropMenu'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
-import { characterStore, chatStore } from '/web/store'
+import { characterStore, chatStore, quickCreateChat } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
-import { getStore } from '/web/store/create'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -412,13 +411,7 @@ const CharacterListOptions: Component<{
               <Star /> Favorite
             </Show>
           </Button>
-          <Button
-            onClick={() =>
-              getStore('chat').quickCreateChat(props.char._id, (id) => nav(`/chat/${id}`))
-            }
-            alignLeft
-            size="sm"
-          >
+          <Button onClick={() => quickCreateChat(props.char._id, nav)} alignLeft size="sm">
             <MessageCircle /> Chat
           </Button>
           <Button alignLeft onClick={props.download} size="sm">
