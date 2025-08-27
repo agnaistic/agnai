@@ -15,7 +15,7 @@ import { embedApi } from './embeddings'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { replace } from '/common/util'
+import { inline, replace } from '/common/util'
 
 export type AllChat = ChatData
 
@@ -23,7 +23,12 @@ export type ChatState = {
   lastChatId: string | null
   lastFetched: number
   allLoading: boolean
-  loaded: boolean
+  allLoaded: boolean
+
+  detailLoaded: boolean
+  detailLoading: boolean
+
+  // loaded: boolean
   // All user chats a user owns or is a member of
   allChats: AllChat[]
   allChars: { map: Record<string, AppSchema.Character>; list: AppSchema.Character[] }
@@ -92,7 +97,11 @@ export type NewChat = {
 const initState: ChatState = {
   lastFetched: 0,
   lastChatId: null,
-  loaded: false,
+
+  detailLoaded: false,
+  detailLoading: false,
+
+  allLoaded: false,
   allLoading: false,
   allChats: [],
   allChars: { map: {}, list: [] },
@@ -126,7 +135,9 @@ export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
   lastChatId: storage.localGetItem('lastChatId'),
   allLoading: false,
-  loaded: false,
+  allLoaded: false,
+  detailLoaded: false,
+  detailLoading: false,
   allChats: [],
   allChars: { map: {}, list: [] },
   chatProfiles: [],
@@ -153,7 +164,7 @@ export const chatStore = createStore<ChatState>('chat', {
     chatStore.setState({
       allChats: init.allChats || [],
       allChars: init.allChars || { map: {}, list: [] },
-      loaded: !!init.allChats && !!init.allChars,
+      allLoaded: !!init.allChats && !!init.allChars,
       lastFetched: 0,
       lastChatId: null,
     })
@@ -236,17 +247,29 @@ export const chatStore = createStore<ChatState>('chat', {
     ) {
       const clear = opts?.clear ?? true
       if (clear) {
-        yield { loaded: false, active: undefined }
+        yield { detailLoaded: false, active: undefined }
       }
+
+      yield { lastChatId: id, detailLoading: true }
 
       events.emit(EVENTS.clearMsgs, id)
       const res = await chatsApi.getChat(id)
+      yield { detailLoading: false }
 
-      yield { loaded: true }
+      /**
+       * We need to check the chat id changed while we were loading this chat.
+       * If it changed, we need to abandon this payload
+       */
+      const currentId = get().lastChatId
+      if (currentId !== id) {
+        console.log(`[chat-state] abandoned chat id ${inline({ was: id, now: currentId })}`)
+        return
+      }
 
       if (res.error) {
         toastStore.error(`Failed to retrieve conversation: ${res.error}`)
         opts?.onDone?.(false, undefined)
+        yield { detailLoaded: true }
       }
 
       if (res.result) {
@@ -295,6 +318,7 @@ export const chatStore = createStore<ChatState>('chat', {
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
+          detailLoaded: true,
         }
       }
     },
@@ -428,13 +452,13 @@ export const chatStore = createStore<ChatState>('chat', {
     async *getAllChats({ allChats, lastFetched }) {
       yield { allLoading: true }
       const diff = Date.now() - lastFetched
-      if (diff < 30000) {
+      if (diff < 300000) {
         yield { allLoading: false }
         return
       }
 
       const res = await chatsApi.getAllChats()
-      yield { lastFetched: Date.now(), loaded: true, allLoading: false }
+      yield { lastFetched: Date.now(), allLoaded: true, allLoading: false }
       if (res.error) {
         toastStore.error(`Could not retrieve chats: ${res.error}`)
         return { allChats }
@@ -452,7 +476,7 @@ export const chatStore = createStore<ChatState>('chat', {
         yield {
           allChats: nextAllChats,
           allChars,
-          loaded: true,
+          allLoaded: true,
           allLoading: false,
         }
 
@@ -487,19 +511,20 @@ export const chatStore = createStore<ChatState>('chat', {
         await storage.userCacheSet('all-chars', allChars)
       }
     },
-    getBotChats: async (_, characterId: string) => {
-      const res = await chatsApi.getBotChats(characterId)
-      if (res.error) toastStore.error(`Failed to retrieve conversations: ${res.error}`)
-      if (res.result) {
-        return {
-          loaded: true,
-          char: {
-            char: res.result.character,
-            chats: res.result.chats.sort(sortDesc),
-          },
-        }
-      }
-    },
+    /** @deprecated Unused */
+    // getBotChats: async (_, characterId: string) => {
+    //   const res = await chatsApi.getBotChats(characterId)
+    //   if (res.error) toastStore.error(`Failed to retrieve conversations: ${res.error}`)
+    //   if (res.result) {
+    //     return {
+    //       loaded: true,
+    //       char: {
+    //         char: res.result.character,
+    //         chats: res.result.chats.sort(sortDesc),
+    //       },
+    //     }
+    //   }
+    // },
     async *createChat(
       { allChats, char },
       characterId: string,

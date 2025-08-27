@@ -74,14 +74,14 @@ const CharacterList: Component = () => {
       list: allChars.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
 
       loading: s.allLoading,
-      loaded: s.loaded,
+      loaded: s.allLoaded,
     }
   })
 
   onMount(() => {
     const state = chatStore.getState()
 
-    if (!state.loaded && !state.allLoading) {
+    if (!state.allLoaded && !state.allLoading) {
       chatStore.getAllChats()
     }
   })

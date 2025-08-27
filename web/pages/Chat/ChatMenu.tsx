@@ -120,7 +120,11 @@ const ChatNav: Component<NavProps> = (props) => {
           <ChevronLeft size={16} /> Characters
         </Nav.Item>
 
-        <Nav.Item class="min-h-8" href={`/character/${props.ctx.char?._id}/chats`}>
+        <Nav.Item
+          class="min-h-8"
+          href={`/character/${props.ctx.char?._id}/chats`}
+          disabled={!props.ctx.char?._id}
+        >
           <ChevronLeft size={16} /> Chats
         </Nav.Item>
       </Nav.DoubleItem>

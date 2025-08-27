@@ -353,7 +353,7 @@ const NoChats: Component<{ character?: string }> = (props) => {
   const state = chatStore()
   return (
     <Show
-      when={state.loaded}
+      when={state.allLoaded}
       fallback={
         <div class="flex w-full justify-center">
           <Loading />

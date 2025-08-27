@@ -542,7 +542,10 @@ const Item: Component<{
   tooltip?: string
   menuOpen?: boolean
   tipClass?: string
+  disabled?: boolean
 }> = (props) => {
+  const clicked = onItemClick(props.onClick, props.menuOpen)
+
   return (
     <Tooltip
       position="top"
@@ -575,8 +578,9 @@ const Item: Component<{
           }`}
           classList={{
             'min-h-[2.25rem]': !props.class?.includes('h-'),
+            '!text-300': !!props.disabled,
           }}
-          onClick={onItemClick(props.onClick, props.menuOpen)}
+          onClick={() => (props.disabled ? null : clicked())}
           role="button"
           aria-label={props.ariaLabel}
         >

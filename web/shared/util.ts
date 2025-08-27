@@ -1014,7 +1014,7 @@ function getProperty(obj: any, path: string) {
 }
 
 export const sticky = {
-  interval: null as any as NodeJS.Timer,
+  interval: null as any as NodeJS.Timeout,
   monitor: (ref: HTMLElement) => {
     let bottom = true
 
@@ -1026,6 +1026,10 @@ export const sticky = {
       } else {
         bottom = false
       }
+    }
+
+    if (sticky.interval) {
+      clearInterval(sticky.interval)
     }
 
     sticky.interval = setInterval(() => {

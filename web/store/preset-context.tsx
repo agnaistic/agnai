@@ -164,14 +164,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const loadChat = async (chat: AppSchema.Chat) => {
-    const stack = new Error()
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
     console.log(
       `[p_ctx] load-by-chat called\n${inline({
         c: chat._id?.slice(0, 8),
         p: chat.genPreset ? chat.genPreset?.slice(0, 8) : 'no-id',
-      })}`,
-      stack.stack
+      })}`
     )
 
     if (chat.genPreset && chat.genPreset === state._id) {

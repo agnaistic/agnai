@@ -8,7 +8,7 @@ const NavBar: Component = () => {
   const chats = chatStore((s) => ({
     chat: s.active?.chat,
     char: s.active?.char,
-    loaded: s.loaded,
+    loaded: s.detailLoaded,
     opts: s.opts,
   }))
 

@@ -41,7 +41,7 @@ export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
     msgs: s.msgs,
     history: s.messageHistory,
   }))
-  const chat = chatStore((s) => ({ loaded: s.loaded }))
+  const chat = chatStore((s) => ({ loaded: s.detailLoaded }))
 
   return (
     <Show when={chat.loaded && state.msgs.length > 0}>

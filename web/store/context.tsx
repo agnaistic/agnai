@@ -145,6 +145,16 @@ export function ContextProvider(props: { children: any }) {
   })
 
   createEffect(() => {
+    // We will try to use our cache if it's available to speed some things up
+    const chat =
+      chats.active?.chat ||
+      chats.allChats.find((c) => (chats.lastChatId ? c._id === chats.lastChatId : undefined))
+    const char = chats.active?.char
+      ? chats.active.char
+      : chat?.characterId
+      ? chats.allChars.map[chat.characterId]
+      : undefined
+
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
@@ -158,8 +168,8 @@ export function ContextProvider(props: { children: any }) {
       activeBots: activeBots(),
 
       impersonate: chars.impersonating,
-      char: chats.active?.char,
-      chat: chats.active?.chat,
+      char: char,
+      chat: chat,
       replyAs: chats.active?.replyAs,
       user: users.user,
       profile: users.profile,
