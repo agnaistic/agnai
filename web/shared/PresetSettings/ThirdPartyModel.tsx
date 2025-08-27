@@ -324,7 +324,7 @@ const OpenRouterModels: Selector = (props) => {
 
     const match = openRouterModels().find((s) => s.value === id)
     if (!match) {
-      if (cfg.flags.debug) return `Model - None selected (${id})`
+      if (cfg.flags.debug) return `Model - None selected (DEBUG: ${id})`
       if (!!id?.trim()) return `Model - ${id}`
       return 'Model - None selected'
     }

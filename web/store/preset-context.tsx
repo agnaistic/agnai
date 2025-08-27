@@ -101,14 +101,20 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   registered: {},
 })
 
-const initModels = (): ModelState => ({ url: '', loading: false, list: [], data: [] })
+const initModels = (): ModelState => ({
+  url: '',
+  loading: false,
+  list: [],
+  data: [],
+  providerId: '',
+})
 
 const noopPreset: SetStoreFunction<PresetState> = (...args: any[]) => {}
 const noopModels: SetStoreFunction<ModelState> = (...args: any[]) => {}
 
 const PresetContext = createContext([initPreset(), noopPreset, initModels(), noopModels] as const)
 
-type ModelState = { list: string[]; url: string; loading: boolean; data: any[] }
+type ModelState = { list: string[]; url: string; loading: boolean; data: any[]; providerId: string }
 
 export function PresetStateProvider(props: { children: any }) {
   const [store, setStore] = createStore(initPreset())
@@ -140,16 +146,19 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     const list = user.user?.providers
 
     const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
-    if (!subId) return
 
     const conn = getPresetConnection(state, list)
-    const subModel = cfg.config.subs.find((s) => s._id === subId)
+    const subModel = subId ? undefined : cfg.config.subs.find((s) => s._id === subId)
     const attachments = canAttachImage(conn, subModel)
 
     setContext({ ...conn, sub: subModel, attachments })
 
     const hides = createHides(state, conn)
     setHides(hides)
+
+    if (models.providerId !== state.providerId) {
+      loadModels({ preset: state })
+    }
   })
 
   const loadChat = async (chat: AppSchema.Chat) => {
@@ -222,7 +231,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     try {
       const models = await presetApi.getModelListByPreset(opts?.preset || state, opts?.force)
       if (models) {
-        setModels({ list: models?.list || [], data: models?.data || [], url: models.url })
+        setModels({
+          list: models?.list || [],
+          data: models?.data || [],
+          url: models.url,
+          providerId: state.providerId,
+        })
       }
     } finally {
       setModels('loading', false)
