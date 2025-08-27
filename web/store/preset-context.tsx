@@ -3,16 +3,17 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, createEffect, on, useContext } from 'solid-js'
+import { createContext, createEffect, createMemo, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
-import { getPresetConnection } from '/common/providers'
+import { getPresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { ADAPTER_SETTINGS } from '../shared/PresetSettings/settings'
 import { isValidServiceSetting } from '../shared/util'
 import { toastStore } from './toasts'
 import { presetApi } from './data/presets'
-import { deepClone } from '/common/util'
+import { deepClone, inline } from '/common/util'
 import { getFallbackPreset } from '/common/presets'
+import { settingStore } from './settings'
 
 export type PresetProps = {
   state: PresetState
@@ -108,7 +109,7 @@ const PresetContext = createContext([initPreset(), noopPreset, initModels(), noo
 
 type ModelState = { list: string[]; url: string; loading: boolean; data: any[] }
 
-export function PresetProvider(props: { children: any }) {
+export function PresetStateProvider(props: { children: any }) {
   const [store, setStore] = createStore(initPreset())
   const [models, setModels] = createStore(initModels())
 
@@ -122,25 +123,37 @@ export function PresetProvider(props: { children: any }) {
 export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
+  const cfg = settingStore()
+
   const [state, setState, models, setModels] = opts?.anonymous
     ? [...createStore(initPreset()), ...createStore(initModels())]
     : useContext(PresetContext)
-
-  // const [local, setLocal] = createStore({
-  //   models: { url: '', loading: false },
-  //   preset: { id: '', loading: false },
-  // })
 
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore<{ [key in keyof AppSchema.GenSettings]?: boolean }>(
     createHides(state, context)
   )
 
-  const loadChat = async (chat: AppSchema.Chat) => {
-    console.log('[p_ctx] load-by-chat called')
+  const subModel = createMemo(() => {
+    const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
+    if (!subId) return
 
+    const subModel = cfg.config.subs.find((s) => s._id === subId)
+    if (!subModel) return
+
+    return subModel
+  })
+
+  const loadChat = async (chat: AppSchema.Chat) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
     let preset = await loadPresetId(chat.genPreset || '')
+    console.log(
+      `[p_ctx] load-by-chat called\n${inline({
+        c: chat._id?.slice(0, 8),
+        p: chat.genPreset?.slice(0, 8),
+        found: preset?._id === chat.genPreset,
+      })}`
+    )
 
     if (expectingUserPreset && preset._id !== chat.genPreset) {
       toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
@@ -288,6 +301,8 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       update: updateAndSave,
       refreshModels: (force?: boolean) => loadModels({ force }),
       context,
+      sub: subModel(),
+      canUseAttachments: canAttachImage(context, subModel()),
     },
   ] as const
 }
@@ -312,6 +327,7 @@ export type PresetContext = {
   provider?: AppSchema.Provider
   service?: AIAdapter
   format?: ThirdPartyFormat
+  detail?: ProviderDefinition
 }
 
 function getPresetContext(
@@ -323,6 +339,7 @@ function getPresetContext(
     service: conn.service,
     format: conn.format,
     provider: conn.provider,
+    detail: conn.detail,
   }
 }
 
@@ -365,4 +382,35 @@ function hidePresetSetting(
   }
 
   return hide
+}
+
+function canAttachImage(
+  conn: PresetContext | undefined,
+  subModel: AppSchema.SubscriptionModelOption | undefined
+) {
+  if (!conn) return false
+  if (conn.service === 'openrouter') return true
+  if (conn.service === 'claude-v2') return true
+  if (conn.service === 'agnaistic') {
+    if (!subModel) return false
+    return !!subModel.preset.subVisionModel
+  }
+
+  const supportedFormats: { [key in ThirdPartyFormat]?: boolean } = {
+    'openai-chat': true,
+    'openai-chatv2': true,
+    llamacpp: true,
+    ollama: true,
+    gemini: true,
+    vllm: true,
+    aphrodite: true,
+    tabby: true,
+    featherless: true,
+    arli: true,
+    claude: true,
+    mistral: true,
+    koboldcpp: true,
+  }
+
+  return !!conn.format && !!supportedFormats[conn.format]
 }

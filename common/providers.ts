@@ -144,7 +144,7 @@ export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
   providers: AppSchema.Provider[] | undefined
 ) {
-  const copy = { ...preset }
+  const copy = { ...preset } as AppSchema.UserGenPreset
   const provider = providers?.find((p) => p._id === preset.providerId)
   const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
 

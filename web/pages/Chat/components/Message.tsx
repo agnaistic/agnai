@@ -61,6 +61,7 @@ import { MessageAttachments } from './Attachments'
 import { ComponentEmitter } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
+import { PresetState } from '/web/store/preset-context'
 
 type MessageProps = {
   messageId: string
@@ -87,6 +88,9 @@ type MessageProps = {
   characterId?: string
   userId?: string
   handle?: string
+
+  preset: PresetState | undefined
+  canUseAttachments?: boolean
 }
 
 const anonNames = new Map<string, number>()
@@ -174,7 +178,7 @@ const Message: Component<MessageProps> = (props) => {
   const content = createMemo(() => {
     const message = msg()
 
-    const msgV2 = getMessageContent(ctx, props, state, {
+    const msgV2 = getMessageContent(ctx, props.preset, props, state, {
       ...message,
       msg: props.content,
     })
@@ -189,9 +193,9 @@ const Message: Component<MessageProps> = (props) => {
     if (message.json) {
       const json = jsonValues()
       const update = getJsonUpdate(
-        ctx.preset?.jsonSource === 'character'
+        props.preset?.jsonSource === 'character'
           ? ctx.activeMap[message.characterId!]?.json
-          : ctx.preset?.json,
+          : props.preset?.json,
         json
       )
 
@@ -474,6 +478,7 @@ const Message: Component<MessageProps> = (props) => {
                     showMore={showOpt}
                     textBeforeGenMore={props.textBeforeGenMore}
                     ctx={ctx}
+                    canUseAttachments={props.canUseAttachments}
                   />
                 </Match>
 
@@ -679,6 +684,7 @@ const MessageOptions: Component<{
   onRemove: () => void
   showMore: Signal<boolean>
   ctx: ContextState
+  canUseAttachments: boolean | undefined
 }> = (props) => {
   let menuParent: any
 
@@ -768,7 +774,7 @@ const MessageOptions: Component<{
         outer: { outer: false, pos: 0 },
         icon: ImagePlus,
         show:
-          props.ctx.canUseAttachments &&
+          !!props.canUseAttachments &&
           (props.msg.userId === props.ctx.user?._id ||
             props.ctx.impersonate?._id === props.msg.characterId),
         onClick: () =>
@@ -1154,6 +1160,7 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
 
 function getMessageContent(
   ctx: ContextState,
+  preset: PresetState | undefined,
   props: MessageProps,
   state: ChatState,
   msg: AppSchema.ChatMessage & { handle?: string }
@@ -1163,7 +1170,7 @@ function getMessageContent(
 
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
-      tags: ctx.preset?.reasoning,
+      tags: preset?.reasoning,
       display: ctx.ui.displayReasoning,
     })
     if (props.partial) {
@@ -1196,7 +1203,7 @@ function getMessageContent(
   }
 
   const { thoughts, content } = extractReasoning(msg.msg, {
-    tags: ctx.preset?.reasoning,
+    tags: preset?.reasoning,
     display: ctx.ui.displayReasoning,
   })
   let message = content

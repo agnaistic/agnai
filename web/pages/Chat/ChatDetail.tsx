@@ -52,7 +52,7 @@ const ChatDetail: Component = () => {
   }))
 
   const [ctx] = useAppContext()
-  const [_, { loadChat: loadPreset }] = usePresetContext()
+  const [_, presetSet] = usePresetContext()
 
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
@@ -257,7 +257,7 @@ const ChatDetail: Component = () => {
       chatStore.openChat(params.id, {
         onDone: async (success, chat) => {
           if (success && chat) {
-            await Promise.all([loadPreset(chat), presetStore.getTemplates(true)])
+            await Promise.all([presetSet.loadChat(chat), presetStore.getTemplates(true)])
             return
           }
 
@@ -496,6 +496,8 @@ const ChatDetail: Component = () => {
                     sendMessage={sendMessage}
                     isPaneOpen={pane.showing()}
                     textBeforeGenMore={msgs.textBeforeGenMore}
+                    preset={_}
+                    canUseAttachments={presetSet.canUseAttachments}
                     voice={
                       msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
                     }

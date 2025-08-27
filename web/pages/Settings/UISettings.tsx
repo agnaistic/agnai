@@ -496,6 +496,7 @@ const UISettings: Component<{}> = () => {
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
+            preset={undefined}
           />
 
           <Show when={state.profile}>
@@ -509,6 +510,7 @@ const UISettings: Component<{}> = () => {
               onRemove={noop}
               sendMessage={() => {}}
               isPaneOpen={false}
+              preset={undefined}
             />
           </Show>
         </div>

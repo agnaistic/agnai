@@ -69,6 +69,7 @@ export const ChatGraphModal: Component<{
             isPaneOpen={false}
             onRemove={() => {}}
             sendMessage={() => {}}
+            preset={undefined}
           ></Message>
         </Show>
       </div>

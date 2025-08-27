@@ -6,16 +6,13 @@ import { chatStore } from './chat'
 import { AppSchema, UI } from '/common/types'
 import { userStore } from './user'
 import { toMap } from '../shared/util'
-import { getActiveBots, getChatPreset } from '../pages/Chat/util'
+import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
 import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
-import { presetStore } from './presets'
-import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
-import { AIAdapter, ThirdPartyFormat } from '/common/adapters'
-import { PresetProvider } from './preset-context'
+import { PresetStateProvider } from './preset-context'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -59,14 +56,7 @@ export type ContextState = {
   imgWaiting?: MsgState['imgWaiting']
   status?: MsgState['hordeStatus']
   attachments: MsgState['attachments']
-  canUseAttachments: boolean
-  preset?: AppSchema.UserGenPreset
-  subPreset?: AppSchema.SubscriptionModelOption
   ui: UI.UISettings
-  provider?: AppSchema.Provider
-  service: AIAdapter | undefined
-  format: ThirdPartyFormat | undefined
-  detail?: ProviderDefinition
   providers?: AppSchema.Provider[]
 }
 
@@ -76,7 +66,6 @@ const initial: ContextState = {
   allBots: {},
 
   attachments: {},
-  canUseAttachments: false,
 
   activeMap: {},
   activeBots: [],
@@ -93,8 +82,8 @@ const initial: ContextState = {
   chatTree: {},
   ui: {} as any,
   config: {} as any,
-  service: undefined,
-  format: undefined,
+  // service: undefined,
+  // format: undefined,
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -107,7 +96,6 @@ export function ContextProvider(props: { children: any }) {
   const users = userStore()
   const cfg = settingStore()
   const msgs = msgStore()
-  const presets = presetStore()
 
   const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(
@@ -156,36 +144,7 @@ export function ContextProvider(props: { children: any }) {
     return impersonate || handle || 'You'
   })
 
-  const preset = createMemo(() => {
-    if (!chats.active?.chat || !users.user) return
-    const match = getChatPreset(
-      chats.active.chat,
-      users.user,
-      presets.presets
-    ) as AppSchema.UserGenPreset
-    return match
-  })
-
-  const subModel = createMemo(() => {
-    const p = preset()
-    const subId = p?.providerModels?.agnaistic || p?.registered?.agnaistic?.subscriptionId
-    if (!subId) return
-
-    const subModel = cfg.config.subs.find((s) => s._id === subId)
-    if (!subModel) return
-
-    return subModel
-  })
-
-  const provider = createMemo(() => {
-    const p = preset()
-    if (!p) return
-    const conn = getPresetConnection(p, users.user?.providers)
-    return { provider: conn.provider, conn }
-  })
-
   createEffect(() => {
-    const detail = provider()
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
@@ -213,13 +172,7 @@ export function ContextProvider(props: { children: any }) {
       imgWaiting: msgs.imgWaiting,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,
-      canUseAttachments: canAttachImage(detail?.conn, subModel()),
-      preset: preset(),
-      subPreset: subModel(),
-      provider: detail?.provider,
-      service: detail?.conn?.service,
-      format: detail?.conn?.format,
-      detail: detail?.conn.detail,
+      // canUseAttachments: canAttachImage(detail?.conn, subModel()),
       ui: users.ui,
       providers: users.user?.providers,
     }
@@ -229,7 +182,7 @@ export function ContextProvider(props: { children: any }) {
 
   return (
     <AppContext.Provider value={[state, setState]}>
-      <PresetProvider>{props.children}</PresetProvider>
+      <PresetStateProvider>{props.children}</PresetStateProvider>
     </AppContext.Provider>
   )
 }
@@ -238,35 +191,4 @@ export function useAppContext() {
   const [state, setState] = useContext(AppContext)
 
   return [state, { setState }] as const
-}
-
-function canAttachImage(
-  conn: PresetConnection | undefined,
-  subModel: AppSchema.SubscriptionModelOption | undefined
-) {
-  if (!conn) return false
-  if (conn.service === 'openrouter') return true
-  if (conn.service === 'claude-v2') return true
-  if (conn.service === 'agnaistic') {
-    if (!subModel) return false
-    return !!subModel.preset.subVisionModel
-  }
-
-  const supportedFormats: { [key in ThirdPartyFormat]?: boolean } = {
-    'openai-chat': true,
-    'openai-chatv2': true,
-    llamacpp: true,
-    ollama: true,
-    gemini: true,
-    vllm: true,
-    aphrodite: true,
-    tabby: true,
-    featherless: true,
-    arli: true,
-    claude: true,
-    mistral: true,
-    koboldcpp: true,
-  }
-
-  return !!conn.format && !!supportedFormats[conn.format]
 }
