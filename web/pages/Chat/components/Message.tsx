@@ -1169,11 +1169,10 @@ function getMessageContent(
   const isPartial = msg._id === 'partial-response'
 
   if (isRetry || isPartial) {
-    let { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
+    const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
       tags: preset?.reasoning,
       display: ctx.ui.displayReasoning,
     })
-
     if (props.partial) {
       return {
         type: 'partial' as const,
@@ -1207,7 +1206,11 @@ function getMessageContent(
     tags: preset?.reasoning,
     display: ctx.ui.displayReasoning,
   })
+
   let message = content
+  if (ctx.trimSentences) {
+    message = trimSentence(message)
+  }
 
   if (props.last && props.swipe) message = props.swipe
   if (msg.event && !props.showHiddenEvents) {
