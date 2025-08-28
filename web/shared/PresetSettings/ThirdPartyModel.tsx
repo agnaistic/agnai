@@ -214,7 +214,7 @@ const CompatModel: Selector = (props) => {
             props.state.thirdPartyModel ||
             'Model - None selected'
           }
-          disabled={props.setters.models.loading}
+          // disabled={props.setters.models.loading}
           footer={<SelectorFooter state={props.state} setters={props.setters} />}
         />
 

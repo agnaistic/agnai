@@ -1174,10 +1174,6 @@ function getMessageContent(
       display: ctx.ui.displayReasoning,
     })
 
-    if (ctx.trimSentences) {
-      content = trimSentence(content)
-    }
-
     if (props.partial) {
       return {
         type: 'partial' as const,

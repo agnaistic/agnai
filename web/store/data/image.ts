@@ -420,7 +420,7 @@ function getSummaryTemplate(service: AIAdapter, opts?: { prompt?: string; questi
       }
 
       return neat`
-      <system>Your task is to generate a Booru Tag Image Caption by summarizing the most recent moment in a roleplay scenario.
+      <system>Your task is to generate an Image Caption using only Comma-separated List of Booru Tags by summarizing the most recent moment in a roleplay scenario.
       Generate an image caption using the details and conversation below.</system>
 
       <instruct>
