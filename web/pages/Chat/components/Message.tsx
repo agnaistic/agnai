@@ -1209,9 +1209,6 @@ function getMessageContent(
   })
 
   let message = content
-  if (ctx.trimSentences) {
-    message = trimSentence(message)
-  }
 
   if (props.last && props.swipe) message = props.swipe
   if (msg.event && !props.showHiddenEvents) {
