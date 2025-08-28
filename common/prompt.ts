@@ -217,7 +217,7 @@ function titlize(str: string) {
  * @returns
  */
 export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter) {
-  if (opts.trimSentences) {
+  if (opts.trimSentences || opts.user.ui?.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
       if (nextMsgs[i].userId) continue

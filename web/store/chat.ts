@@ -732,7 +732,7 @@ export const chatStore = createStore<ChatState>('chat', {
       //   : prompt.template.parsed
       // prompt.template.parsed = parsed
 
-      return { prompt: { ...prompt, msg, shown: true } }
+      return { prompt: { ...prompt, msg: { ...msg }, shown: true } }
     },
 
     closePrompt() {

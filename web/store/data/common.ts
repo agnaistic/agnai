@@ -94,19 +94,9 @@ export async function getPromptEntities(): Promise<PromptEntities> {
     hint: promptState.hintsEnabled ? promptState.hint : '',
   }
 
-  if (isLoggedIn()) {
-    const entities = getAuthedPromptEntities()
-    if (!entities) throw new Error(`Could not collate data for prompting`)
-    return {
-      ...entities,
-      props,
-      messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
-      lastMessage: getLastUserMessage(entities.messages),
-    }
-  }
-
-  const entities = await getGuestEntities()
+  const entities = isLoggedIn() ? getAuthedPromptEntities() : await getGuestEntities()
   if (!entities) throw new Error(`Could not collate data for prompting`)
+
   return {
     ...entities,
     props,
