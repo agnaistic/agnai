@@ -174,6 +174,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = async (chat: AppSchema.Chat) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
+    if (chat.genPreset && chat.genPreset === state._id) {
+      log(`load-by-chat called --> preset already loaded`)
+      return
+    }
+
     log(
       `load-by-chat called %s`,
       inline({
@@ -182,19 +187,14 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       })
     )
 
-    if (chat.genPreset && chat.genPreset === state._id) {
-      log(`preset already loaded`)
-      return
-    }
-
     let preset = await loadPresetId(chat.genPreset || '')
 
-    if (expectingUserPreset && preset._id !== chat.genPreset) {
+    if (expectingUserPreset && chat.genPreset !== preset._id) {
       return
     }
 
-    // If the chat has no preset configured, we need to assign one
     if (chat?._id && !chat.genPreset && preset?._id) {
+      // If the chat has no preset configured, we need to assign one
       getStore('chat').assignChatPreset(chat._id, preset._id, () =>
         toastStore.info('Assigned preset to chat')
       )
@@ -227,11 +227,8 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     }
 
     if (!preset) {
-      if (presetId) {
-      }
-
       const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
-      load({ ...fallback, _id: '' })
+      load({ ...fallback, _id: 'agnaistic' })
       return fallback
     }
 
