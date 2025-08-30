@@ -19,7 +19,8 @@ export function useProviderList(allowNone?: boolean) {
       }
 
       if (detail.category === 'known') {
-        return { label: 'Provider - ' + detail.detail.name, value: p._id, detail }
+        if (p.name) return { label: `${detail.detail.name} - ${p.name}`, value: p._id, detail }
+        return { label: detail.detail.name, value: p._id, detail }
       }
 
       return {

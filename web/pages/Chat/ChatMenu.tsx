@@ -1,6 +1,5 @@
 import './chat-detail.css'
-import { Component, createMemo, Show } from 'solid-js'
-import { ADAPTER_LABELS } from '../../../common/adapters'
+import { Component, createMemo, JSX, Show } from 'solid-js'
 import { ChatRightPane, chatStore, settingStore } from '../../store'
 import { ChatModal } from './ChatOptions'
 import { usePaneManager } from '/web/shared/hooks'
@@ -32,7 +31,7 @@ type NavProps = {
   ctx: ContextState
   togglePane: (paneType: ChatRightPane) => void
   setModal: (model: ChatModal) => void
-  adapterLabel: string
+  adapterLabel: string | JSX.Element
 }
 
 export const ChatMenu: Component<{
@@ -40,7 +39,7 @@ export const ChatMenu: Component<{
   isOwner: boolean
 }> = (props) => {
   const pane = usePaneManager()
-  const [preset, setters] = usePresetContext()
+  const [preset, _setters] = usePresetContext()
 
   const togglePane = (paneType: ChatRightPane) => {
     chatStore.option({ options: false })
@@ -54,22 +53,9 @@ export const ChatMenu: Component<{
   const adapterLabel = createMemo(() => {
     if (!preset._id) return `None`
 
-    const prefix =
-      setters.context.provider?.name ||
-      setters.context.detail?.name ||
-      ADAPTER_LABELS[preset.service!]
     const suffix = preset.name
 
-    // return `PN:${setters.context.provider?.name || 'na'} DN:${
-    //   setters.context.provider?._id || 'na'
-    // } ${preset.providerId || 'na'} FB:${ADAPTER_LABELS[preset.service!]}`
-
-    if (!prefix) return `None (${preset._id?.slice(0, 8) || '....'})`
-
-    if (prefix === suffix) return prefix
-
-    const label = [prefix, suffix].filter((part) => !!part?.trim()).join(' - ')
-    return label
+    return suffix || 'Unnamed Preset'
   })
 
   useSubNav({

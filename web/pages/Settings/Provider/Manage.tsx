@@ -42,12 +42,12 @@ export const ManageProvider: Component<{
 
   const state = presetStore((s) => ({ testLoading: s.testLoading }))
 
-  const isUsableProvider = (id: string) => {
-    if (!props.user?.providers) return true
-    if (props.provider?.provider === id) return true
-    const match = props.user.providers.find((p) => p.provider === id)
-    return !match
-  }
+  // const isUsableProvider = (id: string) => {
+  //   if (!props.user?.providers) return true
+  //   if (props.provider?.provider === id) return true
+  //   const match = props.user.providers.find((p) => p.provider === id)
+  //   return !match
+  // }
 
   const categories = createMemo(() => {
     const known = {
@@ -56,7 +56,7 @@ export const ManageProvider: Component<{
         .map(([key, info]) => ({
           label: info.name,
           value: `known-${key}`,
-          disabled: !isUsableProvider(`known-${key}`),
+          // disabled: !isUsableProvider(`known-${key}`),
         }))
         .sort(sortAlpha) as CustomOption[],
     }
@@ -266,7 +266,6 @@ export const ManageProvider: Component<{
           placeholder="Custom label for this provider"
           value={name()}
           onChange={(ev) => setName(ev.currentTarget.value)}
-          hide={!isCustom() && !isSelf()}
         />
 
         <TextInput
