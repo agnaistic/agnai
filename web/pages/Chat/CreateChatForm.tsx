@@ -66,7 +66,7 @@ const CreateChatForm: Component<{
     loaded: s.characters.loaded,
   }))
 
-  const [state, setState] = createStore(getInitState(chars.char))
+  const [state, setState] = createStore(getInitState(chars.char, { presetId: user.defaultPreset }))
   const [selectedId, setSelected] = createSignal<string | undefined>(params.id)
 
   const scenarios = createMemo(() => {
@@ -366,7 +366,7 @@ const CreateChatForm: Component<{
   )
 }
 
-function getInitState(char?: AppSchema.Character, previous?: ChatState): ChatState {
+function getInitState(char?: AppSchema.Character, previous?: Partial<ChatState>): ChatState {
   return {
     name: previous?.name || '',
     presetId: previous?.presetId || '',
