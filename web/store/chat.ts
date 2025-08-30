@@ -821,7 +821,7 @@ export function quickCreateChat(characterId: string, nav: (to: string) => void) 
   const user = getStore('user').getState().user
 
   const presets = getStore('presets').getState().presets
-  const preset = user?.defaultPreset ? presets.find((p) => user.defaultPreset) : undefined
+  const preset = user?.defaultPreset ? presets.find((p) => p._id === user.defaultPreset) : undefined
 
   if (!preset) {
     nav(`/chats/create/${characterId || ''}`)
