@@ -38,7 +38,7 @@ export const createChat = handle(async ({ body, user, authed, userId }) => {
     ? await store.characters.getCharacter(userId, body.impersonating)
     : undefined
 
-  let genPreset = '' ?? (body.genPreset || authed?.defaultPreset || '')
+  let genPreset = body.genPreset || authed?.defaultPreset || ''
 
   const method = genPreset
     ? isDefaultPreset(genPreset)
