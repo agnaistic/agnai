@@ -512,7 +512,6 @@ export const chatStore = createStore<ChatState>('chat', {
         await storage.userCacheSet('all-chars', allChars)
       }
     },
-
     async *createChat(
       { allChats, char },
       characterId: string,
