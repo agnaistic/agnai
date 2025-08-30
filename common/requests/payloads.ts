@@ -1,5 +1,5 @@
 import { clamp, neat, tryParse } from '/common/util'
-import { toJsonSchema } from '/common/prompt'
+import { JsonField, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { PayloadOpts } from './types'
 import { ModelFormat } from '../presets/templates'
@@ -260,36 +260,35 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       prompt,
       model: gen.thirdPartyModel,
       stream: !!gen.streamResponse,
-      system: '',
-      format: opts.jsonSchema ? 'json' : undefined,
+      seed: Math.trunc(Math.random() * 1_000_000_000),
+      max_tokens: gen.maxTokens,
+      stop: getStoppingStrings(opts, opts.settings, stops),
+      temperature: gen.temp,
+      n: 1,
+      top_p: gen.topP,
+      presence_penalty: gen.presencePenalty,
+      frequency_penalty: gen.frequencyPenalty,
 
-      options: {
-        seed: Math.trunc(Math.random() * 1_000_000_000),
-        num_predict: gen.maxTokens,
-        top_k: gen.topK,
-        top_p: gen.topP,
-        tfs_z: gen.tailFreeSampling,
-        min_p: gen.minP,
-        typical_p: gen.typicalP,
-        repeat_last_n: gen.repetitionPenaltyRange,
-        temperature: gen.temp,
-        repeat_penalty: gen.repetitionPenalty,
-        presence_penalty: gen.presencePenalty,
-        frequency_penalty: gen.frequencyPenalty,
-        mirostat: gen.mirostatToggle && gen.mirostatTau ? 2 : 0,
-        mirostat_tau: gen.mirostatTau,
-        mirostat_eta: gen.mirostatLR,
-        stop: getStoppingStrings(opts, opts.settings, stops),
+      top_k: gen.topK,
+      tfs_z: gen.tailFreeSampling,
+      min_p: gen.minP,
+      typical_p: gen.typicalP,
+      repeat_last_n: gen.repetitionPenaltyRange,
+      repeat_penalty: gen.repetitionPenalty,
+      mirostat: gen.mirostatToggle && gen.mirostatTau ? 2 : 0,
+      mirostat_tau: gen.mirostatTau,
+      mirostat_eta: gen.mirostatLR,
 
-        // ignore_eos: false,
-        dynatemp_range: gen.dynatemp_range,
-        dynatemp_exponent: gen.dynatemp_exponent,
-      },
+      // ignore_eos: false,
+      dynatemp_range: gen.dynatemp_range,
+      dynatemp_exponent: gen.dynatemp_exponent,
+      // options: {
+      // },
     }
 
     if (opts.jsonSchema) {
-      const schema = JSON.stringify(opts.jsonSchema, null, 2)
-      payload.prompt += `\nRespond using the following JSON Schema:\n${schema}`
+      const structure = toCompatStructured(opts, opts.jsonSchema)
+      payload.response_format = structure.format
     }
 
     return payload
@@ -643,4 +642,45 @@ function getReasoningEffort(gen: Partial<AppSchema.GenSettings>) {
   if (percent >= 0.65) return 'high'
   if (percent >= 0.35) return 'medium'
   return 'low'
+}
+
+type OutgoingFields = Record<
+  string,
+  { type: string; description?: string; valid?: string; maxLength?: number }
+>
+
+export function toCompatStructured(opts: MinOpts, jsonSchema: any) {
+  const responseField = `${opts.replyAs?.name || opts.char?.name}'s response`
+  const base: OutgoingFields = {
+    [responseField]: { type: 'string' },
+  }
+  const fields: OutgoingFields = jsonSchema.reduce((prev: OutgoingFields, field: JsonField) => {
+    const { disabled, name, type, ...rest } = field
+    prev[field.name] = {
+      type: type.type,
+      ...rest,
+    }
+    return prev
+  }, base)
+
+  // OpenAI format
+  // https://platform.openai.com/docs/guides/structured-outputs
+  const required = Object.keys(fields)
+
+  const format = {
+    type: 'json_schema',
+    json_schema: {
+      name: 'response',
+      type: 'object',
+      strict: true,
+      schema: {
+        strict: true,
+        properties: fields,
+        required,
+        additionalProperties: false,
+      },
+    },
+  }
+
+  return { format, fields, required }
 }

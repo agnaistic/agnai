@@ -487,7 +487,6 @@ const InputBar: Component<{
                 onUpdate={onFile}
                 accept="image/jpg,image/png,image/jpeg"
                 multiple
-                disabled={!setters.context.attachments}
               />
               <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
                 <ImageUp size={18} />

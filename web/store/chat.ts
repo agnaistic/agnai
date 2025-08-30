@@ -512,20 +512,7 @@ export const chatStore = createStore<ChatState>('chat', {
         await storage.userCacheSet('all-chars', allChars)
       }
     },
-    /** @deprecated Unused */
-    // getBotChats: async (_, characterId: string) => {
-    //   const res = await chatsApi.getBotChats(characterId)
-    //   if (res.error) toastStore.error(`Failed to retrieve conversations: ${res.error}`)
-    //   if (res.result) {
-    //     return {
-    //       loaded: true,
-    //       char: {
-    //         char: res.result.character,
-    //         chats: res.result.chats.sort(sortDesc),
-    //       },
-    //     }
-    //   }
-    // },
+
     async *createChat(
       { allChats, char },
       characterId: string,

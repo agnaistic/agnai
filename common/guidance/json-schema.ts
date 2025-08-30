@@ -13,7 +13,7 @@ export const SCHEMA_VARS = {
   kebab_char: `Character name: kebab-case`,
 }
 
-type Entities = {
+export type StructureEntities = {
   replyAs: M<AppSchema.Character>
   char: AppSchema.Character
   impersonate?: M<AppSchema.Character>
@@ -25,7 +25,7 @@ type M<T> = T | undefined
 /**
  * @destructive Mutates `schema` field names and templates if required
  */
-export function formatJsonSchemaVars(schema: ResponseSchema, ents: Entities) {
+export function formatJsonSchemaVars(schema: ResponseSchema, ents: StructureEntities) {
   if (!schema?.schema?.length) return
   schema.history = parseVariableName(schema.history, ents)
   schema.response = parseVariableName(schema.response, ents)
@@ -65,7 +65,7 @@ type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
 export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   json: JsonField[],
   format: T,
-  entities: Entities
+  entities: StructureEntities
 ): OutboundJsonSchema<T> {
   const response = getResponseVariable(entities)
 
@@ -121,7 +121,7 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   }
 }
 
-function toResponseSchema(fields: JsonField[], entities: Entities) {
+function toResponseSchema(fields: JsonField[], entities: StructureEntities) {
   const response = getResponseVariable(entities)
 
   const schema: GeminiResponseSchema = {
@@ -178,18 +178,18 @@ function toResponseSchema(fields: JsonField[], entities: Entities) {
   return schema
 }
 
-export function getResponseVariable(entities: Entities) {
+export function getResponseVariable(entities: StructureEntities) {
   const { char } = getNames(entities)
   return `${char}'s response`
 }
 
-function getNames(entities: Entities) {
+function getNames(entities: StructureEntities) {
   const char = entities.replyAs?.name || entities.char?.name || 'Bot'
   const user = entities.impersonate?.name || entities.sender?.handle || 'You'
   return { char, user }
 }
 
-function parseVariableName(varname: string, opts: Entities) {
+export function parseVariableName(varname: string, opts: StructureEntities) {
   const user = opts.impersonate?.name || opts.sender?.handle || 'You'
   const char = opts.replyAs?.name || opts.char?.name || 'Bot'
 

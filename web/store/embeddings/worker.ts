@@ -358,7 +358,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   const next = embedQueue.shift()
   if (next) {
-    await new Promise((res) => setTimeout(res, 50))
+    await new Promise((res) => setTimeout(res, 10))
     embed(next)
   }
 }

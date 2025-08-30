@@ -1,3 +1,4 @@
+import { parseVariableName, StructureEntities } from './guidance/json-schema'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
 
@@ -595,11 +596,16 @@ export function parsePartialJson(value: string, aliases?: Record<string, string>
 
 const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
 
-export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: any) {
+export function hydrateTemplate(
+  def: Ensure<AppSchema.Character['json']>,
+  json: any,
+  opts: StructureEntities
+) {
   const map = new Map<string, string>()
 
-  for (const key in def.schema) {
-    map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
+  for (const field of def.schema) {
+    const parsed = parseVariableName(field.name, opts)
+    map.set(parsed.toLowerCase().replace(SAFE_NAME, ' '), field.name)
   }
 
   const output: any = {}
@@ -624,8 +630,9 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
   if (resVars) {
     for (const holder of resVars) {
       const trimmed = holder.slice(2, -2)
-      const safe = trimmed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[trimmed]
+      const parsed = parseVariableName(trimmed, opts)
+      const safe = parsed.replace(SAFE_NAME, ' ')
+      const value = output[safe] ?? output[parsed]
 
       response = response.split(holder).join(value ?? '')
     }
@@ -634,8 +641,9 @@ export function hydrateTemplate(def: Ensure<AppSchema.Character['json']>, json: 
   if (histVars) {
     for (const holder of histVars) {
       const trimmed = holder.slice(2, -2)
-      const safe = trimmed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[trimmed]
+      const parsed = parseVariableName(trimmed, opts)
+      const safe = parsed.replace(SAFE_NAME, ' ')
+      const value = output[safe] ?? output[parsed]
 
       history = history.split(holder).join(value ?? '')
     }

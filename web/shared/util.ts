@@ -146,7 +146,6 @@ async function userCacheSet(key: string, data: any) {
   const prop = getUserCacheKey(key)
   if (!prop) return
 
-  console.log(`[user-cache] updated: ${prop}`)
   await setItem(prop, JSON.stringify(data))
 }
 

@@ -15,6 +15,9 @@ import { deepClone, inline } from '/common/util'
 import { getFallbackPreset } from '/common/presets'
 import { settingStore } from './settings'
 import { userStore } from './user'
+import { debug } from '/common/debug'
+
+const log = debug('preset')
 
 export type PresetProps = {
   state: PresetState
@@ -143,7 +146,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   createEffect(
     on(
-      () => ({ id: state._id, providerId: state.providerId, list: user.user?.providers }),
+      () => ({
+        id: state._id,
+        providerId: state.providerId,
+        subId: state.providerModels?.agnaistic,
+        list: user.user?.providers,
+      }),
       () => runStateUpdate('state')
     )
   )
@@ -151,10 +159,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   const runStateUpdate = (source: string) => {
     const list = user.user?.providers
 
-    const subId = state?.providerModels?.agnaistic || state?.registered?.agnaistic?.subscriptionId
-
     const conn = getPresetConnection(state, list)
-    const subModel = subId ? undefined : cfg.config.subs.find((s) => s._id === subId)
+    const subId =
+      conn.preset?.providerModels?.agnaistic || conn.preset?.registered?.agnaistic?.subscriptionId
+
+    const subModel = subId ? cfg.config.subs.find((s) => s._id === subId) : undefined
     const attachments = canAttachImage(conn, subModel)
 
     setContext({ ...conn, sub: subModel, attachments })
@@ -165,15 +174,16 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = async (chat: AppSchema.Chat) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
-    console.log(
-      `[p_ctx] load-by-chat called\n${inline({
+    log(
+      `load-by-chat called %s`,
+      inline({
         c: chat._id?.slice(0, 8),
         p: chat.genPreset ? chat.genPreset?.slice(0, 8) : 'no-id',
-      })}`
+      })
     )
 
     if (chat.genPreset && chat.genPreset === state._id) {
-      console.log(`[p_ctx] preset already loaded`)
+      log(`preset already loaded`)
       return
     }
 
@@ -192,7 +202,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const loadPresetId = async (presetId: string) => {
-    console.log('[p_ctx] load-by-id called')
+    log('load-by-id called')
 
     if (isDefaultPreset(presetId)) {
       const fallback = { _id: presetId, ...deepClone(defaultPresets[presetId]) }
@@ -305,13 +315,6 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       },
     })
   }
-
-  createEffect(() => {
-    const id = state._id.slice(0, 5)
-    const modelId = state.providerModels?.agnaistic || 'none'
-    const isdef = isDefaultPreset(state._id)
-    console.log(`[agnai:${id}]`, modelId, isdef ? 'true' : 'false')
-  })
 
   return [
     state,

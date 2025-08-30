@@ -193,6 +193,7 @@ const Message: Component<MessageProps> = (props) => {
     if (message.json) {
       const json = jsonValues()
       const update = getJsonUpdate(
+        ctx,
         props.preset?.jsonSource === 'character'
           ? ctx.activeMap[message.characterId!]?.json
           : props.preset?.json,
@@ -1230,9 +1231,14 @@ function getMessageContent(
   }
 }
 
-function getJsonUpdate(def: AppSchema.Character['json'], json: any) {
+function getJsonUpdate(ctx: ContextState, def: AppSchema.Character['json'], json: any) {
   if (!def) return
-  const hydration = hydrateTemplate(def, json)
+  const hydration = hydrateTemplate(def, json, {
+    char: ctx.char!,
+    replyAs: ctx.char,
+    sender: ctx.profile,
+    impersonate: ctx.impersonate,
+  })
 
   return {
     json: hydration,
