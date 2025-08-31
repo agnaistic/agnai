@@ -28,10 +28,15 @@ export const JsonSchema: Component<{
     )
   )
 
-  createEffect(() => {
-    const fields = state.fields
-    props.update(fields)
-  })
+  createEffect(
+    on(
+      () => state.fields,
+      () => {
+        const fields = state.fields
+        props.update(fields)
+      }
+    )
+  )
 
   const addField = () =>
     setState(

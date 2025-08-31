@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { batch, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { SetStoreFunction, createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
@@ -189,7 +189,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
     }
   })
 
-  createEffect(() => {
+  onMount(() => {
     if (!editing) return
 
     const orig = original()

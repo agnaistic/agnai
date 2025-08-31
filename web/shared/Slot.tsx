@@ -13,6 +13,9 @@ import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 import { createDebounce } from './util'
+import { debug } from '/common/debug'
+
+const print = debug('slots')
 
 const win: any = window
 win.enableSticky = JSON.parse(localStorage.getItem('agnai-sticky') || 'true')
@@ -145,7 +148,7 @@ const Slot: Component<{
     let slotid = actualId()
     const now = new Date()
     const ts = `${now.toTimeString().slice(0, 8)}.${now.toISOString().slice(-4, -1)}`
-    console.log.apply(null, [
+    print.apply(null, [
       `${ts} [${cfg.provider || 'none'}|${uniqueId() || 'no id'}]`,
       ...args,
       `| ${slotid}`,
@@ -292,108 +295,113 @@ const Slot: Component<{
     }
   })
 
-  createEffect(async () => {
-    if (!cfg.ready) {
-      log('Not ready')
-      return
-    }
+  createEffect(
+    on(
+      () => [cfg.ready, props.parent, user.disableSlots, ref, cfg.provider],
+      async () => {
+        if (!cfg.ready) {
+          log('Not ready')
+          return
+        }
 
-    if (!props.parent) {
-      log('Not ready: Parent missing')
-      return
-    }
+        if (!props.parent) {
+          log('Not ready: Parent missing')
+          return
+        }
 
-    if (cfg.provider === 'google' && !cfg.publisherId) {
-      return log('No publisher id')
-    }
+        if (cfg.provider === 'google' && !cfg.publisherId) {
+          return log('No publisher id')
+        }
 
-    if (user.disableSlots) {
-      props.parent.style.display = 'hidden'
-      return log('Slots are tier disabled')
-    }
+        if (user.disableSlots) {
+          props.parent.style.display = 'hidden'
+          return log('Slots are tier disabled')
+        }
 
-    if (!cfg.provider) {
-      return log('No provider configured')
-    }
+        if (!cfg.provider) {
+          return log('No provider configured')
+        }
 
-    resize.size()
+        resize.size()
 
-    if (ref && !resize.loaded()) {
-      resize.load(ref)
-      // log('Not loaded')
-      return
-    }
+        if (ref && !resize.loaded()) {
+          resize.load(ref)
+          // log('Not loaded')
+          return
+        }
 
-    if (done()) {
-      return
-    }
+        if (done()) {
+          return
+        }
 
-    const spec = specs()
-    if (!spec) {
-      log('No slot available')
-      return
-    }
+        const spec = specs()
+        if (!spec) {
+          log('No slot available')
+          return
+        }
 
-    const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
-    setUniqueId(num)
+        const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
+        setUniqueId(num)
 
-    if (cfg.provider === 'ez') {
-      invokeEz(log, num)
-    } else if (cfg.provider === 'google') {
-      gtmReady.then((status) => {
-        if (!status) return
+        if (cfg.provider === 'ez') {
+          invokeEz(log, num)
+        } else if (cfg.provider === 'google') {
+          gtmReady.then((status) => {
+            if (!status) return
 
-        googletag.cmd.push(function () {
-          const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
-          setSlotId(slotId)
-          const slot = googletag.defineSlot(slotId, spec.wh, id())
-          if (!slot) {
-            log(`No slot created`)
-            return
+            googletag.cmd.push(function () {
+              const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
+              setSlotId(slotId)
+              const slot = googletag.defineSlot(slotId, spec.wh, id())
+              if (!slot) {
+                log(`No slot created`)
+                return
+              }
+
+              slot.addService(googletag.pubads())
+              googletag.pubads().collapseEmptyDivs()
+              googletag.pubads().enableVideoAds()
+
+              googletag.enableServices()
+              setSlot(slot)
+            })
+
+            googletag.cmd.push(function () {
+              if (adslot()) {
+                log('Displaying')
+                googletag.display(id())
+                googletag.pubads().refresh([adslot()!])
+              }
+            })
+          })
+        } else if (cfg.provider === 'fuse') {
+          fuseReady.then((status) => {
+            if (!status) return
+
+            window.fusetag.registerZone(id())
+            FuseIds.set(id(), false)
+            invokeFuse(user.disableSlots)
+          })
+        }
+
+        if (stick() && props.parent) {
+          props.parent.classList.add('slot-sticky')
+        }
+
+        setDone(true)
+        log('Rendered', !!props.parent)
+
+        setTimeout(() => {
+          if (props.sticky === 'always') return
+          setStick(false)
+
+          if (props.parent) {
+            props.parent.classList.remove('slot-sticky')
           }
-
-          slot.addService(googletag.pubads())
-          googletag.pubads().collapseEmptyDivs()
-          googletag.pubads().enableVideoAds()
-
-          googletag.enableServices()
-          setSlot(slot)
-        })
-
-        googletag.cmd.push(function () {
-          if (adslot()) {
-            log('Displaying')
-            googletag.display(id())
-            googletag.pubads().refresh([adslot()!])
-          }
-        })
-      })
-    } else if (cfg.provider === 'fuse') {
-      fuseReady.then((status) => {
-        if (!status) return
-
-        window.fusetag.registerZone(id())
-        FuseIds.set(id(), false)
-        invokeFuse(user.disableSlots)
-      })
-    }
-
-    if (stick() && props.parent) {
-      props.parent.classList.add('slot-sticky')
-    }
-
-    setDone(true)
-    log('Rendered', !!props.parent)
-
-    setTimeout(() => {
-      if (props.sticky === 'always') return
-      setStick(false)
-
-      if (props.parent) {
-        props.parent.classList.remove('slot-sticky')
+        }, 4500)
       }
-    }, 4500)
-  })
+    )
+  )
 
   const style = createMemo<JSX.CSSProperties>(() => {
     if (!stick()) return {}

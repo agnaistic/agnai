@@ -25,6 +25,7 @@ import {
 import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
+import { on } from 'solid-js'
 
 const baseSortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -99,12 +100,17 @@ const CharacterChats: Component = () => {
     saveListCache(next)
   })
 
-  createEffect(() => {
-    if (!charId()) return
-    if (sortField() === 'character-name' || sortField() === 'character-created') {
-      setSortField('chat-updated')
-    }
-  })
+  createEffect(
+    on(
+      () => charId(),
+      () => {
+        if (!charId()) return
+        if (sortField() === 'character-name' || sortField() === 'character-created') {
+          setSortField('chat-updated')
+        }
+      }
+    )
+  )
 
   const chats = createMemo(() => {
     const filterCharId = charId()

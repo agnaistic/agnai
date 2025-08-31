@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
 
@@ -132,13 +132,18 @@ export const DropMenu: Component<{
     return setAuto({ vert, horz })
   }
 
-  createEffect(() => {
-    if (props.show) {
-      onRef()
-      return
-    }
-    setOpened(false)
-  })
+  createEffect(
+    on(
+      () => props.show,
+      () => {
+        if (props.show) {
+          onRef()
+          return
+        }
+        setOpened(false)
+      }
+    )
+  )
 
   useEffect(() => {
     const handler = (event: MouseEvent | TouchEvent) => {

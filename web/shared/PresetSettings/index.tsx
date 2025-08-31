@@ -157,12 +157,17 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
     values: getServiceTempConfig(props.service),
   })
 
-  createEffect(() => {
-    if (settings.service === props.service) return
+  createEffect(
+    on(
+      () => [props.service],
+      () => {
+        if (settings.service === props.service) return
 
-    const values = getServiceTempConfig(props.service)
-    setSettings({ service: props.service, values })
-  })
+        const values = getServiceTempConfig(props.service)
+        setSettings({ service: props.service, values })
+      }
+    )
+  )
 
   return (
     <Show when={settings.values.length}>

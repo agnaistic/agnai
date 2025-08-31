@@ -49,8 +49,10 @@ export const AgnaisticSettings: Component<{
 
   createEffect(
     on(
-      () =>
-        props.state?.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId,
+      () => [
+        props.state?.providerModels?.agnaistic,
+        props.state.registered?.agnaistic?.subscriptionId,
+      ],
       (id) => {
         if (!id) return
 

@@ -129,15 +129,23 @@ const ChatSettings: Component<{
     setEdit('scenarioId', state.chat?.scenarioIds?.[0] || '')
   })
 
-  createEffect(() => {
-    const currentText = edit.scenario
-    const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
-    if (scenario?.overwriteCharacterScenario && !state.chat?.scenarioIds?.includes(scenario._id)) {
-      setEdit('scenario', scenario.text)
-    } else {
-      setEdit('scenario', currentText)
-    }
-  })
+  createEffect(
+    on(
+      () => [edit.scenarioId],
+      () => {
+        const currentText = edit.scenario
+        const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
+        if (
+          scenario?.overwriteCharacterScenario &&
+          !state.chat?.scenarioIds?.includes(scenario._id)
+        ) {
+          setEdit('scenario', scenario.text)
+        } else {
+          setEdit('scenario', currentText)
+        }
+      }
+    )
+  )
 
   const scenarios = createMemo(() => {
     const noScenario = [{ value: '', label: "None (use character's scenario)" }]

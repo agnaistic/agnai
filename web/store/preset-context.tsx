@@ -152,11 +152,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
         subId: state.providerModels?.agnaistic,
         list: user.user?.providers,
       }),
-      () => runStateUpdate('state')
+      () => onStateUpdated()
     )
   )
 
-  const runStateUpdate = (source: string) => {
+  const onStateUpdated = () => {
     const list = user.user?.providers
 
     const conn = getPresetConnection(state, list)

@@ -465,11 +465,16 @@ export const usePaneManager = () => {
   )
   const [pane, setPane] = createSignal(search.pane)
 
-  createEffect(() => {
-    const next = search.pane !== undefined && typeof search.pane === 'string'
-    setShowing(next)
-    setPane(search.pane)
-  })
+  createEffect(
+    on(
+      () => search.pane,
+      () => {
+        const next = search.pane !== undefined && typeof search.pane === 'string'
+        setShowing(next)
+        setPane(search.pane)
+      }
+    )
+  )
 
   const update = (pane?: string) => {
     setSearch({ pane })
@@ -580,7 +585,7 @@ export function getPagePlatform(width: number) {
 export function useGoogleReady() {
   const [ready, setReady] = createSignal(false)
 
-  createEffect(() => {
+  onMount(() => {
     const timer = setInterval(() => {
       const win: any = window
       if (win.default_gsi) {

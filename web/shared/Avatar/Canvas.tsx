@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect, Suspense, Show, createResource } from 'solid-js'
+import { Component, createSignal, createEffect, Suspense, Show, createResource, on } from 'solid-js'
 import { asyncFrame } from '../util'
 import { WIDTH, HEIGHT, getColorProp } from './hooks'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
@@ -48,16 +48,21 @@ const AvatarCanvas: Component<{
   const [last, setLast] = createSignal<string>()
   const [src, { refetch }] = createResource(sprite, getSpriteImage)
 
-  createEffect(() => {
-    const prev = hash()
-    const next = getSpriteHash(props.body)
-    if (prev === next) return
+  createEffect(
+    on(
+      () => [props.body],
+      () => {
+        const prev = hash()
+        const next = getSpriteHash(props.body)
+        if (prev === next) return
 
-    setLast(src())
-    setSprite(props.body)
-    setHash(next)
-    refetch(props.body)
-  })
+        setLast(src())
+        setSprite(props.body)
+        setHash(next)
+        refetch(props.body)
+      }
+    )
+  )
 
   return (
     <Suspense fallback={<img src={last() || BLANK_IMG} style={props.style} class="border-0" />}>

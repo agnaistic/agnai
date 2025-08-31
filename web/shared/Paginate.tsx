@@ -1,4 +1,4 @@
-import { Component, Index, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Button from './Button'
 import { clamp } from '/common/util'
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from 'lucide-solid'
@@ -166,26 +166,36 @@ export function usePagination<T = any>(opts: {
     setPage(next)
   }
 
-  createEffect(() => {
-    const items = opts.items().slice()
-    const original = count()
-    const itemsChanged = original !== items.length
-    const curr = itemsChanged ? 1 : page()
-    const start = (curr - 1) * safeSize()
-    const nextItems = items.slice(start, start + safeSize())
-    setItems(nextItems)
-    setCount(items.length)
+  createEffect(
+    on(
+      () => [opts.items],
+      () => {
+        const items = opts.items().slice()
+        const original = count()
+        const itemsChanged = original !== items.length
+        const curr = itemsChanged ? 1 : page()
+        const start = (curr - 1) * safeSize()
+        const nextItems = items.slice(start, start + safeSize())
+        setItems(nextItems)
+        setCount(items.length)
 
-    if (itemsChanged) {
-      setPage(1)
-    }
-  })
+        if (itemsChanged) {
+          setPage(1)
+        }
+      }
+    )
+  )
 
-  createEffect(() => {
-    const size = safeSize()
-    if (!opts.name) return
-    storage.localSetItem(localName, `${size}`)
-  })
+  createEffect(
+    on(
+      () => safeSize(),
+      () => {
+        const size = safeSize()
+        if (!opts.name) return
+        storage.localSetItem(localName, `${size}`)
+      }
+    )
+  )
 
   return {
     ids,

@@ -8,6 +8,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
   onMount,
 } from 'solid-js'
@@ -82,12 +83,17 @@ export const CustomSelect: Component<{
     props.listener?.close?.()
   })
 
-  createEffect(() => {
-    const isOpening = open()
-    if (isOpening) {
-      setFilter('')
-    }
-  })
+  createEffect(
+    on(
+      () => open(),
+      () => {
+        const isOpening = open()
+        if (isOpening) {
+          setFilter('')
+        }
+      }
+    )
+  )
 
   const onSelect = (opt: CustomOption) => {
     props.onSelect(opt)

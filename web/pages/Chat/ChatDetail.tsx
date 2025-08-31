@@ -198,23 +198,28 @@ const ChatDetail: Component = () => {
     events.emit('chat-closed')
   })
 
-  createEffect(() => {
-    // On Connect Events
-    if (evented() || !chats.chat || !chats.char || !chars.ready || !chats.ready) return
-    setEvented(true)
+  createEffect(
+    on(
+      () => [msgs.msgs, chats.chat, chats.char, chats.ready],
+      () => {
+        // On Connect Events
+        if (evented() || !chats.chat || !chats.char || !chars.ready || !chats.ready) return
+        setEvented(true)
 
-    const messages = msgs.msgs
-    const isNonEvent = !msgs.msgs[0]?.event
-    if (isNonEvent && messages.length <= 1) {
-      eventStore.onGreeting(chats.chat)
-    } else {
-      eventStore.onChatOpened(chats.chat, new Date(messages[messages.length - 1].createdAt))
-    }
+        const messages = msgs.msgs
+        const isNonEvent = !msgs.msgs[0]?.event
+        if (isNonEvent && messages.length <= 1) {
+          eventStore.onGreeting(chats.chat)
+        } else {
+          eventStore.onChatOpened(chats.chat, new Date(messages[messages.length - 1].createdAt))
+        }
 
-    if (chats.chat.userEmbedId) {
-      embedApi.loadDocument(chats.chat.userEmbedId)
-    }
-  })
+        if (chats.chat.userEmbedId) {
+          embedApi.loadDocument(chats.chat.userEmbedId)
+        }
+      }
+    )
+  )
 
   const descriptionText = createMemo(() => {
     if (!chats.char?.description) return null

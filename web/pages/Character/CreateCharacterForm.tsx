@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, onMount, Show } from 'solid-js'
 import { Plus, Save, X, Import, Download, SlidersVertical, Dices, Image } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -188,46 +188,51 @@ export const CreateCharacterForm: Component<{
     }
   })
 
-  createEffect(async () => {
-    // We know we're waiting for a character to edit, so let's just wait
-    if (!state.edit && srcId()) return
+  createEffect(
+    on(
+      () => [state.edit, srcId()],
+      async () => {
+        // We know we're waiting for a character to edit, so let's just wait
+        if (!state.edit && srcId()) return
 
-    // If this is our first pass: load something no matter what
-    if (!editor.original()) {
-      if (!srcId()) {
-        await editor.loadCached()
-        return
+        // If this is our first pass: load something no matter what
+        if (!editor.original()) {
+          if (!srcId()) {
+            await editor.loadCached()
+            return
+          }
+
+          // We have a `srcId`, we need to wait to receive the character we're editing
+          if (!state.edit) return
+
+          editor.update('editId', srcId())
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
+
+        // This is a subsequent pass - we already have state
+        // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
+
+        if (!state.edit) return
+        const diffCharLoaded = editor.state.editId !== state.edit._id && state.edit._id === srcId()
+        if (diffCharLoaded) {
+          editor.update('editId', srcId())
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
+
+        if ('__type' in state.edit) return
+        const orig = editor.original()
+        if (orig?.__type === 'list_character' && state.edit._id === editor.state.editId) {
+          await editor.load(state.edit)
+          setImage(state.edit?.avatar)
+          return
+        }
       }
-
-      // We have a `srcId`, we need to wait to receive the character we're editing
-      if (!state.edit) return
-
-      editor.update('editId', srcId())
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-
-    // This is a subsequent pass - we already have state
-    // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
-
-    if (!state.edit) return
-    const diffCharLoaded = editor.state.editId !== state.edit._id && state.edit._id === srcId()
-    if (diffCharLoaded) {
-      editor.update('editId', srcId())
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-
-    if ('__type' in state.edit) return
-    const orig = editor.original()
-    if (orig?.__type === 'list_character' && state.edit._id === editor.state.editId) {
-      await editor.load(state.edit)
-      setImage(state.edit?.avatar)
-      return
-    }
-  })
+    )
+  )
 
   createEffect(() => {
     tagStore.updateTags(state.list)

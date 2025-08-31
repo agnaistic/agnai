@@ -143,13 +143,18 @@ const TextInput: Component<Props> = (props) => {
     )
   )
 
-  createEffect(() => {
-    if (!inputRef) return
-    if (props.isMultiline && !props.growup) {
-      value()
-      resize()
-    }
-  })
+  createEffect(
+    on(
+      () => [inputRef, value(), props.isMultiline, props.growup],
+      () => {
+        if (!inputRef) return
+        if (props.isMultiline && !props.growup) {
+          value()
+          resize()
+        }
+      }
+    )
+  )
 
   const onRef = (ref: any) => {
     props.ref?.(ref)
