@@ -28,8 +28,8 @@
 }
 
 .modal-height-fixed {
-  max-height: calc(var(--window-height) - 148px);
-  height: calc(var(--window-height) - 148px);
+  max-height: calc(var(--window-height) - 0px);
+  height: calc(var(--window-height) - 0px);
   /* min-height: calc(80vh - 132px);
   min-height: calc(80dvh - 132px); */
 }

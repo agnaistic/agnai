@@ -202,7 +202,7 @@ export const PresetProvider: Component<{
           }
         >
           <Show when={props.page === 'mode'}>
-            <Show when={props.state.providerId === '' && props.state.service !== 'agnaistic'}>
+            <Show when={!showEdit()}>
               <Button size="sm" onClick={editLegacy}>
                 <WifiPen size={16} />
                 Edit

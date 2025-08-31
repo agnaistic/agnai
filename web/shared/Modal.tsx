@@ -72,8 +72,8 @@ const Modal: Component<Props> = (props) => {
             <form
               ref={autofocus}
               onSubmit={props.onSubmit || defaultSubmit}
-              class={`modal-container bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
-              classList={{ 'h-full': props.maxHeight || full(), 'opacity-80': props.transparent }}
+              class={`modal-container bg-900 z-50 w-[calc(100vw-0px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()}`}
+              classList={{ 'h-screen': props.maxHeight || full(), 'opacity-80': props.transparent }}
               role="dialog"
               aria-modal="true"
               aria-label={props.ariaLabel}

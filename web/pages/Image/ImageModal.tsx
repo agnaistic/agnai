@@ -276,14 +276,13 @@ const ImageCollectionModal: Component<{}> = (props) => {
       }
     >
       <PromptSettings
-        // ctx={ctx}
         state={state}
         update={update}
         messageId={store.src?.messageId}
         footer={ImageFooter}
         settings={imageSettings()}
       >
-        <section class="flex max-h-[calc(100%-100px)] justify-center">
+        <section class="flex max-h-[calc(100%-200px)] justify-center">
           <Show when={state.loading}>
             <div class="bg-900 absolute right-1/2 top-1/2 rounded-lg p-2">
               <RelativeSpinner />
