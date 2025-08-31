@@ -11,8 +11,6 @@ import { debug } from '/common/debug'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
-const log = debug('image-ctx')
-
 const init = (): ImageSettings => ({
   summaryPresetId: '',
   cfg: 7,
@@ -141,6 +139,7 @@ export function useImageContext() {
     on(
       () => [tab.current(), page.open],
       () => {
+        if (!page.open) return
         const view = tab.current()
 
         switch (view) {
