@@ -12,3 +12,5 @@ export function debug(name: string) {
 
   return logger
 }
+
+export const applog = debug('app')

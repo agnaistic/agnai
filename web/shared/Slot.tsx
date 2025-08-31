@@ -130,6 +130,7 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   createEffect(() => {
+    if (page.flags.forceAds) return
     if (!user.disableSlots) return
 
     win.enableSticky = undefined

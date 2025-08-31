@@ -7,10 +7,14 @@ import { isChatPage } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
 import { AppSchema } from '/common/types'
+import { debug } from '/common/debug'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
+const log = debug('image-ctx')
+
 const init = (): ImageSettings => ({
+  summaryPresetId: '',
   cfg: 7,
   height: 1216,
   width: 768,
@@ -48,7 +52,8 @@ export type ImageContext = ReturnType<typeof useImageContext>[0]
 export function useImageContext() {
   const isChat = isChatPage(true)
 
-  const user = userStore()
+  const page = imageStore((s) => ({ open: s.showImgSettings }))
+  const user = userStore((s) => ({ user: s.user, sub: s.sub }))
   const settings = settingStore((s) => ({ config: s.config }))
   const entity = chatStore((s) => ({
     chat: s.active?.chat,
@@ -120,34 +125,21 @@ export function useImageContext() {
   }
 
   createEffect(
-    () => [
-      user.sub?.tier.imagesAccess,
-      user.user?.admin,
-      settings.config.serverConfig?.imagesModels,
-    ],
-    () => {
-      const access = user.sub?.tier.imagesAccess || user.user?.admin
-      const next =
-        !!settings.config.serverConfig?.imagesEnabled &&
-        !!access &&
-        settings.config.serverConfig?.imagesModels?.length > 0
-
-      const hosts = [
-        { label: 'Horde', value: 'horde' },
-        { label: 'NovelAI', value: 'novel' },
-        { label: 'Stable Diffusion', value: 'sd' },
-      ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
-      if (next) {
-        hosts.push({ label: 'Agnaistic', value: 'agnai' })
-      }
-
-      setState({ canUseImages: next, hosts })
-    }
+    on(
+      () => [
+        page.open,
+        user.sub,
+        user.user,
+        settings.config.serverConfig?.imagesModels,
+        settings.config.serverConfig?.imagesEnabled,
+      ],
+      () => recieveUpdate()
+    )
   )
 
   createEffect(
     on(
-      () => tab.current(),
+      () => [tab.current(), page.open],
       () => {
         const view = tab.current()
 
@@ -180,6 +172,27 @@ export function useImageContext() {
       }
     )
   )
+
+  const recieveUpdate = () => {
+    if (!page.open) return
+    const access = user.sub?.tier.imagesAccess || user.user?.admin
+    const next =
+      !!settings.config.serverConfig?.imagesEnabled &&
+      !!access &&
+      settings.config.serverConfig?.imagesModels?.length > 0
+
+    const hosts = [
+      { label: 'Horde', value: 'horde' },
+      { label: 'NovelAI', value: 'novel' },
+      { label: 'Stable Diffusion', value: 'sd' },
+    ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
+
+    if (next) {
+      hosts.push({ label: 'Agnaistic', value: 'agnai' })
+    }
+
+    setState({ canUseImages: next, hosts })
+  }
 
   const save = () => {
     saveImageSettings(tab.current(), cfg, entity)
