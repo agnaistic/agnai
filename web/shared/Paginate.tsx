@@ -168,7 +168,7 @@ export function usePagination<T = any>(opts: {
 
   createEffect(
     on(
-      () => [opts.items],
+      () => [opts.items, page(), safeSize()],
       () => {
         const items = opts.items().slice()
         const original = count()
