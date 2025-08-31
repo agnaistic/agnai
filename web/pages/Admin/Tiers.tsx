@@ -18,7 +18,7 @@ const TiersPage: Component = (props) => {
   const params = useParams()
   const cfg = userStore()
   const admin = adminStore()
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config, slots: s.slots }))
 
   const products = createMemo(() => {
     const list = admin.products.map((product) => {

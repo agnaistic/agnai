@@ -21,10 +21,10 @@ import { cleanPrompt } from '/common/util'
 export const GenerateImageModal: Component = () => {
   const isChat = isChatPage()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
-  const reel = useImageCache(`img-gen-${user.id}`, { clean: true })
+  const reel = useImageCache({ id: `img-gen-${user.id}`, clean: true })
   const emitter = createEmitter('width')
   const [state, setters] = useImageContext({ prompt: '' })
-  const settings = getStore('settings')((s) => ({ ...s.imggen }))
+  const settings = getStore('image')((s) => ({ ...s.imggen }))
 
   const [loading, setLoading] = createSignal(false)
 
@@ -58,7 +58,7 @@ export const GenerateImageModal: Component = () => {
     })
   }
 
-  const close = () => getStore('settings').closeImageGen()
+  const close = () => getStore('image').closeImageGen()
 
   const onCleanPrompt = () => {
     const next = cleanPrompt(state.prompt)
@@ -86,7 +86,7 @@ export const GenerateImageModal: Component = () => {
       maxHeight
       title={
         <>
-          <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
+          <div class="icon-button" onClick={() => getStore('image').imageSettings(true)}>
             <SettingsIcon size={20} />
           </div>
         </>

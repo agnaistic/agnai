@@ -2,8 +2,7 @@ import { Component, Match, Show, Switch, createMemo, createSignal, onMount } fro
 import { FLAI_CONTEXTS, GOOGLE_MODELS, OpenRouterModel } from '/common/adapters'
 import TextInput from '../TextInput'
 import Button from '../Button'
-import { getStore } from '/web/store/create'
-import { presetStore, settingStore, toastStore } from '/web/store'
+import { pageStore, presetStore, settingStore, toastStore } from '/web/store'
 import Select, { Option } from '../Select'
 import { CustomOption, CustomSelect } from '../CustomSelect'
 import { ArliModel } from '/srv/adapter/arli'
@@ -235,7 +234,7 @@ const CompatModel: Selector = (props) => {
 }
 
 const NovelAIModel: Selector = (props) => {
-  const cfg = getStore('settings')()
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const novelModels = createMemo(() => {
     const base = modelsToItems(NOVEL_MODELS)
@@ -273,7 +272,7 @@ const NovelAIModel: Selector = (props) => {
         onSelect={(ev) => setProviderModel(props, ev.value, { novelModel: ev.value })}
         buttonLabel={label()}
       />
-      <Show when={cfg.flags.naiModel}>
+      <Show when={page.flags.naiModel}>
         <TextInput
           fieldName="novelModelOverride"
           helperText="Advanced: Use a custom NovelAI model"

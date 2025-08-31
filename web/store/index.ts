@@ -1,5 +1,6 @@
 export * from './page'
 export * from './prompt'
+export * from './images'
 export * from './user'
 export * from './chat'
 export * from './toasts'

@@ -13,6 +13,7 @@ import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { PresetStateProvider } from './preset-context'
+import { pageStore } from './page'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -94,8 +95,15 @@ export function ContextProvider(props: { children: any }) {
   const chars = characterStore()
   const chats = chatStore()
   const users = userStore()
-  const cfg = settingStore()
-  const msgs = msgStore()
+  const cfg = settingStore((s) => ({ anonymize: s.anonymize, config: s.config }))
+  const msgs = msgStore((s) => ({
+    graph: s.graph,
+    waiting: s.waiting,
+    imgWaiting: s.imgWaiting,
+    hordeStatus: s.hordeStatus,
+    attachments: s.attachments,
+  }))
+  const page = pageStore()
 
   const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(
@@ -157,7 +165,7 @@ export function ContextProvider(props: { children: any }) {
 
     const next: Partial<ContextState> = {
       bg: visuals(),
-      flags: cfg.flags,
+      flags: page.flags,
       anonymize: cfg.anonymize,
       config: cfg.config,
       tempMap: chats.active?.chat.tempCharacters || {},

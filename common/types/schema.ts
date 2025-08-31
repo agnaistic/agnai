@@ -60,6 +60,7 @@ export namespace AppSchema {
   export type AppConfig = Admin.AppConfig
   export type Configuration = Admin.Configuration
   export type ImageModel = Admin.ImageModel
+  export type ImageSettingsSource = 'last-character' | 'main-character' | 'chat' | 'settings'
 
   export type ChatMode = 'standard' | 'adventure'
 
@@ -291,7 +292,7 @@ export namespace AppSchema {
 
     treeLeafId?: string
 
-    imageSource?: 'last-character' | 'main-character' | 'chat' | 'settings'
+    imageSource?: ImageSettingsSource
     imageSettings?: ImageSettings
 
     background?: string

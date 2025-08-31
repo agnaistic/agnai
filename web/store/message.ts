@@ -29,6 +29,7 @@ import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import { botGen, GenerateOpts } from './data/bot-generate'
 import type { MsgAttachment } from '/srv/adapter/type'
+import { debug } from '/common/debug'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -1717,13 +1718,16 @@ subscribe('horde-status', { status: 'any' }, (body) => {
 
 export async function hydrateMessageImages(messageId: string) {
   if (!messageId) return
+
+  const log = debug('msg-imgs')
   const { msgs } = msgStore.getState()
   const curr = findOne(messageId, msgs)
+  log('[%s] loaded none', messageId.slice(0, 4))
   if (!curr) return
 
   const cached = await getMessageImages(messageId)
-  const next: string[] = cached
-  updateMessageInState(messageId, { extras: next })
+  updateMessageInState(messageId, { extras: cached })
+  log('[%s] loaded %s', messageId.slice(0, 4), cached.length)
 
   // Case 1. Initial load or first image
   // if (!curr.extras?.length) {

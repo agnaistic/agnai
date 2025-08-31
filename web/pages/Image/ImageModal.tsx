@@ -5,10 +5,10 @@ import {
   ConfirmAction,
   hydrateMessageImages,
   ImageButton,
-  ImageSource,
+  imageStore,
   msgStore,
+  pageStore,
   promptStore,
-  settingStore,
 } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
@@ -20,39 +20,26 @@ import { RelativeSpinner } from '/web/shared/Loading'
 import { imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
 import { createStore, SetStoreFunction } from 'solid-js/store'
-import { useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
+import { ChatImageSettings, useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
 import { Copy } from '/web/shared/Copy'
 import { downloadImage } from '../Character/util'
-import { ImageContext, useImageContext } from '../Settings/Image/image-context'
+import { debug } from '/common/debug'
+
+const log = debug('image-modal')
 
 type ImageState = { prompt: string; promptLoading: boolean; loading: boolean }
 
 export const ImageModal: Component = () => {
-  const state = settingStore()
-  const [ctx] = useImageContext()
+  const state = imageStore((s) => ({ showImage: s.showImage }))
 
   return (
     <>
-      <ImageCollectionModal
-        ctx={ctx}
-        type={state.showImage?.src.type!}
-        collection={
-          state.showImage?.src.type === 'collection' || state.showImage?.src.type === 'message'
-            ? state.showImage?.src.id!
-            : undefined
-        }
-        close={() => settingStore.clearImage()}
-        actions={state.showImage?.options!}
-        initial={state.showImage?.src.initial}
-        onClose={state.showImage?.onClose}
-        prompt={state.showImage?.src.prompt}
-        messageId={state.showImage?.src.messageId}
-      />
+      <ImageCollectionModal />
 
       <Show when={state.showImage?.src.type === 'url'}>
         <ImageUrlModal
           url={state.showImage?.src.type === 'url' ? state.showImage?.src.id! : ''}
-          close={() => settingStore.clearImage()}
+          close={() => imageStore.clearImage()}
           actions={state.showImage?.options!}
           onClose={state.showImage?.onClose}
         />
@@ -107,20 +94,18 @@ const ImageUrlModal: Component<{
   )
 }
 
-const ImageCollectionModal: Component<{
-  type: ImageSource['type']
-  ctx: ImageContext
-  collection: string | undefined
-  messageId?: string
-  initial?: number
-  close: () => void
-  prompt?: string
-  actions: ImageButton[]
-  onClose?: () => void
-}> = (props) => {
-  const reel = useImageCache(props.collection || 'ephemeral-collection', {
-    initial: props.initial,
+const ImageCollectionModal: Component<{}> = (props) => {
+  // const [ctx] = useImageContext()
+  const reel = useImageCache()
+  const store = imageStore((s) => {
+    return { src: s.showImage?.src, options: s.showImage?.options, onClose: s.showImage?.onClose }
   })
+
+  const show = createMemo(() => {
+    const next = store.src?.id !== undefined && store.src.type !== 'url'
+    return next
+  })
+
   const imageSettings = useCurrentChatImageSettings()
 
   const [state, update] = createStore<ImageState>({
@@ -150,45 +135,48 @@ const ImageCollectionModal: Component<{
       })
     }
 
-    if (props.messageId) {
+    if (store.src?.messageId) {
       btns.push({
         text: 'To Current',
         schema: 'primary',
         onClick: () =>
-          msgStore.addAttachment(props.messageId!, [{ type: 'image', image: reel.state.image }]),
+          msgStore.addAttachment(store.src?.messageId!, [
+            { type: 'image', image: reel.state.image },
+          ]),
       })
     }
 
-    settingStore.openConfirm({ message: 'Add Message Attachment', actions: btns })
+    pageStore.openConfirm({ message: 'Add Message Attachment', actions: btns })
   }
 
   createEffect(
     on(
-      () => props.collection,
+      () => store.src?.id,
       (id) => {
+        log('loading %s', id)
         if (id) {
-          reel.load(id, props.initial)
+          reel.load(id, store.src?.initial)
         }
-        if (props.type === 'message') {
-          const msg = getGraphMessage(props.messageId)
+        if (store.src?.type === 'message') {
+          const msg = getGraphMessage(store.src.messageId)
           update('prompt', msg?.imagePrompt || '')
           return
         }
-        update('prompt', props.prompt || '')
+        update('prompt', store.src?.prompt || '')
       }
     )
   )
 
   const close = () => {
-    props.onClose?.()
-    props.close()
+    store.onClose?.()
+    imageStore.clearImage()
   }
 
   const removeImage = async () => {
     await reel.removeImage(reel.state.imageId)
 
-    if (props.messageId) {
-      hydrateMessageImages(props.messageId)
+    if (store.src?.messageId) {
+      hydrateMessageImages(store.src.messageId)
     }
   }
 
@@ -210,7 +198,7 @@ const ImageCollectionModal: Component<{
         prompt: imagePrompt,
       })
 
-      const msg = getGraphMessage(props.messageId)
+      const msg = getGraphMessage(store.src?.messageId)
       if (!msg) return
       const nextExtras = msg.extras?.slice() || []
       msgStore.localEditMessageProp(msg._id, { extras: nextExtras.concat(cacheId) })
@@ -220,64 +208,67 @@ const ImageCollectionModal: Component<{
   }
 
   const ImageFooter = (
-    <div class="flex h-full w-full items-end justify-center gap-2">
-      <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
-        <ArrowLeft size={20} />
-      </Button>
+    <>
+      <div class="flex h-full w-full items-end justify-center gap-2">
+        <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.prev}>
+          <ArrowLeft size={20} />
+        </Button>
 
-      <Button size="sm" onClick={generateImage} disabled={state.loading}>
-        Generate
-      </Button>
+        <Button size="sm" onClick={generateImage} disabled={state.loading}>
+          Generate
+        </Button>
 
-      <Button size="sm" schema="error" onClick={removeImage} disabled={!reel.state.images.length}>
-        <Trash size={20} />
-      </Button>
+        <Button size="sm" schema="error" onClick={removeImage} disabled={!reel.state.images.length}>
+          <Trash size={20} />
+        </Button>
 
-      <Button
-        size="sm"
-        schema="primary"
-        disabled={!reel.state.image}
-        onClick={() => downloadImage({ name: reel.state.imageId, image: reel.state.image })}
-      >
-        <Download size={20} />
-      </Button>
+        <Button
+          size="sm"
+          schema="primary"
+          disabled={!reel.state.image}
+          onClick={() => downloadImage({ name: reel.state.imageId, image: reel.state.image })}
+        >
+          <Download size={20} />
+        </Button>
 
-      <Button
-        size="sm"
-        schema="primary"
-        disabled={!reel.state.image || !props.messageId}
-        onClick={attachImage}
-      >
-        Attach
-      </Button>
+        <Button
+          size="sm"
+          schema="primary"
+          disabled={!reel.state.image || !store.src?.messageId}
+          onClick={attachImage}
+        >
+          Attach
+        </Button>
 
-      <For each={props.actions}>
-        {(action) => (
-          <Button
-            size="sm"
-            schema={action.schema}
-            onClick={() => action.onClick({ prompt: state.prompt, reel })}
-          >
-            {action.text}
-          </Button>
-        )}
-      </For>
+        <For each={store?.options || []}>
+          {(action) => (
+            <Button
+              size="sm"
+              schema={action.schema}
+              onClick={() => action.onClick({ prompt: state.prompt, reel })}
+            >
+              {action.text}
+            </Button>
+          )}
+        </For>
 
-      <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.next}>
-        <ArrowRight size={20} />
-      </Button>
-    </div>
+        <Button size="sm" disabled={reel.state.images.length <= 1} onClick={reel.next}>
+          <ArrowRight size={20} />
+        </Button>
+      </div>
+    </>
   )
 
   return (
     <Modal
-      show={props.collection !== undefined}
+      debug="img-col"
+      show={show()}
       close={close}
       maxWidth="full"
       fixedHeight
       title={
         <div class="flex items-center gap-2">
-          <div class="icon-button" onClick={() => getStore('settings').imageSettings(true)}>
+          <div class="icon-button" onClick={() => getStore('image').imageSettings(true)}>
             <SettingsIcon size={20} />
           </div>
           <div>{title()}</div>
@@ -285,11 +276,12 @@ const ImageCollectionModal: Component<{
       }
     >
       <PromptSettings
-        ctx={props.ctx}
+        // ctx={ctx}
         state={state}
         update={update}
-        messageId={props.messageId}
+        messageId={store.src?.messageId}
         footer={ImageFooter}
+        settings={imageSettings()}
       >
         <section class="flex max-h-[calc(100%-100px)] justify-center">
           <Show when={state.loading}>
@@ -307,9 +299,9 @@ const ImageCollectionModal: Component<{
 }
 
 const PromptSettings: Component<{
-  ctx: ImageContext
   state: ImageState
   update: SetStoreFunction<ImageState>
+  settings?: ChatImageSettings
   messageId: string | undefined
   children: any
   footer: any
@@ -317,12 +309,10 @@ const PromptSettings: Component<{
   const persist = promptStore()
 
   const fullImagePrompt = createMemo(() => {
-    const cfg = props.ctx.cfg()
-    const parts = [cfg?.prefix, props.state.prompt, cfg?.suffix]
+    const parts = [props.settings?.prefix, props.state.prompt, props.settings?.suffix]
       .filter((c) => !!c?.trim())
       .join(', ')
     const cleaned = cleanPrompt(parts)
-
     return cleaned
   })
 

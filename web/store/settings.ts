@@ -7,37 +7,12 @@ import { createStore, getStore } from './create'
 import { InitEntities, usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
-import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
-import { ButtonSchema } from '../shared/Button'
-import { ImageCacheHook } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
-import { JSX } from 'solid-js'
-import { FileInputResult } from '../shared/FileInput'
-
-export type ImageSource = {
-  type: 'collection' | 'url' | 'message'
-  messageId?: string
-  id: string
-  initial?: number
-  prompt?: string
-}
-
-export type ImageButton = {
-  schema: ButtonSchema
-  text: string
-  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
-}
-
-export type ConfirmAction = {
-  schema?: ButtonSchema
-  text: string | JSX.Element
-  onClick: () => void
-}
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -47,7 +22,6 @@ export type SettingState = {
     ttl: number
   }
 
-  showImpersonate: boolean
   config: AppSchema.AppConfig
 
   allImageModels: AppSchema.ImageModel[]
@@ -63,60 +37,25 @@ export type SettingState = {
     config: AppSchema.AppConfig
     books: AppSchema.MemoryBook[]
   }
-  showImage?: {
-    src: ImageSource
-    options: ImageButton[]
-    onClose?: () => void
-  }
 
   loras: Array<{ id: string; name: string; tags: Record<string, number> }>
   embeddings: Array<{ id: string; name: string; tags: string[] }>
 
-  flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   featherless: { models: FeatherlessModel[]; classes: Record<string, { ctx: number; res: number }> }
   arliai: { models: ArliModel[]; classes: Record<string, { ctx: number; res: number }> }
 
-  showSettings: boolean
-  showImgSettings: boolean
-
-  imggen: {
-    show: boolean
-    prompt?: string
-    action?: {
-      text: string
-      handler: (image: string) => void
-    }
-  }
-
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
-
-  confirm?: {
-    title?: string
-    message: string | JSX.Element
-    actions?: ConfirmAction[]
-    onConfirm?: () => void
-  }
-
-  attach?: {
-    show: boolean
-    multiple: boolean
-    accept: string
-    callback: (files: FileInputResult[]) => void
-  }
 }
 
 const HORDE_URL = `https://aihorde.net/api/v2`
-
-const FLAG_KEY = 'agnai-flags'
 
 const initState: SettingState = {
   anonymize: JSON.parse(storage.localGetItem('agnai-anonymize') || 'false'),
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showImpersonate: false,
   models: [],
   workers: [],
   imageWorkers: [],
@@ -141,10 +80,7 @@ const initState: SettingState = {
   replicate: {},
   featherless: { models: [], classes: {} },
   arliai: { models: [], classes: {} },
-  flags: getFlags(),
-  showSettings: false,
-  showImgSettings: false,
-  imggen: { show: false },
+
   slotsLoaded: false,
   slots: { publisherId: '' },
 }
@@ -175,80 +111,6 @@ export const settingStore = createStore<SettingState>(
   })
 
   return {
-    openAttach(
-      {},
-      opts: { multiple?: boolean; accept?: string },
-      callback: (files: FileInputResult[]) => void
-    ) {
-      const wrapped = (files: FileInputResult[]) => {
-        callback(files)
-        setter({ attach: undefined })
-      }
-
-      return {
-        attach: {
-          show: true,
-          multiple: !!opts.multiple,
-          accept: opts.accept || '*/*',
-          callback: wrapped,
-        },
-      }
-    },
-    openConfirm(
-      {},
-      opts: {
-        message: string | JSX.Element
-        title?: string
-        onConfirm?: () => void
-        actions?: ConfirmAction[]
-      }
-    ) {
-      return {
-        confirm: {
-          message: opts.message,
-          title: opts.title,
-          onConfirm: opts.onConfirm,
-          actions: opts.actions,
-        },
-      }
-    },
-    closeConfirm({ confirm }, confirmed: boolean) {
-      if (!confirm) return
-
-      if (!confirmed) {
-        return { confirm: undefined }
-      }
-
-      confirm.onConfirm?.()
-      return { confirm: undefined }
-    },
-    modal({ showSettings }, show?: boolean) {
-      const next = show ?? !showSettings
-      return { showSettings: next }
-    },
-    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton }) => {
-      return {
-        showImage: {
-          options: opts?.handler ? [opts.handler] : [],
-          src: {
-            type: 'collection',
-            id: '', // No ID = ephemeral
-            initial: 0,
-            prompt: opts?.prompt || '',
-          },
-        },
-      }
-    },
-    closeImageGen: () => {
-      return { showImage: undefined }
-    },
-    imageSettings({ showImgSettings }, next?: boolean) {
-      if (next === undefined) {
-        return { showImgSettings: !showImgSettings }
-      }
-
-      return { showImgSettings: next }
-    },
     async *init({ config: prev }) {
       yield { initLoading: true }
 
@@ -336,9 +198,6 @@ export const settingStore = createStore<SettingState>(
       }
     },
 
-    toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
-      return { showImpersonate: show ?? !showImpersonate }
-    },
     async getFeatherless(state) {
       if (state.featherless.models.length) return
 
@@ -429,31 +288,6 @@ export const settingStore = createStore<SettingState>(
       storage.localSetItem('agnai-anonymize', JSON.stringify(!anonymize))
       return { anonymize: !anonymize }
     },
-    showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
-      return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
-    },
-    showMessageImages(_, opts: { id: string; position?: number }) {
-      return {
-        showImage: {
-          src: {
-            type: 'message',
-            id: `message-images-${opts.id}`,
-            initial: opts.position,
-            messageId: opts.id,
-          },
-          options: [],
-        },
-      }
-    },
-    clearImage() {
-      return { showImage: undefined }
-    },
-    flag({ flags }, flag: keyof FeatureFlags, value: boolean) {
-      const nextFlags = { ...flags, [flag]: value }
-      window.flags = nextFlags
-      saveFlags(nextFlags)
-      return { flags: nextFlags }
-    },
   }
 })
 
@@ -488,80 +322,6 @@ subscribe('connected', { uid: 'string' }, (body) => {
 
   settingStore.getConfig()
 })
-
-window.flag = function (flag: keyof FeatureFlags, value) {
-  if (!flag) {
-    const state = settingStore((s) => s.flags)
-    console.log('Available flags:')
-    for (const [key] of Object.entries(defaultFlags)) console.log(key, (state as any)[key])
-    return
-  }
-
-  if (value === undefined) {
-    const { flags } = settingStore.getState()
-    value = !flags[flag]
-  }
-
-  console.log(`Toggled ${flag} --> ${value}`)
-  settingStore.flag(flag as any, value)
-}
-
-for (const key of Object.keys(defaultFlags)) {
-  Object.defineProperty(window.flag, key, {
-    get() {
-      window.flag(key)
-      return
-    },
-  })
-}
-
-Object.freeze(window.flag)
-
-type FlagCache = { user: FeatureFlags; default: FeatureFlags }
-
-function getFlags(): FeatureFlags {
-  try {
-    const cache = localStorage.getItem(FLAG_KEY)
-    if (!cache) {
-      saveFlags(defaultFlags)
-      return defaultFlags
-    }
-
-    const parsed = JSON.parse(cache) as FlagCache
-
-    const flags: any = parsed.user
-    const pastDefaults: any = parsed.default
-
-    for (const [key, value] of Object.entries(defaultFlags)) {
-      // If the user does not have the key, set it no matter what
-      if (key in flags === false) {
-        flags[key] = value
-        continue
-      }
-
-      // If the 'default' value for the flag has changed, change it for the user
-      const prev = pastDefaults[key]
-      if (prev !== value) {
-        flags[key] = value
-        continue
-      }
-    }
-
-    saveFlags(flags)
-    return flags
-  } catch (ex) {
-    saveFlags(defaultFlags)
-    return defaultFlags
-  }
-}
-
-function saveFlags(flags: {}) {
-  try {
-    window.flags = flags
-    const cache: FlagCache = { user: flags as any, default: defaultFlags }
-    localStorage.setItem(FLAG_KEY, JSON.stringify(cache))
-  } catch (ex) {}
-}
 
 function canUseStorage(noThrow?: boolean) {
   const TEST_KEY = '___TEST'

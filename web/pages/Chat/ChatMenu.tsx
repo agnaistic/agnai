@@ -1,6 +1,6 @@
 import './chat-detail.css'
 import { Component, createMemo, JSX, Show } from 'solid-js'
-import { ChatRightPane, chatStore, settingStore } from '../../store'
+import { ChatRightPane, chatStore, imageStore, pageStore } from '../../store'
 import { ChatModal } from './ChatOptions'
 import { usePaneManager } from '/web/shared/hooks'
 import { ContextState } from '/web/store/context'
@@ -90,11 +90,11 @@ const ChatNav: Component<NavProps> = (props) => {
     const last = getStore('messages').getState().msgs.slice(-1)[0]
 
     if (!last) {
-      settingStore.openImageGen()
+      imageStore.openImageGen()
       return
     }
 
-    settingStore.showMessageImages({ id: last._id, position: 0 })
+    imageStore.showMessageImages({ id: last._id, position: 0 })
   }
 
   return (
@@ -157,7 +157,7 @@ const ChatNav: Component<NavProps> = (props) => {
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Nav.Item
-          onClick={() => settingStore.modal(true)}
+          onClick={() => pageStore.settings(true)}
           ariaLabel="Open settings page"
           tooltip="Site Settings"
         >
@@ -171,7 +171,7 @@ const ChatNav: Component<NavProps> = (props) => {
           <ImagePlus size={size} aria-hidden="true" />
         </Nav.Item>
         <Nav.Item
-          onClick={() => settingStore.imageSettings(true)}
+          onClick={() => imageStore.imageSettings(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >

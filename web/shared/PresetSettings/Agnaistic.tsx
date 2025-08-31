@@ -224,7 +224,7 @@ function useModelCategories() {
     userLevel: s.userLevel,
   }))
 
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config }))
 
   const list = createMemo(() => {
     const tierLevel = state.user?.admin ? Infinity : state.userLevel

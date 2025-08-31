@@ -17,7 +17,7 @@ export const ModeDetail: Component<{
   /** Percentage of content pane height */
   splitHeight?: number
 }> = (props) => {
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ config: s.config }))
   const user = userStore()
   const mode = usePane()
   const size = useWindowSize()

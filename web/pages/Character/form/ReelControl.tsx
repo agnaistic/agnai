@@ -3,14 +3,14 @@ import { Component, createEffect, createMemo, on, onMount, Show } from 'solid-js
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
 import Button from '/web/shared/Button'
-import { settingStore, UserState, userStore } from '/web/store'
+import { imageStore, settingStore, UserState, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 
 export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user: UserState }> = (
   props
 ) => {
   const createAvatar = async () => {
-    settingStore.openImageGen({
+    imageStore.openImageGen({
       prompt: props.editor.state.appearance || '',
       handler: {
         text: 'Send to Editor',
@@ -23,7 +23,7 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
           if (image.reel.state.image) {
             await props.editor.imageCache.addImage(image.reel.state.image, { id: `${v4()}.png` })
           }
-          settingStore.closeImageGen()
+          imageStore.closeImageGen()
         },
       },
     })
@@ -60,7 +60,7 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
         >
           <ArrowRight size={size} />
         </Button>
-        <Button size="sm" onClick={() => settingStore.imageSettings(true)}>
+        <Button size="sm" onClick={() => imageStore.imageSettings(true)}>
           <Settings size={16} />
         </Button>
       </div>

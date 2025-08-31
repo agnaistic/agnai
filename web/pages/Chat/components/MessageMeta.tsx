@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
-import { msgStore, settingStore, toastStore } from '../../../store'
+import { imageStore, msgStore, toastStore } from '../../../store'
 import Button from '/web/shared/Button'
 import { useAppContext } from '/web/store/context'
 import TextInput from '/web/shared/TextInput'
@@ -151,7 +151,7 @@ export const MessageImagePrompt: Component<{
           <div
             class="icon-button"
             onClick={() => {
-              settingStore.showMessageImages({ id: props.msg._id, position: 0 })
+              imageStore.showMessageImages({ id: props.msg._id, position: 0 })
               props.close()
             }}
           >

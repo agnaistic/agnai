@@ -1,12 +1,12 @@
 import { Component, createEffect, createSignal, For, on, onMount, Show } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
-import { ImageButton, settingStore } from '/web/store/settings'
 import { hydrateMessageImages, msgStore } from '/web/store/message'
 import { Pencil, PlusCircle, X } from 'lucide-solid'
 import { MessageImagePrompt } from './MessageMeta'
 import Button from '/web/shared/Button'
 import { ICON_SIZES } from '/web/icons/AppIcon'
+import { ImageButton, imageStore } from '/web/store/images'
 
 type MessageImage = {
   src: string
@@ -61,7 +61,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
               class="mt-2 max-h-12 max-w-[unset] cursor-pointer rounded-md sm:max-h-16"
               src={getAssetUrl(img.src)}
               onClick={() =>
-                settingStore.showMessageImages({
+                imageStore.showMessageImages({
                   id: props.msg._id,
                   position: pos(),
                 })
@@ -106,7 +106,7 @@ function toImageDeleteButton(msgId: string, position: number) {
     text: 'Delete Image',
     onClick: () => {
       msgStore.removeMessageImage(msgId, position)
-      settingStore.clearImage()
+      imageStore.clearImage()
     },
   }
 }

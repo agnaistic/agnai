@@ -10,6 +10,7 @@ import { PartialEmitter } from './util'
 
 interface Props {
   title?: string | JSX.Element
+  debug?: string
   show: boolean
   children?: JSX.Element
   close: () => void

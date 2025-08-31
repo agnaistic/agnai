@@ -42,7 +42,7 @@ const ChatOptions: Component<{
     members: s.chatProfiles,
   }))
   const user = userStore()
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ anonymize: s.anonymize }))
 
   const toggleOocMessages = () => {
     chatStore.option({ hideOoc: !chats.opts.hideOoc })

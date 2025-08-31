@@ -161,7 +161,7 @@ const [updateCache] = createDebounce(async (state: EditorState) => {
 export type CharEditor = ReturnType<typeof useCharEditor>
 
 export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: string }) {
-  const cache = useImageCache('avatars-images', { clean: true })
+  const cache = useImageCache({ id: 'avatars-images', clean: true })
 
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditorState>({ ...initState })

@@ -31,10 +31,10 @@ import {
   chatStore,
   toastStore,
   userStore,
-  settingStore,
   characterStore,
   ChatMessageExt,
   promptStore,
+  pageStore,
 } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -335,7 +335,7 @@ const InputBar: Component<{
             role="button"
             aria-label="Open impersonation menu"
             class="icon-button"
-            onClick={() => settingStore.toggleImpersonate(true)}
+            onClick={() => pageStore.toggleImpersonate(true)}
           >
             <AvatarIcon
               avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}

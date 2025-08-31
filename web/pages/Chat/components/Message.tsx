@@ -38,7 +38,7 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { chatStore, userStore, msgStore, ChatState, VoiceState, settingStore } from '../../../store'
+import { chatStore, userStore, msgStore, ChatState, VoiceState, pageStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
@@ -779,7 +779,7 @@ const MessageOptions: Component<{
           (props.msg.userId === props.ctx.user?._id ||
             props.ctx.impersonate?._id === props.msg.characterId),
         onClick: () =>
-          settingStore.openAttach(
+          pageStore.openAttach(
             { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
             (files) => attachImages(props.msg._id, files)
           ),

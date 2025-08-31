@@ -2,7 +2,7 @@ import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { CircleX, Dices, VenetianMask } from 'lucide-solid'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
-import { characterStore, chatStore, settingStore, userStore } from '../../store'
+import { characterStore, chatStore, imageStore, pageStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import InputBar, { SendFunc } from './components/InputBar'
 import { ContextState } from '/web/store/context'
@@ -80,7 +80,7 @@ export const ChatFooter: Component<{
           <Button
             size="md"
             schema="bordered"
-            onClick={() => settingStore.toggleImpersonate(true)}
+            onClick={() => pageStore.toggleImpersonate(true)}
             classList={{ 'impersonate-btn': true }}
           >
             <VenetianMask size={16} />
@@ -109,7 +109,7 @@ export const ChatFooter: Component<{
                 <img
                   src={image}
                   class="h-[40px] cursor-pointer rounded-md"
-                  onClick={() => settingStore.showImage({ src: { type: 'url', id: image } })}
+                  onClick={() => imageStore.showImage({ src: { type: 'url', id: image } })}
                 />
               )}
             </For>

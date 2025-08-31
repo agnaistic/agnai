@@ -34,9 +34,18 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
 }
 
 const UISettings: Component<{}> = () => {
-  const state = userStore()
-  const chars = characterStore()
-  const settings = settingStore()
+  const state = userStore((s) => ({
+    ui: s.ui,
+    current: s.current,
+    background: s.background,
+    profile: s.profile,
+    user: s.user,
+  }))
+  const chars = characterStore((s) => ({
+    characters: s.characters,
+    impersonating: s.impersonating,
+  }))
+  const settings = settingStore((s) => ({ anonymize: s.anonymize }))
   const prompts = promptStore()
 
   const themeBgOptions = createMemo(() => {

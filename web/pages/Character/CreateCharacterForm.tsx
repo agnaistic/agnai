@@ -5,15 +5,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput, { ButtonInput } from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import { FileInputResult } from '../../shared/FileInput'
-import {
-  characterStore,
-  tagStore,
-  toastStore,
-  chatStore,
-  userStore,
-  settingStore,
-  pageStore,
-} from '../../store'
+import { characterStore, tagStore, toastStore, chatStore, userStore, pageStore } from '../../store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import Select from '../../shared/Select'
@@ -391,7 +383,7 @@ export const CreateCharacterForm: Component<{
                   size="sm"
                   schema="warning"
                   onClick={() => {
-                    settingStore.openConfirm({
+                    pageStore.openConfirm({
                       message: 'Are you sure you wish to clear the editor?',
                       onConfirm: clearEditor,
                     })

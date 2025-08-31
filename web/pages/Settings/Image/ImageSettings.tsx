@@ -1,10 +1,9 @@
-import { Match, Show, Switch, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { SD_SAMPLER } from '../../../../common/image'
+import { Match, Show, Switch, createMemo, createSignal } from 'solid-js'
 import Divider from '../../../shared/Divider'
 import { InlineRangeInput } from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
-import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../../store'
+import { characterStore, chatStore, imageStore, presetStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
@@ -23,43 +22,9 @@ import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { usePresetContext } from '/web/store/preset-context'
 import { useImageContext } from './image-context'
 
-const init: ImageSettings = {
-  cfg: 7,
-  height: 1216,
-  width: 768,
-  steps: 28,
-  clipSkip: 2,
-  negative: '',
-  suffix: '',
-  summariseChat: true,
-  summaryPrompt: '',
-  template: '',
-  type: 'horde',
-  agnai: {
-    model: '',
-    sampler: SD_SAMPLER['Euler a'],
-    draftMode: false,
-  },
-  horde: {
-    sampler: SD_SAMPLER['Euler a'],
-    model: '',
-  },
-  sd: {
-    sampler: SD_SAMPLER['Euler a'],
-    url: '',
-  },
-  novel: {
-    model: '',
-    sampler: SD_SAMPLER['Euler a'],
-    ucPreset: '0',
-    qualityTags: true,
-  },
-}
-
 export const ImageSettingsModal = () => {
   const [ctx] = useImageContext()
-  const user = userStore()
-  const settings = settingStore()
+  const settings = imageStore()
   const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
   const [presetFooter, setPresetFooter] = createSignal<any>()
   const presets = presetStore((s) => ({
@@ -94,42 +59,9 @@ export const ImageSettingsModal = () => {
     setEditPreset(true)
   }
 
-  const canUseImages = createMemo(() => {
-    const access = user.sub?.tier.imagesAccess || user.user?.admin
-    return (
-      settings.config.serverConfig?.imagesEnabled &&
-      access &&
-      settings.config.serverConfig?.imagesModels?.length > 0
-    )
-  })
-
   const presetOptions = createMemo(() =>
     getPresetOptions(presets.list, { builtin: true, base: true })
   )
-
-  createEffect(
-    on(
-      () => ctx.cfg(),
-      (cfg) => {
-        if (!cfg) return
-        ctx.update({ ...init, ...cfg })
-      }
-    )
-  )
-
-  createEffect(
-    on(
-      () => user.user?.imageDefaults,
-      (next) => {
-        if (!next) return
-        ctx.updateDefaults(next)
-      }
-    )
-  )
-
-  createEffect(() => {
-    userStore.updatePartialConfig({ imageDefaults: ctx.defaults }, true)
-  })
 
   const subclass = 'flex flex-col gap-4'
 
@@ -138,10 +70,10 @@ export const ImageSettingsModal = () => {
       <RootModal
         maxWidth="half"
         show={settings.showImgSettings}
-        close={() => settingStore.imageSettings(false)}
+        close={() => imageStore.imageSettings(false)}
         footer={
           <>
-            <Button onClick={() => settingStore.imageSettings(false)}>
+            <Button onClick={() => imageStore.imageSettings(false)}>
               <X /> Close
             </Button>
             <Button onClick={() => save(ctx.tab.current(), ctx.store, entity)}>
@@ -196,11 +128,11 @@ export const ImageSettingsModal = () => {
                 size="sm"
                 class="w-fit"
                 onClick={() =>
-                  chatStore.editChat(entity.chat?._id!, { imageSource: ctx.currentEditing() })
+                  chatStore.editChat(entity.chat?._id!, { imageSource: ctx.state.editing })
                 }
               >
                 <Show
-                  when={ctx.currentSource() === ctx.currentEditing()}
+                  when={ctx.state.source === ctx.state.editing}
                   fallback={`Use ${ctx.tab.current()} Settings`}
                 >
                   Use {ctx.tab.current()} Settings (Active)
@@ -243,14 +175,14 @@ export const ImageSettingsModal = () => {
 
           <Select
             fieldName="imageType"
-            items={ctx.hosts()}
+            items={ctx.state.hosts}
             value={ctx.store.type ?? 'horde'}
             onChange={(value) => ctx.update('type', value.value as any)}
             class="!py-1"
             inline
           />
 
-          <Show when={canUseImages() && ctx.store.type === 'agnai'}>
+          <Show when={ctx.state.canUseImages && ctx.store.type === 'agnai'}>
             <FormLabel
               label="Use Recommended Settings"
               helperText="Use the image model's recommended settings when available."
@@ -335,7 +267,7 @@ export const ImageSettingsModal = () => {
             min={5}
             max={128}
             step={1}
-            value={ctx.store.steps ?? ctx.agnaiModel()?.init.steps ?? 50}
+            value={ctx.store.steps ?? ctx.state.agnaiModel?.init.steps ?? 50}
             label="Sampling Steps"
             onChange={(ev) => ctx.update('steps', ev)}
           />
@@ -345,7 +277,7 @@ export const ImageSettingsModal = () => {
             min={0}
             max={4}
             step={1}
-            value={ctx.store.clipSkip ?? ctx.agnaiModel()?.init.clipSkip ?? 0}
+            value={ctx.store.clipSkip ?? ctx.state.agnaiModel?.init.clipSkip ?? 0}
             label="Clip Skip"
             onChange={(ev) => ctx.update('clipSkip', ev)}
           />
@@ -355,7 +287,7 @@ export const ImageSettingsModal = () => {
             min={256}
             max={1280}
             step={128}
-            value={ctx.store.width ?? ctx.agnaiModel()?.init.width ?? 1024}
+            value={ctx.store.width ?? ctx.state.agnaiModel?.init.width ?? 1024}
             label="Image Width"
             onChange={(ev) => ctx.update('width', ev)}
           />
@@ -365,14 +297,14 @@ export const ImageSettingsModal = () => {
             min={256}
             max={1280}
             step={128}
-            value={ctx.store.height ?? ctx.agnaiModel()?.init.height ?? 1024}
+            value={ctx.store.height ?? ctx.state.agnaiModel?.init.height ?? 1024}
             label="Image Height"
             onChange={(ev) => ctx.update('height', ev)}
           />
 
           <InlineRangeInput
             fieldName="imageCfg"
-            value={ctx.store.cfg ?? ctx.agnaiModel()?.init.cfg ?? 9}
+            value={ctx.store.cfg ?? ctx.state.agnaiModel?.init.cfg ?? 9}
             label="Guidance Scale"
             min={1}
             max={10}
@@ -448,7 +380,7 @@ async function save(tab: string, store: ImageSettings, entity: any) {
   switch (tab) {
     case 'Shared': {
       await userStore.updatePartialConfig({ images: store })
-      settingStore.imageSettings(false)
+      imageStore.imageSettings(false)
       return
     }
 
@@ -466,6 +398,8 @@ async function save(tab: string, store: ImageSettings, entity: any) {
       return
   }
 }
+
+export type ChatImageSettings = ReturnType<ReturnType<typeof useCurrentChatImageSettings>>
 
 export function useCurrentChatImageSettings() {
   const isChat = isChatPage()

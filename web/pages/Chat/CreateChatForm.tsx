@@ -58,7 +58,7 @@ const CreateChatForm: Component<{
   const nav = useNavigate()
 
   const scen = scenarioStore((s) => s.scenarios)
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ config: s.config }))
   const user = userStore((s) => ({ ...s.user, sub: s.sub, userLevel: s.userLevel }))
   const chars = characterStore((s) => ({
     char: s.editing,

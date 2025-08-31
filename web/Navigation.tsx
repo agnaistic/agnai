@@ -41,6 +41,7 @@ import {
   announceStore,
   audioStore,
   characterStore,
+  imageStore,
   inviteStore,
   pageStore,
   settingStore,
@@ -71,7 +72,10 @@ const Navigation: Component = () => {
   let content: any
 
   const page = pageStore()
-  const state = settingStore()
+  const state = settingStore((s) => ({
+    config: s.config,
+  }))
+
   const user = userStore()
   const size = useWindowSize()
   const pane = usePaneManager()
@@ -257,7 +261,9 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const page = pageStore()
-  const menu = settingStore()
+  const menu = settingStore((s) => ({
+    config: s.config,
+  }))
 
   const guidance = createMemo(() => {
     const usable = menu.config.subs.some((sub) => sub.guidance)
@@ -272,7 +278,7 @@ const UserNavigation: Component = () => {
       <div class="flex flex-col gap-1 px-2">
         <UserProfile />
 
-        <Show when={menu.flags.chub}>
+        <Show when={page.flags.chub}>
           <MultiItem>
             <Item href="/chub" ariaLabel="Character hub">
               <ShoppingBag aria-hidden="true" />
@@ -308,7 +314,7 @@ const UserNavigation: Component = () => {
           </EndItem>
         </MultiItem>
 
-        <Show when={menu.flags.sounds}>
+        <Show when={page.flags.sounds}>
           <Sounds />
         </Show>
 
@@ -353,7 +359,6 @@ const GuestNavigation: Component = () => {
   const menu = settingStore((s) => ({
     config: s.config,
     guest: s.guestAccessAllowed,
-    flags: s.flags,
   }))
 
   return (
@@ -375,7 +380,7 @@ const GuestNavigation: Component = () => {
 
           <CharacterLink />
 
-          <Show when={menu.flags.chub}>
+          <Show when={page.flags.chub}>
             <Item href="/chub" ariaLabel="Character hub">
               <ShoppingBag aria-hidden="true" />
               CHUB
@@ -406,7 +411,7 @@ const GuestNavigation: Component = () => {
             </EndItem>
           </MultiItem>
 
-          <Show when={menu.flags.sounds}>
+          <Show when={page.flags.sounds}>
             <Sounds />
           </Show>
         </Show>
@@ -460,12 +465,12 @@ const NavIcons: Component<{
           <HelpCircle aria-hidden="true" />
         </Item>
 
-        <Item onClick={() => settingStore.modal(true)} ariaLabel="Open settings page">
+        <Item onClick={() => pageStore.settings(true)} ariaLabel="Open settings page">
           <Settings aria-hidden="true" />
         </Item>
 
         <Item
-          onClick={() => settingStore.openImageGen()}
+          onClick={() => imageStore.openImageGen()}
           ariaLabel="Image Generation"
           tooltip="Image Generation"
         >
@@ -530,8 +535,8 @@ const NavIcons: Component<{
   )
 }
 
-function onItemClick(onClick?: () => void, menuOpen?: boolean) {
-  return () => {
+function onItemClick(onClick?: () => void) {
+  return (menuOpen?: boolean) => {
     onClick?.()
 
     if (menuOpen) return
@@ -552,7 +557,7 @@ const Item: Component<{
   tipClass?: string
   disabled?: boolean
 }> = (props) => {
-  const clicked = onItemClick(props.onClick, props.menuOpen)
+  const clicked = onItemClick(props.onClick)
 
   return (
     <Tooltip
@@ -570,7 +575,7 @@ const Item: Component<{
             'gap-4': !props.class?.includes('gap-'),
             'min-h-[2.25rem]': !props.class?.includes('h-'),
           }}
-          onClick={onItemClick(props.onClick, props.menuOpen)}
+          onClick={() => clicked(props.menuOpen)}
           tabindex={0}
           role="button"
           aria-label={props.ariaLabel}
@@ -772,7 +777,7 @@ export const UserProfile = () => {
             size="sm"
             aria-label="Open impersonation menu"
             onClick={() => {
-              settingStore.toggleImpersonate(true)
+              pageStore.toggleImpersonate(true)
               if (menu.showMenu) pageStore.closeMenu()
             }}
           >
@@ -847,7 +852,7 @@ export const SubCTA: Component<{
   children?: any
   onClick?: () => void
 }> = (props) => {
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config }))
   const [, setSearch] = useSearchParams()
 
   const openSubPage = () => {

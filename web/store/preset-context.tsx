@@ -133,7 +133,7 @@ export function PresetStateProvider(props: { children: any }) {
 export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ config: s.config }))
   const user = userStore()
 
   const [state, setState, models, setModels] = opts?.anonymous

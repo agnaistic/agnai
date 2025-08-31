@@ -813,7 +813,7 @@ export function asyncFrame() {
 
 export function useUsableServices() {
   const users = getStore('user')()
-  const cfg = getStore('settings')()
+  const cfg = getStore('settings')((s) => ({ config: s.config }))
 
   const services = createMemo(() => {
     const list: AIAdapter[] = []

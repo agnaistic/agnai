@@ -17,7 +17,7 @@ import { wait } from '/common/util'
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
   const store = userStore()
-  const cfg = settingStore()
+  const cfg = settingStore((s) => ({ config: s.config }))
   const [query] = useSearchParams()
 
   const [register, setRegister] = createSignal(false)
@@ -168,7 +168,7 @@ const LoginForm: Component<FormProps> = (props) => {
   const navigate = useNavigate()
   const [query] = useSearchParams()
   const loc = useLocation()
-  const state = settingStore()
+  const state = settingStore((s) => ({ config: s.config, initLoading: s.initLoading }))
   const user = userStore()
 
   const [error, setError] = createSignal<string>()

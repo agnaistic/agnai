@@ -13,14 +13,7 @@ import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
-import {
-  characterStore,
-  chatStore,
-  pageStore,
-  presetStore,
-  settingStore,
-  userStore,
-} from '../../store'
+import { characterStore, chatStore, pageStore, presetStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
@@ -409,7 +402,7 @@ const ChatDetail: Component = () => {
 
       if (ev.key === 'i' || ev.code === 'KeyI') {
         ev.preventDefault()
-        settingStore.toggleImpersonate(true)
+        pageStore.toggleImpersonate(true)
       }
 
       if (ev.key === 'a' || ev.code == 'KeyA') {

@@ -27,7 +27,7 @@ export { PresetSettings as default }
 type TempSetting = AdapterSetting & { value: any }
 
 const PresetSettings: Component<PresetProps & { noSave: boolean }> = (props) => {
-  const settings = settingStore()
+  const settings = settingStore((s) => ({ config: s.config }))
   const pane = usePaneManager()
   const [search, setSearch] = useSearchParams()
   const [tab, setTab] = createSignal(+(search.preset_tab ?? '0'))

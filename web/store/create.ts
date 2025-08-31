@@ -15,6 +15,7 @@ import type { presetStore } from './presets'
 import type { scenarioStore } from './scenario'
 import type { audioStore } from './audio'
 import type { promptStore } from './prompt'
+import type { imageStore } from './images'
 
 type StoreMap = {
   user: typeof userStore
@@ -31,6 +32,7 @@ type StoreMap = {
   audio: typeof audioStore
   prompt: typeof promptStore
   page: typeof pageStore
+  image: typeof imageStore
 }
 
 type HandlerReturn<S> =

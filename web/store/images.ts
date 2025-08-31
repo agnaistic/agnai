@@ -1,6 +1,97 @@
 import { v4 } from 'uuid'
 import { imageApi } from './data/image'
 import { storage } from '../shared/util'
+import { ImageCacheHook } from '../shared/hooks'
+import { ButtonSchema } from '../shared/Button'
+import { createStore } from './create'
+import { debug } from '/common/debug'
+
+const log = debug('image-cache')
+
+export type ImageSource = {
+  type: 'collection' | 'url' | 'message'
+  messageId?: string
+  id: string
+  initial?: number
+  prompt?: string
+}
+
+export type ImageButton = {
+  schema: ButtonSchema
+  text: string
+  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
+}
+
+export type ImageState = {
+  showImgSettings: boolean
+
+  imggen: {
+    show: boolean
+    prompt?: string
+    action?: {
+      text: string
+      handler: (image: string) => void
+    }
+  }
+
+  showImage?: {
+    src: ImageSource
+    options: ImageButton[]
+    onClose?: () => void
+  }
+}
+
+export const imageStore = createStore<ImageState>('images', {
+  imggen: { show: false },
+  showImgSettings: false,
+})(() => {
+  return {
+    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton }) => {
+      return {
+        showImage: {
+          options: opts?.handler ? [opts.handler] : [],
+          src: {
+            type: 'collection',
+            id: '', // No ID = ephemeral
+            initial: 0,
+            prompt: opts?.prompt || '',
+          },
+        },
+      }
+    },
+    closeImageGen: () => {
+      return { showImage: undefined }
+    },
+    imageSettings({ showImgSettings }, next?: boolean) {
+      if (next === undefined) {
+        return { showImgSettings: !showImgSettings }
+      }
+
+      return { showImgSettings: next }
+    },
+    showImage(_, opts: { src: ImageSource; actions?: ImageButton[]; onClose?: () => void }) {
+      return { showImage: { src: opts.src, options: opts.actions || [], onClose: opts.onClose } }
+    },
+    showMessageImages(prev, opts: { id: string; position?: number }) {
+      if (prev.showImage) return
+
+      return {
+        showImage: {
+          src: {
+            type: 'message',
+            id: `message-images-${opts.id}`,
+            initial: opts.position,
+            messageId: opts.id,
+          },
+          options: [],
+        },
+      }
+    },
+    clearImage() {
+      return { showImage: undefined }
+    },
+  }
+})
 
 // const store = lf.createInstance({ name: `agnai-images` })
 
@@ -30,7 +121,7 @@ export function createImageCache(collection: string): ImageReel {
 }
 
 async function getImageIds(collection: string): Promise<string[]> {
-  console.log(`[img-cache] loading ${collection}`)
+  log(`loading %s`, collection)
   const json = await storage.getItem(`${collection}`)
   if (!json) return []
 

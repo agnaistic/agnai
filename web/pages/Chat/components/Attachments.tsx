@@ -1,7 +1,7 @@
 import { Component, createMemo, For, Show } from 'solid-js'
 import { ContextState } from '/web/store/context'
 import { AppSchema } from '/common/types'
-import { msgStore, settingStore } from '/web/store'
+import { imageStore, msgStore } from '/web/store'
 import { CircleX } from 'lucide-solid'
 import Tooltip from '/web/shared/Tooltip'
 
@@ -31,14 +31,14 @@ export const MessageAttachments: Component<{ ctx: ContextState; msg: AppSchema.C
               class="max-h-8 cursor-pointer rounded-md sm:max-h-12"
               src={image}
               onClick={() =>
-                settingStore.showImage({
+                imageStore.showImage({
                   src: { type: 'url', id: image },
                   actions: [
                     {
                       schema: 'warning',
                       text: 'Remove',
                       onClick: () => {
-                        settingStore.clearImage()
+                        imageStore.clearImage()
                         msgStore.removeAttachment(props.msg._id, index())
                       },
                     },

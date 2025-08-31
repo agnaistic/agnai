@@ -3,7 +3,7 @@ import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
-import { settingStore, userStore } from '../../store'
+import { pageStore, userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
@@ -35,18 +35,18 @@ enum MainTab {
 type Tab = keyof typeof MainTab
 
 export const SettingsModal = () => {
-  const state = settingStore()
+  const state = pageStore((s) => ({ showSettings: s.showSettings }))
   const [footer, setFooter] = createSignal<any>()
   return (
     <RootModal
       title="Settings"
       show={state.showSettings}
-      close={() => settingStore.modal(false)}
+      close={() => pageStore.settings(false)}
       fixedHeight
       maxWidth="half"
       footer={
         <>
-          <Button schema="secondary" onClick={() => settingStore.modal(false)}>
+          <Button schema="secondary" onClick={() => pageStore.settings(false)}>
             Close
           </Button>
           {footer()}
