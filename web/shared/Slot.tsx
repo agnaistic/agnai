@@ -482,7 +482,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     ez: [],
   },
   leaderboard: {
-    platform: 'container',
+    platform: 'page',
     sm: { size: '320x50', id: 'agn-leaderboard-sm', fuseId: '23194815330' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg', fuseId: '23194815330' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl', fuseId: '23194815330' },
