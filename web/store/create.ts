@@ -1,6 +1,7 @@
 import create, { StoreApi } from 'zustand/vanilla'
 import * as solidstore from 'solid-js/store'
 import { onCleanup } from 'solid-js'
+import type { pageStore } from './page'
 import type { userStore } from './user'
 import type { chatStore } from './chat'
 import type { toastStore } from './toasts'
@@ -29,6 +30,7 @@ type StoreMap = {
   scenario: typeof scenarioStore
   audio: typeof audioStore
   prompt: typeof promptStore
+  page: typeof pageStore
 }
 
 type HandlerReturn<S> =

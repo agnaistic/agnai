@@ -42,6 +42,7 @@ import {
   audioStore,
   characterStore,
   inviteStore,
+  pageStore,
   settingStore,
   toastStore,
   userStore,
@@ -69,6 +70,7 @@ const Navigation: Component = () => {
   let parent: any
   let content: any
 
+  const page = pageStore()
   const state = settingStore()
   const user = userStore()
   const size = useWindowSize()
@@ -92,14 +94,19 @@ const Navigation: Component = () => {
     )
   )
 
-  createEffect(() => {
-    if (isChat()) return
-    const platform = size.platform()
+  createEffect(
+    on(
+      () => isChat(),
+      () => {
+        if (isChat()) return
+        const platform = size.platform()
 
-    if (platform === 'xl' && !state.showMenu) {
-      settingStore.menu(true)
-    }
-  })
+        if (platform === 'xl' && !page.showMenu) {
+          pageStore.menu(true)
+        }
+      }
+    )
+  )
 
   const suffix = createMemo(() => (user.userLevel > 0 ? '+' : ''))
 
@@ -134,11 +141,11 @@ const Navigation: Component = () => {
 
   return (
     <>
-      <Show when={!state.showMenu && dismissable()}>
+      <Show when={!page.showMenu && dismissable()}>
         <div
           class="icon-button absolute left-2 top-4 z-50 rounded-md px-2 py-2"
           style={{ background: getRgbaFromVar('bg-700', 0.3)?.background }}
-          onClick={() => settingStore.menu(true)}
+          onClick={() => pageStore.menu(true)}
           classList={{ hidden: !isChat() }}
         >
           <Menu />
@@ -148,8 +155,8 @@ const Navigation: Component = () => {
         ref={parent}
         class={`drawer bg-800 flex flex-col gap-2 pt-2`}
         classList={{
-          flex: !state.showMenu,
-          'drawer--hide': dismissable() && !state.showMenu,
+          flex: !page.showMenu,
+          'drawer--hide': dismissable() && !page.showMenu,
           'drawer--pane-open': pane.showing(),
         }}
         role="navigation"
@@ -161,7 +168,7 @@ const Navigation: Component = () => {
               class="icon-button flex w-2/12 justify-start p-1"
               onClick={() => {
                 if (!dismissable()) return
-                settingStore.menu()
+                pageStore.menu()
               }}
             >
               <Menu classList={{ hidden: !dismissable() }} />
@@ -249,6 +256,7 @@ const Navigation: Component = () => {
 
 const UserNavigation: Component = () => {
   const user = userStore()
+  const page = pageStore()
   const menu = settingStore()
 
   const guidance = createMemo(() => {
@@ -329,7 +337,7 @@ const UserNavigation: Component = () => {
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
           user={user}
-          showMenu={menu.showMenu}
+          showMenu={page.showMenu}
           mode={user.ui.mode}
         />
       </div>
@@ -341,8 +349,8 @@ const UserNavigation: Component = () => {
 
 const GuestNavigation: Component = () => {
   const user = userStore()
+  const page = pageStore()
   const menu = settingStore((s) => ({
-    showMenu: s.showMenu,
     config: s.config,
     guest: s.guestAccessAllowed,
     flags: s.flags,
@@ -407,7 +415,7 @@ const GuestNavigation: Component = () => {
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
           user={user}
-          showMenu={menu.showMenu}
+          showMenu={page.showMenu}
           mode={user.ui.mode}
         />
       </div>
@@ -477,7 +485,7 @@ const NavIcons: Component<{
 
         <Item
           onClick={() => {
-            if (props.showMenu) settingStore.closeMenu()
+            if (props.showMenu) pageStore.closeMenu()
             toastStore.modal(true)
           }}
           ariaLabel="Show notification list"
@@ -528,8 +536,8 @@ function onItemClick(onClick?: () => void, menuOpen?: boolean) {
 
     if (menuOpen) return
 
-    const { showMenu } = settingStore.getState()
-    if (showMenu) settingStore.closeMenu()
+    const { showMenu } = pageStore.getState()
+    if (showMenu) pageStore.closeMenu()
   }
 }
 
@@ -610,7 +618,7 @@ const SubItem: Component<{
         href={props.href!}
         class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 pl-4 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
         onClick={() => {
-          if (settingStore.getState().showMenu) settingStore.closeMenu()
+          if (pageStore.getState().showMenu) pageStore.closeMenu()
         }}
         role="button"
         aria-label={props.ariaLabel}
@@ -722,7 +730,7 @@ const ChatLink = () => {
 export const UserProfile = () => {
   const chars = characterStore()
   const user = userStore()
-  const menu = settingStore()
+  const menu = pageStore()
 
   return (
     <>
@@ -735,7 +743,7 @@ export const UserProfile = () => {
         <Item
           ariaLabel="Edit user profile"
           onClick={() => {
-            if (menu.showMenu) settingStore.closeMenu()
+            if (menu.showMenu) pageStore.closeMenu()
             soundEmitter.emit('menu-item-clicked', 'profile')
             userStore.modal(true)
           }}
@@ -765,7 +773,7 @@ export const UserProfile = () => {
             aria-label="Open impersonation menu"
             onClick={() => {
               settingStore.toggleImpersonate(true)
-              if (menu.showMenu) settingStore.closeMenu()
+              if (menu.showMenu) pageStore.closeMenu()
             }}
           >
             Persona
@@ -802,7 +810,7 @@ const EndItem: Component<{ children: any }> = (props) => {
 
 const Slots: Component = (props) => {
   const [ref, onRef] = useRef()
-  const state = settingStore()
+  const page = pageStore()
   const { load } = useResizeObserver()
 
   createEffect(() => {
@@ -815,7 +823,7 @@ const Slots: Component = (props) => {
   createEffect(() => {
     if (rendered()) return
 
-    if (state.showMenu) {
+    if (page.showMenu) {
       setTimeout(() => setRendered(true), 500)
     }
   })

@@ -11,7 +11,7 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
 import { ButtonSchema } from '../shared/Button'
-import { canUsePane, ImageCacheHook, isMobile } from '../shared/hooks'
+import { ImageCacheHook } from '../shared/hooks'
 import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
@@ -47,7 +47,6 @@ export type SettingState = {
     ttl: number
   }
 
-  showMenu: boolean
   showImpersonate: boolean
   config: AppSchema.AppConfig
 
@@ -92,7 +91,6 @@ export type SettingState = {
 
   slotsLoaded: boolean
   slots: { publisherId: string; provider?: 'google' | 'ez' | 'fuse' } & Record<string, any>
-  overlay: boolean
 
   confirm?: {
     title?: string
@@ -118,7 +116,6 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   cfg: { loading: false, ttl: 0 },
-  showMenu: isMobile() || location.search.includes('callback=') ? false : true,
   showImpersonate: false,
   models: [],
   workers: [],
@@ -150,7 +147,6 @@ const initState: SettingState = {
   imggen: { show: false },
   slotsLoaded: false,
   slots: { publisherId: '' },
-  overlay: false,
 }
 
 export const settingStore = createStore<SettingState>(
@@ -339,16 +335,7 @@ export const settingStore = createStore<SettingState>(
         setTimeout(() => settingStore.init(), 2500)
       }
     },
-    toggleOverlay({ overlay }, next?: boolean) {
-      return { overlay: next === undefined ? !overlay : next }
-    },
-    menu({ showMenu }, next?: boolean) {
-      return { showMenu: next ?? !showMenu, overlay: next ?? !showMenu }
-    },
-    closeMenu: () => {
-      if (canUsePane()) return
-      return { showMenu: false, overlay: false }
-    },
+
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }
     },

@@ -95,7 +95,7 @@ homeTour.addSteps([
         text: 'Back',
         classes: 'btn btn-primary',
         action: async () => {
-          await getStore('settings').menu(true)
+          await getStore('page').menu(true)
           homeTour.back()
         },
       },
@@ -103,7 +103,7 @@ homeTour.addSteps([
         text: 'Next',
         classes: 'btn btn-primary',
         action: async () => {
-          await getStore('settings').closeMenu()
+          await getStore('page').closeMenu()
           homeTour.next()
         },
       },
@@ -123,7 +123,7 @@ homeTour.addSteps([
         text: 'Back',
         classes: 'btn btn-primary',
         action: async () => {
-          await getStore('settings').menu(true)
+          await getStore('page').menu(true)
           homeTour.back()
         },
       },

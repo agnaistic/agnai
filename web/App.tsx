@@ -46,6 +46,7 @@ import { ImageSettingsModal } from './pages/Settings/Image/ImageSettings'
 import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
+import { pageStore } from './store'
 
 const App: Component = () => {
   const state = userStore()
@@ -126,6 +127,7 @@ const App: Component = () => {
 }
 
 const Layout: Component<{ children?: any }> = (props) => {
+  const page = pageStore()
   const state = userStore()
   const cfg = settingStore()
 
@@ -165,8 +167,8 @@ const Layout: Component<{ children?: any }> = (props) => {
             id="main-content"
             class="w-full overflow-y-auto overflow-x-hidden"
             classList={{
-              'sm:ml-[320px]': cfg.showMenu,
-              'sm:ml-0': !cfg.showMenu,
+              'sm:ml-[320px]': page.showMenu,
+              'sm:ml-0': !page.showMenu,
             }}
             data-background
             style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
@@ -241,8 +243,8 @@ const Layout: Component<{ children?: any }> = (props) => {
       <SettingsModal />
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-20 sm:hidden"
-        classList={{ hidden: !cfg.showMenu }}
-        onClick={() => settingStore.closeMenu()}
+        classList={{ hidden: !page.showMenu }}
+        onClick={() => pageStore.closeMenu()}
       ></div>
       <Show when={!!cfg.confirm}>
         <Modal

@@ -8,7 +8,7 @@ import {
   setComponentPageTitle,
   uniqueBy,
 } from '../../shared/util'
-import { announceStore, chatStore, settingStore, userStore } from '../../store'
+import { announceStore, chatStore, pageStore, settingStore, userStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
 import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
@@ -61,7 +61,7 @@ const HomePage: Component = () => {
 
     emitter.on('loaded', () => {
       if (!canStartTour('home')) return
-      settingStore.menu(true)
+      pageStore.menu(true)
       startTour('home')
     })
   })

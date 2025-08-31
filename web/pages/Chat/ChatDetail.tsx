@@ -13,7 +13,14 @@ import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
-import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  pageStore,
+  presetStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
@@ -284,7 +291,7 @@ const ChatDetail: Component = () => {
     updateTitle(charName ? `Chat with ${charName || '...'}` : 'Chat')
 
     if (charName && canStartTour('chat')) {
-      settingStore.menu(true)
+      pageStore.menu(true)
       setTimeout(() => {
         startTour('chat')
       }, 500)

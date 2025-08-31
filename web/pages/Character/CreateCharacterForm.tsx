@@ -12,6 +12,7 @@ import {
   chatStore,
   userStore,
   settingStore,
+  pageStore,
 } from '../../store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
@@ -150,7 +151,7 @@ export const CreateCharacterForm: Component<{
     characterStore.clearCharacter()
 
     if (canStartTour('char')) {
-      settingStore.closeMenu()
+      pageStore.closeMenu()
     }
 
     startTour('char')
