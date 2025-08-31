@@ -299,7 +299,7 @@ const Slot: Component<{
 
   createEffect(
     on(
-      () => [cfg.ready, props.parent, user.disableSlots, ref, cfg.provider],
+      () => [cfg.ready, props.parent, user.disableSlots, ref, cfg.provider, cfg.config],
       async () => {
         if (!cfg.ready) {
           log('Not ready')
