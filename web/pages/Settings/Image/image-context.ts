@@ -7,7 +7,6 @@ import { isChatPage } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
 import { AppSchema } from '/common/types'
-import { debug } from '/common/debug'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
