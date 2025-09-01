@@ -215,6 +215,7 @@ export async function getAllChats(userId: string, shallow?: boolean) {
         characters: 1,
         createdAt: 1,
         updatedAt: 1,
+        genPreset: 1,
         'character.name': 1,
       }
 

@@ -262,10 +262,6 @@ const ChatDetail: Component = () => {
         }
 
         if (params.id !== chats.chat?._id) {
-          if (chats.listChat) {
-            presetSet.loadChat(chats.listChat)
-          }
-
           chatStore.openChat(params.id, {
             onDone: async (success, chat) => {
               if (success && chat) {
