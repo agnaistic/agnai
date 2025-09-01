@@ -47,7 +47,7 @@ const initState: ChubState = {
   nsfw: getStoredValue('chub-nsfw', false),
   tags: '',
   excludeTags: '',
-  sort: getStoredValue('chub-sort', 'Creation Date'),
+  sort: getStoredValue('chub-sort', 'Download Count'),
   search: '',
   chars: [],
   books: [],

@@ -1,7 +1,7 @@
 import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
-import ChubNavigation from './ChubNavigation'
+import ChubNavigation, { ChubPager } from './ChubNavigation'
 import { AppSchema } from '/common/types'
 import Loading from '/web/shared/Loading'
 
@@ -13,6 +13,7 @@ const BookList: Component<{
   return (
     <>
       <ChubNavigation page="books" />
+      <ChubPager page="books" />
       <Show when={state.booksLoading}>
         <div class="flex w-full justify-center">
           <Loading />
@@ -36,6 +37,7 @@ const BookList: Component<{
           <For each={new Array(4 - state.books.length)}>{() => <div></div>}</For>
         </Show>
       </div>
+      <ChubPager page="chars" />
     </>
   )
 }

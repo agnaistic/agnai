@@ -95,9 +95,65 @@ const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
   )
 }
 
+export const ChubPager: Component<{ page: 'books' | 'chars' }> = (props) => {
+  const state = chubStore((s) => ({ search: s.search, page: s.page }))
+
+  const update = (page?: number) => {
+    if (page !== undefined) {
+      chubStore.setPage(page)
+    }
+
+    chubStore.getEntities(props.page)
+  }
+
+  return (
+    <div class="flex justify-center gap-2">
+      <Button
+        schema="secondary"
+        class="rounded-xl"
+        onClick={() => {
+          if (state.page > 1) {
+            chubStore.setPage(state.page - 1)
+            update()
+          }
+        }}
+      >
+        <ArrowLeft size={16} />
+      </Button>
+
+      <div class="w-12">
+        <TextInput
+          class="py-1"
+          fieldName="number"
+          value={state.page}
+          onChange={(ev) => {
+            const n = +ev.currentTarget.value
+            if (!isNaN(n) && n !== 0) {
+              chubStore.setPage(n)
+              update()
+            }
+          }}
+        />
+      </div>
+      <Button
+        schema="secondary"
+        class="rounded-xl"
+        onClick={() => {
+          // if (state.chars.length % 48 == 0) {
+          // }
+          chubStore.setPage(state.page + 1)
+          update()
+        }}
+      >
+        <ArrowRight size={16} />
+      </Button>
+    </div>
+  )
+}
+
 export default ChubNavigation
 
-const Tags: Component = () => {
+const Tags = () => {
   const state = chubStore((s) => ({ tags: s.tags, officialTags: s.officialTags }))
   const [search, setSearch] = useSearchParams()
 
