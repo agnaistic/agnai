@@ -269,7 +269,7 @@ const ChatDetail: Component = () => {
           chatStore.openChat(params.id, {
             onDone: async (success, chat) => {
               if (success && chat) {
-                await Promise.all([presetSet.loadChat(chat), presetStore.getTemplates(true)])
+                await Promise.all([presetSet.loadChat(chat, true), presetStore.getTemplates(true)])
                 return
               }
 

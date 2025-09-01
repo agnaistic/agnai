@@ -1,6 +1,13 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { AllChat, characterStore, chatStore, quickCreateChat } from '../../store'
+import {
+  AllChat,
+  characterStore,
+  chatStore,
+  pageStore,
+  presetStore,
+  quickCreateChat,
+} from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
@@ -26,6 +33,7 @@ import Loading from '/web/shared/Loading'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
 import { on } from 'solid-js'
+import { toMap } from '/common/util'
 
 const baseSortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -57,6 +65,7 @@ const CharacterChats: Component = () => {
       characterId: chat.characterId,
       characters: toChatListState(s.allChars.map, chat),
       messageCount: chat.messageCount,
+      genPreset: chat.genPreset,
     })),
     chars: s.allChars.map,
   }))
@@ -264,6 +273,9 @@ const Chats: Component<{
 }> = (props) => {
   const [showDelete, setDelete] = createSignal('')
 
+  const pages = pageStore((s) => ({ flags: s.flags }))
+  const presets = presetStore((s) => ({ map: toMap(s.presets) }))
+
   const groups = createMemo(() => {
     const chars = props.charId ? props.chars.filter((ch) => ch._id === props.charId) : props.chars
 
@@ -327,6 +339,11 @@ const Chats: Component<{
                           </Show>
                           <span class="flex text-xs italic text-[var(--text-600)]">
                             {toDuration(new Date(chat.updatedAt))} ago
+                            <Show when={pages.flags.debug}>
+                              {' '}
+                              {chat.genPreset?.slice(0, 4)}{' '}
+                              {presets.map[chat.genPreset || ''] ? 'ok' : 'bad'}{' '}
+                            </Show>
                             <Show when={chat.messageCount !== undefined}>
                               &nbsp;({chat.messageCount})
                             </Show>

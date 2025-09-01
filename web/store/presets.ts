@@ -1,3 +1,4 @@
+import { v4 } from 'uuid'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { downloadJson, storage } from '../shared/util'
@@ -144,9 +145,14 @@ export const presetStore = createStore<PresetState>(
     },
     async *createPreset(
       { presets },
-      preset: PresetCreate,
+      preset: PresetCreate & { _id?: string },
       onSuccess?: (preset: AppSchema.UserGenPreset) => void
     ) {
+      const payload = { ...preset }
+      if (isDefaultPreset(payload._id)) {
+        payload._id = v4()
+      }
+
       yield { saving: true }
       const res = await presetApi.createPreset(preset)
       yield { saving: false }

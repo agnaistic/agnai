@@ -1,5 +1,5 @@
-import { Component, For, Show, createEffect, createMemo, on } from 'solid-js'
-import { chatStore, presetStore, settingStore, toastStore, userStore } from '/web/store'
+import { Component, For, Show, createMemo } from 'solid-js'
+import { settingStore, toastStore, userStore } from '/web/store'
 import { CustomSelect } from '../CustomSelect'
 import { getSubscriptionModelLimits } from '/common/util'
 import {
@@ -9,7 +9,6 @@ import {
 } from '/common/types/presets'
 import { SubCTA } from '/web/Navigation'
 import { createEmitter } from '../util'
-import { isDefaultPreset } from '/common/default-preset'
 import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
@@ -44,47 +43,19 @@ export const AgnaisticSettings: Component<{
       return
     }
 
-    presetStore.updatePreset(props.state._id, { providerModels: next })
+    props.setters.upsert({
+      quiet: true,
+      onCreated: (preset) => {
+        toastStore.success('Preset created')
+
+        if (!appctx.chat?._id) return
+        props.setters.change({ chatId: appctx.chat._id, presetId: preset._id })
+      },
+      onUpdated: () => toastStore.success('Model updated'),
+    })
+
+    // presetStore.updatePreset(props.state._id, { providerModels: next })
   }
-
-  createEffect(
-    on(
-      () => [
-        props.state?.providerModels?.agnaistic,
-        props.state.registered?.agnaistic?.subscriptionId,
-      ],
-      (id) => {
-        if (!id) return
-
-        if (isDefaultPreset(props.state._id)) {
-          props.setters.upsert({
-            quiet: true,
-            onCreated: (preset) => {
-              if (!props.page) {
-                toastStore.success('Preset created')
-                return
-              }
-
-              const chatId = appctx.chat?._id
-              if (!chatId) return
-              chatStore.assignChatPreset(chatId, props.state._id)
-            },
-            onUpdated: () => {
-              toastStore.success('Preset updated')
-            },
-          })
-          return
-        }
-
-        if (!props.state?._id || !id) return
-        if (props.state._id !== props.state._id) return
-
-        const curr =
-          props.state.providerModels?.agnaistic ?? props.state.registered?.agnaistic?.subscriptionId
-        if (id === curr) return
-      }
-    )
-  )
 
   const emitter = createEmitter('close')
 

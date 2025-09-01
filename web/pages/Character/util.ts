@@ -21,6 +21,7 @@ export type ChatLine = {
   updatedAt: string
   characterId: string
   messageCount?: number
+  genPreset: string | undefined
 }
 
 export type SortType =

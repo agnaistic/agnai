@@ -198,7 +198,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     setContext('hides', hides)
   }
 
-  const loadChat = async (chat: AppSchema.Chat) => {
+  const loadChat = async (chat: AppSchema.Chat, alert?: boolean) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
     if (chat.genPreset && state._id === chat.genPreset) {
       log(`load-by-chat called --> preset already loaded`)
@@ -213,7 +213,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       })
     )
 
-    let preset = await loadPresetId(chat.genPreset || '')
+    let preset = await loadPresetId(chat.genPreset || '', alert)
     loadModels()
     onStateUpdated('load-chat')
 
@@ -224,17 +224,18 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     if (chat?._id && !chat.genPreset && preset?._id) {
       // If the chat has no preset configured, we need to assign one
-      getStore('chat').assignChatPreset(chat._id, preset._id, () =>
+      getStore('chat').assignChatPreset(chat._id, preset._id, () => {
+        if (isDefaultPreset(preset._id)) return
         toastStore.info('Assigned preset to chat')
-      )
+      })
     }
   }
 
-  const loadPresetId = async (presetId: string) => {
+  const loadPresetId = async (presetId: string, alert?: boolean) => {
     if (!presetId) {
       const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
-      await load({ ...fallback, _id: 'agnaistic' })
-      return { ...fallback, _id: 'agnaistic' }
+      await load({ ...fallback, _id: 'agnai' })
+      return { ...fallback, _id: 'agnai' }
     }
 
     if (isDefaultPreset(presetId)) {
@@ -261,11 +262,13 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     if (preset) return preset
 
-    toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
+    // if (alert) {
+    //   toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
+    // }
 
     const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
-    await load({ ...fallback, _id: 'agnaistic' })
-    return { ...fallback, _id: 'agnaistic' }
+    await load({ ...fallback, _id: 'agnai' })
+    return { ...fallback, _id: 'agnai' }
   }
 
   const load = async (preset: Partial<AppSchema.UserGenPreset> | undefined) => {
