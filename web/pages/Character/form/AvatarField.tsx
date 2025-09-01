@@ -9,11 +9,10 @@ import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import TextInput from '/web/shared/TextInput'
 import { Regenerate } from './Regenerate'
 import Button from '/web/shared/Button'
-import { characterStore, UserState } from '/web/store'
+import { characterStore } from '/web/store'
 import Divider from '/web/shared/Divider'
 
 export const AvatarField: Component<{
-  user: UserState
   editor: CharEditor
   image: () => string | undefined
   setImageUrl: (url: string | undefined) => void
@@ -74,7 +73,7 @@ export const AvatarField: Component<{
             </div>
           </Match>
         </Switch>
-        <ReelControl user={props.user} editor={props.editor} loading={state.avatar.loading} />
+        <ReelControl editor={props.editor} loading={state.avatar.loading} />
       </div>
       <div class="flex w-full flex-col gap-2">
         <Switch>

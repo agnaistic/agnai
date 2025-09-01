@@ -102,6 +102,7 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   providerModels: {},
   tokenizer: '',
   registered: {},
+  postUserRole: false,
 })
 
 const initModels = (): ModelState => ({
@@ -134,7 +135,7 @@ export type PresetFuncs = ReturnType<typeof usePresetContext>[1]
 
 export function usePresetContext(opts?: { anonymous: boolean }) {
   const cfg = settingStore((s) => ({ config: s.config }))
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
 
   const [state, setState, models, setModels] = opts?.anonymous
     ? [...createStore(initPreset()), ...createStore(initModels())]

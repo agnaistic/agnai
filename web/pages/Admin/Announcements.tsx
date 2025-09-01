@@ -34,7 +34,7 @@ const AnnoucementPage: Component = () => {
 }
 
 const AnnoucementList: Component = (props) => {
-  const state = announceStore()
+  const state = announceStore((s) => ({ admin: s.admin }))
   const nav = useNavigate()
 
   onMount(() => {

@@ -8,7 +8,7 @@ import Loading from '/web/shared/Loading'
 const BookList: Component<{
   setBook: (book: AppSchema.MemoryBook, fullPath: string) => void
 }> = (props) => {
-  const state = chubStore()
+  const state = chubStore((s) => ({ books: s.books, booksLoading: s.booksLoading }))
 
   return (
     <>

@@ -6,7 +6,7 @@ import { adminStore, settingStore } from '/web/store'
 
 export const Voice: Component = (props) => {
   const settings = settingStore((s) => s.config)
-  const state = adminStore()
+  const state = adminStore((s) => ({ config: s.config }))
 
   return (
     <Card bg="bg-500">

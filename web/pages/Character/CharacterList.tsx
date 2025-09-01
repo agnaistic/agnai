@@ -62,7 +62,7 @@ const CharacterList: Component = () => {
 
   const chats = chatStore((s) => s.allChats)
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
 
   const state = chatStore((s) => {
     const allChars: ListCharacter[] = s.allChars.list

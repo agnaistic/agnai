@@ -125,8 +125,8 @@ const ParticipantsList: Component<{
   charId: string
   edit: (charId: string) => void
 }> = (props) => {
-  const self = userStore()
-  const state = chatStore()
+  const self = userStore((s) => ({ user: s.user, profile: s.profile }))
+  const state = chatStore((s) => ({ active: s.active }))
 
   const lists = useParticipantList()
 
@@ -237,8 +237,8 @@ const ParticipantsList: Component<{
 }
 
 const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
-  const state = chatStore()
-  const chars = characterStore()
+  const state = chatStore((s) => ({ active: s.active }))
+  const chars = characterStore((s) => ({ characters: s.characters }))
 
   onMount(() => {
     if (!chars.characters.loaded) {
@@ -288,7 +288,7 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
 
 const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
   let ref: any
-  const state = chatStore()
+  const state = chatStore((s) => ({ active: s.active }))
 
   const [userId, setUserId] = createSignal('')
 

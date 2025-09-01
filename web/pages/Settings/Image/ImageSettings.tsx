@@ -3,7 +3,7 @@ import Divider from '../../../shared/Divider'
 import { InlineRangeInput } from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
-import { characterStore, chatStore, imageStore, presetStore, userStore } from '../../../store'
+import { chatStore, imageStore, presetStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
@@ -11,7 +11,6 @@ import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
 import { Pencil, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
-import { ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
 import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './ServiceSettings'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -23,8 +22,10 @@ import { usePresetContext } from '/web/store/preset-context'
 import { useImageContext } from './image-context'
 
 export const ImageSettingsModal = () => {
+  const isChat = isChatPage(true)
   const [ctx] = useImageContext()
-  const settings = imageStore()
+  const settings = imageStore((s) => ({ showImgSettings: s.showImgSettings }))
+
   const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
   const [presetFooter, setPresetFooter] = createSignal<any>()
   const presets = presetStore((s) => ({
@@ -39,19 +40,7 @@ export const ImageSettingsModal = () => {
 
   const [editPreset, setEditPreset] = createSignal(false)
 
-  const toggleDefaults = (next: boolean) =>
-    ctx.updateDefaults({
-      size: next,
-      affixes: next,
-      sampler: next,
-      guidance: next,
-      steps: next,
-      negative: next,
-    })
-
   const isAllEnabled = createMemo(() => Array.from(Object.values(ctx.defaults)).every((v) => !!v))
-
-  const isChat = isChatPage(true)
 
   const editPresetClicked = () => {
     if (!ctx.store.summaryPresetId) return
@@ -76,7 +65,7 @@ export const ImageSettingsModal = () => {
             <Button onClick={() => imageStore.imageSettings(false)}>
               <X /> Close
             </Button>
-            <Button onClick={() => save(ctx.tab.current(), ctx.store, entity)}>
+            <Button onClick={() => ctx.save()}>
               <Save /> Save
             </Button>
           </>
@@ -188,7 +177,11 @@ export const ImageSettingsModal = () => {
               helperText="Use the image model's recommended settings when available."
             />
             <div class="flex flex-wrap justify-center gap-2">
-              <ToggleButton size="sm" value={isAllEnabled()} onChange={(ev) => toggleDefaults(ev)}>
+              <ToggleButton
+                size="sm"
+                value={isAllEnabled()}
+                onChange={(ev) => ctx.toggleDefaults(ev)}
+              >
                 Toggle All
               </ToggleButton>
               <ToggleButton
@@ -374,29 +367,6 @@ export const ImageSettingsModal = () => {
       </Modal>
     </>
   )
-}
-
-async function save(tab: string, store: ImageSettings, entity: any) {
-  switch (tab) {
-    case 'Shared': {
-      await userStore.updatePartialConfig({ images: store })
-      imageStore.imageSettings(false)
-      return
-    }
-
-    case 'Chat': {
-      chatStore.editChat(entity.chat?._id!, { imageSettings: store })
-      return
-    }
-
-    case 'Character': {
-      characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: store })
-      return
-    }
-
-    default:
-      return
-  }
 }
 
 export type ChatImageSettings = ReturnType<ReturnType<typeof useCurrentChatImageSettings>>

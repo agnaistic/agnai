@@ -92,9 +92,25 @@ const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] 
 export function ContextProvider(props: { children: any }) {
   const [state, setState] = createStore(initial)
 
-  const chars = characterStore()
-  const chats = chatStore()
-  const users = userStore()
+  const chars = characterStore((s) => ({
+    chatChars: s.chatChars,
+    characters: s.characters,
+    impersonating: s.impersonating,
+  }))
+  const chats = chatStore((s) => ({
+    active: s.active,
+    allChats: s.allChats,
+    lastChatId: s.lastChatId,
+    allChars: s.allChars,
+    chatProfiles: s.chatProfiles,
+    promptHistory: s.promptHistory,
+  }))
+  const users = userStore((s) => ({
+    current: s.current,
+    ui: s.ui,
+    profile: s.profile,
+    user: s.user,
+  }))
   const cfg = settingStore((s) => ({ anonymize: s.anonymize, config: s.config }))
   const msgs = msgStore((s) => ({
     graph: s.graph,
@@ -103,7 +119,7 @@ export function ContextProvider(props: { children: any }) {
     hordeStatus: s.hordeStatus,
     attachments: s.attachments,
   }))
-  const page = pageStore()
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(

@@ -20,6 +20,14 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           onChange={(ev) => props.setters.setState('skipRoleMerging', ev)}
         />
 
+        <Toggle
+          label="Ensure Last Role is User"
+          helperMarkdown={`Chat completions: When enabled, the \`{{post}}\` amble will be sent as a USER role, instead of ASSISTANT.
+          Fixes DeepSeek 3.1 issues.`}
+          value={props.state.postUserRole}
+          onChange={(ev) => props.setters.setState('postUserRole', ev)}
+        />
+
         <TextInput
           fieldName="cfgOppose"
           label="CFG Opposing Prompt"

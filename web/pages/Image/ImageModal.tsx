@@ -305,7 +305,7 @@ const PromptSettings: Component<{
   children: any
   footer: any
 }> = (props) => {
-  const persist = promptStore()
+  const persist = promptStore((s) => ({ imageHint: s.imageHint }))
 
   const fullImagePrompt = createMemo(() => {
     const parts = [props.settings?.prefix, props.state.prompt, props.settings?.suffix]

@@ -163,6 +163,7 @@ export namespace AppSchema {
       guidance: boolean
       steps: boolean
     }
+
     useRecommendedImages?: string // 'all' | 'except-(size|affix|negative)' | 'none'
 
     adapterConfig?: { [key in AIAdapter]?: Record<string, any> }

@@ -18,11 +18,12 @@ export { ServerConfiguration as default }
 
 const ServerConfiguration: Component = () => {
   let form: HTMLFormElement
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
+  const state = adminStore((s) => ({ config: s.config }))
+
   const nav = useNavigate()
   const [search, setSearch] = useSearchParams()
 
-  const state = adminStore()
   const tab = useTabs(['General', 'Images', 'Voice'], +(search.cfg_tab || '0'))
 
   createEffect(() => {

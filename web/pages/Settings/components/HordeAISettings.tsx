@@ -150,8 +150,8 @@ const HordeAISettings: Component<{
 export default HordeAISettings
 
 export const HordeDetails: Component<{ maxTokens: number; maxContextLength: number }> = (props) => {
-  const user = userStore()
-  const cfg = settingStore((c) => c.config.horde)
+  const user = userStore((s) => ({ user: s.user }))
+  const cfg = settingStore((c) => ({ horde: c.config.horde }))
 
   const status = createMemo(() => {
     const m = new Set(
@@ -166,7 +166,7 @@ export const HordeDetails: Component<{ maxTokens: number; maxContextLength: numb
     let excluded = 0
     let unwanted = 0
 
-    const matches = cfg.workers.filter((wrk) => {
+    const matches = cfg.horde.workers.filter((wrk) => {
       if (m.size > 0) {
         if (!wrk.models.some((model) => m.has(model))) {
           unwanted++
@@ -199,7 +199,7 @@ export const HordeDetails: Component<{ maxTokens: number; maxContextLength: numb
     <>
       <div class="text-lg font-bold">Horde Status</div>
       Number of Horde Workers that match your preset: {status().matches.length} /{' '}
-      {cfg.workers.length}.<br />
+      {cfg.horde.workers.length}.<br />
       Workers excluded by your Max Tokens ({props.maxTokens}) / Max Context Length (
       {props.maxContextLength}): {status().excluded}
     </>
@@ -274,7 +274,7 @@ export const HordeWorkerModal: Component<{
     workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
   }))
 
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user }))
 
   const [selected, setSelected] = createSignal<Option[]>()
 

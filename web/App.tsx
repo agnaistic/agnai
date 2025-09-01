@@ -26,7 +26,6 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import Settings, { SettingsModal } from './pages/Settings'
 import ProfilePage, { ProfileModal } from './pages/Profile'
 import { useCharacterBg, usePaneManager } from './shared/hooks'
-import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { css, getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
@@ -49,9 +48,9 @@ import { GlobalFileInput } from './shared/GlobalFileInput'
 import { pageStore } from './store'
 
 const App: Component = () => {
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user, loggedIn: s.loggedIn }))
   const cfg = settingStore((s) => ({ config: s.config }))
-  const page = pageStore()
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   return (
     <Router root={Layout}>
@@ -128,8 +127,12 @@ const App: Component = () => {
 }
 
 const Layout: Component<{ children?: any }> = (props) => {
-  const page = pageStore()
-  const state = userStore()
+  const page = pageStore((s) => ({
+    showMenu: s.showMenu,
+    confirm: s.confirm,
+    showImpersonate: s.showImpersonate,
+  }))
+  const state = userStore((s) => ({ ui: s.ui, banned: s.banned }))
   const cfg = settingStore((s) => ({
     init: s.init,
     initLoading: s.initLoading,
@@ -143,7 +146,6 @@ const Layout: Component<{ children?: any }> = (props) => {
 
     return getMaxChatWidth(state.ui.chatWidth)
   })
-  const rootModals = rootModalStore()
 
   const reload = () => {
     settingStore.init()
@@ -241,7 +243,6 @@ const Layout: Component<{ children?: any }> = (props) => {
       <ProfileModal />
       <BannedModal />
       <GlobalFileInput />
-      <For each={rootModals.modals}>{(modal) => modal.element}</For>
       <ImageModal />
       <ImageSettingsModal />
       <SettingsModal />
@@ -292,17 +293,17 @@ const Layout: Component<{ children?: any }> = (props) => {
 }
 
 const InfoModal: Component = (props) => {
-  const state = rootModalStore()
+  const state = pageStore((s) => ({ info: s.info }))
 
   return (
     <Modal
-      title={state.infoTitle || 'Information'}
-      show={state.info}
-      close={() => rootModalStore.closeInfo()}
+      title={state.info?.title || 'Information'}
+      show={!!state.info?.content}
+      close={() => pageStore.closeInfo()}
       maxWidth="half"
     >
-      <Show when={typeof state.info === 'string'} fallback={state.info}>
-        <div class="markdown" innerHTML={markdown.makeHtml(state.info)} />
+      <Show when={typeof state.info === 'string'} fallback={state.info?.content}>
+        <div class="markdown" innerHTML={markdown.makeHtml(state.info?.content)} />
       </Show>
     </Modal>
   )

@@ -108,7 +108,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   //   })
   // }
 
-  messages.push({ role: 'assistant', content: `${postContent}${prefill}` })
+  const role = req.settings?.postUserRole ? 'user' : 'assistant'
+  messages.push({ role, content: `${postContent}${prefill}` })
 
   return { messages, assembled }
 }

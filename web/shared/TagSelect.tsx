@@ -16,7 +16,7 @@ const TagSelect: Component<{
   label?: string
   helperText?: string | JSX.Element
 }> = (props) => {
-  const state = tagStore()
+  const state = tagStore((s) => ({ filter: s.filter, tags: s.tags, hidden: s.hidden }))
 
   const [opts, setOpts] = createSignal(false)
 

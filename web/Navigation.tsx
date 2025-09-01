@@ -37,7 +37,6 @@ import {
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
-  UserState,
   announceStore,
   audioStore,
   characterStore,
@@ -71,15 +70,13 @@ const Navigation: Component = () => {
   let parent: any
   let content: any
 
-  const page = pageStore()
-  const state = settingStore((s) => ({
-    config: s.config,
-  }))
+  const page = pageStore((s) => ({ showMenu: s.showMenu }))
+  const state = settingStore((s) => ({ config: s.config }))
+  const user = userStore((s) => ({ userLevel: s.userLevel, loggedIn: s.loggedIn }))
 
-  const user = userStore()
   const size = useWindowSize()
   const pane = usePaneManager()
-  const nav = navStore()
+  const nav = navStore((s) => ({ body: s.body, header: s.header, title: s.title }))
 
   const [subnav, setSubnav] = createSignal(false)
   const isChat = isChatPage()
@@ -259,8 +256,8 @@ const Navigation: Component = () => {
 }
 
 const UserNavigation: Component = () => {
-  const user = userStore()
-  const page = pageStore()
+  const user = userStore((s) => ({ user: s.user }))
+  const page = pageStore((s) => ({ flags: s.flags, showMenu: s.showMenu }))
   const menu = settingStore((s) => ({
     config: s.config,
   }))
@@ -342,9 +339,7 @@ const UserNavigation: Component = () => {
         <NavIcons
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
-          user={user}
           showMenu={page.showMenu}
-          mode={user.ui.mode}
         />
       </div>
 
@@ -354,8 +349,7 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const user = userStore()
-  const page = pageStore()
+  const page = pageStore((s) => ({ flags: s.flags, showMenu: s.showMenu }))
   const menu = settingStore((s) => ({
     config: s.config,
     guest: s.guestAccessAllowed,
@@ -419,9 +413,7 @@ const GuestNavigation: Component = () => {
         <NavIcons
           supportEmail={menu.config.serverConfig?.supportEmail}
           patreon={menu.config.patreon}
-          user={user}
           showMenu={page.showMenu}
-          mode={user.ui.mode}
         />
       </div>
 
@@ -433,16 +425,15 @@ const GuestNavigation: Component = () => {
 const NavIcons: Component<{
   patreon?: boolean
   supportEmail?: string
-  user: UserState
   showMenu: boolean
-  mode: 'light' | 'dark'
 }> = (props) => {
-  const invites = inviteStore()
-  const toasts = toastStore()
-  const announce = announceStore()
+  const invites = inviteStore((s) => ({ invites: s.invites }))
+  const toasts = toastStore((s) => ({ unseen: s.unseen }))
+  const announce = announceStore((s) => ({ list: s.list }))
+  const user = userStore((s) => ({ user: s.user, ui: s.ui }))
 
   const count = createMemo(() => {
-    const threshold = new Date(props.user.user?.announcement || 0).toISOString()
+    const threshold = new Date(user.user?.announcement || 0).toISOString()
     const unseen = announce.list.filter(
       (l) => l.location === 'notification' && l.showAt > threshold
     )
@@ -480,10 +471,10 @@ const NavIcons: Component<{
         <Item
           ariaLabel="Toggle between light and dark mode"
           onClick={() => {
-            userStore.saveUI({ mode: props.user.ui.mode === 'light' ? 'dark' : 'light' })
+            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
         >
-          <Show when={props.user.ui.mode === 'dark'} fallback={<Sun />}>
+          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
             <Moon aria-hidden="true" />
           </Show>
         </Item>
@@ -523,10 +514,10 @@ const NavIcons: Component<{
         </Show>
 
         <ExternalLink href="https://discord.agnai.chat" newtab ariaLabel="Discord">
-          <Show when={props.mode === 'dark'}>
+          <Show when={user.ui.mode === 'dark'}>
             <DiscordLightIcon />
           </Show>
-          <Show when={props.mode === 'light'}>
+          <Show when={user.ui.mode === 'light'}>
             <DiscordDarkIcon />
           </Show>
         </ExternalLink>
@@ -670,7 +661,7 @@ const Library: Component<{}> = (props) => {
 }
 
 const Sounds: Component<{}> = (props) => {
-  const audioSettings = audioStore()
+  const audioSettings = audioStore((s) => ({ tracks: s.tracks }))
 
   return (
     <MultiItem>
@@ -733,9 +724,9 @@ const ChatLink = () => {
 }
 
 export const UserProfile = () => {
-  const chars = characterStore()
-  const user = userStore()
-  const menu = pageStore()
+  const chars = characterStore((s) => ({ impersonating: s.impersonating }))
+  const user = userStore((s) => ({ profile: s.profile }))
+  const menu = pageStore((s) => ({ showMenu: s.showMenu }))
 
   return (
     <>
@@ -815,8 +806,9 @@ const EndItem: Component<{ children: any }> = (props) => {
 
 const Slots: Component = (props) => {
   const [ref, onRef] = useRef()
-  const page = pageStore()
   const { load } = useResizeObserver()
+
+  const page = pageStore((s) => ({ showMenu: s.showMenu }))
 
   createEffect(() => {
     const ele = ref()

@@ -27,7 +27,7 @@ import { startTour } from '/web/tours'
 import { createStore } from 'solid-js/store'
 
 export const ProfileModal: Component = () => {
-  const state = userStore()
+  const state = userStore((s) => ({ showProfile: s.showProfile }))
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
   const tabs = useTabs(['Profile', 'Subscription'], 0)
   const [search, setSearch] = useSearchParams()
@@ -94,10 +94,10 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   setComponentPageTitle('My profile')
   const nav = useNavigate()
-  const state = userStore()
-  const admin = adminStore()
+  const state = userStore((s) => ({ profile: s.profile, user: s.user }))
+  const admin = adminStore((s) => ({ impersonating: s.impersonating }))
   const settings = settingStore((s) => ({ config: s.config }))
-  const page = pageStore()
+  const page = pageStore((s) => ({ flags: s.flags }))
 
   const [handle, setHandle] = createSignal(state.profile?.handle || '')
   const [pass, setPass] = createSignal(false)
@@ -402,7 +402,7 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
 }
 
 const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user }))
   const [username, setUsername] = createSignal('')
 
   const deleteAccount = () => {

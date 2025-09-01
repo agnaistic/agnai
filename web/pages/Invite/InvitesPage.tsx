@@ -7,7 +7,7 @@ import { SolidCard } from '/web/shared/Card'
 
 const InvitesPage: Component = () => {
   setComponentPageTitle('Invites')
-  const state = inviteStore()
+  const state = inviteStore((s) => ({ invites: s.invites, profiles: s.profiles, chars: s.chars }))
   const nav = useNavigate()
 
   const accept = (inviteId: string) => {

@@ -16,7 +16,7 @@ export const CallToAction: Component<{
   width?: 'full' | 'fit'
 }> = (props) => {
   const [open, setOpen] = createSignal(true)
-  const user = userStore()
+  const user = userStore((s) => ({ userType: s.userType }))
 
   const canShow = createMemo(() => {
     if (!props.targets || props.targets === 'all') return true

@@ -34,7 +34,7 @@ export const NovelSettings: Component<{
   cfg: ImageSettings
   setter: SetStoreFunction<ImageSettings>
 }> = (props) => {
-  const state = userStore()
+  const state = userStore((s) => ({ user: s.user }))
 
   const isKeySet = createMemo(() => {
     const provider = state.user?.providers?.find((p) => p.provider === 'known-novel')

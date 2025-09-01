@@ -17,7 +17,7 @@ const EditMemoryPage = () => {
   const { updateTitle } = setComponentPageTitle('Memory book')
   const nav = useNavigate()
   const params = useParams()
-  const books = memoryStore()
+  const books = memoryStore((s) => ({ books: s.books }))
   const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBookWithEmptyEntry())
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {

@@ -38,7 +38,7 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
-  const chars = chatStore()
+  const chars = chatStore((s) => ({ allChars: s.allChars }))
   const [search, setSearch] = useSearchParams()
   const [, { onDragStart, onDragEnd }] = useDragDropContext()!
   const size = useResizeObserver()

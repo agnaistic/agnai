@@ -18,8 +18,8 @@ import { AppSchema } from '/common/types'
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
-  const state = adminStore()
-  const config = userStore()
+  const state = adminStore((s) => ({ users: s.users }))
+  const config = userStore((s) => ({ tiers: s.tiers }))
 
   const [code, setCode] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
@@ -131,7 +131,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   props
 ) => {
   let subId: any
-  const state = adminStore()
+  const state = adminStore((s) => ({ info: s.info }))
   const tiers = userStore((s) => ({ list: s.tiers }))
   const [session, setSession] = createSignal<Stripe.Checkout.Session>()
   const [manualId, setManualId] = createSignal(state.info?.manualSub?.tierId || '')

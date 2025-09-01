@@ -17,7 +17,12 @@ const sorts = [
 ]
 
 const FilterSettings: Component = () => {
-  const state = chubStore()
+  const state = chubStore((s) => ({
+    nsfw: s.nsfw,
+    tags: s.tags,
+    excludeTags: s.excludeTags,
+    sort: s.sort,
+  }))
 
   return (
     <div class="relative flex flex-col gap-2">

@@ -15,10 +15,10 @@ export function isDevCommand(value: string): value is DevCommand {
   return value in devCommands
 }
 
-export function devCycleAvatarSettings(user: UserState) {
+export function devCycleAvatarSettings(ui: UserState['ui']) {
   const originalSettings = {
-    avatarCorners: user.ui.avatarCorners,
-    avatarSize: user.ui.avatarSize,
+    avatarCorners: ui.avatarCorners,
+    avatarSize: ui.avatarSize,
   }
   const testedCornerSettings: UI.AvatarCornerRadius[] = ['md', 'circle']
   const settingPermutations = testedCornerSettings.flatMap((avatarCorners) =>

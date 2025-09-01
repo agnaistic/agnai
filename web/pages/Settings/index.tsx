@@ -69,7 +69,7 @@ export const SettingsPage = () => {
 
 const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   setComponentPageTitle('Settings')
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user, tiers: s.tiers, loggedIn: s.loggedIn }))
 
   const [query, setQuery] = useSearchParams()
   const [tab, setTab] = createSignal<number>(+(query.tab ?? '0'))

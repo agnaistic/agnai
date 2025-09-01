@@ -2,7 +2,7 @@ import { createStore } from 'solid-js/store'
 import { SD_SAMPLER } from '/common/image'
 import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
 import { createEffect, on } from 'solid-js'
-import { ImageSettings } from '/common/types/image-schema'
+import { ImageDefaults, ImageSettings } from '/common/types/image-schema'
 import { isChatPage } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
@@ -193,7 +193,7 @@ export function useImageContext() {
   }
 
   const save = () => {
-    saveImageSettings(tab.current(), cfg, entity)
+    saveImageSettings(tab.current(), cfg, entity, defaults)
   }
 
   return [
@@ -210,21 +210,34 @@ export function useImageContext() {
   ]
 }
 
-async function saveImageSettings(tab: string, store: ImageSettings, entity: any) {
+async function saveImageSettings(
+  tab: string,
+  store: ImageSettings,
+  entity: any,
+  defaults: ImageDefaults
+) {
   switch (tab) {
     case 'Shared': {
-      await userStore.updatePartialConfig({ images: store })
+      await userStore.updatePartialConfig({ images: store, imageDefaults: defaults })
       imageStore.imageSettings(false)
       return
     }
 
     case 'Chat': {
-      chatStore.editChat(entity.chat?._id!, { imageSettings: store })
+      await Promise.all([
+        chatStore.editChat(entity.chat?._id!, { imageSettings: store }),
+        userStore.updatePartialConfig({ imageDefaults: defaults }),
+      ])
+      imageStore.imageSettings(false)
       return
     }
 
     case 'Character': {
-      characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: store })
+      await Promise.all([
+        characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: store }),
+        userStore.updatePartialConfig({ imageDefaults: defaults }),
+      ])
+      imageStore.imageSettings(false)
       return
     }
 

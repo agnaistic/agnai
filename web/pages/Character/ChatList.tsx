@@ -356,7 +356,7 @@ const Chats: Component<{
 }
 
 const NoChats: Component<{ character?: string }> = (props) => {
-  const state = chatStore()
+  const state = chatStore((s) => ({ allLoaded: s.allLoaded }))
   return (
     <Show
       when={state.allLoaded}

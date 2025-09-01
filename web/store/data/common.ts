@@ -227,8 +227,8 @@ function getAuthedPromptEntities() {
 }
 
 export function useActivePreset() {
-  const chat = getStore('chat')()
-  const user = getStore('user')()
+  const chat = getStore('chat')((s) => ({ active: s.active }))
+  const user = getStore('user')((s) => ({ user: s.user }))
 
   const preset = createMemo(() => {
     if (!chat.active?.chat || !user.user) return

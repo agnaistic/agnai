@@ -10,7 +10,7 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
 ) => {
   let slotsRef: HTMLInputElement
 
-  const state = adminStore()
+  const state = adminStore((s) => ({ config: s.config }))
 
   const formatSlots = () => {
     try {

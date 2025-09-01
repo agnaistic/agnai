@@ -46,7 +46,7 @@ const UISettings: Component<{}> = () => {
     impersonating: s.impersonating,
   }))
   const settings = settingStore((s) => ({ anonymize: s.anonymize }))
-  const prompts = promptStore()
+  const prompts = promptStore((s) => ({ hintsEnabled: s.hintsEnabled }))
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))

@@ -10,7 +10,7 @@ export const SagaInput: Component<{
 }> = (props) => {
   let ref: HTMLTextAreaElement
 
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui }))
 
   const success = () => {
     ref.value = ''

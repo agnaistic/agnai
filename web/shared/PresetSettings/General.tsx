@@ -11,7 +11,7 @@ import { PresetTabProps } from '/web/store/preset-context'
 export const MODEL_FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const GeneralSettings: Component<PresetTabProps> = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user, userLevel: s.userLevel }))
 
   const subMax = createMemo(() => {
     const level = user.user?.admin ? Infinity : user.userLevel

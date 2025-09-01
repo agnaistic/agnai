@@ -9,7 +9,7 @@ const CharList: Component<{
   loading: () => void
   setChar: (char: NewCharacter, fullPath: string) => void
 }> = (props) => {
-  const state = chubStore()
+  const state = chubStore((s) => ({ charsLoading: s.charsLoading, chars: s.chars }))
 
   return (
     <>

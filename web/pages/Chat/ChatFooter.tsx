@@ -16,7 +16,7 @@ export const ChatFooter: Component<{
   requestMessage: (characterId: string) => void
   sendMessage: SendFunc
 }> = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ profile: s.profile }))
   const msgs = msgStore((s) => ({ waiting: s.waiting, attachments: s.attachments }))
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
   const chats = chatStore((s) => ({

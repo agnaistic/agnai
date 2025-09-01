@@ -41,7 +41,7 @@ export type ImageState = {
   }
 }
 
-export const imageStore = createStore<ImageState>('images', {
+export const imageStore = createStore<ImageState>('image', {
   imggen: { show: false },
   showImgSettings: false,
 })(() => {

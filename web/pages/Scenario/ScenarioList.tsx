@@ -9,7 +9,7 @@ import ImportScenarioModal from './components/ImportScenarioModal'
 import { Page } from '/web/Layout'
 
 const ScenarioList: Component = () => {
-  const scenarioState = scenarioStore()
+  const scenarioState = scenarioStore((s) => ({ loading: s.loading, scenarios: s.scenarios }))
   const nav = useNavigate()
 
   const [showImport, setShowImport] = createSignal(false)

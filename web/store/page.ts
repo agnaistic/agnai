@@ -24,6 +24,11 @@ export type PageState = {
     onConfirm?: () => void
   }
 
+  info?: {
+    content: any
+    title: string
+  }
+
   attach?: {
     show: boolean
     multiple: boolean
@@ -62,6 +67,13 @@ export const pageStore = createStore<PageState>('page', {
           callback: wrapped,
         },
       }
+    },
+
+    info(_, title: string, content: JSX.Element | string) {
+      return { info: { content, title } }
+    },
+    closeInfo() {
+      return { info: undefined }
     },
 
     settings({ showSettings }, show?: boolean) {

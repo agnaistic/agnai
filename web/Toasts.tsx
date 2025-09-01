@@ -20,9 +20,9 @@ const bgColor = {
 } satisfies { [key in Toast['type']]: string }
 
 const Notifications: Component = () => {
-  const announce = announceStore()
-  const user = userStore()
-  const state = toastStore()
+  const announce = announceStore((s) => ({ list: s.list }))
+  const user = userStore((s) => ({ user: s.user }))
+  const state = toastStore((s) => ({ modal: s.modal, toasts: s.toasts, history: s.history }))
 
   const bookmark = createMemo(() => new Date(user.user?.announcement || Date.now()))
   const [read, setRead] = createSignal('')

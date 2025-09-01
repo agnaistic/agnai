@@ -10,7 +10,10 @@ export const SoundpackPicker: Component<{
   helperText?: string
   level: SoundpackLevel
 }> = (props) => {
-  const audio = audioStore()
+  const audio = audioStore((s) => ({
+    soundpacks: s.soundpacks,
+    selectedSoundpacks: s.selectedSoundpacks,
+  }))
   const [selectedId, setSelectedId] = createSignal<string>(__none_soundpack__)
 
   const getSoundpackOptions = createMemo(() => {

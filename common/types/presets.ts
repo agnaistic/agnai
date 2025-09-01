@@ -157,6 +157,7 @@ export interface GenSettings {
   tokenHealing?: boolean
 
   skipRoleMerging?: boolean
+  postUserRole?: boolean
   disableNameStops?: boolean
   earlyStopping?: boolean
   stopSequences?: string[]

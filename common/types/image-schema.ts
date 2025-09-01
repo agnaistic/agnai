@@ -21,11 +21,22 @@ export type BaseImageSettings = {
   seed?: number
 }
 
+export type ImageDefaults = {
+  size: boolean
+  affixes: boolean
+  negative: boolean
+  sampler: boolean
+  guidance: boolean
+  steps: boolean
+}
+
 export type ImageSettings = BaseImageSettings & {
   novel: Omit<NovelSettings, 'type'>
   horde: Omit<HordeSettings, 'type'>
   sd: Omit<SDSettings, 'type'>
   agnai: Omit<AgnaiSettings, 'type'>
+
+  // defaults?: ImageDefaults
 }
 
 export type NovelSettings = {

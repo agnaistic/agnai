@@ -18,7 +18,7 @@ export const ModeDetail: Component<{
   splitHeight?: number
 }> = (props) => {
   const cfg = settingStore((s) => ({ config: s.config }))
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui, sub: s.sub }))
   const mode = usePane()
   const size = useWindowSize()
 

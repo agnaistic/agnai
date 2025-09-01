@@ -65,7 +65,7 @@ export const CreateCharacterForm: Component<{
   const [charLoading, setCharLoading] = createSignal(false)
   const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
   const [preset, presetSetters] = usePresetContext({ anonymous: true })
 
   const isPage = props.close === undefined
@@ -89,7 +89,7 @@ export const CreateCharacterForm: Component<{
 
   const editor = useCharEditor()
 
-  const tagState = tagStore()
+  const tagState = tagStore((s) => ({ tags: s.tags }))
   const state = characterStore((s) => {
     const edit = s.editing
 
@@ -458,7 +458,6 @@ export const CreateCharacterForm: Component<{
               </Card>
 
               <AvatarField
-                user={user}
                 editor={editor}
                 updateFile={updateFile}
                 showBuilder={setShowBuilder}

@@ -54,7 +54,7 @@ const ChatDetail: Component = () => {
   const pane = usePaneManager()
 
   const nav = useNavigate()
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui, profile: s.profile, user: s.user }))
   const chars = characterStore((s) => ({
     botMap: s.characters.map,
     ready: s.characters.loaded > 0 && s.chatChars.chatId === params.id,
@@ -302,7 +302,7 @@ const ChatDetail: Component = () => {
     if (isDevCommand(opts.msg)) {
       switch (opts.msg) {
         case '/devCycleAvatarSettings':
-          devCycleAvatarSettings(user)
+          devCycleAvatarSettings(user.ui)
           opts.onSuccess?.()
           return
 

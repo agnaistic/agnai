@@ -10,7 +10,6 @@ import {
   onMount,
 } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { ModalOptions, rootModalStore } from '../store/root-modal'
 import { useLocation, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
@@ -30,7 +29,7 @@ export function getPlatform() {
 
 export function usePresetOptions() {
   const presets = getStore('presets')((s) => s.presets)
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ user: s.user }))
 
   const options = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -506,7 +505,7 @@ export const usePaneManager = () => {
 }
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ ui: s.ui }))
 
   const bgStyle = createMemo(() => {
     // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
@@ -531,11 +530,6 @@ function isDefined<T>(value: T | undefined | null): value is T {
 
 function isFunction<T>(value: T | Function): value is Function {
   return typeof value === 'function'
-}
-
-export function useRootModal(modal: ModalOptions) {
-  onMount(() => rootModalStore.addModal(modal))
-  onCleanup(() => rootModalStore.removeModal(modal.id))
 }
 
 /**

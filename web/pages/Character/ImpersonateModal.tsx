@@ -17,7 +17,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
     defaultId: s.defaultImpersonateId,
     impersonating: s.impersonating,
   }))
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
 
   const onSelect = (char?: AppSchema.Character) => {
     const match = char ? state.chars.list.find((c) => c._id === char?._id) : undefined

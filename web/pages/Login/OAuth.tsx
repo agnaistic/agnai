@@ -5,7 +5,7 @@ import { userStore } from '/web/store'
 import { TitleCard } from '/web/shared/Card'
 
 const OAuthLogin: Component = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user }))
   const [query] = useSearchParams()
   const [error, setError] = createSignal<string>()
   const [state, setState] = createSignal<'init' | 'creating' | 'done'>('init')

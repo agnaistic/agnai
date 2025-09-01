@@ -37,8 +37,8 @@ const HomePage: Component = () => {
 
   const closeSub = () => setSub(Sub.None)
 
-  const user = userStore()
-  const announce = announceStore()
+  const user = userStore((s) => ({ userLevel: s.userLevel }))
+  const announce = announceStore((s) => ({ list: s.list }))
   const cfg = settingStore((cfg) => ({
     initLoading: cfg.initLoading,
     adapters: adaptersToOptions(cfg.config.adapters),

@@ -6,9 +6,6 @@ import { loadItem, localApi } from './storage'
 import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
 import { getImageData } from './image'
 import { replace } from '/common/util'
-import { TickHandler } from '/common/prompt'
-import { rootModalStore } from '../root-modal'
-import { genApi } from './inference'
 
 export const charsApi = {
   getCharacterDetail,
@@ -21,7 +18,6 @@ export const charsApi = {
   createCharacter,
   getImageBuffer: getFileBuffer,
   setFavorite,
-  publishCharacter,
 }
 
 async function getCharacterDetail(charId: string) {
@@ -38,27 +34,6 @@ async function getCharacterDetail(charId: string) {
   } else {
     return localApi.error(`Character not found`)
   }
-}
-
-async function publishCharacter(
-  char: Partial<AppSchema.Character>,
-  image: string | undefined,
-  onTick: TickHandler
-) {
-  const requestId = v4()
-
-  genApi.subscribe(requestId, (body, state, output) => {
-    onTick(body, state, output)
-    const info = Object.entries(output).reduce((prev, [key, value]) => {
-      prev.push(`\`${key}\`\n${value}`)
-      return prev
-    }, [] as string[])
-
-    rootModalStore.info('Moderation', info.join('\n***\n'))
-  })
-
-  const res = await api.post('/character/publish', { character: char, imageData: image, requestId })
-  return res
 }
 
 export async function getCharacters() {

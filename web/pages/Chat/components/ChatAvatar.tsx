@@ -4,7 +4,7 @@ import { getActiveBots } from '../util'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 
 export function useChatAvatars() {
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui }))
   const chars = characterStore((s) => ({
     allBots: s.characters.list,
     botMap: s.characters.map,

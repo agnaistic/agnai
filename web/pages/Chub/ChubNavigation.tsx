@@ -8,7 +8,7 @@ import { Combobox } from '/web/shared/Combobox'
 import { useSearchParams } from '@solidjs/router'
 
 const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
-  const state = chubStore()
+  const state = chubStore((s) => ({ search: s.search, page: s.page }))
 
   const update = (page?: number) => {
     if (page !== undefined) {
@@ -98,7 +98,7 @@ const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
 export default ChubNavigation
 
 const Tags: Component = () => {
-  const state = chubStore()
+  const state = chubStore((s) => ({ tags: s.tags, officialTags: s.officialTags }))
   const [search, setSearch] = useSearchParams()
 
   const addTag = (tag: string) => {

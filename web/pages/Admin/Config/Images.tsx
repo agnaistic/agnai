@@ -29,7 +29,7 @@ type Model = {
 
 export const Images: Component<{ models: Signal<AppSchema.ImageModel[]> }> = (props) => {
   const settings = settingStore((s) => s.config)
-  const state = adminStore()
+  const state = adminStore((s) => ({ config: s.config }))
 
   return (
     <Card bg="bg-800" class="flex flex-col gap-2" bgOpacity={1}>

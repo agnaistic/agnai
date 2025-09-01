@@ -22,7 +22,6 @@ import { presetStore, settingStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
-import { useRootModal } from '/web/shared/hooks'
 import { Page } from '/web/Layout'
 import PresetSettings from '/web/shared/PresetSettings'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -427,24 +426,19 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
     </>
   )
 
-  useRootModal({
-    id: 'replace-subscription',
-    element: (
-      <Modal show={props.show} close={props.close} title="Replace Subscription" footer={Footer}>
-        <form ref={form}>
-          <Select
-            items={replacements()}
-            fieldName="replacementId"
-            label="Replacement Subscription"
-            helperText="The subscription that will supercede the current subscription"
-            onChange={(ev) => setReplaceId(ev.value)}
-          />
-        </form>
-      </Modal>
-    ),
-  })
-
-  return null
+  return (
+    <Modal show={props.show} close={props.close} title="Replace Subscription" footer={Footer}>
+      <form ref={form}>
+        <Select
+          items={replacements()}
+          fieldName="replacementId"
+          label="Replacement Subscription"
+          helperText="The subscription that will supercede the current subscription"
+          onChange={(ev) => setReplaceId(ev.value)}
+        />
+      </form>
+    </Modal>
+  )
 }
 
 const Levels: Component<{
@@ -533,7 +527,7 @@ const EditPreset: Component<{
   select: (preset: AppSchema.SubscriptionModel) => void
 }> = (props) => {
   const params = useParams()
-  const state = presetStore()
+  const state = presetStore((s) => ({ subs: s.subs }))
   const [id, setId] = createSignal('')
 
   const select = () => {

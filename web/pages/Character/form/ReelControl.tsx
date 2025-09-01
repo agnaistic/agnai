@@ -3,12 +3,10 @@ import { Component, createEffect, createMemo, on, onMount, Show } from 'solid-js
 import { v4 } from 'uuid'
 import { CharEditor } from '../editor'
 import Button from '/web/shared/Button'
-import { imageStore, settingStore, UserState, userStore } from '/web/store'
+import { imageStore, settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 
-export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user: UserState }> = (
-  props
-) => {
+export const ReelControl: Component<{ editor: CharEditor; loading: boolean }> = (props) => {
   const createAvatar = async () => {
     imageStore.openImageGen({
       prompt: props.editor.state.appearance || '',
@@ -75,7 +73,7 @@ export const ReelControl: Component<{ editor: CharEditor; loading: boolean; user
 
 const ModelOverride: Component<{ state: string; setter: (override: string) => void }> = (props) => {
   const state = settingStore((s) => ({ models: s.config.serverConfig?.imagesModels || [] }))
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user, sub: s.sub }))
 
   const options = createMemo(() => {
     const list = state.models.map((m) => ({ label: m.desc, value: m.id || m.name }))

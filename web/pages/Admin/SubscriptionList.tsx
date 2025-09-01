@@ -28,7 +28,7 @@ const SubscriptionList: Component = () => {
     }
   })
 
-  const cfg = userStore()
+  const cfg = userStore((s) => ({ tiers: s.tiers }))
 
   const [deleting, setDeleting] = createSignal<string>()
   const subCats = createMemo(() => {

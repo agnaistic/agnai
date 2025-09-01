@@ -16,7 +16,7 @@ import { v4 } from 'uuid'
 export { EmbedContent as default }
 
 const EmbedContent: Component = (props) => {
-  const user = getStore('user')()
+  const user = getStore('user')((s) => ({ ui: s.ui }))
 
   const options = ['Article', 'PDF', 'Text file', 'Plain Text']
   const [store, setStore] = createStore({

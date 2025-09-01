@@ -77,8 +77,8 @@ const InputBar: Component<{
   const [ctx] = useAppContext()
   const [preset, setters] = usePresetContext()
 
-  const prompt = promptStore()
-  const user = userStore()
+  const prompt = promptStore((s) => ({ hintsEnabled: s.hintsEnabled, hint: s.hint }))
+  const user = userStore((s) => ({ user: s.user, profile: s.profile, ui: s.ui }))
   const state = msgStore((s) => ({
     lastMsg: s.msgs.reduceRight<ChatMessageExt>((prev, curr, i) => {
       if (prev) return prev
@@ -90,7 +90,7 @@ const InputBar: Component<{
     canCaption: s.canImageCaption,
   }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
-  const chars = characterStore()
+  const chars = characterStore((s) => ({ impersonating: s.impersonating }))
 
   useEffect(() => {
     const listener = (text: string) => {

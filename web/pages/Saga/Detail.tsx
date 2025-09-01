@@ -46,7 +46,7 @@ import { trimSentence } from '/common/util'
 import { getHeaderBg, sticky } from '/web/shared/util'
 
 export const SagaDetail: Component = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui, current: s.current }))
   const state = sagaStore((s) => {
     const responses = s.state.responses.map((res) => trimResponse(res, user.ui.trimSentences))
     const init = s.state.init ? trimResponse(s.state.init, user.ui.trimSentences) : undefined
@@ -223,7 +223,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 }
 
 const Header: Component<{ template: Saga.Template; session: Saga.Session }> = (props) => {
-  const user = userStore()
+  const user = userStore((s) => ({ ui: s.ui }))
   const header = createMemo(() => getHeaderBg(user.ui.mode))
   const [_, setParams] = useSearchParams()
   return (
@@ -251,7 +251,12 @@ const Footer: Component<{
   send: (text: string, onSuccess?: () => void) => void
   rendering: boolean
 }> = (props) => {
-  const state = sagaStore()
+  const state = sagaStore((s) => ({
+    busy: s.busy,
+    state: s.state,
+    template: s.template,
+    sessions: s.sessions,
+  }))
   const params = useParams()
   const nav = useNavigate()
 

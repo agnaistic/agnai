@@ -13,7 +13,7 @@ import { ModelList } from '/web/shared/PresetSettings/Agnaistic'
 
 export const SubscriptionPage: Component<{}> = (props) => {
   const settings = settingStore((s) => s.config)
-  const user = userStore()
+  const user = userStore((s) => ({ user: s.user, sub: s.sub, billingLoading: s.billingLoading }))
   const cfg = userStore((s) => {
     const tier = s.user ? getUserSubscriptionTier(s.user, s.tiers) : null
 

@@ -43,7 +43,7 @@ const PromptEditor: Component<
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
 
-  const presets = presetStore()
+  const presets = presetStore((s) => ({ templates: s.templates }))
 
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [template, setTemplate] = createSignal('')

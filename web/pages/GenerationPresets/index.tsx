@@ -199,7 +199,7 @@ const EditPreset: Component<{
   select: (preset: AppSchema.UserGenPreset) => void
 }> = (props) => {
   const params = useParams()
-  const state = presetStore()
+  const state = presetStore((s) => ({ presets: s.presets }))
 
   const select = () => {
     const preset = state.presets.find((preset) => preset._id === id())

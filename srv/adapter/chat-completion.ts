@@ -231,6 +231,7 @@ async function getPostInstruction(
   counter: TokenCounter
 ): Promise<CompletionItem[] | undefined> {
   let prefix = opts.parts.ujb ?? ''
+  const role = opts.gen.postUserRole ? 'user' : 'assistant'
 
   prefix = (
     await injectPlaceholders(prefix, {
@@ -288,7 +289,7 @@ async function getPostInstruction(
           content: prefix,
         },
         {
-          role: 'assistant',
+          role,
           content: `${opts.parts.prefill ?? ''}\n\n${appendName ? opts.replyAs.name : ''}:`.trim(),
         },
       ]
