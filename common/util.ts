@@ -1,7 +1,6 @@
 import { parseVariableName, StructureEntities } from './guidance/json-schema'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
-import { toMap } from '/web/shared/util'
 
 export const PING_INTERVAL_MS = 30000
 
@@ -818,4 +817,9 @@ export function inline(obj: object): string {
 
 function bold(text: string) {
   return `\x1b[1m${text}\x1b[0m`
+}
+
+export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
+  const map = list.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+  return map
 }
