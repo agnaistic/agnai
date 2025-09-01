@@ -142,7 +142,7 @@ const CompatModel: Selector = (props) => {
   const [customId, setCustomId] = createSignal('')
 
   const modelList = createMemo(() => {
-    const list = props.setters.models.list.map((value) => ({ label: value, value }))
+    const list = props.setters.context.list.map((value) => ({ label: value, value }))
 
     return [{ label: 'None', value: '' }].concat(list)
   })
@@ -155,7 +155,7 @@ const CompatModel: Selector = (props) => {
 
   const warning = createMemo(() => {
     if (!props.state.providerId) return
-    if (props.setters.models.loading) return
+    if (props.setters.context.loading) return
     if (modelList().length <= 1) return
 
     const modelId =
@@ -213,7 +213,7 @@ const CompatModel: Selector = (props) => {
             props.state.thirdPartyModel ||
             'Model - None selected'
           }
-          // disabled={props.setters.models.loading}
+          // disabled={props.setters.context.loading}
           footer={<SelectorFooter state={props.state} setters={props.setters} />}
         />
 
@@ -289,7 +289,7 @@ const OpenRouterModels: Selector = (props) => {
   const [customId, setCustomId] = createSignal('')
 
   const openRouterModels = createMemo(() => {
-    const list: OpenRouterModel[] = props.setters.models.data || []
+    const list: OpenRouterModel[] = props.setters.context.data || []
 
     const options = list
       .map((model) => ({
@@ -546,7 +546,7 @@ const FeatherlessModels: Selector = (props) => {
 
   const availableClasses = createMemo(() => {
     const seen = new Set<string>()
-    const list = (props.setters.models.data as FLModel[])
+    const list = (props.setters.context.data as FLModel[])
       .reduce((prev, curr) => {
         if (!curr.model_class || seen.has(curr.model_class)) return prev
         seen.add(curr.model_class)
@@ -572,7 +572,7 @@ const FeatherlessModels: Selector = (props) => {
     const id = props.state.providerId
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
-    const match = props.setters.models.data.find((s) => s.id === id)
+    const match = props.setters.context.data.find((s) => s.id === id)
     if (!match) return 'Model - None selected'
 
     return (
@@ -594,7 +594,7 @@ const FeatherlessModels: Selector = (props) => {
 
     const categories: Record<string, { name: string; options: CustomOption[] }> = {}
 
-    for (const model of props.setters.models.data) {
+    for (const model of props.setters.context.data) {
       // Skip models that cannot be used
       if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
         continue
@@ -660,7 +660,7 @@ const FeatherlessModels: Selector = (props) => {
 
   const availables = createMemo(() => {
     const map: Record<string, number> = {}
-    for (const model of props.setters.models.data) {
+    for (const model of props.setters.context.data) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
       }
@@ -1072,7 +1072,7 @@ const SelectorFooter: Component<{ children?: any; state: PresetState; setters: P
       <Show when={props.state}>
         <Button
           onClick={() => props.setters.refreshModels(true)}
-          disabled={props.setters.models.loading}
+          disabled={props.setters.context.loading}
         >
           <RefreshCcw size={20} />
           Refresh

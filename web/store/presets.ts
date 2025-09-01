@@ -11,8 +11,10 @@ import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { findOne, replace } from '/common/util'
 
 type PresetState = {
-  importing?: AppSchema.UserGenPreset
   presets: AppSchema.UserGenPreset[]
+  presetsLoaded: boolean
+
+  importing?: AppSchema.UserGenPreset
   templates: AppSchema.PromptTemplate[]
   subs: AppSchema.SubscriptionModel[]
   saving: boolean
@@ -22,6 +24,7 @@ type PresetState = {
 
 const initState: PresetState = {
   presets: [],
+  presetsLoaded: false,
   templates: [],
   subs: [],
   saving: false,
@@ -41,7 +44,7 @@ export const presetStore = createStore<PresetState>(
         preset.thirdPartyKey = ''
       }
 
-      presetStore.setState({ presets: init.presets })
+      presetStore.setState({ presets: init.presets, presetsLoaded: true })
     }
   })
 
@@ -61,7 +64,7 @@ export const presetStore = createStore<PresetState>(
             preset.thirdPartyKey = ''
           }
         }
-        return { presets: res.result.presets }
+        return { presets: res.result.presets, presetsLoaded: true }
       }
     },
     async *testConnection(

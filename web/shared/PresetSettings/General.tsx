@@ -35,7 +35,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         helperMarkdown={`When enabled your browser will make requests instead of Agnaistic.\n**NOTE**: Your chat will not support multiplayer.`}
         service={props.setters.context.service}
         format={props.setters.context.format}
-        hide={props.setters.hides.localRequests || !!props.state.providerId}
+        hide={props.setters.context.hides.localRequests || !!props.state.providerId}
         value={props.state.localRequests}
         onChange={(ev) => props.setters.setState('localRequests', ev)}
       />
@@ -47,7 +47,7 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
         value={props.state.thirdPartyUrlNoSuffix}
         service={props.setters.context.service}
         hide={
-          props.setters.hides.thirdPartyFormat ||
+          props.setters.context.hides.thirdPartyFormat ||
           props.setters.context.format === 'featherless' ||
           props.setters.context.format === 'arli'
         }

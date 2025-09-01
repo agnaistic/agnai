@@ -88,7 +88,6 @@ export const PresetProvider: Component<{
 
   const changeProvider = (id: string) => {
     props.setters.setState('providerId', id)
-
     props.setters.refreshModels()
 
     if (props.page !== 'mode' && props.page !== 'menu') {
@@ -372,7 +371,7 @@ const ThirdPartyUrl: Field = (props) => {
       value={props.state.thirdPartyUrl || ''}
       disabled={props.state.disabled}
       hide={
-        props.setters.hides.thirdPartyUrl ||
+        props.setters.context.hides.thirdPartyUrl ||
         props.state.thirdPartyFormat === 'featherless' ||
         props.state.thirdPartyFormat === 'mistral' ||
         props.state.thirdPartyFormat === 'gemini' ||

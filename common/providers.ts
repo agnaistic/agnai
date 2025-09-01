@@ -1,5 +1,6 @@
 import { AIAdapter, ThirdPartyFormat } from './adapters'
 import { AppSchema } from './types'
+import { Provider } from './types/presets'
 
 export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   claude: {
@@ -138,12 +139,21 @@ export type ProviderDefinition = {
 
 type ProviderCategory = 'custom' | 'known' | 'self' | 'agnai'
 
-export type PresetConnection = ReturnType<typeof getPresetConnection>
+export type PresetConnection = {
+  provider?: Provider
+  detail?: ProviderDefinition
+  category?: ProviderCategory
+  preset: AppSchema.UserGenPreset
+  service: AppSchema.UserGenPreset['service']
+  format?: ThirdPartyFormat
+  url?: string
+  key?: string
+}
 
 export function getPresetConnection(
   preset: Partial<AppSchema.GenSettings>,
   providers: AppSchema.Provider[] | undefined
-) {
+): PresetConnection {
   const copy = { ...preset } as AppSchema.UserGenPreset
   const provider = providers?.find((p) => p._id === preset.providerId)
   const validProviderId = preset.providerId && preset.providerId !== 'agnaistic' ? !!provider : true
@@ -158,8 +168,8 @@ export function getPresetConnection(
     copy.thirdPartyFormat = undefined
 
     return {
-      provider: undefined,
-      detail: undefined,
+      provider: undefined as Provider | undefined,
+      detail: undefined as ProviderDefinition | undefined,
       category: 'agnai' as ProviderCategory,
       preset: copy,
       service: 'agnaistic' as const,

@@ -43,7 +43,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           }
           value={props.state.cfgOppose || ''}
           disabled={props.state.disabled}
-          hide={props.setters.hides.cfgScale}
+          hide={props.setters.context.hides.cfgScale}
           onChange={(ev) => props.setters.setState('cfgOppose', ev.currentTarget.value)}
         />
 
@@ -62,7 +62,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
             { label: 'Off', value: 'off' },
           ]}
           value={props.state.phraseRepPenalty || 'aggressive'}
-          hide={props.setters.hides.phraseRepPenalty}
+          hide={props.setters.context.hides.phraseRepPenalty}
           onChange={(ev) => props.setters.setState('phraseRepPenalty', ev.value)}
         />
 
@@ -73,7 +73,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.tempLast ?? false}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.tempLast}
+          hide={props.setters.context.hides.tempLast}
           recommended={props.sub?.preset.tempLast}
           onChange={(ev) => props.setters.setState('tempLast', ev)}
         />
@@ -93,7 +93,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.mirostatToggle ?? false}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.mirostatLR}
+          hide={props.setters.context.hides.mirostatLR}
           format={props.setters.context.format}
           recommended={props.sub?.preset.mirostatToggle}
           onChange={(ev) => props.setters.setState('mirostatToggle', ev)}
@@ -106,7 +106,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.tokenHealing ?? true}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.tokenHealing}
+          hide={props.setters.context.hides.tokenHealing}
           format={props.setters.context.format}
           recommended={props.sub?.preset.tokenHealing}
           onChange={(ev) => props.setters.setState('tokenHealing', ev)}
@@ -118,7 +118,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.addBosToken ?? true}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.addBosToken}
+          hide={props.setters.context.hides.addBosToken}
           format={props.setters.context.format}
           recommended={props.sub?.preset.addBosToken}
           onChange={(ev) => props.setters.setState('addBosToken', ev)}
@@ -130,7 +130,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           value={props.state.banEosToken ?? false}
           disabled={props.state.disabled}
           service={props.setters.context.service}
-          hide={props.setters.hides.banEosToken}
+          hide={props.setters.context.hides.banEosToken}
           format={props.setters.context.format}
           recommended={props.sub?.preset.banEosToken}
           onChange={(ev) => props.setters.setState('banEosToken', ev)}
@@ -143,7 +143,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.skipSpecialTokens}
+          hide={props.setters.context.hides.skipSpecialTokens}
           recommended={props.sub?.preset.skipSpecialTokens}
           onChange={(ev) => props.setters.setState('skipSpecialTokens', ev)}
         />
@@ -156,7 +156,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.doSample}
+          hide={props.setters.context.hides.doSample}
           onChange={(ev) => props.setters.setState('doSample', ev)}
         />
 
@@ -168,7 +168,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           service={props.setters.context.service}
           format={props.setters.context.format}
-          hide={props.setters.hides.earlyStopping}
+          hide={props.setters.context.hides.earlyStopping}
           onChange={(ev) => props.setters.setState('earlyStopping', ev)}
         />
 

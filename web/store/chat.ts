@@ -226,8 +226,9 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    *setChat({ active, allChats }, chatId: string, update: Partial<AppSchema.Chat>) {
-      yield { allChats: replace(chatId, allChats, update) }
+    async *setChat({ active, allChats }, chatId: string, update: Partial<AppSchema.Chat>) {
+      const next = replace(chatId, allChats, update)
+      yield { allChats: next }
 
       if (active?.chat._id !== chatId) return
 
@@ -413,7 +414,8 @@ export const chatStore = createStore<ChatState>('chat', {
           toastStore.success('Updated chat settings')
         }
 
-        yield { allChats: allChats.map((ch) => (ch._id === id ? res.result! : ch)) }
+        const next = allChats.map((ch) => (ch._id === id ? res.result! : ch))
+        yield { allChats: next }
 
         if (char) {
           yield {
@@ -480,9 +482,6 @@ export const chatStore = createStore<ChatState>('chat', {
           allLoaded: true,
           allLoading: false,
         }
-
-        await storage.userCacheSet('all-chats', nextAllChats)
-        await storage.userCacheSet('all-chars', allChars)
       }
     },
     async *getAllCharacters({ allChars, lastFetched }, force?: boolean) {
@@ -509,7 +508,6 @@ export const chatStore = createStore<ChatState>('chat', {
           allChars,
           allLoading: false,
         }
-        await storage.userCacheSet('all-chars', allChars)
       }
     },
     async *createChat(
@@ -724,6 +722,16 @@ export const chatStore = createStore<ChatState>('chat', {
     closePrompt() {
       return { prompt: undefined }
     },
+  }
+})
+
+chatStore.subscribe(async (state, prev) => {
+  if (state.allChats && state.allChats !== prev.allChats) {
+    await storage.userCacheSet('all-chats', state.allChats)
+  }
+
+  if (state.allChars && state.allChars !== prev.allChars) {
+    await storage.userCacheSet('all-chars', state.allChars)
   }
 })
 

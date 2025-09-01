@@ -202,7 +202,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             disabled={props.state.disabled}
             service={props.setters.context.service}
             format={props.setters.context.format}
-            hide={props.setters.hides.prefixNameAppend}
+            hide={props.setters.context.hides.prefixNameAppend}
             onChange={(ev) => props.setters.setState('prefixNameAppend', ev)}
           />
           <TextInput
@@ -217,7 +217,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             value={props.state.prefill ?? ''}
             disabled={props.state.disabled}
             class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-            hide={props.setters.hides.prefill}
+            hide={props.setters.context.hides.prefill}
             onChange={(ev) => props.setters.setState('prefill', ev.currentTarget.value)}
           />
           <div class="flex flex-wrap gap-4">
@@ -225,14 +225,14 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
               label="Override Character System Prompt"
               value={props.state.ignoreCharacterSystemPrompt ?? false}
               disabled={props.state.disabled}
-              hide={props.setters.hides.ignoreCharacterSystemPrompt}
+              hide={props.setters.context.hides.ignoreCharacterSystemPrompt}
               onChange={(ev) => props.setters.setState('ignoreCharacterSystemPrompt', ev)}
             />
             <Toggle
               label="Override Character Jailbreak"
               value={props.state.ignoreCharacterUjb ?? false}
               disabled={props.state.disabled}
-              hide={props.setters.hides.ignoreCharacterUjb}
+              hide={props.setters.context.hides.ignoreCharacterUjb}
               onChange={(ev) => props.setters.setState('ignoreCharacterUjb', ev)}
             />
           </div>
