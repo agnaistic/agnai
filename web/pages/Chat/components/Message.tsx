@@ -601,7 +601,7 @@ const Message: Component<MessageProps> = (props) => {
                     contentEditable={true}
                     onKeyUp={(ev) => {
                       if (ev.key === 'Escape') cancelEdit()
-                      if (ev.altKey && ev.key === 's') {
+                      if (ev.altKey && (ev.code === 'KeyS' || ev.key === 's')) {
                         ev.preventDefault()
                         saveEdit()
                       }

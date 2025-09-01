@@ -1,6 +1,7 @@
 import { parseVariableName, StructureEntities } from './guidance/json-schema'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
+import { toMap } from '/web/shared/util'
 
 export const PING_INTERVAL_MS = 30000
 
@@ -43,6 +44,30 @@ export function getMimeTypeBase64(base64: string) {
 
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
+}
+
+/**
+ * Replace original items with incoming.
+ * Items that don't cause a replacement are appended.
+ */
+export function combine<T extends { _id: string }>(original: T[], incoming: T[]) {
+  const map = toMap(incoming)
+  const replaced: Record<string, boolean> = {}
+
+  const next: T[] = original.map((item) => {
+    if (map[item._id]) {
+      replaced[item._id] = true
+      return map[item._id]
+    }
+    return item
+  })
+
+  for (const inc of incoming) {
+    if (replaced[inc._id]) continue
+    next.push(inc)
+  }
+
+  return next
 }
 
 export function exclude<T extends { _id: string }>(list: T[], ids: string[]) {

@@ -1,12 +1,12 @@
 import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
-import { chubStore } from '../../store/chub'
+import { ChubEntity, chubStore } from '../../store/chub'
 import ChubNavigation, { ChubPager } from './ChubNavigation'
 import { AppSchema } from '/common/types'
 import Loading from '/web/shared/Loading'
 
 const BookList: Component<{
-  setBook: (book: AppSchema.MemoryBook, fullPath: string) => void
+  setBook: (book: AppSchema.MemoryBook, fullPath: string, entity: ChubEntity) => void
 }> = (props) => {
   const state = chubStore((s) => ({ books: s.books, booksLoading: s.booksLoading }))
 

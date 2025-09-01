@@ -8,12 +8,14 @@ import { AppSchema } from '/common/types'
 import { Option } from '/web/shared/Select'
 import { emptyBookWithEmptyEntry } from '/common/memory'
 import { createStore } from 'solid-js/store'
+import { ChubEntity } from '/web/store/chub'
 
 const ChubImportBookModal: Component<{
   show: boolean
   close: () => void
   id?: string
   book: AppSchema.MemoryBook
+  entity: ChubEntity
   fullPath: string
 }> = (props) => {
   let ref: any

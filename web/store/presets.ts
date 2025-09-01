@@ -1,14 +1,14 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { downloadJson, storage } from '../shared/util'
-import { api } from './api'
+import { api, isLoggedIn } from './api'
 import { createStore } from './create'
 import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './data/presets'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
-import { replace } from '/common/util'
+import { findOne, replace } from '/common/util'
 
 type PresetState = {
   importing?: AppSchema.UserGenPreset
@@ -98,7 +98,7 @@ export const presetStore = createStore<PresetState>(
       if (res.error) toastStore.error(`Failed to update preset: ${res.error}`)
       if (res.result) {
         if (!opts?.quiet) toastStore.success('Successfully updated preset')
-        yield { presets: presets.map((p) => (p._id === presetId ? res.result! : p)) }
+        yield { presets: replace(presetId, presets, res.result) }
         opts?.onSuccess?.(res.result)
       }
     },
@@ -448,4 +448,18 @@ export async function exportPreset(preset: AppSchema.UserGenPreset) {
   }
 
   downloadJson(safe, `preset-${_id.slice(0, 4)}`)
+}
+
+export async function getRemotePreset(presetId: string) {
+  const remote = await presetApi.getPreset(presetId)
+
+  if (isLoggedIn() && remote.result) {
+    const presets = presetStore.getState().presets
+    const match = findOne(presetId, presets)
+
+    const next = match ? replace(presetId, presets, remote.result) : presets.concat(remote.result)
+    presetStore.setState({ presets: next })
+  }
+
+  return remote
 }

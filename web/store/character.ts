@@ -12,6 +12,10 @@ import { getUserId } from './api'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { HordeCheck } from '/common/horde-gen'
 import { v4 } from 'uuid'
+import { combine, findOne, replace } from '/common/util'
+import { debug } from '/common/debug'
+
+const log = debug('char-store')
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -148,15 +152,34 @@ export const characterStore = createStore<CharacterState>(
       return { defaultImpersonateId: charId || '' }
     },
 
-    async impersonate({ activeChatId }, char?: AppSchema.Character) {
+    async *impersonate({ activeChatId, chatChars }, char?: AppSchema.Character) {
       if (activeChatId) {
         setStoredValue(`${activeChatId}-impersonate`, char?._id || '')
+      }
+
+      if (!char) {
+        return { impersonating: undefined }
+      }
+
+      const detail = char.persona ? char : chatChars.map[char._id]
+      if (detail) {
+        log('impersonate success')
+        return { impersonating: detail }
+      }
+
+      // Quickly load the shallow result and silently load the character detail
+      yield { impersonating: char }
+
+      const remote = await getCharacterDetail(char._id)
+      if (remote) {
+        log('impersonate loaded')
+        return { impersonating: remote }
       }
 
       return { impersonating: char || undefined }
     },
 
-    async loadImpersonate(
+    async *loadImpersonate(
       { activeChatId, chatChars: { list }, characters: { list: allList }, impersonating: current },
       chatId?: string
     ) {
@@ -169,10 +192,29 @@ export const characterStore = createStore<CharacterState>(
           ? fallback
           : getStoredValue(`${chatId || activeChatId}-impersonate`, fallback)
 
-      if (!id) return { impersonating: undefined }
+      if (!id) {
+        yield { impersonating: undefined }
+        return
+      }
 
-      const impersonating = id ? allList.concat(list).find((ch) => ch._id === id) : current
-      return { impersonating }
+      const detail = findOne(id, list)
+      if (detail) {
+        yield { impersonating: detail }
+        log('impersonate pre-loaded')
+        return
+      }
+
+      const shallow = findOne(id, allList)
+      if (shallow) {
+        yield { impersonating: shallow }
+        const detail = await getCharacterDetail(id)
+        log('impersaonte loaded, detail: %s', !!detail)
+        yield { impersonating: detail || shallow }
+        return
+      }
+
+      yield { impersonating: undefined }
+      return
     },
 
     async *createCharacter(
@@ -224,7 +266,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
           chatChars: nextChars,
@@ -257,7 +299,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
           chatChars: nextChars,
@@ -282,7 +324,7 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? nextChar : ch)),
-            map: replace(map, characterId, { favorite }),
+            map: replaceChar(map, characterId, { favorite }),
             loaded,
           },
         }
@@ -298,7 +340,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? res.result : ch)),
-            map: replace(map, characterId, res.result),
+            map: replaceChar(map, characterId, res.result),
             loaded,
           },
         }
@@ -314,7 +356,7 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, avatar: '' } : ch)),
-            map: replace(map, characterId, { avatar: '' }),
+            map: replaceChar(map, characterId, { avatar: '' }),
             loaded,
           },
         }
@@ -465,10 +507,12 @@ events.on(EVENTS.loggedIn, () => {
 
 events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
   const { chatChars: prev } = characterStore.getState()
+  const next = combine(prev.list, [char])
+
   characterStore.setState({
     chatChars: {
       chatId: prev.chatId,
-      list: prev.list.concat(char),
+      list: next,
       map: Object.assign({}, prev.map, { [char._id]: char }),
     },
   })
@@ -477,7 +521,8 @@ events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
 events.on(
   EVENTS.charsReceived,
   async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
-    const allChars = chars.concat(temps)
+    const prev = characterStore.getState().chatChars.list
+    const allChars = combine(prev, chars.concat(temps))
     characterStore.setState({ chatChars: { chatId, list: allChars, map: toMap(allChars) } })
     characterStore.loadImpersonate(chatId)
   }
@@ -514,7 +559,7 @@ events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
   characterStore.loadImpersonate()
 })
 
-function replace(
+function replaceChar(
   map: Record<string, AppSchema.Character>,
   id: string,
   char: Partial<AppSchema.Character>
@@ -526,3 +571,21 @@ function replace(
 subscribe('horde-status', { status: 'any' }, (body) => {
   characterStore.setState({ hordeStatus: body.status })
 })
+
+export async function getCharacterDetail(characterId: string) {
+  const char = await charsApi.getCharacterDetail(characterId)
+
+  if (!char.result) return
+
+  const detail = characterStore.getState().characters
+  const match = findOne(characterId, detail.list)
+
+  const nextList = match
+    ? replace(characterId, detail.list, char.result)
+    : detail.list.concat(char.result)
+
+  const nextMap = replaceChar(detail.map, characterId, char.result)
+
+  characterStore.setState({ characters: { list: nextList, map: nextMap, loaded: detail.loaded } })
+  return char.result
+}

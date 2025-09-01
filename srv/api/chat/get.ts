@@ -12,9 +12,9 @@ export const getCharacterChats = handle(async (req) => {
   return { character, chats: list }
 })
 
-export const getChatDetail = handle(async ({ userId, params }) => {
+export const getChatDetail = handle(async ({ userId, params, query }) => {
   const id = params.id
-  const detail = await store.chats.getChat(id)
+  const detail = await store.chats.getChat(id, query.impersonating as string)
 
   if (!detail) throw errors.NotFound
 

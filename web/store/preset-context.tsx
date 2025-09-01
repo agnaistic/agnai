@@ -3,7 +3,7 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, createEffect, createSignal, on, useContext } from 'solid-js'
+import { createContext, createEffect, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
@@ -16,6 +16,7 @@ import { getFallbackPreset } from '/common/presets'
 import { settingStore } from './settings'
 import { userStore } from './user'
 import { debug } from '/common/debug'
+import { getRemotePreset } from './presets'
 
 const log = debug('preset')
 
@@ -143,7 +144,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const [context, setContext] = createStore<PresetContext>({})
   const [hides, setHides] = createStore(createHides(state, context))
-  const [attemptedId, setAttemptedId] = createSignal('')
+  const [attempt, setAttempt] = createStore({ id: '', remote: false })
 
   createEffect(
     on(
@@ -175,7 +176,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = async (chat: AppSchema.Chat) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
-    if (chat.genPreset && chat.genPreset === state._id) {
+    if (chat.genPreset && attempt.id === chat.genPreset) {
       log(`load-by-chat called --> preset already loaded`)
       return
     }
@@ -183,14 +184,15 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     log(
       `load-by-chat called %s`,
       inline({
-        c: chat._id?.slice(0, 8),
-        p: chat.genPreset ? chat.genPreset?.slice(0, 8) : 'no-id',
+        c: chat._id?.slice(0, 4),
+        p: chat.genPreset ? chat.genPreset?.slice(0, 4) : 'no-id',
       })
     )
 
     let preset = await loadPresetId(chat.genPreset || '')
 
-    if (expectingUserPreset && chat.genPreset !== preset._id) {
+    if (expectingUserPreset && chat.genPreset === preset._id) {
+      log('load-by-chat success (r: %s)', attempt.remote)
       return
     }
 
@@ -203,38 +205,46 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const loadPresetId = async (presetId: string) => {
-    log('load-by-id called')
-
     if (isDefaultPreset(presetId)) {
       const fallback = { _id: presetId, ...deepClone(defaultPresets[presetId]) }
       load(fallback)
       return fallback
     }
 
+    if (!presetId) {
+      const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
+      load({ ...fallback, _id: 'agnaistic' })
+      return { ...fallback, _id: 'agnaistic' }
+    }
+
+    if (presetId && attempt.id === presetId && attempt.remote) return state
+
+    setAttempt({ id: presetId, remote: false })
     const presets = getStore('presets').getState().presets
     let preset = presets.find((p) => p._id === presetId)
 
-    if (!preset && presetId) {
-      const remote = await presetApi.getPreset(presetId)
-      if (remote?.result) {
-        load(remote.result)
-        return remote.result
-      }
-
-      if (attemptedId() !== presetId) {
-        setAttemptedId(presetId)
-        toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
-      }
+    /**
+     * Load from the cache first to speed things up
+     * Then fetch the real preset
+     */
+    if (preset) {
+      load(preset)
     }
 
-    if (!preset) {
-      const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
-      load({ ...fallback, _id: 'agnaistic' })
-      return fallback
+    const remote = await getRemotePreset(presetId)
+    if (remote?.result) {
+      setAttempt('remote', true)
+      load(remote.result)
+      return remote.result
     }
 
-    load(preset)
-    return preset
+    if (preset) return preset
+
+    toastStore.warn('Could not load your preset - Ensure your chat has a preset assigned')
+
+    const fallback = getFallbackPreset('agnaistic') as Partial<AppSchema.UserGenPreset>
+    load({ ...fallback, _id: 'agnaistic' })
+    return { ...fallback, _id: 'agnaistic' }
   }
 
   const load = (preset: Partial<AppSchema.UserGenPreset> | undefined) => {

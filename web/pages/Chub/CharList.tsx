@@ -1,13 +1,13 @@
 import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
-import { chubStore } from '../../store/chub'
+import { ChubEntity, chubStore } from '../../store/chub'
 import ChubNavigation, { ChubPager } from './ChubNavigation'
 import type { NewCharacter } from '/web/store/character'
 import Loading from '/web/shared/Loading'
 
 const CharList: Component<{
   loading: () => void
-  setChar: (char: NewCharacter, fullPath: string) => void
+  setChar: (char: NewCharacter, fullPath: string, entity: ChubEntity) => void
 }> = (props) => {
   const state = chubStore((s) => ({ charsLoading: s.charsLoading, chars: s.chars }))
 

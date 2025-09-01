@@ -13,7 +13,7 @@ import { Page } from '/web/Layout'
 import { ListFilter } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import Modal from '/web/shared/Modal'
-import { chubStore } from '/web/store/chub'
+import { ChubEntity, chubStore } from '/web/store/chub'
 import Tabs from '/web/shared/Tabs'
 
 const chubTabs = {
@@ -30,8 +30,16 @@ const Chub: Component = () => {
   const tabs: Tab[] = ['characters', 'lorebooks']
 
   const [tab, setTab] = createSignal(0)
-  const [charModal, setCharModal] = createSignal<{ char: NewCharacter; fullPath: string }>()
-  const [bookModal, setBookModal] = createSignal<{ book: AppSchema.MemoryBook; fullPath: string }>()
+  const [charModal, setCharModal] = createSignal<{
+    char: NewCharacter
+    fullPath: string
+    entity: ChubEntity
+  }>()
+  const [bookModal, setBookModal] = createSignal<{
+    book: AppSchema.MemoryBook
+    fullPath: string
+    entity: ChubEntity
+  }>()
   const [loading, setLoading] = createSignal(false)
   const [filter, setFilter] = createSignal(false)
 
@@ -72,8 +80,8 @@ const Chub: Component = () => {
           <div class={currentTab() === 'characters' ? tabClass : 'hidden'}>
             <CharList
               loading={() => setLoading(true)}
-              setChar={(char, fullPath) => {
-                setCharModal({ char, fullPath })
+              setChar={(char, fullPath, entity) => {
+                setCharModal({ char, fullPath, entity })
                 setLoading(false)
               }}
             />
@@ -82,7 +90,9 @@ const Chub: Component = () => {
 
         <Show when={currentTab() === 'lorebooks'}>
           <div class={currentTab() === 'lorebooks' ? tabClass : 'hidden'}>
-            <BookList setBook={(book, fullPath) => setBookModal({ book, fullPath })} />
+            <BookList
+              setBook={(book, fullPath, entity) => setBookModal({ book, fullPath, entity })}
+            />
           </div>
         </Show>
       </div>
@@ -98,7 +108,12 @@ const Chub: Component = () => {
         </sub>
       </div>
       <Show when={loading() || !!charModal()}>
-        <ChubImportCharModal show={true} close={() => setCharModal()} char={charModal()?.char} />
+        <ChubImportCharModal
+          show={true}
+          close={() => setCharModal()}
+          char={charModal()?.char}
+          entity={charModal()?.entity}
+        />
       </Show>
       <Show when={bookModal()}>
         <ChubImportBookModal
@@ -106,6 +121,7 @@ const Chub: Component = () => {
           close={() => setBookModal()}
           fullPath={bookModal()!.fullPath}
           book={bookModal()!.book}
+          entity={bookModal()!.entity}
         />
       </Show>
       <Modal
