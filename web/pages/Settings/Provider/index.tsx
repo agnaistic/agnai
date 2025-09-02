@@ -87,22 +87,8 @@ export const PresetProvider: Component<{
   }
 
   const changeProvider = (id: string) => {
-    props.setters.setState('providerId', id)
-    props.setters.refreshModels()
-
-    if (props.page !== 'mode' && props.page !== 'menu') {
-      return
-    }
-
-    props.setters.update(
-      { providerId: id },
-      {
-        quiet: true,
-        onSuccess: () => {
-          getStore('toasts').success('Provider changed')
-        },
-      }
-    )
+    const save = props.page === 'mode' || props.page === 'menu'
+    props.setters.provider(id, save)
   }
 
   const editLegacy = (ev: any) => {

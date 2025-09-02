@@ -20,8 +20,6 @@ import { getRemotePreset, presetStore } from './presets'
 import { chatStore } from './chat'
 import { v4 } from 'uuid'
 
-const log = debug('preset')
-
 export type PresetProps = {
   state: PresetState
   setters: PresetFuncs
@@ -108,8 +106,8 @@ export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
   postUserRole: false,
 })
 
-const initModels = (): ContextState => ({
-  __: v4().slice(),
+const initContext = (id?: string): ContextState => ({
+  __: id || v4().slice(0, 4),
   url: '',
   loading: false,
   list: [],
@@ -121,10 +119,15 @@ const initModels = (): ContextState => ({
 const noopPreset: SetStoreFunction<PresetState> = (...args: any[]) => {}
 const noopModels: SetStoreFunction<ContextState> = (...args: any[]) => {}
 
-const PresetContext = createContext([initPreset(), noopPreset, initModels(), noopModels] as const)
+const PresetContext = createContext([
+  initPreset(),
+  noopPreset,
+  initContext('global'),
+  noopModels,
+] as const)
 
 type ContextState = {
-  __?: string
+  __: string
   list: string[]
   url: string
   loading: boolean
@@ -141,10 +144,10 @@ type ContextState = {
 
 export function PresetStateProvider(props: { children: any }) {
   const [store, setStore] = createStore(initPreset())
-  const [models, setModels] = createStore(initModels())
+  const [context, setContext] = createStore(initContext())
 
   return (
-    <PresetContext.Provider value={[store, setStore, models, setModels]}>
+    <PresetContext.Provider value={[store, setStore, context, setContext]}>
       {props.children}
     </PresetContext.Provider>
   )
@@ -158,12 +161,14 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   const presets = presetStore((s) => ({ list: s.presets, loaded: s.presetsLoaded }))
 
   const [state, setState, context, setContext] = opts?.anonymous
-    ? [...createStore(initPreset()), ...createStore(initModels())]
+    ? [...createStore(initPreset()), ...createStore(initContext())]
     : useContext(PresetContext)
+
+  const log = debug(`preset:${context.__}`)
 
   const onStateUpdated = (source: string) => {
     if (state.providerId && context.provider?._id === state.providerId) {
-      // log('state updated cancelled %s', state.providerId)
+      log('state updated cancelled %s', state.providerId)
       return
     }
 
@@ -271,9 +276,36 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     return { ...fallback, _id: 'agnai' }
   }
 
+  const changeProvider = async (providerId: string, save?: boolean) => {
+    if (save) {
+      setState({ providerId })
+      onStateUpdated('provider-save')
+
+      await Promise.all([
+        loadModels({ force: true }),
+        updateAndSave(
+          { providerId },
+          {
+            quiet: true,
+            onSuccess: () => {
+              getStore('toasts').success('Provider changed')
+            },
+          }
+        ),
+      ])
+
+      return
+    }
+
+    setState({ providerId })
+    onStateUpdated('provider-nosave')
+    loadModels({ force: true })
+  }
+
   const load = async (preset: Partial<AppSchema.UserGenPreset> | undefined) => {
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
     await loadModels({ preset })
+    onStateUpdated('load')
   }
 
   const loadModels = async (opts?: {
@@ -292,7 +324,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       return
     }
     if (context.providerId === providerId && !opts?.force) {
-      log('models cancelled: provider id (%s) #%s', providerId, context.list.length)
+      log(
+        'models cancelled: provider id (%s) #%s/#%s',
+        providerId,
+        context.list.length,
+        context.data.length
+      )
       return
     }
     if (providerId) {
@@ -384,6 +421,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     {
       context,
       setState,
+      provider: changeProvider,
       load: loadPresetId,
       loadChat,
       clear,

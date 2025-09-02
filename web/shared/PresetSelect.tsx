@@ -29,15 +29,13 @@ export const PresetSelect: Component<{
 
   const presets = presetStore((s) => ({ list: s.presets }))
   const user = userStore((s) => ({ user: s.user }))
-  const settings = pageStore((s) => ({ flags: s.flags }))
 
   const custom = createMemo(() => {
     const filtered = props.options.filter(
       (o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase())
     )
 
-    if (!settings.flags.debug) return filtered
-    return filtered.map((f) => ({ ...f, label: `${f.label} ${f.value.slice(0, 4)} ` }))
+    return filtered
   })
 
   const selectedLabel = createMemo(() => {

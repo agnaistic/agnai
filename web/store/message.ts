@@ -1213,7 +1213,9 @@ subscribe(
     const voice = char.voice
 
     if (body.adapter === 'image' || !voice || !user) return
-    const canSpeak = (user?.texttospeech?.enabled ?? true) && !char.voiceDisabled
+    const canSpeak =
+      (user?.texttospeech?.enabled ?? true) && !char.voiceDisabled && !!char.voice?.service
+
     if (canSpeak && active.char.userId === user._id) {
       const parsed = getUtterableText(body.message)
       if (!parsed?.content) return
