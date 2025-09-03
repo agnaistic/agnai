@@ -339,13 +339,16 @@ const Chats: Component<{
                           </Show>
                           <span class="flex text-xs italic text-[var(--text-600)]">
                             {toDuration(new Date(chat.updatedAt))} ago
-                            <Show when={pages.flags.debug}>
-                              {' '}
-                              {chat.genPreset?.slice(0, 4)}{' '}
-                              {presets.map[chat.genPreset || ''] ? 'ok' : 'bad'}{' '}
-                            </Show>
                             <Show when={chat.messageCount !== undefined}>
                               &nbsp;({chat.messageCount})
+                            </Show>
+                            <Show when={pages.flags.debug}>
+                              {' '}
+                              {chat.genPreset
+                                ? presets.map[chat.genPreset]
+                                  ? 'ok'
+                                  : 'bad'
+                                : 'n/a'}
                             </Show>
                           </span>
                         </div>

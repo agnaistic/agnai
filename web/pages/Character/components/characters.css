@@ -1,0 +1,19 @@
+.charlist {
+  display: grid;
+  width: 100%;
+  grid-template-areas: 'grab content options';
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+}
+
+.charlist__grab {
+  grid-area: grab;
+}
+
+.charlist__content {
+  grid-area: content;
+}
+
+.charlist__options {
+  grid-area: options;
+}

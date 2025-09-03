@@ -19,11 +19,13 @@ import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
-import { getActiveBots } from './util'
+import { getActiveBots, useEditableBots } from './util'
 import Divider from '/web/shared/Divider'
 import Convertible from '../../shared/Mode/Convertible'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
 import Accordian from '/web/shared/Accordian'
+import CharacterSelect from '/web/shared/CharacterSelect'
+import { wait } from '/common/util'
 
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
@@ -36,6 +38,22 @@ const MemberModal: Component<{
   const [view, setView] = createSignal<View>('list')
   const [editCharId, setEditCharId] = createSignal<string>()
   const [footer, setFooter] = createSignal<any>()
+
+  const editableChars = useEditableBots()
+
+  const charBeingEdited = createMemo(() => {
+    return editableChars().find((ch) => ch._id === editCharId())
+  })
+
+  const changeEditingChar = async (char: AppSchema.Character | undefined) => {
+    const prev = editCharId()
+    if (prev === char?._id) return
+
+    setEditCharId('')
+    if (!char) return
+    await wait(0.2)
+    setEditCharId(char._id)
+  }
 
   const Footer = (
     <>
@@ -105,7 +123,17 @@ const MemberModal: Component<{
                 close={closeEditor}
                 temp={editCharId()?.startsWith('temp') || !editCharId()}
                 onSuccess={(char) => setEditCharId(char._id)}
-              />
+              >
+                <Show when={editableChars().length > 1}>
+                  <CharacterSelect
+                    class="w-full"
+                    fieldName="editingId"
+                    items={editableChars()}
+                    value={charBeingEdited()}
+                    onChange={changeEditingChar}
+                  />
+                </Show>
+              </CreateCharacterForm>
             </Match>
             <Match when={view() === 'add_character'}>
               <AddCharacter setView={setView} />

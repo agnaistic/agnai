@@ -4,17 +4,7 @@ import Divider from '/web/shared/Divider'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { getAssetUrl, toDuration } from '/web/shared/util'
-import {
-  ArrowRight,
-  Copy,
-  Download,
-  Menu,
-  MessageCirclePlus,
-  Pencil,
-  Star,
-  Trash,
-  VenetianMask,
-} from 'lucide-solid'
+import { ArrowRight, Download, Menu, Star, Trash, VenetianMask } from 'lucide-solid'
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
 import { quickCreateChat } from '/web/store'
@@ -180,11 +170,20 @@ const Character: Component<CardProps> = (props) => {
           >
             <div class="flex flex-col gap-2 p-2">
               <Button alignLeft onClick={() => quickCreateChat(props.char._id, nav)} size="sm">
-                <MessageCirclePlus size={size} /> New Chat
+                New Chat
               </Button>
 
               <Button onClick={props.edit} aria-label="Edit" alignLeft size="sm">
-                <Pencil size={size} /> Edit
+                Edit
+              </Button>
+
+              <Button
+                onClick={() => nav(`/character/${props.char._id}/chats`)}
+                aria-label="Chat List"
+                alignLeft
+                size="sm"
+              >
+                Chat List
               </Button>
 
               <Button
@@ -192,7 +191,7 @@ const Character: Component<CardProps> = (props) => {
                 onClick={() => nav(`/character/create/${props.char._id}`)}
                 size="sm"
               >
-                <Copy /> Duplicate
+                Duplicate
               </Button>
 
               <Button

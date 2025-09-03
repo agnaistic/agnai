@@ -83,7 +83,7 @@ const CharacterSelect: Component<{
           </Button>
         </Show>
 
-        <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
+        <DropMenu show={opts()} close={() => setOpts(false)} horz="left" vert="down">
           <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
             <CharacterSelectList
               items={props.items}
