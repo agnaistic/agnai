@@ -3,7 +3,6 @@ import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { getFallbackPreset } from '/common/presets'
 import { AppSchema } from '/common/types'
 import { getStore } from '/web/store/create'
-import { characterStore, chatStore } from '/web/store'
 
 export function getChatPreset(
   chat: AppSchema.Chat,
@@ -72,13 +71,13 @@ export function getActiveBots(
 }
 
 export function useEditableBots() {
-  const chars = characterStore((s) => ({
+  const chars = getStore('character')((s) => ({
     chatBots: s.characters.list,
     botMap: s.characters.map,
     impersonate: s.impersonating,
   }))
 
-  const chats = chatStore((s) => {
+  const chats = getStore('chat')((s) => {
     return {
       chat: s.active?.chat,
       char: s.active?.char,
