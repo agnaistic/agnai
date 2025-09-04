@@ -1,10 +1,20 @@
-import { Component, Index, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import {
+  Component,
+  Index,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import Button from './Button'
 import { clamp } from '/common/util'
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from 'lucide-solid'
 import { useDeviceType } from './hooks'
 import { storage } from './util'
 import TextInput from './TextInput'
+import { useSearchParams } from '@solidjs/router'
 
 export const ManualPaginate: Component<{
   pager: Pager
@@ -135,11 +145,18 @@ export function usePagination<T = any>(opts: {
   pageSize: number
   items: () => T[]
 }): Pager<T> {
+  const [search, setSearch] = useSearchParams()
+
   const localName = `agnai-paging-${opts.name}`
   const isMobile = useDeviceType()
 
-  const savedSize = +(storage.localGetItem(localName) ?? `${opts.pageSize}`)
-  const [page, setPage] = createSignal(1)
+  const pageId = opts.name ? `pg_${opts.name}` : ''
+
+  const savedSize = opts.name
+    ? +(storage.localGetItem(localName) ?? `${opts.pageSize}`)
+    : opts.pageSize
+
+  const [page, setPage] = createSignal(pageId ? +(search[pageId] || '1') : 1)
   const [pageSize, setPageSize] = createSignal(savedSize)
   const safeSize = createMemo(() => (pageSize() <= 0 ? 20 : pageSize()))
 
@@ -154,16 +171,34 @@ export function usePagination<T = any>(opts: {
     return getButtonIds(page(), pages(), isMobile() ? 1 : 2)
   })
 
+  const updateSearch = (page: number) => {
+    if (!pageId) return
+    setSearch({ [pageId]: page })
+  }
+
+  onMount(() => {
+    if (!pageId) return
+    updateSearch(page())
+  })
+
   const next = () => {
     const curr = page()
     const next = clamp(curr + 1, pages(), 1)
+    updateSearch(next)
     setPage(next)
   }
 
   const prev = () => {
     const curr = page()
     const next = clamp(curr - 1, pages(), 1)
+    updateSearch(next)
     setPage(next)
+  }
+
+  const changePage = (pageNo: number) => {
+    const clamped = clamp(pageNo, pages(), 1)
+    setPage(clamped)
+    updateSearch(clamped)
   }
 
   createEffect(
@@ -203,7 +238,7 @@ export function usePagination<T = any>(opts: {
     prev,
     page,
     pages,
-    setPage,
+    setPage: changePage,
     pageSize,
     setPageSize,
     items,
