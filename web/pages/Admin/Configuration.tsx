@@ -21,7 +21,7 @@ const ServerConfiguration: Component = () => {
   let form: HTMLFormElement
   const user = userStore((s) => ({ user: s.user }))
   const state = adminStore((s) => ({ config: s.config }))
-  const [store, setStore] = createStore<ConfigState>(state.config! || {})
+  const [store, setStore] = createStore<ConfigState & { _id?: string }>(state.config! || {})
 
   const nav = useNavigate()
   const [search, setSearch] = useSearchParams()
