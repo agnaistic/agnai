@@ -144,15 +144,11 @@ export const settingStore = createStore<SettingState>(
         if (init.config.serverConfig) {
           yield { allImageModels: init.config.serverConfig.imagesModels || [] }
 
-          if (!init.config.tier?.imagesAccess && !init.user?.admin) {
-            init.config.serverConfig.imagesModels = []
-          } else {
-            init.config.serverConfig.imagesModels = filterImageModels(
-              init.user,
-              init.config.serverConfig.imagesModels,
-              init.config.tier
-            )
-          }
+          init.config.serverConfig.imagesModels = filterImageModels(
+            init.user,
+            init.config.serverConfig.imagesModels,
+            init.config.tier
+          )
         }
 
         if (!isMaint) {

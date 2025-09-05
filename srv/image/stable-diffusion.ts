@@ -121,7 +121,10 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   }
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
-  if (!sub?.tier?.imagesAccess && !user.admin) return { kind: 'user', host: userHost.url, headers }
+  if (!sub?.tier?.imagesAccess && !user.admin) {
+    throw new Error(`Agnaistic image models required a subscription`)
+    return { kind: 'user', host: userHost.url, headers }
+  }
 
   const models = getAgnaiModels(srv.imagesModels)
 

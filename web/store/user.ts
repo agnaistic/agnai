@@ -97,7 +97,7 @@ export const userStore = createStore<UserState>(
     userStore.setState({ banned: reason })
   })
 
-  events.on(EVENTS.init, (init) => {
+  events.on(EVENTS.init, async (init) => {
     if (init.user) {
       init.user.userHordeKey = init.user.hordeKey
       init.user.hordeKey = ''
@@ -116,8 +116,10 @@ export const userStore = createStore<UserState>(
     }
 
     if (init.user?._id !== 'anon') {
-      userStore.getTiers()
+      await userStore.getTiers()
     }
+
+    await autoSwitchImageService(init)
 
     /**
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
@@ -476,13 +478,13 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig(_, config: ConfigUpdate) {
+    async updateConfig(_, config: ConfigUpdate, quiet?: boolean) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
 
-        toastStore.success(`Updated settings`)
+        if (!quiet) toastStore.success(`Updated settings`)
         return { user: res.result }
       }
     },
@@ -1152,4 +1154,34 @@ function getInitialEmbeddingsModel(user: AppSchema.User) {
 
   if (user.disableLTM) return EMBED_MODELS.Disabled
   return EMBED_MODELS.Small
+}
+
+async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user: AppSchema.User }) {
+  // If it's already set, ignore
+  const config = init.config.serverConfig
+  if (init.user.images?.type === 'agnai') return
+
+  // If we've changed from the default, ignore
+  if (init.user.images?.type !== 'horde') return
+
+  if (!config?.imagesEnabled) return
+  if (!config?.imagesModels?.length) return
+
+  const { tiers } = userStore.getState()
+
+  const sub = getUserSubscriptionTier(init.user, tiers)
+  if (!sub?.tier?.imagesAccess) return
+
+  const next = { ...init.user.images }
+  next.type = 'agnai'
+
+  if (config?.defaultImageModel) {
+    if (next.agnai) {
+      next.agnai.model = config.defaultImageModel
+    } else {
+      next.agnai = { model: config.defaultImageModel, sampler: 'k_euler_a', draftMode: false }
+    }
+  }
+
+  userStore.updateConfig({ images: next })
 }

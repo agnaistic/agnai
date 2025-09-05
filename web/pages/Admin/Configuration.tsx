@@ -2,7 +2,6 @@ import { Component, Match, Switch, createEffect, createSignal, on, onMount } fro
 import { adminStore, userStore } from '/web/store'
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import PageHeader from '/web/shared/PageHeader'
-import { getStrictForm } from '/web/shared/util'
 import { SaveIcon } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import { Page } from '/web/Layout'
@@ -13,6 +12,8 @@ import { Voice } from './Config/Voice'
 import { Images } from './Config/Images'
 import { v4 } from 'uuid'
 import { ImageModel } from '/common/types/admin'
+import { createStore } from 'solid-js/store'
+import { ConfigState } from './types'
 
 export { ServerConfiguration as default }
 
@@ -20,6 +21,7 @@ const ServerConfiguration: Component = () => {
   let form: HTMLFormElement
   const user = userStore((s) => ({ user: s.user }))
   const state = adminStore((s) => ({ config: s.config }))
+  const [store, setStore] = createStore<ConfigState>(state.config! || {})
 
   const nav = useNavigate()
   const [search, setSearch] = useSearchParams()
@@ -29,8 +31,6 @@ const ServerConfiguration: Component = () => {
   createEffect(() => {
     setSearch({ cfg_tab: tab.selected().toString() })
   })
-
-  const [slots, setSlots] = createSignal(state.config?.slots || '{}')
 
   if (!user.user?.admin) {
     nav('/')
@@ -54,41 +54,13 @@ const ServerConfiguration: Component = () => {
   )
 
   onMount(async () => {
-    await adminStore.getConfiguration()
+    await adminStore.getConfiguration((config) => setStore({ ...config }))
   })
 
   const submit = () => {
-    const body = getStrictForm(form!, {
-      apiAccess: ['off', 'users', 'subscribers', 'admins'],
-      ttsAccess: ['off', 'users', 'subscribers', 'admins'],
-      slots: 'string',
-      maintenance: 'boolean',
-      maintenanceMessage: 'string',
-      termsOfService: 'string',
-      privacyStatement: 'string',
-      policiesEnabled: 'boolean',
-      imagesHost: 'string',
-      imagesEnabled: 'boolean',
-      imagesLoraUrl: 'string',
-      supportEmail: 'string',
-      ttsEnabled: 'boolean',
-      ttsApiKey: 'string',
-      ttsHost: 'string',
-      maxGuidanceTokens: 'number',
-      maxGuidanceVariables: 'number',
-      googleClientId: 'string',
-      googleEnabled: 'boolean',
-      lockSeconds: 'number',
-      stripeCustomerPortal: 'string',
-    })
+    const { _id, tosUpdated, privacyUpdated, kind, ...body } = store
 
-    adminStore.updateServerConfig({
-      ...body,
-      actionCalls: [],
-      slots: slots(),
-      imagesModels: models[0](),
-      enabledAdapters: [],
-    })
+    adminStore.updateServerConfig(body)
   }
 
   return (
@@ -107,13 +79,13 @@ const ServerConfiguration: Component = () => {
 
           <form ref={form!} class="flex flex-col gap-2" onSubmit={(ev) => ev.preventDefault()}>
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'General' }}>
-              <General slots={slots} setSlots={setSlots} />
+              <General state={store} setters={setStore} />
             </div>
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'Voice' }}>
-              <Voice />
+              <Voice state={store} setters={setStore} />
             </div>
             <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'Images' }}>
-              <Images models={models} />
+              <Images state={store} setters={setStore} />
             </div>
 
             <div class="flex justify-end">

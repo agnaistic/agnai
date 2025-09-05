@@ -18,6 +18,7 @@ import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
 import { replaceTags } from '/common/presets/templates'
+import { toastStore } from '../toasts'
 
 type GenerateOpts = {
   chatId?: string
@@ -240,7 +241,10 @@ export async function generateImageAsync(
   const promise = new Promise<ImageResult>((resolve, reject) => {
     callbacks.set(requestId, (image) => {
       opts.onDone?.(image)
-      if (image.error) return reject(new Error(image.error))
+      if (image.error) {
+        toastStore.error(image.error)
+        return reject(new Error(image.error))
+      }
       resolve(image)
     })
   })

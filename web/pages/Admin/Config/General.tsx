@@ -1,36 +1,18 @@
-import { Accessor, Component, Setter, createEffect, on } from 'solid-js'
+import { Component } from 'solid-js'
 import { Card, Pill } from '/web/shared/Card'
 import Select from '/web/shared/Select'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
-import { adminStore } from '/web/store'
+import { ConfigSetters, ConfigState } from '../types'
 
-export const General: Component<{ slots: Accessor<string>; setSlots: Setter<string> }> = (
-  props
-) => {
-  let slotsRef: HTMLInputElement
-
-  const state = adminStore((s) => ({ config: s.config }))
-
-  const formatSlots = () => {
+export const General: Component<{ state: ConfigState; setters: ConfigSetters }> = (props) => {
+  const updateSlots = () => {
     try {
-      const obj = JSON.parse(slotsRef?.value || '{}')
+      const obj = JSON.parse(props.state.slots || '{}')
       const formatted = JSON.stringify(obj, null, 2)
-      props.setSlots(formatted)
-      slotsRef.value = formatted
+      props.setters('slots', formatted)
     } catch (ex) {}
   }
-
-  createEffect(
-    on(
-      () => state.config?.slots,
-      (slots) => {
-        if (!slots) return
-        props.setSlots(slots)
-        return slots
-      }
-    )
-  )
 
   return (
     <>
@@ -39,14 +21,16 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           fieldName="supportEmail"
           label="Support Email"
           helperText="If provided, a link to this email will be added to the main navigation"
-          value={state.config?.supportEmail}
+          value={props.state.supportEmail}
+          onChange={(ev) => props.setters('supportEmail', ev.currentTarget.value)}
         />
 
         <Toggle
           fieldName="maintenance"
           label="Maintenace Mode Enabled"
           helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
-          value={state.config?.maintenance}
+          value={props.state.maintenance}
+          onChange={(ev) => props.setters('maintenance', ev)}
         />
 
         <TextInput
@@ -54,13 +38,15 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           isMultiline
           label="Maintenance Message"
           helperText="Markdown is supported"
-          value={state.config?.maintenanceMessage}
+          value={props.state.maintenanceMessage}
+          onChange={(ev) => props.setters('maintenanceMessage', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="stripeCustomerPortal"
           label="Stripe Customer Portal"
-          value={state.config?.stripeCustomerPortal}
+          value={props.state.stripeCustomerPortal}
+          onChange={(ev) => props.setters('stripeCustomerPortal', ev.currentTarget.value)}
         />
 
         <TextInput
@@ -68,7 +54,8 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           type="number"
           label="Lock Duration (seconds)"
           helperText="Maximum TTL of user-level lock - Set to zero (0) to disable"
-          value={state.config?.lockSeconds ?? 0}
+          value={props.state.lockSeconds ?? 0}
+          onChange={(ev) => props.setters('lockSeconds', +ev.currentTarget.value)}
         />
       </Card>
 
@@ -78,26 +65,27 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           label={
             <div class="flex gap-4">
               <div>Google Client ID</div>
-              <Toggle fieldName="googleEnabled" value={state.config?.googleEnabled} />
+              <Toggle fieldName="googleEnabled" value={props.state.googleEnabled} />
             </div>
           }
           helperText="Used for Sign In"
-          value={state.config?.googleClientId}
+          value={props.state.googleClientId}
+          onChange={(ev) => props.setters('googleClientId', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="slots"
-          ref={(r) => (slotsRef = r)}
           label={
             <div class="flex items-center gap-2">
               Slots Configuration{' '}
-              <Pill small onClick={formatSlots}>
+              <Pill small onClick={updateSlots}>
                 Format
               </Pill>
             </div>
           }
           helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
-          value={props.slots()}
+          value={props.state.slots}
+          onChange={(ev) => props.setters('slots', ev.currentTarget.value)}
           isMultiline
         />
       </Card>
@@ -109,6 +97,7 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           helperText="Display TOS and Privacy Statements"
           disabled
           class="hidden"
+          onChange={(ev) => props.setters('policiesEnabled', ev)}
         />
 
         <TextInput
@@ -117,6 +106,7 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           helperText="Not yet implemented"
           isMultiline
           disabled
+          onChange={(ev) => props.setters('termsOfService', ev.currentTarget.value)}
         />
         <TextInput
           fieldName="privacyStatement"
@@ -124,6 +114,7 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           helperText="Not yet implemented"
           isMultiline
           disabled
+          onChange={(ev) => props.setters('privacyStatement', ev.currentTarget.value)}
         />
       </Card>
 
@@ -136,7 +127,8 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           { label: 'Subscribers', value: 'subscribers' },
           { label: 'Adminstrators', value: 'admins' },
         ]}
-        value={state.config?.apiAccess || 'off'}
+        value={props.state.apiAccess || 'off'}
+        onChange={(ev) => props.setters('apiAccess', ev.value as any)}
       />
 
       <Card bg="bg-500">
@@ -145,14 +137,16 @@ export const General: Component<{ slots: Accessor<string>; setSlots: Setter<stri
           label="Max Guidance Tokens"
           helperText="Max number of tokens a saga/guidance template can reques. Set to 0 to disable."
           type="number"
-          value={state.config?.maxGuidanceTokens ?? 1000}
+          value={props.state.maxGuidanceTokens ?? 1000}
+          onChange={(ev) => props.setters('maxGuidanceTokens', +ev.currentTarget.value)}
         />
         <TextInput
           fieldName="maxGuidanceVariables"
           label="Max Guidance Variables"
           helperText="Max number of variables a saga/guidance template can request. Set to 0 to disable."
           type="number"
-          value={state.config?.maxGuidanceVariables ?? 15}
+          value={props.state.maxGuidanceVariables ?? 15}
+          onChange={(ev) => props.setters('maxGuidanceVariables', +ev.currentTarget.value)}
         />
       </Card>
     </>

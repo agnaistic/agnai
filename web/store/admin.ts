@@ -223,9 +223,10 @@ export const adminStore = createStore<AdminState>('admin', {
         toastStore.error(`Failed to retrieve products: ${res.error}`)
       }
     },
-    async getConfiguration() {
+    async getConfiguration(_, callback?: (config: AppSchema.Configuration) => void) {
       const res = await api.get('/settings')
       if (res.result) {
+        callback?.(res.result.serverConfig)
         return { config: res.result.serverConfig }
       }
     },

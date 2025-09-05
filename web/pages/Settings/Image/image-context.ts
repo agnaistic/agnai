@@ -173,10 +173,9 @@ export function useImageContext() {
 
   const recieveUpdate = () => {
     if (!page.open) return
-    const access = user.sub?.tier.imagesAccess || user.user?.admin
-    const next =
+
+    const hostingImages =
       !!settings.config.serverConfig?.imagesEnabled &&
-      !!access &&
       settings.config.serverConfig?.imagesModels?.length > 0
 
     const hosts = [
@@ -185,11 +184,11 @@ export function useImageContext() {
       { label: 'Stable Diffusion', value: 'sd' },
     ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
 
-    if (next) {
-      hosts.push({ label: 'Agnaistic', value: 'agnai' })
+    if (hostingImages) {
+      hosts.unshift({ label: 'Agnaistic', value: 'agnai' })
     }
 
-    setState({ canUseImages: next, hosts })
+    setState({ canUseImages: hostingImages, hosts })
   }
 
   const save = () => {

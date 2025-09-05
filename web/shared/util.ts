@@ -927,25 +927,23 @@ export type FieldUpdater = (index: number, path: string) => (ev: any) => void
  * @returns
  */
 export function useRowHelper<T extends object>(opts: {
-  signal: [() => T[], (v: T[]) => void]
+  getter: () => T[]
+  setter: (next: T[]) => void
   empty: () => T
 }) {
-  const items = opts.signal[0]
-  const setItems = opts.signal[1]
-
   const add = () => {
-    const next = items().concat(deepClone(opts.empty()))
-    setItems(next)
+    const next = opts.getter().concat(deepClone(opts.empty()))
+    opts.setter(next)
   }
 
   const remove = (index: number) => {
-    const prev = items()
+    const prev = opts.getter()
     const next = prev.slice(0, index).concat(prev.slice(index + 1))
-    setItems(next)
+    opts.setter(next)
   }
 
   const updateItem = (index: number, field: string, value: any) => {
-    const prev = items()
+    const prev = opts.getter()
     const base = getProperty(opts.empty(), field)
     const parsed = typeof base === 'number' ? +value : value
     const item = setProperty(prev[index], field, parsed)
@@ -954,7 +952,7 @@ export function useRowHelper<T extends object>(opts: {
       .slice(0, index)
       .concat(item)
       .concat(prev.slice(index + 1))
-    setItems(next)
+    opts.setter(next)
   }
 
   const updater = (index: number, field: string) => {
@@ -986,7 +984,7 @@ export function useRowHelper<T extends object>(opts: {
     }
   }
 
-  return { add, remove, updateItem, items, updater }
+  return { add, remove, updateItem, updater }
 }
 
 function setProperty(obj: any, path: string, value: any): any {

@@ -165,7 +165,7 @@ export const ImageSettingsModal = () => {
           <Select
             fieldName="imageType"
             items={ctx.state.hosts}
-            value={ctx.store.type ?? 'horde'}
+            value={ctx.store.type ?? (ctx.state.canUseImages ? 'agnai' : 'horde')}
             onChange={(value) => ctx.update('type', value.value as any)}
             class="!py-1"
             inline

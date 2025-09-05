@@ -3,8 +3,9 @@ import { Card } from '/web/shared/Card'
 import Select from '/web/shared/Select'
 import TextInput from '/web/shared/TextInput'
 import { adminStore, settingStore } from '/web/store'
+import { ConfigSetters, ConfigState } from '../types'
 
-export const Voice: Component = (props) => {
+export const Voice: Component<{ state: ConfigState; setters: ConfigSetters }> = (props) => {
   const settings = settingStore((s) => s.config)
   const state = adminStore((s) => ({ config: s.config }))
 
@@ -20,6 +21,7 @@ export const Voice: Component = (props) => {
           { label: 'Adminstrators', value: 'admins' },
         ]}
         value={state.config?.ttsAccess || 'off'}
+        onChange={(ev) => props.setters('ttsAccess', ev.value as any)}
       />
 
       <TextInput
@@ -28,6 +30,7 @@ export const Voice: Component = (props) => {
         helperText="Full URL with Path - Include any query parameters"
         value={state.config?.ttsHost}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+        onChange={(ev) => props.setters('ttsHost', ev.currentTarget.value)}
       />
 
       <TextInput
@@ -35,6 +38,7 @@ export const Voice: Component = (props) => {
         label="Voice API Key"
         value={''}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
+        onChange={(ev) => props.setters('ttsApiKey', ev.currentTarget.value)}
       />
     </Card>
   )
