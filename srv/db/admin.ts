@@ -45,6 +45,7 @@ export async function getServerConfiguration() {
     actionCalls: [],
     lockSeconds: 0,
     stripeCustomerPortal: '',
+    defaultImageModel: '',
   }
 
   await db('configuration').insertOne(next)
