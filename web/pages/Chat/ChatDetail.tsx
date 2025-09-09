@@ -226,7 +226,9 @@ const ChatDetail: Component = () => {
     )
   })
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
-  const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
+  const tts = createMemo(
+    () => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice?.service
+  )
 
   const clearModal = () => {
     chatStore.option({ options: false, modal: 'none' })
