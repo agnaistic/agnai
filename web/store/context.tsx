@@ -53,6 +53,7 @@ export type ContextState = {
   }
   promptHistory: any
   chatTree: ChatTree
+  msgDeleting?: boolean
   waiting?: MsgState['waiting']
   imgWaiting?: MsgState['imgWaiting']
   status?: MsgState['hordeStatus']
@@ -118,6 +119,7 @@ export function ContextProvider(props: { children: any }) {
     imgWaiting: s.imgWaiting,
     hordeStatus: s.hordeStatus,
     attachments: s.attachments,
+    deleting: s.deleting,
   }))
   const page = pageStore((s) => ({ flags: s.flags }))
 
@@ -191,6 +193,7 @@ export function ContextProvider(props: { children: any }) {
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),
 
+      msgDeleting: msgs.deleting,
       impersonate: chars.impersonating,
       char: char,
       chat: chat,

@@ -700,6 +700,7 @@ const MessageOptions: Component<{
         show: boolean
         schema?: ButtonSchema
         icon: (props: LucideProps) => JSX.Element
+        disabled?: boolean
       }
     > = {
       prompt: {
@@ -794,6 +795,7 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
+        disabled: props.ctx.msgDeleting,
       },
 
       'gen-image': {
@@ -846,6 +848,7 @@ const MessageOptions: Component<{
               onClick={closer(def.onClick)}
               class={def.class}
               schema={def.schema}
+              disabled={def.disabled}
             >
               {def.icon({ size: 18 })}
             </MessageOption>
@@ -1013,6 +1016,7 @@ const MessageOption: Component<{
   id: string
   open: boolean | undefined
   show: boolean | undefined
+  disabled: boolean | undefined
   outer: boolean
   onClick: () => void
   label: string
@@ -1034,6 +1038,7 @@ const MessageOption: Component<{
             class={`${props.class || ''} w-full min-w-max`}
             schema={props.schema || 'secondary'}
             onClick={props.onClick}
+            disabled={props.disabled}
             size="sm"
             alignLeft
           >

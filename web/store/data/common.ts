@@ -51,7 +51,8 @@ export function getInferencePreset(
   return preset || fallback?.preset || {}
 }
 
-export async function getImagePromptEntities(entities: PromptEntities) {
+export async function getImagePromptEntities(messageId?: string) {
+  const entities = await getPromptEntities({ messageId })
   const source = entities.chat.imageSource || 'settings'
 
   let summary = ''
@@ -78,16 +79,16 @@ export async function getImagePromptEntities(entities: PromptEntities) {
     }
   }
 
-  if (!presetId) return { summary, preset: undefined }
+  if (!presetId) return { entities, summary, preset: undefined }
 
   const preset = getStore('presets')
     .getState()
     .presets.find((p) => p._id === presetId)
 
-  return { summary, preset }
+  return { entities, summary, preset }
 }
 
-export async function getPromptEntities(): Promise<PromptEntities> {
+export async function getPromptEntities(opts?: { messageId?: string }): Promise<PromptEntities> {
   const promptState = getStore('prompt').getState()
 
   const props = {
@@ -96,6 +97,13 @@ export async function getPromptEntities(): Promise<PromptEntities> {
 
   const entities = isLoggedIn() ? getAuthedPromptEntities() : await getGuestEntities()
   if (!entities) throw new Error(`Could not collate data for prompting`)
+
+  if (opts?.messageId) {
+    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
+    if (index >= 0) {
+      entities.messages = entities.messages.slice(0, index + 1)
+    }
+  }
 
   return {
     ...entities,

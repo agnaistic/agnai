@@ -412,8 +412,20 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
   return { response: inference.generated, meta: inference.meta }
 })
 
-export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req }, res) => {
+export const inferenceStream = wrap(async (req, res) => {
+  const { socketId, userId, body, log } = req
   assertValid({ ...validInference, messages: 'any?', requestId: 'string' }, body)
+
+  const isEventStream = req.headers.accept === 'text/event-stream'
+  const signal = new AbortController()
+
+  if (isEventStream) {
+    req.socket.on('end', () => {
+      if (signal.signal.aborted) return
+      signal.abort()
+      res.status(499).end()
+    })
+  }
 
   if (userId) {
     if (!req.authed) throw errors.Unauthorized
@@ -431,18 +443,41 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
-    signal: new AbortController(),
+    signal,
   })
 
   const requestId = body.requestId || v4()
-  res.json({ requestId, success: true, generating: true })
+
+  if (!isEventStream) {
+    res.json({ requestId, success: true, generating: true })
+  } else {
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders()
+    res.write(
+      `data: ${JSON.stringify({ generating: true, success: true, requestId: body.requestId })}\n\n`
+    )
+  }
+
   let response = ''
   let partial = ''
 
-  const send = userId ? sendOne : sendGuest
-  const sendId = userId ? userId : socketId
+  const wrapped = (data: any) => {
+    const aborted = signal.signal.aborted
+    if (isEventStream && !aborted) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
 
-  await obtainLock(sendId, 15)
+    if (userId) {
+      sendOne(userId, data)
+    } else {
+      sendGuest(socketId, data)
+    }
+  }
+
+  await obtainLock(userId ? userId : socketId, 15)
 
   let promptSent = false
 
@@ -454,48 +489,57 @@ export const inferenceStream = wrap(async ({ socketId, userId, body, log, ...req
       }
 
       if ('prompt' in gen) {
-        send(sendId, { type: 'inference-prompt', prompt: gen.prompt })
+        wrapped({ type: 'inference-prompt', prompt: gen.prompt })
         promptSent = true
       }
 
       if ('meta' in gen) {
-        send(sendId, { type: 'inference-meta', meta: gen.meta, requestId })
+        wrapped({ type: 'inference-meta', meta: gen.meta, requestId })
       }
 
       if ('partial' in gen) {
         partial = gen.partial
-        send(sendId, { type: 'inference-partial', partial, service, requestId })
+        wrapped({ type: 'inference-partial', partial, service, requestId })
         continue
       }
 
       if ('error' in gen) {
-        send(sendId, { type: 'inference-error', partial, error: gen.error, requestId })
+        wrapped({ type: 'inference-error', partial, error: gen.error, requestId })
         continue
       }
 
       if ('warning' in gen) {
-        send(sendId, { type: 'inference-warning', requestId, warning: gen.warning })
+        wrapped({ type: 'inference-warning', requestId, warning: gen.warning })
         continue
       }
     }
 
     if (!promptSent) {
-      send(sendId, { type: 'inference-prompt', prompt: body.prompt })
+      wrapped({ type: 'inference-prompt', prompt: body.prompt })
     }
   } catch (ex: any) {
-    if (ex instanceof StatusError) {
-      send(sendId, {
+    // User cancellation
+    if (ex?.name === 'AbortError') {
+      req.log.debug('user cancelled inference')
+      response = partial
+      signal.abort()
+    } else if (ex instanceof StatusError) {
+      wrapped({
         type: 'inference-error',
         partial,
         error: `[${ex.status}] ${ex.message}`,
         requestId,
       })
     } else {
-      send(sendId, { type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
+      wrapped({ type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
     }
   }
 
-  await releaseLock(sendId)
+  wrapped({ type: 'inference', requestId, response })
+  await releaseLock(userId ? userId : socketId)
 
-  send(sendId, { type: 'inference', requestId, response })
+  if (isEventStream) {
+    res.write(`data: [DONE]`)
+    res.end()
+  }
 })

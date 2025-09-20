@@ -9,7 +9,14 @@ import TextInput from '/web/shared/TextInput'
 import { isChatPage, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
-import { ArrowLeft, ArrowRight, BrushCleaning, SettingsIcon, WandSparkles } from 'lucide-solid'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BrushCleaning,
+  CircleStop,
+  SettingsIcon,
+  WandSparkles,
+} from 'lucide-solid'
 import { createEmitter } from '/web/shared/util'
 import { cleanPrompt } from '/common/util'
 
@@ -144,6 +151,8 @@ export const GenerateImageModal: Component = () => {
           <Show when={loading()}>
             <div class="bg-900 absolute right-1/2 top-1/2 rounded-lg p-2">
               <RelativeSpinner />
+              Stop
+              <CircleStop />
             </div>
           </Show>
           <Show when={!!reel.state.image}>

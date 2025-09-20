@@ -9,6 +9,7 @@ import { replace } from '/common/util'
 
 export const charsApi = {
   getCharacterDetail,
+  getMultipleDetails,
   getCharacters,
   removeAvatar,
   editAvatar,
@@ -34,6 +35,20 @@ async function getCharacterDetail(charId: string) {
   } else {
     return localApi.error(`Character not found`)
   }
+}
+
+async function getMultipleDetails(charIds: string[]) {
+  if (isLoggedIn()) {
+    const res = await api.post(`/character/multiple`, { characterIds: charIds })
+    return res
+  }
+
+  const ids = new Set(charIds)
+  const chars = await loadItem('characters').then((list) =>
+    list.filter((item) => ids.has(item._id))
+  )
+
+  return localApi.result(chars)
 }
 
 export async function getCharacters() {

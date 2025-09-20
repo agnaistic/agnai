@@ -101,5 +101,5 @@ export function extractReasoning(
     break
   }
 
-  return { thoughts: thoughts.filter((t) => !!t.trim()), content }
+  return { thoughts: thoughts.filter((t) => !!t.trim()), content: content.trim() }
 }

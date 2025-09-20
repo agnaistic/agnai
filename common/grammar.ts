@@ -131,6 +131,7 @@ ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { retu
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
 HistoryProperty "history-prop" = "."? prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
+MainCharacter "main-character" = ("mainchar"i / "mainbot"i) { return "main-char" }
 Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
@@ -168,6 +169,7 @@ History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "his
 
 Interp "interp"
 	= Character
+  / MainCharacter
   / UserEmbed
   / User
   / Scenario

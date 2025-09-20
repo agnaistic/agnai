@@ -12,7 +12,7 @@ import { getUserId } from './api'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { HordeCheck } from '/common/horde-gen'
 import { v4 } from 'uuid'
-import { combine, findOne, replace } from '/common/util'
+import { combine, findOne } from '/common/util'
 import { debug } from '/common/debug'
 
 const log = debug('char-store')
@@ -568,24 +568,62 @@ function replaceChar(
   return { ...map, [id]: { ...next, ...char } }
 }
 
+function replaceCharacters(
+  previous: { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> },
+  incoming: AppSchema.Character[]
+) {
+  const nextMap: Record<string, AppSchema.Character> = { ...previous.map }
+  const nextList = combine(previous.list, incoming)
+
+  for (const char of incoming) {
+    nextMap[char._id] = { ...char }
+  }
+
+  return { list: nextList, map: nextMap }
+}
+
 subscribe('horde-status', { status: 'any' }, (body) => {
   characterStore.setState({ hordeStatus: body.status })
 })
 
-export async function getCharacterDetail(characterId: string) {
+async function getCharacterDetail(characterId: string) {
   const char = await charsApi.getCharacterDetail(characterId)
 
   if (!char.result) return
 
   const detail = characterStore.getState().characters
-  const match = findOne(characterId, detail.list)
-
-  const nextList = match
-    ? replace(characterId, detail.list, char.result)
-    : detail.list.concat(char.result)
+  const nextList = combine(detail.list, [char.result])
 
   const nextMap = replaceChar(detail.map, characterId, char.result)
 
   characterStore.setState({ characters: { list: nextList, map: nextMap, loaded: detail.loaded } })
   return char.result
+}
+
+async function getMultipleCharacters(characterIds: string[]) {
+  const { characters, chatChars } = characterStore.getState()
+  const chars: AppSchema.Character[] = []
+  const missing: string[] = []
+
+  for (const charId of characterIds) {
+    const char = chatChars.map[charId] || characters.map[charId]
+    if (!char?.persona) {
+      missing.push(charId)
+      continue
+    }
+
+    chars.push(char)
+  }
+
+  const details = await charsApi.getMultipleDetails(missing)
+  if (details.error) {
+    throw new Error(`Could not retrieve character details: ${details.error}`)
+  }
+
+  const loaded = chars.concat(details.result)
+  const next = replaceCharacters(characters, loaded)
+
+  characterStore.setState({ characters: { list: next.list, map: next.map, loaded: Date.now() } })
+
+  return loaded
 }

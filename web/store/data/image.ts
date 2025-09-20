@@ -1,5 +1,5 @@
 import * as horde from '../../../common/horde-gen'
-import { createImagePrompt, getMaxImageContext } from '../../../common/image-prompt'
+import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
 import { msgsApi } from './messages'
@@ -13,7 +13,7 @@ import { subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
-import { getImagePromptEntities, getPromptEntities, PromptEntities } from './common'
+import { getImagePromptEntities, getPromptEntities } from './common'
 import { genApi } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
@@ -47,33 +47,47 @@ export const imageApi = {
   generateImagePrompt,
   generateImageWithPrompt,
   generateImageAsync,
+  getSummaryTemplate,
   dataURLtoFile,
   getImageData,
   getSDModelList,
   ALLOWED_TYPES,
 }
 
-export async function generateImagePrompt(opts?: {
+export async function generateImagePrompt(opts: {
   onTick?: TickHandler
   question?: string
   messageId?: string
 }) {
-  const entities = await getPromptEntities()
+  const { question, onTick } = opts
 
-  if (opts?.messageId) {
-    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
-    if (index >= 0) {
-      entities.messages = entities.messages.slice(0, index + 1)
+  const imgEnts = await getImagePromptEntities(opts.messageId)
+  const settings = imgEnts.preset || imgEnts.entities.settings
+
+  console.log(
+    'Using',
+    settings.service,
+    'to summarise:',
+    settings.name || '',
+    `\n${imgEnts.summary || ''}`
+  )
+  const result = await getChatSummary(settings, {
+    prompt: imgEnts.summary,
+    onTick,
+    question,
+  })
+
+  if (result.result?.response) {
+    const { content } = extractReasoning(result.result.response)
+    if (content) {
+      result.result.response = content
     }
   }
 
-  const summary = await createSummarizedImagePrompt({
-    entities,
-    onTick: opts?.onTick,
-    question: opts?.question,
-  })
+  const summary = result?.result?.response
 
-  return summary
+  console.log('Image caption: ', summary)
+  return result
 }
 
 const SD_MODEL_CACHE = new Map<string, SDModel[]>()
@@ -101,19 +115,11 @@ export async function generateImage(
   opts: GenerateOpts,
   callbacks?: { onDone?: (summary: string) => void; onTick?: TickHandler }
 ) {
-  const entities = await getPromptEntities()
-
-  if (opts.messageId) {
-    const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
-    if (index >= 0) {
-      entities.messages = entities.messages.slice(0, index + 1)
-    }
-  }
-
+  const entities = await getPromptEntities({ messageId: opts.messageId })
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
-    : await createSummarizedImagePrompt({
-        entities,
+    : await generateImagePrompt({
+        messageId: opts.messageId,
         onTick: callbacks?.onTick,
         question: opts.question,
       })
@@ -317,47 +323,6 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-async function createSummarizedImagePrompt(opts: {
-  entities: PromptEntities
-  onTick?: TickHandler
-  question?: string
-}) {
-  const { entities, question, onTick } = opts
-
-  if (entities.user.images?.summariseChat) {
-    const imageEntities = await getImagePromptEntities(entities)
-    const settings = imageEntities.preset || entities.settings
-
-    console.log(
-      'Using',
-      settings.service,
-      'to summarise:',
-      settings.name || '',
-      `\n${imageEntities.summary || ''}`
-    )
-    const result = await getChatSummary(settings, {
-      prompt: imageEntities.summary,
-      onTick,
-      question,
-    })
-
-    if (result.result?.response) {
-      const { content } = extractReasoning(result.result.response)
-      if (content) {
-        result.result.response = content
-      }
-    }
-
-    const summary = result?.result?.response
-
-    console.log('Image caption: ', summary)
-    return result
-  }
-
-  const prompt = await createImagePrompt(entities)
-  return localApi.result({ response: prompt, meta: {} })
-}
-
 async function getChatSummary(
   settings: Partial<AppSchema.GenSettings>,
   params: {
@@ -368,11 +333,12 @@ async function getChatSummary(
 ) {
   const opts = await msgsApi.getActiveTemplateParts()
   opts.limit = {
-    context: 4096,
+    context: 8 * 1024,
     encoder: await getEncoder(),
   }
 
-  let template = getSummaryTemplate(settings.service!, {
+  let template = getSummaryTemplate({
+    service: settings.service,
     prompt: params.prompt,
     question: params.question,
   })
@@ -400,8 +366,12 @@ async function getChatSummary(
   return response
 }
 
-function getSummaryTemplate(service: AIAdapter, opts?: { prompt?: string; question?: string }) {
-  switch (service) {
+function getSummaryTemplate(opts: {
+  service: AIAdapter | undefined
+  prompt?: string
+  question?: string
+}) {
+  switch (opts.service) {
     case 'novel': {
       const prompt =
         opts?.prompt ||

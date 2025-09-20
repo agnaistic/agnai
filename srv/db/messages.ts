@@ -32,6 +32,21 @@ export type NewMessage = {
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
+export async function checkExistance(messageIds: string[]) {
+  const res = await db('chat-message')
+    .find({ _id: { $in: messageIds } })
+    .project({ _id: 1, name: 1 })
+    .toArray()
+
+  const missing = new Set(messageIds)
+
+  for (const item of res) {
+    missing.delete(item._id)
+  }
+
+  return { missing: Array.from(missing), valid: missing.size === 0, found: res.length }
+}
+
 export async function createChatMessage(creating: NewMessage, ephemeral?: boolean) {
   const doc: AppSchema.ChatMessage = {
     _id: creating._id || v4(),

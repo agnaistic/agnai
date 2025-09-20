@@ -3,7 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
-import { TickHandler } from '/common/prompt'
+import { debug } from '/common/debug'
 
 let socketId = ''
 
@@ -186,7 +186,7 @@ async function callApi<T = any>(
   return { result: json, status: res.status, error: res.status >= 400 ? res.statusText : undefined }
 }
 
-export async function fetchSSE(opts: {
+export function fetchSSE(opts: {
   path: string
   headers: any
   body: any
@@ -195,8 +195,10 @@ export async function fetchSSE(opts: {
   onData?: (event: any) => void
   onDone?: () => void
   onError?: (err: any) => void
-  onTick?: TickHandler
+  onTick?: (payload: any, state: string) => void
 }) {
+  const log = debug('sse')
+
   const { path, headers, body, signal } = opts
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
@@ -212,6 +214,7 @@ export async function fetchSSE(opts: {
   let incomplete = ''
 
   resp.on('header', (statusCode, headers) => {
+    log('code %s', statusCode)
     // const contentType = headers['content-type'] || ''
     if (statusCode > 201) {
       error = `Streaming request failed with status code ${statusCode}`

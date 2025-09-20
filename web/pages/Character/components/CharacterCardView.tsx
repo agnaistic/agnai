@@ -8,6 +8,7 @@ import { ArrowRight, Download, Menu, Star, Trash, VenetianMask } from 'lucide-so
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
 import { quickCreateChat } from '/web/store'
+import { Selectable } from '/web/shared/Selectable'
 
 export const CharacterCardView: Component<ViewProps> = (props) => {
   return (
@@ -20,13 +21,19 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
           <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(160px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
             <For each={group.list}>
               {(char) => (
-                <Character
-                  edit={() => props.setEdit(char)}
-                  char={char}
-                  delete={() => props.setDelete(char)}
-                  download={() => props.setDownload(char)}
-                  toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
-                />
+                <Selectable
+                  selecting={props.selecting}
+                  selected={props.selected[char._id] === true}
+                  onSelect={() => props.select(char._id)}
+                >
+                  <Character
+                    edit={() => props.setEdit(char)}
+                    char={char}
+                    delete={() => props.setDelete(char)}
+                    download={() => props.setDownload(char)}
+                    toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
+                  />
+                </Selectable>
               )}
             </For>
             <Show when={group.list.length < 4}>

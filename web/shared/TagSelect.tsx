@@ -1,9 +1,10 @@
-import { Component, JSX, For, createSignal, Show } from 'solid-js'
+import { Component, JSX, For, createSignal, Show, createMemo, createEffect, on } from 'solid-js'
 import { DropMenu } from './DropMenu'
 import Button from './Button'
 import { CheckSquare, ChevronDown, Square, X, XSquare } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import { tagStore } from '../store'
+import TextInput from './TextInput'
 
 export type TagOption = {
   tag: string
@@ -17,6 +18,7 @@ const TagSelect: Component<{
   helperText?: string | JSX.Element
 }> = (props) => {
   const state = tagStore((s) => ({ filter: s.filter, tags: s.tags, hidden: s.hidden }))
+  const [filter, setFilter] = createSignal('')
 
   const [opts, setOpts] = createSignal(false)
 
@@ -27,6 +29,27 @@ const TagSelect: Component<{
   const toggle = (value: string) => {
     tagStore.toggle(value)
   }
+
+  const filteredTags = createMemo(() => {
+    const search = filter()
+    if (!search.trim()) return state.tags
+
+    const low = search.toLowerCase()
+    const filtered = state.tags.filter((t) => t.tag.toLowerCase().includes(low))
+    return filtered
+  })
+
+  // Clear filter when opening
+  createEffect(
+    on(
+      () => opts(),
+      () => {
+        const open = opts()
+        if (!open) return
+        setFilter('')
+      }
+    )
+  )
 
   return (
     <>
@@ -59,7 +82,21 @@ const TagSelect: Component<{
                     <div class="font-bold">Reset Tag Filters</div>
                   </div>
                 </div>
-                <For each={state.tags}>
+
+                <div class="grid gap-1" style={{ 'grid-template-columns': '1fr auto' }}>
+                  <TextInput
+                    value={filter()}
+                    onChange={(ev) => setFilter(ev.currentTarget.value)}
+                    placeholder="Filter Tags..."
+                  />
+                  <div class="flex cursor-pointer items-center" onClick={() => setFilter('')}>
+                    <X size={16} />
+                  </div>
+                </div>
+                <Show when={filteredTags().length === 0}>
+                  <div class="w-full px-2 py-1 font-bold">No Tags Found</div>
+                </Show>
+                <For each={filteredTags()}>
                   {(option) => (
                     <div
                       class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"

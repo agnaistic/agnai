@@ -155,6 +155,7 @@ const FINAL_IGNORE_HOLDERS: { [key in Holder | 'roll']?: boolean } = {
 }
 
 type Holder =
+  | 'main-char'
   | 'char'
   | 'user'
   | 'scenario'
@@ -933,6 +934,9 @@ function getPlaceholder(
   switch (node.value) {
     case 'value':
       return conditionText || ''
+
+    case 'main-char':
+      return (opts.char?.name || '').trim()
 
     case 'char':
       return ((flags.iterate_char || opts.replyAs || opts.char)?.name || '').trim()

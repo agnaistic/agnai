@@ -1,6 +1,6 @@
 import { assertValid } from '/common/valid'
 import { store } from '../../db'
-import { errors, handle } from '../wrap'
+import { errors, handle, StatusError } from '../wrap'
 import { sendMany } from '../ws'
 
 export const deleteMessages = handle(async ({ body, params, userId }) => {
@@ -17,6 +17,21 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
   }
 
   await store.msgs.deleteMessages(body.ids)
+
+  const toVerifyIds: string[] = []
+  if (body.leafId) toVerifyIds.push(body.leafId)
+  if (body.parents) {
+    const ids = Object.keys(body.parents)
+    toVerifyIds.push(...ids)
+  }
+
+  if (toVerifyIds.length) {
+    const verify = await store.msgs.checkExistance(toVerifyIds)
+
+    if (verify.missing.length) {
+      throw new StatusError(`Some message IDs were invalid. Refresh and try again.`, 400)
+    }
+  }
 
   if (body.leafId) {
     await store.chats.update(chatId, { treeLeafId: body.leafId })

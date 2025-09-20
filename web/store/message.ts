@@ -55,6 +55,7 @@ export type MsgState = {
   msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
+  deleting?: boolean
   waiting?: {
     started: number
     signal?: AbortController
@@ -775,12 +776,21 @@ export const msgStore = createStore<MsgState>(
 
       msgStore.swapMessage(msgId, position, onSuccess)
     },
-    async deleteMessages({ msgs, activeChatId, graph }, fromId: string, deleteOne?: boolean) {
+    async *deleteMessages(
+      { msgs, activeChatId, graph, deleting },
+      fromId: string,
+      deleteOne?: boolean
+    ) {
+      if (deleting) {
+        return
+      }
+
       const index = msgs.findIndex((m) => m._id === fromId)
       if (index === -1) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
+      yield { deleting: true }
       const parents: any = {}
       if (deleteOne) {
         const node = graph.tree[fromId]
@@ -802,10 +812,12 @@ export const msgStore = createStore<MsgState>(
       const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId, parents)
 
       if (res.error) {
+        yield { deleting: false }
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
       updateMsgParents(activeChatId, parents)
+      yield { deleting: false }
     },
     stopSpeech() {
       stopSpeech()
@@ -879,6 +891,7 @@ export const msgStore = createStore<MsgState>(
           characterId: activeCharId,
           messageId,
           started: Date.now(),
+          // signal: new AbortController()
         },
       }
 

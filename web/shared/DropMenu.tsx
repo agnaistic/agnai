@@ -3,6 +3,9 @@ import { Component, createEffect, createMemo, createSignal, on, Show } from 'sol
 import { useEffect } from './hooks'
 import { v4 } from 'uuid'
 
+export type Horz = 'left' | 'right'
+export type Vert = 'up' | 'down'
+
 export const Dropup: Component<{ children: any }> = (props) => {
   const [show, setShow] = createSignal(false)
 
@@ -40,9 +43,6 @@ export const Dropdown: Component<{ children: any }> = (props) => {
     </div>
   )
 }
-
-type Horz = 'left' | 'right'
-type Vert = 'up' | 'down'
 
 export const DropMenu: Component<{
   show: boolean

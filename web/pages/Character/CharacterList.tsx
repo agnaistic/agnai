@@ -33,6 +33,8 @@ import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import { Page } from '/web/Layout'
 import { DragDropProvider, DragDropSensors } from '@thisbeyond/solid-dnd'
 import { isMobile } from '/web/shared/hooks'
+import { createStore } from 'solid-js/store'
+import { Pill } from '/web/shared/Card'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -56,9 +58,12 @@ const CharacterList: Component = () => {
 
   const cached = getListCache()
   const [query, setQuery] = useSearchParams()
+  const [selected, setSelected] = createStore<Record<string, boolean>>()
+
   const [search, setSearch] = createSignal('')
   const [sortField, setSortField] = createSignal(cached.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
+  const [multi, setMulti] = createSignal(false)
 
   const chats = chatStore((s) => s.allChats)
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
@@ -163,26 +168,47 @@ const CharacterList: Component = () => {
     saveListCache(next)
   })
 
+  const multiSelected = createMemo(() => {
+    const ids = Object.entries(selected)
+      .filter(([_, active]) => active === true)
+      .map(([key]) => key)
+
+    return { ids, count: ids.length }
+  })
+
+  const cancelSelect = () => {
+    const { ids } = multiSelected()
+    for (const id of ids) {
+      setSelected(id, false)
+    }
+
+    setMulti(false)
+  }
+
   return (
     <Page>
       <PageHeader
-        title={
-          <div class="flex w-full justify-between">
-            <div>Characters</div>
+        title={'Characters'}
+        subtitle={
+          <div class="flex flex-col gap-2">
             <div class="flex gap-2 text-base">
-              <Button onClick={() => setImport(true)}>
+              <Button size="sm" onClick={() => setImport(true)}>
                 <Import />
                 <span class="hidden sm:inline">Import</span>
               </Button>
 
               <A href="/character/create">
-                <Button>
+                <Button size="sm">
                   <Plus />
                   <span class="hidden sm:inline">Create</span>
                 </Button>
               </A>
 
-              <Button onClick={() => chatStore.getAllChats()}>
+              <Button size="sm" class="!h-[32px]" onClick={() => setMulti(true)}>
+                Multi-Select
+              </Button>
+
+              <Button onClick={() => chatStore.getAllChats()} size="sm">
                 <RefreshCcw />
               </Button>
             </div>
@@ -244,6 +270,30 @@ const CharacterList: Component = () => {
           </div>
         </div>
       </div>
+
+      <Show when={multi()}>
+        <div class="py-1">
+          <div class="text-500 text-xs font-bold">With Selected:</div>
+          <div class="flex items-center gap-2 text-base">
+            <Pill>Selected: {multiSelected().count}</Pill>
+            <Button size="sm" schema="error" disabled={multiSelected().count === 0}>
+              Delete
+            </Button>
+            <Button size="sm" schema="warning" disabled={multiSelected().count === 0}>
+              Archive
+            </Button>
+
+            {/* @todo: need to get detailed char info for downloading before zipping */}
+            {/* <Button size="sm" disabled={multiSelected().count === 0}>
+              Download
+            </Button> */}
+            <Button size="sm" schema="secondary" onClick={cancelSelect}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Show>
+
       <div class="flex justify-center pb-2" classList={{ hidden: view() === 'folders' }}>
         <ManualPaginate pager={pager} />
       </div>
@@ -257,6 +307,9 @@ const CharacterList: Component = () => {
         sortField={sortField()}
         sortDirection={sortDirection()}
         favorites={favorites()}
+        multiselect={multi()}
+        selected={selected}
+        setSelected={setSelected}
       />
       <div class="flex justify-center pb-5 pt-2" classList={{ hidden: view() === 'folders' }}>
         <ManualPaginate pager={pager} />
@@ -274,6 +327,7 @@ const CharacterList: Component = () => {
 
 const Characters: Component<{
   allCharacters: AppSchema.Character[]
+  multiselect: boolean
   characters: AppSchema.Character[]
   favorites: AppSchema.Character[]
   loading: boolean
@@ -282,7 +336,12 @@ const Characters: Component<{
   filter: string
   sortField: SortField
   sortDirection: SortDirection
+
+  selected: Record<string, boolean>
+  setSelected: (charId: string, state: boolean) => void
 }> = (props) => {
+  const [showDelete, setDelete] = createSignal<AppSchema.Character>()
+  const [download, setDownload] = createSignal<AppSchema.Character>()
   const [editChar, setEditChar] = createSignal<AppSchema.Character>()
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
@@ -302,8 +361,11 @@ const Characters: Component<{
     characterStore.setFavorite(charId, favorite)
   }
 
-  const [showDelete, setDelete] = createSignal<AppSchema.Character>()
-  const [download, setDownload] = createSignal<AppSchema.Character>()
+  const selectCharacter = (id: string) => {
+    const prev = !!props.selected[id]
+    props.setSelected(id, !prev)
+  }
+
   return (
     <>
       <DragDropProvider>
@@ -328,6 +390,9 @@ const Characters: Component<{
                 setDownload={setDownload}
                 setDelete={setDelete}
                 setEdit={setEditChar}
+                selecting={props.multiselect}
+                select={selectCharacter}
+                selected={props.selected}
               />
             </Show>
 
@@ -339,6 +404,9 @@ const Characters: Component<{
                 setDelete={setDelete}
                 setDownload={setDownload}
                 setEdit={setEditChar}
+                selecting={props.multiselect}
+                select={selectCharacter}
+                selected={props.selected}
               />
             </Show>
 
@@ -352,6 +420,9 @@ const Characters: Component<{
                 setDelete={setDelete}
                 setDownload={setDownload}
                 setEdit={setEditChar}
+                selecting={props.multiselect}
+                select={selectCharacter}
+                selected={props.selected}
               />
             </Show>
           </Match>

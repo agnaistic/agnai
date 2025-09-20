@@ -66,6 +66,7 @@ const PromptModal: Component = () => {
             <div class="font-bold">Est. tokens: {tokens()}</div>
             <div class="mb-1">
               <CharacterSelect
+                horz="right"
                 items={options()}
                 fieldName="prompt-perspective"
                 onChange={setPerspective}
