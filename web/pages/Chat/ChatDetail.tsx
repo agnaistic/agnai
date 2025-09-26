@@ -70,7 +70,6 @@ const ChatDetail: Component = () => {
     loaded: s.detailLoaded,
     loading: s.detailLoading,
     opts: s.opts,
-    ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
     linesAddedCount: s.prompt?.template.linesAddedCount,
     msgVisibility: s.msgVisibility,
     listChat: s.allChats.find((chat) => chat._id === params.id),
@@ -193,10 +192,10 @@ const ChatDetail: Component = () => {
 
   createEffect(
     on(
-      () => [msgs.msgs, chats.chat, chats.char, chats.ready],
+      () => [msgs.msgs, chats.chat, chats.char],
       () => {
         // On Connect Events
-        if (evented() || !chats.chat || !chats.char || !chars.ready || !chats.ready) return
+        if (evented() || !chats.chat || !chats.char || !chars.ready) return
         setEvented(true)
 
         const messages = msgs.msgs

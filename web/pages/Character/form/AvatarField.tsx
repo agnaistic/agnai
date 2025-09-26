@@ -87,9 +87,17 @@ export const AvatarField: Component<{
               Select Avatar Image
             </FileInput>
             <div class="relative flex w-full gap-2">
-              <div class="absolute right-2 top-1">
+              <div class="absolute right-2 top-1.5">
                 <Regenerate field={'appearance'} editor={props.editor} />
               </div>
+
+              <div class="absolute right-2 top-1.5 flex gap-2">
+                {/* <Button size="sm">
+                  <Dices size={16} />
+                </Button> */}
+                <Regenerate field={'appearance'} editor={props.editor} />
+              </div>
+
               <TextInput
                 isMultiline
                 parentClass="w-full"

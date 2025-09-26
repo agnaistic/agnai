@@ -287,7 +287,7 @@ const InputBar: Component<{
           <div class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]">
             <TextInput
               parentClass="!p-0.5 text-sm flex flex-1"
-              placeholder="Response hint... 🗭"
+              placeholder="Response hint..."
               value={prompt.hint}
               onChange={(ev) =>
                 promptStore.hint({ chatId: props.chat._id, text: ev.currentTarget.value })

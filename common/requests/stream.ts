@@ -101,6 +101,7 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     if (data.meta) {
       if (data.meta.finish_reason) meta.stop = data.meta.finish_reason
       if (data.meta.model) meta.model = meta.model = data.meta.model
+      if (data.meta.provider) meta.ext = data.meta.provider
     }
 
     if (data.error) {

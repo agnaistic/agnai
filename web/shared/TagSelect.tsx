@@ -32,10 +32,27 @@ const TagSelect: Component<{
 
   const filteredTags = createMemo(() => {
     const search = filter()
-    if (!search.trim()) return state.tags
+    if (!search.trim())
+      return state.tags
+        .slice()
+        .sort((l, r) =>
+          l.tag === 'archived'
+            ? -1
+            : r.tag === 'archived'
+            ? 1
+            : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
+        )
 
     const low = search.toLowerCase()
-    const filtered = state.tags.filter((t) => t.tag.toLowerCase().includes(low))
+    const filtered = state.tags
+      .filter((t) => t.tag.toLowerCase().includes(low))
+      .sort((l, r) =>
+        l.tag === 'archived'
+          ? -1
+          : r.tag === 'archived'
+          ? 1
+          : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
+      )
     return filtered
   })
 

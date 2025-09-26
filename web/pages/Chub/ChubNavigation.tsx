@@ -1,8 +1,8 @@
-import { Component, For, createMemo, onMount } from 'solid-js'
+import { Component, For, Show, createMemo, onMount } from 'solid-js'
 import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
-import { ArrowLeft, ArrowRight, Search } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Search, X } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
 import { Combobox } from '/web/shared/Combobox'
 import { useSearchParams } from '@solidjs/router'
@@ -218,6 +218,7 @@ const Tags = () => {
         onClick={(item) => addTag(item.value)}
         onClearClicked={() => chubStore.setTags('')}
         autoClose
+        onEnter={(text) => (text ? addTag(text) : null)}
         placeholder="Tags..."
       />
 
@@ -235,6 +236,11 @@ const Tags = () => {
             </Pill>
           )}
         </For>
+        <Show when={tags().length > 0}>
+          <Pill small type="hl" inverse onClick={() => chubStore.setTags('')}>
+            <X size={16} />
+          </Pill>
+        </Show>
       </div>
     </div>
   )

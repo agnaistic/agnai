@@ -63,11 +63,10 @@ const CharacterChats: Component = () => {
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
       characterId: chat.characterId,
-      characters: toChatListState(s.allChars.map, chat),
+      characters: toChatListState(chars.map, chat),
       messageCount: chat.messageCount,
       genPreset: chat.genPreset,
     })),
-    chars: s.allChars.map,
   }))
 
   const sortOptions = createMemo(() => {
@@ -142,7 +141,7 @@ const CharacterChats: Component = () => {
   })
 
   onMount(() => {
-    chatStore.getAllChats()
+    characterStore.getAllChats()
   })
 
   const Options = () => (
@@ -241,7 +240,7 @@ const CharacterChats: Component = () => {
         fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}
       >
         <Chats
-          allChars={state.chars}
+          allChars={chars.map}
           chats={pager.items()}
           chars={chars.list}
           sortField={sortField()}
@@ -376,10 +375,10 @@ const Chats: Component<{
 }
 
 const NoChats: Component<{ character?: string }> = (props) => {
-  const state = chatStore((s) => ({ allLoaded: s.allLoaded }))
+  const state = characterStore((s) => ({ loaded: s.characters.loaded > 0 }))
   return (
     <Show
-      when={state.allLoaded}
+      when={state.loaded}
       fallback={
         <div class="flex w-full justify-center">
           <Loading />

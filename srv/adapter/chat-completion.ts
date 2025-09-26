@@ -343,3 +343,10 @@ export const requestFullCompletion: CompletionGenerator = async function* ({
 
   return resp.body
 }
+
+export function modelNeedsUserRoleLast(model: string): boolean {
+  if (model.includes('deepseek') && model.includes('v3.1')) return true
+  if (model.includes('grok-4')) return true
+
+  return false
+}

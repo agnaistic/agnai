@@ -8,6 +8,7 @@ export const EVENTS = {
   init: 'init',
   charsReceived: 'chars-received',
   allChars: 'all-chars-recieved',
+  allChats: 'all-chats-received',
   setInputText: 'set-input-text',
   charUpdated: 'character-updated',
   clearMsgs: 'clear-messages',

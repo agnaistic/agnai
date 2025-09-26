@@ -8,7 +8,14 @@ import {
   setComponentPageTitle,
   uniqueBy,
 } from '../../shared/util'
-import { announceStore, chatStore, pageStore, settingStore, userStore } from '../../store'
+import {
+  announceStore,
+  characterStore,
+  chatStore,
+  pageStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import { A, useNavigate } from '@solidjs/router'
 import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
@@ -189,17 +196,18 @@ export default HomePage
 const RecentChats: Component<{ emitter: ComponentEmitter<'loaded'> }> = (props) => {
   const nav = useNavigate()
 
+  const chars = characterStore((s) => ({ map: s.characters.map }))
+
   const state = chatStore((s) => {
     // We want this to occur after the state has propogated
     setTimeout(() => props.emitter.emit.loaded(), 200)
 
     return {
-      chars: s.allChars.list,
       last: uniqueBy(s.allChats, 'characterId')
         .slice()
         .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
         .slice(0, 4)
-        .map((chat) => ({ chat, char: s.allChars.map[chat.characterId] })),
+        .map((chat) => ({ chat, char: chars.map[chat.characterId] })),
     }
   })
 

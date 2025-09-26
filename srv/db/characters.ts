@@ -2,7 +2,7 @@ import { v4 } from 'uuid'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
-import { UpdateFilter } from 'mongodb'
+import { Filter, UpdateFilter } from 'mongodb'
 
 export type CharacterUpdate = Partial<
   Pick<
@@ -92,12 +92,27 @@ export async function updateCharacter(id: string, userId: string, char: Characte
 export async function bulkUpdate(
   userId: string,
   charIds: string[],
-  update: { folder?: string; addTag?: string; removeTag?: string }
+  update: {
+    folder?: string
+    addTag?: string
+    removeTag?: string
+    archive?: boolean
+    delete?: boolean
+  }
 ) {
-  const set: UpdateFilter<AppSchema.Character> = {}
+  const set: UpdateFilter<AppSchema.Character> = { $set: {}, $push: {} }
+
+  if (update.delete) {
+    const result = await db('character').deleteMany({ userId, _id: { $in: charIds } })
+    return result.deletedCount
+  }
+
+  if (update.archive) {
+    set.$push = { tags: 'archived' }
+  }
 
   if (update.folder) {
-    set.folder = update.folder
+    set.$set = { folder: update.folder }
   }
 
   if (update.addTag) {
@@ -108,10 +123,7 @@ export async function bulkUpdate(
     set.$pull = { tags: update.removeTag }
   }
 
-  const result = await db('character').updateMany(
-    { where: { userId, _id: { $in: charIds } } },
-    { $set: set }
-  )
+  const result = await db('character').updateMany({ userId, _id: { $in: charIds } }, set)
 
   return result.matchedCount
 }
@@ -131,24 +143,31 @@ export async function getCharacter(
   return char || undefined
 }
 
-export async function getCharacters(userId: string) {
-  const list = await db('character')
-    .find({ userId })
-    .project({
-      _id: 1,
-      userId: 1,
-      name: 1,
-      avatar: 1,
-      description: 1,
-      favorite: 1,
-      tags: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      voice: 1,
-      voiceDisabled: 1,
-      folder: 1,
-    })
-    .toArray()
+export async function getCharacters(userId: string, opts?: { detailed?: boolean; ids?: string[] }) {
+  const find: Filter<AppSchema.Character> = { userId }
+
+  if (opts?.ids) {
+    find._id = { $in: opts.ids }
+  }
+
+  const project = {
+    _id: 1,
+    userId: 1,
+    name: 1,
+    avatar: 1,
+    description: 1,
+    favorite: 1,
+    tags: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    voice: 1,
+    voiceDisabled: 1,
+    folder: 1,
+  }
+
+  const list = opts?.detailed
+    ? await db('character').find(find).toArray()
+    : await db('character').find(find).project(project).toArray()
 
   return list
 }

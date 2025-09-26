@@ -2,7 +2,11 @@ import { getOaiCompatibleUrl, joinUrl, sanitiseAndTrim } from '/common/requests/
 import { AdapterProps, ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppLog } from '../middleware'
-import { requestFullCompletion, toChatCompletionPayload } from './chat-completion'
+import {
+  modelNeedsUserRoleLast,
+  requestFullCompletion,
+  toChatCompletionPayload,
+} from './chat-completion'
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
 import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
@@ -351,14 +355,14 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
     }
 
     case 'known-openrouter': {
-      if (body.model !== 'deepseek/deepseek-chat-v3.1') return
+      if (!modelNeedsUserRoleLast(body.model)) return
       if (!lastMsg) return
       lastMsg.role = 'user'
       return
     }
   }
 
-  if (model.includes('deepseek') && model.includes('v3.1')) {
+  if (modelNeedsUserRoleLast(model)) {
     lastMsg.role = 'user'
   }
 }

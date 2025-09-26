@@ -224,14 +224,16 @@ const ImageCollectionModal: Component<{}> = (props) => {
         <Download size={20} />
       </Button>
 
-      <Button
-        size="sm"
-        schema="primary"
-        disabled={!reel.state.image || !store.src?.messageId}
-        onClick={attachImage}
-      >
-        Attach to Message
-      </Button>
+      <Show when={store.src?.messageId}>
+        <Button
+          size="sm"
+          schema="primary"
+          disabled={!reel.state.image || !store.src?.messageId}
+          onClick={attachImage}
+        >
+          Attach to Message
+        </Button>
+      </Show>
 
       <Button size="sm" schema="error" onClick={removeImage} disabled={!reel.state.images.length}>
         <Trash size={20} />

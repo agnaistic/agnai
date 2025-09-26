@@ -177,13 +177,22 @@ export async function downloadCharCard(input: string | AppSchema.Character, form
     char = input
   }
 
-  const json = charToJson(char, format)
+  const blob = await createCharacterImageBlob(char, format)
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(blob)
+  anchor.download = `${char.name}.card.png`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+export async function createCharacterImageBlob(char: AppSchema.Character, format?: string) {
+  const json = charToJson(char, format || '')
   const image = getAssetUrl(char.avatar!)
+
   /**
    * Only PNG and APNG files can contain embedded character information
    * If the avatar image is not either of these formats, we must convert it
    */
-
   const dataurl = await imageToDataURL(image)
   const base64 = dataurl.split(',')[1]
   const imgBuffer = Buffer.from(window.atob(base64), 'binary')
@@ -195,11 +204,8 @@ export async function downloadCharCard(input: string | AppSchema.Character, form
     text.encode('chara', output),
     chunks[lastChunkIndex],
   ]
-  const anchor = document.createElement('a')
-  anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-  anchor.download = `${char.name}.card.png`
-  anchor.click()
-  URL.revokeObjectURL(anchor.href)
+  const blob = new Blob([Buffer.from(encode(chunksToExport))])
+  return blob
 }
 
 async function imageToDataURL(image: string) {
@@ -222,12 +228,12 @@ async function imageToDataURL(image: string) {
   return dataUrl
 }
 
-function charToJson(char: AppSchema.Character, format: string) {
+export function charToJson(char: AppSchema.Character, format: string) {
   const { _id, ...json } = char
 
   const copy = { ...char }
 
-  if (format === 'native') {
+  if (format === 'native' || !format) {
     return JSON.stringify(json, null, 2)
   }
 

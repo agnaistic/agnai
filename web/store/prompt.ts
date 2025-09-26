@@ -1,13 +1,5 @@
-import { createSignal, onCleanup } from 'solid-js'
 import { storage } from '../shared/util'
-import { createStore, getStore } from './create'
-import { JsonField, TickHandler } from '/common/prompt'
-import { AppSchema } from '/common/types'
-import { createStore as solidStore } from 'solid-js/store'
-import { genApi } from './data/inference'
-import { parseTemplate } from '/common/template-parser'
-import { msgsApi } from './data/messages'
-import { getEncoder } from '/common/tokenize'
+import { createStore } from './create'
 
 export type PromptState = {
   hintsEnabled: boolean

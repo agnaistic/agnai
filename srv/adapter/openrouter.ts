@@ -10,6 +10,7 @@ import { logPayload, stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { modelNeedsUserRoleLast } from './chat-completion'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -81,7 +82,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.system = system
   } else if (opts.messages) {
     const last = opts.messages.slice(-1)[0]
-    if (last && payload.model === 'deepseek/deepseek-chat-v3.1') {
+    if (last && modelNeedsUserRoleLast(payload.model)) {
       last.role = 'user'
     }
     payload.messages = opts.messages

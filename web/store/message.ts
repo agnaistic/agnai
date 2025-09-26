@@ -944,6 +944,7 @@ export const msgStore = createStore<MsgState>(
             const next = (imgWaiting?.pos || 1) + 1
             msgStore.setState({ imgWaiting: { ...imgWaiting!, pos: next } })
           },
+
           onTick: opts.onTick,
         }
       )

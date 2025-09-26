@@ -53,6 +53,7 @@ export type EditorState = {
   imageSettings?: ImageSettings
   json?: ResponseSchema
   imageOverride: string
+  flags: Record<string, any>
 }
 
 export type SetEditor = SetStoreFunction<EditorState>
@@ -123,6 +124,7 @@ const initState: EditorState = {
     },
   },
   imageOverride: '',
+  flags: {},
 }
 
 const [updateCache] = createDebounce(async (state: EditorState) => {
@@ -299,6 +301,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
       // We set fields that aren't properly managed by form elements
       setState({
         ...char,
+        flags: {},
         personaKind,
         personaAttrs: toAttrs(char?.persona?.attributes),
         alternateGreetings: char?.alternateGreetings || [],

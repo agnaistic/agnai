@@ -26,7 +26,11 @@ export function extractReasoning(
 
   // No thoughts, skip everything
   if (init.start === -1 && init.end === -1) {
-    return { thoughts: [], content }
+    return { content, thoughts: [] }
+  }
+
+  if (init.start === 0 && init.end === -1) {
+    return { content, thoughts }
   }
 
   while (true) {
@@ -83,6 +87,7 @@ export function extractReasoning(
     if (start > -1) {
       const pre = content.slice(0, start)
       const thought = content.slice(start + len.open)
+
       content = pre
       thoughts.push(thought)
       break

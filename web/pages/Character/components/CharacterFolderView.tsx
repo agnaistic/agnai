@@ -27,10 +27,11 @@ import { DropMenu } from '/web/shared/DropMenu'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
 import { on } from 'solid-js'
-import { characterStore, chatStore, quickCreateChat } from '/web/store'
+import { characterStore, quickCreateChat } from '/web/store'
 import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
+import { Selectable } from '/web/shared/Selectable'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -39,7 +40,7 @@ type Folder = { path: string; depth: number; list: AppSchema.Character[] }
 export const CharacterFolderView: Component<
   ViewProps & { characters: AppSchema.Character[]; favorites: AppSchema.Character[] }
 > = (props) => {
-  const chars = chatStore((s) => ({ allChars: s.allChars }))
+  const chars = characterStore((s) => ({ list: s.characters.list, map: s.characters.map }))
   const [search, setSearch] = useSearchParams()
   const [, { onDragStart, onDragEnd }] = useDragDropContext()!
   const size = useResizeObserver()
@@ -120,7 +121,7 @@ export const CharacterFolderView: Component<
   const folders = createMemo(() => {
     const tree: FolderTree = { '/': { path: '/', depth: 1, list: [] } }
     const map = charsMap()
-    for (const char of chars.allChars.list) {
+    for (const char of chars.list) {
       let folder = toFolderSlug(char.folder || '')
       const depth = folder.match(/\//g)?.length ?? 0
 
@@ -209,14 +210,20 @@ export const CharacterFolderView: Component<
 
           <For each={pager.items()}>
             {(char) => (
-              <Character
-                edit={() => props.setEdit(char)}
-                char={char}
-                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-                delete={() => props.setDelete(char)}
-                download={() => props.setDownload(char)}
-                folder={() => setChangeFolder(char)}
-              />
+              <Selectable
+                selecting={props.selecting}
+                selected={props.selected[char._id] === true}
+                onSelect={() => props.select(char._id)}
+              >
+                <Character
+                  edit={() => props.setEdit(char)}
+                  char={char}
+                  toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                  delete={() => props.setDelete(char)}
+                  download={() => props.setDownload(char)}
+                  folder={() => setChangeFolder(char)}
+                />
+              </Selectable>
             )}
           </For>
         </div>

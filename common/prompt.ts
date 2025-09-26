@@ -13,6 +13,7 @@ import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { PromptTemplate } from './types/presets'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
+import { extractReasoning } from './reasoning'
 
 export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
 
@@ -1207,28 +1208,31 @@ function removeReasoning(msg: string, reasoning: AppSchema.GenSettings['reasonin
 
   if (!start || !end) return msg
 
-  while (true) {
-    let startIndex = msg.indexOf(start)
-    const endIndex = msg.indexOf(end)
-    if (startIndex < 0) {
-      if (endIndex >= 0) {
-        startIndex = 0
-      } else {
-        break
-      }
-    }
+  const { content } = extractReasoning(msg, { tags: reasoning })
+  return content
 
-    if (endIndex > startIndex) {
-      const thought = msg.slice(startIndex, endIndex + end.length)
-      msg = msg.replace(thought, '')
-      continue
-    }
+  // while (true) {
+  //   let startIndex = msg.indexOf(start)
+  //   const endIndex = msg.indexOf(end)
+  //   if (startIndex < 0) {
+  //     if (endIndex >= 0) {
+  //       startIndex = 0
+  //     } else {
+  //       break
+  //     }
+  //   }
 
-    const thought = msg.slice(startIndex)
-    if (thought) {
-      msg = msg.replace(thought, '')
-    }
-  }
+  //   if (endIndex > startIndex) {
+  //     const thought = msg.slice(startIndex, endIndex + end.length)
+  //     msg = msg.replace(thought, '')
+  //     continue
+  //   }
 
-  return msg.trim()
+  //   const thought = msg.slice(startIndex)
+  //   if (thought) {
+  //     msg = msg.replace(thought, '')
+  //   }
+  // }
+
+  // return msg.trim()
 }

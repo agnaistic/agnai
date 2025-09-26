@@ -18,6 +18,11 @@ export function incompleteJson(data: string) {
   return false
 }
 
+export function randomElement<T>(elems: T[]) {
+  const rand = Math.floor(Math.random() * elems.length)
+  return elems[rand]
+}
+
 export function parseEvent(msg: string) {
   const event: any = {}
   for (const line of msg.split(/\r?\n/)) {
@@ -43,6 +48,23 @@ export function getMimeTypeBase64(base64: string) {
 
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
+}
+
+export function updateList<T extends { _id: string }>(original: T[], incoming: T[]) {
+  const map = toMap(incoming)
+  const next: T[] = []
+
+  for (const item of original) {
+    const inc = map[item._id]
+    if (!inc) {
+      next.push(item)
+      continue
+    }
+
+    next.push({ ...item, ...inc })
+  }
+
+  return next
 }
 
 /**

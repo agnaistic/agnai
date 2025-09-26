@@ -2,11 +2,12 @@ import { Download } from 'lucide-solid'
 import { Component, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
-import { chatStore, msgStore } from '../../store'
+import { characterStore, chatStore, msgStore } from '../../store'
 import { resolveChatPath } from '/common/chat'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
   const chats = chatStore.getState()
+  const chars = characterStore.getState().characters
   const msgs = msgStore.getState()
 
   const json = createMemo(() => {
@@ -29,13 +30,13 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
         values: msg.values,
         parent: msg.parent ? msg.parent.slice(0, 8) : undefined,
         handle: msg.characterId
-          ? chats.allChars.map[msg.characterId!]?.name
+          ? chars.map[msg.characterId!]?.name
           : msg.userId
           ? chats.memberIds[msg.userId]?.handle || 'You'
           : undefined,
         userId: msg.userId ? msg.userId : undefined,
         characterId: msg.characterId === chat?.characterId ? 'imported' : msg.characterId,
-        name: chats.allChars.map[msg.characterId!]?.name || chats.memberIds[msg.userId!]?.handle,
+        name: chars.map[msg.characterId!]?.name || chats.memberIds[msg.userId!]?.handle,
         msg: msg.msg,
         state: msg.state,
       })),

@@ -286,6 +286,10 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       else lazy.resolve({ response: res })
     }
 
+    if (state === 'error') {
+      lazy.reject(res)
+    }
+
     onTick?.(res, state)
   }
 
@@ -336,7 +340,8 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
 
   const res = await api.method<{ requestId: string; generating: boolean }>(
     'post',
-    `/chat/inference-stream`
+    `/chat/inference-stream`,
+    payload
   )
 
   if (res.error) {

@@ -9,6 +9,7 @@ import { Copy, Download, Edit, MessageCircle, MoreHorizontal, Star, Trash } from
 import { DropMenu } from '/web/shared/DropMenu'
 import Button from '/web/shared/Button'
 import { quickCreateChat } from '/web/store'
+import { Selectable } from '/web/shared/Selectable'
 
 export const CharacterListView: Component<ViewProps> = (props) => {
   return (
@@ -21,14 +22,20 @@ export const CharacterListView: Component<ViewProps> = (props) => {
             </Show>
             <For each={group.list}>
               {(char) => (
-                <Character
-                  type={'list'}
-                  char={char}
-                  edit={() => props.setEdit(char)}
-                  delete={() => props.setDelete(char)}
-                  download={() => props.setDownload(char)}
-                  toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
-                />
+                <Selectable
+                  selecting={props.selecting}
+                  selected={props.selected[char._id] === true}
+                  onSelect={() => props.select(char._id)}
+                >
+                  <Character
+                    type={'list'}
+                    char={char}
+                    edit={() => props.setEdit(char)}
+                    delete={() => props.setDelete(char)}
+                    download={() => props.setDownload(char)}
+                    toggleFavorite={(value) => props.toggleFavorite(char._id, value)}
+                  />
+                </Selectable>
               )}
             </For>
             <Show when={i() < props.groups.length - 1}>

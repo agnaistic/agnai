@@ -19,6 +19,102 @@ export const charsApi = {
   createCharacter,
   getImageBuffer: getFileBuffer,
   setFavorite,
+  editMany,
+}
+
+async function editMany(
+  characterIds: string[],
+  action: { type: 'delete' | 'archive' | 'add-tag' | 'remove-tag' | 'folder'; value?: string }
+) {
+  if (isLoggedIn()) {
+    const payload: any = { characterIds }
+
+    switch (action.type) {
+      case 'delete': {
+        payload.delete = true
+        break
+      }
+
+      case 'add-tag': {
+        payload.addTag = action.value
+        break
+      }
+
+      case 'remove-tag': {
+        payload.removeTag = action.value
+        break
+      }
+
+      case 'archive': {
+        payload.archive = true
+        break
+      }
+
+      case 'folder': {
+        payload.folder = payload.value
+        break
+      }
+    }
+
+    const res = await api.post('/character/bulk-update', payload)
+    return res
+  }
+
+  const allChars = await loadItem('characters')
+
+  const ids = new Set(characterIds)
+
+  if (action.type === 'delete') {
+    const next = allChars.filter((ch) => !ids.has(ch._id))
+    await localApi.saveChars(next)
+
+    return localApi.result({ characters: [] })
+  }
+
+  const handler =
+    action.type === 'add-tag'
+      ? addTag
+      : action.type === 'remove-tag'
+      ? removeTag
+      : action.type === 'archive'
+      ? addTag
+      : setFolder
+
+  const value =
+    action.type === 'add-tag' || action.type === 'remove-tag' || action.type === 'folder'
+      ? action.value!
+      : 'archived'
+
+  const next = allChars.map((ch) => {
+    if (!ids.has(ch._id)) return ch
+    return handler(ch, value)
+  })
+
+  await localApi.saveChars(next)
+  return localApi.result({ characters: next })
+}
+
+function addTag(ch: AppSchema.Character, value: string) {
+  if (!ch.tags) {
+    return { ...ch, tags: [value] }
+  }
+
+  if (ch.tags.includes(value)) return ch
+  return { ...ch, tags: ch.tags.concat(value) }
+}
+
+function removeTag(ch: AppSchema.Character, value: string) {
+  if (!ch.tags) return { ...ch, tags: [] }
+  if (!ch.tags.includes(value)) return ch
+
+  const set = new Set(ch.tags)
+  set.delete(value)
+
+  return { ...ch, tags: Array.from(set) }
+}
+
+function setFolder(ch: AppSchema.Character, value: string) {
+  return { ...ch, folder: value }
 }
 
 async function getCharacterDetail(charId: string) {
@@ -40,6 +136,10 @@ async function getCharacterDetail(charId: string) {
 async function getMultipleDetails(charIds: string[]) {
   if (isLoggedIn()) {
     const res = await api.post(`/character/multiple`, { characterIds: charIds })
+    if (res.result) {
+      return localApi.result(res.result.characters)
+    }
+
     return res
   }
 

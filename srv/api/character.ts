@@ -208,13 +208,29 @@ const editPartCharacter = handle(async ({ body, params, userId }) => {
 
 export const bulkUpdate = handle(async (req) => {
   assertValid(
-    { characterIds: ['string'], folder: 'string?', addTag: 'string?', removeTag: 'string?' },
+    {
+      characterIds: ['string'],
+      folder: 'string?',
+      addTag: 'string?',
+      removeTag: 'string?',
+      archive: 'boolean?',
+      delete: 'boolean?',
+    },
     req.body
   )
 
   const modified = await store.characters.bulkUpdate(req.userId, req.body.characterIds, req.body)
 
-  return { success: true, modified }
+  if (req.body.delete) {
+    return { success: true, modified, characters: [] }
+  }
+
+  const characters = await store.characters.getCharacters(req.userId, {
+    ids: req.body.characterIds,
+    detailed: false,
+  })
+
+  return { success: true, modified, characters }
 })
 
 const editFullCharacter = handle(async (req) => {
@@ -303,6 +319,15 @@ const getCharacter = handle(async ({ userId, params }) => {
   return char
 })
 
+const getDetailCharacters = handle(async ({ userId, body }) => {
+  assertValid({ characterIds: ['string'] }, body)
+  const characters = await store.characters.getCharacters(userId, {
+    ids: body.characterIds,
+    detailed: true,
+  })
+  return { characters }
+})
+
 const deleteCharacter = handle(async ({ userId, params }) => {
   const id = params.id
   await store.characters.deleteCharacter({ userId: userId!, charId: id })
@@ -374,15 +399,18 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
 
 router.post('/image', createImage)
 router.use(loggedIn)
-router.post('/', createCharacter)
+
 router.get('/', getCharacters)
+router.post('/multiple', getDetailCharacters)
+router.delete('/:id', deleteCharacter)
+router.post('/bulk-update', bulkUpdate)
+
+router.post('/', createCharacter)
 router.post('/:id/update', editPartCharacter)
 router.post('/:id', editFullCharacter)
 router.get('/:id', getCharacter)
-router.delete('/:id', deleteCharacter)
 router.post('/:id/favorite', editCharacterFavorite)
 router.delete('/:id/avatar', removeAvatar)
-router.post('/bulk-update', bulkUpdate)
 
 export default router
 

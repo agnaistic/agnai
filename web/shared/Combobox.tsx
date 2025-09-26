@@ -59,6 +59,10 @@ export const Combobox: Component<{
               setOpen(false)
               setText('')
             }
+
+            if (ev.key === 'Enter' && text().trim()) {
+              props.onEnter?.(text())
+            }
           }}
         />
 

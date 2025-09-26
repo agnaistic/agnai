@@ -425,13 +425,7 @@ const ArliModels: Selector = (props) => {
     }
 
     return (
-      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
-        {match.id}
-        <span class="text-500 text-xs">
-          {' '}
-          {arliContext(match, state.classes)} {match.status}
-        </span>
-      </span>
+      <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>{match.id}</span>
     )
   })
 
@@ -447,7 +441,7 @@ const ArliModels: Selector = (props) => {
         label: (
           <div class="flex w-full justify-between" title={`${s.status}`}>
             <div class="ellipsis">{s.id}</div>
-            <div class="text-500 text-xs">
+            <div class="text-500 min-w-fit text-xs">
               {arliContext(s, state.classes)} {s.status}
             </div>
           </div>

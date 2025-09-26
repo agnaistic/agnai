@@ -160,7 +160,10 @@ const Character: Component<CardProps> = (props) => {
             positioned parent to be the sitewide container */}
         <div
           class="float-right mr-[3px] mt-[-224px] flex justify-end"
-          onClick={() => setOpts(true)}
+          onClick={() => {
+            console.log('show')
+            setOpts(true)
+          }}
         >
           <div
             class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]"
@@ -172,8 +175,9 @@ const Character: Component<CardProps> = (props) => {
             show={opts()}
             close={() => setOpts(false)}
             vert="down"
-            horz="right"
-            parent={itemMenu}
+            horz="left"
+
+            // parent={itemMenu}
           >
             <div class="flex flex-col gap-2 p-2">
               <Button alignLeft onClick={() => quickCreateChat(props.char._id, nav)} size="sm">

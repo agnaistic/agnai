@@ -102,7 +102,6 @@ export function ContextProvider(props: { children: any }) {
     active: s.active,
     allChats: s.allChats,
     lastChatId: s.lastChatId,
-    allChars: s.allChars,
     chatProfiles: s.chatProfiles,
     promptHistory: s.promptHistory,
   }))
@@ -175,10 +174,11 @@ export function ContextProvider(props: { children: any }) {
     const chat =
       chats.active?.chat ||
       chats.allChats.find((c) => (chats.lastChatId ? c._id === chats.lastChatId : undefined))
+
     const char = chats.active?.char
       ? chats.active.char
       : chat?.characterId
-      ? chats.allChars.map[chat.characterId]
+      ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
       : undefined
 
     const next: Partial<ContextState> = {
