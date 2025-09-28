@@ -1,4 +1,13 @@
-import { Component, createEffect, createMemo, createSignal, on, onMount, Show } from 'solid-js'
+import {
+  batch,
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+  Show,
+} from 'solid-js'
 import { Plus, Save, X, Import, Download, SlidersVertical, Dices, Image } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -36,7 +45,7 @@ import { AdvancedOptions } from './form/AdvancedOptions'
 import { AvatarField } from './form/AvatarField'
 import { usePresetContext } from '/web/store/preset-context'
 import { PageSpinner } from '/web/shared/Loading'
-import { randomElement } from '/common/util'
+// import { randomElement } from '/common/util'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes (Key: value)' },
@@ -277,14 +286,15 @@ export const CreateCharacterForm: Component<{
     const gender = Math.random() > 0.65 ? 'male' : 'female'
     const name = await random('first', { gender })
 
-    if (editor.state.appearance && !isRandomAppearance(editor.state.appearance)) {
+    batch(() => {
       editor.update('name', name)
-      return
-    }
+      if (editor.state.appearance && !isRandomAppearance(editor.state.appearance)) {
+        return
+      }
 
-    editor.update({
-      name: name,
-      appearance: randomAppearance(gender),
+      // editor.update({
+      //   appearance: randomAppearance(gender),
+      // })
     })
   }
 
@@ -710,25 +720,25 @@ const LOOKS = {
   chest: ['flat', 'small', 'medium', 'large'],
 }
 
-function randomAppearance(gender: string) {
-  const hairColor = randomElement(LOOKS.hairColor)
-  const hairLength = randomElement(LOOKS.hairLength)
-  const hairStyle = randomElement(['neat', 'curly', 'straight', 'parted'])
-  const eyeColor = randomElement(['green', 'blue', 'brown', 'hazel'])
-  const chest = randomElement(['flat', 'small', 'medium', 'large'])
+// function randomAppearance(gender: string) {
+//   const hairColor = randomElement(LOOKS.hairColor)
+//   const hairLength = randomElement(LOOKS.hairLength)
+//   const hairStyle = randomElement(['neat', 'curly', 'straight', 'parted'])
+//   const eyeColor = randomElement(['green', 'blue', 'brown', 'hazel'])
+//   const chest = randomElement(['flat', 'small', 'medium', 'large'])
 
-  const elements = [
-    gender,
-    `${eyeColor} eyes`,
-    `${hairStyle} ${hairColor} ${hairLength}-length hair`,
-  ]
+//   const elements = [
+//     gender,
+//     `${eyeColor} eyes`,
+//     `${hairStyle} ${hairColor} ${hairLength}-length hair`,
+//   ]
 
-  if (gender === 'female') {
-    elements.push(`${chest} chest`)
-  }
+//   if (gender === 'female') {
+//     elements.push(`${chest} chest`)
+//   }
 
-  return elements.join(', ')
-}
+//   return elements.join(', ')
+// }
 
 function isRandomAppearance(appearance: string) {
   const [gender, eyes, hair, chest] = appearance.split(',').map((value) => value.trim())
