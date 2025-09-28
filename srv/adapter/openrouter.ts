@@ -64,6 +64,8 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
   if (opts.gen.openRouterModel?.id) {
     payload.model = opts.gen.openRouterModel.id
+  } else {
+    payload.model = opts.gen.thirdPartyModel
   }
 
   if (opts.gen.jsonEnabled && opts.jsonSchema) {
