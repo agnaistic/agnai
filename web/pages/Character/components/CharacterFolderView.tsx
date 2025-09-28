@@ -193,14 +193,20 @@ export const CharacterFolderView: Component<
         <div class="flex w-full flex-col gap-1 overflow-y-scroll">
           <For each={faveChars()}>
             {(char) => (
-              <Character
-                edit={() => props.setEdit(char)}
-                char={char}
-                toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
-                delete={() => props.setDelete(char)}
-                download={() => props.setDownload(char)}
-                folder={() => setChangeFolder(char)}
-              />
+              <Selectable
+                selecting={props.selecting}
+                selected={props.selected[char._id] === true}
+                onSelect={() => props.select(char._id)}
+              >
+                <Character
+                  edit={() => props.setEdit(char)}
+                  char={char}
+                  toggleFavorite={(v) => props.toggleFavorite(char._id, v)}
+                  delete={() => props.setDelete(char)}
+                  download={() => props.setDownload(char)}
+                  folder={() => setChangeFolder(char)}
+                />
+              </Selectable>
             )}
           </For>
 
