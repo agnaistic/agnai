@@ -8,14 +8,7 @@ import {
   createSignal,
   onMount,
 } from 'solid-js'
-import {
-  NewCharacter,
-  characterStore,
-  chatStore,
-  downloadCharacters,
-  pageStore,
-  userStore,
-} from '../../store'
+import { NewCharacter, characterStore, downloadCharacters, pageStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
@@ -80,12 +73,6 @@ const CharacterList: Component = () => {
     map: s.characters.map,
   }))
 
-  const chats = chatStore((s) => {
-    return {
-      list: s.allChats,
-    }
-  })
-
   onMount(() => {
     if (!chars.loaded && !chars.loading) {
       characterStore.getAllChats()
@@ -124,7 +111,6 @@ const CharacterList: Component = () => {
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
-      .map<ListCharacter>((ch) => ({ ...ch, chat: findLatestChat(ch._id, chats.list) }))
       .sort(getSortFunction(field, dir))
     return sorted
   })
@@ -616,20 +602,20 @@ const NoCharacters: Component = () => (
 
 export default CharacterList
 
-function findLatestChat(charId: string, chats: AppSchema.Chat[]) {
-  let match: AppSchema.Chat | undefined
+// function findLatestChat(charId: string, chats: AppSchema.Chat[]) {
+//   let match: AppSchema.Chat | undefined
 
-  for (const chat of chats) {
-    if (chat.characterId !== charId) continue
-    if (!match) {
-      match = chat
-      continue
-    }
+//   for (const chat of chats) {
+//     if (chat.characterId !== charId) continue
+//     if (!match) {
+//       match = chat
+//       continue
+//     }
 
-    if (chat.updatedAt > match.updatedAt) {
-      match = chat
-    }
-  }
+//     if (chat.updatedAt > match.updatedAt) {
+//       match = chat
+//     }
+//   }
 
-  return match
-}
+//   return match
+// }
