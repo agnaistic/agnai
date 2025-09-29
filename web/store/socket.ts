@@ -109,13 +109,11 @@ function onMessage(msg: MessageEvent<any>) {
       }
 
       if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
-        console.log(
-          `Prompt\n${
-            typeof payload.prompt === 'string'
-              ? payload.prompt
-              : JSON.stringify(payload.prompt, null, 2)
-          }`
-        )
+        const printable =
+          typeof payload.prompt === 'string'
+            ? payload.prompt
+            : JSON.stringify(payload.prompt, null, 2)
+        console.log(`Prompt\n${printable}`)
       } else if (payload.type !== 'image-generated') {
         console.log(now, JSON.stringify(payload))
       } else {

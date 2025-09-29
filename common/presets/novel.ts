@@ -7,6 +7,7 @@ export const NOVEL_MODELS = {
   krake: 'krake-v2',
   clio_v1: 'clio-v1',
   kayra_v1: 'kayra-v1',
+  glm_45: 'glm-4-5',
 } satisfies { [key: string]: string }
 
 export const NOVEL_ALIASES: Record<string, string> = {
