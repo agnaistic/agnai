@@ -105,6 +105,7 @@ const CharacterList: Component = () => {
     const field = sortField()
     const dir = sortDirection()
     return chars.list
+      .filter((ch) => ch.userId === user.user?._id)
       .filter((ch) => !!ch.favorite)
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
@@ -116,11 +117,6 @@ const CharacterList: Component = () => {
     const field = sortField()
     const dir = sortDirection()
 
-    const excludeArchived = !tags.filter.includes('archived') || tags.hidden.includes('archived')
-
-    const tagsVisible = new Set(tags.filter)
-    const tagsHidden = new Set(tags.hidden)
-
     const selectingIds = new Set<string>()
     const isSelecting = multi()
 
@@ -131,23 +127,13 @@ const CharacterList: Component = () => {
       }
     }
 
-    const sorted = characters()
+    const sorted = chars.list
       .slice()
-      .filter((ch) => {
-        if (ch.userId !== user.user?._id) return false
-        if (selectingIds.has(ch._id)) return true
-        if (!ch.name.toLowerCase().includes(search().toLowerCase().trim())) return false
-        if (ch.tags?.includes('archived') && excludeArchived) return false
-        if (tags.filter.length > 0 && !ch.tags?.some((t) => tagsVisible.has(t))) return false
-        if (ch.tags?.some((t) => tagsHidden.has(t))) return false
-        return true
-      })
-      // .filter((ch) => )
-      // .filter(ch => selectingIds.has(ch._id))
-      // .filter((ch) => )
-      // .filter((ch) => ( ? false : true))
-      // .filter((ch) => )
-      // .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
+      .filter((ch) => ch.userId === user.user?._id)
+      .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
+      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
+      .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
+      .map<ListCharacter>((ch) => ({ ...ch, chat: findLatestChat(ch._id, chats.list) }))
       .sort(getSortFunction(field, dir))
     return sorted
   })
