@@ -86,15 +86,6 @@ const CharacterList: Component = () => {
     }
   })
 
-  const characters = createMemo(() => {
-    const allChars: ListCharacter[] = chars.list
-      .filter((ch) => ch.userId === user.user?._id)
-      .map<ListCharacter>((ch) => ({ ...ch, chat: findLatestChat(ch._id, chats.list) }))
-      .filter((ch) => ch.userId === user.user?._id && !ch.favorite)
-
-    return allChars
-  })
-
   onMount(() => {
     if (!chars.loaded && !chars.loading) {
       characterStore.getAllChats()
