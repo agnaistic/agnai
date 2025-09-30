@@ -21,6 +21,7 @@ export function getServicePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
+      enabled: true,
       exclude: gen.reasoning.exclude ?? false,
     }
 

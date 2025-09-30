@@ -406,7 +406,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     req.socket.removeAllListeners('end')
 
     if (body.eventStream && res.writable && signal && !signal?.signal.aborted) {
-      res.write('data: [DONE]')
+      res.write('data: [DONE]\n\n')
       res.end()
     }
 
@@ -442,7 +442,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   if (!aborted && res.writable) {
     if (body.eventStream) {
-      res.write('data: [DONE]')
+      res.write('data: [DONE]\n\n')
       res.end()
     } else {
       return { success: true }
@@ -991,5 +991,5 @@ function setTextStreamHeaders(res: Response, ents: MsgEntities, body: GenRequest
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders()
-  res.write(`data: ${JSON.stringify(success)}`)
+  res.write(`data: ${JSON.stringify(success)}\n\n`)
 }

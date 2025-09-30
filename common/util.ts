@@ -845,3 +845,17 @@ export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
   const map = list.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
   return map
 }
+
+export function toPropMap<T extends object, U extends PickProps<T, string>>(
+  list: T[],
+  prop: U
+): Record<string, T> {
+  const map: Record<string, T> = list.reduce((prev, curr) => {
+    const value = curr[prop] as string
+    const next = Object.assign(prev, { [value]: curr })
+    return next
+  }, {})
+  return map
+}
+
+type PickProps<T, U = string> = keyof { [key in keyof T as T[key] extends U ? key : never]: T[key] }

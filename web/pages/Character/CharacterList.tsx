@@ -8,7 +8,14 @@ import {
   createSignal,
   onMount,
 } from 'solid-js'
-import { NewCharacter, characterStore, downloadCharacters, pageStore, userStore } from '../../store'
+import {
+  NewCharacter,
+  characterStore,
+  chatStore,
+  downloadCharacters,
+  pageStore,
+  userStore,
+} from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
@@ -34,6 +41,7 @@ import { Page } from '/web/Layout'
 import { DragDropProvider, DragDropSensors } from '@thisbeyond/solid-dnd'
 import { isMobile } from '/web/shared/hooks'
 import { createStore } from 'solid-js/store'
+import { toPropMap } from '/common/util'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -66,6 +74,12 @@ const CharacterList: Component = () => {
 
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const user = userStore((s) => ({ user: s.user }))
+
+  const chats = chatStore((s) => ({
+    list: s.allChats,
+    map: toPropMap(s.allChats, 'characterId'),
+  }))
+
   const chars = characterStore((s) => ({
     loading: s.loading,
     loaded: s.characters.loaded > 0,
@@ -88,6 +102,7 @@ const CharacterList: Component = () => {
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
+      .map((ch) => ({ ...ch, chat: chats.map[ch._id] }))
       .sort(getSortFunction(field, dir))
   })
 
@@ -111,6 +126,7 @@ const CharacterList: Component = () => {
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
+      .map((ch) => ({ ...ch, chat: chats.map[ch._id] }))
       .sort(getSortFunction(field, dir))
     return sorted
   })
