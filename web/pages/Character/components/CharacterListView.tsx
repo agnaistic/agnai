@@ -161,13 +161,13 @@ const CharacterListOptions: Component<{
         <MoreHorizontal class="icon-button" />
       </div>
       <DropMenu
-        class="bg-[var(--bg-700)]"
+        class="z-100 bg-[var(--bg-700)]"
         show={listOpts()}
         close={() => setListOpts(false)}
         // customPosition="right-[10px]"
         horz="left"
         vert="down"
-        parent={itemMenu}
+        // parent={itemMenu}
       >
         <div class="flex flex-col gap-2 p-2 font-bold">
           <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">

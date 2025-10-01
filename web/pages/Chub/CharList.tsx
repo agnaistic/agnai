@@ -32,6 +32,7 @@ const CharList: Component<{
               fullPath={char.fullPath}
               description={char.tagline || char.description}
               avatar={
+                char.avatar_url ||
                 `https://avatars.charhub.io/avatars/${char.fullPath}/avatar.webp` ||
                 `https://git.chub.ai/${char.fullPath}/-/raw/main/avatar.webp`
               }

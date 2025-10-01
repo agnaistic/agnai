@@ -193,11 +193,19 @@ export async function createCharacterImageBlob(char: AppSchema.Character, format
    * Only PNG and APNG files can contain embedded character information
    * If the avatar image is not either of these formats, we must convert it
    */
-  const dataurl = await imageToDataURL(image)
+  const embedded = await embedImageJson(image, json)
+  return embedded
+}
+
+export async function embedImageJson(imageUrl: string, json: any) {
+  const dataurl = await imageToDataURL(imageUrl)
   const base64 = dataurl.split(',')[1]
   const imgBuffer = Buffer.from(window.atob(base64), 'binary')
   const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
-  const output = Buffer.from(json, 'utf8').toString('base64')
+  const output = Buffer.from(
+    typeof json === 'string' ? json : JSON.stringify(json),
+    'utf8'
+  ).toString('base64')
   const lastChunkIndex = chunks.length - 1
   const chunksToExport = [
     ...chunks.slice(0, lastChunkIndex),

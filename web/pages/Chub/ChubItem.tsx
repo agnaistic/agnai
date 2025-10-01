@@ -42,7 +42,7 @@ export const ChubItem: Component<{
       return
     }
 
-    const file = await processChar(props.fullPath)
+    const file = await processChar(props.fullPath, props.entity)
     const json = await extractCardData(file)
     if (!json) {
       throw new Error('Invalid tavern image')

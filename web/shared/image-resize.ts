@@ -35,9 +35,10 @@ export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
 
     case 'fit': {
       if (origHeight <= opts.max && origWidth <= opts.max) {
+        const data = await canvas.toDataURL('image/png')
         return {
-          mime: image.file.type,
-          content: image.content,
+          mime: 'image/png', // image.file.type,
+          content: data,
           w: origWidth,
           h: origHeight,
           original: { ...image, w: origWidth, h: origHeight },
@@ -61,9 +62,9 @@ export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
 
   ctx?.drawImage(element.image, 0, 0, width, height)
 
-  const data = canvas.toDataURL(image.file.type)
+  const data = canvas.toDataURL('image/png') // previously: image.file.type
   return {
-    mime: image.file.type,
+    mime: 'image/png', // image.file.type,
     content: data,
     w: width,
     h: height,

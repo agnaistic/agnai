@@ -4,6 +4,8 @@ import { createStore } from './create'
 
 export type ChubEntity = {
   id: number
+  avatar_url?: string
+
   name: string
   description: string
   fullPath: string
