@@ -75,10 +75,12 @@ const CharacterList: Component = () => {
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const user = userStore((s) => ({ user: s.user }))
 
-  const chats = chatStore((s) => ({
-    list: s.allChats,
-    map: toPropMap(s.allChats, 'characterId'),
-  }))
+  const chats = chatStore((s) => {
+    return {
+      list: s.allChats,
+      map: s.allChats.reduce<Record<string, AppSchema.Chat>>(toCharacterChatMap, {}),
+    }
+  })
 
   const chars = characterStore((s) => ({
     loading: s.loading,
@@ -635,3 +637,15 @@ export default CharacterList
 
 //   return match
 // }
+
+function toCharacterChatMap(prev: Record<string, AppSchema.Chat>, curr: AppSchema.Chat) {
+  const exist = prev[curr.characterId]
+  if (!exist) {
+    prev[curr.characterId] = { ...curr }
+    return prev
+  }
+
+  const next = exist.updatedAt > curr.updatedAt ? exist : { ...curr }
+  prev[curr.characterId] = next
+  return prev
+}
