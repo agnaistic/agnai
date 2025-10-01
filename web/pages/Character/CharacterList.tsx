@@ -41,7 +41,6 @@ import { Page } from '/web/Layout'
 import { DragDropProvider, DragDropSensors } from '@thisbeyond/solid-dnd'
 import { isMobile } from '/web/shared/hooks'
 import { createStore } from 'solid-js/store'
-import { toPropMap } from '/common/util'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
