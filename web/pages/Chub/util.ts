@@ -1,7 +1,5 @@
 import { embedImageJson } from '../Character/util'
 import { debug } from '/common/debug'
-import { getFileAsDataURL } from '/web/shared/FileInput'
-import { resizeImage } from '/web/shared/image-resize'
 import { ChubEntity } from '/web/store/chub'
 
 export async function processBook(entity: ChubEntity) {
