@@ -923,6 +923,10 @@ export function getContextLimit(
         return configuredMax - genAmount
       }
 
+      if (model === NOVEL_MODELS.glm_46) {
+        return 27500 - genAmount // 28k with the correct tokenizer
+      }
+
       return configuredMax - genAmount
     }
 

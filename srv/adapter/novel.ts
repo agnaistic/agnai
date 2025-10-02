@@ -17,7 +17,7 @@ const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when t
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
 const streamUrl = (model: string) => {
   const base = getBaseUrl(model)
-  if (model === NOVEL_MODELS.glm_45) return `${base}/oa/v1/completions`
+  if (model === NOVEL_MODELS.glm_46) return `${base}/oa/v1/completions`
   return `${base}/ai/generate-stream`
 }
 
@@ -56,7 +56,7 @@ const NEW_PARAMS: Record<string, 0 | 1 | 2> = {
   'llama-3-erato-v1': 1,
   [NOVEL_MODELS.clio_v1]: 1,
   [NOVEL_MODELS.kayra_v1]: 1,
-  [NOVEL_MODELS.glm_45]: 2,
+  [NOVEL_MODELS.glm_46]: 2,
 }
 
 export const handleNovel: ModelAdapter = async function* (opts) {
@@ -364,7 +364,7 @@ function getBaseUrl(model: string) {
   if (
     model === NOVEL_MODELS.kayra_v1 ||
     model === 'llama-3-erato-v1' ||
-    model === NOVEL_MODELS.glm_45
+    model === NOVEL_MODELS.glm_46
   ) {
     return NOVEL_TEXT_URL
   }
