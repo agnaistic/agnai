@@ -84,7 +84,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.system = system
   } else if (opts.messages) {
     const last = opts.messages.slice(-1)[0]
-    if (last && modelNeedsUserRoleLast(payload.model)) {
+    if (last && modelNeedsUserRoleLast(opts.gen, payload.model)) {
       last.role = 'user'
     }
     payload.messages = opts.messages
