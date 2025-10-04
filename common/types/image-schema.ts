@@ -37,14 +37,36 @@ export type ImageDefaults = {
 }
 
 export type ImageSettings = BaseImageSettings & {
-  novel: Omit<NovelSettings, 'type'>
-  horde: Omit<HordeSettings, 'type'>
-  sd: Omit<SDSettings, 'type'>
-  agnai: Omit<AgnaiSettings, 'type'>
-  swarm: Omit<SwarmSettings, 'type'>
+  novel: ImageProviderSettings
+  horde: ImageProviderSettings
+  sd: ImageProviderSettings
+  agnai: ImageProviderSettings
+  swarm: ImageProviderSettings
 
   active?: 'novel' | 'horde' | 'sd' | 'agnai' | 'swarm'
   // defaults?: ImageDefaults
+}
+
+export type ImageProviderSettings = {
+  _id?: string
+  type: ImageType['type']
+  url: string
+  sampler: string
+  model: string
+
+  // Inherit auth from Text Provider
+  providerId?: string
+
+  // Agnai
+  draftMode?: boolean
+
+  // SwarmUI
+  local?: boolean
+  loras?: Array<{ id: string; clipStrength: number; modelStrength: number; enabled: boolean }>
+
+  // NovelAI
+  ucPreset?: string
+  qualityTags?: boolean
 }
 
 export type NovelSettings = {

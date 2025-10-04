@@ -64,7 +64,7 @@ async function getModelList(hostname?: string) {
   }
 
   const models = res.files
-    .map((file) => ({ ...file, name: file.name.split('.').slice(0, -1).join('.') }))
+    .map((file) => ({ ...file, title: file.name.split('.').slice(0, -1).join('.') }))
     .filter((file) => !!file.architecture) as Array<{
     name: string
     title: string
@@ -109,7 +109,7 @@ async function generateImage(req: ImageRequestOpts) {
     .then(async (blob) => {
       const buf = await blob.arrayBuffer()
       const buffer = Buffer.from(buf)
-      const base64 = buffer.toString('base64')
+      const base64 = `data:image/png;base64,` + buffer.toString('base64')
       return { content: base64, blob, buffer }
     })
 
@@ -120,8 +120,9 @@ async function generateImage(req: ImageRequestOpts) {
 function getUrl(opts: { host?: string; path: string; getter?: boolean }) {
   const affix = opts.getter ? '' : '/API'
   const prefix = opts.path.startsWith('/') ? affix : `${affix}/`
+  const host = opts.host || 'http://localhost:7801'
 
-  return `http://localhost:7801${prefix}${opts.path}`
+  return `${host}${prefix}${opts.path}`
 }
 
 /**

@@ -203,10 +203,12 @@ function getPayload(config: InternalConfig, opts: ImageRequestOpts) {
 
     if (rec.affixes) {
       const prompt = [
-        init.prefix || opts.settings?.prefix,
-        opts.raw_prompt,
-        init.suffix || opts.settings?.suffix,
-      ].join(',')
+        init.prefix || opts.settings?.prefix || '',
+        opts.raw_prompt || '',
+        init.suffix || opts.settings?.suffix || '',
+      ]
+        .filter((p) => !!p.trim())
+        .join(',')
 
       payload.prompt = fixImagePrompt(prompt)
     }

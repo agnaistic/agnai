@@ -31,7 +31,6 @@ import { InlineRangeInput } from '/web/shared/RangeInput'
 import { useProviderList } from '../Provider/hooks'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import { imageApi } from '/web/store/data/image'
-import { swarmApi } from '/common/requests/swarmui'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -184,9 +183,13 @@ export const SwarmSettings: Component<{
 
   const loadModels = async () => {
     // if (!props.cfg.swarm.url) return
-    const result = await swarmApi.getModelList(props.cfg.swarm?.url)
+    const result = await imageApi.getImageModelList({
+      type: 'swarm',
+      local: props.cfg.swarm.local,
+      url: props.cfg.swarm?.url,
+    })
 
-    const options = result.models.map((model) => ({ label: model.name, value: model.name }))
+    const options = result.models.map((model) => ({ label: model.title, value: model.title }))
     options.unshift({ label: 'Automatic', value: '' })
     setModels(options)
   }

@@ -9,7 +9,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
 import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Pencil, Plus, Save, X } from 'lucide-solid'
+import { Pencil, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
 import { isChatPage } from '/web/shared/hooks'
 import {
@@ -177,10 +177,10 @@ export const ImageSettingsModal = () => {
               class="!py-1"
               inline
             />
-            <Button size="sm" class="h-[36px]">
+            {/* <Button size="sm" class="h-[36px]">
               <Plus size={20} />
               Service
-            </Button>
+            </Button> */}
           </div>
 
           <Show when={ctx.state.canUseImages && ctx.store.type === 'agnai'}>

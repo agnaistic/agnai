@@ -10,12 +10,14 @@ import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
 import { AppSchema } from '/common/types'
 import { ImageSettings } from '/common/types/image-schema'
+import { getImagePrompt, getImageSettings } from '/common/image'
 
 const DEFAULT_NEGATIVE = ``
 
 export async function generateImageSync(opts: ImageGenerateRequest, log: AppLog) {
   const imageSettings = opts.user.images
-  const prompt = getImagePrompt(opts, imageSettings)
+  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
+  opts.raw_prompt = rawPrompt
 
   let { error, image } = await runImageGenerate({
     imageSettings,
@@ -51,8 +53,9 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     }
   }
 
-  const imageSettings = getImageSettings(chat, character, user)
-  const prompt = getImagePrompt(opts, imageSettings)
+  const { settings: imageSettings } = getImageSettings(chat, character, user)
+  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
+  opts.raw_prompt = rawPrompt
 
   log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')
 
@@ -246,60 +249,6 @@ async function runImageGenerate(options: {
   }
 
   return { image, output, error }
-}
-
-function getImagePrompt(opts: ImageGenerateRequest, imageSettings: ImageSettings | undefined) {
-  let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
-  let prompt = parsed
-
-  if (imageSettings?.template) {
-    prompt = imageSettings.template.replace(/\{\{prompt\}\}/g, parsed)
-    if (!prompt.includes(parsed)) {
-      prompt = prompt + ' ' + parsed
-    }
-  }
-
-  prompt = prompt.trim()
-  opts.raw_prompt = prompt
-
-  if (!opts.noAffix) {
-    const parts = [prompt]
-    if (imageSettings?.prefix) {
-      parts.unshift(imageSettings.prefix)
-    }
-
-    if (imageSettings?.suffix) {
-      parts.push(imageSettings.suffix)
-    }
-
-    prompt = parts
-      .join(', ')
-      .split(',')
-      .filter((p) => !!p.trim())
-      .join(', ')
-      .replace(/,+/g, ',')
-      .replace(/ +/g, ' ')
-  }
-
-  return prompt
-}
-
-function getImageSettings(
-  chat: AppSchema.Chat | null | undefined,
-  character: AppSchema.Character | undefined,
-  user: AppSchema.User
-) {
-  let imageSettings =
-    chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
-      ? character?.imageSettings
-      : chat?.imageSource === 'chat'
-      ? chat?.imageSettings
-      : user.images
-
-  if (!imageSettings) {
-    imageSettings = user.images
-  }
-  return imageSettings
 }
 
 async function updateMessageImages(opts: {

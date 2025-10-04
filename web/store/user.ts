@@ -1179,7 +1179,13 @@ async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user:
     if (next.agnai) {
       next.agnai.model = config.defaultImageModel
     } else {
-      next.agnai = { model: config.defaultImageModel, sampler: 'k_euler_a', draftMode: false }
+      next.agnai = {
+        type: 'agnai',
+        url: '',
+        model: config.defaultImageModel,
+        sampler: 'k_euler_a',
+        draftMode: false,
+      }
     }
   }
 

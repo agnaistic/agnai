@@ -101,17 +101,23 @@ const initState: EditorState = {
     template: '',
 
     agnai: {
+      type: 'agnai',
+      url: '',
       model: '',
       sampler: '',
       draftMode: false,
     },
 
     horde: {
+      type: 'horde',
+      url: '',
       model: '',
       sampler: '',
     },
 
     novel: {
+      type: 'novel',
+      url: '',
       model: '',
       sampler: '',
       qualityTags: true,
@@ -119,11 +125,14 @@ const initState: EditorState = {
     },
 
     sd: {
-      sampler: '',
+      type: 'sd',
       url: '',
+      sampler: '',
+      model: '',
     },
 
     swarm: {
+      type: 'swarm',
       url: '',
       sampler: '',
       local: true,
