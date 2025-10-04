@@ -108,23 +108,38 @@ function onMessage(msg: MessageEvent<any>) {
         )
       }
 
-      if (payload.type === 'service-prompt' || payload.type === 'inference-prompt') {
-        const printable =
-          typeof payload.prompt === 'string'
-            ? payload.prompt
-            : JSON.stringify(payload.prompt, null, 2)
-        console.log(`Prompt\n${printable}`)
-      } else if (payload.type !== 'image-generated') {
-        console.log(now, JSON.stringify(payload))
-      } else {
-        const image = payload.image || ''
-        console.log(
-          now,
-          JSON.stringify({
-            ...payload,
-            image: image.startsWith('http') ? image : `${image.slice(0, 60)}'...'`,
-          })
-        )
+      switch (payload.type) {
+        case 'service-prompt':
+        case 'inference-prompt': {
+          const printable =
+            typeof payload.prompt === 'string'
+              ? payload.prompt
+              : JSON.stringify(payload.prompt, null, 2)
+          console.log(`Prompt\n${printable}`)
+          break
+        }
+
+        case 'image-generated': {
+          console.log(now, JSON.stringify(payload))
+          break
+        }
+
+        case 'message-retry': {
+          const { probs, retries, extras, ...rest } = payload
+          console.log(rest)
+          break
+        }
+
+        default: {
+          const image = payload.image || ''
+          console.log(
+            now,
+            JSON.stringify({
+              ...payload,
+              image: image.startsWith('http') ? image : `${image.slice(0, 60)}'...'`,
+            })
+          )
+        }
       }
     } else {
       // console.log(payload.type, '...')

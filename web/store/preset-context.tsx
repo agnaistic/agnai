@@ -166,6 +166,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const log = debug(`preset:${context.__}`)
 
+  // Always clear the loading flag
+  if (!opts?.anonymous) {
+    setContext('loading', false)
+  }
+
   const onStateUpdated = (source: string) => {
     if (state.providerId && context.provider?._id === state.providerId) {
       log('state updated cancelled %s', state.providerId)
@@ -352,6 +357,8 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
           setContext('providerId', opts.preset.providerId || '')
         }
       }
+    } catch (ex) {
+      setContext('loading', false)
     } finally {
       setContext('loading', false)
     }

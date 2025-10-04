@@ -29,6 +29,7 @@ import { JsonField, TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import { botGen, GenerateOpts } from './data/bot-generate'
 import type { MsgAttachment } from '/srv/adapter/type'
+import { debug } from '/common/debug'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -1173,6 +1174,7 @@ subscribe(
     json: 'any?',
   },
   async (body) => {
+    const log = debug('retry')
     const { msgs, activeChatId, graph } = msgStore.getState()
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
@@ -1184,7 +1186,7 @@ subscribe(
     const prev = msgs.find((msg) => msg._id === body.messageId)
     const char = prev?.characterId ? characters.map[prev?.characterId] : undefined
 
-    console.log(`[wait] msg-retry ${inline({ ...body, message: '...', retries: undefined })}`)
+    log(`msg-retry ${inline({ ...body, message: '...', retries: undefined, probs: undefined })}`)
     msgStore.setState({
       partial: undefined,
       retrying: undefined,
@@ -1214,7 +1216,7 @@ subscribe(
     const nextMsgs = replace(body.messageId, msgs, nextMsg)
     const replacement = { ...prev, ...nextMsg }
 
-    console.log(`[wait] msg-retry:2 ${inline({ ...body, message: '...', retries: undefined })}`)
+    log(`msg-retry:2 ${inline({ ...body, message: '...', retries: undefined, probs: undefined })}`)
     msgStore.setState({
       partial: undefined,
       retrying: undefined,

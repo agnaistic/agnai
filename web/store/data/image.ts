@@ -331,13 +331,13 @@ async function getChatSummary(
     onTick?: TickHandler
   }
 ) {
-  const opts = await msgsApi.getActiveTemplateParts()
-  opts.limit = {
-    context: 8 * 1024,
+  const active = await msgsApi.getActiveTemplateParts()
+  active.limit = {
+    context: settings.maxContextLength!,
     encoder: await getEncoder(),
   }
 
-  let template = getSummaryTemplate({
+  const template = getSummaryTemplate({
     service: settings.service,
     prompt: params.prompt,
     question: params.question,
@@ -345,7 +345,7 @@ async function getChatSummary(
 
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
-  const parsed = await parseTemplate(template, opts)
+  const parsed = await parseTemplate(template, active)
 
   let prompt = parsed.parsed
   prompt = replaceTags(prompt, settings.modelFormat || 'None')

@@ -317,6 +317,9 @@ export function cleanPrompt(prompt: string) {
     .join(',')
     .replace(/ +/, ' ')
     .replace(/,+/g, ',')
+    .split(',')
+    .map((t) => t.trim())
+    .join(', ')
   return next
 }
 
