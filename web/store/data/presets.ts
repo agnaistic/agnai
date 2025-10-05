@@ -223,12 +223,11 @@ async function getPresetModelList(opts: {
   key?: string
   useCache?: boolean
 }): Promise<{ models: string[]; data?: any[] }> {
-  const alreadySeen = MODELS_LOADED.has(opts.url)
   const isGuest = !isLoggedIn()
 
   if (opts.useCache) {
-    const cache = await getCachedModelList(opts.url, alreadySeen)
-    if (cache?.models.length) return cache
+    const cache = await getCachedModelList(opts.url)
+    if (cache?.models.length && cache.models.length > 1) return cache
   }
 
   const res = await api.post<{ data: any[] }>(`/user/preset-models`, {
@@ -241,6 +240,9 @@ async function getPresetModelList(opts: {
 
   if (res.error) {
     toastStore.error(`Could not get models: ${res.error}`)
+    const cached = await getCachedModelList(opts.url, true)
+    if (cached) return cached
+
     return { models: [] }
   }
 
@@ -253,7 +255,7 @@ async function getPresetModelList(opts: {
 
   models.sort((l, r) => l.localeCompare(r))
 
-  const ttl = Date.now() + 60000 * 30 // 30 minutes
+  const ttl = Date.now() + 60000 * 5 // 30 minutes
 
   MODELS_LOADED.add(opts.url)
   await storage.setItem(
@@ -271,6 +273,7 @@ async function getCachedModelList(url: string, ignoreTtl: boolean = false) {
 
   try {
     const json = JSON.parse(cached) as { models: string[]; data: any[]; ttl: number }
+    if (!json?.models?.length) return
     if (json && ignoreTtl) return json
     if (json.ttl > Date.now()) return json
   } catch (ex) {}
