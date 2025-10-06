@@ -114,6 +114,9 @@ export const characterStore = createStore<CharacterState>(
       lastFetched: 0,
       lastChatId: null,
     })
+
+    // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
+    characterStore.getAllChats(true)
   })
 
   return {
