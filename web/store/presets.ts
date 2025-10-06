@@ -10,6 +10,7 @@ import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
 import { findOne, replace } from '/common/util'
+import { InitEntities } from './data/user'
 
 type PresetState = {
   presets: AppSchema.UserGenPreset[]
@@ -37,15 +38,21 @@ export const presetStore = createStore<PresetState>(
   'presets',
   initState
 )((_) => {
-  events.on(EVENTS.init, (init) => {
-    if (Array.isArray(init.presets)) {
-      for (const preset of init.presets) {
-        if (!preset.thirdPartyKey) continue
-        preset.userThirdPartyKey = preset.thirdPartyKey
-        preset.thirdPartyKey = ''
-      }
+  events.on(EVENTS.init, (init: InitEntities) => {
+    if (!Array.isArray(init.presets)) return
 
-      presetStore.setState({ presets: init.presets, presetsLoaded: true })
+    for (const preset of init.presets) {
+      if (!preset.thirdPartyKey) continue
+      preset.userThirdPartyKey = preset.thirdPartyKey
+      preset.thirdPartyKey = ''
+    }
+
+    presetStore.setState({ presets: init.presets, presetsLoaded: true })
+
+    // Fetch latest if we used cached presets
+
+    if (init.cachedPresets) {
+      presetStore.getPresets()
     }
   })
 

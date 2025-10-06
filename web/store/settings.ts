@@ -122,10 +122,12 @@ export const settingStore = createStore<SettingState>(
 
         if (caches?.books) {
           init.books = caches.books
+          init.cachedBooks = true
         }
 
         if (caches?.presets) {
           init.presets = caches.presets
+          init.cachedPresets = true
         }
 
         if (caches?.allChars) {

@@ -19,6 +19,8 @@ export type InitEntities = {
 
   allChars?: any
   allChats?: any
+  cachedPresets?: boolean
+  cachedBooks?: boolean
 }
 
 export const usersApi = {

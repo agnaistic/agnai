@@ -5,6 +5,7 @@ import { memoryApi } from './data/memory'
 import { toastStore } from './toasts'
 import { embedApi } from './embeddings'
 import { storage } from '../shared/util'
+import { InitEntities } from './data/user'
 
 export type MemoryState = {
   show: boolean
@@ -44,11 +45,17 @@ export const memoryStore = createStore<MemoryState>(
     }
   })
 
-  events.on(EVENTS.init, async (init) => {
+  events.on(EVENTS.init, async (init: InitEntities) => {
     if (init.books) {
       memoryStore.setState({ books: { loaded: true, list: init.books } })
 
-      await storage.userCacheSet('books', init.books)
+      if (!init.cachedBooks) {
+        await storage.userCacheSet('books', init.books)
+      }
+
+      if (init.cachedBooks) {
+        memoryStore.getAll()
+      }
     }
   })
 
