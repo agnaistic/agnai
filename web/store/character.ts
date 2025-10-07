@@ -112,7 +112,7 @@ export const characterStore = createStore<CharacterState>(
      * We handle the chat-init here to prevent any race conditions
      */
     getStore('chat').setState({
-      allChats: data.allChats || [],
+      allChats: (data.allChats || []).sort(sortDesc),
       lastFetched: 0,
       lastChatId: null,
     })
