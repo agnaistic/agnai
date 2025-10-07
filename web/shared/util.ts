@@ -543,8 +543,15 @@ export function capitalize(input: string) {
   return input.slice(0, 1).toUpperCase() + input.slice(1)
 }
 
-export function toDropdownItems(values: string[] | readonly string[]): Option[] {
-  return values.map((value) => ({ label: capitalize(value), value }))
+export function toDropdownItems(
+  values: string[] | readonly string[] | Record<string, string>
+): Option[] {
+  if (Array.isArray(values)) {
+    return values.map((value) => ({ label: capitalize(value), value }))
+  }
+
+  const options = Object.entries(values).map(([value, label]) => ({ label, value }))
+  return options
 }
 
 export function createDebounce<T extends (...args: any[]) => void>(

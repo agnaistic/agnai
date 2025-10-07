@@ -93,7 +93,7 @@ export const characterStore = createStore<CharacterState>(
   'character',
   initState
 )((get, set) => {
-  events.on(EVENTS.init, (data) => {
+  events.on(EVENTS.init, async (data) => {
     const allChars = Array.isArray(data.allChars)
       ? data.allChars
       : Array.isArray(data.allChars?.list)
@@ -104,6 +104,8 @@ export const characterStore = createStore<CharacterState>(
     if (!allChars) return
 
     replaceCharacters(allChars)
+
+    await Promise.resolve()
 
     /**
      * The chat list relies on the characters being available
@@ -116,7 +118,7 @@ export const characterStore = createStore<CharacterState>(
     })
 
     // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
-    characterStore.getAllChats(true)
+    // characterStore.getAllChats(true) // We currently do this in the handlePostInit
   })
 
   return {
@@ -175,7 +177,10 @@ export const characterStore = createStore<CharacterState>(
 
       const chars = res.result.characters.map((c) => ({ __type: 'list_character', ...c }))
       replaceCharacters(chars)
-      events.emit(EVENTS.allChats, res.result.chats)
+
+      await Promise.resolve()
+      getStore('chat').setState({ allChats: res.result.chats, lastFetched: Date.now() })
+      // events.emit(EVENTS.allChats, res.result.chats)
     },
 
     async *getCharacters(state, force?: boolean) {

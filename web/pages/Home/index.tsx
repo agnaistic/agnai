@@ -207,7 +207,8 @@ const RecentChats: Component<{ emitter: ComponentEmitter<'loaded'> }> = (props) 
         .slice()
         .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
         .slice(0, 4)
-        .map((chat) => ({ chat, char: chars.map[chat.characterId] })),
+        .map((chat) => ({ chat, char: chars.map[chat.characterId] }))
+        .filter((pair) => !!pair.char),
     }
   })
 

@@ -711,17 +711,20 @@ subscribe(
 type ChatOptCache = { editing: boolean; hideOoc: boolean }
 
 export function quickCreateChat(characterId: string, nav: (to: string) => void) {
-  const user = getStore('user').getState().user
+  nav(`/chats/create/${characterId}`)
 
-  const presets = getStore('presets').getState().presets
-  const preset = user?.defaultPreset ? presets.find((p) => p._id === user.defaultPreset) : undefined
+  // Disabling quick-create behavior
+  // const user = getStore('user').getState().user
 
-  if (!preset) {
-    nav(`/chats/create/${characterId || ''}`)
-    return
-  }
+  // const presets = getStore('presets').getState().presets
+  // const preset = user?.defaultPreset ? presets.find((p) => p._id === user.defaultPreset) : undefined
 
-  chatStore.quickCreateChat(characterId, preset._id, (id) => nav(`/chat/${id}`))
+  // if (!preset) {
+  //   nav(`/chats/create/${characterId || ''}`)
+  //   return
+  // }
+
+  // chatStore.quickCreateChat(characterId, preset._id, (id) => nav(`/chat/${id}`))
 }
 
 function saveOptsCache(cache: ChatOptCache) {

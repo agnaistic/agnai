@@ -153,7 +153,7 @@ export const msgStore = createStore<MsgState>(
     msgStore.setState({ canImageCaption: true })
   })
 
-  events.on('logged-out', () => {
+  events.on(EVENTS.loggedOut, () => {
     msgStore.setState(initState)
   })
 
@@ -163,6 +163,10 @@ export const msgStore = createStore<MsgState>(
 
   events.on(EVENTS.clearMsgs, (chatId: string) => {
     msgStore.setState({ activeChatId: chatId, activeCharId: undefined, msgs: [] })
+  })
+
+  events.on(EVENTS.chatClosed, () => {
+    msgStore.setState({ activeChatId: undefined, activeCharId: undefined })
   })
 
   events.on(

@@ -48,12 +48,6 @@ export const presetStore = createStore<PresetState>(
     }
 
     presetStore.setState({ presets: init.presets, presetsLoaded: true })
-
-    // Fetch latest if we used cached presets
-
-    if (init.cachedPresets) {
-      presetStore.getPresets()
-    }
   })
 
   events.on(EVENTS.loggedOut, () => {

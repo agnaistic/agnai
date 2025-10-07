@@ -6,6 +6,7 @@ const CharacterRoutes: Component = () => (
     <Route path="/character">
       <Route path="/create" component={lazy(() => import('./CreateCharacter'))} />
       <Route path="/create/:duplicateId" component={lazy(() => import('./CreateCharacter'))} />
+      <Route path="/:duplicateId/duplicate" component={lazy(() => import('./CreateCharacter'))} />
       <Route path="/:editId/edit" component={lazy(() => import('./CreateCharacter'))} />
       <Route path="/list" component={lazy(() => import('./CharacterList'))} />
       <Route path="/:id/chats" component={lazy(() => import('./ChatList'))} />

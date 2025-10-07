@@ -163,22 +163,5 @@ export function createOnEnter(callback: Function) {
 }
 
 function getSort(sort: string) {
-  switch (sort) {
-    case 'Download Count':
-      return 'download_count'
-    case 'ID':
-      return 'id'
-    case 'Rating':
-      return 'rating'
-    case 'Rating Count':
-      return 'rating_count'
-    case 'Last Activity':
-      return 'last_activity_at'
-    case 'Creation Date':
-      return 'created_at'
-    case 'Name':
-      return 'name'
-    case 'Token Count':
-      return 'n_tokens'
-  }
+  return sort
 }

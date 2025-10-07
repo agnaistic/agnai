@@ -52,10 +52,6 @@ export const memoryStore = createStore<MemoryState>(
       if (!init.cachedBooks) {
         await storage.userCacheSet('books', init.books)
       }
-
-      if (init.cachedBooks) {
-        memoryStore.getAll()
-      }
     }
   })
 

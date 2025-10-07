@@ -5,23 +5,26 @@ import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { chubStore } from '../../store/chub'
 
-const sorts = [
-  'Download Count',
-  'ID',
-  'Rating',
-  'Rating Count',
-  'Last Activity',
-  'Creation Date',
-  'Name',
-  'Token Count',
-]
+const SORTS = {
+  default: 'Default',
+  trending: 'Trending',
+  n_favorites: '# Favorites',
+  random: 'Random',
+  rating: 'Rating',
+  last_activity_at: 'Updated',
+  star_count: 'Popularity',
+  created_at: 'Created',
+  name: 'Name',
+  n_tokens: '# Tokens',
+  rating_count: '# Ratings',
+}
 
 const FilterSettings: Component = () => {
   const state = chubStore((s) => ({
     nsfw: s.nsfw,
     tags: s.tags,
     excludeTags: s.excludeTags,
-    sort: s.sort,
+    sort: s.sort as keyof typeof SORTS,
   }))
 
   return (
@@ -59,8 +62,8 @@ const FilterSettings: Component = () => {
       <Select
         fieldName="sort"
         label="Sort By"
-        items={toDropdownItems(sorts)}
-        value={state.sort}
+        items={toDropdownItems(SORTS)}
+        value={SORTS[state.sort] ? state.sort : 'trending'}
         onChange={(v) => {
           chubStore.setSort(v.value)
         }}
