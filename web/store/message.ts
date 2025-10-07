@@ -879,14 +879,21 @@ export const msgStore = createStore<MsgState>(
 
     async *generateImagePrompt(
       { activeChatId, activeCharId, msgs },
-      opts: { onSummary?: (summary: string) => void; onTick?: TickHandler; question?: string }
+      opts: {
+        messageId?: string
+        onSummary?: (summary: string) => void
+        onTick?: TickHandler
+        question?: string
+      }
     ) {
-      const messageId = msgs.slice(-1)[0]._id
+      const messageId = opts.messageId || msgs.slice(-1)[0]._id
 
       if (!messageId) {
         toastStore.warn('Could not generate image prompt: Current chat has no messages')
         return
       }
+
+      const signal = new AbortController()
 
       yield {
         hordeStatus: undefined,
@@ -896,7 +903,7 @@ export const msgStore = createStore<MsgState>(
           characterId: activeCharId,
           messageId,
           started: Date.now(),
-          // signal: new AbortController()
+          signal,
         },
       }
 
@@ -904,6 +911,7 @@ export const msgStore = createStore<MsgState>(
         onTick: opts.onTick,
         question: opts.question,
         messageId,
+        signal,
       })
 
       yield { waiting: undefined }
@@ -918,7 +926,7 @@ export const msgStore = createStore<MsgState>(
 
     async *createImage(
       { msgs, activeChatId, activeCharId, imgWaiting },
-      opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler }
+      opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler; prompt?: string }
     ) {
       if (imgWaiting) return
 
@@ -939,7 +947,7 @@ export const msgStore = createStore<MsgState>(
       const res = await imageApi.generateImage(
         {
           messageId,
-          prompt: prev?.imagePrompt,
+          prompt: opts.prompt || prev?.imagePrompt,
           append: opts.append,
           source: 'summary',
         },

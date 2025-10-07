@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { imageStore, msgStore, toastStore } from '../../../store'
 import Button from '/web/shared/Button'
 import { useAppContext } from '/web/store/context'
@@ -101,10 +101,21 @@ export const MessageImagePrompt: Component<{
   msg: AppSchema.ChatMessage
   close: () => void
   children?: any
+  onPrompt?: (prompt: string) => void
+  onClose?: () => void
 }> = (props) => {
   const [ctx] = useAppContext()
 
   const [prompt, setPrompt] = createSignal(props.msg?.imagePrompt || '')
+
+  createEffect(() => {
+    const p = prompt()
+    props.onPrompt?.(p)
+  })
+
+  onCleanup(() => {
+    props.onClose?.()
+  })
 
   const updateImagePrompt = () => {
     if (!props.msg) return
@@ -113,8 +124,23 @@ export const MessageImagePrompt: Component<{
     })
   }
 
+  const generatePrompt = () => {
+    if (ctx.waiting?.signal) {
+      ctx.waiting.signal.abort()
+      return
+    }
+
+    if (ctx.waiting) return
+
+    msgStore.generateImagePrompt({
+      onSummary: (summary) => setPrompt(summary),
+      onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
+    })
+  }
+
   return (
     <TextInput
+      class="max-h-[160px]"
       helperText={
         <div class="mb-0.5 flex items-center gap-1.5">
           Image Prompt -{' '}
@@ -129,15 +155,12 @@ export const MessageImagePrompt: Component<{
           <Button
             size="pill"
             schema="secondary"
-            onClick={() =>
-              msgStore.generateImagePrompt({
-                onSummary: (summary) => setPrompt(summary),
-                onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),
-              })
-            }
-            disabled={!!ctx.waiting}
+            onClick={generatePrompt}
+            disabled={ctx.waiting && !ctx.waiting.signal}
           >
-            Generate
+            <Show when={ctx.waiting} fallback="Generate">
+              Interrupt
+            </Show>
           </Button>
           <Button
             size="pill"

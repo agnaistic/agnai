@@ -14,7 +14,7 @@ import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities } from './common'
-import { genApi } from './inference'
+import { genApi, inferenceHelper } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
 import { replaceTags } from '/common/presets/templates'
@@ -48,6 +48,7 @@ export const imageApi = {
   generateImageWithPrompt,
   generateImageAsync,
   getSummaryTemplate,
+  getChatSummary,
   dataURLtoFile,
   getImageData,
   getSDModelList,
@@ -58,10 +59,11 @@ export async function generateImagePrompt(opts: {
   onTick?: TickHandler
   question?: string
   messageId?: string
+  signal?: AbortController
 }) {
-  const { question, onTick } = opts
-
   const imgEnts = await getImagePromptEntities(opts.messageId)
+  const helper = inferenceHelper({ preset: imgEnts.preset, onTick: opts.onTick })
+  const template = getSummaryTemplate({ service: imgEnts.preset?.service, question: opts.question })
   const settings = imgEnts.preset || imgEnts.entities.settings
 
   console.log(
@@ -71,11 +73,16 @@ export async function generateImagePrompt(opts: {
     settings.name || '',
     `\n${imgEnts.summary || ''}`
   )
-  const result = await getChatSummary(settings, {
-    prompt: imgEnts.summary,
-    onTick,
-    question,
-  })
+
+  const stream = await helper.send({ prompt: template, preset: settings, signal: opts.signal })
+  const result = await stream.promise
+
+  // const result = await getChatSummary(settings, {
+  //   prompt: imgEnts.summary,
+  //   onTick,
+  //   question,
+  //   signal: opts.signal,
+  // })
 
   if (result.result?.response) {
     const { content } = extractReasoning(result.result.response)
@@ -329,6 +336,7 @@ async function getChatSummary(
     prompt: string
     question?: string
     onTick?: TickHandler
+    signal?: AbortController
   }
 ) {
   const active = await msgsApi.getActiveTemplateParts()
@@ -355,6 +363,7 @@ async function getChatSummary(
       prompt,
       settings,
       messages: parsed.blocks,
+      signal: params.signal,
     },
     (text, state) => {
       if (!params.onTick) return

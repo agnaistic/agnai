@@ -6,7 +6,7 @@ import { JsonField, TickHandler } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { api, getAuthHeaders } from '../api'
 import { toastStore } from '../toasts'
-import { createSignal, onCleanup } from 'solid-js'
+import { onCleanup } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { getEncoder } from '/common/tokenize'
 import { msgsApi } from './messages'
@@ -41,22 +41,48 @@ type InferenceOpts = {
 }
 
 type InferenceStatus = 'idle' | 'loading' | 'error'
-export function inferenceSignal(init: {
-  preset?: AppSchema.GenSettings
+
+type InferenceState = {
+  status: InferenceStatus
+  response: string
+  error: string
+  preset?: Partial<AppSchema.GenSettings>
+  schema?: JsonField[]
+  maxContext: number
+  thoughts: string[]
+  signal: AbortController | null
+}
+
+const initState = (init?: {
+  preset?: Partial<AppSchema.GenSettings>
+  schema?: JsonField[]
+  maxContext?: number
+}): InferenceState => ({
+  status: 'idle',
+  response: '',
+  error: '',
+  preset: init?.preset,
+  schema: init?.schema,
+  maxContext: init?.maxContext || 0,
+  thoughts: [],
+  signal: null as AbortController | null,
+})
+
+export function inferenceHelper(init: {
+  preset?: Partial<AppSchema.GenSettings>
   schema?: JsonField[]
   onTick?: TickHandler
+  onState?: (next: InferenceState) => void
   maxContext?: number
 }) {
-  const [ctrl, setCtrl] = createSignal<AbortController>()
-  const [state, setState] = createStore({
-    status: 'idle' as InferenceStatus,
-    response: '',
-    error: '',
-    preset: init.preset,
-    schema: init.schema,
-    maxContext: init.maxContext || 0,
-    thoughts: [] as string[],
-  })
+  const state: InferenceState = initState(init)
+
+  const getState = () => ({ ...state })
+
+  const setState = (partial: Partial<typeof state>) => {
+    Object.assign(state, partial)
+    init.onState?.(getState())
+  }
 
   const onTick: TickHandler = (response, tick) => {
     if (state.status !== 'loading') return
@@ -65,8 +91,7 @@ export function inferenceSignal(init: {
 
     switch (tick) {
       case 'error': {
-        setState({ status: 'error', error: response })
-        setCtrl()
+        setState({ status: 'error', error: response, signal: null })
         init.onTick?.(response, tick)
         return
       }
@@ -85,8 +110,8 @@ export function inferenceSignal(init: {
           status: 'idle',
           response: parsed.content,
           thoughts: parsed.thoughts,
+          signal: null,
         })
-        setCtrl()
         break
       }
     }
@@ -95,9 +120,10 @@ export function inferenceSignal(init: {
   }
 
   const generate = async (opts: {
+    signal?: AbortController
     prompt: string
     image?: string
-    preset?: AppSchema.GenSettings
+    preset?: Partial<AppSchema.GenSettings>
     schema?: JsonField[]
     maxContext?: number
   }) => {
@@ -122,39 +148,137 @@ export function inferenceSignal(init: {
         image: opts.image,
         settings: preset,
         jsonSchema: schema,
+        signal: opts.signal,
       },
       onTick
     )
 
-    setCtrl(stream.signal)
-    setState({ status: 'loading' })
+    setState({ status: 'loading', signal: stream.signal })
+
+    return stream
   }
 
   const cancel = () => {
     if (state.status !== 'loading') return
-    const signal = ctrl()
-    if (!signal) return
+    if (!state.signal) return
 
     applog('cancelling stream')
-    setState({ status: 'idle' })
-    signal.abort()
-    setCtrl()
+    state.signal.abort()
+    setState({ status: 'idle', signal: null })
   }
 
+  return { getState, setState, send: generate, cancel }
+}
+
+export function inferenceSignal(init: {
+  preset?: AppSchema.GenSettings
+  schema?: JsonField[]
+  onTick?: TickHandler
+  maxContext?: number
+}) {
+  const helper = inferenceHelper({ ...init, onState: (next) => setState(next) })
+  const [state, setState] = createStore(helper.getState())
+
+  // const [ctrl, setCtrl] = createSignal<AbortController>()
+
+  // const onTick: TickHandler = (response, tick) => {
+  //   const current = helper.getState()
+  //   if (current.status !== 'loading') return
+
+  //   const parsed = extractReasoning(response || '', { tags: state.preset?.reasoning })
+
+  //   switch (tick) {
+  //     case 'error': {
+  //       setState({ status: 'error', error: response })
+  //       setCtrl()
+  //       init.onTick?.(response, tick)
+  //       return
+  //     }
+
+  //     case 'partial': {
+  //       setState({
+  //         response: parsed.content,
+  //         thoughts: parsed.thoughts,
+  //       })
+  //       break
+  //     }
+
+  //     case 'done': {
+  //       const parsed = extractReasoning(response, { tags: state.preset?.reasoning })
+  //       setState({
+  //         status: 'idle',
+  //         response: parsed.content,
+  //         thoughts: parsed.thoughts,
+  //       })
+  //       setCtrl()
+  //       break
+  //     }
+  //   }
+
+  //   init.onTick?.(parsed.content, tick)
+  // }
+
+  // const generate = async (opts: {
+  //   prompt: string
+  //   image?: string
+  //   preset?: AppSchema.GenSettings
+  //   schema?: JsonField[]
+  //   maxContext?: number
+  // }) => {
+  //   if (opts.preset) setState({ preset: opts.preset })
+  //   if (opts.schema) setState({ schema: opts.schema })
+  //   if (opts.maxContext) setState({ maxContext: opts.maxContext })
+
+  //   const preset = opts.preset || state.preset
+  //   const schema = opts.schema || state.schema
+
+  //   const active = await msgsApi.getActiveTemplateParts()
+  //   active.limit = {
+  //     context: opts.maxContext! || preset?.maxContextLength!,
+  //     encoder: await getEncoder(),
+  //   }
+  //   const parsed = await parseTemplate(opts.prompt, active)
+
+  //   const stream = genApi.cancellableStream(
+  //     {
+  //       prompt: opts.prompt,
+  //       messages: parsed.blocks.length ? parsed.blocks : undefined,
+  //       image: opts.image,
+  //       settings: preset,
+  //       jsonSchema: schema,
+  //     },
+  //     onTick
+  //   )
+
+  //   setCtrl(stream.signal)
+  //   setState({ status: 'loading' })
+  // }
+
+  // const cancel = () => {
+  //   if (state.status !== 'loading') return
+  //   const signal = ctrl()
+  //   if (!signal) return
+
+  //   applog('cancelling stream')
+  //   setState({ status: 'idle' })
+  //   signal.abort()
+  //   setCtrl()
+  // }
+
   onCleanup(() => {
-    cancel()
+    helper.cancel()
   })
 
   return {
     state,
-    cancel,
-    send: generate,
+    cancel: helper.cancel,
+    send: helper.send,
     update: (next: {
       preset?: AppSchema.GenSettings
       schema?: JsonField[]
       maxContext?: number
     }) => {
-      setState(next)
+      helper.setState(next)
     },
   }
 }
@@ -236,7 +360,7 @@ export async function basicInference(opts: InferenceOpts) {
 }
 
 export function cancellableStream(opts: InferenceOpts, onTick?: TickHandler) {
-  const signal = new AbortController()
+  const signal = opts.signal || new AbortController()
 
   const promise = inferenceStream({ ...opts, signal }, onTick)
 

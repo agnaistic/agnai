@@ -18,6 +18,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
 ) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
   const [showPrompt, setShowPrompt] = createSignal(false)
+  const [override, setOverride] = createSignal('')
 
   createEffect(
     on(
@@ -47,7 +48,12 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
   return (
     <>
       <Show when={showPrompt()}>
-        <MessageImagePrompt msg={props.msg} close={() => setShowPrompt(false)}>
+        <MessageImagePrompt
+          msg={props.msg}
+          close={() => setShowPrompt(false)}
+          onPrompt={(next) => setOverride(next)}
+          onClose={() => setOverride('')}
+        >
           <Button size="sm" onClick={() => setShowPrompt(false)}>
             <X size={ICON_SIZES.PILL} />
           </Button>
@@ -76,6 +82,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
               class="icon-button"
               onClick={() =>
                 msgStore.createImage({
+                  prompt: override().trim(),
                   sourceMsgId: props.msg._id,
                   append: true,
                 })
