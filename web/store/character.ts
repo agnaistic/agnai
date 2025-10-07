@@ -179,8 +179,10 @@ export const characterStore = createStore<CharacterState>(
       replaceCharacters(chars)
 
       await Promise.resolve()
-      getStore('chat').setState({ allChats: res.result.chats, lastFetched: Date.now() })
-      // events.emit(EVENTS.allChats, res.result.chats)
+      getStore('chat').setState({
+        allChats: res.result.chats?.sort(sortDesc),
+        lastFetched: Date.now(),
+      })
     },
 
     async *getCharacters(state, force?: boolean) {
@@ -771,4 +773,8 @@ async function getMultipleCharacters(characterIds: string[]) {
   replaceCharacters(loaded)
 
   return loaded
+}
+
+function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
+  return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
 }
