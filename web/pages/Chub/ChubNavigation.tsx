@@ -47,46 +47,6 @@ const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
           <Button onClick={() => update(1)}>
             <Search size={16} />
           </Button>
-
-          <Button
-            schema="secondary"
-            class="rounded-xl"
-            onClick={() => {
-              if (state.page > 1) {
-                chubStore.setPage(state.page - 1)
-                update()
-              }
-            }}
-          >
-            <ArrowLeft size={16} />
-          </Button>
-
-          <div class="w-12">
-            <TextInput
-              class="py-1"
-              fieldName="number"
-              value={state.page}
-              onChange={(ev) => {
-                const n = +ev.currentTarget.value
-                if (!isNaN(n) && n !== 0) {
-                  chubStore.setPage(n)
-                  update()
-                }
-              }}
-            />
-          </div>
-          <Button
-            schema="secondary"
-            class="rounded-xl"
-            onClick={() => {
-              // if (state.chars.length % 48 == 0) {
-              // }
-              chubStore.setPage(state.page + 1)
-              update()
-            }}
-          >
-            <ArrowRight size={16} />
-          </Button>
         </div>
 
         <Tags />

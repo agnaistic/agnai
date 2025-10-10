@@ -342,23 +342,11 @@ const PromptSettings: Component<{
     const ents = await getImagePromptEntities(props.messageId)
 
     const template = imageApi.getSummaryTemplate({
-      service: ents.preset?.service,
+      preset: ents.preset,
       question: persist.imageHint,
     })
 
     await gen.send({ prompt: template, preset: ents.preset })
-
-    // props.update('promptLoading', true)
-    // getStore('messages').generateImagePrompt({
-    //   question: persist.imageHint,
-    //   onSummary: (summary) => {
-    //     props.update({ prompt: summary, promptLoading: false })
-    //   },
-    //   onTick: (res, state) => {
-    //     if (state === 'partial') props.update('prompt', res)
-    //     if (state === 'done' || state === 'error') props.update('promptLoading', false)
-    //   },
-    // })
   }
 
   const onCleanPrompt = () => {

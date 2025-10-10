@@ -189,6 +189,17 @@ const Character: Component<CardProps> = (props) => {
               </Button>
 
               <Button
+                alignLeft
+                size="sm"
+                ariaLabel="Toggle Favorite"
+                onClick={() => props.toggleFavorite(!props.char.favorite)}
+              >
+                <Show when={props.char.favorite} fallback={<>Favorite</>}>
+                  Unfavorite
+                </Show>
+              </Button>
+
+              <Button
                 onClick={() => nav(`/character/${props.char._id}/chats`)}
                 aria-label="Chat List"
                 alignLeft
