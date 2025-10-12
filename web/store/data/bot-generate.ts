@@ -31,7 +31,6 @@ import { ThirdPartyFormat } from '/common/adapters'
 import { localEmit } from '../socket'
 import { getPresetConnection } from '/common/providers'
 import { tryParse } from '/common/util'
-import { debug } from '/common/debug'
 
 iconv.enableStreamingAPI(require('stream'))
 
