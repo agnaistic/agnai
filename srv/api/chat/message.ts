@@ -992,22 +992,25 @@ async function createUserMessage(req: AppRequest<GenRequest>, ents: MsgEntities)
 
 async function sendMsg<T extends { type: string }>(ents: MsgEntities, payload: T) {
   const next = { requestId: ents.requestId, ...payload }
-  ents.sse(next)
+  if (ents.version > 1) ents.sse(next)
 
   if (ents.guest) {
     if (ents.version > 1) return
     return sendGuest(ents.socketId, next)
   }
 
+  // The socket IDs does not include the caller socket ID if v2+ requests
   return sendMany(ents.socketIds, next)
 }
 
 async function sendMsgOne<T extends { type: string }>(ents: MsgEntities, payload: T) {
   const next = { requestId: ents.requestId, ...payload }
-  ents.sse(next)
+  if (ents.version > 1) {
+    ents.sse(next)
+    return
+  }
 
   if (ents.guest) {
-    if (ents.version > 1) return
     return sendGuest(ents.socketId, next)
   }
 
