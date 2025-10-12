@@ -180,7 +180,7 @@ export async function generateResponse(
   }
 
   request.eventStream = true
-  request.v = 2
+  request.v = 1
 
   console.log(
     `${opts.kind} cx:${!!opts.signal} p:${
