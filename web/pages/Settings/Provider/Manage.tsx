@@ -71,7 +71,7 @@ export const ManageProvider: Component<{
     }
 
     const self = {
-      name: 'Self-Host',
+      name: 'Local / Self-Host',
       options: Object.entries(KNOWN_SELF_HOST)
         .map(([key, info]) => ({
           label: info.name,
@@ -81,7 +81,7 @@ export const ManageProvider: Component<{
     }
 
     const custom = {
-      name: 'Custom - OpenAI Compatible',
+      name: 'Custom',
       options: Object.entries(CUSTOM_PROVIDERS)
         .map(([key, info]) => ({
           label: info.name,

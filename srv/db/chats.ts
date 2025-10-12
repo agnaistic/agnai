@@ -104,8 +104,8 @@ export async function create(
     const { parsed } = await parseTemplate(props.greeting, {
       chat: doc,
       char,
-      impersonate: impersonating,
-      sender: profile,
+      // impersonate: impersonating,
+      // sender: profile,
       jsonValues: {},
     })
     const msg: AppSchema.ChatMessage = {

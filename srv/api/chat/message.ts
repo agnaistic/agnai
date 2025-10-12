@@ -35,6 +35,7 @@ const sendValidator = {
 
 const genValidator = {
   requestId: 'string?',
+  v: 'number?',
   parent: 'string?',
   kind: [
     'send',
@@ -151,7 +152,15 @@ export const generateMessageV2 = handle(async (req, res) => {
     body.user = req.authed
   }
 
-  const ents = await getMessageEntities(req)
+  if (body.eventStream) {
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders()
+  }
+
+  const ents = await getMessageEntities(req, res)
   const { requestId, messageId, chat, replyAs, impersonate, members } = ents
 
   if (!ents.guest && body.kind === 'request' && chat.userId !== userId) {
@@ -209,7 +218,6 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = body.response || ''
   let retries: string[] = []
-  let aborted = false
   let error = false
   let adapter = 'local'
   let meta: Record<string, any> = {}
@@ -219,6 +227,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   // If body.response is defined, it's a "local request" which means the browser handled the generation.
   // When undefined, we'll generate the response
   let signal: AbortController | null = new AbortController()
+
   if (body.response === undefined) {
     const listener = () => {
       if (!signal) return
@@ -358,7 +367,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if ('prompt' in gen) {
-          sendMsgOne(req, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
+          sendMsgOne(ents, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
           continue
         }
 
@@ -369,7 +378,8 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if ('warning' in gen) {
-          sendMsgOne(req, { type: 'message-warning', requestId, warning: gen.warning })
+          // ents.sse({ type: 'inference-warning', warning: gen.warning })
+          sendMsgOne(ents, { type: 'message-warning', requestId, warning: gen.warning })
         }
       }
     } catch (ex: any) {
@@ -377,7 +387,6 @@ export const generateMessageV2 = handle(async (req, res) => {
       generated = partial
 
       if (ex?.name === 'AbortError') {
-        aborted = true
         signal = null
         error = false
         // Intentional NOOP - This is a user cancellation or request interruption
@@ -393,6 +402,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
       } else {
         log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
+        // ents.sse({ type: 'inference-error', error: `Unhandled exception: ${ex?.message || ex}` })
         sendMsg(ents, {
           type: 'message-error',
           requestId,
@@ -405,7 +415,13 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     req.socket.removeAllListeners('end')
 
+    generated = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+    if (hydration?.response) {
+      generated = hydration.response
+    }
+
     if (body.eventStream && res.writable && signal && !signal?.signal.aborted) {
+      // ents.sse({ type: 'inference', response: generated, meta })
       res.write('data: [DONE]\n\n')
       res.end()
     }
@@ -421,32 +437,36 @@ export const generateMessageV2 = handle(async (req, res) => {
     return
   }
 
+  const parent = getNewMessageParent(body, userMsg)
+
+  if (hydration?.response) {
+    generated = hydration.response
+  }
+
   if (meta.probs) {
     probs = meta.probs
     delete meta.probs
   }
 
-  let responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
-  const parent = getNewMessageParent(body, userMsg)
-
-  if (hydration?.response) {
-    responseText = hydration.response
+  const payload = {
+    req,
+    ents,
+    meta,
+    probs,
+    responseText: generated,
+    parent,
+    hydration,
+    adapter,
+    retries,
   }
-
-  const payload = { req, ents, meta, probs, responseText, parent, hydration, adapter, retries }
   if (ents.guest) {
     await handleGuestResponse(payload)
   } else {
     await handleAuthedResponse(payload)
   }
 
-  if (!aborted && res.writable) {
-    if (body.eventStream) {
-      res.write('data: [DONE]\n\n')
-      res.end()
-    } else {
-      return { success: true }
-    }
+  if (!body.eventStream) {
+    return { success: true }
   }
 })
 
@@ -560,12 +580,12 @@ async function handleAuthedResponse(opts: {
 
   switch (body.kind) {
     case 'summary': {
-      sendMsgOne(req, { type: 'chat-summary', chatId: ents.chatId, summary: responseText })
+      sendMsgOne(ents, { type: 'chat-summary', chatId: ents.chatId, summary: responseText })
       break
     }
 
     case 'chat-query': {
-      sendMsgOne(req, {
+      sendMsgOne(ents, {
         type: 'chat-query',
         requestId: body.requestId,
         chatId,
@@ -733,7 +753,7 @@ async function handleGuestResponse(opts: {
 
   switch (body.kind) {
     case 'summary':
-      sendMsgOne(req, { type: 'chat-summary', chatId: ents.chatId, summary: responseText })
+      sendMsgOne(ents, { type: 'chat-summary', chatId: ents.chatId, summary: responseText })
       return
 
     case 'continue':
@@ -744,7 +764,7 @@ async function handleGuestResponse(opts: {
     case 'send-event:world':
     case 'send-event:character':
     case 'send-event:hidden':
-      sendMsgOne(req, {
+      sendMsgOne(ents, {
         type: 'guest-message-created',
         requestId: ents.requestId,
         msg: response,
@@ -759,7 +779,7 @@ async function handleGuestResponse(opts: {
   }
 }
 
-async function getMessageEntities(req: AppRequest<GenRequest>) {
+async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
   const { body, userId } = req
   const requestId = body.requestId || v4()
   const messageId =
@@ -768,6 +788,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
       : body.kind === 'continue'
       ? body.continuing?._id
       : requestId
+  const version = req.body.v || 1
 
   if (isGuest(req)) {
     const replyAs = body.replyAs || body.char
@@ -776,6 +797,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
     const impersonate = body.impersonate
 
     return {
+      version,
       guest: true,
       requestId,
       messageId,
@@ -791,6 +813,14 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
       book: undefined,
       resolvedScenario: undefined,
       senderId: body.kind === 'self' ? 'anon' : undefined,
+      socketIds: [req.socketId],
+      sse: (payload: object) => {
+        if (!body.eventStream) return
+        if (res.closed) return
+        if (!res.writable) return
+
+        res.write(`data: ${JSON.stringify(payload)}\n\n`)
+      },
     }
   }
 
@@ -867,10 +897,11 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
   const resolvedScenario = resolveScenario(chat, mainCharacter, chatScenarios)
 
   return {
+    version,
     guest: false,
     requestId,
     messageId,
-    socketId: '',
+    socketId: req.socketId,
     user,
     chat,
     preset: settings,
@@ -881,6 +912,14 @@ async function getMessageEntities(req: AppRequest<GenRequest>) {
     book,
     resolvedScenario,
     senderId: body.kind === 'self' ? req.userId : undefined,
+    socketIds: version >= 2 ? members.filter((mem) => mem !== req.userId) : members,
+    sse: (payload: object) => {
+      if (!body.eventStream) return
+      if (res.closed) return
+      if (!res.writable) return
+
+      res.write(`data: ${JSON.stringify(payload)}\n\n`)
+    },
   }
 }
 
@@ -952,19 +991,27 @@ async function createUserMessage(req: AppRequest<GenRequest>, ents: MsgEntities)
 }
 
 async function sendMsg<T extends { type: string }>(ents: MsgEntities, payload: T) {
+  const next = { requestId: ents.requestId, ...payload }
+  ents.sse(next)
+
   if (ents.guest) {
-    return sendGuest(ents.socketId, payload)
+    if (ents.version > 1) return
+    return sendGuest(ents.socketId, next)
   }
 
-  return sendMany(ents.members, payload)
+  return sendMany(ents.socketIds, next)
 }
 
-async function sendMsgOne<T extends { type: string }>(req: AppRequest, payload: T) {
-  if (!req.userId) {
-    return sendGuest(req.socketId, payload)
+async function sendMsgOne<T extends { type: string }>(ents: MsgEntities, payload: T) {
+  const next = { requestId: ents.requestId, ...payload }
+  ents.sse(next)
+
+  if (ents.guest) {
+    if (ents.version > 1) return
+    return sendGuest(ents.socketId, next)
   }
 
-  return sendOne(req.userId, payload)
+  return sendOne(ents.socketId, next)
 }
 
 function isGuest(req: AppRequest) {
@@ -986,10 +1033,5 @@ function setTextStreamHeaders(res: Response, ents: MsgEntities, body: GenRequest
     return
   }
 
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
   res.write(`data: ${JSON.stringify(success)}\n\n`)
 }

@@ -55,6 +55,7 @@ export type AsyncDelta = { delta: Partial<Inference['message']> }
 
 export type GenerateRequestV2 = {
   requestId: string
+  v?: number
   kind:
     | 'send'
     | 'send-event:world'

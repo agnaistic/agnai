@@ -30,6 +30,8 @@ import { isDefaultPreset } from '/common/default-preset'
 import { ThirdPartyFormat } from '/common/adapters'
 import { localEmit } from '../socket'
 import { getPresetConnection } from '/common/providers'
+import { tryParse } from '/common/util'
+import { debug } from '/common/debug'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -180,6 +182,7 @@ export async function generateResponse(
   }
 
   request.eventStream = true
+  request.v = 2
 
   console.log(
     `${opts.kind} cx:${!!opts.signal} p:${
@@ -196,6 +199,48 @@ export async function generateResponse(
     headers: getAuthHeaders(),
     body: request,
     signal: opts.signal,
+    onTick: (payload) => {
+      if (!payload.data) return
+      const json = tryParse(payload.data)
+      if (!json) return
+
+      if (json.type) {
+        localEmit(json)
+        return
+      }
+
+      if (!onTick) return
+
+      switch (json.type) {
+        case 'message-partial':
+          onTick(json.partial, 'partial')
+          break
+
+        case 'message-error':
+          onTick(json.error, 'error')
+          break
+
+        case 'message-warning':
+          onTick(json.warning, 'warning')
+          break
+
+        case 'message-created':
+          onTick(json.msg.msg, 'done')
+          break
+
+        case 'message-retry':
+          onTick(json.message, 'done')
+          break
+
+        case 'chat-query':
+          onTick(json.response, 'done')
+          break
+
+        case 'chat-summary':
+          onTick(json.summary, 'done')
+          break
+      }
+    },
   })
 
   return localApi.result({ requestId: request.requestId, generating: true, success: true })

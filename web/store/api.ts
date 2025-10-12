@@ -222,7 +222,7 @@ export function fetchSSE(opts: {
   })
 
   resp.on('error', (err) => {
-    error = `Streaing request failed: ${err?.message || err}`
+    error = `Streaming request failed: ${err?.message || err}`
     opts.onError?.(error)
   })
 
@@ -272,6 +272,7 @@ export function fetchSSE(opts: {
       if (event.event) {
         event.type = event.event
       }
+
       opts.onData?.(event)
       opts.onTick?.(event, 'partial')
     }

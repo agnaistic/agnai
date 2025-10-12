@@ -942,6 +942,7 @@ function getPlaceholder(
       return ((flags.iterate_char || opts.replyAs || opts.char)?.name || '').trim()
 
     case 'user':
+      if (!opts.impersonate && !opts.sender) return '{{user}}'
       return (opts.impersonate?.name || opts.sender?.handle || 'You').trim()
 
     case 'example_dialogue': {
