@@ -2,7 +2,7 @@ import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
-import { parseSearchQuery, tryParse, incompleteJson, parseEvent, inline } from '/common/util'
+import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 import { debug } from '/common/debug'
 import { TickHandler } from '/common/prompt'
 
