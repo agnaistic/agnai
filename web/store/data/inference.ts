@@ -13,7 +13,6 @@ import { msgsApi } from './messages'
 import { parseTemplate } from '/common/template-parser'
 import { extractReasoning } from '/common/reasoning'
 import { applog } from '/common/debug'
-import { tryParse } from '/common/util'
 import { replaceTags } from '/common/presets/templates'
 
 const inferenceCallbacks = new Map<string, TickHandler>()
