@@ -31,6 +31,7 @@ import { InlineRangeInput } from '/web/shared/RangeInput'
 import { useProviderList } from '../Provider/hooks'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import { imageApi } from '/web/store/data/image'
+import { swarmApi } from '/common/requests/swarmui'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
