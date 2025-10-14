@@ -1,4 +1,10 @@
-type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings
+export type ImageType =
+  | NovelSettings
+  | HordeSettings
+  | SDSettings
+  | AgnaiSettings
+  | ImageProvider
+  | SwarmSettings
 
 export type BaseImageSettings = {
   presetId?: string
@@ -35,7 +41,9 @@ export type ImageSettings = BaseImageSettings & {
   horde: Omit<HordeSettings, 'type'>
   sd: Omit<SDSettings, 'type'>
   agnai: Omit<AgnaiSettings, 'type'>
+  swarm: Omit<SwarmSettings, 'type'>
 
+  active?: 'novel' | 'horde' | 'sd' | 'agnai' | 'swarm'
   // defaults?: ImageDefaults
 }
 
@@ -53,6 +61,14 @@ export type HordeSettings = {
   model: string
 }
 
+export type SwarmSettings = {
+  type: 'swarm'
+  sampler: string
+  url: string
+  model?: string
+  local?: boolean
+}
+
 export type SDSettings = {
   type: 'sd'
   sampler: string
@@ -68,4 +84,19 @@ export type AgnaiSettings = {
   sampler: string
   draftMode: boolean
   loras?: Array<{ id: string; clipStrength: number; modelStrength: number; enabled: boolean }>
+}
+
+export type ImageProvider = {
+  type: 'provider'
+  name: string
+  url: string
+  backend: 'sd' | 'swarm' | 'novel' | 'agnai'
+  local: boolean
+
+  model: string
+  sampler: string
+
+  // Novel
+  qualityTags: boolean
+  ucPreset: string
 }

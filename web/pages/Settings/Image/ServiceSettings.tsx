@@ -14,6 +14,8 @@ import {
   NOVEL_SAMPLER_REV,
   SD_SAMPLER,
   SD_SAMPLER_REV,
+  SWARM_SAMPLER,
+  SWARM_SAMPLER_REV,
 } from '../../../../common/image'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
@@ -29,6 +31,7 @@ import { InlineRangeInput } from '/web/shared/RangeInput'
 import { useProviderList } from '../Provider/hooks'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import { imageApi } from '/web/store/data/image'
+import { swarmApi } from '/common/requests/swarmui'
 
 export const NovelSettings: Component<{
   cfg: ImageSettings
@@ -166,6 +169,75 @@ const SD_SAMPLERS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
   label: `Sampler: ${value}`,
   value: key,
 }))
+
+const SWARM_SAMPLERS = Object.entries(SWARM_SAMPLER_REV).map(([key, value]) => ({
+  label: `Sampler: ${value}`,
+  value: key,
+}))
+
+export const SwarmSettings: Component<{
+  cfg: ImageSettings
+  setter: SetStoreFunction<ImageSettings>
+}> = (props) => {
+  const emitter = createEmitter('open')
+  const [models, setModels] = createSignal<CustomOption[]>([])
+
+  const loadModels = async () => {
+    // if (!props.cfg.swarm.url) return
+    const result = await swarmApi.getModelList(props.cfg.swarm?.url)
+
+    const options = result.models.map((model) => ({ label: model.name, value: model.name }))
+    options.unshift({ label: 'Automatic', value: '' })
+    setModels(options)
+  }
+
+  onMount(() => {
+    emitter.on('open', loadModels)
+  })
+
+  return (
+    <>
+      <TextInput
+        fieldName="sdUrl"
+        label="SwarmUI URL"
+        helperText="Base URL for SwarmUI. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7801"
+        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+        value={props.cfg.swarm?.url || 'http://localhost:7801'}
+        onChange={(ev) =>
+          props.setter(applyStoreProperty(props.cfg, 'swarm.url', ev.currentTarget.value))
+        }
+      />
+
+      <div class="flex items-center gap-1">
+        <CustomSelect
+          listener={emitter.emit}
+          onSelect={(ev) => props.setter(applyStoreProperty(props.cfg, 'swarm.model', ev.value))}
+          selected={props.cfg.swarm?.model}
+          options={models()}
+          buttonLabel={props.cfg.swarm?.model || 'Automatic'}
+        />
+        <div class="icon-button" onClick={loadModels}>
+          <RefreshCcw />
+        </div>
+      </div>
+
+      <Select
+        fieldName="swarmSampler"
+        items={SWARM_SAMPLERS}
+        inline
+        class="!py-1"
+        value={props.cfg.swarm?.sampler || SWARM_SAMPLER['Euler a']}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'swarm.sampler', ev.value))}
+      />
+
+      <Toggle
+        label="Use Local Requests"
+        value={props.cfg.swarm?.local ?? false}
+        onChange={(ev) => props.setter(applyStoreProperty(props.cfg, 'swarm.local', ev))}
+      />
+    </>
+  )
+}
 
 export const SDSettings: Component<{
   cfg: ImageSettings

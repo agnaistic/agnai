@@ -606,8 +606,12 @@ export function tryParseConcat<T = any>(value: string, prev?: string): T | undef
 
 export function tryParse<T = any>(value?: any, aliases?: Record<string, string>): T | undefined {
   if (!value) return
+
   try {
-    const obj = JSON.parse(value)
+    const obj =
+      typeof value === 'string' ? JSON.parse(value) : typeof value === 'object' ? value : null
+
+    if (!obj) return
 
     if (aliases) {
       for (const key in aliases) {

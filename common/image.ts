@@ -58,12 +58,31 @@ export const SD_SAMPLER_REV = {
   UniPC: 'UniPC',
 } as const
 
+export const SWARM_SAMPLER_REV = {
+  euler: 'Euler',
+  euler_ancestral: 'Euler a',
+  lms: 'LMS',
+  heun: 'Huen',
+  dpm_2: 'DPM2',
+  dpm_2_ancestral: 'DPM2 A',
+  dpmpp_2s_ancestral: 'DPM++ 2S a',
+  dpmpp_2m: 'DPM++ 2M',
+  dpmpp_sde: 'DPM++ SDE',
+  dpm_fast: 'DPM Fast',
+  dpm_adaptive: 'DPM Adaptive',
+  lms_ka: 'LMS Karras',
+  dpmpp_3m_sde: 'DPM++ 3M SDE',
+  ddim: 'DDIM',
+  uni_pc: 'UniPC',
+} as const
+
 export const SD_SAMPLER_OPTS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
   label: value,
   value: key,
 }))
 
 export const SD_SAMPLER = reverseKeyValue(SD_SAMPLER_REV)
+export const SWARM_SAMPLER = reverseKeyValue(SWARM_SAMPLER_REV)
 
 type ReverseMap<T extends Record<keyof T, keyof any>> = {
   [P in T[keyof T]]: {

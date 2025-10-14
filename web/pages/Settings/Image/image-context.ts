@@ -42,6 +42,12 @@ const init = (): ImageSettings => ({
     ucPreset: '0',
     qualityTags: true,
   },
+  swarm: {
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+    url: 'http://localhost:7801',
+    local: true,
+  },
 })
 
 export type ImageContext = ReturnType<typeof useImageContext>[0]
@@ -182,6 +188,7 @@ export function useImageContext() {
       { label: 'Horde', value: 'horde' },
       { label: 'NovelAI', value: 'novel' },
       { label: 'Stable Diffusion', value: 'sd' },
+      { label: 'Swarm UI', value: 'swarm' },
     ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
 
     if (hostingImages) {

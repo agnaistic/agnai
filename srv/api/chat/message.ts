@@ -325,7 +325,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if (typeof gen === 'string') {
-          signal = null
           generated = gen
           continue
         }
@@ -335,7 +334,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if ('tokens' in gen) {
-          signal = null
           generated = gen.tokens as string
           break
         }
@@ -420,12 +418,6 @@ export const generateMessageV2 = handle(async (req, res) => {
       generated = hydration.response
     }
 
-    if (body.eventStream && res.writable && signal && !signal?.signal.aborted) {
-      // ents.sse({ type: 'inference', response: generated, meta })
-      res.write('data: [DONE]\n\n')
-      res.end()
-    }
-
     signal = null
 
     if (!ents.guest) {
@@ -434,6 +426,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   if (error) {
+    if (body.eventStream) {
+      res.write(`data: [DONE]\n\n`)
+      res.end()
+    }
     return
   }
 
@@ -467,6 +463,13 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   if (!body.eventStream) {
     return { success: true }
+  }
+
+  if (res.writable) {
+    try {
+      res.write('data: [DONE]\n\n')
+      res.end()
+    } catch (ex) {}
   }
 })
 

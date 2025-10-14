@@ -122,6 +122,13 @@ const initState: EditorState = {
       sampler: '',
       url: '',
     },
+
+    swarm: {
+      url: '',
+      sampler: '',
+      local: true,
+      model: '',
+    },
   },
   imageOverride: '',
   flags: {},

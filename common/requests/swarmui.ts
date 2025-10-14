@@ -1,0 +1,293 @@
+import { ImageRequestOpts } from '/srv/image/types'
+
+/**
+ * POST /API/GetNewSession
+ *
+ *
+ * POST /API/ListModels
+ * session_id: string
+ * path: ''
+ * depth: 5
+ *
+ * POST /API/GenerateText2Image
+ * rawInput: { ... }
+ * -- session_id: string
+ * -- prompt: string
+ * -- model: string
+ * -- steps: number
+ * -- width: number
+ * -- height: number
+ * -- images: number
+ * -- seed: number
+ * -- cfg scale?
+ * -- sampler?
+ * -- scheduler?
+ *
+ *
+ * Returns: { images: string[] }
+ *
+ * GET /:imagePath
+ *
+ */
+
+export const swarmApi = {
+  getModelList,
+  generateImage,
+}
+
+async function getSessionId(hostname: string | undefined) {
+  const session = await fetch(getUrl({ host: hostname, path: 'GetNewSession' }), {
+    method: 'post',
+    body: JSON.stringify({}),
+    headers: { 'content-type': 'application/json' },
+  }).then((res) => res.json())
+
+  return session.session_id as string
+}
+
+async function getModelList(hostname?: string) {
+  const session_id = await getSessionId(hostname)
+
+  const res = (await fetch(getUrl({ host: hostname, path: '/ListModels' }), {
+    method: 'post',
+    body: JSON.stringify({ session_id, path: '', depth: 10 }),
+    headers: { 'content-type': 'application/json' },
+  }).then((res) => res.json())) as {
+    files: Array<{
+      name: string
+      title: string
+      class?: string
+      compat_class?: string
+      architecture?: string
+    }>
+    folders: string[]
+  }
+
+  const models = res.files
+    .map((file) => ({ ...file, name: file.name.split('.').slice(0, -1).join('.') }))
+    .filter((file) => !!file.architecture) as Array<{
+    name: string
+    title: string
+  }>
+
+  return { models, json: res }
+}
+
+async function generateImage(req: ImageRequestOpts) {
+  const session_id = await getSessionId(req.settings?.swarm?.url)
+
+  const result = await fetch(
+    getUrl({ host: req.settings?.swarm?.url, path: 'GenerateText2Image' }),
+    {
+      method: 'post',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        session_id,
+        prompt: req.prompt,
+        negativeprompt: req.negative || '',
+        cfgscale: `${req.settings?.cfg || 5}`,
+        steps: `${req.settings?.steps || 20}`,
+        width: `${req.settings?.width || 1024}`,
+        height: `${req.settings?.height || 1024}`,
+        model: req.settings?.swarm?.model || '',
+        sampler: req.settings?.swarm?.sampler || 'euler_ancestral',
+        images: `1`,
+      }),
+    }
+  ).then((res) => res.json())
+
+  if (result.error) {
+    throw new Error(`SwarmUI failed: ${result.error}`)
+  }
+
+  const imagePath = result.images[0]
+  const image = await fetch(
+    getUrl({ host: req.settings?.swarm?.url, path: imagePath, getter: true }),
+    { headers: { accept: 'image/png' } }
+  )
+    .then((res) => res.blob())
+    .then(async (blob) => {
+      const buf = await blob.arrayBuffer()
+      const buffer = Buffer.from(buf)
+      const base64 = buffer.toString('base64')
+      return { content: base64, blob, buffer }
+    })
+
+  const file = new File([image.blob], `swarm_${Date.now()}.png`, { type: image.blob.type })
+  return { content: image.content, file, buffer: image.buffer }
+}
+
+function getUrl(opts: { host?: string; path: string; getter?: boolean }) {
+  const affix = opts.getter ? '' : '/API'
+  const prefix = opts.path.startsWith('/') ? affix : `${affix}/`
+
+  return `http://localhost:7801${prefix}${opts.path}`
+}
+
+/**
+ * aspectratio
+: 
+"1:1"
+automaticvae
+: 
+true
+batchsize
+: 
+"1"
+cfgscale
+: 
+"6"
+colorcorrectionbehavior
+: 
+"None"
+colordepth
+: 
+"8bit"
+controlnetpreviewonly
+: 
+false
+debugregionalprompting
+: 
+false
+donotsave
+: 
+false
+donotsaveintermediates
+: 
+false
+easycachemode
+: 
+"disabled"
+extra_metadata
+: 
+{}
+gligenmodel
+: 
+"None"
+height
+: 
+"1024"
+images
+: 
+"1"
+internalbackendtype
+: 
+"Any"
+loras
+: 
+""
+lorasectionconfinement
+: 
+""
+loratencweights
+: 
+""
+loraweights
+: 
+""
+maskcompositeunthresholded
+: 
+false
+model
+: 
+"JANKUV5NSFWTrainedNoobai_v50"
+modelspecificenhancements
+: 
+true
+negativeprompt
+: 
+""
+nopreviews
+: 
+false
+noseedincrement
+: 
+false
+outputintermediateimages
+: 
+false
+personalnote
+: 
+""
+placeholderparamgroupstarred
+: 
+false
+placeholderparamgroupuserone
+: 
+false
+placeholderparamgroupuserthree
+: 
+false
+placeholderparamgroupusertwo
+: 
+false
+presets
+: 
+[]
+prompt
+: 
+"blonde, petite, 1girl, 34dd breasts, modest clothing, beach, night, full_moon, starry sky, hand_in_pants, male POV, public nudity risk, embarrassed, flushed, looking down, handjob, outdoor, sand"
+regionalobjectcleanupfactor
+: 
+"0"
+removebackground
+: 
+false
+renormcfg
+: 
+"0"
+savesegmentmask
+: 
+false
+seamlesstileable
+: 
+"false"
+seed
+: 
+"-1"
+segmentsortorder
+: 
+"left-right"
+session_id
+: 
+"c3bc92f49250d2e1a79a1c38a9cd7470c8553f4d"
+shiftedlatentaverageinit
+: 
+false
+sidelength
+: 
+"1024"
+steps
+: 
+"30"
+torchcompile
+: 
+"Disabled"
+trimvideoendframes
+: 
+"0"
+trimvideostartframes
+: 
+"0"
+usecfgzerostar
+: 
+false
+usetcfg
+: 
+false
+videopreviewtype
+: 
+"animate"
+webhooks
+: 
+"Normal"
+width
+: 
+"1024"
+wildcardseedbehavior
+: 
+"Random"
+zeronegative
+: 
+false
+ */

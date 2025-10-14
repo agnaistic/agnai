@@ -10,6 +10,7 @@ import { getCachedTiers } from '../db/subscriptions'
 import { config } from '../config'
 import { fixImagePrompt } from '/common/image-prompt'
 import { decryptText } from '../db/util'
+import { swarmApi } from '/common/requests/swarmui'
 
 const defaultSettings: SDSettings = {
   type: 'sd',
@@ -48,6 +49,11 @@ export type SDRequest = {
 }
 
 type InternalConfig = Awaited<ReturnType<typeof getConfig>>
+
+export const handleSwarmImage: ImageAdapter = async (opts, log, guestId) => {
+  const image = await swarmApi.generateImage(opts)
+  return { ext: 'png', content: image.buffer }
+}
 
 export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
   const config = await getConfig(opts)

@@ -5,7 +5,7 @@ import { store } from '../db'
 import { config } from '../config'
 import { v4 } from 'uuid'
 import { saveFile } from '../api/upload'
-import { handleSDImage } from './stable-diffusion'
+import { handleSDImage, handleSwarmImage } from './stable-diffusion'
 import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
 import { AppSchema } from '/common/types'
@@ -172,6 +172,23 @@ async function runImageGenerate(options: {
 
   try {
     switch (imageSettings?.type || 'horde') {
+      case 'swarm': {
+        image = await handleSwarmImage(
+          {
+            user,
+            prompt,
+            negative,
+            settings: imageSettings,
+            override: opts.model,
+            params: opts.params,
+            raw_prompt: opts.prompt,
+          },
+          log,
+          guestId
+        )
+        break
+      }
+
       case 'novel':
         image = await handleNovelImage(
           {

@@ -9,10 +9,16 @@ import { Toggle } from '/web/shared/Toggle'
 import { SolidCard } from '/web/shared/Card'
 import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Pencil, Save, X } from 'lucide-solid'
+import { Pencil, Plus, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
 import { isChatPage } from '/web/shared/hooks'
-import { AgnaiSettings, HordeSettings, NovelSettings, SDSettings } from './ServiceSettings'
+import {
+  AgnaiSettings,
+  HordeSettings,
+  NovelSettings,
+  SDSettings,
+  SwarmSettings,
+} from './ServiceSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { getPresetOptions } from '/web/shared/adapter'
@@ -162,14 +168,20 @@ export const ImageSettingsModal = () => {
             />
           </Accordian>
 
-          <Select
-            fieldName="imageType"
-            items={ctx.state.hosts}
-            value={ctx.store.type ?? (ctx.state.canUseImages ? 'agnai' : 'horde')}
-            onChange={(value) => ctx.update('type', value.value as any)}
-            class="!py-1"
-            inline
-          />
+          <div class="flex gap-2">
+            <Select
+              fieldName="imageType"
+              items={ctx.state.hosts}
+              value={ctx.store.type ?? (ctx.state.canUseImages ? 'agnai' : 'horde')}
+              onChange={(value) => ctx.update('type', value.value as any)}
+              class="!py-1"
+              inline
+            />
+            <Button size="sm" class="h-[36px]">
+              <Plus size={20} />
+              Service
+            </Button>
+          </div>
 
           <Show when={ctx.state.canUseImages && ctx.store.type === 'agnai'}>
             <FormLabel
@@ -241,6 +253,14 @@ export const ImageSettingsModal = () => {
             class={ctx.tab.current() === 'Shared' && ctx.store.type === 'sd' ? subclass : 'hidden'}
           >
             <SDSettings cfg={ctx.store} setter={ctx.update} />
+          </div>
+
+          <div
+            class={
+              ctx.tab.current() === 'Shared' && ctx.store.type === 'swarm' ? subclass : 'hidden'
+            }
+          >
+            <SwarmSettings cfg={ctx.store} setter={ctx.update} />
           </div>
 
           <div class={ctx.store.type === 'agnai' ? subclass : 'hidden'}>

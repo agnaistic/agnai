@@ -2,8 +2,9 @@ import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
 import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
-import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
+import { parseSearchQuery, tryParse, incompleteJson, parseEvent, inline } from '/common/util'
 import { debug } from '/common/debug'
+import { TickHandler } from '/common/prompt'
 
 let socketId = ''
 
@@ -195,7 +196,7 @@ export function fetchSSE(opts: {
   onData?: (event: any) => void
   onDone?: () => void
   onError?: (err: any) => void
-  onTick?: (payload: any, state: string) => void
+  onTick?: TickHandler
 }) {
   const log = debug('sse')
 
@@ -203,6 +204,11 @@ export function fetchSSE(opts: {
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
+    timeout: 5000,
+    open_timeout: 5000,
+    read_timeout: 0,
+    response_timeout: 0,
+
     headers: {
       ...headers,
       Accept: 'text/event-stream',
@@ -221,9 +227,16 @@ export function fetchSSE(opts: {
     }
   })
 
-  resp.on('error', (err) => {
+  resp.on('err', (err) => {
     error = `Streaming request failed: ${err?.message || err}`
     opts.onError?.(error)
+    opts.onTick?.(error, 'error')
+  })
+
+  resp.on('timeout', (...args) => {
+    error = 'Network request failed'
+    opts.onError?.(error)
+    opts.onTick?.(error, 'error')
   })
 
   resp.on('data', (chunk: Buffer) => {
@@ -273,8 +286,50 @@ export function fetchSSE(opts: {
         event.type = event.event
       }
 
-      opts.onData?.(event)
-      opts.onTick?.(event, 'partial')
+      const json = tryParse(event.data)
+
+      if (json) {
+        opts.onData?.(json)
+      }
+
+      if (!opts?.onTick) return
+      if (!event?.data) return
+
+      if (!json) return
+
+      switch (json.type) {
+        case 'message-partial':
+        case 'inference-partial':
+          opts.onTick(json.partial, 'partial')
+          break
+
+        case 'message-error':
+        case 'inference-error':
+          opts.onTick(json.error, 'error')
+          break
+
+        case 'message-warning':
+        case 'inference-warning':
+          opts.onTick(json.warning, 'warning')
+          break
+
+        case 'message-created':
+          opts.onTick(json.msg.msg, 'done')
+          break
+
+        case 'message-retry':
+          opts.onTick(json.message, 'done')
+          break
+
+        case 'chat-query':
+        case 'inference':
+          opts.onTick(json.response, 'done')
+          break
+
+        case 'chat-summary':
+          opts.onTick(json.summary, 'done')
+          break
+      }
     }
   })
 

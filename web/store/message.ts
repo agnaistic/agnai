@@ -562,8 +562,8 @@ export const msgStore = createStore<MsgState>(
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error}`)
-        console.log('[wait] retry err')
+        toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`)
+        console.log('[wait] retry err', res.error)
         yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
@@ -715,7 +715,7 @@ export const msgStore = createStore<MsgState>(
           res = await botGen
             .generate({ signal, kind: opts.mode, text: opts.msg })
             .catch((err) => ({ error: err.message, result: undefined }))
-          if ('result' in res && !res.result.generating) {
+          if ('result' in res && !res.result?.generating) {
             console.log('[wait] send no-gen')
             yield { partial: undefined, waiting: undefined }
           }

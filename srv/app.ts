@@ -23,6 +23,14 @@ export function createApp() {
   const app = express()
   const server = createServer(app)
 
+  if (!config.clustering) {
+    app.use((req, res, next) => {
+      req
+      res
+      next()
+    })
+  }
+
   app.use(
     cors({
       origin: true,

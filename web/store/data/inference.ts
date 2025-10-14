@@ -344,33 +344,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       headers: getAuthHeaders(),
       body: payload,
       signal: opts.signal,
-      onTick: (payload) => {
-        if (!payload.data) return
-        const json = tryParse(payload.data)
-        if (!json) return
-
-        switch (json.type) {
-          case 'inference-partial': {
-            tickWrapper(json.partial, 'partial')
-            break
-          }
-
-          case 'inference-error': {
-            tickWrapper(json.error, 'error')
-            break
-          }
-
-          case 'inference': {
-            tickWrapper(json.response, 'done')
-            break
-          }
-
-          case 'inference-warning': {
-            tickWrapper(json.warning, 'warning')
-            break
-          }
-        }
-      },
+      onTick: tickWrapper,
     })
 
     return lazy.promise

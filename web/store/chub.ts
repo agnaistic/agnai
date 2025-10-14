@@ -2,6 +2,20 @@ import { ChubItem as ChubEntity } from '../pages/Chub/ChubItem'
 import { getStoredValue, setStoredValue } from '../shared/hooks'
 import { createStore } from './create'
 
+export const CHUB_SORTS = {
+  default: 'Default',
+  trending: 'Trending',
+  n_favorites: '# Favorites',
+  random: 'Random',
+  rating: 'Rating',
+  last_activity_at: 'Updated',
+  star_count: 'Popularity',
+  created_at: 'Created',
+  name: 'Name',
+  n_tokens: '# Tokens',
+  rating_count: '# Ratings',
+}
+
 export type ChubEntity = {
   id: number
   avatar_url?: string
@@ -162,6 +176,8 @@ export function createOnEnter(callback: Function) {
   }
 }
 
-function getSort(sort: string) {
-  return sort
+function getSort(sort: string): keyof typeof CHUB_SORTS {
+  const key = sort as keyof typeof CHUB_SORTS
+  if (!key || !CHUB_SORTS[key]) return 'default'
+  return key
 }

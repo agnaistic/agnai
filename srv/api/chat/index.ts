@@ -11,7 +11,7 @@ import {
 } from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
-import { createImage, getSdModelList } from './image'
+import { createImage, getImageModelList, getSdModelList } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
@@ -27,6 +27,7 @@ router.post('/completion', apiKeyUsage, inferenceApi)
 router.post('/guidance', guidance)
 router.post('/reguidance', guidance)
 router.post('/sd-models', getSdModelList)
+router.post('/image-models', getImageModelList)
 router.post('/:id/send', createMessage)
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
