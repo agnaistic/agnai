@@ -11,9 +11,28 @@ export function handle(handler: Handler): express.RequestHandler {
     }
 
     try {
+      // We want to ensure that all requests are terminated
       const result = await handler(req as any, res, wrappedNext)
-      if (!res.headersSent && !nextCalled && !!result && res.writable) {
-        res.json(result)
+      if (!nextCalled && !res.writableEnded) {
+        const accept = req.headers.accept
+
+        switch (accept) {
+          case 'application/json':
+            // Don't "safely" (i.e. 200) if a JSON route handler doesn't correctly respond
+            if (!result) {
+              const err = new StatusError('Server API failed to respond', 500)
+              req.log.error({ err }, 'Unexpected handler fall-through')
+              next(err)
+              break
+            }
+
+            res.json(result)
+            break
+
+          case 'text/event-stream':
+            res.end()
+            break
+        }
       }
     } catch (ex) {
       req.log.error({ err: ex }, 'Error occurred handling request')
