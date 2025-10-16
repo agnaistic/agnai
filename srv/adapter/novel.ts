@@ -313,7 +313,7 @@ const streamCompletion = async function* (
 }
 
 async function* fullCompletion(headers: any, body: any, log: AppLog) {
-  const res = await needle('post', novelUrl(body.model), body, {
+  const res = await needle('post', streamUrl(body.model), body, {
     json: true,
     // timeout: 2000,
     response_timeout: 30000,
