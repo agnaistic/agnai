@@ -204,10 +204,6 @@ export function fetchSSE(opts: {
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
-    timeout: 5000,
-    open_timeout: 5000,
-    read_timeout: 0,
-    response_timeout: 0,
 
     headers: {
       ...headers,
