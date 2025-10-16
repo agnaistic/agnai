@@ -56,6 +56,8 @@ const NEW_PARAMS: Record<string, 0 | 1 | 2> = {
   'llama-3-erato-v1': 1,
   [NOVEL_MODELS.clio_v1]: 1,
   [NOVEL_MODELS.kayra_v1]: 1,
+  [NOVEL_MODELS.krake]: 0,
+  [NOVEL_MODELS.euterpe]: 0,
   [NOVEL_MODELS.glm_46]: 2,
 }
 
@@ -151,11 +153,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
 }
 
 function getRequestBody(opts: AdapterProps) {
-  const model =
-    NOVEL_ALIASES[opts.gen.novelModel!] ||
-    opts.gen.novelModel ||
-    opts.user.novelModel ||
-    NOVEL_MODELS.clio_v1
+  const model = NOVEL_ALIASES[opts.gen.novelModel!] || opts.gen.novelModel || NOVEL_MODELS.glm_46
 
   const version = NEW_PARAMS[model] ?? 0
 
