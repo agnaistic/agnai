@@ -197,6 +197,7 @@ function getRequestBody(opts: AdapterProps) {
       return { input: processNovelAIPrompt(opts.prompt), model, parameters }
 
     case 2:
+    default:
       // OpenAI Compatible
       return {
         prompt: processNovelAIPrompt(opts.prompt),
