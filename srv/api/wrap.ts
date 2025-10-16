@@ -17,7 +17,12 @@ export function handle(handler: Handler): express.RequestHandler {
         const accept = req.headers.accept
 
         switch (accept) {
+          case 'text/event-stream':
+            res.end()
+            break
+
           case 'application/json':
+          default:
             // Don't "safely" (i.e. 200) if a JSON route handler doesn't correctly respond
             if (!result) {
               const err = new StatusError('Server API failed to respond', 500)
@@ -27,10 +32,6 @@ export function handle(handler: Handler): express.RequestHandler {
             }
 
             res.json(result)
-            break
-
-          case 'text/event-stream':
-            res.end()
             break
         }
       }
