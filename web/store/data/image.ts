@@ -164,43 +164,39 @@ export async function generateImage(
 
   const req = await createImageRequest({ prompt: trimmed, messageId: opts.messageId })
 
-  if (!req.provider?.local) {
-    const res = await api.post<{ success: boolean }>(
-      `/chat/${opts.chatId || entities.chat._id}/image`,
-      {
-        prompt: trimmed,
-        user: entities.user,
-        messageId: opts.messageId,
-        ephemeral: opts.ephemeral,
-        append: opts.append,
-        source: opts.source,
+  if (req.provider?.local && req.provider.type === 'swarm') {
+    const lazy = lazyPromise()
+
+    swarmApi.generateImage(req.request).then((res) => {
+      localEmit({
+        type: 'image-generated',
         chatId: opts.chatId,
-        characterId,
-        parent: opts.parent,
+        messageId: opts.messageId,
+        image: res.content,
         requestId: v4(),
-      }
-    )
-    return res
-  }
-
-  const lazy = lazyPromise()
-
-  switch (req.provider.type) {
-    case 'swarm': {
-      swarmApi.generateImage(req.request).then((res) => {
-        localEmit({
-          type: 'image-generated',
-          chatId: opts.chatId,
-          messageId: opts.messageId,
-          image: res.content,
-          requestId: v4(),
-          source: opts.source,
-        })
+        source: opts.source,
       })
-    }
+    })
+
+    return lazy.promise
   }
 
-  return lazy.promise
+  const res = await api.post<{ success: boolean }>(
+    `/chat/${opts.chatId || entities.chat._id}/image`,
+    {
+      prompt: trimmed,
+      user: entities.user,
+      messageId: opts.messageId,
+      ephemeral: opts.ephemeral,
+      append: opts.append,
+      source: opts.source,
+      chatId: opts.chatId,
+      characterId,
+      parent: opts.parent,
+      requestId: v4(),
+    }
+  )
+  return res
 }
 
 export async function generateImageWithPrompt(opts: {
