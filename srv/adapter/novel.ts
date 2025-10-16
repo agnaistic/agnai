@@ -14,8 +14,7 @@ import { getStoppingStrings } from '/common/requests/payloads'
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const NOVEL_TEXT_URL = `https://text.novelai.net` // use text.novelai.net when the new API allows >150 response tokens.
 
-const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
-const streamUrl = (model: string) => {
+const novelUrl = (model: string) => {
   const base = getBaseUrl(model)
   if (model === NOVEL_MODELS.glm_46) return `${base}/oa/v1/completions`
   return `${base}/ai/generate-stream`
@@ -34,12 +33,12 @@ const streamUrl = (model: string) => {
  * 8. Mirostat
  */
 
-const statuses: Record<number, string> = {
-  400: 'Invalid payload',
-  401: 'Invalid API key',
-  402: 'You need an active subscription',
-  409: "You have a model selected that your subscription tier isn't eligible for",
-}
+// const statuses: Record<number, string> = {
+//   400: 'Invalid payload',
+//   401: 'Invalid API key',
+//   402: 'You need an active subscription',
+//   409: "You have a model selected that your subscription tier isn't eligible for",
+// }
 
 const base = {
   generate_until_sentence: true,
@@ -111,10 +110,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
     body.parameters.max_length = Math.min(body.parameters.max_length, maxTokens)
   }
 
-  const stream =
-    opts.kind !== 'summary' && opts.gen.streamResponse
-      ? streamCompletion(opts, headers, body, log)
-      : fullCompletion(headers, body, log)
+  const stream = streamCompletion(opts, headers, body, log)
 
   let accum = ''
   while (true) {
@@ -128,20 +124,23 @@ export const handleNovel: ModelAdapter = async function* (opts) {
     }
 
     if ('token' in generated.value) {
-      accum += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accum,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-          stops: endTokens,
-        }),
+      accum += generated.value.token as string
+
+      if (opts.gen.streamResponse) {
+        yield {
+          partial: sanitiseAndTrim({
+            text: accum,
+            char: opts.replyAs,
+            members,
+            gen: opts.gen,
+            stops: endTokens,
+          }),
+        }
       }
     }
 
     if ('tokens' in generated.value) {
-      accum = generated.value.tokens
+      accum = generated.value.tokens as string
       break
     }
   }
@@ -257,7 +256,7 @@ const streamCompletion = async function* (
   body: any,
   _log: AppLog
 ) {
-  const resp = await fetch(streamUrl(body.model), {
+  const resp = await fetch(novelUrl(body.model), {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
@@ -312,48 +311,48 @@ const streamCompletion = async function* (
   return
 }
 
-async function* fullCompletion(headers: any, body: any, log: AppLog) {
-  const res = await needle('post', streamUrl(body.model), body, {
-    json: true,
-    // timeout: 2000,
-    response_timeout: 30000,
-    headers,
-  }).catch((err) => ({ err }))
+// async function* fullCompletion(headers: any, body: any, log: AppLog) {
+//   const res = await needle('post', novelUrl(body.model), body, {
+//     json: true,
+//     // timeout: 2000,
+//     response_timeout: 30000,
+//     headers,
+//   }).catch((err) => ({ err }))
 
-  if ('err' in res) {
-    log.error({ err: `Novel request failed: ${res.err?.message || res.err}` })
-    yield { error: res.err.message }
-    return
-  }
+//   if ('err' in res) {
+//     log.error({ err: `Novel request failed: ${res.err?.message || res.err}` })
+//     yield { error: res.err.message }
+//     return
+//   }
 
-  const status = res.statusCode || 0
-  if (statuses[status]) {
-    log.error({ error: res.body }, `Novel response failed (${status})`)
-    yield { error: `Novel API returned an error (${statuses[status]}) ${res.body.message}` }
-    return
-  }
+//   const status = res.statusCode || 0
+//   if (statuses[status]) {
+//     log.error({ error: res.body }, `Novel response failed (${status})`)
+//     yield { error: `Novel API returned an error (${statuses[status]}) ${res.body.message}` }
+//     return
+//   }
 
-  if (status >= 400) {
-    log.error({ error: res.body }, `Novel request failed (${status})`)
-    yield {
-      error: `Novel API returned an error (${res.statusMessage!}) ${res.body.message}`,
-    }
-    return
-  }
+//   if (status >= 400) {
+//     log.error({ error: res.body }, `Novel request failed (${status})`)
+//     yield {
+//       error: `Novel API returned an error (${res.statusMessage!}) ${res.body.message}`,
+//     }
+//     return
+//   }
 
-  if (res.body.error) {
-    log.error({ error: res.body }, `Novel response failed (${status})`)
-    yield {
-      error: `Novel API returned an error: ${
-        res.body.error.message || res.body.error || res.body.message
-      }`,
-    }
-    return
-  }
+//   if (res.body.error) {
+//     log.error({ error: res.body }, `Novel response failed (${status})`)
+//     yield {
+//       error: `Novel API returned an error: ${
+//         res.body.error.message || res.body.error || res.body.message
+//       }`,
+//     }
+//     return
+//   }
 
-  yield { tokens: res.body.output }
-  return
-}
+//   yield { tokens: res.body.output }
+//   return
+// }
 
 function processNovelAIPrompt(prompt: string) {
   return prompt.replace(/^\<START\>$/gm, '***').replace(/\n\n+/gi, '\n\n')
