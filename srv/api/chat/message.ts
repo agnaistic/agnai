@@ -461,10 +461,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleAuthedResponse(payload)
   }
 
-  if (!body.eventStream) {
-    return { success: true }
-  }
-
   if (res.writable) {
     try {
       res.write('data: [DONE]\n\n')
