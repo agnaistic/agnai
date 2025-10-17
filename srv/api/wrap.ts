@@ -13,13 +13,13 @@ export function handle(handler: Handler): express.RequestHandler {
     try {
       // We want to ensure that all requests are terminated
       const result = await handler(req as any, res, wrappedNext)
-      if (!nextCalled && !res.writableEnded) {
+      if (!nextCalled) {
         const accept = req.headers.accept
 
         switch (accept) {
           case 'text/event-stream':
             res.end()
-            break
+            return
 
           case 'application/json':
           default:
@@ -28,11 +28,11 @@ export function handle(handler: Handler): express.RequestHandler {
               const err = new StatusError('Server API failed to respond', 500)
               req.log.error({ err }, 'Unexpected handler fall-through')
               next(err)
-              break
+              return
             }
 
             res.json(result)
-            break
+            return
         }
       }
     } catch (ex) {
