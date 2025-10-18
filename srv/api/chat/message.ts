@@ -31,6 +31,7 @@ const sendValidator = {
   impersonate: 'any?',
   parent: 'string?',
   bot: 'boolean?',
+  messageId: 'string?',
 } as const
 
 const genValidator = {
@@ -105,7 +106,7 @@ export const createMessage = handle(async (req) => {
 
   if (!userId) {
     const guest = req.socketId
-    const newMsg = newMessage(v4(), chatId, body.text, {
+    const newMsg = newMessage(body.messageId || v4(), chatId, body.text, {
       userId: body.bot || impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
@@ -113,30 +114,32 @@ export const createMessage = handle(async (req) => {
       parent: body.parent,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
-  } else {
-    const chat = await store.chats.getChatOnly(chatId)
-    if (!chat) throw errors.NotFound
-    const members = chat.memberIds.concat(chat.userId)
 
-    await ensureBotMembership(chat, members, impersonate)
-
-    const userMsg = await store.msgs.createChatMessage({
-      chatId,
-      message: body.text,
-      characterId: impersonate?._id,
-      senderId: body.bot ? undefined : userId,
-      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
-      event: getScenarioEventType(body.kind),
-      parent: body.parent,
-      name: impersonate?.name,
-    })
-
-    await store.chats.update(chatId, { treeLeafId: userMsg._id })
-
-    sendMany(members, { type: 'message-created', msg: userMsg, chatId })
+    return { success: true, message: newMsg }
   }
 
-  return { success: true }
+  const chat = await store.chats.getChatOnly(chatId)
+  if (!chat) throw errors.NotFound
+  const members = chat.memberIds.concat(chat.userId)
+
+  await ensureBotMembership(chat, members, impersonate)
+
+  const userMsg = await store.msgs.createChatMessage({
+    _id: body.messageId || v4(),
+    chatId,
+    message: body.text,
+    characterId: impersonate?._id,
+    senderId: body.bot ? undefined : userId,
+    ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
+    event: getScenarioEventType(body.kind),
+    parent: body.parent,
+    name: impersonate?.name,
+  })
+
+  await store.chats.update(chatId, { treeLeafId: userMsg._id })
+
+  sendMany(members, { type: 'message-created', msg: userMsg, chatId })
+  return { success: true, message: userMsg }
 })
 
 export const generateMessageV2 = handle(async (req, res) => {
