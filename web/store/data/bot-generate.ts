@@ -86,6 +86,8 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
   const req = await buildChatRequest(opts)
   const messages = await toChatMessages(req.request, countTokens)
 
+  console.log(messages.assembled.prompt)
+
   const lazy = lazyPromise()
 
   const pre = await handlePreStreamResponse(opts, req)
