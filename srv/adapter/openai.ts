@@ -9,7 +9,7 @@ import {
 } from './chat-completion'
 import { decryptText } from '../db/util'
 import { getTokenCounter } from '../tokenize'
-import { ensureMessagesAlternate, stripImageContent } from './template-chat-payload'
+import { ensureMessagesAlternate, stripImageContent } from '/common/template-messages'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'

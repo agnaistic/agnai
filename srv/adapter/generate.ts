@@ -21,9 +21,9 @@ import {
 import { getCachedSubscriptionModels } from '../db/subscriptions'
 import { sendOne } from '../api/ws'
 import { ResponseSchema } from '/common/types/library'
-import { toChatMessages, validateChatMessages } from './template-chat-payload'
 import { isDefaultPreset } from '/common/default-preset'
 import { getPresetConnection } from '/common/providers'
+import { toChatMessages, validateChatMessages } from '/common/template-messages'
 
 let version = ''
 

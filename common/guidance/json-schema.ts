@@ -14,13 +14,11 @@ export const SCHEMA_VARS = {
 }
 
 export type StructureEntities = {
-  replyAs: M<AppSchema.Character>
+  replyAs?: AppSchema.Character
   char: AppSchema.Character
-  impersonate?: M<AppSchema.Character>
-  sender: M<AppSchema.Profile>
+  impersonate?: AppSchema.Character
+  sender?: AppSchema.Profile
 }
-
-type M<T> = T | undefined
 
 /**
  * @destructive Mutates `schema` field names and templates if required

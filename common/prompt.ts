@@ -17,7 +17,7 @@ import { extractReasoning } from './reasoning'
 
 export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
 
-export type InferenceState = 'partial' | 'done' | 'error' | 'warning'
+export type InferenceState = 'partial' | 'done' | 'error' | 'warning' | 'headers' | 'meta'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -554,9 +554,9 @@ export async function buildPromptPlaceholders(
 
     const post = createPostPrompt(opts)
 
-    if (opts.continue) {
-      post.unshift(`${char.name}: ${opts.continue}`)
-    }
+    // if (opts.continue) {
+    //   post.unshift(`${char.name}: ${opts.continue}`)
+    // }
 
     const books: AppSchema.MemoryBook[] = []
     if (replyAs.characterBook) books.push(replyAs.characterBook)

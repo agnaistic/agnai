@@ -19,19 +19,22 @@ type GenRequest = UnwrapBody<typeof genValidator>
 type MsgEntities = Awaited<ReturnType<typeof getMessageEntities>>
 
 const sendValidator = {
-  kind: [
-    'send-noreply',
-    'ooc',
-    'send-event:world',
-    'send-event:character',
-    'send-event:hidden',
-    'send-event:ooc',
-  ],
+  // kind: [
+  //   'send-noreply',
+  //   'ooc',
+  //   'send-event:world',
+  //   'send-event:character',
+  //   'send-event:hidden',
+  //   'send-event:ooc',
+  // ],
+  kind: 'string?',
+  ooc: 'boolean?',
   text: 'string',
   impersonate: 'any?',
   parent: 'string?',
   bot: 'boolean?',
   messageId: 'string?',
+  meta: 'any?',
 } as const
 
 const genValidator = {
@@ -109,9 +112,10 @@ export const createMessage = handle(async (req) => {
     const newMsg = newMessage(body.messageId || v4(), chatId, body.text, {
       userId: body.bot || impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
-      ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
-      event: getScenarioEventType(body.kind),
+      ooc: body.ooc || body.kind === 'ooc' || body.kind === 'send-event:ooc',
+      event: body.kind ? getScenarioEventType(body.kind) : undefined,
       parent: body.parent,
+      meta: body.meta,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
 
@@ -130,10 +134,11 @@ export const createMessage = handle(async (req) => {
     message: body.text,
     characterId: impersonate?._id,
     senderId: body.bot ? undefined : userId,
-    ooc: body.kind === 'ooc' || body.kind === 'send-event:ooc',
-    event: getScenarioEventType(body.kind),
+    ooc: body.ooc || body.kind === 'ooc' || body.kind === 'send-event:ooc',
+    event: body.kind ? getScenarioEventType(body.kind) : undefined,
     parent: body.parent,
     name: impersonate?.name,
+    meta: body.meta,
   })
 
   await store.chats.update(chatId, { treeLeafId: userMsg._id })
@@ -379,7 +384,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if ('warning' in gen) {
-          // ents.sse({ type: 'inference-warning', warning: gen.warning })
           sendMsgOne(ents, { type: 'message-warning', requestId, warning: gen.warning })
         }
       }
@@ -403,7 +407,6 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
       } else {
         log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
-        // ents.sse({ type: 'inference-error', error: `Unhandled exception: ${ex?.message || ex}` })
         sendMsg(ents, {
           type: 'message-error',
           requestId,
@@ -464,7 +467,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     await handleAuthedResponse(payload)
   }
 
-  if (res.writable) {
+  if (!res.writableEnded) {
     try {
       res.write('data: [DONE]\n\n')
       res.end()

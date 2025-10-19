@@ -12,8 +12,11 @@ import { getEncoder } from '/common/tokenize'
 import { msgsApi } from './messages'
 import { parseTemplate } from '/common/template-parser'
 import { extractReasoning } from '/common/reasoning'
-import { applog } from '/common/debug'
+import { applog, debug } from '/common/debug'
 import { replaceTags } from '/common/presets/templates'
+import { getProvider } from '../preset-context'
+import { getProviderConnection } from '/common/providers'
+import { getLocalPayload } from '/common/requests/payloads'
 
 const inferenceCallbacks = new Map<string, TickHandler>()
 
@@ -36,8 +39,11 @@ type InferenceOpts = {
   maxTokens?: number
   jsonSchema?: JsonField[]
 
+  broadcast?: { type: string; id: string; payload: any }
+
   /** Base64 image */
   image?: string
+  payload?: any
 }
 
 type InferenceStatus = 'idle' | 'loading' | 'error'
@@ -315,6 +321,9 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     settings: { ...preset, stream: true },
   }
 
+  const provider = getProvider(settings?.providerId)
+  const conn = provider ? getProviderConnection(provider) : undefined
+
   const tickWrapper: TickHandler = (res, state) => {
     if (state === 'partial') {
       lastResponse = res
@@ -338,13 +347,34 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       lazy.resolve({ response: lastResponse })
     }
 
-    api.fetchSSE({
-      path: '/chat/inference-stream',
-      headers: getAuthHeaders(),
-      body: payload,
-      signal: opts.signal,
-      onTick: tickWrapper,
-    })
+    if (conn?.local) {
+      if (!opts.payload) {
+        debug('sse')('warning: no local payload provided, using fallback')
+      }
+
+      const fallback = getLocalPayload({
+        user,
+        messages: opts.messages,
+        prompt: opts.prompt,
+        settings: preset,
+      })
+      api.localSSE({
+        host: conn?.url,
+        path: payload.messages ? `/chat/completions` : '/completions',
+        body: opts.payload || fallback,
+        headers: {},
+        signal: opts.signal,
+        onTick: tickWrapper,
+      })
+    } else {
+      api.fetchSSE({
+        path: '/chat/inference-stream',
+        headers: getAuthHeaders(),
+        body: payload,
+        signal: opts.signal,
+        onTick: tickWrapper,
+      })
+    }
 
     return lazy.promise
   }

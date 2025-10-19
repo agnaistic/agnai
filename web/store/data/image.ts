@@ -168,14 +168,17 @@ export async function generateImage(
     const lazy = lazyPromise()
 
     swarmApi.generateImage(req.request).then((res) => {
-      localEmit({
+      const result = {
         type: 'image-generated',
         chatId: opts.chatId,
         messageId: opts.messageId,
         image: res.content,
         requestId: v4(),
         source: opts.source,
-      })
+        summary,
+      }
+      lazy.resolve(result)
+      localEmit(result)
     })
 
     return lazy.promise

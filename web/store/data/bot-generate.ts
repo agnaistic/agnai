@@ -11,10 +11,11 @@ import {
   JsonField,
   PromptLine,
   resolveScenario,
+  TickHandler,
 } from '/common/prompt'
 import { handleLocalRequest } from '/common/requests'
 import { parseTemplate } from '/common/template-parser'
-import { getEncoder } from '/common/tokenize'
+import { countTokens, getEncoder } from '/common/tokenize'
 import { AppSchema } from '/common/types'
 import { UserEmbed } from '/common/types/memory'
 import { GenerateRequestV2 } from '/srv/adapter/type'
@@ -29,11 +30,17 @@ import { genApi, lazyPromise } from './inference'
 import { isDefaultPreset } from '/common/default-preset'
 import { ThirdPartyFormat } from '/common/adapters'
 import { localEmit } from '../socket'
-import { getPresetConnection } from '/common/providers'
+import { getPresetConnection, getProviderConnection } from '/common/providers'
+import { toChatMessages } from '/common/template-messages'
+import { msgsApi } from './messages'
+import { getProvider } from '../preset-context'
+import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
+import { sanitiseAndTrim } from '/common/requests/util'
 
 iconv.enableStreamingAPI(require('stream'))
 
 export const botGen = {
+  stream: streamResponse,
   generate: generateResponse,
   getActivePromptOptions,
 }
@@ -67,30 +74,318 @@ export type GenerateOpts = { signal: AbortController; hint?: string } & /**
   | { kind: 'chat-query'; text: string; schema?: JsonField[] }
 )
 
-export async function generateResponse(
-  opts: GenerateOpts,
-  onTick?: (msg: string, state: InferenceState) => any
-) {
-  const { active } = getStore('chat').getState()
+type ChatRequest = Awaited<ReturnType<typeof buildChatRequest>>
+type StreamOpts = Exclude<GenerateOpts, { type: 'ooc' | 'send-noreply' | 'send-event:ooc' }>
 
+async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
+  const { active } = getStore('chat').getState()
   if (!active) {
     return localApi.error('No active chat. Try refreshing.')
   }
 
-  if (
-    opts.kind === 'ooc' ||
-    opts.kind === 'send-noreply' ||
-    opts.kind === 'send-event:ooc' ||
-    // allow events to be sent without a reply in multi-bot chats
-    (isEventOpts(opts) && !active.replyAs)
-  ) {
-    return createMessage(active.chat._id, opts)
+  const req = await buildChatRequest(opts)
+  const messages = await toChatMessages(req.request, countTokens)
+
+  const lazy = lazyPromise()
+
+  const pre = await handlePreStreamResponse(opts, req)
+  if (pre?.messageId) {
+    req.request.parent = pre.messageId
   }
 
+  const meta: any = {}
+  const provider = getProvider(req.entities.settings?.providerId)
+  const conn = provider ? getProviderConnection(provider) : undefined
+
+  const payload = conn?.local
+    ? getLocalPayload({
+        ...req.request,
+        messages: messages.messages,
+        prompt: messages.assembled.prompt,
+      })
+    : undefined
+
+  let prefix = req.request.continuing?.msg || ''
+  if (prefix) {
+    prefix += ' '
+  }
+
+  const stops = getStoppingStrings(req.request, req.entities.settings)
+  const santitize = (text: string) =>
+    sanitiseAndTrim({
+      char: req.entities.char,
+      members: req.entities.members,
+      gen: req.entities.settings,
+      text,
+      stops,
+    })
+
+  await genApi.inferenceStream(
+    {
+      settings: req.entities.settings,
+      jsonSchema: req.request.jsonSchema,
+      messages: messages.messages,
+      prompt: messages.assembled.prompt,
+      payload,
+      signal: opts.signal,
+      // TODO: Re-enable multiplayer streaming
+      // broadcast: {
+      //   type: 'chat',
+      //   id: active.chat._id,
+      //   payload: {
+      //     messageId: out.request.requestId,
+      //     characterId: out.request.replyAs._id,
+      //     chatId: active.chat._id,
+      //   },
+      // },
+    },
+    async (response, state, json) => {
+      switch (state) {
+        case 'error':
+          lazy.reject(response)
+          break
+
+        case 'meta':
+          Object.assign(meta, json)
+          break
+
+        case 'headers': {
+          lazy.resolve({
+            generating: true,
+            input: opts.kind === 'send' ? opts.text : undefined,
+            requestId: req.request.requestId,
+          })
+          break
+        }
+
+        case 'partial': {
+          const trimmed = santitize(prefix + response)
+          localEmit({
+            type: 'message-partial',
+            chatId: active.chat._id,
+            partial: trimmed,
+          })
+          break
+        }
+
+        case 'done': {
+          const trimmed = santitize(prefix + response)
+          await handlePostStreamResponse(opts, req, trimmed, meta)
+          break
+        }
+      }
+
+      onTick?.(response, state, json)
+    }
+  )
+
+  return lazy.promise
+}
+
+async function handlePreStreamResponse(opts: StreamOpts, req: ChatRequest) {
+  if (opts.kind !== 'ooc' && opts.kind !== 'send') return
+
+  const { impersonating } = getStore('character').getState()
+
+  const chatId = req.request.chat._id
+  const messageId = v4()
+
+  await msgsApi.createMessage({
+    kind: 'send-noreply',
+    chatId,
+    messageId,
+    text: opts.text,
+    parent: req.request.parent,
+    character: impersonating,
+    bot: false,
+  })
+
+  return { messageId }
+}
+
+async function handlePostStreamResponse(
+  opts: StreamOpts,
+  req: ChatRequest,
+  response: string,
+  meta: any
+) {
+  const { replacing, parent, replyAs, continuing } = req.request
+  const messageId = replacing?._id || req.request.requestId
+  const chatId = req.request.chat._id
+
+  /**
+   * Handle exceptions to message creations in here
+   * `break` if we need to create a new message
+   */
+  switch (opts.kind) {
+    case 'retry': {
+      if (!replacing) {
+        break
+      }
+
+      const retries = [replacing.msg].concat(replacing.retries || [])
+      await msgsApi.editMessageProps(replacing, {
+        msg: response,
+        retries,
+        state: 'retried',
+        meta,
+      })
+      return
+    }
+
+    case 'continue': {
+      if (!continuing) {
+        throw new Error(`Unable to update message: Source message not found`)
+      }
+
+      await msgsApi.editMessageProps(continuing, {
+        msg: response,
+        state: 'continued',
+        meta,
+      })
+      return
+    }
+
+    case 'chat-query':
+    case 'ooc':
+    case 'send-event:ooc':
+    case 'send-noreply':
+    case 'summary':
+      // Intentional NOOP
+      return
+
+    case 'request':
+    case 'send':
+    case 'self':
+    case 'send-event:world':
+    case 'send-event:character':
+    case 'send-event:hidden': {
+      break
+    }
+  }
+
+  req.request.response = response
+  await msgsApi.createMessage({
+    kind: 'send-noreply',
+    chatId,
+    messageId,
+    text: response,
+    parent,
+    character: replyAs,
+    bot: true,
+    meta,
+  })
+}
+
+export async function generateResponse(
+  opts: GenerateOpts,
+  onTick?: (msg: string, state: InferenceState) => any
+) {
+  try {
+    const { active } = getStore('chat').getState()
+    if (!active) {
+      return localApi.error('No active chat. Try refreshing.')
+    }
+
+    if (
+      opts.kind === 'ooc' ||
+      opts.kind === 'send-noreply' ||
+      opts.kind === 'send-event:ooc' ||
+      // allow events to be sent without a reply in multi-bot chats
+      (isEventOpts(opts) && !active.replyAs)
+    ) {
+      return createMessage(active.chat._id, opts)
+    }
+
+    const {
+      request,
+      prompt,
+      activePrompt: { entities },
+    } = await buildChatRequest(opts)
+
+    const win: any = window
+    win.lastPrompt = prompt.template.parsed
+
+    if (useLocalRequest(entities.settings, entities.user)) {
+      localRequest(request, opts.signal, prompt.template.parsed).then(() => {
+        console.log('[done]')
+      })
+
+      let input = opts.kind === 'send' ? opts.text : undefined
+
+      /**
+       * Edge-case: Guests using local requests need the message they sent to be persisted immediately.
+       * Otherwise it'd have to be created when the response is complete
+       */
+      if (!isLoggedIn() && opts.kind === 'send') {
+        const newMsg: AppSchema.ChatMessage = {
+          _id: v4(),
+          chatId: active.chat._id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          kind: 'chat-message',
+          retries: [],
+          msg: opts.text || '',
+          userId: request.impersonate ? undefined : 'anon',
+          characterId: request.impersonate?._id,
+          parent: request.parent,
+        }
+        input = undefined
+        localEmit({ type: 'message-created', chatId: active.chat._id, msg: newMsg })
+        request.parent = newMsg._id
+      }
+
+      return localApi.result({ generating: true, input, requestId: request.requestId })
+    }
+
+    request.eventStream = true
+    request.v = 3
+
+    console.log(
+      `${opts.kind} cx:${!!opts.signal} p:${
+        request.parent?.slice(0, 5) || 'none'
+      } rep:${request.replacing?._id?.slice(0, 4)}`
+    )
+
+    if (onTick) {
+      genApi.callbacks.set(request.requestId, onTick)
+    }
+
+    const lazy = lazyPromise()
+
+    api.fetchSSE({
+      path: `/chat/${entities.chat._id}/generate`,
+      headers: getAuthHeaders(),
+      body: request,
+      signal: opts.signal,
+      onData: (data) => {
+        if (data.type === 'message-creating') {
+          lazy.resolve({ requestId: request.requestId, generating: true, success: true })
+        }
+        localEmit(data)
+      },
+      onTick: (text, state) => {
+        if (state === 'error') {
+          lazy.reject(text)
+          // localEmit({ type: 'message-error', error: payload, chatId: request.chat._id })
+        }
+
+        onTick?.(text, state)
+      },
+    })
+
+    return lazy.promise
+  } catch (ex: any) {
+    console.error(ex)
+    return localApi.error(ex?.message || ex)
+  }
+}
+
+async function buildChatRequest(opts: GenerateOpts) {
   const activePrompt = await createActiveChatPrompt(opts).catch((err) => ({ err }))
   if ('err' in activePrompt) {
     console.error(activePrompt.err)
-    return localApi.error(activePrompt.err.message || activePrompt.err)
+    throw new Error(activePrompt.err.message || activePrompt.err)
   }
 
   const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
@@ -131,10 +426,8 @@ export async function generateResponse(
     userEmbeds,
     jsonValues: props.json,
     reschemaPrompt: props.reschemaPrompt,
+    eventStream: true,
   }
-
-  const win: any = window
-  win.lastPrompt = prompt.template.parsed
 
   if (
     opts.kind === 'send' ||
@@ -147,75 +440,7 @@ export async function generateResponse(
     request.attachments = entities.attachments
   }
 
-  if (useLocalRequest(entities.settings, entities.user)) {
-    localRequest(request, opts.signal, prompt.template.parsed).then(() => {
-      console.log('[done]')
-    })
-
-    let input = opts.kind === 'send' ? opts.text : undefined
-
-    /**
-     * Edge-case: Guests using local requests need the message they sent to be persisted immediately.
-     * Otherwise it'd have to be created when the response is complete
-     */
-    if (!isLoggedIn() && opts.kind === 'send') {
-      const newMsg: AppSchema.ChatMessage = {
-        _id: v4(),
-        chatId: active.chat._id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        kind: 'chat-message',
-        retries: [],
-        msg: opts.text || '',
-        userId: request.impersonate ? undefined : 'anon',
-        characterId: request.impersonate?._id,
-        parent: request.parent,
-      }
-      input = undefined
-      localEmit({ type: 'message-created', chatId: active.chat._id, msg: newMsg })
-      request.parent = newMsg._id
-    }
-
-    return localApi.result({ generating: true, input, requestId: request.requestId })
-  }
-
-  request.eventStream = true
-  request.v = 2
-
-  console.log(
-    `${opts.kind} cx:${!!opts.signal} p:${
-      request.parent?.slice(0, 5) || 'none'
-    } rep:${request.replacing?._id?.slice(0, 4)}`
-  )
-
-  if (onTick) {
-    genApi.callbacks.set(request.requestId, onTick)
-  }
-
-  const lazy = lazyPromise()
-
-  api.fetchSSE({
-    path: `/chat/${entities.chat._id}/generate`,
-    headers: getAuthHeaders(),
-    body: request,
-    signal: opts.signal,
-    onData: (data) => {
-      if (data.type === 'message-creating') {
-        lazy.resolve({ requestId: request.requestId, generating: true, success: true })
-      }
-      localEmit(data)
-    },
-    onTick: (payload, state) => {
-      if (state === 'error') {
-        lazy.reject(payload)
-        // localEmit({ type: 'message-error', error: payload, chatId: request.chat._id })
-      }
-
-      onTick?.(payload, state)
-    },
-  })
-
-  return lazy.promise
+  return { request, prompt, entities, activePrompt }
 }
 
 async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
@@ -292,9 +517,7 @@ function isEventOpts(
   )
 }
 
-async function createActiveChatPrompt(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' | 'send-event:ooc' }>
-) {
+async function createActiveChatPrompt(opts: GenerateOpts) {
   const { active } = getStore('chat').getState()
   const { ui } = getStore('user').getState()
   const { templates } = getStore('presets').getState()
@@ -435,7 +658,7 @@ export type GenerateProps = {
 }
 
 async function getGenerateProps(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' } | { kind: 'send-noreply' }>,
+  opts: GenerateOpts,
   active: NonNullable<ChatState['active']>
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()

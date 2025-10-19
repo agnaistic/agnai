@@ -3,8 +3,8 @@ import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { joinUrl, sanitiseAndTrim } from './util'
 import { countTokens } from '../tokenize'
-import { stripImageContent, toChatMessages } from '/srv/adapter/template-chat-payload'
 import { getStoppingStrings, toImageJinjaTemplate } from './payloads'
+import { stripImageContent, toChatMessages } from '../template-messages'
 
 type Role = 'user' | 'assistant' | 'system'
 export type CompletionItem = { role: Role; content: string; name?: string }
@@ -71,33 +71,33 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   console.log(`Prompt:\n`, JSON.stringify(stripImageContent(messages as any), null, 2))
   const fullUrl = joinUrl(gen.thirdPartyUrl || '', urlPath)
 
-  if (!gen.streamResponse) {
-    const result = await requestFullCompletion(fullUrl, headers, payload, signal)
-    if ('error' in result) {
-      yield result
-      return
-    }
+  // if (!gen.streamResponse) {
+  //   const result = await requestFullCompletion(fullUrl, headers, payload, signal)
+  //   if ('error' in result) {
+  //     yield result
+  //     return
+  //   }
 
-    const text = getCompletionContent(result)
-    if (text instanceof Error) {
-      yield { error: `request returned an error: ${text.message}` }
-      return
-    }
+  //   const text = getCompletionContent(result)
+  //   if (text instanceof Error) {
+  //     yield { error: `request returned an error: ${text.message}` }
+  //     return
+  //   }
 
-    if (!text?.length) {
-      yield { error: `[local] request failed: Received empty response. Try again.` }
-      return
-    }
+  //   if (!text?.length) {
+  //     yield { error: `[local] request failed: Received empty response. Try again.` }
+  //     return
+  //   }
 
-    yield sanitiseAndTrim({
-      text,
-      char: opts.replyAs,
-      members: opts.members,
-      gen: opts.settings || {},
-      stops,
-    })
-    return
-  }
+  //   yield sanitiseAndTrim({
+  //     text,
+  //     char: opts.replyAs,
+  //     members: opts.members,
+  //     gen: opts.settings || {},
+  //     stops,
+  //   })
+  //   return
+  // }
 
   const stream = streamGenerator({
     userId: opts.user._id,
@@ -130,13 +130,17 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accumulated,
-          char: opts.char,
-          members: opts.members,
-          gen: opts.settings || {},
-        }),
+
+      if (gen.streamResponse) {
+        yield {
+          partial: sanitiseAndTrim({
+            text: accumulated,
+            char: opts.char,
+            members: opts.members,
+            gen: opts.settings || {},
+            stops,
+          }),
+        }
       }
     }
 

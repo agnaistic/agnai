@@ -5,6 +5,7 @@ import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 import { debug } from '/common/debug'
 import { TickHandler } from '/common/prompt'
+import { joinUrl } from '/common/requests/util'
 
 let socketId = ''
 
@@ -50,6 +51,7 @@ export const api = {
   streamPost,
   toApiUrl,
   fetchSSE,
+  localSSE,
   isCdnApi,
   getFallbackApiUrl,
 }
@@ -187,19 +189,119 @@ async function callApi<T = any>(
   return { result: json, status: res.status, error: res.status >= 400 ? res.statusText : undefined }
 }
 
-export function fetchSSE(opts: {
+type SSEOpts<T = {}> = T & {
   path: string
   headers: any
   body: any
   signal?: AbortController
-
   onData?: (event: any) => void
   onDone?: () => void
   onError?: (err: any) => void
   onTick?: TickHandler
-}) {
-  const log = debug('sse')
+}
 
+export function localSSE(opts: SSEOpts<{ host: string }>) {
+  const resp = needle.post(joinUrl(opts.host, opts.path), JSON.stringify(opts.body), {
+    parse: false,
+    signal: opts.signal?.signal,
+
+    headers: {
+      ...opts.headers,
+      Accept: 'text/event-stream',
+      'Content-Type': 'application/json',
+    },
+  })
+
+  let accum = ''
+  let error = ''
+  let incomplete = ''
+  let meta: any = {}
+  let done = false
+
+  handleNonData(opts, resp, (err) => {
+    error = err
+  })
+
+  resp.on('data', (chunk: Buffer) => {
+    const data = incomplete + chunk.toString()
+    incomplete = ''
+
+    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
+
+    for (const msg of messages) {
+      // If we have an error, we want to retrieve the reason for the error
+      // which is usually a message in the event stream
+      if (error) {
+        handleError(opts, error, msg)
+        return
+      }
+
+      const { json, incomplete: skip } = preHandleData(opts, msg)
+      if (skip) {
+        incomplete = skip
+        continue
+      }
+
+      if (!json || !opts.onTick) continue
+      opts.onData?.(json)
+
+      const changed = getChoiceProp(json, meta, ['model', 'finish_reason', 'provider'])
+      if (changed.found) {
+        opts.onTick('', 'meta', meta)
+      }
+
+      const token = getToken(json)
+      if (token) {
+        accum += token
+        opts.onTick?.(accum, 'partial')
+        continue
+      }
+
+      if (done) continue
+      if (changed.matches.finish_reason) {
+        opts?.onTick(accum, 'done')
+        done = true
+        continue
+      }
+
+      const response = json.response
+      if (response) {
+        opts?.onTick(accum, 'done')
+        done = true
+        continue
+      }
+    }
+  })
+}
+
+function getChoiceProp<T = any>(json: any, assign: any, props: string[]) {
+  let found = false
+  let matches: any = {}
+
+  for (const prop of props) {
+    const choice = json?.choices?.[0]
+    const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+
+    if (assign && value) {
+      if (assign[prop] === value) continue
+      matches[prop] = value
+      assign[prop] = value
+      found = true
+    }
+  }
+
+  return { found, matches }
+}
+
+function getToken(json: any) {
+  const choice = json?.choices?.[0]
+  if (!choice) return
+
+  const token = choice.delta?.content || choice.delta?.text || choice.content || choice.text
+  return token
+}
+
+export function fetchSSE(opts: SSEOpts) {
   const { path, headers, body, signal } = opts
   const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
@@ -215,24 +317,8 @@ export function fetchSSE(opts: {
   let error = ''
   let incomplete = ''
 
-  resp.on('header', (statusCode, headers) => {
-    log('code %s', statusCode)
-    // const contentType = headers['content-type'] || ''
-    if (statusCode > 201) {
-      error = `Streaming request failed with status code ${statusCode}`
-    }
-  })
-
-  resp.on('err', (err) => {
-    error = `Streaming request failed: ${err?.message || err}`
-    opts.onError?.(error)
-    opts.onTick?.(error, 'error')
-  })
-
-  resp.on('timeout', (...args) => {
-    error = 'Network request failed'
-    opts.onError?.(error)
-    opts.onTick?.(error, 'error')
+  handleNonData(opts, resp, (err) => {
+    error = err
   })
 
   resp.on('data', (chunk: Buffer) => {
@@ -242,56 +328,20 @@ export function fetchSSE(opts: {
     const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l && l !== ': OPENROUTER PROCESSING')
 
     for (const msg of messages) {
+      // If we have an error, we want to retrieve the reason for the error
+      // which is usually a message in the event stream
       if (error) {
-        const event = tryParse(msg)
-
-        if (!event) {
-          opts.onError?.(error)
-          opts.onTick?.(error, 'error')
-        } else if (typeof event === 'string') {
-          opts.onError?.(`Local request failed: ${event}`)
-          opts.onTick?.(event, 'error')
-        } else if (event.error) {
-          if (typeof event.error === 'string') {
-            opts.onError?.(`Local request failed: ${event.error}`)
-            opts.onTick?.(event.error, 'error')
-          } else if (event.error?.message) {
-            opts.onError?.(`Local request failed: ${event.error.message}`)
-            opts.onTick?.(event.error.message, 'error')
-          }
-        } else {
-          opts.onError?.(error)
-          opts.onTick?.(error, 'error')
-        }
+        handleError(opts, error, msg)
         return
       }
 
-      const event: any = parseEvent(msg)
-
-      if (!event.data) {
+      const { json, incomplete: skip } = preHandleData(opts, msg)
+      if (skip) {
+        incomplete = skip
         continue
       }
 
-      const data: string = event.data
-      if (typeof data === 'string' && incompleteJson(data)) {
-        incomplete = msg
-        continue
-      }
-
-      if (event.event) {
-        event.type = event.event
-      }
-
-      const json = tryParse(event.data)
-
-      if (json) {
-        opts.onData?.(json)
-      }
-
-      if (!opts?.onTick) return
-      if (!event?.data) return
-
-      if (!json) return
+      if (!json || !opts.onTick) return
 
       switch (json.type) {
         case 'message-partial':
@@ -325,13 +375,97 @@ export function fetchSSE(opts: {
         case 'chat-summary':
           opts.onTick(json.summary, 'done')
           break
+
+        case 'inference-meta':
+          opts.onTick('', 'meta', json.meta)
+          break
       }
     }
+  })
+}
+
+function preHandleData(opts: SSEOpts, msg: string) {
+  const event: any = parseEvent(msg)
+
+  if (!event.data) {
+    return { incomplete: undefined, event: undefined, json: undefined }
+  }
+
+  const data: string = event.data
+  if (typeof data === 'string' && incompleteJson(data)) {
+    return { incomplete: msg, event: undefined, json: undefined }
+  }
+
+  if (event.event) {
+    event.type = event.event
+  }
+
+  const json = tryParse(event.data)
+
+  if (json) {
+    opts.onData?.(json)
+  }
+
+  return { event, json, incomplete: undefined }
+}
+
+function handleNonData(
+  opts: SSEOpts,
+  resp: NodeJS.ReadableStream,
+  onError: (error: string) => void
+) {
+  resp.on('header', (statusCode, headers) => {
+    debug('sse')('code %s', statusCode)
+    // const contentType = headers['content-type'] || ''
+    if (statusCode > 201) {
+      onError(`Streaming request failed with status code ${statusCode}`)
+      // We need to return, most callers resolve successfully if we make the headers called.
+      return
+    }
+    opts.onTick?.(`${statusCode}`, 'headers')
+  })
+
+  resp.on('err', (err) => {
+    let error = `Streaming request failed: ${err?.message || err}`
+    onError(error)
+    opts.onError?.(error)
+    opts.onTick?.(error, 'error')
+  })
+
+  resp.on('timeout', (...args) => {
+    let error = 'Network request failed'
+    onError(error)
+    opts.onError?.(error)
+    opts.onTick?.(error, 'error')
   })
 
   resp.on('done', () => {
     opts.onDone?.()
   })
+}
+
+function handleError(opts: SSEOpts, error: string, msg: string) {
+  const event = tryParse(msg)
+
+  if (!event) {
+    debug('error')(`!event: ${msg}`)
+    opts.onError?.(error)
+    opts.onTick?.(error, 'error')
+  } else if (typeof event === 'string') {
+    opts.onError?.(`Local request failed: ${event}`)
+    opts.onTick?.(event, 'error')
+  } else if (event.error) {
+    if (typeof event.error === 'string') {
+      opts.onError?.(`Local request failed: ${event.error}`)
+      opts.onTick?.(event.error, 'error')
+    } else if (event.error?.message) {
+      opts.onError?.(`Local request failed: ${event.error.message}`)
+      opts.onTick?.(event.error.message, 'error')
+    }
+  } else {
+    opts.onError?.(error)
+    opts.onTick?.(error, 'error')
+  }
 }
 
 export function getAuthHeaders() {

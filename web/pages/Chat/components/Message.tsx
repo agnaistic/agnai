@@ -795,7 +795,7 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
-        disabled: props.ctx.msgDeleting,
+        disabled: props.ctx.msgDeleting || props.ctx.waiting?.chatId === props.msg.chatId,
       },
 
       'gen-image': {
@@ -898,7 +898,12 @@ const MessageOptions: Component<{
       <Show when={props.last && !props.msg.characterId}>
         <div
           class="icon-button"
-          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
+          onClick={() => {
+            if (props.partial) return
+            // msgStore.resend(props.msg.chatId, props.msg._id)
+            if (!props.ctx.chat?.characterId) return
+            msgStore.request(props.ctx.chat._id, props.ctx.chat.characterId)
+          }}
         >
           <RefreshCw size={18} />
         </div>

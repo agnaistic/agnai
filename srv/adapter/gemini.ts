@@ -9,11 +9,12 @@ import {
   HarmCategory,
   SafetySetting,
 } from '@google/genai'
-import { remapMessages, toChatMessages } from './template-chat-payload'
+import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { toChatMessages } from '/common/template-messages'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,

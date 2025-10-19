@@ -393,7 +393,9 @@ const ChatDetail: Component = () => {
         } else if (msg.characterId) {
           msgStore.retry({ chatId: msg.chatId, msgId: msg._id })
         } else {
-          msgStore.resend(msg.chatId, msg._id)
+          if (!ctx.chat?.characterId) return
+          msgStore.request(msg.chatId, ctx.chat.characterId)
+          // msgStore.resend(msg.chatId, msg._id)
         }
       }
 

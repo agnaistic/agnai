@@ -36,7 +36,7 @@ export async function handleLocalRequest(
     }
 
     if ('error' in gen) {
-      const message = typeof gen.error === 'string' ? gen.error : gen.error.message
+      const message = typeof gen.error === 'string' ? gen.error : gen.error?.message
       emit({
         type: 'message-error',
         requestId: body.requestId,

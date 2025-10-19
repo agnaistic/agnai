@@ -57,20 +57,24 @@ export function localEmit<T extends { type: string }>(payload: T) {
 }
 
 export function subscribe<T extends string, U extends Validator>(
-  type: string,
+  type: string | string[],
   validator: U,
   handler: (body: UnwrapBody<U> & { type: T }) => void,
   once?: (body: UnwrapBody<U> & { type: T }) => boolean
 ) {
-  if (once) {
-    const handlers = onceListeners.get(type) || []
-    handlers.push({ validator, fn: handler, predicate: once })
-    onceListeners.set(type, handlers)
-    return
+  const types = Array.isArray(type) ? type : [type]
+
+  for (const type of types) {
+    if (once) {
+      const handlers = onceListeners.get(type) || []
+      handlers.push({ validator, fn: handler, predicate: once })
+      onceListeners.set(type, handlers)
+      return
+    }
+    const handlers = listeners.get(type) || []
+    handlers.push({ validator, fn: handler })
+    listeners.set(type, handlers)
   }
-  const handlers = listeners.get(type) || []
-  handlers.push({ validator, fn: handler })
-  listeners.set(type, handlers)
 }
 
 const squelched = new Set([

@@ -20,9 +20,10 @@ import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
-import { remapMessages, stripImageContent, toChatMessages } from './template-chat-payload'
+import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { stripImageContent, toChatMessages } from '/common/template-messages'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`

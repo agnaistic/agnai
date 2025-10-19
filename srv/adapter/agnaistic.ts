@@ -27,8 +27,8 @@ import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
 import { getPresetConnection, PresetConnection } from '/common/providers'
-import { stripImageContent } from './template-chat-payload'
 import { getServicePayload } from './payloads'
+import { stripImageContent } from '/common/template-messages'
 
 export type SubscriptionPreset = Awaited<NonNullable<ReturnType<typeof getSubscriptionPreset>>>
 

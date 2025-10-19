@@ -6,11 +6,12 @@ import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { createClaudeChatCompletion } from './claude'
-import { logPayload, stripImageContent } from './template-chat-payload'
+import { logPayload } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
 import { modelNeedsUserRoleLast } from './chat-completion'
+import { stripImageContent } from '/common/template-messages'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`

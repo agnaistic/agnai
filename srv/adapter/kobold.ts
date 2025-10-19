@@ -11,11 +11,11 @@ import {
   sanitiseAndTrim,
   trimResponseV2,
 } from '/common/requests/util'
-import { stripImageContent } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
 import { getStoppingStrings, getThirdPartyPayload } from '/common/requests/payloads'
+import { stripImageContent } from '/common/template-messages'
 
 /**
  * Sampler order

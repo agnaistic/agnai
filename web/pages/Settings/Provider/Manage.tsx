@@ -224,7 +224,7 @@ export const ManageProvider: Component<{
     try {
       new URL(url()) // Validate the URL
       presetStore.testConnection(
-        { providerId: provider(), url: url(), key: key() },
+        { providerType: provider(), url: url(), key: key() },
         (success, goodUrl) => {
           if (!success) {
             setTested(false)
@@ -293,13 +293,24 @@ export const ManageProvider: Component<{
           hide={!isCustom() && !isSelf()}
         />
 
-        <TextInput
-          helperText="API Key"
-          type="password"
-          placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
-          onChange={(ev) => setKey(ev.currentTarget.value)}
-          value={key()}
-        />
+        <div class="flex gap-2">
+          <TextInput
+            parentClass="w-full"
+            helperText="API Key"
+            type="password"
+            placeholder={props.provider?.keySet ? 'Key is set' : 'E.g. sk-...'}
+            onChange={(ev) => setKey(ev.currentTarget.value)}
+            value={key()}
+          />
+          <Show when={props.provider?.keySet && props.provider._id}>
+            <div
+              class="icon-button flex items-end pb-3"
+              onClick={() => userStore.deleteProviderKey(props.provider?._id!)}
+            >
+              <X />
+            </div>
+          </Show>
+        </div>
 
         <Show when={isCustom()}>
           <Toggle

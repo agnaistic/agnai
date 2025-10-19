@@ -1,43 +1,42 @@
 import { clamp, neat, tryParse } from '/common/util'
 import { JsonField, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
-import { PayloadOpts } from './types'
 import { ModelFormat } from '../presets/templates'
 import { AppSchema } from '../types'
 import type { SubscriptionPreset } from '/srv/adapter/agnaistic'
 import { getPresetConnection } from '../providers'
 import { getJsonSchemaPayload } from '../guidance/json-schema'
 
-type MinOpts = Pick<
-  PayloadOpts,
-  | 'kind'
-  | 'requestId'
-  | 'jsonSchema'
-  | 'prompt'
-  | 'characters'
-  | 'members'
-  | 'impersonate'
-  | 'replyAs'
-  | 'user'
-  | 'sender'
-  | 'char'
-> & {
+type MinOpts = {
+  user: AppSchema.User
+
   gen?: Partial<AppSchema.GenSettings>
   settings?: Partial<AppSchema.GenSettings>
   subscription?: SubscriptionPreset
+  prompt?: string
+  messages?: any[]
+  requestId?: string
+  jsonSchema?: JsonField[]
+  characters?: Record<string, AppSchema.Character>
+  members?: AppSchema.Profile[]
+  impersonate?: AppSchema.Character
+  replyAs?: AppSchema.Character
+  sender?: AppSchema.Profile
+  char?: AppSchema.Character
 }
 
 export function getLocalPayload(opts: MinOpts, stops: string[] = []) {
   const gen = opts.settings!
   const body = getBasePayload(opts, stops)
 
+  opts.characters
+
   // Always add baseline OpenAI format properties
   body.model ??= gen.thirdPartyModel || ''
   body.temperature ??= gen.temp
   body.top_p ??= gen.topP
   body.stop ??= getStoppingStrings(opts, opts.settings)
-  body.stream ??=
-    (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse
+  body.stream = true
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {
@@ -82,9 +81,9 @@ export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
     }
   }
 
-  if (opts.kind === 'continue') {
-    gen.tokenHealing = true
-  }
+  // if (opts.kind === 'continue') {
+  //   gen.tokenHealing = true
+  // }
 
   if (gen.jinjaEnabled) {
     body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
@@ -96,6 +95,7 @@ export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
 function getBasePayload(opts: MinOpts, stops: string[] = []) {
   const gen = opts.gen || opts.settings!
   const prompt = opts.prompt
+  const messages = opts.messages
 
   const conn = getPresetConnection(gen, opts.user.providers)
   const format = opts.subscription?.preset?.thirdPartyFormat || conn.format
@@ -104,12 +104,14 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   const characterNames = Object.values(opts.characters || {})
     .map((c) => c.name.split(' '))
-    .concat(opts.members.map((m) => m.handle.split(' ')))
+    .concat(opts.members?.map((m) => m.handle.split(' ')) || [])
     .flat()
 
   const sequenceBreakers = Array.from(
     new Set(
-      [opts.replyAs.name?.split(' '), opts.replyAs.name?.split(' '), ...characterNames].flat()
+      [opts.replyAs?.name?.split(' '), opts.replyAs?.name?.split(' '), ...characterNames]
+        .flat()
+        .filter((t) => !!t?.trim())
     ).values()
   )
     .concat(gen.drySequenceBreakers || [])
@@ -131,8 +133,9 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
     const body: any = {
       model,
-      stream:
-        (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.openai.streamResponse,
+      prompt: messages ? undefined : prompt,
+      messages,
+      stream: true,
       temperature: gen.temp ?? defaultPresets.openai.temp,
       max_tokens: gen.maxTokens,
       top_p: gen.topP ?? 1,
@@ -158,7 +161,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'arli') {
     const body: any = {
       model: gen.providerId ? gen.thirdPartyModel : gen.arliModel || gen.thirdPartyModel,
-      // prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       stop: getStoppingStrings(opts, opts.settings, stops),
       presence_penalty: gen.presencePenalty,
       frequency_penalty: gen.frequencyPenalty,
@@ -201,8 +205,9 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       body.top_k = -1
     }
 
-    if (gen.jsonEnabled && opts.jsonSchema) {
-      const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
+    if (gen.jsonEnabled && opts.jsonSchema && opts.char) {
+      const char = opts.char! // TypeScript being stupid
+      const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', { ...opts, char })
       body.guided_json = schema
       // body.guided_decoding_backend = 'outlines'
     }
@@ -213,8 +218,10 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'vllm') {
     const body: any = {
       n: 1,
+      prompt: messages ? undefined : prompt,
+      messages,
       model: gen.thirdPartyModel,
-      stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
+      stream: true,
       temperature: gen.temp ?? 0.5,
       max_tokens: gen.maxTokens ?? 200,
 
@@ -257,7 +264,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'ollama') {
     const payload: any = {
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       model: gen.thirdPartyModel,
       stream: !!gen.streamResponse,
       seed: Math.trunc(Math.random() * 1_000_000_000),
@@ -296,7 +304,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'mistral') {
     const body = {
-      messages: [{ role: 'user', content: prompt }],
+      messages: messages || [{ role: 'user', content: prompt }],
       model: gen.mistralModel!,
       temperature: clamp(gen.temp!, 0.01, 1),
       top_p: clamp(gen.topP!, 0, 1),
@@ -309,7 +317,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'tabby') {
     const body: any = {
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       top_k: gen.topK,
       top_a: gen.topA,
       min_p: gen.minP,
@@ -346,7 +355,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'llamacpp') {
     const body = {
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       temperature: gen.temp,
       min_p: gen.minP,
       top_k: gen.topK,
@@ -372,7 +382,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'ooba') {
     const body: any = {
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       temperature: gen.temp,
       min_p: gen.minP,
       top_k: gen.topK,
@@ -411,7 +422,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'aphrodite') {
     const body: any = {
       model: gen.thirdPartyModel || '',
-      stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
+      stream: true,
       temperature: gen.temp ?? 0.5,
       max_tokens: gen.maxTokens ?? 200,
       best_of: gen.swipesPerGeneration,
@@ -476,7 +487,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     const body = {
       n: 1,
       max_context_length: gen.maxContextLength,
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       max_length: gen.maxTokens,
       rep_pen: gen.repetitionPenalty,
       temperature: gen.temp,
@@ -499,7 +511,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'featherless') {
     const payload: any = {
       model: gen.providerId ? gen.thirdPartyModel : gen.featherlessModel || gen.thirdPartyModel,
-      prompt,
+      prompt: messages ? undefined : prompt,
+      messages,
       stop: getStoppingStrings(opts, opts.settings, stops),
       presence_penalty: gen.presencePenalty,
       frequency_penalty: gen.frequencyPenalty,
@@ -518,7 +531,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 }
 
 export function getStoppingStrings(
-  opts: Pick<PayloadOpts, 'characters' | 'members' | 'impersonate' | 'replyAs'>,
+  opts: MinOpts,
   settings: Partial<AppSchema.GenSettings> | undefined,
   extras: string[] = []
 ) {
@@ -533,14 +546,14 @@ export function getStoppingStrings(
 
     for (const char of chars) {
       if (seen.has(char.name)) continue
-      if (char.name === opts.replyAs.name) continue
+      if (char.name === opts.replyAs?.name) continue
       unique.add(`\n${char.name}:`)
       seen.add(char.name)
     }
 
-    for (const member of opts.members) {
+    for (const member of opts.members || []) {
       if (seen.has(member.handle)) continue
-      if (member.handle === opts.replyAs.name) continue
+      if (member.handle === opts.replyAs?.name) continue
       unique.add(`\n${member.handle}:`)
       seen.add(member.handle)
     }

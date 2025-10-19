@@ -62,6 +62,7 @@ export type GenerateRequestV2 = {
     | 'send-event:character'
     | 'send-event:hidden'
     | 'send-event:ooc'
+    | 'send-noreply'
     | 'ooc'
     | 'retry'
     | 'continue'

@@ -1,5 +1,5 @@
 import { StatusError, errors, wrap } from '../wrap'
-import { sendGuest, sendOne } from '../ws'
+import { sendGuest, sendMany, sendOne } from '../ws'
 import { assertValid } from '/common/valid'
 import {
   InferenceRequest,
@@ -11,11 +11,12 @@ import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { obtainLock, releaseLock } from './lock'
 import { v4 } from 'uuid'
-import { renderMessagesToPrompt } from '/srv/adapter/template-chat-payload'
 import { replaceTags } from '/common/presets/templates'
 import { getCachedSubscriptionModels, getCachedTiers } from '/srv/db/subscriptions'
 import { generateImageSync } from '/srv/image'
 import { getSubscriptionModelLimits, getUserSubscriptionTier } from '/common/util'
+import { renderMessagesToPrompt } from '/common/template-messages'
+import { optional } from '/common/valid/types'
 
 const validImage = {
   prompt: 'string',
@@ -296,6 +297,7 @@ export const inferenceApi = wrap(async (req, res) => {
       : body.messages
       ? rendered?.prompt || ''
       : '',
+    messages: body.messages,
     user: req.authed!,
     log: req.log,
     settings,
@@ -306,7 +308,7 @@ export const inferenceApi = wrap(async (req, res) => {
     signal,
   }
 
-  if (!request.prompt) {
+  if (!request.prompt && !request.messages) {
     throw new StatusError(`Invalid request: Request must contain 'prompt' or 'messages'`, 400)
   }
 
@@ -414,7 +416,15 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
 
 export const inferenceStream = wrap(async (req, res) => {
   const { socketId, userId, body, log } = req
-  assertValid({ ...validInference, messages: 'any?', requestId: 'string' }, body)
+  assertValid(
+    {
+      ...validInference,
+      messages: 'any?',
+      requestId: 'string',
+      broadcast: optional({ type: 'string', id: 'string', payload: 'any' }),
+    },
+    body
+  )
 
   const isEventStream = req.headers.accept === 'text/event-stream'
   const signal = new AbortController()
@@ -464,16 +474,28 @@ export const inferenceStream = wrap(async (req, res) => {
   let response = ''
   let partial = ''
 
+  const broadcastMembers = body.broadcast
+    ? await getBroadcastMembers(req.userId, body.broadcast)
+    : []
+
   const wrapped = (data: any) => {
     const aborted = signal.signal.aborted
     if (isEventStream && !aborted) {
       res.write(`data: ${JSON.stringify(data)}\n\n`)
     }
 
+    if (!userId) {
+      sendGuest(socketId, data)
+      return
+    }
+
+    if (body.broadcast) {
+      sendMany(broadcastMembers, { ...data, ...body.broadcast.payload })
+      return
+    }
+
     if (userId) {
       sendOne(userId, data)
-    } else {
-      sendGuest(socketId, data)
     }
   }
 
@@ -543,3 +565,14 @@ export const inferenceStream = wrap(async (req, res) => {
     res.end()
   }
 })
+
+async function getBroadcastMembers(userId: string, opts: { type: string; id: string }) {
+  const chat = await store.chats.getChatOnly(opts.id)
+
+  if (!chat) return []
+
+  if (chat.userId !== userId && !chat.memberIds.includes(userId)) return []
+
+  const members = chat.memberIds.filter((id) => id !== userId)
+  return members
+}

@@ -25,6 +25,7 @@ export const presetApi = {
   deleteTemplate,
   deleteUserPresetKey,
   getModelListByPreset,
+  testLocalUrl,
 }
 
 export async function getPresets() {
@@ -124,6 +125,7 @@ async function getLocalModelList(opts: {
     }
 
     const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
+
     const list = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []
     const models: string[] = []
 
@@ -144,6 +146,27 @@ async function getLocalModelList(opts: {
   } catch (ex: any) {
     return { models: [] }
   }
+}
+
+async function testLocalUrl(opts: { url: string; key?: string }) {
+  const headers: any = {}
+
+  if (opts.key) {
+    headers.Authorization = `Bearer ${opts.key}`
+    headers['x-api-key'] = opts.key
+  }
+
+  try {
+    const res = await fetch(joinUrl(opts.url, '/models'), { headers }).then((res) => res.json())
+    return localApi.result({ url: opts.url, success: true, json: res })
+  } catch (ex) {}
+
+  try {
+    const res = await fetch(joinUrl(opts.url, '/v1/models'), { headers }).then((res) => res.json())
+    return localApi.result({ url: joinUrl(opts.url, '/v1'), success: true, json: res })
+  } catch (ex) {}
+
+  return localApi.result({ success: false, url: opts.url })
 }
 
 async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, force = false) {

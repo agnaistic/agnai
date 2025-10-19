@@ -71,12 +71,17 @@ export const presetStore = createStore<PresetState>(
     },
     async *testConnection(
       _,
-      opts: { providerId?: string; url: string; key: string },
+      opts: { providerType?: string; url: string; key: string },
       cb: (success: boolean, url: string) => void
     ) {
       if (!opts.url) return
       yield { testLoading: true }
-      const res = await api.post('/user/preset-test', opts)
+
+      const useLocal = opts.providerType?.startsWith('self-')
+
+      const res = useLocal
+        ? await presetApi.testLocalUrl(opts)
+        : await api.post('/user/preset-test', opts)
 
       if (res.result) {
         cb(!!res.result.success, res.result.url || '')
