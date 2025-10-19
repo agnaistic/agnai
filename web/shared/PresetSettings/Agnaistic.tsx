@@ -219,7 +219,9 @@ function useModelCategories() {
         if (prev.level > curr.level) return curr
         return prev
       }, sub.preset.levels[0])
-      const disabled = !!sub.preset.allowGuestUsage ? false : minLevel.level > level
+      const disabled = !!sub.preset.allowGuestUsage
+        ? false
+        : (minLevel?.level ?? limit?.level) > level
       const tier =
         sub.level <= 0
           ? 'Free'
