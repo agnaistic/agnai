@@ -218,7 +218,7 @@ function useModelCategories() {
         if (!prev) return curr
         if (prev.level > curr.level) return curr
         return prev
-      })
+      }, sub.preset.levels[0])
       const disabled = !!sub.preset.allowGuestUsage ? false : minLevel.level > level
       const tier =
         sub.level <= 0
