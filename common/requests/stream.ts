@@ -269,7 +269,7 @@ export async function* fetchStream(
             opts?.log?.error(
               {
                 err: error,
-                chunk: error ? undefined : chunk,
+                chunk,
                 url: response.url,
                 msg: error.message,
               },
@@ -294,7 +294,7 @@ export async function* fetchStream(
             opts?.log?.error(
               {
                 err: error,
-                chunk: error ? undefined : chunk,
+                chunk,
                 url: response.url,
                 msg: error.message,
               },
