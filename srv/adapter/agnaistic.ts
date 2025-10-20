@@ -20,7 +20,7 @@ import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
-import { parseStops } from '/common/util'
+import { getSubscriptionModelLimits, parseStops } from '/common/util'
 import { handleVenus } from './venus'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
@@ -106,7 +106,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  if (subPreset.subLevel > -1 && subPreset.subLevel > newLevel) {
+  const limit = getSubscriptionModelLimits(subPreset, newLevel)
+  const subLevel = limit?.level ?? subPreset.subLevel
+  if (subLevel > -1 && subLevel > newLevel) {
     opts.log.error(
       {
         preset: subPreset.name,
@@ -120,7 +122,6 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     yield { error: 'Your account is ineligible for this model - Subscription tier insufficient' }
     return
   }
-
   if (!subPreset.allowGuestUsage && opts.guest) {
     yield { error: 'Please sign in to use this model' }
     return
