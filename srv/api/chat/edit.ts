@@ -180,6 +180,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
     ...update,
+    chatId: prev.chat._id,
     messageId: params.id,
     message: body.msg ?? prev.msg.msg, // Backwards compatibility
   })
