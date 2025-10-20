@@ -2,7 +2,14 @@ import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { CircleX, Dices, VenetianMask } from 'lucide-solid'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
-import { characterStore, chatStore, imageStore, pageStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  imageStore,
+  pageStore,
+  responseStore,
+  userStore,
+} from '../../store'
 import { msgStore } from '../../store'
 import InputBar, { SendFunc } from './components/InputBar'
 import { ContextState } from '/web/store/context'
@@ -17,7 +24,8 @@ export const ChatFooter: Component<{
   sendMessage: SendFunc
 }> = (props) => {
   const user = userStore((s) => ({ profile: s.profile }))
-  const msgs = msgStore((s) => ({ waiting: s.waiting, attachments: s.attachments }))
+  const response = responseStore((s) => ({ waiting: s.waiting }))
+  const msgs = msgStore((s) => ({ attachments: s.attachments }))
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
   const chats = chatStore((s) => ({
     opts: s.opts,
@@ -53,7 +61,7 @@ export const ChatFooter: Component<{
     return !isMember
   })
 
-  const moreMessage = () => msgStore.continuation(chats.chat?._id!)
+  const moreMessage = () => responseStore.continuation(chats.chat?._id!)
 
   const requestRandom = () => {
     const index = Math.floor(Math.random() * props.pills.length)
@@ -74,7 +82,7 @@ export const ChatFooter: Component<{
       <Show when={props.isOwner && props.ctx.activeBots.length > 1 && !!chats.chat}>
         <div
           class={`flex max-h-[42px] min-h-[42px] flex-wrap justify-center gap-2 overflow-y-auto py-1 ${
-            msgs.waiting ? 'opacity-70 saturate-0' : ''
+            response.waiting ? 'opacity-70 saturate-0' : ''
           }`}
         >
           <Button
@@ -90,7 +98,7 @@ export const ChatFooter: Component<{
               <CharacterPill
                 char={bot}
                 onClick={props.requestMessage}
-                disabled={!!msgs.waiting}
+                disabled={!!response.waiting}
                 active={chats.replyAs === bot._id}
               />
             )}

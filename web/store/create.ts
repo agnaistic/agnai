@@ -16,6 +16,7 @@ import type { scenarioStore } from './scenario'
 import type { audioStore } from './audio'
 import type { promptStore } from './prompt'
 import type { imageStore } from './images'
+import type { responseStore } from './response'
 
 type StoreMap = {
   user: typeof userStore
@@ -33,6 +34,7 @@ type StoreMap = {
   prompt: typeof promptStore
   page: typeof pageStore
   image: typeof imageStore
+  responses: typeof responseStore
 }
 
 type HandlerReturn<S> =

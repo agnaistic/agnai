@@ -15,7 +15,14 @@ import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { fromAttrs, toAttrs } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { chatStore, msgStore, presetStore, scenarioStore, toastStore, userStore } from '../../store'
+import {
+  chatStore,
+  presetStore,
+  responseStore,
+  scenarioStore,
+  toastStore,
+  userStore,
+} from '../../store'
 import { defaultPresets } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
@@ -367,7 +374,7 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  msgStore.chatQuery('Generate a name for this conversation', (msg, state) => {
+                  responseStore.chatQuery('Generate a name for this conversation', (msg, state) => {
                     setEdit('name', msg)
                   })
                 }

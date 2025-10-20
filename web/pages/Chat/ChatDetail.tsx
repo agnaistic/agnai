@@ -13,7 +13,14 @@ import { useNavigate, useParams } from '@solidjs/router'
 import ChatExport from './ChatExport'
 import Button from '../../shared/Button'
 import { getAssetUrl, setComponentPageTitle, sticky } from '../../shared/util'
-import { characterStore, chatStore, pageStore, presetStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  pageStore,
+  presetStore,
+  responseStore,
+  userStore,
+} from '../../store'
 import { msgStore } from '../../store'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
@@ -22,7 +29,7 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { useEffect, usePaneManager } from '/web/shared/hooks'
-import { emptyMsg, LoadMore, SwipeMessage } from './helpers'
+import { LoadMore, SwipeMessage } from './helpers'
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
@@ -36,12 +43,12 @@ import { ConfirmModal } from '/web/shared/Modal'
 import { TitleCard } from '/web/shared/Card'
 import { ChatGraphModal } from './components/GraphModal'
 import { EVENTS, events } from '/web/emitter'
-import { AppSchema } from '/common/types'
 import { canStartTour, startTour } from '/web/tours'
 import { MessageMeta } from './components/MessageMeta'
 import { usePresetContext } from '/web/store/preset-context'
 import { SendFunc } from './components/InputBar'
 import { MessageVisibility } from './components/Visibility'
+import { PendingMessages } from './components/Pending'
 
 export { ChatDetail as default }
 
@@ -75,13 +82,15 @@ const ChatDetail: Component = () => {
     listChat: s.allChats.find((chat) => chat._id === params.id),
   }))
 
-  const msgs = msgStore((s) => ({
-    msgs: s.msgs,
+  const response = responseStore((s) => ({
     partial: s.partial,
     waiting: s.waiting,
-    speaking: s.speaking,
     retrying: s.retrying,
-    inference: s.lastInference,
+    speaking: s.speaking,
+  }))
+
+  const msgs = msgStore((s) => ({
+    msgs: s.msgs,
     textBeforeGenMore: s.textBeforeGenMore,
   }))
 
@@ -120,46 +129,46 @@ const ChatDetail: Component = () => {
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
-  const waitingMsg = createMemo(() => {
-    if (!msgs.waiting) return
-    if (msgs.retrying) return
+  // const waitingMsg = createMemo(() => {
+  //   if (!msgs.waiting) return
+  //   if (msgs.retrying) return
 
-    const userId = msgs.waiting.userId
-    const charId = msgs.waiting.characterId
-    const profile =
-      user.profile?.userId === userId || !userId
-        ? user.profile
-        : chats.members.find((ch) => ch.userId === userId)
-    const char = charId ? ctx.allBots[charId] : undefined
+  //   const userId = msgs.waiting.userId
+  //   const charId = msgs.waiting.characterId
+  //   const profile =
+  //     user.profile?.userId === userId || !userId
+  //       ? user.profile
+  //       : chats.members.find((ch) => ch.userId === userId)
+  //   const char = charId ? ctx.allBots[charId] : undefined
 
-    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
+  //   const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
 
-    const waitingMsgs = {
-      input: null as AppSchema.ChatMessage | null,
-      response: null as AppSchema.ChatMessage | null,
-    }
+  //   const waitingMsgs = {
+  //     input: null as AppSchema.ChatMessage | null,
+  //     response: null as AppSchema.ChatMessage | null,
+  //   }
 
-    if (msgs.waiting.input) {
-      waitingMsgs.input = emptyMsg({
-        id: 'partial-input',
-        charId: ctx.impersonate?._id,
-        userId: user.user?._id,
-        message: msgs.waiting.input || '',
-        handle: ctx.impersonate?.name || profile?.handle || 'You',
-      })
-    }
+  //   if (msgs.waiting.input) {
+  //     waitingMsgs.input = emptyMsg({
+  //       id: 'partial-input',
+  //       charId: ctx.impersonate?._id,
+  //       userId: user.user?._id,
+  //       message: msgs.waiting.input || '',
+  //       handle: ctx.impersonate?.name || profile?.handle || 'You',
+  //     })
+  //   }
 
-    waitingMsgs.response = emptyMsg({
-      id: 'partial-response',
-      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
-      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
-      message: msgs.partial || '',
-      adapter: 'partial-response',
-      handle: handle || 'You',
-    })
+  //   waitingMsgs.response = emptyMsg({
+  //     id: 'partial-response',
+  //     charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
+  //     userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+  //     message: msgs.partial || '',
+  //     adapter: 'partial-response',
+  //     handle: handle || 'You',
+  //   })
 
-    return waitingMsgs
-  })
+  //   return waitingMsgs
+  // })
 
   const chatMsgs = createMemo(() => {
     if (!chats.chat || !chats.char) return []
@@ -172,15 +181,15 @@ const ChatDetail: Component = () => {
       return true
     })
 
-    const waiting = waitingMsg()
+    // const waiting = waitingMsg()
 
-    if (waiting?.input) {
-      filtered.push(waiting.input)
-    }
+    // if (waiting?.input) {
+    //   filtered.push(waiting.input)
+    // }
 
-    if (waiting?.response) {
-      filtered.push(waiting.response)
-    }
+    // if (waiting?.response) {
+    //   filtered.push(waiting.response)
+    // }
 
     return filtered
   })
@@ -246,13 +255,6 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  createEffect(() => {
-    if (!msgs.inference) return
-
-    // express.classify(opts.preset, msgs.inference.text)
-    msgStore.clearLastInference()
-  })
-
   createEffect(
     on(
       () => params.id,
@@ -317,7 +319,7 @@ const ChatDetail: Component = () => {
       : 'send-noreply'
     if (!opts.ooc) setSwipe(0)
 
-    msgStore.send({
+    responseStore.send({
       chatId: chats.chat?._id!,
       msg: opts.msg,
       mode: kind,
@@ -326,7 +328,7 @@ const ChatDetail: Component = () => {
     return
   }
 
-  const requestMessage = (charId: string) => msgStore.request(chats.chat?._id!, charId)
+  const requestMessage = (charId: string) => responseStore.request(chats.chat?._id!, charId)
   const cancelSwipe = () => setSwipe(0)
 
   const confirmSwipe = (msgId: string) => {
@@ -355,7 +357,7 @@ const ChatDetail: Component = () => {
   })
 
   const generateFirst = () => {
-    msgStore.retry({ chatId: chats.chat?._id! })
+    responseStore.retry({ chatId: chats.chat?._id! })
   }
 
   const characterPills = createMemo(() => {
@@ -378,23 +380,23 @@ const ChatDetail: Component = () => {
         if (!pill) return
 
         ev.preventDefault()
-        if (msgs.retrying || msgs.partial) return
+        if (response.retrying || response.partial) return
         requestMessage(pill._id)
       }
 
       if (ev.key === 'r' || ev.code === 'KeyR') {
         ev.preventDefault()
-        if (msgs.retrying || msgs.partial) return
+        if (response.retrying || response.partial) return
         const last = indexOfLastRPMessage()
         const msg = msgs.msgs[last]
         if (!msg) return
         if (msg.adapter === 'image') {
           msgStore.createImage({ sourceMsgId: msg._id })
         } else if (msg.characterId) {
-          msgStore.retry({ chatId: msg.chatId, msgId: msg._id })
+          responseStore.retry({ chatId: msg.chatId, msgId: msg._id })
         } else {
           if (!ctx.chat?.characterId) return
-          msgStore.request(msg.chatId, ctx.chat.characterId)
+          responseStore.request(msg.chatId, ctx.chat.characterId)
           // msgStore.resend(msg.chatId, msg._id)
         }
       }
@@ -410,7 +412,7 @@ const ChatDetail: Component = () => {
         const msg = msgs.msgs[last]
         if (!msg?.characterId) return
 
-        msgStore.request(msg.chatId, msg.characterId)
+        responseStore.request(msg.chatId, msg.characterId)
       }
 
       if (ev.key === 'g' || ev.key === 'KeyG') {
@@ -491,7 +493,7 @@ const ChatDetail: Component = () => {
                 {descriptionText()}
               </div>
             </Show>
-            <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
+            <Show when={chats.loaded && chatMsgs().length === 0 && !response.waiting}>
               <div class="flex justify-center gap-2">
                 <Button onClick={generateFirst}>Generate Message</Button>
               </div>
@@ -516,8 +518,8 @@ const ChatDetail: Component = () => {
                     cancelSwipe={cancelSwipe}
                     discardSwipe={() => discardSwipe(msg()._id, swipe())}
                     tts={tts()}
-                    retrying={msgs.retrying}
-                    partial={msgs.partial}
+                    retrying={response.retrying}
+                    partial={response.partial}
                     characterId={msg().characterId}
                     userId={msg().userId}
                     sendMessage={sendMessage}
@@ -526,7 +528,9 @@ const ChatDetail: Component = () => {
                     preset={_}
                     canUseAttachments={presetSet.context.attachments}
                     voice={
-                      msg()._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
+                      msg()._id === response.speaking?.messageId
+                        ? response.speaking.status
+                        : undefined
                     }
                   >
                     {isOwner() && retries()?.list?.length! > 1 && i === indexOfLastRPMessage() && (
@@ -542,6 +546,82 @@ const ChatDetail: Component = () => {
                 </>
               )}
             </Index>
+
+            <PendingMessages
+              ctx={ctx}
+              userId={ctx.user?._id}
+              impersonateId={ctx.impersonate?._id}
+              preset={_}
+              isPaneOpen={pane.showing()}
+              handle={ctx.impersonate?.name || ctx.profile?.handle || 'You'}
+            />
+
+            {/* <Show when={waitingMsg()?.input}>
+              <Message
+                index={-1}
+                messageId={waitingMsg()!.input!._id}
+                content={waitingMsg()!.input!.msg}
+                editing={chats.opts.editing}
+                last={-1 === indexOfLastRPMessage()}
+                onRemove={() => setRemoveId(waitingMsg()!.input!._id)}
+                swipe={
+                  waitingMsg()!.input!._id === retries()?.msgId &&
+                  swipe() > 0 &&
+                  retries()?.list[swipe()]
+                }
+                confirmSwipe={() => confirmSwipe(waitingMsg()!.input!._id)}
+                cancelSwipe={cancelSwipe}
+                discardSwipe={() => discardSwipe(waitingMsg()!.input!._id, swipe())}
+                tts={tts()}
+                retrying={msgs.retrying}
+                characterId={waitingMsg()!.input!.characterId}
+                userId={waitingMsg()!.input!.userId}
+                sendMessage={sendMessage}
+                isPaneOpen={pane.showing()}
+                textBeforeGenMore={msgs.textBeforeGenMore}
+                preset={_}
+                canUseAttachments={presetSet.context.attachments}
+                voice={
+                  waitingMsg()!.input!._id === msgs.speaking?.messageId
+                    ? msgs.speaking.status
+                    : undefined
+                }
+              ></Message>
+            </Show>
+
+            <Show when={waitingMsg()?.response}>
+              <Message
+                index={-1}
+                messageId={waitingMsg()!.response!._id}
+                content={waitingMsg()!.response!.msg}
+                editing={chats.opts.editing}
+                last={-1 === indexOfLastRPMessage()}
+                onRemove={() => setRemoveId(waitingMsg()!.response!._id)}
+                swipe={
+                  waitingMsg()!.response!._id === retries()?.msgId &&
+                  swipe() > 0 &&
+                  retries()?.list[swipe()]
+                }
+                confirmSwipe={() => confirmSwipe(waitingMsg()!.response!._id)}
+                cancelSwipe={cancelSwipe}
+                discardSwipe={() => discardSwipe(waitingMsg()!.response!._id, swipe())}
+                tts={tts()}
+                retrying={msgs.retrying}
+                partial={msgs.partial}
+                characterId={waitingMsg()!.response!.characterId}
+                userId={waitingMsg()!.response!.userId}
+                sendMessage={sendMessage}
+                isPaneOpen={pane.showing()}
+                textBeforeGenMore={msgs.textBeforeGenMore}
+                preset={_}
+                canUseAttachments={presetSet.context.attachments}
+                voice={
+                  waitingMsg()!.response!._id === msgs.speaking?.messageId
+                    ? msgs.speaking.status
+                    : undefined
+                }
+              ></Message>
+            </Show> */}
           </div>
         </section>
       </ModeDetail>

@@ -14,6 +14,7 @@ import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
 import { PresetStateProvider } from './preset-context'
 import { pageStore } from './page'
+import { ResponseState, responseStore } from './response'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -54,7 +55,7 @@ export type ContextState = {
   promptHistory: any
   chatTree: ChatTree
   msgDeleting?: boolean
-  waiting?: MsgState['waiting']
+  waiting?: ResponseState['waiting']
   imgWaiting?: MsgState['imgWaiting']
   status?: MsgState['hordeStatus']
   attachments: MsgState['attachments']
@@ -114,12 +115,16 @@ export function ContextProvider(props: { children: any }) {
   const cfg = settingStore((s) => ({ anonymize: s.anonymize, config: s.config }))
   const msgs = msgStore((s) => ({
     graph: s.graph,
-    waiting: s.waiting,
     imgWaiting: s.imgWaiting,
     hordeStatus: s.hordeStatus,
     attachments: s.attachments,
     deleting: s.deleting,
   }))
+
+  const response = responseStore((s) => ({
+    waiting: s.waiting,
+  }))
+
   const page = pageStore((s) => ({ flags: s.flags }))
 
   const visuals = createMemo(() => {
@@ -205,7 +210,7 @@ export function ContextProvider(props: { children: any }) {
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
       chatTree: msgs.graph.tree,
-      waiting: msgs.waiting,
+      waiting: response.waiting,
       imgWaiting: msgs.imgWaiting,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,

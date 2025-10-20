@@ -1,21 +1,17 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { createDebounce, getAssetUrl, getUtterableText, storage } from '../shared/util'
+import { getAssetUrl, getUtterableText, storage } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
-import { publish, subscribe } from './socket'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { msgsApi } from './data/messages'
 import { imageApi } from './data/image'
 import { userStore } from './user'
 import { localApi } from './data/storage'
 import { chatStore } from './chat'
-import { voiceApi } from './data/voice'
-import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/texttospeech-schema'
-import { defaultCulture } from '../shared/CultureCodes'
-import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
-import { exclude, findOne, inline, replace } from '/common/util'
+import { findOne, replace } from '/common/util'
 import {
   ChatTree,
   removeChatTreeNodes,
@@ -25,15 +21,13 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
-import { JsonField, TickHandler } from '/common/prompt'
+import { TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
-import { botGen, GenerateOpts } from './data/bot-generate'
 import type { MsgAttachment } from '/srv/adapter/type'
 import { debug } from '/common/debug'
+import { responseStore } from './response'
 
 const SOFT_PAGE_SIZE = 20
-
-export type VoiceState = 'generating' | 'playing'
 
 type SendModes =
   | 'send'
@@ -54,19 +48,7 @@ export type MsgState = {
   activeCharId: string
   messageHistory: ChatMessageExt[]
   msgs: ChatMessageExt[]
-  partial?: string
-  retrying?: AppSchema.ChatMessage
   deleting?: boolean
-  waiting?: {
-    started: number
-    signal?: AbortController
-    chatId: string
-    mode?: GenerateOpts['kind']
-    input?: string
-    userId?: string
-    characterId: string
-    messageId?: string
-  }
 
   imgWaiting?: {
     chatId: string
@@ -78,14 +60,8 @@ export type MsgState = {
 
   nextLoading: boolean
   imagesSaved: boolean
-  speaking: { messageId: string; status: VoiceState } | undefined
-  lastInference?: {
-    requestId: string
-    chatId: string
-    messageId: string
-    characterId: string
-    text: string
-  }
+  // speaking: { messageId: string; status: VoiceState } | undefined
+
   textBeforeGenMore: string | undefined
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
   // cache: Record<string, AppSchema.ChatMessage>
@@ -114,10 +90,6 @@ const initState: MsgState = {
   msgs: [],
   nextLoading: false,
   imagesSaved: false,
-  waiting: undefined,
-  partial: undefined,
-  retrying: undefined,
-  speaking: undefined,
   queue: [],
   textBeforeGenMore: undefined,
   canImageCaption: false,
@@ -210,12 +182,7 @@ export const msgStore = createStore<MsgState>(
     setMetadataMsg(_, msg?: AppSchema.ChatMessage) {
       return { metadata: msg }
     },
-    abortMessage(state) {
-      if (!state.waiting) return
-      state.waiting.signal?.abort?.()
-      console.log('[wait] abort-msg')
-      return { waiting: undefined, partial: undefined, retrying: undefined }
-    },
+
     // setAttachment({ attachments }, chatId: string, base64: string) {
     //   return { attachments: { ...attachments, [chatId]: { image: base64 } } }
     // },
@@ -438,94 +405,6 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
-    clearLastInference() {
-      return { lastInference: undefined }
-    },
-
-    async *continuation(
-      { msgs },
-      chatId: string,
-      onSuccess?: () => void,
-      retryLatestGenMoreOutput?: boolean
-    ) {
-      if (!chatId) {
-        toastStore.error('Could not send message: No active chat')
-        yield { partial: undefined }
-        return
-      }
-
-      const signal = new AbortController()
-
-      const [_, replace] = msgs.slice(-2)
-      yield {
-        partial: '',
-        waiting: {
-          signal,
-          chatId,
-          mode: 'continue',
-          characterId: replace.characterId!,
-          started: Date.now(),
-        },
-        retrying: replace,
-      }
-
-      const msgState = msgStore.getState()
-      const textBeforeGenMore = retryLatestGenMoreOutput
-        ? msgState.textBeforeGenMore ?? replace.msg
-        : replace.msg
-      const res = await botGen
-        .stream(
-          {
-            signal,
-            kind: 'continue',
-            retry: retryLatestGenMoreOutput,
-          },
-          (_, state) => {
-            if (state === 'done') {
-              msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
-            }
-          }
-        )
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Continue) Generation request failed: ${res.error}`)
-        console.log('[wait] continue err')
-        yield { partial: undefined, waiting: undefined }
-      }
-
-      if (res.result) {
-        msgStore.setState({ textBeforeGenMore })
-        onSuccess?.()
-      }
-    },
-
-    async *request(_, chatId: string, characterId: string, onSuccess?: () => void) {
-      if (!chatId) {
-        toastStore.error('Could not send message: No active chat')
-        yield { partial: undefined }
-        return
-      }
-
-      const signal = new AbortController()
-      yield {
-        partial: undefined,
-        waiting: { signal, chatId, mode: 'request', characterId, started: Date.now() },
-      }
-
-      const res = await botGen
-        .stream({ signal, kind: 'request', characterId })
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Bot) Generation request failed: ${res.error}`)
-        console.log('[wait] request err')
-        yield { partial: undefined, waiting: undefined }
-      }
-
-      if (res.result) onSuccess?.()
-    },
-
     async *fork({ graph: { tree }, msgs, messageHistory }, messageId: 'root' | string) {
       if (messageId === 'root') {
         const first = messageHistory[0] || msgs[0]
@@ -542,247 +421,11 @@ export const msgStore = createStore<MsgState>(
       yield { msgs: page, messageHistory: path }
     },
 
-    async *retry({ msgs, activeCharId }, opts: { chatId: string; msgId?: string }) {
-      if (!opts.chatId) {
-        toastStore.error('Could not send message: No active chat')
-        yield { partial: undefined }
-        return
-      }
-
-      if (msgs.length === 0) {
-        msgStore.request(opts.chatId, activeCharId)
-        return
-      }
-
-      const msg = opts.msgId ? msgs.find((msg) => msg._id === opts.msgId)! : msgs[msgs.length - 1]
-      const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
-      const characterId = replace?.characterId || activeCharId
-      const signal = new AbortController()
-      yield {
-        partial: '',
-        waiting: { signal, chatId: opts.chatId, mode: 'retry', characterId, started: Date.now() },
-        retrying: replace,
-      }
-
-      const res = await botGen
-        .stream({ signal, kind: 'retry', messageId: opts.msgId }, (_, state) => {
-          if (state === 'done') {
-            msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
-          }
-        })
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`)
-        console.log('[wait] retry err', res.error)
-        yield { partial: undefined, waiting: undefined, retrying: undefined }
-      }
-    },
-
-    async *retrySchema({ msgs, activeCharId }, chatId: string, messageId: string) {
-      if (!chatId) {
-        toastStore.error('Could not send message: No active chat')
-        yield { partial: undefined }
-        return
-      }
-
-      if (msgs.length === 0) {
-        msgStore.request(chatId, activeCharId)
-        return
-      }
-
-      const msg = msgs.find((msg) => msg._id === messageId)
-      if (!msg) {
-        toastStore.error(`Could not regenerate: Message not found`)
-        yield { partial: undefined }
-        return
-      }
-
-      const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
-      const characterId = replace?.characterId || activeCharId
-      const signal = new AbortController()
-      yield {
-        partial: '',
-        waiting: { signal, chatId, mode: 'retry', characterId, started: Date.now() },
-        retrying: replace,
-      }
-
-      const res = await botGen
-        .generate({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error}`)
-        console.log('[wait] retry-schema err')
-        yield { partial: undefined, waiting: undefined, retrying: undefined }
-      }
-    },
-
-    async resend({ msgs }, chatId: string, msgId: string) {
-      const msgIndex = msgs.findIndex((m) => m._id === msgId)
-
-      if (msgIndex === -1) {
-        toastStore.error('Cannot resend message: Message not found')
-        return
-      }
-
-      const msg = msgs[msgIndex]
-      msgStore.send({ chatId, msg: msg.msg, mode: 'retry' })
-    },
-
-    async *selfGenerate({ activeChatId }) {
-      msgStore.send({ chatId: activeChatId, msg: '', mode: 'self' })
-    },
-
     *queue({ queue }, chatId: string, message: string, mode: SendModes) {
       yield { queue: [...queue, { chatId, message, mode }] }
       processQueue()
     },
 
-    async *chatQuery({ waiting, activeChatId }, message: string, onTick: TickHandler) {
-      if (waiting) return
-      if (!activeChatId) {
-        toastStore.error('Could not send message: No active chat')
-        return
-      }
-
-      const signal = new AbortController()
-
-      const res = await botGen
-        .stream({ signal, kind: 'chat-query', text: message }, onTick)
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
-      }
-    },
-
-    async *chatJson(
-      { waiting, activeChatId },
-      message: string,
-      schema: JsonField[],
-      onTick: TickHandler
-    ) {
-      if (waiting) return
-      if (!activeChatId) {
-        toastStore.error('Could not send message: No active chat')
-        return
-      }
-
-      const signal = new AbortController()
-      const res = await botGen
-        .stream({ signal, kind: 'chat-query', text: message, schema }, onTick)
-        .catch((err) => ({ error: err.message, result: undefined }))
-
-      if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
-      }
-    },
-
-    async *send(
-      { activeCharId, waiting },
-      opts: { chatId: string; msg: string; mode: SendModes; onSuccess?: () => void }
-    ) {
-      if (waiting) return
-      if (!opts.chatId) {
-        toastStore.error('Could not send message: No active chat')
-        yield { partial: undefined }
-        return
-      }
-
-      const active = getStore('chat').getState().active
-      const replyingCharId = active?.replyAs || activeCharId
-      const signal = new AbortController()
-
-      let res: { result?: any; error?: string }
-
-      yield {
-        partial: '',
-        waiting: {
-          signal,
-          chatId: opts.chatId,
-          mode: opts.mode,
-          characterId: replyingCharId,
-          started: Date.now(),
-        },
-      }
-      let input = ''
-
-      switch (opts.mode) {
-        case 'self':
-        case 'retry':
-          res = await botGen
-            .stream({ signal, kind: opts.mode })
-            .catch((err) => ({ error: err.message, result: undefined }))
-          break
-
-        case 'send':
-        case 'ooc':
-        case 'send-event:world':
-        case 'send-event:character':
-        case 'send-event:hidden':
-        case 'send-noreply':
-        case 'send-event:ooc':
-          res = await botGen
-            .stream({ signal, kind: opts.mode, text: opts.msg })
-            .catch((err) => ({ error: err.message, result: undefined }))
-          if ('result' in res && !res.result?.generating) {
-            console.log('[wait] send no-gen')
-            yield { partial: undefined, waiting: undefined }
-          }
-
-          input = res.result?.input
-          if (input) {
-            yield {
-              waiting: {
-                signal,
-                chatId: opts.chatId,
-                mode: opts.mode,
-                characterId: replyingCharId,
-                input,
-                started: Date.now(),
-              },
-            }
-          }
-          break
-
-        default:
-          res = { error: `Unknown mode ${opts.mode}`, result: undefined }
-      }
-
-      if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
-        console.log('[wait] send err')
-        yield { partial: undefined, waiting: undefined }
-      }
-
-      if (res.result) {
-        opts.onSuccess?.()
-
-        if (res.result.created) {
-          onMessageReceived({
-            type: res.result.messageId ? 'message-created' : 'message-complete',
-            msg: res.result.created,
-            chatId: res.result.created.chatId,
-          })
-        }
-      }
-
-      if (res.result?.messageId) {
-        yield {
-          partial: '',
-          waiting: {
-            signal,
-            chatId: opts.chatId,
-            mode: opts.mode,
-            characterId: replyingCharId,
-            messageId: res.result.messageId,
-            input,
-            started: Date.now(),
-          },
-        }
-      }
-    },
     async *confirmSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
       const replacement = msg?.retries?.[position - 1]
@@ -834,58 +477,6 @@ export const msgStore = createStore<MsgState>(
 
       updateMsgParents(activeChatId, parents)
       yield { deleting: false }
-    },
-    stopSpeech() {
-      stopSpeech()
-      return { speaking: undefined }
-    },
-    async *textToSpeech(
-      { activeChatId, msgs },
-      messageId: string,
-      text: string,
-      voice: VoiceSettings,
-      culture?: string
-    ) {
-      stopSpeech()
-
-      if (!voice.service) {
-        yield { speaking: undefined }
-        return
-      }
-
-      yield { speaking: { messageId, status: 'generating' } }
-
-      if (voice.service === 'webspeechsynthesis') {
-        if (!isNativeSpeechSupported()) {
-          toastStore.error(`Speech synthesis not supported on this browser`)
-          return
-        }
-
-        try {
-          await playVoiceFromBrowser(voice, text, culture ?? defaultCulture, messageId)
-        } catch (e: any) {
-          toastStore.error(`Failed to play web speech synthesis: ${e.message}`)
-        }
-
-        return
-      }
-
-      const msg = msgs.find((m) => m._id === messageId)
-      if (msg?.voiceUrl) {
-        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl, voice.rate)
-        return
-      }
-
-      const res = await voiceApi.chatTextToSpeech({
-        chatId: activeChatId,
-        messageId,
-        text,
-        voice,
-        culture,
-      })
-      if (res.error) {
-        toastStore.error(`Failed to request text to speech: ${res.error}`)
-      }
     },
 
     async *generateImagePrompt(
@@ -986,52 +577,6 @@ export const msgStore = createStore<MsgState>(
   }
 })
 
-const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
-  embedApi.embedChat(chatId, history)
-}, 500)
-
-let msgCheckPoll: NodeJS.Timeout | null = null
-
-function startMessageChecking() {
-  if (msgCheckPoll) return
-
-  msgCheckPoll = setInterval(checkForMessage, 4000)
-}
-
-function stopMessageChecking() {
-  if (!msgCheckPoll) return
-  clearInterval(msgCheckPoll)
-  msgCheckPoll = null
-}
-
-function checkForMessage() {
-  const { waiting, retrying, graph } = msgStore.getState()
-  if (!waiting) return
-
-  const id = waiting.messageId || retrying?._id
-  if (!id) return
-  if (!retrying && graph.tree[id]) return
-
-  publish({
-    type: 'message-ready',
-    messageId: id,
-    updatedAt: new Date(waiting.started).toISOString(),
-  })
-}
-
-msgStore.subscribe((state, prev) => {
-  // When message-waiting ends, stop polling for a message update
-  if (!state.waiting && prev.waiting) {
-    stopMessageChecking()
-  }
-
-  if (state.partial) return
-  if (state.waiting) return
-  if (!state.activeChatId) return
-  if (!state.msgs.length) return
-  debouncedEmbed(state.activeChatId, state.messageHistory.concat(state.msgs))
-})
-
 function processQueue() {
   const state = msgStore.getState()
   const queue = state.queue
@@ -1041,7 +586,7 @@ function processQueue() {
   const remaining = queue.slice(1)
   msgStore.setState({ queue: remaining })
 
-  msgStore.send({
+  getStore('responses').send({
     chatId: first.chatId,
     msg: first.message,
     mode: first.mode,
@@ -1108,181 +653,8 @@ async function handleImage(body: {
   }
 }
 
-async function playVoiceFromUrl(
-  chatId: string,
-  messageId: string,
-  url: string,
-  rate: number | undefined
-) {
-  if (chatId != msgStore.getState().activeChatId) {
-    msgStore.setState({ speaking: undefined })
-    return
-  }
-  try {
-    const audio = await createSpeech({ kind: 'remote', url })
-
-    audio.addEventListener('error', (e) => {
-      console.error(e)
-      toastStore.error(`Error playing URL: ${e.message}`)
-      const msgs = msgStore.getState().msgs
-      const msg = msgs.find((m) => m._id === messageId)
-      if (!msg) return
-      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: undefined } : m))
-      msgStore.setState({ speaking: undefined, msgs: nextMsgs })
-    })
-    audio.addEventListener('playing', () => {
-      const msgs = msgStore.getState().msgs
-      const msg = msgs.find((m) => m._id === messageId)
-      if (!msg) return
-      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: url } : m))
-      msgStore.setState({ speaking: { messageId, status: 'playing' }, msgs: nextMsgs })
-    })
-    audio.addEventListener('ended', () => {
-      msgStore.setState({ speaking: undefined })
-    })
-    msgStore.setState({ speaking: { messageId, status: 'generating' } })
-    audio.play(rate)
-  } catch (e: any) {
-    toastStore.error(`Error playing URL: ${e.message}`)
-    msgStore.setState({ speaking: undefined })
-  }
-}
-
-async function playVoiceFromBrowser(
-  voice: VoiceWebSynthesisSettings,
-  text: string,
-  culture: string,
-  messageId: string
-) {
-  const user = userStore.getState().user
-  if (!user || user?.texttospeech?.enabled === false) return
-  const filterAction = user.texttospeech?.filterActions ?? true
-  const audio = await createSpeech({ kind: 'native', voice, text, culture, filterAction })
-
-  audio.addEventListener('error', (e) => {
-    toastStore.error(`Error playing web speech: ${e.message}`)
-    msgStore.setState({ speaking: undefined })
-  })
-
-  audio.addEventListener('playing', () =>
-    msgStore.setState({ speaking: { messageId, status: 'playing' } })
-  )
-  audio.addEventListener('ended', () => msgStore.setState({ speaking: undefined }))
-
-  audio.play(voice.rate)
-}
-
-subscribe(
-  ['message-partial', 'inference-partial'],
-  { partial: 'string', chatId: 'string', kind: 'string?', json: 'any?' },
-  (body) => {
-    const { activeChatId, waiting } = msgStore.getState()
-    if (!waiting) return
-    if (body.chatId !== activeChatId) return
-
-    if (body.kind !== 'chat-query') {
-      msgStore.setState({ partial: body.partial })
-    }
-  }
-)
-
-subscribe(
-  'message-retry',
-  {
-    messageId: 'string',
-    requestId: 'string?',
-    chatId: 'string',
-    message: 'string',
-    continue: 'boolean?',
-    adapter: 'string?',
-    extras: ['string?'],
-    meta: 'any?',
-    retries: ['string?'],
-    updatedAt: 'string?',
-    json: 'any?',
-  },
-  async (body) => {
-    const log = debug('retry')
-    const { msgs, activeChatId, graph } = msgStore.getState()
-    const { characters } = getStore('character').getState()
-    const { active } = getStore('chat').getState()
-
-    const { user } = getStore('user').getState()
-
-    if (activeChatId !== body.chatId || !active) return
-
-    const prev = msgs.find((msg) => msg._id === body.messageId)
-    const char = prev?.characterId ? characters.map[prev?.characterId] : undefined
-
-    log(`msg-retry ${inline({ ...body, message: '...', retries: undefined, probs: undefined })}`)
-    msgStore.setState({
-      partial: undefined,
-      retrying: undefined,
-      waiting: undefined,
-      lastInference: {
-        requestId: body.requestId!,
-        text: body.message,
-        characterId: char?._id!,
-        chatId: body.chatId,
-        messageId: body.messageId,
-      },
-    })
-
-    await Promise.resolve()
-
-    const nextMsg = {
-      msg: body.message,
-      voiceUrl: undefined,
-      meta: body.meta,
-      extras: body.extras || prev?.extras,
-      retries: body.retries,
-      updatedAt: body.updatedAt || new Date().toISOString(),
-      json: body.json,
-    }
-
-    if (!prev) return
-    const nextMsgs = replace(body.messageId, msgs, nextMsg)
-    const replacement = { ...prev, ...nextMsg }
-
-    log(`msg-retry:2 ${inline({ ...body, message: '...', retries: undefined, probs: undefined })}`)
-    msgStore.setState({
-      partial: undefined,
-      retrying: undefined,
-      waiting: undefined,
-      msgs: nextMsgs,
-      graph: { ...graph, tree: updateChatTreeNode(graph.tree, replacement) },
-    })
-
-    if (active.chat._id !== body.chatId || !char) return
-    const voice = char.voice
-
-    if (body.adapter === 'image' || !voice || !user) return
-    const canSpeak =
-      (user?.texttospeech?.enabled ?? true) && !char.voiceDisabled && !!char.voice?.service
-
-    if (canSpeak && active.char.userId === user._id) {
-      const parsed = getUtterableText(body.message)
-      if (!parsed?.content) return
-      msgStore.textToSpeech(body.messageId, parsed.content, voice, char.culture ?? defaultCulture)
-    }
-  }
-)
-
 subscribe(
   'message-created',
-  {
-    msg: 'any',
-    chatId: 'string',
-    generate: 'boolean?',
-    requestId: 'string?',
-    retry: 'boolean?',
-    json: 'any?',
-  } as const,
-  onMessageReceived
-)
-
-subscribe(
-  'message-completed',
   {
     msg: 'any',
     chatId: 'string',
@@ -1334,13 +706,6 @@ async function onMessageReceived(body: {
   console.log('[wait] msg-rec', body.type, stack.stack)
 
   msgStore.setState({
-    lastInference: {
-      requestId: body.requestId!,
-      text: body.msg.msg,
-      characterId: body.msg.characterId,
-      chatId: body.chatId,
-      messageId: body.msg._id,
-    },
     textBeforeGenMore: undefined,
     graph: {
       tree,
@@ -1348,25 +713,15 @@ async function onMessageReceived(body: {
     },
   })
 
-  if (body.type !== 'message-created') {
-    msgStore.setState({
-      waiting: undefined,
-      partial: undefined,
-    })
-  }
-
   // If the message is from a user don't clear the "waiting for response" flags
   if (isUserMsg && !body.generate) {
-    msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
+    msgStore.setState({ msgs: nextMsgs })
+    getStore('responses').setState({ speaking: speech?.speaking })
   } else {
     console.log('[wait] msg-rec:2')
-    msgStore.setState({
-      msgs: nextMsgs,
-      partial: undefined,
-      waiting: undefined,
-      retrying: undefined,
-      speaking: speech?.speaking,
-    })
+    msgStore.setState({ msgs: nextMsgs })
+    getStore('responses').setState({ speaking: speech?.speaking })
+    getStore('responses').setState({ partial: undefined, waiting: undefined, retrying: undefined })
   }
 
   const chatAttachments = attachments[body.chatId]
@@ -1390,7 +745,7 @@ async function onMessageReceived(body: {
   if (speech && !isUserMsg) {
     const parsed = getUtterableText(msg.msg)
     if (parsed?.content)
-      msgStore.textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
+      getStore('responses').textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
   }
 
   onCharacterMessageReceived(msg)
@@ -1441,7 +796,7 @@ subscribe('chat-query', { requestId: 'string', response: 'string' }, (body) => {
 
 subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
   console.log('[wait] img-failed')
-  msgStore.setState({ waiting: undefined })
+  msgStore.setState({ imgWaiting: undefined })
   toastStore.error(body.error)
 })
 
@@ -1459,32 +814,9 @@ subscribe(
   }
 )
 
-subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
-  const activeChatId = msgStore.getState().activeChatId
-  if (activeChatId != body.chatId) return
-  const { user } = userStore.getState()
-  if (user?.texttospeech?.enabled === false) return
-  msgStore.setState({ speaking: { messageId: body.messageId, status: 'generating' } })
-})
-
-subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
-  const activeChatId = msgStore.getState().activeChatId
-  if (activeChatId != body.chatId) return
-  msgStore.setState({ speaking: undefined })
-  toastStore.error(body.error)
-})
-
-subscribe(
-  'voice-generated',
-  { chatId: 'string', messageId: 'string', url: 'string', rate: 'number?' },
-  (body) => {
-    if (msgStore.getState().speaking?.messageId != body.messageId) return
-    playVoiceFromUrl(body.chatId, body.messageId, body.url, body.rate)
-  }
-)
-
 subscribe(['message-error', 'inference-error'], { error: 'any', chatId: 'string' }, (body) => {
-  const { activeChatId, waiting } = msgStore.getState()
+  const { activeChatId } = msgStore.getState()
+  const { waiting } = getStore('responses').getState()
 
   if (activeChatId !== body.chatId) return
   if (!waiting) return
@@ -1497,7 +829,7 @@ subscribe(['message-error', 'inference-error'], { error: 'any', chatId: 'string'
   }
 
   console.log('[wait] voice-gen')
-  msgStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
+  responseStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
 })
 
 subscribe('messages-deleted', { ids: ['string'] }, (body) => {
@@ -1528,7 +860,7 @@ const updateMsgSub = (body: {
   invisible?: any
 }) => {
   debug('edit')('updating %s', body.messageId)
-  const { msgs, graph, waiting } = msgStore.getState()
+  const { msgs, graph } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 
   if (!prev) return
@@ -1548,13 +880,8 @@ const updateMsgSub = (body: {
 
   const nextMsgs = replace(body.messageId, msgs, next)
 
-  const isSame = waiting?.chatId === body.chatId && waiting.messageId === body.messageId
-  const isEdit = body.type === 'message-edited' || body.type === 'message-swapped'
-  const wait = isEdit ? waiting : isSame ? undefined : waiting
-
   msgStore.setState({
     msgs: nextMsgs,
-    waiting: wait,
     graph: {
       tree: updateChatTreeNode(graph.tree, next),
       root: graph.root,
@@ -1658,110 +985,9 @@ subscribe(
   updateMsgSub
 )
 
-subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
-  const { msgs, activeChatId, retrying, waiting } = msgStore.getState()
-
-  const replace = msgs.find((msg) => msg._id === body.messageId)
-
-  if (activeChatId !== body.chatId) return
-  if (retrying) return
-  if (!replace) return
-
-  msgStore.setState({
-    partial: '',
-    retrying: replace,
-    waiting: {
-      signal: waiting?.signal,
-      chatId: body.chatId,
-      mode: 'retry',
-      characterId: '',
-      started: Date.now(),
-    },
-    lastInference: undefined,
-  })
-})
-
-subscribe(
-  'message-creating',
-  { chatId: 'string', senderId: 'string?', mode: 'string?', characterId: 'string' },
-  (body) => {
-    const { activeChatId, waiting } = msgStore.getState()
-    if (body.chatId !== activeChatId) return
-
-    msgStore.setState({
-      waiting: {
-        signal: waiting?.signal,
-        chatId: activeChatId,
-        mode: body.mode as any,
-        userId: body.senderId,
-        characterId: body.characterId,
-        started: Date.now(),
-      },
-      partial: '',
-      lastInference: undefined,
-    })
-
-    startMessageChecking()
-  }
-)
-
 subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
   toastStore.normal(`Queue: ${body.queue}`)
 })
-
-subscribe(
-  'guest-message-created',
-  { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
-  async (body) => {
-    const { activeChatId, retrying, graph, msgs } = msgStore.getState()
-    if (activeChatId !== body.chatId) return
-
-    if (retrying) {
-      body.msg._id = retrying._id
-    }
-
-    const allMsgs = await localApi.getMessages(body.chatId)
-
-    const msg = body.msg as AppSchema.ChatMessage
-    const next = allMsgs.filter((m) => m._id !== retrying?._id && m._id !== msg._id).concat(msg)
-    const speech = getMessageSpeechInfo(msg, userStore.getState().user)
-
-    const chats = await localApi.loadItem('chats')
-    await localApi.saveChats(
-      replace(body.chatId, chats, { updatedAt: new Date().toISOString(), treeLeafId: body.msg._id })
-    )
-    await localApi.saveMessages(body.chatId, next)
-
-    console.log('[wait] guest-msg-created')
-    msgStore.setState({
-      msgs: exclude(msgs, [body.msg._id]).concat(msg),
-      retrying: undefined,
-      partial: undefined,
-      waiting: undefined,
-      speaking: speech?.speaking,
-      lastInference: {
-        requestId: body.requestId!,
-        text: body.msg.msg,
-        characterId: body.msg.characterId,
-        chatId: body.chatId,
-        messageId: body.msg._id,
-      },
-      textBeforeGenMore: undefined,
-      graph: {
-        tree: updateChatTreeNode(graph.tree, msg),
-        root: graph.root,
-      },
-    })
-
-    if (speech) {
-      const parsed = getUtterableText(msg.msg)
-      if (parsed?.content)
-        msgStore.textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
-    }
-
-    onCharacterMessageReceived(msg)
-  }
-)
 
 subscribe('horde-status', { status: 'any' }, (body) => {
   const waiting = msgStore.getState().imgWaiting

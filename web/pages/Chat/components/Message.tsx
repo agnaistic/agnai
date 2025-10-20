@@ -38,7 +38,15 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { chatStore, userStore, msgStore, ChatState, VoiceState, pageStore } from '../../../store'
+import {
+  chatStore,
+  userStore,
+  msgStore,
+  ChatState,
+  VoiceState,
+  pageStore,
+  responseStore,
+} from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ContextState, useAppContext } from '/web/store/context'
@@ -335,13 +343,13 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={props.voice === 'generating'}>
-                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                  <div class="animate-pulse cursor-pointer" onClick={responseStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={DownloadCloud} />
                   </div>
                 </Match>
 
                 <Match when={props.voice === 'playing'}>
-                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                  <div class="animate-pulse cursor-pointer" onClick={responseStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={PauseCircle} bot />
                   </div>
                 </Match>
@@ -888,7 +896,9 @@ const MessageOptions: Component<{
       >
         <div
           class="icon-button"
-          onClick={() => !props.partial && msgStore.continuation(props.msg.chatId, undefined, true)}
+          onClick={() =>
+            !props.partial && responseStore.continuation(props.msg.chatId, undefined, true)
+          }
         >
           <Repeat1 size={18} />
         </div>
@@ -901,7 +911,7 @@ const MessageOptions: Component<{
             if (props.partial) return
             // msgStore.resend(props.msg.chatId, props.msg._id)
             if (!props.ctx.chat?.characterId) return
-            msgStore.request(props.ctx.chat._id, props.ctx.chat.characterId)
+            responseStore.request(props.ctx.chat._id, props.ctx.chat.characterId)
           }}
         >
           <RefreshCw size={18} />
@@ -1056,14 +1066,14 @@ const MessageOption: Component<{
 
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
-    msgStore.retry({ chatId: split.chatId, msgId: original._id })
+    responseStore.retry({ chatId: split.chatId, msgId: original._id })
   } else {
     msgStore.createImage({ sourceMsgId: split._id })
   }
 }
 
 function retryJsonSchema(original: AppSchema.ChatMessage, split: SplitMessage) {
-  msgStore.retrySchema(split.chatId, original._id)
+  responseStore.retrySchema(split.chatId, original._id)
 }
 
 function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {

@@ -12,9 +12,10 @@ import {
 import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
-import { msgStore, toastStore, userStore } from '../../../store'
+import { responseStore, toastStore, userStore } from '../../../store'
 import { AppSchema } from '../../../../common/types/schema'
 import { createDebounce } from '/web/shared/util'
+import { getStore } from '/web/store/create'
 
 const win: any = window
 
@@ -184,13 +185,15 @@ export const SpeechRecognitionRecorder: Component<{
     props.onText(value)
   })
 
-  const unsub = msgStore.subscribe((state) => {
+  const unsub = responseStore.subscribe((state) => {
     if (state.speaking && isListening()) {
       setPendingRecord(true)
       speechRecognition()?.abort()
       setIsListening(false)
       return
     }
+
+    const { msgs } = getStore('messages').getState()
 
     if (
       !settings.enabled ||
@@ -199,12 +202,12 @@ export const SpeechRecognitionRecorder: Component<{
       state.speaking ||
       state.partial ||
       state.waiting ||
-      state.msgs.length === 0
+      msgs.length === 0
     ) {
       return
     }
 
-    const lastMsg = state.msgs[state.msgs.length - 1]
+    const lastMsg = msgs[msgs.length - 1]
     if (!lastMsg?.characterId) return
     setPendingRecord(false)
     speechRecognition()?.start()

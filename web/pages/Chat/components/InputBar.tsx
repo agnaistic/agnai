@@ -35,6 +35,7 @@ import {
   ChatMessageExt,
   promptStore,
   pageStore,
+  responseStore,
 } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -185,7 +186,7 @@ const InputBar: Component<{
   }
 
   const respondAgain = () => {
-    msgStore.request(props.chat._id, props.chat.characterId)
+    responseStore.request(props.chat._id, props.chat.characterId)
   }
 
   const more = () => {
@@ -214,7 +215,7 @@ const InputBar: Component<{
       display: ctx.ui.displayReasoning,
     })
 
-    msgStore.textToSpeech(
+    responseStore.textToSpeech(
       lastTextMsg._id,
       text.content,
       char.voice,
@@ -312,7 +313,7 @@ const InputBar: Component<{
             class="animate-pulse cursor-pointer p-2"
             onClick={() => {
               console.log('Cancel clicked', !!ctx.waiting?.signal)
-              msgStore.abortMessage()
+              responseStore.abortMessage()
             }}
           >
             <StopCircle />
@@ -416,7 +417,7 @@ const InputBar: Component<{
               class="w-full"
               onClick={() => {
                 setMenu(false)
-                msgStore.selfGenerate()
+                responseStore.selfGenerate()
               }}
               alignLeft
               disabled={!ctx.impersonate}
