@@ -219,7 +219,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   const isThirdParty = isThirdPartyPreset(conn)
 
-  const handler = getHandlers({ user: opts.user, settings })
+  const handler = getHandlers({ user: opts.user, settings: opts.settings })
   const stream = handler({
     kind: 'plain',
     conn,

@@ -795,7 +795,6 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
-        disabled: props.ctx.msgDeleting || props.ctx.waiting?.chatId === props.msg.chatId,
       },
 
       'gen-image': {

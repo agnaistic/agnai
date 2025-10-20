@@ -1527,6 +1527,7 @@ const updateMsgSub = (body: {
   json?: any
   invisible?: any
 }) => {
+  debug('edit')('updating %s', body.messageId)
   const { msgs, graph, waiting } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 
@@ -1537,6 +1538,11 @@ const updateMsgSub = (body: {
   for (const [key, value] of Object.entries(body)) {
     const prop = key as keyof ChatMessageExt
     if (key === 'type' || key === 'chatId' || key === 'messageId') continue
+    if (key === 'message') {
+      next.msg = value
+      continue
+    }
+
     next[prop] = value as any
   }
 
@@ -1625,8 +1631,12 @@ subscribe(
   {
     chatId: 'string',
     messageId: 'string',
+
     message: 'string?',
+    msg: 'string?',
     imagePrompt: 'string?',
+    invsibie: 'any?',
+    json: 'any?',
     actions: 'any?',
     extras: ['string?'],
     retries: ['string?'],

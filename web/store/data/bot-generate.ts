@@ -36,6 +36,7 @@ import { msgsApi } from './messages'
 import { getProvider } from '../preset-context'
 import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
 import { sanitiseAndTrim } from '/common/requests/util'
+import { toastStore } from '../toasts'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -143,6 +144,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
       switch (state) {
         case 'error':
           lazy.reject(response)
+          toastStore.error(response)
           break
 
         case 'meta':

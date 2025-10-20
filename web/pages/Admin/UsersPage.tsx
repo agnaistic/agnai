@@ -1,4 +1,4 @@
-import { X } from 'lucide-solid'
+import { HatGlasses, X } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -116,6 +116,9 @@ const UsersPage: Component = () => {
                 </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
+                </Button>
+                <Button size="sm" onClick={() => adminStore.impersonate(user._id)}>
+                  <HatGlasses size={20} />
                 </Button>
               </div>
             </div>
