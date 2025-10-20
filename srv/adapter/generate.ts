@@ -203,6 +203,20 @@ export async function createInferenceStream(opts: InferenceRequest) {
   }
 
   const conn = getPresetConnection(settings, opts.user.providers)
+  opts.settings = conn.preset
+
+  if (opts.settings?.thirdPartyUrl) {
+    opts.user.koboldUrl = opts.settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  }
+
+  if (opts.settings?.stopSequences) {
+    opts.settings.stopSequences = parseStops(opts.settings.stopSequences)
+  }
+
   const isThirdParty = isThirdPartyPreset(conn)
 
   const handler = getHandlers({ user: opts.user, settings })
