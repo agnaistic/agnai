@@ -7,7 +7,7 @@ import { toastStore } from '../toasts'
 import { parseTemplate, TemplateOpts } from '/common/template-parser'
 import { exclude, replace } from '/common/util'
 import { toMap } from '/web/shared/util'
-import { subscribe } from '../socket'
+import { localEmit, subscribe } from '../socket'
 import { genApi } from './inference'
 import { botGen } from './bot-generate'
 import { getPromptEntities } from './common'
@@ -112,6 +112,7 @@ export async function editMessageProps(
   const messages = await localApi.getMessages(msg.chatId)
   const next = replace(msg._id, messages, update)
   await localApi.saveMessages(msg.chatId, next)
+  localEmit({ type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update })
   return localApi.result({ success: true })
 }
 
