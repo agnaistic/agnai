@@ -156,7 +156,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
     on(
       () => store.src?.id,
       (id) => {
-        log('loading %s', id)
+        log('loading #%s %s ', store.src?.initial || 0, id)
         if (id) {
           reel.load(id, store.src?.initial)
         }
