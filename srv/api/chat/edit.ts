@@ -149,6 +149,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       userId: 'string?',
       name: 'string?',
       invisible: 'any?',
+      parent: 'string?',
     },
     body
   )
@@ -158,17 +159,18 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const update: Partial<AppSchema.ChatMessage> = {
-    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
-    msg: body.msg ?? prev.msg.msg,
-    retries: body.retries,
-    extras: body.extras || prev.msg.extras,
-    json: body.json || prev.msg.json,
-    invisible: body.invisible ?? prev.msg.invisible,
-    characterId: body.characterId ?? prev.msg.characterId,
-    userId: body.userId ?? prev.msg.userId,
-    name: body.name ?? prev.msg.name,
-  }
+  const update: Partial<AppSchema.ChatMessage> = {}
+
+  if (body.imagePrompt) update.imagePrompt = body.imagePrompt
+  if (body.msg) update.msg = body.msg
+  if (body.extras) update.extras = body.extras
+  if (body.retries) update.retries = body.retries
+  if (body.json) update.json = body.json
+  if (body.characterId) update.characterId = body.characterId
+  if (body.userId) update.userId = body.userId
+  if (body.name) update.name = body.name
+  if (body.invisible) update.invisible = body.invisible
+  if (body.parent) update.parent = body.parent
 
   const message = await store.msgs.editMessage(params.id, {
     ...update,
@@ -177,11 +179,9 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
-    chatId: prev.chat._id,
+    ...update,
     messageId: params.id,
-    imagePrompt: body.imagePrompt ?? prev.msg.imagePrompt,
-    message: body.msg ?? prev.msg.msg,
-    extras: body.extras || prev.msg.extras,
+    message: body.msg ?? prev.msg.msg, // Backwards compatibility
   })
 
   return message

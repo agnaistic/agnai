@@ -1509,22 +1509,25 @@ const updateMsgSub = (body: {
   message?: string
   retries?: string[]
   actions: any
+  msg?: string
+  parent?: string
   extras?: string[]
+  json?: any
+  invisible?: any
 }) => {
   const { msgs, graph, waiting } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 
   if (!prev) return
 
-  const next: ChatMessageExt = {
-    ...prev,
-    msg: body.message || prev?.msg,
-    imagePrompt: body.imagePrompt || prev.imagePrompt,
-    retries: body.retries || prev?.retries,
-    actions: body.actions || prev?.actions,
-    voiceUrl: undefined,
-    extras: body.extras || prev?.extras,
+  const next: ChatMessageExt = { ...prev }
+
+  for (const [key, value] of Object.entries(body)) {
+    const prop = key as keyof ChatMessageExt
+    if (key === 'type' || key === 'chatId' || key === 'messageId') continue
+    next[prop] = value as any
   }
+
   const nextMsgs = replace(body.messageId, msgs, next)
 
   const isSame = waiting?.chatId === body.chatId && waiting.messageId === body.messageId
