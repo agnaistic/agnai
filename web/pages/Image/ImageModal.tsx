@@ -9,6 +9,7 @@ import {
   msgStore,
   pageStore,
   promptStore,
+  toastStore,
 } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
@@ -204,6 +205,9 @@ const ImageCollectionModal: Component<{}> = (props) => {
       if (!msg) return
       const nextExtras = msg.extras?.slice() || []
       msgStore.localEditMessageProp(msg._id, { extras: nextExtras.concat(cacheId) })
+    } catch (ex: any) {
+      toastStore.error(`Image Generation Error: ${ex.message || ex}`)
+      update('loading', false)
     } finally {
       update('loading', false)
     }
