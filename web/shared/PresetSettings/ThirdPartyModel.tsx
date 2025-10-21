@@ -1066,7 +1066,7 @@ const SelectorFooter: Component<{ children?: any; state: PresetState; setters: P
       <Show when={props.state}>
         <Button
           onClick={() => props.setters.refreshModels(true)}
-          disabled={props.setters.context.loading}
+          // disabled={props.setters.context.loading}
         >
           <RefreshCcw size={20} />
           Refresh

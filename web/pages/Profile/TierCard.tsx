@@ -30,7 +30,7 @@ export const TierCard: Component<{
   })
 
   const patreonCost = createMemo(() => {
-    if (props.tier.patreon?.cost) {
+    if (props.tier?.patreon?.cost) {
       const cost = (
         <div>
           ${(props.tier.patreon.cost / 100).toFixed(2)}/mo{' '}

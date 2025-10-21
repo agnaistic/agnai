@@ -260,10 +260,6 @@ export const responseStore = createStore<ResponseState>(
         yield { partial: undefined, waiting: undefined }
       }
 
-      if (res.result) {
-        opts.onSuccess?.()
-      }
-
       if (res.result?.messageId) {
         yield {
           partial: '',
