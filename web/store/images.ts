@@ -8,22 +8,10 @@ import { debug } from '/common/debug'
 
 const log = debug('image-cache')
 
-export type ImageSource = {
-  type: 'collection' | 'url' | 'message'
-  messageId?: string
-  id: string
-  initial?: number
-  prompt?: string
-}
-
-export type ImageButton = {
-  schema: ButtonSchema
-  text: string
-  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
-}
-
 export type ImageState = {
   showImgSettings: boolean
+  preview?: { file: File; base64: string; percent: number }
+  signal?: AbortController
 
   imggen: {
     show: boolean
@@ -39,6 +27,20 @@ export type ImageState = {
     options: ImageButton[]
     onClose?: () => void
   }
+}
+
+export type ImageSource = {
+  type: 'collection' | 'url' | 'message'
+  messageId?: string
+  id: string
+  initial?: number
+  prompt?: string
+}
+
+export type ImageButton = {
+  schema: ButtonSchema
+  text: string
+  onClick: (ents?: { reel: ImageCacheHook; prompt: string }) => void
 }
 
 export const imageStore = createStore<ImageState>('image', {
@@ -125,9 +127,8 @@ async function getImageIds(collection: string): Promise<string[]> {
   const json = await storage.getItem(`${collection}`)
   if (!json) return []
 
-  const ids = JSON.parse(json as string)
-
-  return ids as string[]
+  const ids = JSON.parse(json as string) as string[]
+  return ids
 }
 
 async function addImage(

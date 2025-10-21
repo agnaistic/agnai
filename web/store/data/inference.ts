@@ -416,3 +416,22 @@ export function lazyPromise<T = any>() {
 
   return parts
 }
+
+export function lazySimplePromise<T = any>() {
+  const parts = {
+    resolve: (result: T) => {},
+    reject: (error: any) => {},
+    promise: {} as any as Promise<T>,
+  }
+
+  parts.promise = new Promise<T>((resolve, _reject) => {
+    parts.resolve = (result: any) => {
+      resolve(result)
+    }
+    parts.reject = (error: any) => {
+      resolve(error)
+    }
+  })
+
+  return parts
+}

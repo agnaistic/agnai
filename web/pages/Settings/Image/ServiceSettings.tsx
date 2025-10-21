@@ -182,7 +182,7 @@ export const SwarmSettings: Component<{
   const [models, setModels] = createSignal<CustomOption[]>([])
 
   const loadModels = async () => {
-    // if (!props.cfg.swarm.url) return
+    if (props.cfg.type !== 'swarm') return
     const result = await imageApi.getImageModelList({
       type: 'swarm',
       local: props.cfg.swarm.local,

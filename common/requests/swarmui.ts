@@ -1,4 +1,6 @@
 import { ImageRequestOpts } from '/srv/image/types'
+import { dataURLtoFile } from '/web/store/data/image'
+import { lazySimplePromise } from '/web/store/data/inference'
 
 /**
  * POST /API/GetNewSession
@@ -33,7 +35,10 @@ import { ImageRequestOpts } from '/srv/image/types'
 export const swarmApi = {
   getModelList,
   generateImage,
+  generateImageWS,
 }
+
+export type ImageResponse = Awaited<ReturnType<typeof processImage>>
 
 async function getSessionId(hostname: string | undefined) {
   const session = await fetch(getUrl({ host: hostname, path: 'GetNewSession' }), {
@@ -73,26 +78,84 @@ async function getModelList(hostname?: string) {
   return { models, json: res }
 }
 
-async function generateImage(req: ImageRequestOpts) {
-  const session_id = await getSessionId(req.settings?.swarm?.url)
+async function generateImageWS(
+  req: ImageRequestOpts,
+  events?: {
+    signal?: AbortController
+    onError?: (error: any) => void
+    onDone?: (image: ImageResponse) => void
+    onPreview?: (step: { file: File; base64: string; percent: number }) => void
+  }
+) {
+  const payload = await getPayload(req)
+
+  let url = getUrl({ host: req.settings?.swarm?.url, path: 'GenerateText2ImageWS' })
+  url = url.replace('http://', 'ws://').replace('https://', 'wss://')
+
+  const ws = new WebSocket(url)
+  const lazy = lazySimplePromise<ImageResponse>()
+  let done = false
+
+  if (events?.signal) {
+    events.signal.signal.onabort = () => {
+      if (done) return
+      ws.close()
+      done = true
+      events.onError?.(`Image generation cancelled`)
+    }
+  }
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify(payload))
+  }
+
+  ws.onmessage = async (msg) => {
+    const json = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data
+
+    if (json.image) {
+      done = true
+      const image = await processImage(req.settings?.swarm?.url, json.image)
+      ws.close()
+      lazy.resolve(image)
+      events?.onDone?.(image)
+    }
+
+    const progress = json.gen_progress
+    if (progress?.preview) {
+      const percent = progress.current_percent as number
+      const image = await processBase64(progress.preview)
+
+      events?.onPreview?.({ ...image, percent })
+    }
+  }
+
+  ws.onerror = () => {
+    const error = `Failed to connect to SwarmUI service`
+    lazy.reject(error)
+    events?.onError?.(error)
+  }
+
+  ws.onclose = () => {
+    if (done) return
+    const error = `SwarmUI failed to generate an image`
+    lazy.reject(error)
+    events?.onError?.(error)
+    done = true
+  }
+
+  return lazy.promise
+}
+
+async function generateImage(req: ImageRequestOpts, events?: { signal?: AbortController }) {
+  const payload = await getPayload(req)
 
   const result = await fetch(
     getUrl({ host: req.settings?.swarm?.url, path: 'GenerateText2Image' }),
     {
+      signal: events?.signal?.signal,
       method: 'post',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        session_id,
-        prompt: req.prompt,
-        negativeprompt: req.negative || '',
-        cfgscale: `${req.settings?.cfg || 5}`,
-        steps: `${req.settings?.steps || 20}`,
-        width: `${req.settings?.width || 1024}`,
-        height: `${req.settings?.height || 1024}`,
-        model: req.settings?.swarm?.model || '',
-        sampler: req.settings?.swarm?.sampler || 'euler_ancestral',
-        images: `1`,
-      }),
+      body: JSON.stringify(payload),
     }
   ).then((res) => res.json())
 
@@ -101,10 +164,14 @@ async function generateImage(req: ImageRequestOpts) {
   }
 
   const imagePath = result.images[0]
-  const image = await fetch(
-    getUrl({ host: req.settings?.swarm?.url, path: imagePath, getter: true }),
-    { headers: { accept: 'image/png' } }
-  )
+  const image = await processImage(req.settings?.swarm?.url, imagePath)
+  return image
+}
+
+async function processImage(baseUrl: string | undefined, imagePath: string) {
+  const image = await fetch(getUrl({ host: baseUrl, path: imagePath, getter: true }), {
+    headers: { accept: 'image/png' },
+  })
     .then((res) => res.blob())
     .then(async (blob) => {
       const buf = await blob.arrayBuffer()
@@ -115,6 +182,30 @@ async function generateImage(req: ImageRequestOpts) {
 
   const file = new File([image.blob], `swarm_${Date.now()}.png`, { type: image.blob.type })
   return { content: image.content, file, buffer: image.buffer }
+}
+
+async function processBase64(base64: string) {
+  const full = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`
+  const file = await dataURLtoFile(full, `swarm_${Date.now()}.png`)
+  return { base64: full, file }
+}
+
+async function getPayload(req: ImageRequestOpts) {
+  const session_id = await getSessionId(req.settings?.swarm?.url)
+  const payload = {
+    session_id,
+    prompt: req.prompt,
+    negativeprompt: req.negative || '',
+    cfgscale: `${req.settings?.cfg || 5}`,
+    steps: `${req.settings?.steps || 20}`,
+    width: `${req.settings?.width || 1024}`,
+    height: `${req.settings?.height || 1024}`,
+    model: req.settings?.swarm?.model || '',
+    sampler: req.settings?.swarm?.sampler || 'euler_ancestral',
+    images: `1`,
+  }
+
+  return payload
 }
 
 function getUrl(opts: { host?: string; path: string; getter?: boolean }) {

@@ -101,7 +101,12 @@ const ImageCollectionModal: Component<{}> = (props) => {
   // const [ctx] = useImageContext()
   const reel = useImageCache()
   const store = imageStore((s) => {
-    return { src: s.showImage?.src, options: s.showImage?.options, onClose: s.showImage?.onClose }
+    return {
+      src: s.showImage?.src,
+      options: s.showImage?.options,
+      onClose: s.showImage?.onClose,
+      preview: s.preview,
+    }
   })
 
   const show = createMemo(() => {
@@ -250,7 +255,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
   )
 
   const GenerationActions = (
-    <>
+    <div class="flex flex-col gap-2">
       <div class="flex w-full items-end justify-end gap-2">
         <Button size="sm" onClick={generateImage} disabled={state.loading}>
           Generate Image
@@ -268,7 +273,13 @@ const ImageCollectionModal: Component<{}> = (props) => {
           )}
         </For>
       </div>
-    </>
+
+      <div class="flex w-full justify-center">
+        <Show when={store.preview}>
+          <img src={store.preview?.base64} />
+        </Show>
+      </div>
+    </div>
   )
 
   return (
