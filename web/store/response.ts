@@ -10,6 +10,8 @@ import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Aud
 import { VoiceSettings, VoiceWebSynthesisSettings } from '/common/types/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
 import { voiceApi } from './data/voice'
+import { v4 } from 'uuid'
+import { msgsApi } from './data/messages'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -201,9 +203,17 @@ export const responseStore = createStore<ResponseState>(
           started: Date.now(),
         },
       }
+
+      const created = await handlePreSend(opts)
+
       let input = ''
 
       switch (opts.mode) {
+        case 'send-noreply': {
+          yield { partial: undefined, waiting: undefined }
+          return
+        }
+
         case 'self':
         case 'retry':
           res = await botGen
@@ -216,10 +226,9 @@ export const responseStore = createStore<ResponseState>(
         case 'send-event:world':
         case 'send-event:character':
         case 'send-event:hidden':
-        case 'send-noreply':
         case 'send-event:ooc':
           res = await botGen
-            .stream({ signal, kind: opts.mode, text: opts.msg })
+            .stream({ signal, kind: opts.mode, text: opts.msg, messageId: created?.messageId })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result?.generating) {
             console.log('[wait] send no-gen')
@@ -432,6 +441,38 @@ export const responseStore = createStore<ResponseState>(
     },
   }
 })
+
+/** Essentially a duplicate of `bot-generate.ts:handlePreStreamResponse` */
+async function handlePreSend(opts: {
+  chatId: string
+  msg: string
+  mode: SendModes
+  onSuccess?: () => void
+}) {
+  if (opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') return
+
+  const { impersonating } = getStore('character').getState()
+  const { messageHistory, msgs } = getStore('messages').getState()
+
+  const messageId = v4()
+  const parent = botGen.getMessageParent(opts.mode, messageHistory.concat(msgs))
+
+  const res = await msgsApi.createMessage({
+    kind: 'send-noreply',
+    chatId: opts.chatId,
+    messageId,
+    text: opts.msg,
+    parent: parent?._id,
+    character: impersonating,
+    bot: false,
+  })
+
+  if (res.result) {
+    opts.onSuccess?.()
+  }
+
+  return { messageId }
+}
 
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
   embedApi.embedChat(chatId, history)

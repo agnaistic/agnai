@@ -44,15 +44,16 @@ export const botGen = {
   stream: streamResponse,
   generate: generateResponse,
   getActivePromptOptions,
+  getMessageParent,
 }
 
 export type GenerateOpts = { signal: AbortController; hint?: string } & /**
  * A user sending a new message
  */ (
-  | { kind: 'send'; text: string }
+  | { kind: 'send'; text: string; messageId?: string }
   | { kind: EventKind; text: string }
   | { kind: 'send-noreply'; text: string }
-  | { kind: 'ooc'; text: string }
+  | { kind: 'ooc'; text: string; messageId?: string }
   /**
    * A user request a message from a character
    */
@@ -89,10 +90,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
 
   const lazy = lazyPromise()
 
-  const pre = await handlePreStreamResponse(opts, req)
-  if (pre?.messageId) {
-    req.request.parent = pre.messageId
-  }
+  await handlePreStreamResponse(opts, req)
 
   const meta: any = {}
   const provider = getProvider(req.entities.settings?.providerId)
@@ -186,23 +184,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
 
 async function handlePreStreamResponse(opts: StreamOpts, req: ChatRequest) {
   if (opts.kind !== 'ooc' && opts.kind !== 'send') return
-
-  const { impersonating } = getStore('character').getState()
-
-  const chatId = req.request.chat._id
-  const messageId = v4()
-
-  await msgsApi.createMessage({
-    kind: 'send-noreply',
-    chatId,
-    messageId,
-    text: opts.text,
-    parent: req.request.parent,
-    character: impersonating,
-    bot: false,
-  })
-
-  return { messageId }
+  if (opts.messageId) return { messageId: opts.messageId }
 }
 
 async function handlePostStreamResponse(
