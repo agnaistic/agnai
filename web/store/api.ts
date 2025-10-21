@@ -222,6 +222,12 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
     error = err
   })
 
+  resp.on('done', () => {
+    if (done) return
+    opts.onTick?.(accum, 'done')
+    opts.onDone?.()
+  })
+
   resp.on('data', (chunk: Buffer) => {
     const data = incomplete + chunk.toString()
     incomplete = ''
@@ -316,9 +322,18 @@ export function fetchSSE(opts: SSEOpts) {
 
   let error = ''
   let incomplete = ''
+  let accum = ''
+  let done = false
 
   handleNonData(opts, resp, (err) => {
     error = err
+  })
+
+  resp.on('done', () => {
+    if (done) return
+    done = true
+    opts.onTick?.(accum, 'done')
+    opts.onDone?.()
   })
 
   resp.on('data', (chunk: Buffer) => {
@@ -341,43 +356,46 @@ export function fetchSSE(opts: SSEOpts) {
         continue
       }
 
-      if (!json || !opts.onTick) return
+      if (!json) return
 
       switch (json.type) {
         case 'message-partial':
         case 'inference-partial':
-          opts.onTick(json.partial, 'partial')
+          accum = json.partial
+          opts.onTick?.(json.partial, 'partial')
           break
 
         case 'message-error':
         case 'inference-error':
-          opts.onTick(json.error, 'error')
+          opts.onTick?.(json.error, 'error')
           break
 
         case 'message-warning':
         case 'inference-warning':
-          opts.onTick(json.warning, 'warning')
+          opts.onTick?.(json.warning, 'warning')
           break
 
         case 'message-created':
-          opts.onTick(json.msg.msg, 'done')
+          opts.onTick?.(json.msg.msg, 'done')
           break
 
         case 'message-retry':
-          opts.onTick(json.message, 'done')
+          opts.onTick?.(json.message, 'done')
           break
 
         case 'chat-query':
         case 'inference':
-          opts.onTick(json.response, 'done')
+          done = true
+          opts.onTick?.(json.response, 'done')
+          opts.onDone?.()
           break
 
         case 'chat-summary':
-          opts.onTick(json.summary, 'done')
+          opts.onTick?.(json.summary, 'done')
           break
 
         case 'inference-meta':
-          opts.onTick('', 'meta', json.meta)
+          opts.onTick?.('', 'meta', json.meta)
           break
       }
     }
@@ -437,10 +455,6 @@ function handleNonData(
     onError(error)
     opts.onError?.(error)
     opts.onTick?.(error, 'error')
-  })
-
-  resp.on('done', () => {
-    opts.onDone?.()
   })
 }
 
