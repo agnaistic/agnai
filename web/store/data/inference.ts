@@ -17,6 +17,7 @@ import { replaceTags } from '/common/presets/templates'
 import { getProvider } from '../preset-context'
 import { getProviderConnection } from '/common/providers'
 import { getLocalPayload } from '/common/requests/payloads'
+import { lazyPromise } from '/common/util'
 
 const inferenceCallbacks = new Map<string, TickHandler>()
 
@@ -396,42 +397,4 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   }
 
   return lazy.promise
-}
-
-export function lazyPromise<T = any>() {
-  const parts = {
-    resolve: (result: T) => {},
-    reject: (error: any) => {},
-    promise: {} as any as Promise<{ result?: T; error?: any }>,
-  }
-
-  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, _reject) => {
-    parts.resolve = (result: any) => {
-      resolve({ result, error: undefined })
-    }
-    parts.reject = (error: any) => {
-      resolve({ result: undefined, error })
-    }
-  })
-
-  return parts
-}
-
-export function lazySimplePromise<T = any>() {
-  const parts = {
-    resolve: (result: T) => {},
-    reject: (error: any) => {},
-    promise: {} as any as Promise<T>,
-  }
-
-  parts.promise = new Promise<T>((resolve, _reject) => {
-    parts.resolve = (result: any) => {
-      resolve(result)
-    }
-    parts.reject = (error: any) => {
-      resolve(error)
-    }
-  })
-
-  return parts
 }

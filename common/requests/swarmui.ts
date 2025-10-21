@@ -1,6 +1,5 @@
+import { lazySimplePromise } from '../util'
 import { ImageRequestOpts } from '/srv/image/types'
-import { dataURLtoFile } from '/web/store/data/image'
-import { lazySimplePromise } from '/web/store/data/inference'
 
 /**
  * POST /API/GetNewSession
@@ -186,7 +185,8 @@ async function processImage(baseUrl: string | undefined, imagePath: string) {
 
 async function processBase64(base64: string) {
   const full = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`
-  const file = await dataURLtoFile(full, `swarm_${Date.now()}.png`)
+  const blob = new Blob([full])
+  const file = new File([blob], `swarm_${Date.now()}.png`, { type: 'image/png' })
   return { base64: full, file }
 }
 
