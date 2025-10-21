@@ -218,9 +218,18 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
   let meta: any = {}
   let done = false
 
-  handleNonData(opts, resp, (err) => {
-    error = err
-  })
+  handleNonData(
+    opts,
+    resp,
+    (err) => {
+      error = err
+    },
+    () => {
+      if (done) return
+      opts.onTick?.(accum, 'done')
+      opts.onDone?.()
+    }
+  )
 
   resp.on('done', () => {
     if (done) return
@@ -325,9 +334,18 @@ export function fetchSSE(opts: SSEOpts) {
   let accum = ''
   let done = false
 
-  handleNonData(opts, resp, (err) => {
-    error = err
-  })
+  handleNonData(
+    opts,
+    resp,
+    (err) => {
+      error = err
+    },
+    () => {
+      if (done) return
+      opts.onTick?.(accum, 'done')
+      opts.onDone?.()
+    }
+  )
 
   resp.on('done', () => {
     if (done) return
@@ -430,7 +448,8 @@ function preHandleData(opts: SSEOpts, msg: string) {
 function handleNonData(
   opts: SSEOpts,
   resp: NodeJS.ReadableStream,
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  onAbort: () => void
 ) {
   resp.on('header', (statusCode, headers) => {
     debug('sse')('code %s', statusCode)
@@ -445,6 +464,12 @@ function handleNonData(
 
   resp.on('err', (err) => {
     let error = `Streaming request failed: ${err?.message || err}`
+
+    if (err?.name === 'AbortError' || err?.message?.startsWith('Aborted by signal')) {
+      onAbort()
+      return
+    }
+
     onError(error)
     opts.onError?.(error)
     opts.onTick?.(error, 'error')
