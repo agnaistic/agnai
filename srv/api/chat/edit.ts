@@ -177,7 +177,8 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     state: body.msg === undefined ? prev.msg.state : 'edited',
   })
 
-  sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
+  const members = [prev.chat.userId].concat(prev.chat.memberIds || [])
+  sendMany(members, {
     type: 'message-edited',
     ...update,
     chatId: prev.chat._id,
