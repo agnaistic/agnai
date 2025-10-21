@@ -18,6 +18,7 @@ import {
   Braces,
   ImagePlus,
   Eye,
+  EyeOff,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -35,7 +36,7 @@ import {
   Signal,
   Switch,
 } from 'solid-js'
-import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
+import { BOT_REPLACE, isMessageInvisible, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import {
@@ -787,7 +788,12 @@ const MessageOptions: Component<{
       visible: {
         key: 'visible',
         class: '',
-        icon: Eye,
+        icon:
+          props.ctx.replyAs &&
+          props.ctx.chat &&
+          isMessageInvisible(props.ctx.chat, props.msg, props.ctx.replyAs)
+            ? EyeOff
+            : Eye,
         label: 'Visibility',
         show: true,
         outer: props.ui.msgOptsInline.visible,

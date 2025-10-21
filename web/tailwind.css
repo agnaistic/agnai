@@ -261,6 +261,16 @@ body {
     @apply text-500 hover:text-[var(--text-900)] focus:text-[var(--text-900)];
   }
 
+  .green-icon-button {
+    @apply _focusable-base cursor-pointer;
+    @apply text-[var(--green-500)] hover:text-[var(--green-900)] focus:text-[var(--green-900)];
+  }
+
+  .red-icon-button {
+    @apply _focusable-base cursor-pointer;
+    @apply text-[var(--red-500)] hover:text-[var(--red-900)] focus:text-[var(--red-900)];
+  }
+
   /** Integrates with solid-router - highlights current selection. */
   .focusable-icon-button.active,
   .icon-button.active {
