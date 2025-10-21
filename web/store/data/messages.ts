@@ -106,6 +106,9 @@ export async function editMessageProps(
 ) {
   if (isLoggedIn()) {
     const res = await api.method('put', `/chat/${msg._id}/message-props`, update)
+    if (res.result) {
+      localEmit({ type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update })
+    }
     return res
   }
 

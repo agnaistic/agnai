@@ -129,47 +129,6 @@ const ChatDetail: Component = () => {
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
-  // const waitingMsg = createMemo(() => {
-  //   if (!msgs.waiting) return
-  //   if (msgs.retrying) return
-
-  //   const userId = msgs.waiting.userId
-  //   const charId = msgs.waiting.characterId
-  //   const profile =
-  //     user.profile?.userId === userId || !userId
-  //       ? user.profile
-  //       : chats.members.find((ch) => ch.userId === userId)
-  //   const char = charId ? ctx.allBots[charId] : undefined
-
-  //   const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
-
-  //   const waitingMsgs = {
-  //     input: null as AppSchema.ChatMessage | null,
-  //     response: null as AppSchema.ChatMessage | null,
-  //   }
-
-  //   if (msgs.waiting.input) {
-  //     waitingMsgs.input = emptyMsg({
-  //       id: 'partial-input',
-  //       charId: ctx.impersonate?._id,
-  //       userId: user.user?._id,
-  //       message: msgs.waiting.input || '',
-  //       handle: ctx.impersonate?.name || profile?.handle || 'You',
-  //     })
-  //   }
-
-  //   waitingMsgs.response = emptyMsg({
-  //     id: 'partial-response',
-  //     charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : ctx.impersonate?._id,
-  //     userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
-  //     message: msgs.partial || '',
-  //     adapter: 'partial-response',
-  //     handle: handle || 'You',
-  //   })
-
-  //   return waitingMsgs
-  // })
-
   const chatMsgs = createMemo(() => {
     if (!chats.chat || !chats.char) return []
 
@@ -180,16 +139,6 @@ const ChatDetail: Component = () => {
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
     })
-
-    // const waiting = waitingMsg()
-
-    // if (waiting?.input) {
-    //   filtered.push(waiting.input)
-    // }
-
-    // if (waiting?.response) {
-    //   filtered.push(waiting.response)
-    // }
 
     return filtered
   })
