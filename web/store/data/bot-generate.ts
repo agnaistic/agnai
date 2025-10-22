@@ -95,7 +95,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     )
   }
 
-  if (assembled.linesAddedCount === 0 && req.entities.messages?.length) {
+  if (assembled.linesAddedCount === 0 && req.props.messages.length) {
     return localApi.error(
       `Could not fit any messages in prompt. Check your character definition, context size, and template`
     )
@@ -443,7 +443,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     request.attachments = entities.attachments
   }
 
-  return { request, prompt, entities, activePrompt }
+  return { request, prompt, entities, activePrompt, props }
 }
 
 async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
