@@ -217,7 +217,7 @@ const CompatModel: Selector = (props) => {
           footer={<SelectorFooter state={props.state} setters={props.setters} />}
         />
 
-        <Button size="sm" onClick={() => props.setters.refreshModels()}>
+        <Button size="sm" onClick={() => props.setters.refreshModels(true)}>
           <RefreshCcw size={20} />
         </Button>
       </div>

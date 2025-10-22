@@ -466,12 +466,17 @@ export async function createClaudeChatCompletionV2(opts: AdapterProps) {
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
-    messages: await toChatCompletionPayload(
+    messages: opts.messages!,
+  }
+
+  if (!result.messages) {
+    result.messages = await toChatCompletionPayload(
       opts,
       getTokenCounter('openai', OPENAI_MODELS.Turbo),
       opts.gen.maxTokens!
-    ),
+    )
   }
+
   // Claude doesn't have a system role, so we extract the first message to put it in the system
   // field (https://docs.anthropic.com/claude/docs/system-prompts)
   if (result.messages[0].role === 'system') {
@@ -487,7 +492,7 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
     }
   }
 
-  let last: CompletionItem
+  let last: CompletionItem<string>
 
   // We need to ensure each role alternates so we will naively merge consecutive messages :/
   result.messages = result.messages.reduce((msgs, msg) => {
@@ -509,7 +514,7 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
 
     last.content += ('\n\n' + msg.content).trim()
     return msgs
-  }, [] as CompletionItem[])
+  }, [] as CompletionItem<string>[])
 
   return result
 }

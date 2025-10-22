@@ -5,7 +5,7 @@ import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
-import { createClaudeChatCompletion } from './claude'
+import { createClaudeChatCompletionV2 } from './claude'
 import { logPayload } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
@@ -80,9 +80,9 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
   if (opts.gen.service === 'openrouter-completion') {
     payload.prompt = opts.prompt
   } else if (useAnthropic) {
-    const { messages, system } = await createClaudeChatCompletion(opts)
+    const messages = await createClaudeChatCompletionV2(opts)
     payload.messages = messages
-    payload.system = system
+    // payload.system = system
   } else if (opts.messages) {
     const last = opts.messages.slice(-1)[0]
     if (last && modelNeedsUserRoleLast(opts.gen, payload.model)) {
