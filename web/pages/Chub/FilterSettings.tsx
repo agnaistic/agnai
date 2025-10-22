@@ -49,7 +49,7 @@ const FilterSettings: Component = () => {
         fieldName="sort"
         label="Sort By"
         items={toDropdownItems(CHUB_SORTS)}
-        value={CHUB_SORTS[state.sort] ? state.sort : 'trending'}
+        value={CHUB_SORTS[state.sort] ? state.sort : 'default'}
         onChange={(v) => {
           chubStore.setSort(v.value)
         }}
