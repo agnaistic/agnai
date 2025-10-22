@@ -226,6 +226,7 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
     },
     () => {
       if (done) return
+      done = true
       opts.onTick?.(accum, 'done')
       opts.onDone?.()
     }
@@ -342,6 +343,7 @@ export function fetchSSE(opts: SSEOpts) {
     },
     () => {
       if (done) return
+      done = true
       opts.onTick?.(accum, 'done')
       opts.onDone?.()
     }

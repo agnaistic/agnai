@@ -20,7 +20,13 @@ export const PendingMessages: Component<{
 
   return (
     <>
-      <Show when={!response.retrying && !!response.waiting}>
+      <Show
+        when={
+          !response.retrying &&
+          !!response.waiting &&
+          response.waiting.chatId === props.ctx.chat?._id
+        }
+      >
         <Message
           index={-1}
           messageId={'partial-response'}
