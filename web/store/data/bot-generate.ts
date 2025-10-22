@@ -87,7 +87,19 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
   }
 
   const req = await buildChatRequest(opts)
-  const messages = await toChatMessages(req.request, countTokens)
+  const { messages, assembled } = await toChatMessages(req.request, countTokens)
+
+  if (assembled.sections.warnings.noHistory) {
+    return localApi.error(
+      `Your prompt template does not contain the 'chat history' placeholder. Please fix your prompt template.`
+    )
+  }
+
+  if (assembled.linesAddedCount === 0 && req.entities.messages?.length) {
+    return localApi.error(
+      `Could not fit any messages in prompt. Check your character definition, context size, and template`
+    )
+  }
 
   const lazy = lazyPromise()
 
@@ -100,8 +112,8 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
   const payload = conn?.local
     ? getLocalPayload({
         ...req.request,
-        messages: messages.messages,
-        prompt: messages.assembled.prompt,
+        messages: messages,
+        prompt: assembled.prompt,
       })
     : undefined
 
@@ -124,8 +136,8 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     {
       settings: req.request.settings,
       jsonSchema: req.request.jsonSchema,
-      messages: messages.messages,
-      prompt: messages.assembled.prompt,
+      messages: messages,
+      prompt: assembled.prompt,
       payload,
       signal: opts.signal,
       stop: req.request.settings?.stopSequences,
