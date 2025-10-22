@@ -19,8 +19,6 @@ import {
   ImagePlus,
   Eye,
   EyeOff,
-  MailX,
-  MailPlus,
 } from 'lucide-solid'
 import {
   Accessor,
