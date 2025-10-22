@@ -178,6 +178,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
             type: 'message-partial',
             chatId: active.chat._id,
             partial: trimmed,
+            partialId: req.request.requestId,
           })
           break
         }
@@ -263,6 +264,7 @@ async function handlePostStreamResponse(
   }
 
   req.request.response = response
+
   await msgsApi.createMessage({
     kind: 'send-noreply',
     chatId,
@@ -782,13 +784,13 @@ async function getGenerateProps(
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
       props.impersonate = entities.impersonating
       props.replyAs = getBot(entities.autoReplyAs)
-      props.messages.push(
-        emptyMsg(entities.chat, {
-          msg: opts.text,
-          userId: entities.user._id,
-          characterId: entities.impersonating?._id,
-        })
-      )
+      // props.messages.push(
+      //   emptyMsg(entities.chat, {
+      //     msg: opts.text,
+      //     userId: entities.user._id,
+      //     characterId: entities.impersonating?._id,
+      //   })
+      // )
       break
     }
 
@@ -845,21 +847,21 @@ async function createMessage(
   })
 }
 
-function emptyMsg(
-  chat: AppSchema.Chat,
-  props: Partial<AppSchema.ChatMessage>
-): AppSchema.ChatMessage {
-  return {
-    _id: '',
-    kind: 'chat-message',
-    chatId: chat._id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    msg: '',
-    retries: [],
-    ...props,
-  }
-}
+// function emptyMsg(
+//   chat: AppSchema.Chat,
+//   props: Partial<AppSchema.ChatMessage>
+// ): AppSchema.ChatMessage {
+//   return {
+//     _id: '',
+//     kind: 'chat-message',
+//     chatId: chat._id,
+//     createdAt: new Date().toISOString(),
+//     updatedAt: new Date().toISOString(),
+//     msg: '',
+//     retries: [],
+//     ...props,
+//   }
+// }
 
 function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
   if (!settings.providerId) {
