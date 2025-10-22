@@ -19,6 +19,8 @@ import {
   ImagePlus,
   Eye,
   EyeOff,
+  MailX,
+  MailPlus,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -36,7 +38,12 @@ import {
   Signal,
   Switch,
 } from 'solid-js'
-import { BOT_REPLACE, isMessageInvisible, SELF_REPLACE } from '../../../../common/prompt'
+import {
+  BOT_REPLACE,
+  getMessageVisibility,
+  isMessageInvisible,
+  SELF_REPLACE,
+} from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import {
@@ -308,6 +315,27 @@ const Message: Component<MessageProps> = (props) => {
     msgStore.setMetadataMsg(msg())
   }
 
+  const visibleIcon = createMemo(() => {
+    const message = msg()
+    if (!ctx.chat) return null
+    if (!ctx.replyAs) return null
+    const state = getMessageVisibility(ctx.chat, message, ctx.replyAs)
+    if (state === 'default') return null
+
+    const Icon = state === 'invisible' ? EyeOff : Eye
+    const nextState = state === 'invisible' ? false : true
+    const invisible = { ...message.invisible, [ctx.replyAs]: nextState }
+
+    return (
+      <span
+        class="icon-button ml-2"
+        onClick={() => msgStore.editMessageProp(message._id, { invisible })}
+      >
+        <Icon size={14} />
+      </span>
+    )
+  })
+
   return (
     <div
       class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
@@ -453,6 +481,7 @@ const Message: Component<MessageProps> = (props) => {
                       <Info size={14} />
                     </span>
                   </Show>
+                  {visibleIcon()}
                 </span>
               </span>
               <Switch>

@@ -16,6 +16,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
     throw errors.Forbidden
   }
 
+  const members = [chat.userId].concat(chat.memberIds || [])
   await store.msgs.deleteMessages(body.ids)
 
   const toVerifyIds: string[] = []
@@ -44,14 +45,14 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
       await store.msgs.editChatMessage(msgId, chatId, { parent })
     }
 
-    sendMany(chat.memberIds.concat(chat.userId), {
+    sendMany(members, {
       type: 'message-parents',
       chatId,
       parents: body.parents,
     })
   }
 
-  sendMany(chat.memberIds.concat(chat.userId), { type: 'messages-deleted', ids: body.ids })
+  sendMany(members, { type: 'messages-deleted', ids: body.ids })
   return { success: true }
 })
 

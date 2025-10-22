@@ -78,15 +78,18 @@ export function getChatWidth(
 export function emptyMsg(opts: {
   id?: string
   charId?: string
+  chatId?: string
   userId?: string
   adapter?: string
   handle?: string
+  parent?: string
   message: string
 }): AppSchema.ChatMessage & { handle?: string } {
   return {
     kind: 'chat-message',
     _id: opts.id || '',
-    chatId: '',
+    chatId: opts.chatId || '',
+    parent: opts.parent,
     characterId: opts.charId,
     userId: opts.userId,
     msg: opts.message || '',

@@ -82,7 +82,7 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
               class="icon-button"
               onClick={() =>
                 msgStore.createImage({
-                  prompt: override().trim(),
+                  prompt: override().trim() || props.msg.imagePrompt,
                   sourceMsgId: props.msg._id,
                   append: true,
                 })

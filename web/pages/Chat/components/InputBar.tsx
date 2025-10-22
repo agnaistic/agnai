@@ -58,7 +58,12 @@ import { MsgAttachment } from '/srv/adapter/type'
 import { extractReasoning } from '/common/reasoning'
 import { usePresetContext } from '/web/store/preset-context'
 
-export type SendFunc = (opts: { msg: string; ooc: boolean; onSuccess?: () => void }) => void
+export type SendFunc = (opts: {
+  msg: string
+  ooc: boolean
+  onSuccess?: () => void
+  onError?: (err?: string) => void
+}) => void
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -168,14 +173,20 @@ const InputBar: Component<{
       return toastStore.warn(`Confirm or cancel swiping before sending`)
     }
 
+    ref.value = ''
+    setText('')
+    setCleared(0)
+
     props.send({
       msg: value,
       ooc: props.ooc,
       onSuccess: () => {
-        ref.value = ''
-        setText('')
-        setCleared(0)
         draft.clear()
+      },
+      onError: () => {
+        ref.value = value
+        setText(value)
+        draft.update(value)
       },
     })
   }, 100)

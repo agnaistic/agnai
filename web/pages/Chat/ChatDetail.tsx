@@ -273,6 +273,7 @@ const ChatDetail: Component = () => {
       msg: opts.msg,
       mode: kind,
       onSuccess: opts.onSuccess,
+      onError: opts.onError,
     })
     return
   }

@@ -119,6 +119,13 @@ async function generateImageWS(
       events?.onDone?.(image)
     }
 
+    if (json.error) {
+      if (done) return
+      done = true
+      lazy.reject(json.error)
+      events?.onError?.(json.error)
+    }
+
     const progress = json.gen_progress
     if (progress?.preview) {
       const percent = progress.current_percent as number

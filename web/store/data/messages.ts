@@ -1,6 +1,6 @@
 import { InferenceState } from '../../../common/prompt'
 import { AppSchema } from '../../../common/types/schema'
-import { api, isLoggedIn } from '../api'
+import { api, getUserId, isLoggedIn } from '../api'
 import { chatStore } from '../chat'
 import { localApi } from './storage'
 import { toastStore } from '../toasts'
@@ -11,6 +11,8 @@ import { localEmit, subscribe } from '../socket'
 import { genApi } from './inference'
 import { botGen } from './bot-generate'
 import { getPromptEntities } from './common'
+import { emptyMsg } from '/web/pages/Chat/helpers'
+import { v4 } from 'uuid'
 
 export const msgsApi = {
   createMessage,
@@ -53,6 +55,7 @@ export async function createMessage(opts: {
   meta?: any
 }) {
   const props = await getPromptEntities()
+  const messageId = opts.messageId || v4()
 
   const text = await parseTemplate(opts.text, {
     char: props.char,
@@ -67,6 +70,17 @@ export async function createMessage(opts: {
     ),
   })
 
+  const preMsg = emptyMsg({
+    id: messageId,
+    message: text.parsed + '  ',
+    chatId: opts.chatId,
+    charId: opts.character?._id,
+    parent: opts.parent,
+    userId: getUserId(),
+  })
+
+  localEmit({ type: 'message-created', msg: preMsg, chatId: opts.chatId })
+
   const result = await api.post(`/chat/${opts.chatId}/send`, {
     kind: opts.kind,
     text: text.parsed,
@@ -74,9 +88,13 @@ export async function createMessage(opts: {
     ooc: opts.ooc,
     parent: opts.parent,
     bot: opts.bot,
-    messageId: opts.messageId,
+    messageId,
     meta: opts.meta,
   })
+
+  if (result.result?.message) {
+    localEmit({ type: 'message-created', msg: result.result.message, chatId: opts.chatId })
+  }
 
   return result
 }
@@ -180,6 +198,11 @@ export async function deleteMessages(
       leafId,
       parents,
     })
+
+    if (res.result) {
+      localEmit({ type: 'messages-deleted', ids: msgIds })
+    }
+
     return res
   }
 

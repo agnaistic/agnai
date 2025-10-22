@@ -692,12 +692,12 @@ async function onMessageReceived(body: {
     return
   }
 
-  const speech = getMessageSpeechInfo(msg, user)
-
   const isUserMsg = !!msg.userId
+  const isRetry = !!existing
 
-  const isRetry = !!graph.tree[msg._id]
+  const speech = getMessageSpeechInfo(msg, user)
   const tree = updateChatTreeNode(graph.tree, msg)
+
   const nextMsgs = isRetry
     ? msgs.map((m) => (m._id === msg._id ? msg : m))
     : msgs.filter((m) => m._id !== msg._id).concat(msg)
@@ -720,8 +720,12 @@ async function onMessageReceived(body: {
   } else {
     console.log('[wait] msg-rec:2')
     msgStore.setState({ msgs: nextMsgs })
-    getStore('responses').setState({ speaking: speech?.speaking })
-    getStore('responses').setState({ partial: undefined, waiting: undefined, retrying: undefined })
+    getStore('responses').setState({
+      speaking: speech?.speaking,
+      partial: undefined,
+      waiting: undefined,
+      retrying: undefined,
+    })
   }
 
   const chatAttachments = attachments[body.chatId]

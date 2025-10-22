@@ -753,6 +753,32 @@ export function isMessageInvisible(
   return false
 }
 
+export function isMessageVisible(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  characterId: string
+): boolean {
+  const specific = msg.invisible?.[characterId]
+  const defaults = chat.invisible?.[characterId]
+
+  if (specific !== undefined) return !specific
+  if (defaults !== undefined) return !defaults
+  return true
+}
+
+export function getMessageVisibility(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  characterId: string
+) {
+  const specific = msg.invisible?.[characterId]
+  const defaults = chat.invisible?.[characterId]
+
+  if (specific !== undefined) return specific ? 'invisible' : 'visible'
+  if (defaults !== undefined) return defaults ? 'invisible' : 'visible'
+  return 'default'
+}
+
 function trimAddedLine(added: HistoryLine): HistoryLine {
   return { msg: trimSentence(added.msg), _id: added._id, role: added.role }
 }

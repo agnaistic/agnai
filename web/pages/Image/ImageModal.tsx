@@ -212,6 +212,7 @@ const ImageCollectionModal: Component<{}> = (props) => {
       msgStore.localEditMessageProp(msg._id, { extras: nextExtras.concat(cacheId) })
     } catch (ex: any) {
       toastStore.error(`Image Generation Error: ${ex.message || ex}`)
+      console.error(ex)
       update('loading', false)
     } finally {
       update('loading', false)

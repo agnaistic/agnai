@@ -176,7 +176,13 @@ export const responseStore = createStore<ResponseState>(
 
     async *send(
       { waiting },
-      opts: { chatId: string; msg: string; mode: SendModes; onSuccess?: () => void }
+      opts: {
+        chatId: string
+        msg: string
+        mode: SendModes
+        onSuccess?: () => void
+        onError?: (error?: string) => void
+      }
     ) {
       if (waiting) return
 
@@ -205,6 +211,13 @@ export const responseStore = createStore<ResponseState>(
       }
 
       const created = await handlePreSend(opts)
+
+      if (created?.error) {
+        toastStore.error(`(Send) Message request failed: ${created?.error ?? 'Unknown error'}`)
+        console.log('[wait] create err')
+        yield { partial: undefined, waiting: undefined }
+        return
+      }
 
       let input = ''
 
@@ -444,6 +457,7 @@ async function handlePreSend(opts: {
   msg: string
   mode: SendModes
   onSuccess?: () => void
+  onError?: (err?: string) => void
 }) {
   if (opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') return
 
@@ -451,6 +465,11 @@ async function handlePreSend(opts: {
   const { messageHistory, msgs } = getStore('messages').getState()
 
   const messageId = v4()
+
+  if (opts.msg === '#FAIL') {
+    return { messageId, error: 'Error test' }
+  }
+
   const parent = botGen.getMessageParent(opts.mode, messageHistory.concat(msgs))
 
   const res = await msgsApi.createMessage({
@@ -467,7 +486,11 @@ async function handlePreSend(opts: {
     opts.onSuccess?.()
   }
 
-  return { messageId }
+  if (res.error) {
+    opts.onError?.(res.error)
+  }
+
+  return { messageId, error: res.error }
 }
 
 const [debouncedEmbed] = createDebounce((chatId: string, history: AppSchema.ChatMessage[]) => {
