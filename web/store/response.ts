@@ -249,19 +249,6 @@ export const responseStore = createStore<ResponseState>(
             yield { partial: undefined, waiting: undefined }
           }
 
-          input = res.result?.input
-          if (input) {
-            yield {
-              waiting: {
-                signal,
-                chatId: opts.chatId,
-                mode: opts.mode,
-                characterId: replyingCharId,
-                input,
-                started: Date.now(),
-              },
-            }
-          }
           break
 
         default:

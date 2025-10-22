@@ -20,29 +20,6 @@ export const PendingMessages: Component<{
 
   return (
     <>
-      <Show when={!response.retrying && !!response.waiting?.input}>
-        <Message
-          index={-1}
-          messageId={'partial-input'}
-          content={response.waiting?.input || ''}
-          last={false}
-          onRemove={noop}
-          swipe={false}
-          confirmSwipe={noop}
-          cancelSwipe={noop}
-          discardSwipe={noop}
-          tts={false}
-          characterId={props.impersonateId}
-          userId={props.userId}
-          sendMessage={noop}
-          isPaneOpen={props.isPaneOpen}
-          preset={props.preset}
-          canUseAttachments={false}
-          editing={false}
-          handle={props.handle}
-        ></Message>
-      </Show>
-
       <Show when={!response.retrying && !!response.waiting}>
         <Message
           index={-1}
