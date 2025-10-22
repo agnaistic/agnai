@@ -349,6 +349,12 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     }
 
     if (conn?.local) {
+      const headers: any = {}
+      const key = provider?.userKey || opts.settings?.thirdPartyKey
+      if (key) {
+        headers.Authorization = `Bearer ${key}`
+        headers['x-api-key'] = `${key}`
+      }
       if (!opts.payload) {
         debug('sse')('warning: no local payload provided, using fallback')
       }
@@ -363,7 +369,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
         host: conn?.url,
         path: payload.messages ? `/chat/completions` : '/completions',
         body: opts.payload || fallback,
-        headers: {},
+        headers,
         signal: opts.signal,
         onTick: tickWrapper,
       })
