@@ -682,15 +682,6 @@ async function onMessageReceived(body: {
   const user = userStore.getState().user
 
   const existing = graph.tree[msg._id]
-  if (existing && existing.msg === body.msg.msg) {
-    console.log('message-created: already received [text equal]')
-    return
-  }
-
-  if (existing && existing.msg.updatedAt >= body.msg.updatedAt) {
-    console.log('message-created: already received [existing newer]')
-    return
-  }
 
   const isUserMsg = !!msg.userId
   const isRetry = !!existing

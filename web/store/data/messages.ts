@@ -72,7 +72,7 @@ export async function createMessage(opts: {
 
   const preMsg = emptyMsg({
     id: messageId,
-    message: text.parsed + '  ',
+    message: text.parsed,
     chatId: opts.chatId,
     charId: opts.character?._id,
     parent: opts.parent,
