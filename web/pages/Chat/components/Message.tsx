@@ -36,12 +36,7 @@ import {
   Signal,
   Switch,
 } from 'solid-js'
-import {
-  BOT_REPLACE,
-  getMessageVisibility,
-  isMessageInvisible,
-  SELF_REPLACE,
-} from '../../../../common/prompt'
+import { BOT_REPLACE, isMessageInvisible, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import {
@@ -317,11 +312,11 @@ const Message: Component<MessageProps> = (props) => {
     const message = msg()
     if (!ctx.chat) return null
     if (!ctx.replyAs) return null
-    const state = getMessageVisibility(ctx.chat, message, ctx.replyAs)
-    if (state === 'default') return null
 
-    const Icon = state === 'invisible' ? EyeOff : Eye
-    const nextState = state === 'invisible' ? false : true
+    const state = isMessageInvisible(ctx.chat, message, ctx.replyAs)
+
+    const Icon = state ? EyeOff : Eye
+    const nextState = state ? false : true
     const invisible = { ...message.invisible, [ctx.replyAs]: nextState }
 
     return (

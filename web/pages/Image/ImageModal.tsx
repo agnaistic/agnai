@@ -388,9 +388,14 @@ const PromptSettings: Component<{
       <section class="flex flex-col gap-1" style={{ 'grid-area': 'options' }}>
         <Show when={props.messageId}>
           <TextInput
-            placeholder="Prompt Gen Hint: What to focus on?"
+            placeholder="Caption Hint: What to focus on when generating the caption?"
             class="!text-sm"
-            onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+            onChange={(ev) =>
+              promptStore.imageHint({
+                chatId: msgs.message.msg.chatId,
+                text: ev.currentTarget.value,
+              })
+            }
             value={persist.imageHint}
           />
         </Show>

@@ -160,60 +160,69 @@ export const MessageImagePrompt: Component<{
   }
 
   return (
-    <>
+    <div class="flex flex-col gap-3">
       <TextInput
-        placeholder="Prompt Gen Hint: What to focus on?"
+        helperText="Caption Hint: What to focus on when generating the caption?"
+        placeholder="Caption Hint: What to focus on?"
         class="!text-sm"
-        onChange={(ev) => promptStore.imageHint(ev.currentTarget.value)}
+        onChange={(ev) =>
+          promptStore.imageHint({ chatId: props.msg.chatId, text: ev.currentTarget.value })
+        }
         value={persist.imageHint}
       />
+
       <TextInput
         class="max-h-[160px]"
         helperText={
-          <div class="mb-0.5 flex items-center gap-1.5">
-            Image Prompt -{' '}
-            <Button
-              size="pill"
-              schema="secondary"
-              onClick={updateImagePrompt}
-              disabled={prompt() === props.msg.imagePrompt}
-            >
-              Save
-            </Button>
-            <Button
-              size="pill"
-              schema="secondary"
-              onClick={generatePrompt}
-              disabled={ctx.waiting && !ctx.waiting.signal}
-            >
-              <Show
-                when={ctx.waiting}
-                fallback={
-                  <>
-                    <WandSparkles size={16} /> Prompt
-                  </>
-                }
+          <div class="mb-0.5 flex flex-col gap-0.5">
+            <div>Image Prompt</div>
+
+            <div class="flex items-center gap-1.5">
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={updateImagePrompt}
+                disabled={prompt() === props.msg.imagePrompt}
               >
-                Interrupt
-              </Show>
-            </Button>
-            <Button
-              size="pill"
-              schema="secondary"
-              onClick={() => {
-                setPrompt(cleanPrompt(prompt()))
-              }}
-            >
-              Clean
-            </Button>
-            <div
-              class="icon-button"
-              onClick={() => {
-                imageStore.showMessageImages({ id: props.msg._id, position: 0 })
-                // props.close()
-              }}
-            >
-              <SquareArrowOutUpRight size={20} />
+                Save
+              </Button>
+
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={generatePrompt}
+                disabled={ctx.waiting && !ctx.waiting.signal}
+              >
+                <Show
+                  when={ctx.waiting}
+                  fallback={
+                    <>
+                      <WandSparkles size={16} /> Prompt
+                    </>
+                  }
+                >
+                  Interrupt
+                </Show>
+              </Button>
+              <Button
+                size="pill"
+                schema="secondary"
+                onClick={() => {
+                  setPrompt(cleanPrompt(prompt()))
+                }}
+              >
+                Clean
+              </Button>
+              <div
+                class="icon-button flex items-center gap-0.5"
+                onClick={() => {
+                  imageStore.showMessageImages({ id: props.msg._id, position: 0 })
+                  props.close()
+                }}
+              >
+                Editor
+                <SquareArrowOutUpRight size={16} />
+              </div>
             </div>
             {props.children}
           </div>
@@ -223,6 +232,6 @@ export const MessageImagePrompt: Component<{
         value={prompt()}
         onChange={(ev) => receivePrompt(ev.currentTarget.value)}
       />
-    </>
+    </div>
   )
 }

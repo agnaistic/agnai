@@ -49,9 +49,26 @@ export const promptStore = createStore<PromptState>(
       storage.localSetItem(hintKey(opts.chatId), opts.text)
       return { hintId: opts.chatId, hint: opts.text }
     },
-    imageHint: (_, text: string) => {
-      storage.localSetItem(KEYS.LAST_IMAGE_HINT, text)
-      return { imageHint: text }
+    imageHint: (_, opts: { chatId: string; text: string }) => {
+      const id = `image-hint-${opts.chatId}`
+      storage.localSetItem(id, opts.text)
+      storage.localRemoveItem(KEYS.LAST_IMAGE_HINT)
+      return { imageHint: opts.text }
+    },
+    loadImageHint: (_, chatId: string) => {
+      const id = `image-hint-${chatId}`
+      const prev = storage.localGetItem(id)
+      if (prev) {
+        return { imageHint: prev }
+      }
+
+      const fallback = storage.localGetItem(KEYS.LAST_IMAGE_HINT)
+      if (fallback) {
+        storage.localSetItem(id, fallback)
+        return { imageHint: fallback }
+      }
+
+      return { imageHint: '' }
     },
   }
 })

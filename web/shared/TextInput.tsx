@@ -200,28 +200,24 @@ const TextInput: Component<Props> = (props) => {
         </div>
       </Show>
       <Show when={!!props.label || !!props.helperText}>
-        <label for={props.fieldName}>
-          <Show when={!!props.label}>
-            <div class="flex items-center gap-1" classList={{ 'pb-1': !props.helperText }}>
-              {props.label}{' '}
-              <Show when={props.tokenCount}>
-                <em class="ml-1 text-xs">({tokens()} tokens)</em>
-              </Show>
-              <Show when={props.isMultiline}>
-                <IsVisible onEnter={resize} />
-              </Show>
-            </div>
-          </Show>
-          <Show when={!!props.helperText}>
-            <p class="helper-text">{props.helperText}</p>
-          </Show>
-          <Show when={!!props.helperMarkdown}>
-            <p
-              class="helper-text markdown"
-              innerHTML={markdown.makeHtml(props.helperMarkdown!)}
-            ></p>
-          </Show>
-        </label>
+        <label for={props.fieldName}></label>
+        <Show when={!!props.label}>
+          <div class="flex items-center gap-1" classList={{ 'pb-1': !props.helperText }}>
+            {props.label}{' '}
+            <Show when={props.tokenCount}>
+              <em class="ml-1 text-xs">({tokens()} tokens)</em>
+            </Show>
+            <Show when={props.isMultiline}>
+              <IsVisible onEnter={resize} />
+            </Show>
+          </div>
+        </Show>
+        <Show when={!!props.helperText}>
+          <p class="helper-text">{props.helperText}</p>
+        </Show>
+        <Show when={!!props.helperMarkdown}>
+          <p class="helper-text markdown" innerHTML={markdown.makeHtml(props.helperMarkdown!)}></p>
+        </Show>
       </Show>
       <Switch>
         <Match when={props.isMultiline}>
