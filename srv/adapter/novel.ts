@@ -199,7 +199,7 @@ function getRequestBody(opts: AdapterProps) {
       return {
         prompt: processNovelAIPrompt(opts.prompt),
         model,
-        max_tokens: Math.min(opts.gen.maxTokens!, 150),
+        max_tokens: Math.min(opts.gen.maxTokens || 150),
         temperature: opts.gen.temp,
         frequency_penalty: opts.gen.frequencyPenalty,
         typical_p: opts.gen.typicalP,
@@ -259,6 +259,7 @@ const streamCompletion = async function* (
   const resp = await fetch(novelUrl(body.model), {
     method: 'POST',
     body: JSON.stringify(body),
+    signal: opts.signal.signal,
     headers: {
       ...headers,
       Accept: `text/event-stream`,
@@ -310,49 +311,6 @@ const streamCompletion = async function* (
   yield { text: tokens.join('') }
   return
 }
-
-// async function* fullCompletion(headers: any, body: any, log: AppLog) {
-//   const res = await needle('post', novelUrl(body.model), body, {
-//     json: true,
-//     // timeout: 2000,
-//     response_timeout: 30000,
-//     headers,
-//   }).catch((err) => ({ err }))
-
-//   if ('err' in res) {
-//     log.error({ err: `Novel request failed: ${res.err?.message || res.err}` })
-//     yield { error: res.err.message }
-//     return
-//   }
-
-//   const status = res.statusCode || 0
-//   if (statuses[status]) {
-//     log.error({ error: res.body }, `Novel response failed (${status})`)
-//     yield { error: `Novel API returned an error (${statuses[status]}) ${res.body.message}` }
-//     return
-//   }
-
-//   if (status >= 400) {
-//     log.error({ error: res.body }, `Novel request failed (${status})`)
-//     yield {
-//       error: `Novel API returned an error (${res.statusMessage!}) ${res.body.message}`,
-//     }
-//     return
-//   }
-
-//   if (res.body.error) {
-//     log.error({ error: res.body }, `Novel response failed (${status})`)
-//     yield {
-//       error: `Novel API returned an error: ${
-//         res.body.error.message || res.body.error || res.body.message
-//       }`,
-//     }
-//     return
-//   }
-
-//   yield { tokens: res.body.output }
-//   return
-// }
 
 function processNovelAIPrompt(prompt: string) {
   return prompt.replace(/^\<START\>$/gm, '***').replace(/\n\n+/gi, '\n\n')

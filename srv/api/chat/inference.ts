@@ -419,6 +419,7 @@ export const inferenceStream = wrap(async (req, res) => {
   assertValid(
     {
       ...validInference,
+      stop: ['string?'],
       messages: 'any?',
       requestId: 'string',
       broadcast: optional({ type: 'string', id: 'string', payload: 'any' }),
@@ -453,6 +454,7 @@ export const inferenceStream = wrap(async (req, res) => {
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
+    stop: body.stop,
     signal,
   })
 

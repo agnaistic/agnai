@@ -39,6 +39,7 @@ type InferenceOpts = {
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
   jsonSchema?: JsonField[]
+  stop?: string[]
 
   broadcast?: { type: string; id: string; payload: any }
 
@@ -320,6 +321,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     imageData: opts.image,
     jsonSchema: opts.jsonSchema,
     settings: { ...preset, stream: true },
+    stop: opts.stop,
   }
 
   const provider = getProvider(settings?.providerId)

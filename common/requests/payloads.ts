@@ -572,7 +572,8 @@ export function getStoppingStrings(
     }
   }
 
-  const stops = Array.from(unique.values()).filter((str) => !!str)
+  const uniques = Array.from(unique.values())
+  const stops = uniques.filter((str) => !!str)
   return stops
 }
 

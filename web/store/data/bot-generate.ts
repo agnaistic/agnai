@@ -115,19 +115,20 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     sanitiseAndTrim({
       char: req.entities.char,
       members: req.entities.members,
-      gen: req.entities.settings,
+      gen: req.request.settings!,
       text,
       stops,
     })
 
   await genApi.inferenceStream(
     {
-      settings: req.entities.settings,
+      settings: req.request.settings,
       jsonSchema: req.request.jsonSchema,
       messages: messages.messages,
       prompt: messages.assembled.prompt,
       payload,
       signal: opts.signal,
+      stop: req.request.settings?.stopSequences,
       // TODO: Re-enable multiplayer streaming
       // broadcast: {
       //   type: 'chat',
@@ -396,7 +397,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     lines: prompt.lines.map((l) => l.msg),
     history: prompt.lines,
     linesCount: props.messages.length,
-    settings: entities.settings,
+    settings: { ...entities.settings },
     replacing: props.replacing,
     continuing: props.continuing,
     replyAs: removeAvatar(
@@ -413,6 +414,9 @@ async function buildChatRequest(opts: GenerateOpts) {
     reschemaPrompt: props.reschemaPrompt,
     eventStream: true,
   }
+
+  const stops = getStoppingStrings(request, request.settings)
+  request.settings!.stopSequences = stops
 
   if (
     opts.kind === 'send' ||
