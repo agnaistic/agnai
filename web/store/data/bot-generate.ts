@@ -174,12 +174,14 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
 
         case 'partial': {
           const trimmed = santitize(prefix + response)
-          localEmit({
-            type: 'message-partial',
-            chatId: active.chat._id,
-            partial: trimmed,
-            partialId: req.request.requestId,
-          })
+          if (req.request.settings?.streamResponse) {
+            localEmit({
+              type: 'message-partial',
+              chatId: active.chat._id,
+              partial: trimmed,
+              partialId: req.request.requestId,
+            })
+          }
           break
         }
 
