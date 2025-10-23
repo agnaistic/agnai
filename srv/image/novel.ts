@@ -131,9 +131,9 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
   return { ext: 'png', content: entry.getData() }
 }
 
-// Specifically for Image gen, there is no preset with the API key set
+// Specifically for Image/TTS gen, there is no preset with the API key set
 // This can be removed after Image Presets w/ Providers
-function getNovelApiKey(user: AppSchema.User, isGuest: boolean) {
+export function getNovelApiKey(user: AppSchema.User, isGuest: boolean) {
   const provider = user.providers?.find((p) => p.provider === `known-novel`)
   if (provider && provider.key) {
     const key = isGuest ? provider.key : decryptText(provider.key)
