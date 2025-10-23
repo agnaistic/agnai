@@ -327,7 +327,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   const provider = getProvider(settings?.providerId)
   const conn = provider ? getProviderConnection(provider) : undefined
 
-  const tickWrapper: TickHandler = (res, state) => {
+  const tickWrapper: TickHandler = (res, state, json) => {
     if (state === 'partial') {
       lastResponse = res
     }
@@ -341,7 +341,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       lazy.reject(res)
     }
 
-    onTick?.(res, state)
+    onTick?.(res, state, json)
   }
 
   if (opts.signal) {

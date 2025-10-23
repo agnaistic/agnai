@@ -120,8 +120,13 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
 
 export async function editMessageProps(
   msg: Pick<AppSchema.ChatMessage, '_id' | 'chatId'>,
-  update: Partial<AppSchema.ChatMessage>
+  payload: Partial<AppSchema.ChatMessage>
 ) {
+  const update = { ...payload }
+  if (update.meta && Object.keys(update.meta).length === 0) {
+    delete update.meta
+  }
+
   if (isLoggedIn()) {
     const res = await api.method('put', `/chat/${msg._id}/message-props`, update)
     if (res.result) {

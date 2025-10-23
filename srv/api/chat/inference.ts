@@ -513,12 +513,14 @@ export const inferenceStream = wrap(async (req, res) => {
       }
 
       if ('prompt' in gen) {
-        wrapped({ type: 'inference-prompt', prompt: gen.prompt })
+        if (promptSent) continue
         promptSent = true
+        wrapped({ type: 'inference-prompt', prompt: gen.prompt })
       }
 
       if ('meta' in gen) {
         wrapped({ type: 'inference-meta', meta: gen.meta, requestId })
+        continue
       }
 
       if ('partial' in gen) {

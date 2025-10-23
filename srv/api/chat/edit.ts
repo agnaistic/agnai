@@ -150,6 +150,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       name: 'string?',
       invisible: 'any?',
       parent: 'string?',
+      meta: 'any?',
     },
     body
   )
@@ -171,6 +172,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   if (body.name) update.name = body.name
   if (body.invisible) update.invisible = body.invisible
   if (body.parent) update.parent = body.parent
+  if (body.meta) update.meta = body.meta
 
   const message = await store.msgs.editMessage(params.id, {
     ...update,

@@ -415,6 +415,7 @@ export function fetchSSE(opts: SSEOpts) {
           break
 
         case 'inference-meta':
+        case 'message-meta':
           opts.onTick?.('', 'meta', json.meta)
           break
       }

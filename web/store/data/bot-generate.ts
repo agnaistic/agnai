@@ -223,12 +223,14 @@ async function handlePostStreamResponse(
       }
 
       const retries = [replacing.msg].concat(replacing.retries || [])
-      await msgsApi.editMessageProps(replacing, {
+      const payload: Partial<AppSchema.ChatMessage> = {
         msg: response,
         retries,
         state: 'retried',
         meta,
-      })
+      }
+
+      await msgsApi.editMessageProps(replacing, payload)
       return
     }
 
