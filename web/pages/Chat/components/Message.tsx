@@ -67,7 +67,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import { ComponentEmitter } from '/web/shared/util'
+import { ComponentEmitter, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
 import { PresetState } from '/web/store/preset-context'
@@ -354,6 +354,11 @@ const Message: Component<MessageProps> = (props) => {
               data-bot-avatar={isBot()}
               data-user-avatar={isUser()}
             >
+              <Show when={ctx.flags.debug}>
+                <span class="text-600 flex w-full justify-center text-[0.5rem]">
+                  {msg().parent?.slice(0, 4) || 'root'}
+                </span>
+              </Show>
               <Switch>
                 <Match when={user.ui.avatarSize === 'hide'}>{null}</Match>
                 <Match when={msg().event === 'world' || msg().event === 'ooc'}>
@@ -404,6 +409,11 @@ const Message: Component<MessageProps> = (props) => {
                   />
                 </Match>
               </Switch>
+              <Show when={ctx.flags.debug}>
+                <span class="text-600 flex w-full justify-center text-[0.5rem]">
+                  {msg()._id.slice(0, 4)}
+                </span>
+              </Show>
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
@@ -455,17 +465,8 @@ const Message: Component<MessageProps> = (props) => {
                   data-bot-time={isBot()}
                   data-user-time={isUser()}
                 >
-                  {new Date(msg().createdAt).toLocaleString()}
-                  <Show when={ctx.flags.debug}>
-                    <tr>
-                      <td class="pr-2">
-                        <b>id</b>
-                      </td>
-                      <td>
-                        id:{msg()._id.slice(0, 4)} up:{msg().parent?.slice(0, 4)}
-                      </td>
-                    </tr>
-                  </Show>
+                  <span class="hidden sm:block">{new Date(msg().createdAt).toLocaleString()}</span>
+                  <span class="block sm:hidden">{toShortDuration(msg().createdAt)} ago</span>
                   <Show when={ctx.flags.debug || canShowMeta(msg(), ctx.promptHistory[msg()._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
@@ -474,6 +475,7 @@ const Message: Component<MessageProps> = (props) => {
                       <Info size={14} />
                     </span>
                   </Show>
+
                   {visibleIcon()}
                 </span>
               </span>
