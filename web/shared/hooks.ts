@@ -101,7 +101,7 @@ export function useRef<T = HTMLElement>() {
   return [ref, onRef] as const
 }
 
-export function isChatPage(noSaga?: boolean) {
+export function isChatPageMemo(noSaga?: boolean) {
   const location = useLocation()
   const isChat = createMemo(() => {
     if (noSaga) {
@@ -114,9 +114,13 @@ export function isChatPage(noSaga?: boolean) {
   return isChat
 }
 
+export function isChatPage() {
+  return location.pathname.startsWith('/chat/')
+}
+
 export function useCharacterBg(src: 'layout' | 'page') {
   const isMobile = useMobileDetect()
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const state = getStore('user')((s) => ({ ui: s.ui, background: s.background }))
   const cfg = getStore('settings')((s) => ({ anonymize: s.anonymize }))

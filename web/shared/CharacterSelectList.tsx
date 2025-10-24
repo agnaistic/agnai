@@ -6,7 +6,7 @@ import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
 import { Pill } from './Card'
-import { isChatPage } from './hooks'
+import { isChatPageMemo } from './hooks'
 
 export type Option<T extends string = string> = {
   label: string
@@ -25,7 +25,7 @@ const CharacterSelectList: Component<{
   const chats = chatStore((s) => ({ active: s.active }))
   const [_ref, setRef] = createSignal<any>()
   const [search, setSearch] = createSignal('')
-  const chatPage = isChatPage()
+  const chatPage = isChatPageMemo()
 
   const current = createMemo(() => {
     if (!chatPage()) return

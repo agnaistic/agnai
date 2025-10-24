@@ -3,7 +3,7 @@ import { SD_SAMPLER } from '/common/image'
 import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
 import { createEffect, on } from 'solid-js'
 import { ImageDefaults, ImageSettings } from '/common/types/image-schema'
-import { isChatPage } from '/web/shared/hooks'
+import { isChatPageMemo } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
 import { AppSchema } from '/common/types'
@@ -62,7 +62,7 @@ const init = (): ImageSettings => ({
 export type ImageContext = ReturnType<typeof useImageContext>[0]
 
 export function useImageContext() {
-  const isChat = isChatPage(true)
+  const isChat = isChatPageMemo(true)
 
   const page = imageStore((s) => ({ open: s.showImgSettings }))
   const user = userStore((s) => ({ user: s.user, sub: s.sub }))

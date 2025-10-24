@@ -11,7 +11,7 @@ import Tabs from '/web/shared/Tabs'
 import Button, { ToggleButton } from '/web/shared/Button'
 import { Pencil, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
-import { isChatPage } from '/web/shared/hooks'
+import { isChatPageMemo } from '/web/shared/hooks'
 import {
   AgnaiSettings,
   HordeSettings,
@@ -28,7 +28,7 @@ import { usePresetContext } from '/web/store/preset-context'
 import { useImageContext } from './image-context'
 
 export const ImageSettingsModal = () => {
-  const isChat = isChatPage(true)
+  const isChat = isChatPageMemo(true)
   const [ctx] = useImageContext()
   const settings = imageStore((s) => ({ showImgSettings: s.showImgSettings }))
 
@@ -392,7 +392,7 @@ export const ImageSettingsModal = () => {
 export type ChatImageSettings = ReturnType<ReturnType<typeof useCurrentChatImageSettings>>
 
 export function useCurrentChatImageSettings() {
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const user = userStore((s) => ({ cfg: s.user?.images }))
   const entity = chatStore((s) => ({

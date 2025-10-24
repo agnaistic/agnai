@@ -6,7 +6,7 @@ import { ImageHost, ImageSamplers } from '/common/types/presets'
 import { SD_SAMPLER } from '/common/image'
 import { createStore } from 'solid-js/store'
 import TextInput from '/web/shared/TextInput'
-import { isChatPage, useImageCache } from '/web/shared/hooks'
+import { isChatPageMemo, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
 import {
@@ -26,7 +26,7 @@ import { cleanPrompt } from '/common/util'
 // }
 
 export const GenerateImageModal: Component = () => {
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
   const reel = useImageCache({ id: `img-gen-${user.id}`, clean: true })
   const emitter = createEmitter('width')

@@ -6,10 +6,10 @@ import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import PageHeader from '/web/shared/PageHeader'
 import { HeartPlus, X } from 'lucide-solid'
-import { isChatPage } from '/web/shared/hooks'
+import { isChatPageMemo } from '/web/shared/hooks'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const state = characterStore((s) => ({
     chars: s.characters,

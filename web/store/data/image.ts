@@ -22,6 +22,7 @@ import { swarmApi } from '/common/requests/swarmui'
 import { ImageRequestOpts } from '/srv/image/types'
 import { getImagePrompt, getImageSettings } from '/common/image'
 import { imageStore } from '../images'
+import { isChatPage } from '/web/shared/hooks'
 
 type GenerateOpts = {
   chatId?: string
@@ -511,7 +512,8 @@ export async function createImageRequest(input: {
   messageId?: string
   noAffix?: boolean
 }) {
-  const ents = await getPromptEntities({ messageId: input.messageId })
+  const ents = await getImageEntities()
+  const { user } = getStore('user').getState()
   const { settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
   const { rawPrompt, prompt } = getImagePrompt(input, settings)
 
@@ -520,7 +522,7 @@ export async function createImageRequest(input: {
     prompt,
     raw_prompt: rawPrompt,
     settings,
-    user: ents.user,
+    user: user!,
     override: '',
     params: {
       cfg_scale: settings?.cfg,
@@ -539,4 +541,16 @@ export async function createImageRequest(input: {
   }
 
   return { request: opts, settings, provider }
+}
+
+function getImageEntities() {
+  const { user } = getStore('user').getState()
+  const { active } = getStore('chat').getState()
+  const isChat = isChatPage()
+
+  return {
+    user: user!,
+    chat: isChat ? active?.chat : undefined,
+    char: isChat ? active?.char : undefined,
+  }
 }

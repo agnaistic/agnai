@@ -2,7 +2,7 @@ import { Menu } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
 import { chatStore, pageStore } from '../store'
-import { isChatPage } from './hooks'
+import { isChatPageMemo } from './hooks'
 
 const NavBar: Component = () => {
   const chats = chatStore((s) => ({
@@ -12,7 +12,7 @@ const NavBar: Component = () => {
     opts: s.opts,
   }))
 
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const Title = (
     <A href="/">

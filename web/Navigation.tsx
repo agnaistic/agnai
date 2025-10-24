@@ -49,7 +49,7 @@ import {
 } from './store'
 import Slot from './shared/Slot'
 import {
-  isChatPage,
+  isChatPageMemo,
   useEffect,
   usePaneManager,
   useRef,
@@ -79,7 +79,7 @@ const Navigation: Component = () => {
   const nav = navStore((s) => ({ body: s.body, header: s.header, title: s.title }))
 
   const [subnav, setSubnav] = createSignal(false)
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   createEffect(
     on(

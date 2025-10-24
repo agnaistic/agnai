@@ -149,8 +149,6 @@ export const chatStore = createStore<ChatState>('chat', {
     chatStore.setState({ allChats: chats.sort(sortDesc) })
   })
 
-  events.on(EVENTS.loggedIn, () => {})
-
   return {
     /**
      * If a user accepts an invite to a chat, their profile has not been fetched and cached

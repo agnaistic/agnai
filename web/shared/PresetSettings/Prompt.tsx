@@ -7,7 +7,7 @@ import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
 import { ToggleButton } from '../Button'
-import { isChatPage } from '../hooks'
+import { isChatPageMemo } from '../hooks'
 import { Jailbreak, ReasoningTags, JinjaTemplate, SystemPrompt } from './Fields'
 import { InlineRangeInput } from '../RangeInput'
 import { FormLabel } from '../FormLabel'
@@ -16,7 +16,7 @@ import Accordian from '../Accordian'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
   const character = chatStore((s) => s.active?.char)
-  const isChat = isChatPage()
+  const isChat = isChatPageMemo()
 
   const jsonCharId = createMemo(() => {
     const src = props.state.jsonSource
