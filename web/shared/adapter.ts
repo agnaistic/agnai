@@ -33,10 +33,16 @@ export const AutoPreset = {
   service: 'horde',
 }
 
-export type PresetOption = Option & { custom: boolean }
+export type PresetOption = Option & { custom: boolean; name: string; provider: string }
 
 export const BasePresetOptions: PresetOption[] = [
-  { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+  {
+    label: 'System Built-in Preset (Horde)',
+    value: AutoPreset.service,
+    custom: false,
+    name: 'System Built-in Preset',
+    provider: 'Horde',
+  },
 ]
 
 export type PresetInfo = {
@@ -88,6 +94,8 @@ export function getPresetOptions(
     }`,
     value: preset._id,
     custom: true,
+    name: preset.name,
+    provider: getPresetProviderName(preset, user.providers),
   }))
 
   const defaults = Object.entries(defaultPresets).map(([_id, preset]) => ({
@@ -101,6 +109,8 @@ export function getPresetOptions(
       label: `[${getServiceName(preset.service)}] ${preset.name}`,
       value: preset._id,
       custom: false,
+      name: preset.name,
+      provider: getServiceName(preset.service),
     }))
 
     presets.push(...builtinOptions)

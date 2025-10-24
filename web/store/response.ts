@@ -194,7 +194,7 @@ export const responseStore = createStore<ResponseState>(
         return
       }
 
-      const active = getStore('chat').getState().active
+      const { active } = getStore('chat').getState()
       const replyingCharId = active?.replyAs || activeCharId
       const signal = new AbortController()
 

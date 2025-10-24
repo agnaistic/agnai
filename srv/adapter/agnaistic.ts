@@ -39,7 +39,7 @@ export async function getSubscriptionPreset(
 ) {
   if (!isConnected()) return
   if (!gen) return
-  if (gen.service !== 'agnaistic') return
+  if (gen.service !== 'agnaistic' && gen.providerId !== 'agnaistic') return
 
   const tier = store.users.getUserSubTier(user)
   const level = user.admin ? 999999 : tier?.level ?? -1

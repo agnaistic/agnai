@@ -415,7 +415,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     lines: prompt.lines.map((l) => l.msg),
     history: prompt.lines,
     linesCount: props.messages.length,
-    settings: { ...entities.settings },
+    settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
     replyAs: removeAvatar(
@@ -850,22 +850,6 @@ async function createMessage(
     parent: getMessageParent(opts.kind, props.messages)?._id,
   })
 }
-
-// function emptyMsg(
-//   chat: AppSchema.Chat,
-//   props: Partial<AppSchema.ChatMessage>
-// ): AppSchema.ChatMessage {
-//   return {
-//     _id: '',
-//     kind: 'chat-message',
-//     chatId: chat._id,
-//     createdAt: new Date().toISOString(),
-//     updatedAt: new Date().toISOString(),
-//     msg: '',
-//     retries: [],
-//     ...props,
-//   }
-// }
 
 function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
   if (!settings.providerId) {

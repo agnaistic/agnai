@@ -11,6 +11,7 @@ import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
 import { ChatMessageExt, MsgState } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
+import { simplifyPreset } from '/common/prompt'
 
 export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
@@ -21,7 +22,7 @@ export type PromptEntities = {
   profile: AppSchema.Profile
   book?: AppSchema.MemoryBook
   messages: AppSchema.ChatMessage[]
-  settings: Partial<AppSchema.UserGenPreset>
+  settings: Partial<AppSchema.GenSettings>
   members: AppSchema.Profile[]
   chatBots: AppSchema.Character[]
   autoReplyAs?: string
@@ -96,7 +97,13 @@ export async function getPromptEntities(opts?: { messageId?: string }): Promise<
   }
 
   const entities = isLoggedIn() ? getAuthedPromptEntities() : await getGuestEntities()
+
   if (!entities) throw new Error(`Could not collate data for prompting`)
+
+  const conn = getPresetConnection({ ...entities.settings }, entities.user.providers)
+  const sub = getPresetSubscription(conn.preset)
+  const simple = simplifyPreset(entities.user, conn.preset, sub?.preset)
+  entities.settings = simple
 
   if (opts?.messageId) {
     const index = entities.messages.findLastIndex((m) => m._id === opts.messageId)
@@ -111,6 +118,25 @@ export async function getPromptEntities(opts?: { messageId?: string }): Promise<
     messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
     lastMessage: getLastUserMessage(entities.messages),
   }
+}
+
+function getPresetSubscription(gen: Partial<AppSchema.GenSettings> | undefined) {
+  if (!gen) return
+
+  // If it's a 'preset (non-provider)' preset, check the `.service` property
+  if (!gen.providerId && gen.service !== 'agnaistic') return
+
+  // If it's a modern (provider) preset, check the `.providerId`
+  if (gen.providerId && gen.providerId !== 'agnaistic') return
+
+  const subId = gen.providerId
+    ? gen.providerModels?.agnaistic
+    : gen.registered?.agnaistic?.subscriptionId
+  if (!subId) return
+
+  const { subs } = getStore('settings').getState().config
+  const sub = subs.find((sub) => sub._id === subId)
+  return sub
 }
 
 export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
@@ -150,6 +176,9 @@ async function getGuestEntities() {
   const conn = getPresetConnection(settings, user.providers)
   const messages = trimMessages(user, messageHistory.concat(msgs))
 
+  const sub = getPresetSubscription(conn.preset)
+  const simple = simplifyPreset(user, conn.preset, sub?.preset)
+
   return {
     chat,
     char,
@@ -157,7 +186,7 @@ async function getGuestEntities() {
     profile,
     book,
     messages,
-    settings: conn.preset,
+    settings: simple,
     members: [profile] as AppSchema.Profile[],
     chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
@@ -165,6 +194,7 @@ async function getGuestEntities() {
     impersonating,
     scenarios,
     attachments: getChatAttachments(chat._id, messages, attachments),
+    conn,
   }
 }
 
@@ -216,6 +246,9 @@ function getAuthedPromptEntities() {
   const characters = getBotsForChat(chat, char, chatChars.map)
   const messages = trimMessages(user, messageHistory.concat(msgs))
 
+  const sub = getPresetSubscription(conn.preset)
+  const simple = simplifyPreset(user, conn.preset, sub?.preset)
+
   return {
     chat,
     char,
@@ -223,7 +256,7 @@ function getAuthedPromptEntities() {
     profile,
     book,
     messages,
-    settings: conn.preset,
+    settings: simple,
     members,
     chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
@@ -231,6 +264,7 @@ function getAuthedPromptEntities() {
     impersonating,
     scenarios,
     attachments: getChatAttachments(chat._id, messages, attachments),
+    conn,
   }
 }
 

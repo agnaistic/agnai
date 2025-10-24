@@ -67,7 +67,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import { ComponentEmitter, toShortDuration } from '/web/shared/util'
+import { ComponentEmitter, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
 import { PresetState } from '/web/store/preset-context'
@@ -465,8 +465,18 @@ const Message: Component<MessageProps> = (props) => {
                   data-bot-time={isBot()}
                   data-user-time={isUser()}
                 >
-                  <span class="hidden sm:block">{new Date(msg().createdAt).toLocaleString()}</span>
-                  <span class="block sm:hidden">{toShortDuration(msg().createdAt)} ago</span>
+                  <Switch>
+                    <Match when={isToday(msg().createdAt)}>
+                      <span>{new Date(msg().createdAt).toLocaleTimeString()}</span>
+                    </Match>
+
+                    <Match when>
+                      <span class="hidden sm:block">
+                        {new Date(msg().createdAt).toLocaleString()}
+                      </span>
+                      <span class="block sm:hidden">{toShortDuration(msg().createdAt)} ago</span>
+                    </Match>
+                  </Switch>
                   <Show when={ctx.flags.debug || canShowMeta(msg(), ctx.promptHistory[msg()._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"

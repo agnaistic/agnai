@@ -105,6 +105,7 @@ export type PresetParser =
 
 export interface GenSettings {
   name: string
+  userId?: string
   description?: string
   presetMode?: 'simple' | 'advanced' | undefined
 

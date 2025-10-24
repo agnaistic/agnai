@@ -1,17 +1,17 @@
-import { AIAdapter, getAdapter, isThirdPartyPreset, MODE_SETTINGS } from '../../common/adapters'
+import { AIAdapter, getAdapter, isThirdPartyPreset } from '../../common/adapters'
 import { mapPresetsToAdapter, defaultPresets, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../middleware'
 import { StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import { buildPromptPlaceholders, JsonField, getContextLimit } from '../../common/prompt'
+import { buildPromptPlaceholders, JsonField, simplifyPreset } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
-import { SubscriptionPreset, getHandlers, getSubscriptionPreset } from './agnaistic'
+import { getHandlers, getSubscriptionPreset } from './agnaistic'
 import { deepClone, getSubscriptionModelLimits, parseStops, tryParse } from '/common/util'
 import {
   GuidanceParams,
@@ -46,13 +46,13 @@ configure(async (opts) => {
 }, logger)
 
 export type InferenceRequest = {
+  chatId?: string
   requestId?: string
   prompt: string
   messages?: Array<any>
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
-  maxKnownLines?: number
 
   guidance?: boolean
   placeholders?: any
@@ -139,7 +139,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 }
 
 export async function guidanceAsync(opts: InferenceRequest) {
-  const settings = await getRequestPreset(opts)
+  const { preset: settings } = await getRequestPreset(opts)
   const sub = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings || settings)
 
   const previous = { ...opts.previous }
@@ -196,14 +196,11 @@ export async function guidanceAsync(opts: InferenceRequest) {
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
-  const settings = await getRequestPreset(opts)
+  const { simple: settings, conn } = await getRequestPreset(opts)
 
   if (opts.stop) {
     settings.stopSequences = opts.stop
   }
-
-  const conn = getPresetConnection(settings, opts.user.providers)
-  opts.settings = conn.preset
 
   if (opts.settings?.thirdPartyUrl) {
     opts.user.koboldUrl = opts.settings.thirdPartyUrl
@@ -219,7 +216,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   const isThirdParty = isThirdPartyPreset(conn)
 
-  const handler = getHandlers({ user: opts.user, settings: opts.settings })
+  const handler = getHandlers({ user: opts.user, settings })
   const stream = handler({
     kind: 'plain',
     conn,
@@ -301,7 +298,19 @@ async function getRequestPreset(opts: InferenceRequest) {
     opts.user.thirdPartyFormat = preset.thirdPartyFormat
   }
 
-  return preset
+  if (preset.userId !== opts.user._id) {
+    if (!opts.chatId) throw new StatusError(`Could not locate preset for inference request`, 402)
+    const members = await store.chats.getActiveMembers(opts.chatId)
+
+    const isMember = members.some((id) => id === opts.user._id)
+    if (!isMember) throw new StatusError(`Could not locate preset for inference request`, 402)
+  }
+
+  const conn = getPresetConnection(preset, opts.user.providers)
+  const sub = await getSubscriptionPreset(opts.user, !!opts.guest, preset)
+  const simple = simplifyPreset(opts.user, conn.preset, sub?.preset)
+
+  return { preset, simple, conn, sub }
 }
 
 export async function createChatStream(
@@ -355,7 +364,7 @@ export async function createChatStream(
   if (!guestSocketId) {
     const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
     const encoder = getTokenCounter(adapter, model)
-    const nextSettings = simplifyPreset(opts.user, opts.settings, subscription)
+    const nextSettings = simplifyPreset(opts.user, opts.settings, subscription?.preset)
     opts.settings = nextSettings
     opts.parts = await buildPromptPlaceholders(
       {
@@ -562,35 +571,4 @@ export async function getGenerationSettings(
     ...getFallbackPreset(adapter),
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
-}
-
-function simplifyPreset(
-  user: AppSchema.User,
-  gen: Partial<AppSchema.GenSettings>,
-  sub?: SubscriptionPreset
-): Partial<AppSchema.GenSettings> {
-  const next: Partial<AppSchema.GenSettings> = { ...gen }
-
-  if (gen.useMaxContext || gen.presetMode === 'simple') {
-    gen.useMaxContext = true
-    next.maxContextLength = getContextLimit(user, next) + (gen.maxTokens ?? 0)
-  }
-
-  if (!gen.presetMode || gen.presetMode === 'advanced') return next
-
-  const recommends: any = {}
-
-  if (sub?.preset) {
-    for (const [prop, usable] of Object.entries(MODE_SETTINGS[gen.presetMode] || {})) {
-      if (!usable) continue
-      const value = (sub.preset as any)[prop]
-      if (value !== undefined) {
-        recommends[prop] = value
-      }
-    }
-  }
-
-  Object.assign(next, recommends, { useMaxContext: true })
-
-  return next
 }

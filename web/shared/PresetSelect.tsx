@@ -4,7 +4,7 @@ import TextInput from './TextInput'
 import Button from './Button'
 import Modal, { RootModal } from './Modal'
 import { FormLabel } from './FormLabel'
-import { exportPreset, presetStore, toastStore, userStore } from '../store'
+import { exportPreset, presetStore, toastStore } from '../store'
 import { DownloadIcon, PlusIcon } from 'lucide-solid'
 import { AppSchema } from '/common/types'
 import { createStore } from 'solid-js/store'
@@ -28,7 +28,6 @@ export const PresetSelect: Component<{
   const [newPreset, setNewPreset] = createSignal(false)
 
   const presets = presetStore((s) => ({ list: s.presets }))
-  const user = userStore((s) => ({ user: s.user }))
 
   const custom = createMemo(() => {
     const filtered = props.options.filter(
@@ -40,11 +39,14 @@ export const PresetSelect: Component<{
 
   const selectedLabel = createMemo(() => {
     const opt = props.options.find((o) => o.value === props.selected)
-    return opt === undefined
-      ? 'None'
-      : opt.value === user.user?.defaultPreset
-      ? `${opt.label} (Default)`
-      : `${opt.label} ${opt.custom ? '' : '(Built-in)'}`
+    if (opt === undefined) return <strong>None</strong>
+
+    return (
+      <div class="flex flex-col">
+        <div class="text-500 text-xs">{opt.provider}</div>
+        <div class="font-bold">{opt.name}</div>
+      </div>
+    )
   })
 
   const [showSelectModal, setShowSelectModal] = createSignal(false)
@@ -76,8 +78,8 @@ export const PresetSelect: Component<{
         </Show>
 
         <div class="flex w-full items-center gap-2">
-          <Button onClick={() => setShowSelectModal(true)} class="w-fit">
-            <strong>{selectedLabel()}</strong>
+          <Button onClick={() => setShowSelectModal(true)} class="w-fit !py-0">
+            {selectedLabel()}
           </Button>
 
           <Button onClick={downloadPreset} disabled={!props.selected}>
@@ -148,10 +150,11 @@ const OptionList: Component<{
               'bg-[var(--hl-800)]': props.selected === option.value,
               'bg-700': props.selected !== option.value,
             }}
-            class={`w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`}
+            class={`flex w-full cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm`}
             onClick={() => props.onSelect(option.value)}
           >
-            <div class="font-bold">{option.label}</div>
+            <span class="text-500 text-xs">{option.provider}</span>
+            <div class="font-bold">{option.name}</div>
           </div>
         )}
       </For>

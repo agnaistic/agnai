@@ -396,6 +396,16 @@ export function formatDate(value: string | number | Date) {
   return `${month} ${day} ${time}`
 }
 
+export function isToday(time: Date | string) {
+  const date = typeof time === 'string' || typeof time === 'number' ? new Date(time) : time
+
+  const now = new Date()
+  if (now.getFullYear() !== date.getFullYear()) return false
+  if (now.getMonth() !== date.getMonth()) return false
+  if (now.getDate() !== date.getDate()) return false
+  return true
+}
+
 export function toShortDuration(valueSecs: number | Date | string, parts?: number) {
   if (valueSecs instanceof Date) {
     valueSecs = Math.round((Date.now() - valueSecs.valueOf()) / 1000)

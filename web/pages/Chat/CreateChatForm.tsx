@@ -111,7 +111,13 @@ const CreateChatForm: Component<{
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
     const combined = [
-      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+      {
+        label: 'System Built-in Preset (Horde)',
+        value: AutoPreset.service,
+        custom: false,
+        name: 'System Built-in Preset',
+        provider: 'Horde',
+      },
     ].concat(opts)
 
     const defaultPreset = presets.find((p) => p._id === user.defaultPreset)
@@ -121,6 +127,8 @@ const CreateChatForm: Component<{
         label: `[${label}] Your Default Preset`,
         value: '',
         custom: true,
+        provider: label,
+        name: 'Your Default Preset',
       })
     }
 

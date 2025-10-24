@@ -1,6 +1,6 @@
 import type { GenerateRequestV2, HistoryLine } from '../srv/adapter/type'
 import type { AppSchema, TokenCounter } from './types'
-import { AIAdapter, GOOGLE_LIMITS } from './adapters'
+import { AIAdapter, GOOGLE_LIMITS, MODE_SETTINGS } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -1269,4 +1269,35 @@ function removeReasoning(msg: string, reasoning: AppSchema.GenSettings['reasonin
   // }
 
   // return msg.trim()
+}
+
+export function simplifyPreset(
+  user: AppSchema.User,
+  gen: Partial<AppSchema.GenSettings>,
+  sub?: Partial<Omit<AppSchema.SubscriptionModel, 'kind'>>
+): Partial<AppSchema.GenSettings> {
+  const next: Partial<AppSchema.GenSettings> = { ...gen }
+
+  if (gen.useMaxContext || gen.presetMode === 'simple') {
+    gen.useMaxContext = true
+    next.maxContextLength = getContextLimit(user, next) + (gen.maxTokens ?? 0)
+  }
+
+  if (!gen.presetMode || gen.presetMode === 'advanced') return next
+
+  const recommends: any = {}
+
+  if (sub) {
+    for (const [prop, usable] of Object.entries(MODE_SETTINGS[gen.presetMode] || {})) {
+      if (!usable) continue
+      const value = (sub as any)[prop]
+      if (value !== undefined) {
+        recommends[prop] = value
+      }
+    }
+  }
+
+  Object.assign(next, recommends, { useMaxContext: true })
+
+  return next
 }
