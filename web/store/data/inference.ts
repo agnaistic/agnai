@@ -349,59 +349,40 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       inferenceCallbacks.delete(requestId)
       lazy.resolve({ response: lastResponse })
     }
-
-    if (conn?.local) {
-      const headers: any = {}
-      const key = provider?.userKey || opts.settings?.thirdPartyKey
-      if (key) {
-        headers.Authorization = `Bearer ${key}`
-        headers['x-api-key'] = `${key}`
-      }
-      if (!opts.payload) {
-        debug('sse')('warning: no local payload provided, using fallback')
-      }
-
-      const fallback = getLocalPayload({
-        user,
-        messages: opts.messages,
-        prompt: opts.prompt,
-        settings: preset,
-      })
-      api.localSSE({
-        host: conn?.url,
-        path: payload.messages ? `/chat/completions` : '/completions',
-        body: opts.payload || fallback,
-        headers,
-        signal: opts.signal,
-        onTick: tickWrapper,
-      })
-    } else {
-      api.fetchSSE({
-        path: '/chat/inference-stream',
-        headers: getAuthHeaders(),
-        body: payload,
-        signal: opts.signal,
-        onTick: tickWrapper,
-      })
+  }
+  if (conn?.local) {
+    const headers: any = {}
+    const key = provider?.userKey || opts.settings?.thirdPartyKey
+    if (key) {
+      headers.Authorization = `Bearer ${key}`
+      headers['x-api-key'] = `${key}`
+    }
+    if (!opts.payload) {
+      debug('sse')('warning: no local payload provided, using fallback')
     }
 
-    return lazy.promise
-  }
-
-  inferenceCallbacks.set(requestId, tickWrapper)
-
-  const res = await api.method<{ requestId: string; generating: boolean }>(
-    'post',
-    `/chat/inference-stream`,
-    payload
-  )
-
-  if (res.error) {
-    onTick?.(res.error, 'error')
-  }
-
-  if (!res.result?.generating) {
-    inferenceCallbacks.delete(requestId)
+    const fallback = getLocalPayload({
+      user,
+      messages: opts.messages,
+      prompt: opts.prompt,
+      settings: preset,
+    })
+    api.localSSE({
+      host: conn?.url,
+      path: payload.messages ? `/chat/completions` : '/completions',
+      body: opts.payload || fallback,
+      headers,
+      signal: opts.signal,
+      onTick: tickWrapper,
+    })
+  } else {
+    api.fetchSSE({
+      path: '/chat/inference-stream',
+      headers: getAuthHeaders(),
+      body: payload,
+      signal: opts.signal,
+      onTick: tickWrapper,
+    })
   }
 
   return lazy.promise
