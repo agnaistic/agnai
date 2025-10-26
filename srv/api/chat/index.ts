@@ -11,13 +11,14 @@ import {
 } from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
-import { createImage, getImageModelList, getSdModelList } from './image'
+import { getImageModelList, getSdModelList } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
 import { guidance, inference, inferenceApi, inferenceStream } from './inference'
+import { generateAppImage } from '../image-api'
 
 const router = Router()
 
@@ -31,7 +32,7 @@ router.post('/image-models', getImageModelList)
 router.post('/:id/send', createMessage)
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
-router.post('/:id/image', createImage)
+router.post('/:id/image', generateAppImage)
 router.post('/:id/voice', textToSpeech)
 router.use(loggedIn)
 router.get('/', getAllChats)

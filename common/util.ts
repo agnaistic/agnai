@@ -893,12 +893,12 @@ export function lazySimplePromise<T = any>() {
     promise: {} as any as Promise<T>,
   }
 
-  parts.promise = new Promise<T>((resolve, _reject) => {
+  parts.promise = new Promise<T>((resolve, reject) => {
     parts.resolve = (result: any) => {
       resolve(result)
     }
     parts.reject = (error: any) => {
-      resolve(error)
+      reject(error)
     }
   })
 

@@ -6,7 +6,7 @@ import { exportCharacter } from '/common/characters'
 import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
-import { imageApi } from '/web/store/data/image'
+import { asyncImage, imageApi } from '/web/store/data/image'
 import { IMAGE_FORMATS } from './port'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
@@ -219,7 +219,7 @@ export async function embedImageJson(imageUrl: string, json: any) {
 async function imageToDataURL(image: string) {
   const { ext } = getExt(image)
 
-  const base64 = await getImageBase64(image)
+  const base64 = await imageApi.getImageBase64(image)
   const apng = await isAPNG(base64)
   if (apng || ext === 'apng') {
     return base64
@@ -261,29 +261,6 @@ function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
   const ext = url.split('.').slice(-1)[0]
   if (imageApi.ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
   return { type: 'url', ext: 'unknown' }
-}
-
-export async function getImageBase64(image: string) {
-  if (image.startsWith('data:')) return image
-
-  if (!image.startsWith('http')) {
-    image = getAssetUrl(image)
-  }
-
-  const base64 = await imageApi.getImageData(image)
-  return base64!
-}
-
-export function asyncImage(src: string) {
-  return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
-    const data = await getImageBase64(src)
-    const image = new Image()
-    image.setAttribute('crossorigin', 'anonymous')
-    image.src = data
-
-    image.onload = () => resolve({ name: src, image })
-    image.onerror = (ev) => reject(ev)
-  })
 }
 
 async function isAPNG(base64: string) {

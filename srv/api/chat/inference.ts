@@ -13,24 +13,9 @@ import { obtainLock, releaseLock } from './lock'
 import { v4 } from 'uuid'
 import { replaceTags } from '/common/presets/templates'
 import { getCachedSubscriptionModels, getCachedTiers } from '/srv/db/subscriptions'
-import { generateImageSync } from '/srv/image'
 import { getSubscriptionModelLimits, getUserSubscriptionTier } from '/common/util'
 import { renderMessagesToPrompt } from '/common/template-messages'
 import { optional } from '/common/valid/types'
-
-const validImage = {
-  prompt: 'string',
-  negative: 'string?',
-  model: 'string?',
-  width: 'number?',
-  height: 'number?',
-  cfg_scale: 'number?',
-  clip_skip: 'number?',
-  steps: 'number?',
-  sampler: 'string?',
-  seed: 'number?',
-  use_recommended: 'string?',
-} as const
 
 const validInference = {
   prompt: 'string',
@@ -82,33 +67,6 @@ const validInferenceApi = {
   temperature_last: 'boolean?',
   json_schema: 'any?',
 } as const
-
-export const generateImageApi = wrap(async ({ authed, userId, log, body }) => {
-  assertValid(validImage, body)
-
-  if (body.use_recommended && authed) {
-    authed.useRecommendedImages = body.use_recommended
-  }
-
-  const result = await generateImageSync(
-    {
-      user: authed!,
-      model: body.model,
-      prompt: body.prompt,
-      source: 'api',
-      parentId: undefined,
-      params: body,
-      noAffix: true,
-    },
-    log
-  )
-
-  if (result.error) {
-    throw new StatusError(result.error, 500)
-  }
-
-  return { output: result.output }
-})
 
 export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
   assertValid(

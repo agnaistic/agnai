@@ -1,4 +1,4 @@
-import { asyncImage, getImageBase64 } from '../pages/Character/util'
+import { imageApi } from '../store/data/image'
 import { FileInputResult } from './FileInput'
 
 export type ResizeOptions =
@@ -10,8 +10,8 @@ export type ResizeOptions =
   | { type: 'fit'; max: number }
 
 export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
-  const base64 = await getImageBase64(image.content)
-  const element = await asyncImage(base64)
+  const base64 = await imageApi.getImageBase64(image.content)
+  const element = await imageApi.asyncImage(base64)
   const origWidth = element.image.naturalWidth
   const origHeight = element.image.naturalHeight
   const canvas = document.createElement('canvas')

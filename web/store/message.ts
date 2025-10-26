@@ -528,7 +528,7 @@ export const msgStore = createStore<MsgState>(
 
     async *createImage(
       { msgs, activeChatId, activeCharId, imgWaiting },
-      opts: { sourceMsgId?: string; append?: boolean; onTick?: TickHandler; prompt?: string }
+      opts: { sourceMsgId?: string; append?: boolean; prompt?: string }
     ) {
       if (imgWaiting) return
 
@@ -555,19 +555,27 @@ export const msgStore = createStore<MsgState>(
           source: 'summary',
         },
         {
-          onDone: () => {
+          onSummary: async (summary) => {
             const { imgWaiting } = msgStore.getState()
             const next = (imgWaiting?.pos || 1) + 1
             msgStore.setState({ imgWaiting: { ...imgWaiting!, pos: next } })
-          },
 
-          onTick: opts.onTick,
+            if (!opts.prompt) {
+              await msgStore.editMessageProp(messageId, { imagePrompt: summary })
+            }
+          },
         }
       )
 
-      if (res.result?.summary && !opts.prompt) {
-        await msgStore.editMessageProp(messageId, { imagePrompt: res.result.summary })
+      if (res.result?.content) {
+        handleImage({
+          chatId: activeChatId,
+          image: res.result.content,
+          messageId,
+          requestId: res.result.requestId,
+        })
       }
+
       if (res.error) {
         console.log('[wait] create-img err')
         yield { imgWaiting: undefined }
@@ -630,7 +638,10 @@ async function handleImage(body: {
   }
 
   const cacheId = imagesSaved ? '' : `cache:${requestId}`
+
   if (cacheId) {
+    const prev = await storage.getItem(cacheId)
+    if (prev) return
     const imageIds = await getMessageImages(messageId)
 
     imageIds.push(cacheId)

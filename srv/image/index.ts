@@ -113,7 +113,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
           meta: { negative: imageSettings?.negative },
         })
 
-        if (msg) return
+        if (msg) return { output }
       }
     } else {
       output = output || (await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300))

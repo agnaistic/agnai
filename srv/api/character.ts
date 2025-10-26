@@ -8,11 +8,11 @@ import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { CharacterUpdate } from '../db/characters'
 import { getVoiceService } from '../voice'
-import { generateImage } from '../image'
 import { v4 } from 'uuid'
 import { validBook } from './memory'
 import { isObject, tryParse } from '/common/util'
 import { assertStrict } from '/common/valid/validate'
+import { generateAppImage } from './image-api'
 
 const router = Router()
 
@@ -358,46 +358,7 @@ function parseAndValidateVoice(json?: string) {
   return obj as unknown as AppSchema.Character['voice']
 }
 
-export const createImage = handle(async ({ body, userId, socketId, log }) => {
-  assertValid(
-    {
-      user: 'any?',
-      prompt: 'string',
-      ephemeral: 'boolean?',
-      source: 'string?',
-      noAffix: 'boolean?',
-      characterId: 'string?',
-      chatId: 'string?',
-      requestId: 'string?',
-      parent: 'string?',
-      model: 'string?',
-    },
-    body
-  )
-  const user = userId ? await store.users.getUser(userId) : body.user
-
-  const guestId = userId ? undefined : socketId
-  const requestId = body.requestId || v4()
-  generateImage(
-    {
-      user,
-      prompt: body.prompt,
-      ephemeral: body.ephemeral,
-      source: body.source || 'unknown',
-      noAffix: body.noAffix,
-      chatId: body.chatId,
-      characterId: body.characterId,
-      requestId,
-      parentId: body.parent,
-      model: body.model,
-    },
-    log,
-    guestId
-  )
-  return { success: true, requestId }
-})
-
-router.post('/image', createImage)
+router.post('/image', generateAppImage)
 router.use(loggedIn)
 
 router.get('/', getCharacters)
