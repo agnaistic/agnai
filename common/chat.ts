@@ -178,7 +178,8 @@ function getMessageDepth(tree: ChatTree, leaf: string) {
     if (!node.msg.parent) return depth
 
     if (visited.has(node.msg.parent)) {
-      throw new Error(`Invalid chat tree: Circular reference detected (${node.msg.parent})`)
+      console.warn(`Invalid chat tree: Circular reference detected (${node.msg.parent})`)
+      return -1
     }
 
     depth++
