@@ -150,9 +150,13 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
     pageStore.openConfirm({
       message: warning,
-      onConfirm: () => {
+      onConfirm: async () => {
         if (!guestData()) return
-        localApi.importGuestData(guestData())
+        try {
+          localApi.importGuestData(guestData())
+        } catch (ex: any) {
+          toastStore.error(`Import failed: ${ex?.message || ex}`)
+        }
       },
     })
   }
