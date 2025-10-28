@@ -173,8 +173,6 @@ export const msgStore = createStore<MsgState>(
         msgs: recent,
         graph,
       })
-
-      embedApi.embedChat(data.chatId, data.messages)
     }
   )
 

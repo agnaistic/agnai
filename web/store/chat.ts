@@ -267,6 +267,11 @@ export const chatStore = createStore<ChatState>('chat', {
           memberIds: res.result.members.reduce(toMemberKeys, {}),
           detailLoaded: true,
         }
+
+        setTimeout(() => {
+          if (!res.result?.messages) return
+          setTimeout(() => embedApi.embedChat(id, res.result!.messages!))
+        })
       }
     },
     setAutoReplyAs({ active }, charId: string | undefined) {
