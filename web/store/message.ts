@@ -720,8 +720,8 @@ async function onMessageReceived(body: {
     msgStore.setState({ msgs: nextMsgs })
     getStore('responses').setState({ speaking: speech?.speaking })
   } else {
-    console.log('[wait] msg-rec:2')
     msgStore.setState({ msgs: nextMsgs })
+    debug('waiting')('msg-received:not-user-msg or no-generate')
     getStore('responses').setState({
       speaking: speech?.speaking,
       partial: undefined,
@@ -834,7 +834,7 @@ subscribe(['message-error', 'inference-error'], { error: 'any', chatId: 'string'
     toastStore.error(`Failed to generate response: ${body.error}`)
   }
 
-  console.log('[wait] voice-gen')
+  debug('waiting')('subscription:on-error')
   responseStore.setState({ partial: undefined, waiting: undefined, retrying: undefined })
 })
 

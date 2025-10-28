@@ -110,7 +110,7 @@ export const createMessage = handle(async (req) => {
   if (!userId) {
     const guest = req.socketId
     const newMsg = newMessage(body.messageId || v4(), chatId, body.text, {
-      userId: body.bot || impersonate ? undefined : 'anon',
+      userId: body.bot ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.ooc || body.kind === 'ooc' || body.kind === 'send-event:ooc',
       event: body.kind ? getScenarioEventType(body.kind) : undefined,

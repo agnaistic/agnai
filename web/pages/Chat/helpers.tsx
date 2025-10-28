@@ -84,10 +84,15 @@ export function emptyMsg(opts: {
   handle?: string
   parent?: string
   message: string
+  meta?: any
+  ooc?: boolean
+  event?: AppSchema.ScenarioEventType
 }): AppSchema.ChatMessage & { handle?: string } {
   return {
     kind: 'chat-message',
     _id: opts.id || '',
+    event: opts.event,
+    ooc: opts.ooc,
     chatId: opts.chatId || '',
     parent: opts.parent,
     characterId: opts.charId,
@@ -98,6 +103,7 @@ export function emptyMsg(opts: {
     handle: opts.handle,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    meta: opts.meta,
   }
 }
 

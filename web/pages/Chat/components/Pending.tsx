@@ -20,6 +20,20 @@ export const PendingMessages: Component<{
 
   return (
     <>
+      <div class="flex flex-col">
+        <div>
+          Retrying: <code>{(!!response.retrying).toString()}</code>
+        </div>
+        <div>
+          Waiting: <code>{(!!response.waiting).toString()}</code>
+        </div>
+        <div>
+          Chat ID:{' '}
+          <code>
+            {(!!response.waiting && response.waiting.chatId === props.ctx.chat?._id).toString()}
+          </code>
+        </div>
+      </div>
       <Show
         when={
           !response.retrying &&

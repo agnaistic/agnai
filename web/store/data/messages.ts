@@ -13,6 +13,7 @@ import { botGen } from './bot-generate'
 import { getPromptEntities } from './common'
 import { emptyMsg } from '/web/pages/Chat/helpers'
 import { v4 } from 'uuid'
+import { getScenarioEventType } from '/common/scenario'
 
 export const msgsApi = {
   createMessage,
@@ -76,7 +77,10 @@ export async function createMessage(opts: {
     chatId: opts.chatId,
     charId: opts.character?._id,
     parent: opts.parent,
-    userId: getUserId(),
+    userId: opts.bot ? undefined : getUserId(),
+    meta: opts.meta,
+    event: opts.kind ? getScenarioEventType(opts.kind) : undefined,
+    ooc: opts.kind === 'ooc' || opts.kind === 'send-event:ooc',
   })
 
   localEmit({ type: 'message-created', msg: preMsg, chatId: opts.chatId })
@@ -92,7 +96,7 @@ export async function createMessage(opts: {
     meta: opts.meta,
   })
 
-  if (result.result?.message) {
+  if (isLoggedIn() && result.result?.message) {
     localEmit({ type: 'message-created', msg: result.result.message, chatId: opts.chatId })
   }
 

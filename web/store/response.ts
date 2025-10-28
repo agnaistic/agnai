@@ -12,6 +12,7 @@ import { defaultCulture } from '../shared/CultureCodes'
 import { voiceApi } from './data/voice'
 import { v4 } from 'uuid'
 import { msgsApi } from './data/messages'
+import { debug } from '/common/debug'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -52,7 +53,7 @@ export const responseStore = createStore<ResponseState>(
     abortMessage(state) {
       if (!state.waiting) return
       state.waiting.signal?.abort?.()
-      console.log('[wait] abort-msg')
+      debug('waiting')('abort')
       return { waiting: undefined, partial: undefined, retrying: undefined }
     },
 
@@ -83,6 +84,7 @@ export const responseStore = createStore<ResponseState>(
       const res = await botGen
         .stream({ signal, kind: 'retry', messageId: opts.msgId }, (_, state) => {
           if (state === 'done') {
+            debug('waiting')('retry:done')
             setter({ partial: undefined, waiting: undefined, retrying: undefined })
           }
         })
@@ -90,7 +92,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`)
-        console.log('[wait] retry err', res.error)
+        debug('waiting')('retry:error')
         yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
@@ -126,12 +128,12 @@ export const responseStore = createStore<ResponseState>(
       }
 
       const res = await botGen
-        .generate({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
+        .stream({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
-        console.log('[wait] retry-schema err')
+        debug('waiting')('retry-schema:error')
         yield { partial: undefined, waiting: undefined, retrying: undefined }
       }
     },
@@ -155,7 +157,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (res.error) {
         toastStore.error(`(Bot) Generation request failed: ${res.error}`)
-        console.log('[wait] request err')
+        debug('waiting')('request:error')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -215,7 +217,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (created?.error) {
         toastStore.error(`(Send) Message request failed: ${created?.error ?? 'Unknown error'}`)
-        console.log('[wait] create err')
+        debug('waiting')('send-created:error')
         yield { partial: undefined, waiting: undefined }
         return
       }
@@ -224,6 +226,7 @@ export const responseStore = createStore<ResponseState>(
 
       switch (opts.mode) {
         case 'send-noreply': {
+          debug('waiting')('send-noreply:switch')
           yield { partial: undefined, waiting: undefined }
           return
         }
@@ -245,7 +248,7 @@ export const responseStore = createStore<ResponseState>(
             .stream({ signal, kind: opts.mode, text: opts.msg, messageId: created?.messageId })
             .catch((err) => ({ error: err.message, result: undefined }))
           if ('result' in res && !res.result?.generating) {
-            console.log('[wait] send no-gen')
+            debug('waiting')('send-no-gen:switch')
             yield { partial: undefined, waiting: undefined }
           }
 
@@ -257,7 +260,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (res.error) {
         toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
-        console.log('[wait] send err')
+        debug('waiting')('send:error')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -319,6 +322,7 @@ export const responseStore = createStore<ResponseState>(
           },
           (_, state) => {
             if (state === 'done') {
+              debug('waiting')('continue:done')
               setter({ partial: undefined, waiting: undefined, retrying: undefined })
             }
           }
@@ -327,7 +331,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (res.error) {
         toastStore.error(`(Continue) Generation request failed: ${res.error}`)
-        console.log('[wait] continue err')
+        debug('waiting')('continue:error')
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -522,18 +526,18 @@ subscribe(
   }
 )
 
-subscribe('message-created', { msg: 'any' }, (body) => {
-  if (!body.msg._id) return
-  const { partialId } = responseStore.getState()
+// subscribe('message-created', { msg: 'any' }, (body) => {
+//   if (!body.msg._id) return
+//   const { partialId } = responseStore.getState()
 
-  if (body.msg._id !== partialId) return
-  responseStore.setState({
-    partial: undefined,
-    partialId: undefined,
-    waiting: undefined,
-    retrying: undefined,
-  })
-})
+//   if (body.msg._id !== partialId) return
+//   responseStore.setState({
+//     partial: undefined,
+//     partialId: undefined,
+//     waiting: undefined,
+//     retrying: undefined,
+//   })
+// })
 
 responseStore.subscribe((state, prev) => {
   const msgState = getStore('messages').getState()

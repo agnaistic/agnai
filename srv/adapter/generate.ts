@@ -255,7 +255,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 async function getRequestPreset(opts: InferenceRequest) {
   let preset: Partial<AppSchema.GenSettings> | undefined
 
-  if (opts.settings?._id && opts.user && !isDefaultPreset(opts.settings._id)) {
+  if (opts.settings?._id && opts.user && !opts.guest && !isDefaultPreset(opts.settings._id)) {
     const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
     if (userPreset && userPreset.userId === opts.user._id) {
       opts.settings = userPreset
@@ -298,7 +298,7 @@ async function getRequestPreset(opts: InferenceRequest) {
     opts.user.thirdPartyFormat = preset.thirdPartyFormat
   }
 
-  if (preset.userId !== opts.user._id) {
+  if (!opts.guest && preset.userId !== opts.user._id) {
     if (!opts.chatId) throw new StatusError(`Could not locate preset for inference request`, 402)
     const members = await store.chats.getActiveMembers(opts.chatId)
 

@@ -378,6 +378,10 @@ export function fetchSSE(opts: SSEOpts) {
 
       if (!json) return
 
+      if (json.error && !json.type) {
+        opts.onTick?.(`Request failed: ` + json.error, 'error')
+      }
+
       switch (json.type) {
         case 'message-partial':
         case 'inference-partial':

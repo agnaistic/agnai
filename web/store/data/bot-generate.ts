@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { api, getAuthHeaders, isLoggedIn } from '../api'
+import { isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { localApi } from './storage'
 import {
@@ -7,13 +7,11 @@ import {
   createPromptParts,
   getLinesForPrompt,
   getTemplate,
-  InferenceState,
   JsonField,
   PromptLine,
   resolveScenario,
   TickHandler,
 } from '/common/prompt'
-import { handleLocalRequest } from '/common/requests'
 import { parseTemplate } from '/common/template-parser'
 import { countTokens, getEncoder } from '/common/tokenize'
 import { AppSchema } from '/common/types'
@@ -27,10 +25,8 @@ import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
 import iconv from 'iconv-lite'
 import { genApi } from './inference'
-import { isDefaultPreset } from '/common/default-preset'
-import { ThirdPartyFormat } from '/common/adapters'
 import { localEmit } from '../socket'
-import { getPresetConnection, getProviderConnection } from '/common/providers'
+import { getProviderConnection } from '/common/providers'
 import { toChatMessages } from '/common/template-messages'
 import { msgsApi } from './messages'
 import { getProvider } from '../preset-context'
@@ -43,7 +39,6 @@ iconv.enableStreamingAPI(require('stream'))
 
 export const botGen = {
   stream: streamResponse,
-  generate: generateResponse,
   getActivePromptOptions,
   getMessageParent,
 }
@@ -287,110 +282,13 @@ async function handlePostStreamResponse(
     bot: true,
     meta,
   })
-}
 
-export async function generateResponse(
-  opts: GenerateOpts,
-  onTick?: (msg: string, state: InferenceState) => any
-) {
-  try {
-    const { active } = getStore('chat').getState()
-    if (!active) {
-      return localApi.error('No active chat. Try refreshing.')
-    }
-
-    if (
-      opts.kind === 'ooc' ||
-      opts.kind === 'send-noreply' ||
-      opts.kind === 'send-event:ooc' ||
-      // allow events to be sent without a reply in multi-bot chats
-      (isEventOpts(opts) && !active.replyAs)
-    ) {
-      return createMessage(active.chat._id, opts)
-    }
-
-    const {
-      request,
-      prompt,
-      activePrompt: { entities },
-    } = await buildChatRequest(opts)
-
-    const win: any = window
-    win.lastPrompt = prompt.template.parsed
-
-    if (useLocalRequest(entities.settings, entities.user)) {
-      localRequest(request, opts.signal, prompt.template.parsed).then(() => {
-        console.log('[done]')
-      })
-
-      let input = opts.kind === 'send' ? opts.text : undefined
-
-      /**
-       * Edge-case: Guests using local requests need the message they sent to be persisted immediately.
-       * Otherwise it'd have to be created when the response is complete
-       */
-      if (!isLoggedIn() && opts.kind === 'send') {
-        const newMsg: AppSchema.ChatMessage = {
-          _id: v4(),
-          chatId: active.chat._id,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          kind: 'chat-message',
-          retries: [],
-          msg: opts.text || '',
-          userId: request.impersonate ? undefined : 'anon',
-          characterId: request.impersonate?._id,
-          parent: request.parent,
-        }
-        input = undefined
-        localEmit({ type: 'message-created', chatId: active.chat._id, msg: newMsg })
-        request.parent = newMsg._id
-      }
-
-      return localApi.result({ generating: true, input, requestId: request.requestId })
-    }
-
-    request.eventStream = true
-    request.v = 3
-
-    console.log(
-      `${opts.kind} cx:${!!opts.signal} p:${
-        request.parent?.slice(0, 5) || 'none'
-      } rep:${request.replacing?._id?.slice(0, 4)}`
-    )
-
-    if (onTick) {
-      genApi.callbacks.set(request.requestId, onTick)
-    }
-
-    const lazy = lazyPromise()
-
-    api.fetchSSE({
-      path: `/chat/${entities.chat._id}/generate`,
-      headers: getAuthHeaders(),
-      body: request,
-      signal: opts.signal,
-      onData: (data) => {
-        if (data.type === 'message-creating') {
-          lazy.resolve({ requestId: request.requestId, generating: true, success: true })
-        }
-        localEmit(data)
-      },
-      onTick: (text, state) => {
-        if (state === 'error') {
-          lazy.reject(text)
-          // localEmit({ type: 'message-error', error: payload, chatId: request.chat._id })
-        }
-
-        onTick?.(text, state)
-      },
-    })
-
-    return lazy.promise
-  } catch (ex: any) {
-    console.error(ex)
-    return localApi.error(ex?.message || ex)
-  }
+  getStore('responses').setState({
+    waiting: undefined,
+    retrying: undefined,
+    partial: undefined,
+    partialId: undefined,
+  })
 }
 
 async function buildChatRequest(opts: GenerateOpts) {
@@ -458,17 +356,6 @@ async function buildChatRequest(opts: GenerateOpts) {
   return { request, prompt, entities, activePrompt, props }
 }
 
-async function localRequest(request: GenerateRequestV2, signal: AbortController, prompt: string) {
-  const res = await handleLocalRequest(request, signal, prompt)
-  if (res.result) {
-    request.response = res.result.response
-    await api.post<{ requestId: string; messageId?: string }>(
-      `/chat/${request.chat._id}/generate`,
-      request
-    )
-  }
-}
-
 async function getActivePromptOptions(
   opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
 ) {
@@ -522,15 +409,6 @@ type EventKind =
   | 'send-event:character'
   | 'send-event:hidden'
   | 'send-event:ooc'
-
-function isEventOpts(
-  opts: GenerateOpts
-): opts is { signal: AbortController; kind: EventKind; text: string } {
-  return (
-    opts.kind.startsWith('send-event:') &&
-    ['world', 'character', 'hidden', 'ooc'].includes(opts.kind.split(':')[1])
-  )
-}
 
 async function createActiveChatPrompt(opts: GenerateOpts) {
   const { active } = getStore('chat').getState()
@@ -828,96 +706,6 @@ async function getGenerateProps(
   props.replyAs = { ...props.replyAs, avatar: undefined }
 
   return props
-}
-
-/**
- * Create a user message that does not generate a bot response
- */
-async function createMessage(
-  chatId: string,
-  opts: {
-    kind: 'ooc' | 'send-noreply' | EventKind
-    text: string
-  }
-) {
-  const props = await getPromptEntities()
-  const { impersonating } = getStore('character').getState()
-  const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
-
-  const text = await parseTemplate(opts.text, {
-    char: props.char,
-    chat: props.chat,
-    sender: props.profile,
-    impersonate: impersonating,
-    replyAs: props.char,
-    lastMessage: props.lastMessage?.date,
-    jsonValues: props.messages.reduce(
-      (prev, curr) => Object.assign(prev, curr.json?.values || {}),
-      {}
-    ),
-  })
-
-  return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
-    text: text.parsed,
-    kind: opts.kind,
-    impersonate: impersonate,
-    parent: getMessageParent(opts.kind, props.messages)?._id,
-  })
-}
-
-function useLocalRequest(settings: Partial<AppSchema.UserGenPreset>, user: AppSchema.User) {
-  if (!settings.providerId) {
-    if (settings.service === 'agnaistic') return false
-    if (settings.service !== 'kobold') return false
-
-    if (settings.service === 'kobold' && !settings.localRequests) return false
-    return true
-  }
-
-  const conn = getPresetConnection(settings || {}, user.providers)
-  if (!isSupportedLocalRequestFormat(conn.format)) return false
-
-  if (settings.localRequests) {
-    if (isDefaultPreset(settings._id)) return true
-
-    if (settings.userId !== user._id) {
-      throw new Error(
-        `Multiplayer not available for this chat: Chat is configured for local requests`
-      )
-    }
-  }
-
-  if (conn.category === 'self') return true
-
-  return false
-}
-
-function isSupportedLocalRequestFormat(format: ThirdPartyFormat | undefined) {
-  if (!format) return false
-
-  switch (format) {
-    case 'openai':
-    case 'openai-chat':
-    case 'openai-chatv2':
-    // For these formats we will use openai-chatv2
-    case 'aphrodite':
-    case 'ollama':
-    case 'koboldcpp':
-    case 'llamacpp':
-    case 'tabby':
-    case 'vllm':
-    case 'kobold':
-    case 'ooba':
-      return true
-
-    case 'arli':
-    case 'claude':
-    case 'exllamav2':
-    case 'featherless':
-    case 'gemini':
-    case 'mistral':
-      return false
-  }
 }
 
 function getMessageParent(
