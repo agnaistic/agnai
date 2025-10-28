@@ -130,9 +130,8 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
   const format = req.request.settings?.modelFormat
   if (stops.length < 4 && format) {
     const tags = BUILTIN_FORMATS[format]
-    if (tags) {
-      stops.push(tags.closeBot, tags.closeUser)
-    }
+    if (tags?.closeBot?.trim()) stops.push(tags.closeBot)
+    if (tags?.closeUser?.trim()) stops.push(tags.closeUser)
   }
 
   await genApi.inferenceStream(
