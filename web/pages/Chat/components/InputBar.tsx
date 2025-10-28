@@ -49,14 +49,15 @@ import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 import WizardIcon from '/web/icons/WizardIcon'
 import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
+import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { api } from '/web/store/api'
 import { resizeImage } from '/web/shared/image-resize'
-import { ALLOWED_TYPES } from '/web/store/data/image'
+import { ALLOWED_TYPES, imageApi } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
 import { extractReasoning } from '/common/reasoning'
 import { usePresetContext } from '/web/store/preset-context'
+import { debug } from '/common/debug'
 
 export type SendFunc = (opts: {
   msg: string
@@ -279,13 +280,21 @@ const InputBar: Component<{
         toastStore.warn(`Invalid file type: Must be an image`)
         return
       }
-      const buffer = await getFileAsDataURL(file)
+
       if (file.size > 1024 * 1024 * 1024) {
         toastStore.warn(`Attachment exceeds size limit (1MB)`)
         return
       }
 
-      const resized = await resizeImage(buffer, { type: 'fit', max: 768 })
+      const proc = await imageApi.processImageFile(file)
+      const resized = await resizeImage(proc, { type: 'fit', max: 768 })
+      debug('resize')(
+        'Orig: %sx%s, New: %sx%s',
+        resized.original.w,
+        resized.original.h,
+        resized.w,
+        resized.h
+      )
       toAttach.push({ type: 'image', image: resized.content })
     }
 
@@ -497,7 +506,7 @@ const InputBar: Component<{
                 fieldName="imageCaption"
                 parentClass="hidden"
                 onUpdate={onFile}
-                accept="image/jpg,image/png,image/jpeg"
+                accept="image/jpg,image/png,image/jpeg,image/webp"
                 multiple
               />
               <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>

@@ -22,6 +22,7 @@ import { ImageRequestOpts } from '/srv/image/types'
 import { getImagePrompt, getImageSettings } from '/common/image'
 import { imageStore } from '../images'
 import { isChatPage } from '/web/shared/hooks'
+import { FileInputResult } from '/web/shared/FileInput'
 
 export type ImageRequestEntities = Awaited<ReturnType<typeof createImageRequest>>
 
@@ -45,6 +46,7 @@ export const ALLOWED_TYPES = new Map([
   ['png', 'image/png'],
   ['apng', 'image/apng'],
   ['gif', 'image/gif'],
+  ['webp', 'image/webp'],
 ])
 
 export function getImageType(image: string) {
@@ -69,9 +71,20 @@ export const imageApi = {
   getImageBase64,
   processBase64,
   asyncImage,
+  processImageFile,
   ALLOWED_TYPES,
 }
 
+async function processImageFile(file: File): Promise<FileInputResult> {
+  const buf = await file.arrayBuffer()
+  const buffer = Buffer.from(buf)
+  const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
+
+  return {
+    file,
+    content: base64,
+  }
+}
 export async function generateImagePrompt(opts: {
   onTick?: TickHandler
   question?: string

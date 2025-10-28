@@ -123,7 +123,7 @@ export function createImageCache(collection: string): ImageReel {
 }
 
 async function getImageIds(collection: string): Promise<string[]> {
-  log(`loading %s`, collection)
+  log(`loading %s`, collection.slice(0, 20) + '...')
   const json = await storage.getItem(`${collection}`)
   if (!json) return []
 

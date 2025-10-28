@@ -35,14 +35,9 @@ export async function resizeImage(image: FileInputResult, opts: ResizeOptions) {
 
     case 'fit': {
       if (origHeight <= opts.max && origWidth <= opts.max) {
-        const data = await canvas.toDataURL('image/png')
-        return {
-          mime: 'image/png', // image.file.type,
-          content: data,
-          w: origWidth,
-          h: origHeight,
-          original: { ...image, w: origWidth, h: origHeight },
-        }
+        width = origWidth
+        height = origHeight
+        break
       }
 
       const factor = origHeight > origWidth ? opts.max / origHeight : opts.max / origWidth
