@@ -273,6 +273,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
           const next = [...state.personaAttrs]
           next[index] = { key: trait || 'text', values: res }
           setState('personaAttrs', next)
+          updateCache(state)
+
           // const attributes = { ...char.persona.attributes }
           // if (!trait) {
           //   attributes.text = [res]
@@ -286,6 +288,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string; __type?: 
 
         if (field in state) {
           setState(field as keyof EditorState, res)
+          updateCache(state)
         }
       },
     })

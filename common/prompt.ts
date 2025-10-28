@@ -411,6 +411,7 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
 
   const format = inject.format || opts.settings?.modelFormat || 'None'
   result.parsed = replaceTags(result.parsed, format)
+  result.blockPrompt = replaceTags(result.blockPrompt, format)
   result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, format)
   replaceSectionTags(result.sections.sections, format)
 

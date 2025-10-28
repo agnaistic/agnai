@@ -715,6 +715,12 @@ async function getGenerateProps(
   }
 
   const getBot = (id: string) => {
+    if (!isLoggedIn() && !id.startsWith('temp-')) {
+      const { characters } = getStore('character').getState()
+      const char = characters.list.find((ch) => ch._id === id)
+      if (char) return char
+    }
+
     if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
     return entities.chatBots.find((ch) => ch._id === id)!
   }

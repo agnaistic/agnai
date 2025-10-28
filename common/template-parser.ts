@@ -25,6 +25,7 @@ type InternalState = {
 export type TemplateOpts = {
   continue?: boolean
   parts?: Partial<PromptPlaceholders>
+  settings?: Partial<AppSchema.GenSettings>
   chat?: AppSchema.Chat
 
   isPart?: boolean
@@ -215,6 +216,7 @@ export async function parseTemplate(
   addedLines: string[]
   sections: NonNullable<TemplateOpts['sections']>
   blocks: Array<{ role: ChatRole; content: string }>
+  blockPrompt: string
   flags: InternalState
 }> {
   if (opts.limit) {
@@ -400,6 +402,15 @@ export async function parseTemplate(
     flags.messages = nextMsgs
   }
 
+  const blockPrompt = flags.messages
+    .map((msg, i, list) => {
+      const isLast = i === list.length - 1
+      const tag = msg.role === 'system' ? 'system' : msg.role === 'user' ? 'user' : 'bot'
+      const text = isLast ? `<${tag}>${msg.content}` : `<${tag}>${msg.content}</${tag}>`
+      return text
+    })
+    .join('\n\n')
+
   return {
     parsed: output,
     inserts: opts.inserts ?? new Map(),
@@ -409,6 +420,9 @@ export async function parseTemplate(
     history: historyLines,
     addedLines,
     blocks: flags.messages,
+    blockPrompt: opts.settings?.modelFormat
+      ? replaceTags(blockPrompt, opts.settings.modelFormat)
+      : blockPrompt,
     flags,
   }
 }
