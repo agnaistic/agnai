@@ -22,7 +22,7 @@ import { GenerateRequestV2 } from '/srv/adapter/type'
 import { GenerateEntities, getPromptEntities, PromptEntities } from './common'
 import { embedApi } from '../embeddings'
 import { ChatState } from '../chat'
-import { replaceTags } from '/common/presets/templates'
+import { BUILTIN_FORMATS, replaceTags } from '/common/presets/templates'
 import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
 import iconv from 'iconv-lite'
@@ -132,6 +132,14 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
       stops,
     })
 
+  const format = req.request.settings?.modelFormat
+  if (stops.length < 4 && format) {
+    const tags = BUILTIN_FORMATS[format]
+    if (tags) {
+      stops.push(tags.closeBot, tags.closeUser)
+    }
+  }
+
   await genApi.inferenceStream(
     {
       settings: req.request.settings,
@@ -140,7 +148,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
       prompt: assembled.prompt,
       payload,
       signal: opts.signal,
-      stop: req.request.settings?.stopSequences,
+      stop: stops,
       // TODO: Re-enable multiplayer streaming
       // broadcast: {
       //   type: 'chat',

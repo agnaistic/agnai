@@ -129,9 +129,7 @@ function getPresetSubscription(gen: Partial<AppSchema.GenSettings> | undefined) 
   // If it's a modern (provider) preset, check the `.providerId`
   if (gen.providerId && gen.providerId !== 'agnaistic') return
 
-  const subId = gen.providerId
-    ? gen.providerModels?.agnaistic
-    : gen.registered?.agnaistic?.subscriptionId
+  const subId = gen.providerModels?.agnaistic || gen.registered?.agnaistic?.subscriptionId
   if (!subId) return
 
   const { subs } = getStore('settings').getState().config
