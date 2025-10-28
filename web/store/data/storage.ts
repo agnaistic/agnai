@@ -270,7 +270,8 @@ async function importGuestData(data: GuestEntities) {
     !data.templates ||
     !data.user
   ) {
-    throw new Error(`Missing data in import`)
+    toastStore.error(`Missing data in import`)
+    return
   }
 
   await saveBooks(data.books)
