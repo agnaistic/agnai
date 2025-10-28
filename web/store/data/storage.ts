@@ -169,6 +169,8 @@ async function migrateToJson() {
   return entities
 }
 
+type GuestEntities = Awaited<ReturnType<typeof getGuestInitEntities>>
+
 async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   await migrateLegacyItems()
   /**
@@ -182,6 +184,7 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   const characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
 
+  /** Create a default preset for guests on initialization */
   if (!presets.length && config?.subs.length) {
     const model = config.subs.find((s) => s.preset.isDefaultSub)
     if (model) {
@@ -243,6 +246,43 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   user._id = 'anon'
 
   return { user, presets, profile, books, scenario, characters, chats, templates }
+}
+
+async function downloadGuestData() {
+  const data = await getGuestInitEntities()
+
+  const content = encodeURIComponent(JSON.stringify(data, null, 2))
+  const anchor = document.createElement('a')
+  anchor.href = `data:text/json:charset=utf-8,${content}`
+  anchor.download = `guest-data-${Date.now()}.json`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+async function importGuestData(data: GuestEntities) {
+  if (
+    !data.books ||
+    !data.characters ||
+    !data.chats ||
+    !data.presets ||
+    !data.profile ||
+    !data.scenario ||
+    !data.templates ||
+    !data.user
+  ) {
+    throw new Error(`Missing data in import`)
+  }
+
+  await saveBooks(data.books)
+  await saveChars(data.characters)
+  await saveChats(data.chats)
+  await savePresets(data.presets)
+  await saveProfile(data.profile)
+  await saveScenarios(data.scenario)
+  await saveTemplates(data.templates)
+  await saveConfig(data.user)
+
+  window.location.reload()
 }
 
 async function migrateLegacyItems() {
@@ -421,4 +461,6 @@ export const localApi = {
   error,
   result,
   handleGuestInit,
+  downloadGuestData,
+  importGuestData,
 }

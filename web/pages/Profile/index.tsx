@@ -12,7 +12,7 @@ import {
 } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
-import FileInput, { FileInputResult } from '../../shared/FileInput'
+import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { RootModal } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { setComponentPageTitle } from '../../shared/util'
@@ -25,6 +25,8 @@ import { Page } from '/web/Layout'
 import { useGoogleReady } from '/web/shared/hooks'
 import { startTour } from '/web/tours'
 import { createStore } from 'solid-js/store'
+import { isLoggedIn } from '/web/store/api'
+import { localApi } from '/web/store/data/storage'
 
 export const ProfileModal: Component = () => {
   const state = userStore((s) => ({ showProfile: s.showProfile }))
@@ -121,6 +123,38 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
     const payload = { handle: handle(), avatar: avatar() }
     userStore.updateProfile(payload)
     userStore.modal(false)
+  }
+
+  const [guestData, setGuestData] = createSignal<any>()
+
+  const importGuestData = () => {
+    setGuestData(undefined)
+    const warning = (
+      <div class="flex flex-col items-center gap-2">
+        <FileInput
+          fieldName="guest-data-import"
+          accept="text/json,application/json"
+          label="Guest Data"
+          onUpdate={async (data) => {
+            if (!data?.[0]) return
+            const str = await getFileAsString(data[0])
+            const json = JSON.parse(str)
+            setGuestData(json)
+          }}
+        />
+        <div class="font-bold">!! WARNING !!</div>
+        <div>This will REPLACE all of your existing guest data.</div>
+        <div>Are you sure?</div>
+      </div>
+    )
+
+    pageStore.openConfirm({
+      message: warning,
+      onConfirm: () => {
+        if (!guestData()) return
+        localApi.importGuestData(guestData())
+      },
+    })
   }
 
   onMount(() => {
@@ -300,9 +334,22 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             onUpdate={onAvatar}
           />
 
-          <div>
-            <Button onClick={() => setPass(true)}>Change Password</Button>
-          </div>
+          <Show when={isLoggedIn()}>
+            <div>
+              <Button onClick={() => setPass(true)}>Change Password</Button>
+            </div>
+          </Show>
+
+          <Show when={state.user?._id === 'anon'}>
+            <div class="flex justify-center gap-4">
+              <Button schema="success" onClick={localApi.downloadGuestData}>
+                Download Guest Data
+              </Button>
+              <Button schema="warning" onClick={importGuestData}>
+                Import Guest Data
+              </Button>
+            </div>
+          </Show>
 
           <Show when={state.user?._id !== 'anon'}>
             <div class="flex justify-center gap-4">
