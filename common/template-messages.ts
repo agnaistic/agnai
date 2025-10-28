@@ -40,7 +40,7 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     const unparsed = assembled.unparsedLines[unparsedIndex]
     const line = assembled.lines[i]
 
-    const text = replaceTags(line.line, req.settings?.modelFormat || 'None').trim()
+    const text = replaceTags(line.line, 'None').trim()
 
     /**
      * The `assembles.lines` can contain history interwoven with inserts.
