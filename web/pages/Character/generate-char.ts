@@ -116,11 +116,11 @@ export async function generateField(opts: {
 
   const settings = getUserPreset(user?.chargenPreset || user?.defaultPreset)
 
-  const { blocks } = await parseTemplate(prompt, {})
+  const { blocks, parsed } = await parseTemplate(prompt, {})
 
   genApi.inferenceStream(
     {
-      prompt,
+      prompt: parsed,
       messages: blocks,
       overrides: { stopSequences: ['[/INST]', '###', '<|', '</s>'] },
       settings,
