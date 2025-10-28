@@ -120,7 +120,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
   const stops = getStoppingStrings(req.request, req.entities.settings)
   const santitize = (text: string) =>
     sanitiseAndTrim({
-      char: req.entities.char,
+      char: req.props.replyAs,
       members: req.entities.members,
       gen: req.request.settings!,
       text,
