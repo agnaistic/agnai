@@ -208,6 +208,7 @@ Object {
   },
   "template": Object {
     "addedLines": Array [],
+    "blockPrompt": "",
     "blocks": Array [],
     "flags": Object {
       "is_final": true,
