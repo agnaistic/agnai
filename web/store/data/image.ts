@@ -209,25 +209,29 @@ async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requ
     return result
   }
 
-  const res = await api.post<{ success: boolean; output?: string }>(`/chat/${opts.chatId}/image`, {
-    sync: true,
-    prompt: req.request.prompt,
-    messageId: opts.messageId,
-    ephemeral: opts.ephemeral,
-    append: opts.append,
-    source: opts.source,
-    chatId: opts.chatId,
-    characterId: req.entities.message?.characterId,
-    parent: opts.parent,
-    requestId,
-  })
+  const res = await api.post<{ success: boolean; output?: string; error?: string }>(
+    `/chat/${opts.chatId}/image`,
+    {
+      sync: true,
+      prompt: req.request.prompt,
+      messageId: opts.messageId,
+      ephemeral: opts.ephemeral,
+      append: opts.append,
+      source: opts.source,
+      chatId: opts.chatId,
+      characterId: req.entities.message?.characterId,
+      parent: opts.parent,
+      requestId,
+    }
+  )
 
   if (res.error) {
     throw new Error(res.error)
   }
 
   if (!res.result?.output) {
-    throw new Error(`Image generation failed to return a result`)
+    const msg = res.result?.error || `Image generation failed to return a result`
+    throw new Error(msg)
   }
 
   const base64 = await imageApi.getImageBase64(res.result.output)

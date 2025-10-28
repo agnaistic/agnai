@@ -579,7 +579,7 @@ export const msgStore = createStore<MsgState>(
       if (res.error) {
         console.log('[wait] create-img err')
         yield { imgWaiting: undefined }
-        toastStore.error(`Failed to request image: ${res.error}`)
+        toastStore.error(`[Image Generation]: ${res.error}`)
       }
     },
   }

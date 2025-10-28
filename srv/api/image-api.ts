@@ -43,7 +43,7 @@ const validImage = {
   sync: 'boolean?',
 } as const
 
-export const generateAppImage = handle(async ({ body, userId, socketId, log }) => {
+export const generateAppImage = handle(async ({ body, userId, socketId, log }, res) => {
   assertValid(validImage, body)
   const user = userId ? await store.users.getUser(userId) : body.user
 
@@ -62,15 +62,17 @@ export const generateAppImage = handle(async ({ body, userId, socketId, log }) =
     parentId: body.parent,
     model: body.model,
     messageId: body.messageId,
+    sync: body.sync,
   }
 
-  const job = generateImage(opts, log, guestId)
+  if (!body.sync) {
+    res.json({ success: true, requestId })
+  }
+
+  const job = await generateImage(opts, log, guestId)
   if (body.sync) {
-    const result = await job
-    return { success: !!result.output, requestId, output: result.output }
+    return { success: !!job.output, requestId, output: job.output, error: job.error }
   }
-
-  return { success: true }
 })
 
 export const generateImageApi = handle(async ({ authed, userId, log, body }) => {

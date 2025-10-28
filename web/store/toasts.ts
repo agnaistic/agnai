@@ -1,5 +1,6 @@
 import { createStore, getStore } from './create'
 import { subscribe } from './socket'
+import { debug } from '/common/debug'
 import { setNotifier } from '/common/requests/util'
 
 export type Toast = {
@@ -28,6 +29,11 @@ export const toastStore = createStore<ToastState>('toasts', {
     return (_: ToastState, msg: string, ttl = 5) => {
       if (kind === 'admin') {
         ttl = 300
+      }
+
+      if (kind === 'error') {
+        const err = new Error()
+        debug('toast')(`${msg}\n${err.stack}`)
       }
 
       const id = ++toastId

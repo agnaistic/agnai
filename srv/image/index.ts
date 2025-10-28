@@ -59,7 +59,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
 
   log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')
 
-  if (!guestId) {
+  if (!guestId && !opts.sync) {
     sendOne(user._id, {
       type: 'image-generation-started',
       prompt,
@@ -132,6 +132,10 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     })
   }
 
+  if (!image && !error) {
+    error = 'Invalid image settings (No handler found)'
+  }
+
   const message = image
     ? {
         type: 'image-generated',
@@ -144,17 +148,19 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     : {
         type: 'image-failed',
         chatId,
-        error: error || 'Invalid image settings (No handler found)',
+        error,
         requestId: opts.requestId,
       }
 
-  if (broadcastIds.length) {
-    sendMany(broadcastIds, message)
-  } else if (guestId) {
-    sendGuest(guestId, message)
+  if (!opts.sync) {
+    if (broadcastIds.length) {
+      sendMany(broadcastIds, message)
+    } else if (guestId) {
+      sendGuest(guestId, message)
+    }
   }
 
-  return { output }
+  return { output, error }
 }
 
 async function runImageGenerate(options: {
@@ -245,7 +251,8 @@ async function runImageGenerate(options: {
       { err: ex, body: ex.body },
       `[${imageSettings?.type || 'default'}] Image generation failed `
     )
-    error = ex.message || ex
+
+    error = `Request failed: ${ex.message || ex}`
   }
 
   return { image, output, error }
