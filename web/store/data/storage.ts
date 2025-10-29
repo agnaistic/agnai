@@ -169,7 +169,9 @@ async function migrateToJson() {
   return entities
 }
 
-type GuestEntities = Awaited<ReturnType<typeof getGuestInitEntities>>
+type GuestEntities = Awaited<ReturnType<typeof getGuestInitEntities>> & {
+  messages: AppSchema.ChatMessage[]
+}
 
 async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   await migrateLegacyItems()
@@ -250,8 +252,19 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
 
 async function downloadGuestData() {
   const data = await getGuestInitEntities()
+  const messages: Record<string, AppSchema.ChatMessage[]> = {}
 
-  const content = encodeURIComponent(JSON.stringify(data, null, 2))
+  for (const chat of data.chats) {
+    const list = await storage.getItem(`messages-${chat._id}`)
+
+    if (list) {
+      const json = JSON.parse(list)
+      if (!Array.isArray(json)) continue
+      messages[chat._id] = json
+    }
+  }
+
+  const content = encodeURIComponent(JSON.stringify({ ...data, messages }, null, 2))
   const anchor = document.createElement('a')
   anchor.href = `data:text/json:charset=utf-8,${content}`
   anchor.download = `guest-data-${Date.now()}.json`
@@ -282,6 +295,12 @@ async function importGuestData(data: GuestEntities) {
   await saveScenarios(data.scenario)
   await saveTemplates(data.templates)
   await saveConfig(data.user)
+
+  if (data.messages) {
+    for (const [chatId, messages] of Object.entries(data.messages)) {
+      await storage.setItem(`messages-${chatId}`, JSON.stringify(messages))
+    }
+  }
 
   window.location.reload()
 }

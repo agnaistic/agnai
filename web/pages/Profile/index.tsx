@@ -32,6 +32,7 @@ export const ProfileModal: Component = () => {
   const state = userStore((s) => ({ showProfile: s.showProfile }))
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
   const tabs = useTabs(['Profile', 'Subscription'], 0)
+
   const [search, setSearch] = useSearchParams()
 
   createEffect(() => {
@@ -105,6 +106,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const [pass, setPass] = createSignal(false)
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
+  const [importing, setImporting] = createSignal(false)
   const google = useGoogleReady()
 
   const canuseGoogle = createMemo(
@@ -153,9 +155,12 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
       onConfirm: async () => {
         if (!guestData()) return
         try {
-          localApi.importGuestData(guestData())
+          setImporting(true)
+          await localApi.importGuestData(guestData())
+          setImporting(false)
         } catch (ex: any) {
           toastStore.error(`Import failed: ${ex?.message || ex}`)
+          setImporting(false)
         }
       },
     })
@@ -349,7 +354,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
               <Button schema="success" onClick={localApi.downloadGuestData}>
                 Download Guest Data
               </Button>
-              <Button schema="warning" onClick={importGuestData}>
+              <Button disabled={importing()} schema="warning" onClick={importGuestData}>
                 Import Guest Data
               </Button>
             </div>
