@@ -143,6 +143,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
       payload,
       signal: opts.signal,
       stop: stops,
+      chatId: req.request.chat._id,
       // TODO: Re-enable multiplayer streaming
       // broadcast: {
       //   type: 'chat',

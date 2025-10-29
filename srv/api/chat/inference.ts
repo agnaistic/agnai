@@ -24,6 +24,7 @@ const validInference = {
   presetId: 'string?',
   jsonSchema: 'any?',
   imageData: 'string?',
+  chatId: 'string?',
 } as const
 
 const validInferenceApi = {
@@ -414,6 +415,7 @@ export const inferenceStream = wrap(async (req, res) => {
     imageData: body.imageData,
     stop: body.stop,
     signal,
+    chatId: body.chatId,
   })
 
   const requestId = body.requestId || v4()

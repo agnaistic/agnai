@@ -38,6 +38,7 @@ type InferenceOpts = {
   settings?: Partial<AppSchema.GenSettings>
   overrides?: Partial<AppSchema.GenSettings>
   maxTokens?: number
+  chatId?: string
   jsonSchema?: JsonField[]
   stop?: string[]
 
@@ -77,6 +78,7 @@ const initState = (init?: {
 })
 
 export function inferenceHelper(init: {
+  chatId?: string
   preset?: Partial<AppSchema.GenSettings>
   schema?: JsonField[]
   onTick?: TickHandler
@@ -131,6 +133,7 @@ export function inferenceHelper(init: {
     signal?: AbortController
     prompt: string
     image?: string
+    chatId?: string
     preset?: Partial<AppSchema.GenSettings>
     schema?: JsonField[]
     maxContext?: number
@@ -158,6 +161,7 @@ export function inferenceHelper(init: {
         settings: preset,
         jsonSchema: schema,
         signal: opts.signal,
+        chatId: init.chatId || opts.chatId,
       },
       onTick
     )
@@ -322,6 +326,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     jsonSchema: opts.jsonSchema,
     settings: { ...preset, stream: true },
     stop: opts.stop,
+    chatId: opts.chatId,
   }
 
   const provider = getProvider(settings?.providerId)

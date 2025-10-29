@@ -51,7 +51,6 @@ import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import { api } from '/web/store/api'
 import { resizeImage } from '/web/shared/image-resize'
 import { ALLOWED_TYPES, imageApi } from '/web/store/data/image'
 import { MsgAttachment } from '/srv/adapter/type'
@@ -328,7 +327,7 @@ const InputBar: Component<{
       </Show>
 
       <div class="relative flex items-start justify-center rounded-md bg-[var(--bg-800)]">
-        <Show when={ctx.waiting?.signal && !api.isCdnApi()}>
+        <Show when={ctx.waiting?.signal}>
           <button
             class="animate-pulse cursor-pointer p-2"
             onClick={() => {
