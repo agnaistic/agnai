@@ -37,7 +37,7 @@ const ChatOptions: Component<{
   togglePane: (pane: ChatRightPane) => void
 }> = (props) => {
   const chats = chatStore((s) => ({
-    ...s.active,
+    active: s.details[s.lastChatId || ''],
     opts: s.opts,
     members: s.chatProfiles,
   }))
@@ -53,7 +53,7 @@ const ChatOptions: Component<{
   }
 
   const isOwner = createMemo(
-    () => chats.chat?.userId === user.user?._id && chats.chat?.mode !== 'companion'
+    () => chats.active?.chat?.userId === user.user?._id && chats.active?.chat?.mode !== 'companion'
   )
 
   const screenshotChat = async () => {
@@ -87,8 +87,8 @@ const ChatOptions: Component<{
 
   return (
     <>
-      <Show when={chats.chat?.mode}>
-        <Card>Mode: {chats.chat?.mode}</Card>
+      <Show when={chats.active?.chat?.mode}>
+        <Card>Mode: {chats.active?.chat?.mode}</Card>
       </Show>
       <div class="flex w-72 flex-col gap-2 p-2">
         <Show when={chats.members.length > 1}>
@@ -152,7 +152,7 @@ const ChatOptions: Component<{
           </Item>
         </Row>
 
-        <Show when={chats.chat}>
+        <Show when={chats.active?.chat}>
           <Row>
             <Item
               onClick={() => {

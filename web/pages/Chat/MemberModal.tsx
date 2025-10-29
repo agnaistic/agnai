@@ -154,7 +154,7 @@ const ParticipantsList: Component<{
   edit: (charId: string) => void
 }> = (props) => {
   const self = userStore((s) => ({ user: s.user, profile: s.profile }))
-  const state = chatStore((s) => ({ active: s.active }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId] }))
 
   const lists = useParticipantList()
 
@@ -265,7 +265,7 @@ const ParticipantsList: Component<{
 }
 
 const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
-  const state = chatStore((s) => ({ active: s.active }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId] }))
   const chars = characterStore((s) => ({ characters: s.characters }))
 
   onMount(() => {
@@ -316,7 +316,7 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
 
 const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
   let ref: any
-  const state = chatStore((s) => ({ active: s.active }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId] }))
 
   const [userId, setUserId] = createSignal('')
 
@@ -505,7 +505,10 @@ export function useParticipantList(forChat?: boolean) {
     impersonating: s.impersonating,
     characters: forChat ? s.chatChars : s.characters,
   }))
-  const state = chatStore((s) => ({ active: s.active, memberIds: s.memberIds }))
+  const state = chatStore((s) => ({
+    active: s.details[s.lastChatId || ''],
+    memberIds: s.memberIds,
+  }))
 
   const charMembers = createMemo<AppSchema.Character[]>(() => {
     const active = getActiveBots(

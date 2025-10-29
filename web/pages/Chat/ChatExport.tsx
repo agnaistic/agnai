@@ -4,15 +4,17 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { characterStore, chatStore, msgStore } from '../../store'
 import { resolveChatPath } from '/common/chat'
+import { useAppContext } from '/web/store/context'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
+  const [ctx] = useAppContext()
   const chats = chatStore.getState()
   const chars = characterStore.getState().characters
   const msgs = msgStore.getState()
 
   const json = createMemo(() => {
     const graph = msgs.graph
-    const chat = chats.active?.chat
+    const chat = ctx.active?.chat
     const messages = resolveChatPath(graph.tree, msgs.msgs.slice(-1)[0]._id)
 
     const json = {
@@ -52,7 +54,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
       </Button>
       <a
         href={`data:text/json:charset=utf-8,${json()}`}
-        download={`chat-${chats.active?.chat._id.slice(0, 4)}.json`}
+        download={`chat-${ctx.active?.chat._id.slice(0, 4)}.json`}
         onClick={props.close}
       >
         <Button>

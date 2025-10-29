@@ -157,7 +157,8 @@ export async function getMessages(chatId: string, before: string) {
 }
 
 async function getActiveTemplateParts() {
-  const { active } = chatStore.getState()
+  const { details, lastChatId } = chatStore.getState()
+  const active = details[lastChatId]
 
   const signal = new AbortController()
   const { parts, entities, props, lines } = await botGen.getActivePromptOptions({

@@ -193,7 +193,10 @@ export const ModeGenSettings: Component<{
                 classList={{ '!text-green-500': clicked() }}
                 onClick={() => copy(props.preset._id)}
               >
-                Copy ID {clicked() ? '✓' : ''}
+                <Show when={window.flags.debug} fallback={'Copy ID'}>
+                  {props.preset._id}
+                </Show>
+                {clicked() ? '✓' : ''}
               </div>
             </div>
           }

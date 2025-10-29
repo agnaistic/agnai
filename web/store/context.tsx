@@ -2,7 +2,7 @@ import { JSX, createContext, createEffect, createMemo, useContext } from 'solid-
 import { createStore } from 'solid-js/store'
 import { characterStore } from './character'
 import { settingStore } from './settings'
-import { chatStore } from './chat'
+import { ChatDetail, chatStore } from './chat'
 import { AppSchema, UI } from '/common/types'
 import { userStore } from './user'
 import { toMap } from '../shared/util'
@@ -40,6 +40,7 @@ export type ContextState = {
   impersonate?: AppSchema.Character
   user?: AppSchema.User
   profile?: AppSchema.Profile
+  active?: ChatDetail
   chatProfiles?: AppSchema.Profile[]
   flags: FeatureFlags
   char?: AppSchema.Character
@@ -100,7 +101,7 @@ export function ContextProvider(props: { children: any }) {
     impersonating: s.impersonating,
   }))
   const chats = chatStore((s) => ({
-    active: s.active,
+    active: s.details[s.lastChatId || ''],
     allChats: s.allChats,
     lastChatId: s.lastChatId,
     chatProfiles: s.chatProfiles,
@@ -197,6 +198,7 @@ export function ContextProvider(props: { children: any }) {
 
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),
+      active: chats.active,
 
       msgDeleting: msgs.deleting,
       impersonate: chars.impersonating,

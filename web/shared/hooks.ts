@@ -124,7 +124,10 @@ export function useCharacterBg(src: 'layout' | 'page') {
 
   const state = getStore('user')((s) => ({ ui: s.ui, background: s.background }))
   const cfg = getStore('settings')((s) => ({ anonymize: s.anonymize }))
-  const chat = getStore('chat')((s) => ({ active: s.active }))
+  const chat = getStore('chat')((s) => ({
+    lastChatId: s.lastChatId,
+    active: s.details[s.lastChatId || 'unknown'],
+  }))
   const chars = getStore('character')((s) => ({ chatId: s.activeChatId, chars: s.chatChars }))
 
   const bg = createMemo(() => {

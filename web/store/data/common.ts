@@ -147,7 +147,9 @@ export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
 }
 
 async function getGuestEntities() {
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
+  const active = details[lastChatId]
+
   if (!active) return
   const { msgs, messageHistory, attachments } = getStore('messages').getState()
 
@@ -219,7 +221,8 @@ function getChatAttachments(
 }
 
 function getAuthedPromptEntities() {
-  const { active, chatProfiles: members } = getStore('chat').getState()
+  const { details, chatProfiles: members, lastChatId } = getStore('chat').getState()
+  const active = details[lastChatId]
   if (!active) return
 
   const { profile, user } = getStore('user').getState()
@@ -267,7 +270,7 @@ function getAuthedPromptEntities() {
 }
 
 export function useActivePreset() {
-  const chat = getStore('chat')((s) => ({ active: s.active }))
+  const chat = getStore('chat')((s) => ({ active: s.details[s.lastChatId] }))
   const user = getStore('user')((s) => ({ user: s.user }))
 
   const preset = createMemo(() => {
@@ -294,7 +297,8 @@ export function getActivePreset(
   user?: AppSchema.User
 ): Partial<AppSchema.GenSettings> | undefined {
   if (!chat) {
-    chat = getStore('chat').getState().active?.chat!
+    const { details, lastChatId } = getStore('chat').getState()
+    chat = details[lastChatId]?.chat
   }
 
   if (!user) {

@@ -114,7 +114,7 @@ export const characterStore = createStore<CharacterState>(
     getStore('chat').setState({
       allChats: (data.allChats || []).sort(sortDesc),
       lastFetched: 0,
-      lastChatId: null,
+      lastChatId: '',
     })
 
     // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data

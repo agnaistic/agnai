@@ -6,8 +6,8 @@ import { isChatPageMemo } from './hooks'
 
 const NavBar: Component = () => {
   const chats = chatStore((s) => ({
-    chat: s.active?.chat,
-    char: s.active?.char,
+    chat: s.details[s.lastChatId]?.chat,
+    char: s.details[s.lastChatId]?.char,
     loaded: s.detailLoaded,
     opts: s.opts,
   }))

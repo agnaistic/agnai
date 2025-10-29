@@ -71,11 +71,12 @@ const ChatDetail: Component = () => {
   const [_, presetSet] = usePresetContext()
 
   const chats = chatStore((s) => ({
-    ...(s.active?.chat._id === params.id ? s.active : undefined),
+    ...(ctx.active?.chat._id === params.id ? ctx.active : undefined),
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.detailLoaded,
     loading: s.detailLoading,
+
     opts: s.opts,
     linesAddedCount: s.prompt?.template.linesAddedCount,
     msgVisibility: s.msgVisibility,
@@ -213,11 +214,12 @@ const ChatDetail: Component = () => {
           return nav(`/chat/${chats.lastId}`)
         }
 
-        if (params.id !== chats.chat?._id) {
+        if (params.id !== chats.lastId) {
+          presetSet.loadChatId(params.id)
+          presetStore.getTemplates(true)
           chatStore.openChat(params.id, {
             onDone: async (success, chat) => {
               if (success && chat) {
-                await Promise.all([presetSet.loadChat(chat, true), presetStore.getTemplates(true)])
                 return
               }
 
@@ -425,7 +427,7 @@ const ChatDetail: Component = () => {
             swipe={swipe()}
           />
         }
-        loading={!chats.loaded && !chats.chat}
+        loading={!ctx.active}
         showPane={showPane()}
         pane={<ChatPanes />}
         split={split()}

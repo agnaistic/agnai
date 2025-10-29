@@ -2,12 +2,14 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
-import { now, replace } from '/common/util'
+import { deepClone, now, replace } from '/common/util'
 import { joinUrl } from '/common/requests/util'
 import { toastStore } from '../toasts'
 import { storage } from '/web/shared/util'
 import { getStore } from '../create'
 import { getSafeProviderDetail } from '/common/providers'
+import { defaultPresets, getFallbackPreset } from '/common/presets'
+import { isDefaultPreset } from '/common/default-preset'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -16,6 +18,7 @@ export type SubscriptionUpdate = Omit<AppSchema.SubscriptionModel, 'kind' | '_id
 export const presetApi = {
   getPresets,
   getPreset,
+  getChatPreset,
   createPreset,
   editPreset,
   deletePreset,
@@ -30,12 +33,16 @@ export const presetApi = {
 
 export async function getPresets() {
   if (isLoggedIn()) {
-    const res = await api.get<{ presets: AppSchema.UserGenPreset[] }>('/user/presets')
+    const res = await api.get<{
+      presets: AppSchema.UserGenPreset[]
+      templates: AppSchema.PromptTemplate[]
+    }>('/user/presets')
     return res
   }
 
   const presets = await loadItem('presets')
-  return localApi.result({ presets })
+  const templates = await loadItem('templates')
+  return localApi.result({ presets, templates })
 }
 
 export async function getPreset(id: string) {
@@ -49,6 +56,41 @@ export async function getPreset(id: string) {
 
   if (!preset) {
     return localApi.error('Preset not found')
+  }
+
+  return localApi.result(preset)
+}
+
+async function getChatPreset(chatId: string) {
+  if (isLoggedIn()) {
+    const res = await api.get<AppSchema.UserGenPreset>(`/user/presets/${chatId}/chat`)
+    return res
+  }
+
+  const chats = await loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  if (!chat) {
+    return localApi.error(`Preset not found: Invalid chat`)
+  }
+
+  const presets = await loadItem('presets')
+
+  if (!chat.genPreset) {
+    const fallback = getFallbackPreset('agnaistic')
+    return localApi.result(fallback)
+  }
+
+  if (isDefaultPreset(chat.genPreset)) {
+    const fallback = { _id: chat.genPreset, ...deepClone(defaultPresets[chat.genPreset]) }
+    return localApi.result(fallback)
+  }
+
+  const preset = presets.find((p) => p._id === chat.genPreset)
+
+  if (!preset) {
+    toastStore.warn(`Preset not found: Using built-in`)
+    const fallback = getFallbackPreset('agnaistic')
+    return localApi.result(fallback)
   }
 
   return localApi.result(preset)

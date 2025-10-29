@@ -58,7 +58,7 @@ const ChatPanes: Component<{}> = (props) => {
 
   const chats = chatStore((s) => {
     return {
-      ...(s.active?.chat._id === params.id ? s.active : undefined),
+      ...(s.details[s.lastChatId]?.chat._id === params.id ? s.details[s.lastChatId] : undefined),
     }
   })
 

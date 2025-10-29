@@ -12,11 +12,11 @@ export function useChatAvatars() {
   }))
 
   const chats = chatStore((s) => ({
-    chat: s.active?.chat,
-    chatChars: s.active?.chat.characters || {},
-    char: s.active?.char,
+    chat: s.details[s.lastChatId]?.chat,
+    chatChars: s.details[s.lastChatId]?.chat.characters || {},
+    char: s.details[s.lastChatId]?.char,
 
-    activeBots: getActiveBots(s.active?.chat!, chars.botMap),
+    activeBots: getActiveBots(s.details[s.lastChatId]?.chat!, chars.botMap),
   }))
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))

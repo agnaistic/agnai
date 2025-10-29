@@ -77,10 +77,10 @@ const ChatSettings: Component<{
   close: () => void
   footer: (children: any) => void
 }> = (props) => {
-  const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId || ''] }))
   const [generating, setGenerating] = createSignal('')
   const [flags, setFlags] = createSignal<Record<string, boolean>>({})
-  const [edit, setEdit] = createStore(getInitState(state.chat, state.char))
+  const [edit, setEdit] = createStore(getInitState(state.active?.chat, state.active?.char))
 
   const user = userStore((s) => ({ user: s.user }))
   const presets = presetStore((s) => ({ list: s.presets }))
@@ -95,7 +95,7 @@ const ChatSettings: Component<{
 
   const saveBackgroundImage = async (files: FileInputResult[]) => {
     if (!files?.length) return
-    if (!state.chat) return
+    if (!state.active?.chat) return
 
     const [file] = files
 
@@ -114,7 +114,7 @@ const ChatSettings: Component<{
   })
 
   const activePreset = createMemo(() => {
-    const presetId = state.chat?.genPreset
+    const presetId = state.active?.chat?.genPreset
     if (!presetId) return
 
     if (isDefaultPreset(presetId)) return defaultPresets[presetId]
@@ -123,10 +123,10 @@ const ChatSettings: Component<{
 
   createEffect(
     on(
-      () => [state.chat, state.char] as const,
+      () => [state.active?.chat, state.active?.char] as const,
       ([chat, char]) => {
         if (!chat || !char) return
-        setFlags(state.chat?.invisible ? { ...state.chat.invisible } : {})
+        setFlags(state.active?.chat?.invisible ? { ...state.active?.chat.invisible } : {})
         setEdit(getInitState(chat, char))
       }
     )
@@ -137,7 +137,7 @@ const ChatSettings: Component<{
   })
 
   createEffect(() => {
-    setEdit('scenarioId', state.chat?.scenarioIds?.[0] || '')
+    setEdit('scenarioId', state.active?.chat?.scenarioIds?.[0] || '')
   })
 
   createEffect(
@@ -148,7 +148,7 @@ const ChatSettings: Component<{
         const scenario = scenarioState.scenarios.find((s) => s._id === edit.scenarioId)
         if (
           scenario?.overwriteCharacterScenario &&
-          !state.chat?.scenarioIds?.includes(scenario._id)
+          !state.active?.chat?.scenarioIds?.includes(scenario._id)
         ) {
           setEdit('scenario', scenario.text)
         } else {
@@ -162,7 +162,7 @@ const ChatSettings: Component<{
     const noScenario = [{ value: '', label: "None (use character's scenario)" }]
     if (scenarioState.loading || scenarioState.partial) {
       return noScenario.concat(
-        (state.chat?.scenarioIds ?? []).map((id) => ({
+        (state.active?.chat?.scenarioIds ?? []).map((id) => ({
           value: id,
           label: '...',
         }))
@@ -189,7 +189,7 @@ const ChatSettings: Component<{
     genOverrideField({
       char: {
         name: edit.name,
-        appearance: state.char?.appearance || '',
+        appearance: state.active?.char?.appearance || '',
         description: edit.description || '',
 
         greeting: edit.greeting,
@@ -229,7 +229,7 @@ const ChatSettings: Component<{
     const flag = next[charId] === undefined ? true : !next[charId]
     next[charId] = flag
     setFlags(next)
-    chatStore.editChat(state.chat?._id!, { invisible: next }, { quiet: true })
+    chatStore.editChat(state.active?.chat?._id!, { invisible: next }, { quiet: true })
   }
 
   const onSave = () => {
@@ -248,7 +248,7 @@ const ChatSettings: Component<{
       scenarioIds: edit.scenarioId ? [edit.scenarioId] : [],
       scenarioStates: edit.scenarioStates,
     }
-    chatStore.editChat(state.chat?._id!, payload, {
+    chatStore.editChat(state.active?.chat?._id!, payload, {
       useOverrides: edit.useOverrides,
       onSuccess: () => {
         if (pane() !== 'pane') {
@@ -259,10 +259,10 @@ const ChatSettings: Component<{
   }
 
   const revert = () => {
-    const char = state.char
+    const char = state.active?.char
     if (!char) return
 
-    chatStore.editChat(state.chat?._id!, {})
+    chatStore.editChat(state.active?.chat?._id!, {})
   }
 
   const Footer = (
@@ -288,7 +288,7 @@ const ChatSettings: Component<{
   return (
     <form class="flex flex-col gap-3">
       <Show when={user.user?.admin}>
-        <Card class="text-xs">{state.chat?._id}</Card>
+        <Card class="text-xs">{state.active?.chat?._id}</Card>
       </Show>
 
       <Card>
@@ -315,7 +315,7 @@ const ChatSettings: Component<{
               <div class="flex items-center justify-between gap-1">
                 Background Image{' '}
                 <div class="flex items-center gap-1">
-                  <Show when={state.chat?.background}>
+                  <Show when={state.active?.chat?.background}>
                     <Select
                       parentClass="text-xs"
                       items={[
@@ -346,7 +346,7 @@ const ChatSettings: Component<{
             label="Chat Mode"
             helperText={
               <>
-                <Show when={state.chat?.mode !== 'companion' && edit.mode === 'companion'}>
+                <Show when={state.active?.chat?.mode !== 'companion' && edit.mode === 'companion'}>
                   <TitleCard type="orange">
                     Warning! Switching to COMPANION mode is irreversible! You will no longer be able
                     to: retry messages, delete chats, edit chat settings.

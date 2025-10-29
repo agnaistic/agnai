@@ -68,8 +68,8 @@ export function useImageContext() {
   const user = userStore((s) => ({ user: s.user, sub: s.sub }))
   const settings = settingStore((s) => ({ config: s.config }))
   const entity = chatStore((s) => ({
-    chat: s.active?.chat,
-    char: s.active?.char,
+    chat: s.details[s.lastChatId]?.chat,
+    char: s.details[s.lastChatId]?.char,
   }))
 
   const [cfg, setCfg] = createStore(init())

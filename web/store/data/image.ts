@@ -640,8 +640,9 @@ export async function createImageRequest(input: {
 
 function getImageEntities(messageId?: string) {
   const { user } = getStore('user').getState()
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
   const { graph } = getStore('messages').getState()
+  const active = details[lastChatId]
   const isChat = isChatPage()
 
   const message = messageId ? graph.tree[messageId]?.msg : undefined

@@ -3,7 +3,7 @@ import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
-import { clearDraft } from '../shared/hooks'
+import { clearDraft, isChatPage } from '../shared/hooks'
 import { storage } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
@@ -15,12 +15,19 @@ import { embedApi } from './embeddings'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { inline, replace } from '/common/util'
+import { replace } from '/common/util'
 
 export type AllChat = ChatData
 
+export type ChatDetail = {
+  chat: AppSchema.Chat & { background?: string }
+  char: AppSchema.Character
+  replyAs?: string
+  participantIds: string[]
+}
+
 export type ChatState = {
-  lastChatId: string | null
+  lastChatId: string
   lastFetched: number
 
   detailLoaded: boolean
@@ -28,12 +35,15 @@ export type ChatState = {
 
   // All user chats a user owns or is a member of
   allChats: AllChat[]
-  active?: {
-    chat: AppSchema.Chat
-    char: AppSchema.Character
-    replyAs?: string
-    participantIds: string[]
-  }
+  // active?: {
+  //   chat: AppSchema.Chat
+  //   char: AppSchema.Character
+  //   replyAs?: string
+  //   participantIds: string[]
+  // }
+
+  details: Record<string, ChatDetail>
+
   chatProfiles: AppSchema.Profile[]
   // chatBots: AppSchema.Character[]
   // chatBotMap: Record<string, AppSchema.Character>
@@ -87,13 +97,13 @@ export type NewChat = {
 
 const initState: ChatState = {
   lastFetched: 0,
-  lastChatId: null,
+  lastChatId: '',
 
   detailLoaded: false,
   detailLoading: false,
+  details: {},
 
   allChats: [],
-  active: undefined,
 
   /** All profiles that have ever participated in the active chat */
   chatProfiles: [],
@@ -120,10 +130,12 @@ const EDITING_KEY = 'chat-detail-settings'
 
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
-  lastChatId: storage.localGetItem('lastChatId'),
+  lastChatId: '',
 
   detailLoaded: false,
   detailLoading: false,
+  details: {},
+
   allChats: [],
   chatProfiles: [],
   memberIds: {},
@@ -171,19 +183,7 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *setChat({ active, allChats }, chatId: string, update: Partial<AppSchema.Chat>) {
-      const next = replace(chatId, allChats, update)
-      yield { allChats: next }
 
-      if (active?.chat._id !== chatId) return
-
-      return {
-        active: {
-          ...active,
-          chat: active?.chat._id === chatId ? Object.assign({}, active.chat, update) : active?.chat,
-        },
-      }
-    },
     async *openChat(
       _,
       id: string,
@@ -202,16 +202,6 @@ export const chatStore = createStore<ChatState>('chat', {
       events.emit(EVENTS.clearMsgs, id)
       const res = await chatsApi.getChat(id)
       yield { detailLoading: false }
-
-      /**
-       * We need to check the chat id changed while we were loading this chat.
-       * If it changed, we need to abandon this payload
-       */
-      const currentId = get().lastChatId
-      if (currentId !== id) {
-        console.log(`[chat-state] abandoned chat id ${inline({ was: id, now: currentId })}`)
-        return
-      }
 
       if (res.error) {
         toastStore.error(`Failed to retrieve conversation: ${res.error}`)
@@ -257,12 +247,12 @@ export const chatStore = createStore<ChatState>('chat', {
 
         yield {
           lastChatId: id,
-          active: {
+          details: updateDetails(id, {
             chat: res.result.chat,
             char: res.result.character,
             participantIds: res.result.active,
             replyAs: isMultiChars ? undefined : res.result.character._id,
-          },
+          }),
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
           detailLoaded: true,
@@ -274,19 +264,15 @@ export const chatStore = createStore<ChatState>('chat', {
         })
       }
     },
-    setAutoReplyAs({ active }, charId: string | undefined) {
-      if (!active) return
+    setAutoReplyAs({ lastChatId }, charId: string | undefined) {
+      if (!lastChatId) return
       return {
-        active: { ...active, replyAs: charId },
+        details: updateDetails(lastChatId, { replyAs: charId }),
       }
     },
-    async *updateChatScenarioStates({ active }, chatId: string, states: string[]) {
-      if (!active || active.chat._id !== chatId) return
+    async *updateChatScenarioStates({}, chatId: string, states: string[]) {
       yield {
-        active: {
-          ...active,
-          chat: { ...active.chat, scenarioStates: states },
-        },
+        details: updateChatDetail(chatId, { scenarioStates: states }),
       }
       const res = await chatsApi.editChat(chatId, {
         scenarioStates: states,
@@ -298,16 +284,12 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *removeChatBackground({ active }) {
-      if (!active) return
-
-      await storage.removeItem(`chat-background-${active.chat._id}`)
+    async *removeChatBackground({ lastChatId }) {
+      if (!lastChatId) return
+      await storage.removeItem(`chat-background-${lastChatId}`)
 
       yield {
-        active: {
-          ...active,
-          chat: { ...active.chat, background: undefined },
-        },
+        details: updateChatDetail(lastChatId, { background: undefined }),
       }
     },
 
@@ -315,35 +297,31 @@ export const chatStore = createStore<ChatState>('chat', {
       return { msgVisibility: messageId ? { id: messageId } : undefined }
     },
 
-    async *editChatBackground({ active }, image: File) {
-      if (!active) return
+    async *editChatBackground({ lastChatId }, image: File) {
+      if (!lastChatId) return
       const base64 = await imageApi.getImageData(image)
 
       if (!base64) return
-      await storage.setItem(`chat-background-${active.chat._id}`, base64)
+      await storage.setItem(`chat-background-${lastChatId}`, base64)
 
       yield {
-        active: {
-          ...active,
-          chat: { ...active.chat, background: base64 },
-        },
+        details: updateChatDetail(lastChatId, { background: base64 }),
       }
     },
 
-    async *editLocalChatSettings({ active }, settings: any) {
-      if (!active) return
-
-      const id = `chat-settings-${active.chat._id}`
+    async *editLocalChatSettings({ lastChatId }, settings: any) {
+      if (!lastChatId) return
+      const id = `chat-settings-${lastChatId}`
       const current = await storage.getItem(id).then((curr) => JSON.parse(curr || '{}'))
 
       const next = { ...current, ...settings }
       await storage.setItem(id, JSON.stringify(next))
 
-      return { active: { ...active, chat: { ...active.chat, localSettings: next } } }
+      return { details: updateChatDetail(lastChatId, { localSettings: next }) }
     },
 
     async *editChat(
-      { allChats, active },
+      { allChats },
       id: string,
       update: Partial<AppSchema.Chat>,
       opts?: { useOverrides?: boolean; quiet?: boolean; onSuccess?: () => void }
@@ -355,9 +333,6 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        res.result.background = active?.chat.background
-        res.result.localSettings = active?.chat.localSettings
-
         opts?.onSuccess?.()
 
         if (!opts?.quiet) {
@@ -376,20 +351,22 @@ export const chatStore = createStore<ChatState>('chat', {
         //   }
         // }
 
-        if (active && active.chat._id === id) {
-          yield {
-            active: {
-              ...active,
-              chat: res.result!,
-              char: active.char,
-              participantIds: active.participantIds,
-            },
-          }
+        yield {
+          details: updateDetails(id, { chat: res.result }),
         }
       }
     },
 
-    async *assignChatPreset({ active }, chatId: string, preset: string, onSuccess?: () => void) {
+    async *setChat({ details, allChats }, chatId: string, update: Partial<AppSchema.Chat>) {
+      const next = replace(chatId, allChats, update)
+      yield { allChats: next }
+
+      return {
+        details: updateChatDetail(chatId, update),
+      }
+    },
+
+    async *assignChatPreset({}, chatId: string, preset: string, onSuccess?: () => void) {
       if (!preset) {
         console.error(`Tried to assign undefined preset to chat`)
         return
@@ -473,7 +450,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *upsertTempCharacter(
-      { active, allChats },
+      { allChats, details },
       chatId: string,
       char: Omit<AppSchema.Character, '_id' | 'kind' | 'createdAt' | 'updatedAt' | 'userId'> & {
         _id?: string
@@ -481,16 +458,14 @@ export const chatStore = createStore<ChatState>('chat', {
       onSuccess?: (char: AppSchema.Character) => void
     ) {
       const res = await chatsApi.upsertTempCharacter(chatId, char)
+      const prev = details[chatId]?.chat
       if (res.result) {
         const char = res.result.char
 
         onSuccess?.(char)
-        if (active?.chat._id === chatId) {
+        if (prev) {
           yield {
-            active: {
-              ...active,
-              chat: Object.assign({}, replaceTemp(active.chat, char)),
-            },
+            details: updateDetails(chatId, { chat: replaceTemp(prev, char) }),
           }
         }
 
@@ -515,18 +490,18 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *deleteChat({ active, allChats }, chatId: string, onSuccess?: Function) {
+    async *deleteChat({ allChats }, chatId: string, onSuccess?: Function) {
       clearDraft(chatId)
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {
         embedApi.deleteChatCache(chatId)
         toastStore.success('Successfully deleted chat')
-        if (active?.chat._id === chatId) {
-          yield { active: undefined }
-        }
 
-        yield { allChats: allChats.filter((ch) => ch._id !== chatId) }
+        yield {
+          allChats: allChats.filter((ch) => ch._id !== chatId),
+          details: removeChatDetail(chatId),
+        }
 
         // if (char?.chats) {
         //   yield { char: { ...char, chats: char.chats.filter((ch) => ch._id !== chatId) } }
@@ -570,16 +545,21 @@ export const chatStore = createStore<ChatState>('chat', {
       await api.get(`/chat/${chatId}/summary`)
     },
 
-    async computePrompt({ active }, msg: AppSchema.ChatMessage, perspective?: AppSchema.Character) {
-      if (!active) return
+    async computePrompt(
+      { details },
+      msg: AppSchema.ChatMessage,
+      perspective?: AppSchema.Character
+    ) {
+      const detail = details[msg.chatId]
+      if (!detail) return
 
       const { msgs, messageHistory } = msgStore.getState()
       const entities = await getPromptEntities()
 
       const encoder = await getEncoder()
-      const replyAs = active.replyAs?.startsWith('temp-')
-        ? entities.chat.tempCharacters![active.replyAs]
-        : entities.characters[active.replyAs!] || active.char
+      const replyAs = detail.replyAs?.startsWith('temp-')
+        ? entities.chat.tempCharacters![detail.replyAs]
+        : entities.characters[detail.replyAs!] || detail.char
 
       const resolvedScenario = resolveScenario(
         entities.chat,
@@ -652,20 +632,9 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
 })
 
 subscribe('chat-deleted', { chatId: 'string' }, (body) => {
-  const { allChats, active } = chatStore.getState()
-  if (active?.chat._id === body.chatId) {
-    chatStore.setState({ active: undefined })
-  }
-
-  {
-    const next = allChats.filter((ch) => ch._id !== body.chatId)
-    chatStore.setState({ allChats: next })
-  }
-
-  // if (char?.chats) {
-  //   const next = char.chats.filter((ch) => ch._id !== body.chatId)
-  //   chatStore.setState({ char: { ...char, chats: next } })
-  // }
+  const { allChats } = chatStore.getState()
+  const next = allChats.filter((ch) => ch._id !== body.chatId)
+  chatStore.setState({ allChats: next, details: removeChatDetail(body.chatId) })
 })
 
 function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
@@ -676,14 +645,16 @@ subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => 
   const profile = getStore('user').getState().profile
   if (!profile) return
 
-  const { chatProfiles, active } = chatStore.getState()
+  const { chatProfiles, details } = chatStore.getState()
+  const detail = details[body.chatId]
+  if (!detail) return
 
-  if (!active?.chat) return
-  if (active.chat._id !== body.chatId) return
-
-  const nextIds = active.participantIds.filter((id) => id !== body.memberId)
+  const nextIds = detail.participantIds.filter((id) => id !== body.memberId)
   const nextProfiles = chatProfiles.filter((mem) => mem.userId !== body.memberId)
-  chatStore.setState({ chatProfiles: nextProfiles, active: { ...active, participantIds: nextIds } })
+  chatStore.setState({
+    chatProfiles: nextProfiles,
+    details: updateDetails(body.chatId, { participantIds: nextIds }),
+  })
 })
 
 subscribe(
@@ -693,20 +664,21 @@ subscribe(
     profile: { kind: 'any', userId: 'string', handle: 'string', _id: 'string', avatar: 'string?' },
   },
   (body) => {
-    const { active, chatProfiles, memberIds } = chatStore.getState()
-    if (!active || active.chat._id !== body.chatId) return
+    const { chatProfiles, memberIds, details } = chatStore.getState()
+    const detail = details[body.chatId]
+    if (!detail?.chat) return
 
     const nextProfiles = chatProfiles.concat(body.profile)
     const nextProfileMap = { ...memberIds, [body.profile.userId]: body.profile }
-    const nextIds = active.participantIds.concat(body.profile.userId)
+    const nextIds = detail.participantIds.concat(body.profile.userId)
     const nextChat = {
-      ...active.chat,
-      memberIds: active.chat.memberIds.concat(body.profile.userId),
+      ...detail.chat,
+      memberIds: detail.chat.memberIds.concat(body.profile.userId),
     }
     chatStore.setState({
       chatProfiles: nextProfiles,
       memberIds: nextProfileMap,
-      active: { ...active, participantIds: nextIds, chat: nextChat },
+      details: updateDetails(body.chatId, { participantIds: nextIds, chat: nextChat }),
     })
   }
 )
@@ -743,8 +715,9 @@ function getOptsCache(): ChatOptCache {
 }
 
 subscribe('chat-server-notification', { chatId: 'string', text: 'string' }, (body) => {
-  const { active } = chatStore.getState()
-  if (body.chatId !== active?.chat._id) return
+  const { lastChatId } = chatStore.getState()
+  if (!isChatPage()) return
+  if (body.chatId !== lastChatId) return
   toastStore.warn(body.text)
 })
 
@@ -752,7 +725,8 @@ subscribe(
   'chat-character-added',
   { chatId: 'string', active: 'boolean?', character: 'any' },
   (body) => {
-    const { active, allChats } = chatStore.getState()
+    const { details, allChats } = chatStore.getState()
+    const detail = details[body.chatId]
 
     const nextChats = allChats.map((chat) => {
       if (chat._id !== body.chatId) return chat
@@ -764,21 +738,15 @@ subscribe(
 
     chatStore.setState({ allChats: nextChats })
 
-    if (!active || active.chat._id !== body.chatId) return
+    if (!detail) return
 
     const nextActive = {
-      ...(active.chat.characters || {}),
+      ...(detail.chat.characters || {}),
       [body.character._id]: body.active ?? true,
     }
 
     chatStore.setState({
-      active: {
-        ...active,
-        chat: {
-          ...active.chat,
-          characters: nextActive,
-        },
-      },
+      details: updateChatDetail(body.chatId, { characters: nextActive }),
     })
 
     events.emit(EVENTS.charAdded, body.character)
@@ -786,7 +754,8 @@ subscribe(
 )
 
 subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
-  const { active, allChats } = chatStore.getState()
+  const { details, allChats } = chatStore.getState()
+  const detail = details[body.chatId]
 
   const nextChats = allChats.map((c) => {
     if (c._id !== body.chatId) return c
@@ -797,17 +766,11 @@ subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' },
   })
   chatStore.setState({ allChats: nextChats })
 
-  if (!active || active.chat._id !== body.chatId) return
+  if (!detail) return
 
-  const nextChatCharacters = { ...(active.chat.characters || {}), [body.characterId]: false }
+  const nextChatCharacters = { ...(detail.chat.characters || {}), [body.characterId]: false }
   chatStore.setState({
-    active: {
-      ...active,
-      chat: {
-        ...active.chat,
-        characters: nextChatCharacters,
-      },
-    },
+    details: updateChatDetail(body.chatId, { characters: nextChatCharacters }),
   })
 })
 
@@ -823,21 +786,18 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
 })
 
 subscribe('chat-temp-character', { chatId: 'string', character: 'any' }, (body) => {
-  const { active, allChats } = chatStore.getState()
+  const { details, allChats } = chatStore.getState()
+  const detail = details[body.chatId]
   const nextChats = allChats.map((chat) => {
     if (chat._id !== body.chatId) return chat
     return replaceTemp(chat, body.character)
   })
 
   chatStore.setState({ allChats: nextChats })
-
-  if (!active || active.chat._id !== body.chatId) return
+  if (!detail) return
 
   chatStore.setState({
-    active: {
-      ...active,
-      chat: replaceTemp(active.chat, body.character),
-    },
+    details: updateDetails(body.chatId, { chat: replaceTemp(detail.chat, body.character) }),
   })
 })
 
@@ -849,4 +809,48 @@ function replaceTemp(chat: AppSchema.Chat, char: AppSchema.Character): AppSchema
     ...chat,
     tempCharacters: { ...temp },
   }
+}
+
+function removeChatDetail(id: string): Record<string, ChatDetail> {
+  const { details } = chatStore.getState()
+  const next = {
+    ...details,
+    [id]: undefined,
+  }
+
+  return next as Record<string, ChatDetail>
+}
+
+function updateChatDetail(
+  id: string,
+  update: Partial<AppSchema.Chat & { background?: string }>
+): Record<string, ChatDetail> {
+  const { details } = chatStore.getState()
+  const detail = details[id]
+  if (detail?.chat) return details
+
+  const next = {
+    ...details,
+    [id]: {
+      ...detail,
+      chat: { ...detail.chat, ...update },
+    },
+  }
+
+  return next
+}
+
+function updateDetails(id: string, update: Partial<ChatDetail>): Record<string, ChatDetail> {
+  const { details } = chatStore.getState()
+  const last = details[id] || {}
+
+  const next = {
+    ...details,
+    [id]: {
+      ...last,
+      ...update,
+    },
+  }
+
+  return next
 }

@@ -9,7 +9,7 @@ import CharacterSelect from '/web/shared/CharacterSelect'
 
 const PromptModal: Component = () => {
   const user = userStore((s) => ({ user: s.user }))
-  const state = chatStore((s) => ({ prompt: s.prompt, chat: s.active?.chat }))
+  const state = chatStore((s) => ({ prompt: s.prompt, chat: s.details[s.lastChatId]?.chat }))
   const [encoder, setEncoder] = createSignal<TokenCounter>()
   const [tokens, setTokens] = createSignal(0)
   const lists = useParticipantList(true)

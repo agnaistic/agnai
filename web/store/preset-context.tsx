@@ -3,7 +3,7 @@ import { AIAdapter, MODE_SETTINGS, PresetAISettings, ThirdPartyFormat } from '/c
 import { AppSchema } from '/common/types'
 import { SubscriptionModelOption } from '/common/types/presets'
 import { agnaiPresets } from '/common/presets/agnaistic'
-import { createContext, useContext } from 'solid-js'
+import { createContext, createEffect, createSignal, on, useContext } from 'solid-js'
 import { getStore } from '/web/store/create'
 import { getPresetConnection, PresetConnection, ProviderDefinition } from '/common/providers'
 import { defaultPresets, isDefaultPreset } from '/common/default-preset'
@@ -159,12 +159,16 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   const cfg = settingStore((s) => ({ config: s.config }))
   const user = userStore((s) => ({ user: s.user }))
   const presets = presetStore((s) => ({ list: s.presets, loaded: s.presetsLoaded }))
+  const chats = chatStore((s) => ({ details: s.details, lastChatId: s.lastChatId }))
+
+  const [failedChatId, setFailedChatId] = createSignal('')
 
   const [state, setState, context, setContext] = opts?.anonymous
     ? [...createStore(initPreset()), ...createStore(initContext())]
     : useContext(PresetContext)
 
-  const log = debug(`preset:${context.__}`)
+  const log = (...args: any[]) =>
+    debug(`preset[${state._id ? state._id.slice(0, 4) : '....'}]`).apply(null, args as any)
 
   // Always clear the loading flag
   if (!opts?.anonymous) {
@@ -182,12 +186,12 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     const conn = getPresetConnection(state, list)
 
     log(
-      '[%s:%s] changing %s --> %s (%s)',
+      '[%s:%s] changing provider FROM:%s --> TO:%s (CONN:%s)',
       context.__,
       source,
-      context.provider?._id,
-      state.providerId,
-      conn.provider?._id
+      context.provider?._id?.slice(0, 4) || 'nil',
+      state.providerId?.slice(0, 4) || 'nil',
+      conn.provider?._id?.slice(0, 4) || 'nil'
     )
     const subId =
       conn.preset?.providerModels?.agnaistic || conn.preset?.registered?.agnaistic?.subscriptionId
@@ -206,6 +210,58 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     const hides = createHides(state, conn)
     setContext('hides', hides)
+  }
+
+  createEffect(
+    on(
+      () => [failedChatId(), chats.details],
+      () => {
+        if (!failedChatId()) return
+
+        const detail = chats.details[failedChatId()]
+
+        log('skipped post-failure (detail not ready yet)')
+        if (!detail?.chat) return
+
+        log('loading after failure (chat now ready)')
+        loadChat(detail.chat)
+      }
+    )
+  )
+
+  const loadChatId = async (chatId: string, knownPresetId?: string) => {
+    try {
+      if (knownPresetId) {
+        if (isDefaultPreset(knownPresetId)) {
+          await loadPresetId(knownPresetId)
+          return
+        }
+
+        const result = await loadPresetId(knownPresetId)
+        if (result) return
+      }
+
+      const result = await presetApi.getChatPreset(chatId)
+      if (result.result) {
+        load(result.result)
+        return
+      }
+
+      if (result.error) {
+        if (result.error === 'Resource not found') {
+          setFailedChatId(chatId)
+        } else {
+          toastStore.error(result.error)
+        }
+      }
+
+      const fallback = getFallbackPreset('agnaistic')
+      load(fallback)
+    } catch (ex) {
+    } finally {
+      log('loaded by chat-id')
+      loadModels()
+    }
   }
 
   const loadChat = async (chat: AppSchema.Chat, alert?: boolean) => {
@@ -430,6 +486,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       setState,
       provider: changeProvider,
       load: loadPresetId,
+      loadChatId,
       loadChat,
       clear,
       upsert,

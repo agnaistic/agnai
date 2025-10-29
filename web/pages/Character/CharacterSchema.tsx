@@ -95,7 +95,7 @@ export const CharacterSchema: Component<{
 
         if (props.characterId) {
           const char = ctx.allBots[props.characterId]
-          json = char ? char.json : chatStore.getState().active?.char.json
+          json = char ? char.json : ctx.char?.json
         } else if (props.presetId || props.inherit) {
           json = props.inherit || activePreset()?.json
         }

@@ -40,8 +40,8 @@ export const ImageSettingsModal = () => {
   }))
 
   const entity = chatStore((s) => ({
-    chat: s.active?.chat,
-    char: s.active?.char,
+    chat: s.details[s.lastChatId]?.chat,
+    char: s.details[s.lastChatId]?.char,
   }))
 
   const [editPreset, setEditPreset] = createSignal(false)
@@ -396,8 +396,8 @@ export function useCurrentChatImageSettings() {
 
   const user = userStore((s) => ({ cfg: s.user?.images }))
   const entity = chatStore((s) => ({
-    chat: s.active?.chat,
-    char: s.active?.char,
+    chat: s.details[s.lastChatId]?.chat,
+    char: s.details[s.lastChatId]?.char,
   }))
 
   const cfg = createMemo(() => {

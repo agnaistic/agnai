@@ -769,7 +769,10 @@ function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
     }
   }
 
-  eventStore.onCharacterMessageReceived(chatStore.getState().active?.chat!, messagesSinceLastEvent)
+  const { details, lastChatId } = chatStore.getState()
+  const active = details[lastChatId]
+
+  eventStore.onCharacterMessageReceived(active?.chat!, messagesSinceLastEvent)
 }
 
 function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {

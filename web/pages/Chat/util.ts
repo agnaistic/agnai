@@ -79,11 +79,11 @@ export function useEditableBots() {
 
   const chats = getStore('chat')((s) => {
     return {
-      chat: s.active?.chat,
-      char: s.active?.char,
+      chat: s.details[s.lastChatId]?.chat,
+      char: s.details[s.lastChatId]?.char,
       opts: s.opts,
-      activeBots: getActiveBots(s.active?.chat!, chars.botMap),
-      tempBots: Object.values(s.active?.chat?.tempCharacters! || {}),
+      activeBots: getActiveBots(s.details[s.lastChatId]?.chat!, chars.botMap),
+      tempBots: Object.values(s.details[s.lastChatId]?.chat?.tempCharacters! || {}),
     }
   })
 

@@ -95,7 +95,7 @@ const InputBar: Component<{
     msgs: s.msgs,
     canCaption: s.canImageCaption,
   }))
-  const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
+  const chats = chatStore((s) => ({ replyAs: s.details[s.lastChatId]?.replyAs }))
   const chars = characterStore((s) => ({ impersonating: s.impersonating }))
 
   useEffect(() => {

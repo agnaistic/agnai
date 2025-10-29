@@ -66,7 +66,8 @@ export const presetStore = createStore<PresetState>(
             preset.thirdPartyKey = ''
           }
         }
-        return { presets: res.result.presets, presetsLoaded: true }
+
+        return { presets: res.result.presets, templates: res.result.templates, presetsLoaded: true }
       }
     },
     async *testConnection(
@@ -478,3 +479,5 @@ export async function getRemotePreset(presetId: string) {
 
   return remote
 }
+
+export async function getRemoteChatPreset(chatId: string) {}

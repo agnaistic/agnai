@@ -22,7 +22,7 @@ const CharacterSelectList: Component<{
   onSelect: (item: AppSchema.Character | undefined) => void
   adornment?: Component<{ char: AppSchema.Character }>
 }> = (props) => {
-  const chats = chatStore((s) => ({ active: s.active }))
+  const chats = chatStore((s) => ({ active: s.details[s.lastChatId] }))
   const [_ref, setRef] = createSignal<any>()
   const [search, setSearch] = createSignal('')
   const chatPage = isChatPageMemo()

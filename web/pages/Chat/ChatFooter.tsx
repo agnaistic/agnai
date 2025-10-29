@@ -29,10 +29,10 @@ export const ChatFooter: Component<{
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
   const chats = chatStore((s) => ({
     opts: s.opts,
-    char: s.active?.char,
-    chat: s.active?.chat,
-    replyAs: s.active?.replyAs,
-    participantIds: s.active?.participantIds,
+    char: props.ctx.active?.char,
+    chat: props.ctx.active?.chat,
+    replyAs: props.ctx.active?.replyAs,
+    participantIds: props.ctx.active?.participantIds,
     members: s.chatProfiles,
   }))
 

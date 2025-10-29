@@ -15,7 +15,7 @@ import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
-  const character = chatStore((s) => s.active?.char)
+  const character = chatStore((s) => s.details[s.lastChatId]?.char)
   const isChat = isChatPageMemo()
 
   const jsonCharId = createMemo(() => {

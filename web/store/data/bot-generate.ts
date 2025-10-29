@@ -19,7 +19,7 @@ import { UserEmbed } from '/common/types/memory'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 import { GenerateEntities, getPromptEntities, PromptEntities } from './common'
 import { embedApi } from '../embeddings'
-import { ChatState } from '../chat'
+import { ChatDetail } from '../chat'
 import { BUILTIN_FORMATS, replaceTags } from '/common/presets/templates'
 import { getServiceTempConfig } from '/web/shared/adapter'
 import { getActiveBots } from '/web/pages/Chat/util'
@@ -76,7 +76,8 @@ type ChatRequest = Awaited<ReturnType<typeof buildChatRequest>>
 type StreamOpts = Exclude<GenerateOpts, { type: 'ooc' | 'send-noreply' | 'send-event:ooc' }>
 
 async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
+  const active = details[lastChatId]
   if (!active) {
     return localApi.error('No active chat. Try refreshing.')
   }
@@ -359,7 +360,9 @@ async function buildChatRequest(opts: GenerateOpts) {
 async function getActivePromptOptions(
   opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
 ) {
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
+  const active = details[lastChatId]
+
   const promptState = getStore('prompt').getState()
 
   if (!active) {
@@ -411,7 +414,9 @@ type EventKind =
   | 'send-event:ooc'
 
 async function createActiveChatPrompt(opts: GenerateOpts) {
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
+  const active = details[lastChatId]
+
   const { ui } = getStore('user').getState()
   const { templates } = getStore('presets').getState()
 
@@ -552,7 +557,7 @@ export type GenerateProps = {
 
 async function getGenerateProps(
   opts: GenerateOpts,
-  active: NonNullable<ChatState['active']>
+  active: NonNullable<ChatDetail>
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()
 

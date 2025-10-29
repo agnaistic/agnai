@@ -81,7 +81,8 @@ export const embedApi = {
     setter({ embeds })
   },
   initSimiliary: (model: string) => {
-    const chat = getStore('chat').getState().active?.chat
+    const { details, lastChatId } = getStore('chat').getState()
+    const chat = details[lastChatId]?.chat
 
     // WIP: Only use small model on mobile
     if (isMobile()) {
@@ -154,7 +155,8 @@ const handlers: {
         return
       }
       const user = getStore('user').getState()
-      const chat = getStore('chat').getState().active?.chat
+      const { details, lastChatId } = getStore('chat').getState()
+      const chat = details[lastChatId]?.chat
 
       if (type === 'embed') {
         post('initSimilarity', {

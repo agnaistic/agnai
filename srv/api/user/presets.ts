@@ -1,5 +1,5 @@
 import { assertValid } from '/common/valid'
-import { defaultPresets, presetValidator } from '../../../common/presets'
+import { defaultPresets, getFallbackPreset, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
 import { StatusError, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
@@ -7,6 +7,8 @@ import { AppSchema } from '/common/types'
 import { toSamplerOrder } from '/common/sampler-order'
 import { decryptText } from '/srv/db/util'
 import { getThirdPartyModels } from '/common/requests/util'
+import { isDefaultPreset } from '/common/default-preset'
+import { deepClone } from '/common/util'
 
 const createPreset = {
   ...presetValidator,
@@ -91,6 +93,39 @@ export const getUserPreset = handle(async ({ userId, params }) => {
 
   if (!preset || preset.userId !== userId) {
     throw new StatusError('Preset not found', 404)
+  }
+
+  return preset
+})
+
+export const getChatPreset = handle(async ({ userId, params }) => {
+  const chat = await store.chats.getChatOnly(params.id)
+  if (!chat) {
+    throw new StatusError(`Preset not found (Invalid chat id)`, 404)
+  }
+
+  if (!chat.genPreset) {
+    return getFallbackPreset('agnaistic')
+  }
+
+  if (isDefaultPreset(chat.genPreset)) {
+    const copy = deepClone(defaultPresets[chat.genPreset])
+    return copy
+  }
+
+  const preset = await store.presets.getSafeUserPreset(chat.genPreset, userId)
+  if (!preset) {
+    const fallback = getFallbackPreset('agnaistic')
+    return fallback
+  }
+
+  if (userId === preset.userId) {
+    return preset
+  }
+
+  const members = await store.chats.getActiveMembers(params.id)
+  if (!members.includes(userId)) {
+    throw new StatusError(`Preset not found: Not allowed`, 402)
   }
 
   return preset

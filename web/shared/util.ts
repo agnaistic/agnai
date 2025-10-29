@@ -15,6 +15,7 @@ import { v4 } from 'uuid'
 import { getChatPreset } from '../pages/Chat/util'
 import { extractReasoning } from '/common/reasoning'
 import { getUserId, isLoggedIn } from '../store/api'
+import { debug } from '/common/debug'
 
 const [css, hooks] = createHooks(recommended)
 
@@ -134,9 +135,13 @@ async function userCacheGet(key: string) {
   if (!prop) return
 
   const data = await getItem(prop)
-  if (!data) return
+  if (!data) {
+    debug('cache')(`[${key}] miss`)
+    return
+  }
 
   const json = JSON.parse(data)
+  debug('cache')(`[${key}] hit`)
   return json
 }
 
@@ -146,6 +151,7 @@ async function userCacheSet(key: string, data: any) {
   const prop = getUserCacheKey(key)
   if (!prop) return
 
+  debug('cache')(`[${key}] modified`)
   await setItem(prop, JSON.stringify(data))
 }
 
@@ -157,9 +163,10 @@ function getUserCacheKey(key: string) {
 }
 
 export function getUtterableText(msg: string) {
-  const { active } = getStore('chat').getState()
+  const { details, lastChatId } = getStore('chat').getState()
   const { ui, user } = getStore('user').getState()
   const { presets } = getStore('presets').getState()
+  const active = details[lastChatId]
 
   if (!active?.chat || !user) return
 
