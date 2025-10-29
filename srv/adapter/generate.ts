@@ -268,6 +268,9 @@ async function getRequestPreset(opts: InferenceRequest) {
     if (model) {
       notUserPreset = true
       preset = model
+    } else if (isDefaultPreset(opts.settings._id)) {
+      notUserPreset = true
+      preset = opts.settings
     } else {
       preset = opts.settings
     }
