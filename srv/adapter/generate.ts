@@ -254,6 +254,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
 async function getRequestPreset(opts: InferenceRequest) {
   let preset: Partial<AppSchema.GenSettings> | undefined
+  let notUserPreset = false
 
   if (opts.settings?._id && opts.user && !opts.guest && !isDefaultPreset(opts.settings._id)) {
     const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
@@ -265,12 +266,14 @@ async function getRequestPreset(opts: InferenceRequest) {
   if (opts.settings) {
     const model = getCachedSubscriptionModels().find((m) => m._id === opts.settings?._id)
     if (model) {
+      notUserPreset = true
       preset = model
     } else {
       preset = opts.settings
     }
   } else if (opts.user.defaultPreset) {
     if (isDefaultPreset(opts.user.defaultPreset)) {
+      notUserPreset = true
       preset = deepClone(defaultPresets[opts.user.defaultPreset])
     }
 
@@ -282,6 +285,7 @@ async function getRequestPreset(opts: InferenceRequest) {
     const models = getCachedSubscriptionModels()
     const model = models.find((m) => m.isDefaultSub)
     if (model) {
+      notUserPreset = true
       preset = model
     }
   }
@@ -298,7 +302,7 @@ async function getRequestPreset(opts: InferenceRequest) {
     opts.user.thirdPartyFormat = preset.thirdPartyFormat
   }
 
-  if (!opts.guest && preset.userId !== opts.user._id) {
+  if (!opts.guest && !notUserPreset && preset.userId !== opts.user._id) {
     if (!opts.chatId) throw new StatusError(`Could not locate preset for inference request`, 402)
     const members = await store.chats.getActiveMembers(opts.chatId)
 
