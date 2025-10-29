@@ -74,14 +74,14 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   const [query, setQuery] = useSearchParams()
   const [tab, setTab] = createSignal<number>(+(query.tab ?? '0'))
 
-  const [store, setStore] = createStore(toUserStoreObject(user.user!))
+  const [store, setStore] = createStore(toUserStoreObject(user.user! || {}))
 
   createEffect(
     on(
       () => user.user,
       (next) => {
         if (!next) return
-        setStore(next)
+        setStore(toUserStoreObject(next))
       }
     )
   )
