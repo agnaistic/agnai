@@ -268,7 +268,7 @@ async function getRequestPreset(opts: InferenceRequest) {
     if (model) {
       notUserPreset = true
       preset = model
-    } else if (isDefaultPreset(opts.settings._id)) {
+    } else if (isDefaultPreset(opts.settings._id) || !opts.settings._id) {
       notUserPreset = true
       preset = opts.settings
     } else {
@@ -306,11 +306,12 @@ async function getRequestPreset(opts: InferenceRequest) {
   }
 
   if (!opts.guest && !notUserPreset && preset.userId !== opts.user._id) {
-    if (!opts.chatId) throw new StatusError(`Could not locate preset for inference request`, 402)
+    if (!opts.chatId)
+      throw new StatusError(`[2] Could not locate preset for inference request`, 402)
     const members = await store.chats.getActiveMembers(opts.chatId)
 
     const isMember = members.some((id) => id === opts.user._id)
-    if (!isMember) throw new StatusError(`Could not locate preset for inference request`, 402)
+    if (!isMember) throw new StatusError(`[3] Could not locate preset for inference request`, 402)
   }
 
   const conn = getPresetConnection(preset, opts.user.providers)

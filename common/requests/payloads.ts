@@ -37,6 +37,7 @@ export function getLocalPayload(opts: MinOpts, stops: string[] = []) {
   body.top_p ??= gen.topP
   body.stop ??= getStoppingStrings(opts, opts.settings)
   body.stream = true
+  body.think = false
 
   if (gen.reasoning?.enabled) {
     body.reasoning = {

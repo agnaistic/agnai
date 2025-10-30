@@ -727,14 +727,12 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail): Promise
       if (!entities.impersonating) break
       // We need to switch the user/assistant roles around for the main character and the user
       const assistantId = entities.impersonating._id // To be viewed as: reply as, main character
-      const userId = entities.char._id // To be viewed as: impersonating
+      // const userId = entities.char._id // To be viewed as: impersonating
 
       props.replyAs = getBot(assistantId)
-      entities.char = getBot(assistantId)
       entities.autoReplyAs = assistantId
-
-      props.impersonate = getBot(userId)
-      entities.impersonating = getBot(userId)
+      props.impersonate = getBot(assistantId)
+      entities.impersonating = getBot(assistantId)
       break
     }
   }

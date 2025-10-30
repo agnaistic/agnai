@@ -300,6 +300,7 @@ export namespace AppSchema {
     localSettings?: { bgFormat?: 'contain' | 'cover' | 'auto' }
 
     invisible?: Record<string, boolean>
+    invisibleChars?: Record<string, Record<string, boolean>>
   }
 
   export interface ChatMember {
