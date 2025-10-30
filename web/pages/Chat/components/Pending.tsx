@@ -54,18 +54,10 @@ export const PendingMessages: Component<{
           partial={response.partial}
           cancelSwipe={noop}
           discardSwipe={noop}
-          handle={
-            response.waiting?.mode !== 'self'
-              ? props.ctx.allBots[response.waiting?.characterId || '']?.name
-              : '???'
-          }
+          handle={props.ctx.allBots[response.waiting?.characterId || '']?.name || '...'}
           tts={false}
-          characterId={
-            response.waiting?.mode !== 'self' ? response.waiting?.characterId : props.impersonateId
-          }
-          userId={
-            response.waiting?.mode === 'self' ? response.waiting.userId || props.userId : undefined
-          }
+          characterId={response.waiting?.characterId}
+          userId={response.waiting?.userId}
           sendMessage={noop}
           isPaneOpen={props.isPaneOpen}
           preset={props.preset}

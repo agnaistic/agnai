@@ -34,6 +34,8 @@ import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { toastStore } from '../toasts'
 import { lazyPromise } from '/common/util'
+import type { ResponseState } from '../response'
+import { EVENTS, events } from '/web/emitter'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -135,6 +137,17 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     if (tags?.closeUser?.trim()) stops.push(tags.closeUser)
   }
 
+  waiting({
+    mode: opts.kind,
+    characterId: req.request.replyAs._id,
+    chatId: req.request.chat._id,
+    started: Date.now(),
+    input: req.request.text,
+    messageId: req.request.replacing?._id || req.request.requestId,
+    signal: opts.signal,
+    userId: undefined, // Do we ever need this?
+  })
+
   await genApi.inferenceStream(
     {
       settings: req.request.settings,
@@ -161,6 +174,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
         case 'error':
           lazy.reject(response)
           toastStore.error(response)
+          waiting(undefined)
           break
 
         case 'meta':
@@ -192,6 +206,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
         case 'done': {
           const trimmed = santitize(prefix + response)
           await handlePostStreamResponse(opts, req, trimmed, meta)
+          waiting(undefined)
           break
         }
       }
@@ -325,9 +340,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
-    replyAs: removeAvatar(
-      opts.kind === 'self' && props.impersonate ? props.impersonate : props.replyAs
-    ),
+    replyAs: removeAvatar(props.replyAs),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
     parent: props.parent?._id,
@@ -445,8 +458,13 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
   const prompt = await createPromptParts(
     {
       kind: opts.kind,
-      char: entities.char,
       sender: entities.profile,
+
+      // Relevant characters
+      char: entities.char,
+      replyAs: props.replyAs,
+      impersonate: props.impersonate,
+
       chat: entities.chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
@@ -455,9 +473,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
       retry: props?.retry,
       settings: entities.settings,
       messages: props.messages,
-      replyAs: props.replyAs,
       characters: entities.characters,
-      impersonate: props.impersonate,
       lastMessage: entities.lastMessage?.date || '',
       trimSentences: ui.trimSentences,
       chatEmbeds,
@@ -555,10 +571,7 @@ export type GenerateProps = {
   reschemaPrompt?: string
 }
 
-async function getGenerateProps(
-  opts: GenerateOpts,
-  active: NonNullable<ChatDetail>
-): Promise<GenerateProps> {
+async function getGenerateProps(opts: GenerateOpts, active: ChatDetail): Promise<GenerateProps> {
   const entities = await getPromptEntities()
 
   const json = entities.messages.reduce<Record<string, any>>(
@@ -701,6 +714,22 @@ async function getGenerateProps(
 
     case 'request': {
       props.replyAs = getBot(opts.characterId)
+      break
+    }
+
+    case 'self': {
+      if (!entities.impersonating) break
+      // We need to switch the user/assistant roles around for the main character and the user
+      const assistantId = entities.impersonating._id // To be viewed as: reply as, main character
+      const userId = entities.char._id // To be viewed as: impersonating
+
+      props.replyAs = getBot(assistantId)
+      entities.char = getBot(assistantId)
+      entities.autoReplyAs = assistantId
+
+      props.impersonate = getBot(userId)
+      entities.impersonating = getBot(userId)
+      break
     }
   }
 
@@ -759,4 +788,8 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
   }
 
   return next
+}
+
+function waiting(next: ResponseState['waiting']) {
+  events.emit(EVENTS.setWaiting, next)
 }

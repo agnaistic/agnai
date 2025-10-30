@@ -22,6 +22,7 @@ export const EVENTS = {
   chatClosed: 'chat-closed',
   userBanned: 'user-banned',
   msgAttachment: 'msg-attachment',
+  setWaiting: 'set-waiting',
 } as const
 
 type EventType = (typeof EVENTS)[keyof typeof EVENTS]

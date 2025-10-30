@@ -699,6 +699,7 @@ export async function getLinesForPrompt(
       members: profiles,
       sender: opts.sender,
       impersonate: opts.impersonate,
+      replyAs: opts.replyAs,
     })
     const char = getBotName(
       opts.chat,

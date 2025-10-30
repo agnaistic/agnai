@@ -335,18 +335,30 @@ export function getMessageAuthor(opts: {
   chars: Record<string, AppSchema.Character>
   members: Map<string, AppSchema.Profile>
   sender: AppSchema.Profile
-  impersonate?: AppSchema.Character
+  impersonate: AppSchema.Character | undefined
+  replyAs: AppSchema.Character | undefined
 }): { role: 'user' | 'model'; name: string } {
   const { chat, msg, chars, members, sender, impersonate } = opts
 
+  /**
+   * All messages not from the `replying` character should be role:user
+   */
   if (msg.characterId) {
+    if (opts.replyAs?._id === msg.characterId) {
+      return { role: 'model', name: opts.replyAs.name || 'Assistant' }
+    }
+
+    if (opts.impersonate?._id === msg.characterId) {
+      return { role: 'user', name: opts.impersonate.name || 'You' }
+    }
+
     const char =
       msg.characterId === impersonate?._id
         ? impersonate
         : chars[msg.characterId] || chat.tempCharacters?.[msg.characterId]
 
     return {
-      role: !!msg.userId && msg.userId === sender.userId ? 'user' : 'model',
+      role: 'user',
       name: char?.name || msg.name || 'Unknown',
     }
   }
