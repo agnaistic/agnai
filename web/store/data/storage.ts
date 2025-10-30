@@ -264,7 +264,7 @@ async function getGuestData() {
     }
   }
 
-  return { ...data, messages }
+  return { date: new Date().toISOString(), ...data, messages }
 }
 
 async function downloadGuestData() {

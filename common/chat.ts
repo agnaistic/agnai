@@ -15,8 +15,12 @@ export type ChatDepths = Record<number, string[]>
 export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree; root: string } {
   const tree: ChatTree = {}
 
+  const seenMsgs: Record<string, boolean> = {}
+
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]
+    if (seenMsgs[msg._id]) continue
+    seenMsgs[msg._id] = true
 
     const parent = messages[i - 1]
     if (!msg.parent && parent) {
