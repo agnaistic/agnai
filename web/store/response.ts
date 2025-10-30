@@ -14,6 +14,7 @@ import { v4 } from 'uuid'
 import { msgsApi } from './data/messages'
 import { debug } from '/common/debug'
 import { EVENTS, events } from '../emitter'
+import { getScenarioEventType } from '/common/scenario'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -399,7 +400,9 @@ async function handlePreSend(opts: {
   onSuccess?: () => void
   onError?: (err?: string) => void
 }) {
-  if (opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') return
+  const isEvent = opts.mode.startsWith('send-event:')
+  if (!isEvent && opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply')
+    return
 
   const { impersonating } = getStore('character').getState()
   const { messageHistory, msgs } = getStore('messages').getState()
@@ -413,7 +416,7 @@ async function handlePreSend(opts: {
   const parent = botGen.getMessageParent(opts.mode, messageHistory.concat(msgs))
 
   const res = await msgsApi.createMessage({
-    kind: 'send-noreply',
+    kind: isEvent ? getScenarioEventType(opts.mode) : 'send-noreply',
     chatId: opts.chatId,
     messageId,
     text: opts.msg,

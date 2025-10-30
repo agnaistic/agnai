@@ -103,7 +103,10 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
 
   await handlePreStreamResponse(opts, req)
 
-  const meta: any = {}
+  const meta: any = {
+    ctx: req.entities.settings.maxContextLength,
+    len: req.prompt.template.length,
+  }
   const provider = getProvider(req.entities.settings?.providerId)
   const conn = provider ? getProviderConnection(provider) : undefined
 
@@ -137,16 +140,19 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     if (tags?.closeUser?.trim()) stops.push(tags.closeUser)
   }
 
+  const messageId = req.request.replacing?._id || req.request.requestId
   waiting({
     mode: opts.kind,
     characterId: req.request.replyAs._id,
     chatId: req.request.chat._id,
     started: Date.now(),
     input: req.request.text,
-    messageId: req.request.replacing?._id || req.request.requestId,
+    messageId,
     signal: opts.signal,
     userId: undefined, // Do we ever need this?
   })
+
+  localEmit({ type: 'service-prompt', id: messageId, prompt: JSON.stringify(messages, null, 2) })
 
   await genApi.inferenceStream(
     {
@@ -289,7 +295,7 @@ async function handlePostStreamResponse(
   req.request.response = response
 
   await msgsApi.createMessage({
-    kind: 'send-noreply',
+    kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
     chatId,
     messageId,
     text: response,

@@ -133,6 +133,7 @@ const ChatSettings: Component<{
   )
 
   onMount(() => {
+    if (scenarioState.scenarios.length) return
     scenarioStore.getAll()
   })
 
