@@ -136,7 +136,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
       <div class="flex flex-col items-center gap-2">
         <FileInput
           fieldName="guest-data-import"
-          accept="text/json,application/json"
+          accept=".txt, text/json, application/json"
           label="Guest Data"
           onUpdate={async (data) => {
             if (!data?.[0]) return

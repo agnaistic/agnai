@@ -192,7 +192,7 @@ export async function prepareJsonHref(content: string | object) {
   const output = encodeURIComponent(
     typeof content === 'string' ? content : JSON.stringify(content, null, 2)
   )
-  const href = `data:text/json:charset=utf-8,${output}`
+  const href = `data:application/json:charset=utf-8,${output}`
   return href
 }
 
