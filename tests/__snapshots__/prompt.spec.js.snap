@@ -182,7 +182,7 @@ Object {
     Object {
       "_id": "",
       "msg": "MainChar: bot response",
-      "role": "model",
+      "role": "user",
     },
   ],
   "parts": Object {
