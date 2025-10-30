@@ -1117,70 +1117,109 @@ function retryJsonSchema(original: AppSchema.ChatMessage, split: SplitMessage) {
 }
 
 function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {
+  // Iam getting pissed of by showdown effing up Asteriks, I just do this myself - @Aldimensch
+  // Escape single asterisks but not double asterisks
+  text = text.replace(/(?<!\*)\*(?!\*)/g, '\\*')
+
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
   // we sanizize user input to prevent XSS attacks
   // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
-  const html = Purify.sanitize(
-    wrapWithQuoteElement(
-      markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
-    ),
-    {
-      ADD_TAGS: ['qem'],
-    }
+  let html = makeTextLookNice(
+    markdown
+      .makeHtml(parseMessage(text, ctx, isUser, adapter))
+      .replace(/&amp;nbsp;/g, '&nbsp;')
   )
+
+  // Now, after HTML is generated, process asterisks in text nodes only
+  html = asterikPairing(html)
+
+  html = Purify.sanitize(html, {
+    ADD_TAGS: ['qem', 'eem'],
+  })
 
   return html
 }
 
+function asterikPairing(text: string) {
+  const lines = text.split(/((?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>))/i);
+  let accum = '';
+  let tempLine = '';
+  for (let line of lines) {
+    if (/(?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>)/i.test(line)) {
+      accum += line;
+    } else {
+      tempLine = outerAsterikPairing(line);
+      accum += innerAsterikPairing(tempLine);
+    }
+  }
+  return accum;
+}
+
+function outerAsterikPairing(line: string) {
+  // Check if the line contains any <pre> or <code> tags, we dont mess with the content of these tags.
+  if (/<(?:pre|code)(?:\s[^>]*)?>/i.test(line)) return line
+
+  const firstAsterisk = line.indexOf('*')
+  const lastAsterisk = line.lastIndexOf('*')
+  if (firstAsterisk !== -1 && lastAsterisk !== -1 && firstAsterisk !== lastAsterisk) {
+    return line.slice(0, firstAsterisk) + '<em>' + line.slice(firstAsterisk + 1, lastAsterisk) + '</em>' + line.slice(lastAsterisk + 1)
+  }
+  return line
+}
+
+function innerAsterikPairing(line: string) {
+  // Check if the line contains any <pre> or <code> tags, we dont mess with the content of these tags.
+  if (/<(?:pre|code)(?:\s[^>]*)?>/i.test(line)) return line
+
+  // Count asterisks in the line
+  const asteriskCount = (line.match(/\*/g) || []).length
+  
+  // If odd number of asterisks, we can't properly pair them
+  if (asteriskCount % 2 !== 0) return line
+  
+  // If even number of asterisks, replace all * pairs with <em> tags
+  return line.replace(/\*(.*?)\*/g, '<eem>$1</eem>')
+}
+
 /**
- * Markup beautification. Lets us control color of diffrent HTML tags, expands on the markdown functionality
- * Especially useful for quotes, which are wrapped in <q> tags
- * and emphasis, which is wrapped in <qem> tags.
+ * Beautifies the markup by handling custom quote and emphasis formatting in a single pass.
+ * This function replaces a series of sequential replacements with a single, more efficient
+ * regular expression. It processes:
+ * - Escaped asterisks inside `<code>` blocks.
+ * - Double-quoted sections `"..."` into `<q>...</q>` tags.
+ * - Asterisk-based emphasis inside quotes into `<qem>...</qem>` tags.
+ * (Asterisk emphasis is now handled after HTML generation)
  */
-function wrapWithQuoteElement(str: string) {
-  // Replace all non-regular double quotes with double regular quotes
+function makeTextLookNice(str: string) {
+  // First, normalize all Unicode double quotes to standard double quotes.
   // Unicode double quote characters: https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
-  str = str.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+  const normalizedStr = str.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
 
-  return str.replace(
-    /*
-    Regex magic explained:
-    <[\s\S]*?>      - skip all HTML tags   eg. <sumting>
-    ```[\s\S]*?```  - skip all code blocks eg. <pre>/``` markdown transform <pre><code> to ```
-    ``[\s\S]*?``    - skip all inline code eg. <code>/`` markdown transform <code> to `` | this is a non standard markup 
-    `[\s\S]*?`      - skip all inline code eg. <code>/` markdown transform <code> to `
+  // This regex handles two cases, in order of priority:
+  // 1. `<code>...</code>` blocks, 2. quoted sections `"..."`
+  return normalizedStr.replace(
+    /(<code>[\s\S]*?<\/code>)|(".*?")/gm,
+    (match, codeBlock, quoted) => {
+      // Case 1: A code block was matched.
+      if (codeBlock) {
+        // Un-escape any `\*` back to `*` inside a code block.
+        return codeBlock.replace(/\\\*/g, '*')
+      }
 
-    (\".+?\")       - capture all regular double quotes, which are not part of HTML tags or code blocks
-    All captured groups are passed to the wrapCaptureGroupQuotes function
-    */
-    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")/gm,
-    wrapCaptureGroupQuotes
+      // Case 2: A quoted string was matched.
+      if (quoted) {
+        // Find any asterisk-wrapped text *inside* the quote and
+        // convert it to a custom emphasis tag `<qem>`.
+        const innerContent = quoted.slice(1, -1).replace(/\*(.*?)\*/g, '<qem>$1</qem>')
+        return `<q>"${innerContent}"</q>`
+      }
+
+      return match
+    }
   )
-}
-
-/** Processes capture group from above */
-function wrapCaptureGroupQuotes(match: string, regularQuoted?: string) {
-  if (regularQuoted) {
-    /*If we have a valid string then we are within a quote
-    ([\s\S]*?) - we ignore all characters between <em> and </em>
-    a valid capure will look like this: "lets have some <em>fun</em>"
-    we then pass the capture group to wrapCaptureGroupEmphasis function, which will replace <em> with <qem>
-    */
-    regularQuoted = regularQuoted.replace(/<em>([\s\S]*?)<\/em>/gm, wrapCaptureGroupEmphasis)
-    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
-  }
-  return match
-}
-
-/** Replaces all <em> tags within a <q> tag with <qem> tags */
-function wrapCaptureGroupEmphasis(match: string, emphasisQuote?: string) {
-  if (emphasisQuote) {
-    return '<qem>' + emphasisQuote.replace(/\"/g, '') + '</qem>'
-  }
-  return match
 }
 
 function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAction) {

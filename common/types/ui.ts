@@ -42,6 +42,8 @@ export type CustomUI = {
   chatQuoteColor: string
   chatQuoteEmphasisColor: string
   chatQuoteEmphasisWeight: string
+  chatEmphasisEmphasisColor: string
+  chatEmphasisEmphasisWeight: string
 }
 
 export type MessageOption =
@@ -101,6 +103,8 @@ const customUiGuard = {
   chatQuoteColor: 'string',
   chatQuoteEmphasisColor: 'string',
   chatQuoteEmphasisWeight: 'string',
+  chatEmphasisEmphasisColor: 'string',
+  chatEmphasisEmphasisWeight: 'string',
 } as const
 
 export const uiGuard = {
@@ -152,6 +156,8 @@ export const defaultUIsettings: UISettings = {
     chatQuoteColor: '--text-800',
     chatQuoteEmphasisColor: '--text-800',
     chatQuoteEmphasisWeight: 'unset',
+    chatEmphasisEmphasisColor: '--text-800',
+    chatEmphasisEmphasisWeight: 'unset',
   },
 
   dark: {
@@ -162,6 +168,8 @@ export const defaultUIsettings: UISettings = {
     chatQuoteColor: '--text-800',
     chatQuoteEmphasisColor: '--text-800',
     chatQuoteEmphasisWeight: 'unset',
+    chatEmphasisEmphasisColor: '--text-800',
+    chatEmphasisEmphasisWeight: 'unset',
   },
 
   msgOptsInline: {
