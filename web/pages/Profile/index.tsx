@@ -1,4 +1,4 @@
-import { AlertTriangle, Save, X } from 'lucide-solid'
+import { AlertTriangle, Download, Save, X } from 'lucide-solid'
 import {
   Component,
   Match,
@@ -107,6 +107,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
   const [importing, setImporting] = createSignal(false)
+  const [dataHref, setDataHref] = createSignal('')
   const google = useGoogleReady()
 
   const canuseGoogle = createMemo(
@@ -350,14 +351,37 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
           </Show>
 
           <Show when={state.user?._id === 'anon'}>
-            <div class="flex justify-center gap-4">
-              <Button schema="success" onClick={localApi.downloadGuestData}>
-                Download Guest Data
-              </Button>
-              <Button disabled={importing()} schema="warning" onClick={importGuestData}>
-                Import Guest Data
-              </Button>
-            </div>
+            <TitleCard title="Guest Data" center>
+              <div class="flex flex-col items-center gap-3">
+                <div class="flex justify-center gap-4">
+                  <Button
+                    schema="success"
+                    onClick={async () => {
+                      const data = await localApi.getGuestData()
+                      const href = await localApi.prepareJsonHref(data)
+                      setDataHref(href)
+                    }}
+                  >
+                    Prepare Backup
+                  </Button>
+                  <Button disabled={importing()} schema="warning" onClick={importGuestData}>
+                    Import
+                  </Button>
+                </div>
+
+                <Show when={!!dataHref()} fallback={<span class="text-500">Backup Not Ready</span>}>
+                  <div class="flex justify-center">
+                    <a
+                      class="link flex gap-1"
+                      href={dataHref()}
+                      download={`guest-data-${Date.now()}.json`}
+                    >
+                      Download Guest Data <Download size={16} />
+                    </a>
+                  </div>
+                </Show>
+              </div>
+            </TitleCard>
           </Show>
 
           <Show when={state.user?._id !== 'anon'}>

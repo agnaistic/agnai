@@ -188,6 +188,14 @@ export function downloadJson(content: string | object, filename: string = 'agnai
   URL.revokeObjectURL(anchor.href)
 }
 
+export async function prepareJsonHref(content: string | object) {
+  const output = encodeURIComponent(
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  )
+  const href = `data:text/json:charset=utf-8,${output}`
+  return href
+}
+
 export function getHeaderBg(mode: UI.UISettings['mode']) {
   mode
   const rgb = getRootRgb('bg-900')

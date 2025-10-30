@@ -3,7 +3,7 @@ import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
-import { storage } from '/web/shared/util'
+import { prepareJsonHref, storage } from '/web/shared/util'
 import { replace } from '/common/util'
 import { NOVEL_MODELS } from '/common/presets/novel'
 
@@ -250,6 +250,23 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
   return { user, presets, profile, books, scenario, characters, chats, templates }
 }
 
+async function getGuestData() {
+  const data = await getGuestInitEntities()
+  const messages: Record<string, AppSchema.ChatMessage[]> = {}
+
+  for (const chat of data.chats) {
+    const list = await storage.getItem(`messages-${chat._id}`)
+
+    if (list) {
+      const json = JSON.parse(list)
+      if (!Array.isArray(json)) continue
+      messages[chat._id] = json
+    }
+  }
+
+  return { ...data, messages }
+}
+
 async function downloadGuestData() {
   const data = await getGuestInitEntities()
   const messages: Record<string, AppSchema.ChatMessage[]> = {}
@@ -483,4 +500,6 @@ export const localApi = {
   handleGuestInit,
   downloadGuestData,
   importGuestData,
+  getGuestData,
+  prepareJsonHref,
 }
