@@ -181,7 +181,8 @@ export function downloadJson(content: string | object, filename: string = 'agnai
   )
 
   const anchor = document.createElement('a')
-  anchor.href = `data:text/json:charset=utf-8,${output}`
+  const blob = new Blob([`data:text/json:charset=utf-8,${output}`])
+  anchor.href = URL.createObjectURL(blob)
   anchor.download = `${filename}.json`
   anchor.click()
   URL.revokeObjectURL(anchor.href)
