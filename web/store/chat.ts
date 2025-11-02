@@ -827,7 +827,7 @@ function updateChatDetail(
 ): Record<string, ChatDetail> {
   const { details } = chatStore.getState()
   const detail = details[id]
-  if (detail?.chat) return details
+  if (!detail?.chat) return details
 
   const next = {
     ...details,
