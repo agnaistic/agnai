@@ -4,7 +4,7 @@ import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, userStore } from '../../../store'
 import { AppSchema, TokenCounter } from '/common/types'
-import { useParticipantList } from '../MemberModal'
+import { useParticipantList } from '../util'
 import CharacterSelect from '/web/shared/CharacterSelect'
 
 const PromptModal: Component = () => {

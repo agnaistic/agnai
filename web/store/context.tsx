@@ -17,6 +17,7 @@ import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 
 export type ContextState = {
+  appReady: boolean
   tooltip?: string | JSX.Element
   anonymize: boolean
 
@@ -65,6 +66,7 @@ export type ContextState = {
 }
 
 const initial: ContextState = {
+  appReady: false,
   anonymize: false,
   tempMap: {},
   allBots: {},
@@ -113,7 +115,7 @@ export function ContextProvider(props: { children: any }) {
     profile: s.profile,
     user: s.user,
   }))
-  const cfg = settingStore((s) => ({ anonymize: s.anonymize, config: s.config }))
+  const cfg = settingStore((s) => ({ anonymize: s.anonymize, config: s.config, inited: !!s.init }))
   const msgs = msgStore((s) => ({
     graph: s.graph,
     imgWaiting: s.imgWaiting,
@@ -189,6 +191,7 @@ export function ContextProvider(props: { children: any }) {
 
     const next: Partial<ContextState> = {
       bg: visuals(),
+      appReady: cfg.inited,
       flags: page.flags,
       anonymize: cfg.anonymize,
       config: cfg.config,

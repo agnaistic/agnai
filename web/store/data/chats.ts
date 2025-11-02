@@ -56,7 +56,14 @@ export async function getChat(id: string) {
     return localApi.error(`Character not found in data`)
   }
 
-  return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
+  return localApi.result({
+    chat,
+    character,
+    messages,
+    members: [profile],
+    active: [],
+    characters,
+  })
 }
 
 export async function restartChat(chatId: string) {

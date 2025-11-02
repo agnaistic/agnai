@@ -46,44 +46,52 @@ export const MessageMeta: Component = () => {
         <Card>
           <LogProbs msg={state.msg!} />
           <table class="text-sm">
-            <Show when={state.msg!.adapter}>
+            <tbody>
               <tr>
                 <td class="pr-2">
-                  <b>Adapter</b>
+                  <b>created</b>
                 </td>
-                <td>{state.msg!.adapter}</td>
+                <td>{new Date(state.msg!.createdAt).toLocaleString()}</td>
               </tr>
-            </Show>
-            <Show when={depth() >= 0}>
-              <tr>
-                <td>
-                  <b>depth</b>
-                </td>
-                <td>#{depth() + 1}</td>
-              </tr>
-            </Show>
-            <Show when={descendants().length > 0 && ctx.flags.debug}>
-              <tr>
-                <td>
-                  <b>descendants</b>
-                </td>
-                <td>
-                  {descendants()
-                    .map((d) => d.slice(0, 4))
-                    .join(', ')}
-                </td>
-              </tr>
-            </Show>
-            <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
-              {([key, value]) => (
+              <Show when={state.msg!.adapter}>
                 <tr>
                   <td class="pr-2">
-                    <b>{key}</b>
+                    <b>Adapter</b>
                   </td>
-                  <td>{value as string}</td>
+                  <td>{state.msg!.adapter}</td>
                 </tr>
-              )}
-            </For>
+              </Show>
+              <Show when={depth() >= 0}>
+                <tr>
+                  <td>
+                    <b>depth</b>
+                  </td>
+                  <td>#{depth() + 1}</td>
+                </tr>
+              </Show>
+              <Show when={descendants().length > 0 && ctx.flags.debug}>
+                <tr>
+                  <td>
+                    <b>descendants</b>
+                  </td>
+                  <td>
+                    {descendants()
+                      .map((d) => d.slice(0, 4))
+                      .join(', ')}
+                  </td>
+                </tr>
+              </Show>
+              <For each={Object.entries(state.msg!.meta || {}).filter(([key]) => key !== 'probs')}>
+                {([key, value]) => (
+                  <tr>
+                    <td class="pr-2">
+                      <b>{key}</b>
+                    </td>
+                    <td>{value as string}</td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
           </table>
         </Card>
 

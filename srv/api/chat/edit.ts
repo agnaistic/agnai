@@ -27,6 +27,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       imageSource: 'string?',
       imageSettings: 'any?',
       invisible: 'any?',
+      invisibleChars: 'any?',
     },
     body,
     true
@@ -56,6 +57,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     imageSource: (body.imageSource as any) ?? prev.imageSource,
     imageSettings: body.imageSettings,
     invisible: body.invisible ?? prev.invisible,
+    invisibleChars: body.invisibleChars ?? prev.invisibleChars,
   }
 
   if (body.useOverrides === false) {

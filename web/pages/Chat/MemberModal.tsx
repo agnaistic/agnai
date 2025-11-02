@@ -14,12 +14,12 @@ import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, msgStore, toastStore, userStore } from '../../store'
+import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
-import { getActiveBots, useEditableBots } from './util'
+import { useEditableBots, useParticipantList } from './util'
 import Divider from '/web/shared/Divider'
 import Convertible from '../../shared/Mode/Convertible'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
@@ -497,83 +497,3 @@ const CharacterParticipant: Component<{
 }
 
 export default MemberModal
-
-export function useParticipantList(forChat?: boolean) {
-  const self = userStore((s) => ({ profile: s.profile }))
-  const msgs = msgStore((s) => ({ msgs: s.msgs, messageHistory: s.messageHistory }))
-  const chars = characterStore((s) => ({
-    impersonating: s.impersonating,
-    characters: forChat ? s.chatChars : s.characters,
-  }))
-  const state = chatStore((s) => ({
-    active: s.details[s.lastChatId || ''],
-    memberIds: s.memberIds,
-  }))
-
-  const charMembers = createMemo<AppSchema.Character[]>(() => {
-    const active = getActiveBots(
-      state.active?.chat!,
-      chars.characters.map,
-      state.active?.chat.tempCharacters || {}
-    )
-
-    const needsImpersonate =
-      chars.impersonating && active.every((a) => a._id !== chars.impersonating?._id)
-    if (needsImpersonate) {
-      active.unshift(chars.impersonating!)
-    }
-
-    const ids = new Set(active.map((chr) => chr._id))
-
-    for (const msg of msgs.messageHistory.concat(msgs.msgs)) {
-      if (!msg.characterId) continue
-      if (state.active?.chat.tempCharacters?.[msg.characterId]) continue
-      if (ids.has(msg.characterId)) continue
-
-      const char = chars.characters.map[msg.characterId]
-      if (!char) continue
-      active.push(char)
-      ids.add(char._id)
-    }
-
-    active.sort((left, right) => left.name.localeCompare(right.name))
-
-    return active
-  })
-
-  const temps = createMemo(() => {
-    const chat = state.active?.chat
-    if (!chat) return { active: [], inactive: [], deleted: [] }
-
-    if (!chat.tempCharacters) return { active: [], inactive: [], deleted: [] }
-
-    const all = Object.values(chat.tempCharacters)
-    const active = all.filter((char) => char.favorite !== false && !char.deletedAt)
-    const inactive = all.filter((char) => char.favorite === false && !char.deletedAt)
-    const deleted = all.filter((ch) => !!ch.deletedAt)
-
-    return { active, inactive, deleted }
-  })
-
-  const users = createMemo(() => {
-    if (!self.profile) return []
-    const participants = state.active?.participantIds?.map((id) => state.memberIds[id]) || []
-    return [self.profile].concat(participants.sort((a, b) => a.handle.localeCompare(b.handle)))
-  })
-
-  const lists = createMemo(() => {
-    const temp = temps()
-    const map = {
-      chars: charMembers(),
-      users: users(),
-
-      tempsActive: temp.active,
-      tempsInactive: temp.inactive,
-      tempsDeleted: temp.deleted,
-    }
-
-    return map
-  })
-
-  return lists
-}

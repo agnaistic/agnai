@@ -749,8 +749,10 @@ export function isMessageInvisible(
 ): boolean {
   const specific = msg.invisible?.[characterId]
   const defaults = chat.invisible?.[characterId]
+  const charDefaults = chat.invisibleChars?.[characterId]?.[msg.characterId || 'none']
 
   if (specific !== undefined) return specific
+  if (charDefaults !== undefined) return charDefaults
   if (defaults !== undefined) return defaults
   return false
 }
@@ -760,12 +762,7 @@ export function isMessageVisible(
   msg: AppSchema.ChatMessage,
   characterId: string
 ): boolean {
-  const specific = msg.invisible?.[characterId]
-  const defaults = chat.invisible?.[characterId]
-
-  if (specific !== undefined) return !specific
-  if (defaults !== undefined) return !defaults
-  return true
+  return !isMessageInvisible(chat, msg, characterId)
 }
 
 export function getMessageVisibility(
@@ -775,8 +772,10 @@ export function getMessageVisibility(
 ) {
   const specific = msg.invisible?.[characterId]
   const defaults = chat.invisible?.[characterId]
+  const charDefaults = chat.invisibleChars?.[characterId]?.[msg.characterId || 'none']
 
   if (specific !== undefined) return specific ? 'invisible' : 'visible'
+  if (charDefaults !== undefined) return charDefaults ? 'invisible' : 'visible'
   if (defaults !== undefined) return defaults ? 'invisible' : 'visible'
   return 'default'
 }

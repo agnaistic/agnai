@@ -24,12 +24,12 @@ import {
   userStore,
 } from '../../store'
 import { defaultPresets } from '/common/presets'
-import { Card, TitleCard } from '/web/shared/Card'
+import { Card, Pill, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 import Divider from '/web/shared/Divider'
-import { Sparkles, Wand } from 'lucide-solid'
+import { Check, Minus, Sparkles, Wand, X } from 'lucide-solid'
 import { createStore } from 'solid-js/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import { StreamCallback } from '/web/store/data/messages'
@@ -37,8 +37,9 @@ import { generateField, MinCharacter } from '../Character/generate-char'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { isDefaultPreset } from '/common/default-preset'
 import { FormLabel } from '/web/shared/FormLabel'
-import { useParticipantList } from './MemberModal'
-import { VisibilityToggle } from './components/Visibility'
+import { useParticipantList } from './util'
+import { CharacterDefaultVisibility, VisibilityToggle } from './components/Visibility'
+import { neat } from '/common/util'
 
 const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
@@ -79,7 +80,7 @@ const ChatSettings: Component<{
 }> = (props) => {
   const state = chatStore((s) => ({ active: s.details[s.lastChatId || ''] }))
   const [generating, setGenerating] = createSignal('')
-  const [flags, setFlags] = createSignal<Record<string, boolean>>({})
+  const [flags, setFlags] = createSignal<Record<string, boolean | undefined>>({})
   const [edit, setEdit] = createStore(getInitState(state.active?.chat, state.active?.char))
 
   const user = userStore((s) => ({ user: s.user }))
@@ -227,7 +228,8 @@ const ChatSettings: Component<{
 
   const toggle = (charId: string) => {
     const next = { ...flags() }
-    const flag = next[charId] === undefined ? true : !next[charId]
+    const curr = next[charId]
+    const flag = curr === undefined ? true : curr === false ? undefined : false
     next[charId] = flag
     setFlags(next)
     chatStore.editChat(state.active?.chat?._id!, { invisible: next }, { quiet: true })
@@ -502,20 +504,38 @@ const ChatSettings: Component<{
 
       <FormLabel
         label="Default Message Visibility"
-        helperText="When the Message has not had visibility edited"
+        helperMarkdown={neat`
+          When the Message has not had visibility edited.
+          The _most specific_ takes precendence:
+          \`Message > Character Default > All Default\`
+          `}
       />
 
       <div>
-        <p>
-          <b>Green - </b> Can see this message when replying
-        </p>
+        <div class="flex flex-wrap gap-2">
+          <Pill small inverse>
+            <Check size={16} color="var(--success-500)" class="flex items-center gap-1" />
+            Visible
+          </Pill>
+          <Pill small inverse>
+            <X size={16} color="var(--error-500)" class="flex items-center gap-1" />
+            Invisible
+          </Pill>
+          <Pill small inverse class="flex items-center gap-1">
+            <Minus size={16} />
+            Not Set
+          </Pill>
+        </div>
 
+        <div>
+          <strong>Defaults for All Messages</strong>
+        </div>
         <div class="flex flex-wrap gap-2">
           <For each={lists().chars}>
             {(char) => (
               <VisibilityToggle
                 char={char}
-                invisible={!!flags()[char._id]}
+                invisible={flags()[char._id]}
                 onClick={() => toggle(char._id)}
               />
             )}
@@ -525,12 +545,16 @@ const ChatSettings: Component<{
             {(char) => (
               <VisibilityToggle
                 char={char}
-                invisible={!!flags()[char._id]}
+                invisible={flags()[char._id]}
                 onClick={() => toggle(char._id)}
               />
             )}
           </For>
         </div>
+
+        <Show when={state.active.chat}>
+          <CharacterDefaultVisibility chat={state.active.chat} participants={lists()} />
+        </Show>
       </div>
     </form>
   )

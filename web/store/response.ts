@@ -401,8 +401,9 @@ async function handlePreSend(opts: {
   onError?: (err?: string) => void
 }) {
   const isEvent = opts.mode.startsWith('send-event:')
-  if (!isEvent && opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply')
+  if (!isEvent && opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') {
     return
+  }
 
   const { impersonating } = getStore('character').getState()
   const { messageHistory, msgs } = getStore('messages').getState()
@@ -422,7 +423,7 @@ async function handlePreSend(opts: {
     text: opts.msg,
     parent: parent?._id,
     character: impersonating,
-    bot: false,
+    bot: isEvent ? true : false,
   })
 
   if (res.result) {

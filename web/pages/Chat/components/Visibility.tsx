@@ -1,17 +1,28 @@
-import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  on,
+  onMount,
+  Show,
+  Switch,
+} from 'solid-js'
 import { ContextState } from '/web/store/context'
 import Modal from '/web/shared/Modal'
 import { chatStore, msgStore } from '/web/store'
-import { useParticipantList } from '../MemberModal'
+import { ParticipantList, useParticipantList } from '../util'
 import { AppSchema } from '/common/types'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
-import { Pill } from '/web/shared/Card'
-import { Check, X } from 'lucide-solid'
+import { Pill, TitleCard } from '/web/shared/Card'
+import { Check, Minus, X } from 'lucide-solid'
 
 export const MessageVisibility: Component<{ ctx: ContextState; messageId: string }> = (props) => {
   const lists = useParticipantList()
-  const [flags, setFlags] = createSignal<Record<string, boolean>>({})
+  const [flags, setFlags] = createSignal<Record<string, boolean | undefined>>({})
 
   const currents = createMemo(() => {
     const msg = flags()
@@ -40,7 +51,7 @@ export const MessageVisibility: Component<{ ctx: ContextState; messageId: string
 
   const toggle = (charId: string) => {
     const next = { ...flags() }
-    const flag = next[charId] === undefined ? true : !next[charId]
+    const flag = next[charId] === undefined ? true : next[charId] === false ? undefined : false
     next[charId] = flag
     setFlags(next)
   }
@@ -82,9 +93,6 @@ export const MessageVisibility: Component<{ ctx: ContextState; messageId: string
         <div class="flex flex-col">
           <span class="text-500 text-sm">Toggles for this message</span>
           <div class="flex flex-wrap gap-1">
-            <Button onClick={() => setFlags({})} class="!text-md !py-1">
-              Use Defaults
-            </Button>
             <For each={lists().chars}>
               {(char) => (
                 <VisibilityToggle
@@ -104,17 +112,6 @@ export const MessageVisibility: Component<{ ctx: ContextState; messageId: string
                 />
               )}
             </For>
-          </div>
-        </div>
-
-        <div class="flex flex-col">
-          <span class="text-500 text-sm">Meanings</span>
-          <div class="flex flex-wrap gap-1">
-            <div class="rounded-md bg-[var(--green-800)] p-1">Visible</div>
-            <div class="bg-900 rounded-md border-[1px] border-[var(--bg-700)] p-1">
-              Using Chat Default
-            </div>
-            <div class="rounded-md bg-[var(--error-800)] p-1">Invisible</div>
           </div>
         </div>
       </div>
@@ -157,6 +154,72 @@ const CurrentToggle: Component<{ char: AppSchema.Character; invisible: boolean |
   )
 }
 
+export const CharacterDefaultVisibility: Component<{
+  chat: AppSchema.Chat
+  participants: ParticipantList
+}> = (props) => {
+  const [flags, setFlags] = createSignal<Record<string, Record<string, boolean | undefined>>>({})
+
+  createEffect(
+    on(
+      () => [props.chat],
+      () => {
+        setFlags(props.chat?.invisibleChars ? { ...props.chat.invisibleChars } : {})
+      }
+    )
+  )
+
+  const toggle = (perspectiveId: string, authorId: string) => {
+    const next = { ...flags() }
+    const perspective = { ...next[perspectiveId] }
+
+    const curr = perspective[authorId]
+    const flag = curr === undefined ? true : curr === false ? undefined : false
+
+    perspective[authorId] = flag
+    next[perspectiveId] = perspective
+    setFlags(next)
+    chatStore.editChat(props.chat?._id!, { invisibleChars: next }, { quiet: true })
+  }
+
+  return (
+    <div class="mt-1 flex flex-col gap-1">
+      <div class="flex flex-col gap-0.5">
+        <div class="font-bold">Defaults per Character</div>
+        <div class="text-sm">By default, who can character's see messages from.</div>
+      </div>{' '}
+      <For each={props.participants.chars.concat(props.participants.tempsActive)}>
+        {(perspective) => (
+          <TitleCard
+            title={
+              <div class="flex items-center gap-1">
+                <CharacterAvatar char={perspective} format={{ corners: 'circle', size: 'xs' }} />
+                <span class="text-sm font-bold">{perspective.name}</span>
+              </div>
+            }
+          >
+            <div class="flex flex-wrap items-center gap-1">
+              <For
+                each={props.participants.chars
+                  .concat(props.participants.tempsActive)
+                  .filter((ch) => ch._id !== perspective._id)}
+              >
+                {(char) => (
+                  <VisibilityToggle
+                    char={char}
+                    invisible={flags()[perspective._id]?.[char._id]}
+                    onClick={() => toggle(perspective._id, char._id)}
+                  />
+                )}
+              </For>
+            </div>
+          </TitleCard>
+        )}
+      </For>
+    </div>
+  )
+}
+
 export const VisibilityToggle: Component<{
   char: AppSchema.Character
   invisible: boolean | undefined
@@ -167,15 +230,28 @@ export const VisibilityToggle: Component<{
       class={`character-reply-btn flex max-w-[200px] cursor-pointer select-none items-center overflow-hidden rounded-md border-[1px] border-[var(--bg-700)] px-2 py-1  `}
       onclick={props.onClick}
       classList={{
-        'bg-900 hover:bg-[var(--bg-700)]': props.invisible === undefined,
-        'bg-[var(--green-800)] hover:bg-[var(--green-600)]': props.invisible === false,
-        'bg-[var(--error-800)] hover:bg-[var(--error-600)]': props.invisible === true,
+        'bg-900 hover:bg-[var(--bg-700)]': props.invisible === undefined || true,
+        // 'bg-[var(--green-800)] hover:bg-[var(--green-600)]': props.invisible === false,
+        // 'bg-[var(--error-800)] hover:bg-[var(--error-600)]': props.invisible === true,
       }}
     >
       <CharacterAvatar bot format={{ size: 'xs', corners: 'circle' }} char={props.char as any} />
       <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
         {props.char.name}
       </strong>
+      <Switch>
+        <Match when={props.invisible === undefined}>
+          <Minus size={16} />
+        </Match>
+
+        <Match when={props.invisible === true}>
+          <Check size={16} color="var(--success-500)" />
+        </Match>
+
+        <Match when={props.invisible === false}>
+          <X size={16} color="var(--error-500)" />
+        </Match>
+      </Switch>
     </div>
   )
 }

@@ -1036,7 +1036,7 @@ function setProviderModel(
 ) {
   console.log(`[model updated] ${model}`)
   const update: Partial<PresetState> = extras ?? {}
-  update.thirdPartyModel = model
+  update.thirdPartyModel = ''
 
   const settings = state.providerSettings ? { ...state.providerSettings } : {}
   const models = state.providerModels ? { ...state.providerModels } : {}

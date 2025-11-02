@@ -277,8 +277,9 @@ body {
     @apply text-100;
   }
 
-  .icon-button.disabled {
-    @apply cursor-not-allowed;
+  .icon-button.disabled,
+  .icon-button:disabled {
+    @apply text-300 hover:text-300 focus:text-300 cursor-not-allowed;
   }
 
   /**

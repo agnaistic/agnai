@@ -207,19 +207,20 @@ const ChatDetail: Component = () => {
 
   createEffect(
     on(
-      () => params.id,
+      () => [params.id, ctx.appReady],
       () => {
+        if (!ctx.appReady) return
         if (!params.id) {
           if (!chats.lastId) return nav('/character/list')
           return nav(`/chat/${chats.lastId}`)
         }
 
         if (params.id !== chats.lastId) {
-          presetSet.loadChatId(params.id)
           presetStore.getTemplates(true)
           chatStore.openChat(params.id, {
             onDone: async (success, chat) => {
               if (success && chat) {
+                presetSet.loadChat(chat)
                 return
               }
 
@@ -416,6 +417,7 @@ const ChatDetail: Component = () => {
   return (
     <>
       <ChatMenu ctx={ctx} isOwner={isOwner()} />
+      <Show when={!ctx.appReady}>Agnaistic loading...</Show>
       <ModeDetail
         footer={
           <ChatFooter

@@ -761,7 +761,8 @@ const MessageOptions: Component<{
         label: 'Edit',
         class: 'edit-btn',
         outer: props.ui.msgOptsInline.edit,
-        show: props.msg.adapter !== 'image' && !props.partial,
+        show: props.msg.adapter !== 'image',
+        disabled: !!props.ctx.waiting,
         onClick: props.startEdit,
         icon: Pencil,
       },
@@ -843,6 +844,7 @@ const MessageOptions: Component<{
         class: 'delete-btn',
         schema: 'red',
         icon: Trash,
+        disabled: !!props.ctx.waiting,
       },
 
       'gen-image': {
@@ -1082,9 +1084,13 @@ const MessageOption: Component<{
     <Show when={props.show && show()}>
       <Portal mount={document.querySelector(`#${props.outer ? 'outer' : 'inner'}-${props.id}`)!}>
         <Show when={props.outer}>
-          <div class={`icon-button ${props.class || ''}`} onClick={props.onClick}>
+          <button
+            class={`icon-button ${props.class || ''}`}
+            disabled={props.disabled}
+            onClick={props.onClick}
+          >
             {props.children}
-          </div>
+          </button>
         </Show>
 
         <Show when={!props.outer}>
