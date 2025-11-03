@@ -231,8 +231,8 @@ export const VisibilityToggle: Component<{
       onclick={props.onClick}
       classList={{
         'bg-900 hover:bg-[var(--bg-700)]': props.invisible === undefined || true,
-        // 'bg-[var(--green-800)] hover:bg-[var(--green-600)]': props.invisible === false,
-        // 'bg-[var(--error-800)] hover:bg-[var(--error-600)]': props.invisible === true,
+        'bg-[var(--green-900)] hover:bg-[var(--green-700)]': props.invisible === false,
+        'bg-[var(--error-900)] hover:bg-[var(--error-700)]': props.invisible === true,
       }}
     >
       <CharacterAvatar bot format={{ size: 'xs', corners: 'circle' }} char={props.char as any} />
@@ -244,11 +244,11 @@ export const VisibilityToggle: Component<{
           <Minus size={16} />
         </Match>
 
-        <Match when={props.invisible === true}>
+        <Match when={props.invisible === false}>
           <Check size={16} color="var(--success-500)" />
         </Match>
 
-        <Match when={props.invisible === false}>
+        <Match when={props.invisible === true}>
           <X size={16} color="var(--error-500)" />
         </Match>
       </Switch>
