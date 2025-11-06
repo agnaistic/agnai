@@ -1,4 +1,5 @@
 import { parseVariableName, StructureEntities } from './guidance/json-schema'
+import { UserType } from './types/admin'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
 
@@ -16,6 +17,16 @@ export function incompleteJson(data: string) {
     return true
   }
   return false
+}
+
+export function getUserType(user: AppSchema.User): UserType {
+  if (!user) return 'guests'
+  if (user.admin) return 'admins'
+  if (user.role === 'admin') return 'admins'
+  if (user.role === 'moderator') return 'moderators'
+  if (user.sub?.level && user.sub.level > 0) return 'subscribers'
+  if (user._id === 'anon') return 'guests'
+  return 'users'
 }
 
 export function randomElement<T>(elems: T[]) {

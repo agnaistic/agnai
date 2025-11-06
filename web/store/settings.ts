@@ -8,11 +8,12 @@ import { InitEntities, usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { ReplicateModel } from '/common/types/replicate'
-import { getSubscriptionModelLimits, tryParse, wait } from '/common/util'
+import { getSubscriptionModelLimits, getUserType, tryParse, wait } from '/common/util'
 import { setContextLimitStrategy } from '/common/prompt'
 import { filterImageModels } from '/common/image-util'
 import type { FeatherlessModel } from '/srv/adapter/featherless'
 import type { ArliModel } from '/srv/adapter/arli'
+import { debug } from '/common/debug'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -119,23 +120,52 @@ export const settingStore = createStore<SettingState>(
 
       if (res.result) {
         const init = res.result as InitEntities
+        const userId = getUserId()
 
         if (caches?.books) {
-          init.books = caches.books
-          init.cachedBooks = true
+          getStore('memory').setState({
+            books: { list: caches.books.filter((item) => item.userId === userId), loaded: true },
+          })
         }
 
         if (caches?.presets) {
-          init.presets = caches.presets
-          init.cachedPresets = true
+          getStore('presets').setState({
+            presets: caches.presets
+              .filter((item) => item.userId === userId)
+              .map((preset) => {
+                if (!preset.thirdPartyKey) return preset
+                preset.userThirdPartyKey = preset.thirdPartyKey
+                preset.thirdPartyKey = ''
+                return preset
+              }),
+            presetsLoaded: true,
+          })
         }
 
         if (caches?.allChars) {
-          init.allChars = caches.allChars
+          const allChars = Array.isArray(caches.allChars)
+            ? caches.allChars
+            : Array.isArray((caches.allChars as any)?.list)
+            ? (caches.allChars as any).list
+            : []
+
+          getStore('character').receiveCharacterList(allChars)
         }
 
         if (caches?.allChats) {
-          init.allChats = caches.allChats
+          getStore('chat').setState({
+            allChats: caches.allChats.filter((item) => item.userId === userId).sort(sortDesc),
+          })
+        }
+
+        if (init.user) {
+          init.user.userHordeKey = init.user.hordeKey
+          init.user.hordeKey = ''
+          getStore('user').setState({
+            user: init.user,
+            profile: init.profile,
+            userType: getUserType(init.user),
+          })
         }
 
         setAssetPrefix(init.config.assetPrefix)
@@ -436,11 +466,19 @@ async function loadUserCachedEntities() {
   const userId = getUserId()
   if (!userId) return
 
-  const books = await storage.userCacheGet('books')
-  const presets = await storage.userCacheGet('presets')
-  const templates = await storage.userCacheGet('templates')
-  const allChats = await storage.userCacheGet('all-chats')
-  const allChars = await storage.userCacheGet('all-chars')
+  const books = await storage.userCacheGet<AppSchema.MemoryBook[]>('books')
+  const presets = await storage.userCacheGet<AppSchema.UserGenPreset[]>('presets')
+  const templates = await storage.userCacheGet<AppSchema.PromptTemplate[]>('templates')
+  const allChats = await storage.userCacheGet<AppSchema.Chat[]>('all-chats')
+  const allChars = await storage.userCacheGet<AppSchema.Character[]>('all-chars')
+
+  debug('init')(`%j`, {
+    books: !!books,
+    presets: !!presets,
+    templates: !!templates,
+    allChats: !!allChats,
+    allChars: !!allChars,
+  })
 
   return { books, templates, presets, allChats, allChars }
 }
@@ -462,4 +500,8 @@ async function handlePostInit(
   if (!init.allChars) {
     getStore('character').loadImpersonate()
   }
+}
+
+function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
+  return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
 }

@@ -93,33 +93,33 @@ export const characterStore = createStore<CharacterState>(
   'character',
   initState
 )((get, set) => {
-  events.on(EVENTS.init, async (data) => {
-    const allChars = Array.isArray(data.allChars)
-      ? data.allChars
-      : Array.isArray(data.allChars?.list)
-      ? data.allChars.list
-      : null
+  // events.on(EVENTS.init, async (data) => {
+  //   const allChars = Array.isArray(data.allChars)
+  //     ? data.allChars
+  //     : Array.isArray(data.allChars?.list)
+  //     ? data.allChars.list
+  //     : null
 
-    log('receiving #%s', allChars?.length)
-    if (!allChars) return
+  //   log('receiving #%s', allChars?.length)
+  //   if (!allChars) return
 
-    replaceCharacters(allChars)
+  //   replaceCharacters(allChars)
 
-    await Promise.resolve()
+  //   await Promise.resolve()
 
-    /**
-     * The chat list relies on the characters being available
-     * We handle the chat-init here to prevent any race conditions
-     */
-    getStore('chat').setState({
-      allChats: (data.allChats || []).sort(sortDesc),
-      lastFetched: 0,
-      lastChatId: '',
-    })
+  //   /**
+  //    * The chat list relies on the characters being available
+  //    * We handle the chat-init here to prevent any race conditions
+  //    */
+  //   getStore('chat').setState({
+  //     allChats: (data.allChats || []).sort(sortDesc),
+  //     lastFetched: 0,
+  //     lastChatId: '',
+  //   })
 
-    // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
-    // characterStore.getAllChats(true) // We currently do this in the handlePostInit
-  })
+  //   // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
+  //   // characterStore.getAllChats(true) // We currently do this in the handlePostInit
+  // })
 
   return {
     clearCharacter() {
@@ -183,6 +183,10 @@ export const characterStore = createStore<CharacterState>(
         allChats: res.result.chats?.sort(sortDesc),
         lastFetched: Date.now(),
       })
+    },
+
+    receiveCharacterList(_, incoming: AppSchema.Character[]) {
+      replaceCharacters(incoming)
     },
 
     async *getCharacters(state, force?: boolean) {

@@ -552,6 +552,9 @@ function canAttachImage(
   subModel: AppSchema.SubscriptionModelOption | undefined
 ) {
   if (!conn) return false
+
+  debug('attach')('service: %s | format: %s', conn.service, conn.format)
+
   if (conn.service === 'openrouter') return true
   if (conn.service === 'claude-v2') return true
   if (conn.service === 'agnaistic') {

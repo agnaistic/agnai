@@ -260,6 +260,9 @@ async function dispatch(opts: AdapterProps, body: any) {
           ? `${baseURL}/api/extra/generate/stream`
           : `${baseURL}/api/v1/generate`
 
+      body.prompt = opts.prompt
+      body.messages = undefined
+
       return opts.gen.streamResponse && isStreamSupported
         ? streamGenerator({ ...base, url, format: 'koboldcpp' })
         : fullCompletion({
@@ -279,6 +282,7 @@ async function getHeaders(opts: AdapterProps) {
   }
 
   switch (opts.gen.thirdPartyFormat) {
+    case 'koboldcpp':
     case 'aphrodite': {
       if (!password) return headers
       const apiKey = opts.guest ? password : decryptText(password, true)

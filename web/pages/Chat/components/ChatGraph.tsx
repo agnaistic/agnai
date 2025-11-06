@@ -8,6 +8,8 @@ import { FeatureFlags } from '/web/store/flags'
 import { AppSchema } from '/common/types'
 import { SetStoreFunction } from 'solid-js/store'
 import { toShortDuration } from '/web/shared/util'
+import { debug } from '/common/debug'
+import { getStore } from '/web/store/create'
 
 export { ChatGraph as default }
 
@@ -26,29 +28,44 @@ export const ChatGraph: Component<{
   state: GraphState
   setter: SetStoreFunction<GraphState>
 }> = (props) => {
+  const log = debug('graph')
   let cyRef: any
 
-  const graph = msgStore((s) => s.graph)
+  const graph = msgStore((s) => ({ tree: s.graph.tree, root: s.graph.root }))
   const flags = pageStore((s) => s.flags)
 
-  createEffect(() => {
-    const id = props.state.hovered || props.state.clicked
-    if (!id) {
-      props.setter({ msg: undefined })
-      return
-    }
+  createEffect(
+    on(
+      () => [props.state.hovered, props.state.clicked],
+      () => {
+        const id = props.state.hovered || props.state.clicked
+        if (!id) {
+          props.setter({ msg: undefined })
+          return
+        }
 
-    const msg = graph.tree[id]
-    props.setter({ msg: msg?.msg })
-  })
+        const {
+          graph: { tree },
+        } = getStore('messages').getState()
+        const msg = tree[id]
+        log('node-event %s [parent:%s]', id.slice(0, 4), msg?.msg.parent?.slice(0, 4) || 'nil')
+
+        props.setter({ msg: msg?.msg })
+      }
+    )
+  )
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
     cyRef = ref
-    redraw(tree)
+    redraw()
   }
 
-  const redraw = (tree: ChatTree) => {
+  const redraw = () => {
+    const {
+      graph: { tree, root },
+    } = getStore('messages').getState()
+    log('redraw')
     instance()?.destroy()
 
     const cy = cyto({
@@ -91,8 +108,8 @@ export const ChatGraph: Component<{
       wheelSensitivity: 0.1,
       elements:
         props.nodes === 'full'
-          ? getAllElements(graph.tree, props.leafId)
-          : getElements(graph.tree, graph.root, props.leafId, flags),
+          ? getAllElements(tree, props.leafId)
+          : getElements(tree, root, props.leafId, flags),
     })
 
     cy.on('click', 'node', function (this: any, evt) {
@@ -133,12 +150,14 @@ export const ChatGraph: Component<{
     on(
       () => graph.tree,
       (tree) => {
+        const latest = getStore('messages').getState()
+        log('tree changed')
         const win: any = window
-        win.tree = { ...graph.tree }
+        win.tree = { ...latest.graph.tree }
         const cy = instance()
         if (!cy) return
 
-        redraw(tree)
+        redraw()
       }
     )
   )
@@ -147,10 +166,11 @@ export const ChatGraph: Component<{
     on(
       () => props.nodes,
       () => {
+        log('graph size: %s', props.nodes)
         const cy = instance()
         if (!cy) return
 
-        redraw(graph.tree)
+        redraw()
       }
     )
   )
@@ -158,19 +178,20 @@ export const ChatGraph: Component<{
   createEffect(
     on(
       () => props.leafId,
-      (leafId) => {
+      (leafId, prev) => {
+        const {
+          graph: { tree },
+        } = getStore('messages').getState()
         const cy = instance()
         if (!cy) return
+
+        log('leaf id: %s [was: %s]', props.leafId.slice(0, 4), prev?.slice(0, 4) || '----')
 
         const nodes = cy.nodes()
 
         nodes.each((ele) => {
           const color =
-            ele.id() === leafId
-              ? 'green-500'
-              : graph.tree[ele.id()]?.msg.userId
-              ? 'bg-500'
-              : 'hl-500'
+            ele.id() === leafId ? 'green-500' : tree[ele.id()]?.msg.userId ? 'bg-500' : 'hl-500'
 
           ele.style({ 'background-color': getSettingColor(color) })
         })
@@ -182,6 +203,7 @@ export const ChatGraph: Component<{
     on(
       () => props.dir,
       (dir) => {
+        log('direction: %s', props.dir)
         const result = instance()?.layout({ name: 'dagre', rankDir: dir || 'LR' } as any)
         result?.run()
         instance()?.fit()
@@ -195,7 +217,7 @@ export const ChatGraph: Component<{
 
   return (
     <div
-      class="flex h-full min-h-[400px] w-full justify-center p-4"
+      class="flex min-h-[400px] w-full justify-center p-4"
       ref={(ref) => init(ref, graph.tree)}
     ></div>
   )
@@ -276,9 +298,9 @@ function getAllElements(tree: ChatTree, leafId: string) {
   }
 
   for (const node of Object.values(tree)) {
-    if (node.children.size === 0) continue
+    if (Object.keys(node.children).length === 0) continue
 
-    for (const child of Array.from(node.children.values())) {
+    for (const child of Object.keys(node.children)) {
       elements.push({
         group: 'edges',
         data: { source: node.msg._id, target: child },
@@ -309,13 +331,13 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
   let length = 1
 
   do {
-    if (curr.children.size === 0) {
+    if (Object.keys(curr.children).length === 0) {
       if (id === curr.msg._id) return
       return [{ start, end: curr, length }]
     }
 
-    if (curr.children.size === 1) {
-      const next = curr.children.values().next().value!
+    if (Object.keys(curr.children).length === 1) {
+      const next = Object.keys(curr.children)[0]
       if (visited.has(next)) {
         throw new Error(`Invalid chat tree: Contains a circular reference (${next})`)
       }
@@ -331,7 +353,7 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
     if (start.msg._id !== curr.msg._id) {
       edges.push({ start, end: curr, length })
     }
-    for (const child of curr.children) {
+    for (const child in curr.children) {
       const end = tree[child]
       if (!end) continue
 
@@ -373,5 +395,9 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
 }
 
 function toLabel(msg: AppSchema.ChatMessage) {
-  return toShortDuration(msg.createdAt, 1)
+  const duration = toShortDuration(msg.createdAt, 1)
+  const up = msg.parent ? msg.parent.slice(0, 4) : 'root'
+  const self = msg._id.slice(0, 4)
+  return self
+  return `${up} - ${duration} - ${self}`
 }

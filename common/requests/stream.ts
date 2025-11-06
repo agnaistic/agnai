@@ -331,7 +331,10 @@ export async function* fetchStream(
           } else {
             const reasoning = getChoiceProp(json, 'reasoning') || getChoiceProp(json, 'thought')
             const token: string =
-              getChoiceProp(json, 'content') || getChoiceProp(json, 'text') || json.response
+              getChoiceProp(json, 'content') ||
+              getChoiceProp(json, 'text') ||
+              json.token ||
+              json.response
 
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 

@@ -513,6 +513,9 @@ export async function buildPromptPlaceholders(
     for (const bot of Object.values(opts.characters || {})) {
       if (!bot) continue
       if (personalities.has(bot._id)) continue
+
+      // We skip
+      if (bot._id === opts.replyAs._id) continue
       if (bot._id === opts.impersonate?._id) continue
 
       const temp = opts.chat.tempCharacters?.[bot._id]

@@ -235,6 +235,7 @@ async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requ
       characterId: req.entities.message?.characterId,
       parent: opts.parent,
       requestId,
+      user: req.entities.user,
     }
   )
 

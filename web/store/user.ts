@@ -13,7 +13,7 @@ import { UI } from '/common/types'
 import { UISettings, defaultUIsettings } from '/common/types/ui'
 import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
-import { getUserSubscriptionTier } from '/common/util'
+import { getUserSubscriptionTier, getUserType } from '/common/util'
 import {
   getColorShades,
   getRootVariable,
@@ -98,12 +98,6 @@ export const userStore = createStore<UserState>(
   })
 
   events.on(EVENTS.init, async (init) => {
-    if (init.user) {
-      init.user.userHordeKey = init.user.hordeKey
-      init.user.hordeKey = ''
-    }
-    userStore.setState({ user: init.user, profile: init.profile, userType: getUserType(init.user) })
-
     const canCheckSub =
       (init.user?.patreonUserId ||
         init.user?.billing ||
@@ -1136,16 +1130,6 @@ async function checkout(sessionUrl: string) {
       clearInterval(interval)
     }
   }, 3000)
-}
-
-function getUserType(user: AppSchema.User): UserType {
-  if (!user) return 'guests'
-  if (user.admin) return 'admins'
-  if (user.role === 'admin') return 'admins'
-  if (user.role === 'moderator') return 'moderators'
-  if (user.sub?.level && user.sub.level > 0) return 'subscribers'
-  if (user._id === 'anon') return 'guests'
-  return 'users'
 }
 
 function getInitialEmbeddingsModel(user: AppSchema.User) {

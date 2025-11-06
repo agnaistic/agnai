@@ -202,6 +202,9 @@ export async function deleteMessages(
   leafId: string,
   parents: Record<string, string>
 ) {
+  if (!chatId) {
+    throw new Error(`Chat ID not set`)
+  }
   if (isLoggedIn()) {
     const res = await api.method('delete', `/chat/${chatId}/messages`, {
       ids: msgIds,

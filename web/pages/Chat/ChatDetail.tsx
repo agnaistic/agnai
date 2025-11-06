@@ -49,6 +49,7 @@ import { usePresetContext } from '/web/store/preset-context'
 import { SendFunc } from './components/InputBar'
 import { MessageVisibility } from './components/Visibility'
 import { PendingMessages } from './components/Pending'
+import { debug } from '/common/debug'
 
 export { ChatDetail as default }
 
@@ -217,9 +218,17 @@ const ChatDetail: Component = () => {
 
         if (params.id !== chats.lastId) {
           presetStore.getTemplates(true)
+          const listChat = chats.listChat
+
+          if (listChat) {
+            debug('chat-detail')('loading preset early')
+            presetSet.loadChat(listChat)
+          }
+
           chatStore.openChat(params.id, {
             onDone: async (success, chat) => {
               if (success && chat) {
+                debug('chat-detail')('loading preset late')
                 presetSet.loadChat(chat)
                 return
               }

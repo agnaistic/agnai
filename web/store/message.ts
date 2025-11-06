@@ -141,42 +141,42 @@ export const msgStore = createStore<MsgState>(
     msgStore.setState({ activeChatId: undefined, activeCharId: undefined })
   })
 
-  events.on(
-    EVENTS.receiveMsgs,
-    (data: {
-      characterId: string
-      chatId: string
-      leafId?: string
-      messages: AppSchema.ChatMessage[]
-    }) => {
-      data.messages.sort(sortAsc)
-      const graph = toChatGraph(data.messages)
+  return {
+    receiveMessages(
+      _,
+      opts: {
+        chatId: string
+        leafId?: string
+        characterId: string
+        messages: AppSchema.ChatMessage[]
+      }
+    ) {
+      opts.messages.sort(sortAsc)
+      const graph = toChatGraph(opts.messages)
 
-      let leaf = data.leafId || data.messages.slice(-1)[0]?._id || ''
+      let leaf = opts.leafId || opts.messages.slice(-1)[0]?._id || ''
 
       // If the leaf has been deleted then the path won't load
       // So, if the leaf doesn't exist, use the most recent message
-      if (data.leafId) {
-        const node = graph.tree[data.leafId]
+      if (opts.leafId) {
+        const node = graph.tree[opts.leafId]
         if (!node) {
-          leaf = data.messages.slice(-1)[0]?._id || ''
+          leaf = opts.messages.slice(-1)[0]?._id || ''
         }
       }
 
       const fullPath = resolveChatPath(graph.tree, leaf)
       const recent = fullPath.splice(-SOFT_PAGE_SIZE)
 
-      msgStore.setState({
-        activeCharId: data.characterId,
-        activeChatId: data.chatId,
+      return {
+        activeCharId: opts.characterId,
+        activeChatId: opts.chatId,
         messageHistory: fullPath,
         msgs: recent,
         graph,
-      })
-    }
-  )
+      }
+    },
 
-  return {
     setMetadataMsg(_, msg?: AppSchema.ChatMessage) {
       return { metadata: msg }
     },
@@ -438,42 +438,39 @@ export const msgStore = createStore<MsgState>(
       fromId: string,
       deleteOne?: boolean
     ) {
+      let chatId = activeChatId
+      if (!chatId) {
+        chatId = msgs[0]?.chatId
+      }
+
       if (deleting) {
         return
       }
 
       const index = msgs.findIndex((m) => m._id === fromId)
-      if (index === -1) {
+      const fromMsg = graph.tree[fromId]
+      if (index === -1 || !fromMsg) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
       yield { deleting: true }
-      const parents: any = {}
-      if (deleteOne) {
-        const node = graph.tree[fromId]
 
-        if (node) {
-          const children = node.children
-          for (const child of children) {
-            parents[child] = node.msg.parent
-          }
-        }
-      }
-
-      const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
-      const removed = new Set(deleteIds)
+      const changes = getParentUpdates(graph.tree, fromId, !!deleteOne)
+      const removed = new Set(changes.deletes)
 
       const nextMsgs = msgs.filter((msg) => !removed.has(msg._id))
 
-      const leafId = nextMsgs.slice(-1)[0]?._id || ''
-      const res = await msgsApi.deleteMessages(activeChatId, deleteIds, leafId, parents)
+      const leaf = nextMsgs.slice(-1)[0]
+      const leafId = leaf?._id || ''
+
+      const res = await msgsApi.deleteMessages(chatId, changes.deletes, leafId, changes.parents)
 
       if (res.error) {
         yield { deleting: false }
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
-      updateMsgParents(activeChatId, parents)
+      updateMsgParents(activeChatId, changes.parents, changes.deletes)
       yield { deleting: false }
     },
 
@@ -931,11 +928,11 @@ function updateMsgParents(chatId: string, parents: Record<string, string>, delet
     modified = true
     const nextDesc = { ...descendant.msg, parent: parentId }
     tree = updateChatTreeNode(tree, nextDesc)
-    tree[nextDesc._id].children = new Set(descendant.children)
+    tree[nextDesc._id].children = { ...descendant.children }
 
     const parent = tree[parentId]
     if (parent) {
-      parent.children.add(nextDesc._id)
+      parent.children[nextDesc._id] = true
     }
   }
 
@@ -1040,4 +1037,44 @@ function updateMessageInState(messageId: string, updates: Partial<AppSchema.Chat
   } else {
     msgStore.setState({ messageHistory: next, graph: { tree: nextGraph, root: graph.root } })
   }
+}
+
+function getParentUpdates(graph: ChatTree, fromId: string, deleteOne: boolean) {
+  const realDeletes: string[] = [fromId]
+  const from = graph[fromId]
+  const nextParent = from?.msg.parent || ''
+
+  if (!from) {
+    throw new Error(`Could not locate message to delete`)
+  }
+
+  const parents: Record<string, string> = {}
+  const current: Record<string, true> = { ...from.children }
+
+  if (deleteOne) {
+    for (const childId in from.children) {
+      const msg = graph[childId]
+      if (!msg) continue
+
+      parents[childId] = nextParent
+    }
+  }
+
+  if (!deleteOne) {
+    do {
+      const count = Object.keys(current).length
+      if (count === 0) break
+
+      for (const childId in current) {
+        realDeletes.push(childId)
+        const child = graph[childId]
+        delete current[childId]
+        if (!child) continue
+
+        Object.assign(current, { ...child.children })
+      }
+    } while (true)
+  }
+
+  return { parents, deletes: realDeletes, leafId: nextParent }
 }

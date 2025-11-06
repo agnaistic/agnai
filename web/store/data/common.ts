@@ -252,7 +252,7 @@ function getAuthedPromptEntities() {
 
   return {
     chat,
-    char,
+    char: tryReplaceCharacter(chatChars.map, char)!,
     user,
     profile,
     book,
@@ -262,11 +262,21 @@ function getAuthedPromptEntities() {
     chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
     characters,
-    impersonating,
+    impersonating: tryReplaceCharacter(chatChars.map, impersonating),
     scenarios,
     attachments: getChatAttachments(chat._id, messages, attachments),
     conn,
   }
+}
+
+function tryReplaceCharacter(
+  map: Record<string, AppSchema.Character>,
+  char: AppSchema.Character | undefined
+) {
+  if (!char) return
+
+  const replacement = map[char._id]
+  return replacement || char
 }
 
 export function useActivePreset() {

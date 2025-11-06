@@ -111,10 +111,10 @@ export function getImageSettings(
       ? character?.imageSettings
       : chat?.imageSource === 'chat'
       ? chat?.imageSettings
-      : user.images
+      : user?.images
 
   if (!imageSettings) {
-    imageSettings = user.images
+    imageSettings = user?.images
   }
 
   let provider: ImageProviderSettings | undefined

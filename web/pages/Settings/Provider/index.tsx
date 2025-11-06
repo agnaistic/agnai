@@ -1,7 +1,7 @@
 import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { getStore } from '/web/store/create'
 import Button from '/web/shared/Button'
-import { Info, PlusIcon, WifiPen } from 'lucide-solid'
+import { Info, Pencil, PlusIcon, WifiPen } from 'lucide-solid'
 import Select from '/web/shared/Select'
 import { HelpModal, RootModal } from '/web/shared/Modal'
 import TextInput from '/web/shared/TextInput'
@@ -166,7 +166,13 @@ export const PresetProvider: Component<{
           openSub={props.openSub}
           closeSub={emitter.on}
           preoptions={
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
+              <Show when={!!props.state.providerId && props.state.providerId !== 'agnaistic'}>
+                <Button size="sm" onClick={editProvider}>
+                  <Pencil size={16} />
+                  Edit Selected
+                </Button>
+              </Show>
               <Button size="sm" onClick={newProvider}>
                 <PlusIcon size={16} />
                 New
@@ -176,7 +182,7 @@ export const PresetProvider: Component<{
           footer={
             <>
               <Button schema="secondary" onClick={emitter.emit.close}>
-                Cancel
+                Close
               </Button>
             </>
           }
@@ -213,7 +219,7 @@ export const PresetProvider: Component<{
         show={open()}
         close={(reason, provider) => {
           setOpen(false)
-          emitter.emit.close()
+          // emitter.emit.close()
           if (provider) {
             changeProvider(provider._id)
           }

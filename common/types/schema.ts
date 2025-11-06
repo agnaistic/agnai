@@ -301,6 +301,9 @@ export namespace AppSchema {
 
     invisible?: Record<string, boolean | undefined>
     invisibleChars?: Record<string, Record<string, boolean | undefined>>
+
+    /**  */
+    deletes?: Record<string, string>
   }
 
   export interface ChatMember {

@@ -42,18 +42,18 @@ export const usersApi = {
   deleteProviderKey,
 }
 
-export async function getInit(caches?: { presets: boolean; books: boolean; templates: boolean }) {
+export async function getInit(caches?: { presets?: any[]; books?: any[]; templates?: any[] }) {
   if (isLoggedIn()) {
     const query: any = {}
-    if (caches?.books) {
+    if (caches?.books?.length) {
       query['omit-books'] = 'true'
     }
 
-    if (caches?.presets) {
+    if (caches?.presets?.length) {
       query['omit-presets'] = 'true'
     }
 
-    if (caches?.templates) {
+    if (caches?.templates?.length) {
       query['omit-templates'] = 'true'
     }
 

@@ -6,7 +6,8 @@ import { useLocalStorage } from '/web/shared/hooks'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { GraphState } from './ChatGraph'
-import Message from './Message'
+import { CharacterAvatar } from '/web/shared/AvatarIcon'
+import { useAppContext } from '/web/store/context'
 
 export const ChatGraphModal: Component<{
   tree: ChatTree
@@ -16,6 +17,7 @@ export const ChatGraphModal: Component<{
 }> = (props) => {
   const Graph = lazy(() => import('./ChatGraph'))
 
+  const [ctx] = useAppContext()
   const cy = () => (window as any).cy as Cyto.Core | undefined
 
   const [dir, setDir] = useLocalStorage('graph-layout', 'LR')
@@ -61,16 +63,17 @@ export const ChatGraphModal: Component<{
       </div>
       <div class="h-32 max-h-32 min-h-32 overflow-y-scroll">
         <Show when={store.msg}>
-          <Message
-            messageId={store.msg?._id!}
-            content={store.msg?.msg!}
-            editing={false}
-            index={0}
-            isPaneOpen={false}
-            onRemove={() => {}}
-            sendMessage={() => {}}
-            preset={undefined}
-          ></Message>
+          <div class="bg-700 mx-2 flex h-full flex-col rounded-md p-1">
+            <div class="flex items-center gap-1 font-bold">
+              <CharacterAvatar
+                char={ctx.allBots[store.msg!.characterId!]}
+                format={{ corners: 'circle', size: 'sm' }}
+              />
+              <div>{ctx.allBots[store.msg!.characterId!]?.name}</div>
+            </div>
+
+            <div class="px-1">{store.msg?.msg}</div>
+          </div>
         </Show>
       </div>
       <Graph leafId={props.leafId} dir={dir()} nodes={short()} state={store} setter={setStore} />

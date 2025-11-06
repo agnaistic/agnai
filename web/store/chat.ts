@@ -35,18 +35,11 @@ export type ChatState = {
 
   // All user chats a user owns or is a member of
   allChats: AllChat[]
-  // active?: {
-  //   chat: AppSchema.Chat
-  //   char: AppSchema.Character
-  //   replyAs?: string
-  //   participantIds: string[]
-  // }
 
   details: Record<string, ChatDetail>
 
   chatProfiles: AppSchema.Profile[]
-  // chatBots: AppSchema.Character[]
-  // chatBotMap: Record<string, AppSchema.Character>
+
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt & { msg: AppSchema.ChatMessage }
   opts: {
@@ -215,7 +208,7 @@ export const chatStore = createStore<ChatState>('chat', {
         opts?.onDone?.(!!res.result, res.result.chat)
         storage.localSetItem('lastChatId', id)
 
-        events.emit(EVENTS.receiveMsgs, {
+        getStore('messages').receiveMessages({
           chatId: id,
           leafId: res.result.chat.treeLeafId,
           characterId: res.result.character._id,

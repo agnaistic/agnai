@@ -130,7 +130,7 @@ export function createEmitter<T extends string>(...events: T[]) {
   return { emit, on, off } as ComponentEmitter<T>
 }
 
-async function userCacheGet(key: string) {
+async function userCacheGet<T = any>(key: string) {
   const prop = getUserCacheKey(key)
   if (!prop) return
 
@@ -142,7 +142,7 @@ async function userCacheGet(key: string) {
 
   const json = JSON.parse(data)
   debug('cache')(`[${key}] hit`)
-  return json
+  return json as T
 }
 
 async function userCacheSet(key: string, data: any) {
