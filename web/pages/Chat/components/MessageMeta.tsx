@@ -32,7 +32,7 @@ export const MessageMeta: Component = () => {
     const self = state.graph.tree[state.msg._id]
     if (!self) return []
 
-    return Array.from(self.children.values())
+    return Object.keys(self.children)
   })
 
   const depth = createMemo(() => {
