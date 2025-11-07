@@ -1,3 +1,7 @@
+html {
+  font-size: var(--sitewide-font-size);
+}
+
 .app {
   height: 100vh;
   height: 100dvh;

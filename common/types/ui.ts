@@ -91,6 +91,8 @@ export type UISettings = {
 
   dark: CustomUI
   light: CustomUI
+
+  fontSize?: number
 }
 
 const customUiGuard = {

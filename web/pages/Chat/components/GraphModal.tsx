@@ -8,6 +8,7 @@ import { createStore } from 'solid-js/store'
 import { GraphState } from './ChatGraph'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { useAppContext } from '/web/store/context'
+import { MessageShell } from './MessageShell'
 
 export const ChatGraphModal: Component<{
   tree: ChatTree
@@ -63,7 +64,18 @@ export const ChatGraphModal: Component<{
       </div>
       <div class="h-32 max-h-32 min-h-32 overflow-y-scroll">
         <Show when={store.msg}>
-          <div class="bg-700 mx-2 flex h-full flex-col rounded-md p-1">
+          <MessageShell
+            author={ctx.allBots[store.msg!.characterId!]?.name}
+            content={store.msg?.msg}
+            dateline={new Date(store.msg?.createdAt!)}
+            avatar={
+              <CharacterAvatar
+                char={ctx.allBots[store.msg!.characterId!]}
+                format={{ corners: 'circle', size: 'sm' }}
+              />
+            }
+          />
+          {/* <div class="bg-700 mx-2 flex h-full flex-col rounded-md p-1">
             <div class="flex items-center gap-1 font-bold">
               <CharacterAvatar
                 char={ctx.allBots[store.msg!.characterId!]}
@@ -73,7 +85,7 @@ export const ChatGraphModal: Component<{
             </div>
 
             <div class="px-1">{store.msg?.msg}</div>
-          </div>
+          </div> */}
         </Show>
       </div>
       <Graph leafId={props.leafId} dir={dir()} nodes={short()} state={store} setter={setStore} />

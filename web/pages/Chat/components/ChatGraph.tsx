@@ -298,14 +298,21 @@ function getAllElements(tree: ChatTree, leafId: string) {
   }
 
   for (const node of Object.values(tree)) {
-    if (Object.keys(node.children).length === 0) continue
-
-    for (const child of Object.keys(node.children)) {
+    if (node.msg.parent) {
       elements.push({
         group: 'edges',
-        data: { source: node.msg._id, target: child },
+        data: { source: node.msg.parent, target: node.msg._id },
       })
     }
+
+    // if (Object.keys(node.children).length === 0) continue
+
+    // for (const child of Object.keys(node.children)) {
+    //   elements.push({
+    //     group: 'edges',
+    //     data: { source: node.msg._id, target: child },
+    //   })
+    // }
   }
 
   return elements

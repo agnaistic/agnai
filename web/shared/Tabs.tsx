@@ -35,7 +35,7 @@ const Tabs: Component<{
         <Match when>
           <For each={props.tabs}>
             {(tab, i) => (
-              <div
+              <button
                 onClick={() => props.select(i())}
                 class={`flex min-w-max cursor-pointer items-center justify-center rounded-t-md border-b-2 px-4 py-2`}
                 classList={{
@@ -49,7 +49,7 @@ const Tabs: Component<{
                 }}
               >
                 {props.titles ? props.titles[i()] : tab}
-              </div>
+              </button>
             )}
           </For>
         </Match>

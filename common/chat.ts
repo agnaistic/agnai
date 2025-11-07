@@ -19,6 +19,12 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
 
   const seenMsgs: Record<string, boolean> = {}
 
+  // Initial child-less tree
+  for (const msg of messages) {
+    tree[msg._id] = { msg, depth: -1, children: {} }
+  }
+
+  // Populate the depths and descendants
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]
     if (seenMsgs[msg._id]) {
@@ -28,29 +34,41 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
     seenMsgs[msg._id] = true
 
     const parent = messages[i - 1]
-    if (!msg.parent && parent) {
-      log('modified parent of %s', msg._id.slice(0, 4))
-      msg.parent = parent._id
-    }
 
-    tree[msg._id] = {
-      depth: getMessageDepth(tree, msg.parent || '') + 1,
-      msg,
-      children: {},
-    }
-  }
-
-  for (const { msg } of Object.values(tree)) {
     if (!msg.parent) {
-      log(`root? %s`, msg._id.slice(0, 4))
-      continue
+      if (parent) {
+        log('modified parent of %s', msg._id.slice(0, 4))
+        msg.parent = parent._id
+      } else {
+        log('root? %s', msg._id.slice(0, 4))
+      }
     }
 
-    const parent = tree[msg.parent]
-    if (!parent) continue
-    log('assigned to %s: %s', parent.msg._id.slice(0, 4), msg._id.slice(0, 4))
-    parent.children[msg._id] = true
+    tree[msg._id].depth = getMessageDepth(tree, msg.parent || '') + 1
+    if (msg.parent) {
+      const base = `${msg.parent.slice(0, 4)} <-- ${msg._id.slice(0, 4)}`
+      const ancestor = tree[msg.parent]
+
+      if (ancestor) {
+        log(base)
+        ancestor.children[msg._id] = true
+      } else {
+        log('%s: ancestor not found', base)
+      }
+    }
   }
+
+  // for (const { msg } of Object.values(tree)) {
+  //   if (!msg.parent) {
+  //     log(`root? %s`, msg._id.slice(0, 4))
+  //     continue
+  //   }
+
+  //   const parent = tree[msg.parent]
+  //   if (!parent) continue
+  //   log('assigned to %s: %s', parent.msg._id.slice(0, 4), msg._id.slice(0, 4))
+  //   parent.children[msg._id] = true
+  // }
 
   return { tree, root: messages[0]?._id || '' }
 }
