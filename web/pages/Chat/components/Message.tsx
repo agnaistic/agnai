@@ -1087,7 +1087,10 @@ const MessageOption: Component<{
           <button
             class={`icon-button ${props.class || ''}`}
             disabled={props.disabled}
-            onClick={props.onClick}
+            onClick={(ev) => {
+              ev.preventDefault()
+              props.onClick()
+            }}
           >
             {props.children}
           </button>

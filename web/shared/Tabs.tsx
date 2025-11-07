@@ -36,7 +36,10 @@ const Tabs: Component<{
           <For each={props.tabs}>
             {(tab, i) => (
               <button
-                onClick={() => props.select(i())}
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  props.select(i())
+                }}
                 class={`flex min-w-max cursor-pointer items-center justify-center rounded-t-md border-b-2 px-4 py-2`}
                 classList={{
                   'bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]':

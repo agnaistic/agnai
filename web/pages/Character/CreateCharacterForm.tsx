@@ -315,7 +315,10 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const tabs = useTabs(['Persona', 'Voice', 'Images', 'Advanced'], +(search.char_tab || '0'))
+  const tabs = useTabs(
+    ['Persona', 'Voice', 'Images', 'Advanced'],
+    isNaN(+(search.char_tab || '0')) ? 0 : +(search.char_tab || '0')
+  )
 
   return (
     <Page classList={{ 'p-0': !isPage }}>

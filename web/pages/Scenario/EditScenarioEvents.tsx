@@ -224,12 +224,24 @@ const EditScenarioEvents: Component<{
                       <div class="flex gap-2">
                         <div class="ml-2 flex flex-col justify-center space-y-1">
                           <Show when={index !== 0}>
-                            <button class="ml-2" onClick={() => moveItem(index, -1)}>
+                            <button
+                              class="ml-2"
+                              onClick={(ev) => {
+                                ev.preventDefault()
+                                moveItem(index, -1)
+                              }}
+                            >
                               <ChevronUp size={16} />
                             </button>
                           </Show>
                           <Show when={index !== props.state.entries.length - 1}>
-                            <button class="ml-2" onClick={() => moveItem(index, 1)}>
+                            <button
+                              class="ml-2"
+                              onClick={(ev) => {
+                                ev.preventDefault()
+                                moveItem(index, 1)
+                              }}
+                            >
                               <ChevronDown size={16} />
                             </button>
                           </Show>

@@ -112,7 +112,10 @@ export const ToggleButtons: Component<{
                 'rounded-l-md': i() === 0,
                 'rounded-r-md': isLast,
               }}
-              onClick={() => props.onChange(opt)}
+              onClick={(ev) => {
+                ev.preventDefault()
+                props.onChange(opt)
+              }}
             >
               {opt.label}
             </button>

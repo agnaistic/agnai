@@ -112,7 +112,13 @@ const TagInput: Component<TagInputProps> = (props) => {
           {(tag) => (
             <span class="btn-primary m-1 flex items-center rounded px-2 py-1 text-sm text-white">
               {tag}
-              <button class="ml-1" onClick={() => removeTag(tag)}>
+              <button
+                class="ml-1"
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  removeTag(tag)
+                }}
+              >
                 &times;
               </button>
             </span>

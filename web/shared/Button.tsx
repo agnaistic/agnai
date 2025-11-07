@@ -57,7 +57,10 @@ const Button: Component<{
         'justify-center': !props.alignLeft,
       }}
       disabled={props.disabled}
-      onClick={props.onClick}
+      onClick={(ev) => {
+        ev.preventDefault()
+        props.onClick?.(ev)
+      }}
       aria-label={props.ariaLabel}
     >
       {props.children}
@@ -143,7 +146,10 @@ export const ModeButton: Component<{
           } ` + (props.class || '')
         }
         disabled={props.disabled}
-        onClick={onClick}
+        onClick={(ev) => {
+          ev.preventDefault()
+          onClick(ev)
+        }}
       >
         {label()}
       </button>
@@ -185,7 +191,10 @@ export const ToggleButton: Component<{
           'border-[var(--hl-500)]': !props.value,
         }}
         disabled={props.disabled}
-        onClick={onClick}
+        onClick={(ev) => {
+          ev.preventDefault()
+          onClick(ev)
+        }}
       >
         <Show when={props.children}>{props.children}</Show>
         <Show when={props.value && props.onText}>{props.onText}</Show>

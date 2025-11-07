@@ -110,7 +110,10 @@ const Character: Component<CardProps> = (props) => {
         </div>
         <div class="flex justify-between p-1">
           <button
-            onClick={() => props.toggleFavorite(!props.char.favorite)}
+            onClick={(ev) => {
+              ev.preventDefault()
+              props.toggleFavorite(!props.char.favorite)
+            }}
             aria-label="Toggle Favorite"
           >
             <Show when={props.char.favorite}>
@@ -129,7 +132,10 @@ const Character: Component<CardProps> = (props) => {
           <Switch>
             <Match when={props.char.chat}>
               <button
-                onClick={() => nav(`/chat/${props.char.chat?._id}`)}
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  nav(`/chat/${props.char.chat?._id}`)
+                }}
                 aria-label="Open Recent Chat"
               >
                 <ArrowRight size={size} />
@@ -138,7 +144,10 @@ const Character: Component<CardProps> = (props) => {
 
             <Match when={!props.char.chat}>
               <button
-                onClick={() => nav(`/chats/create/${props.char._id}`)}
+                onClick={(ev) => {
+                  ev.preventDefault()
+                  nav(`/chats/create/${props.char._id}`)
+                }}
                 aria-label="Open Character Chats"
               >
                 <ArrowRight size={size} />

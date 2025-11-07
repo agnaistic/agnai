@@ -330,7 +330,8 @@ const InputBar: Component<{
         <Show when={ctx.waiting?.signal}>
           <button
             class="animate-pulse cursor-pointer p-2"
-            onClick={() => {
+            onClick={(ev) => {
+              ev.preventDefault()
               console.log('Cancel clicked', !!ctx.waiting?.signal)
               responseStore.abortMessage()
             }}

@@ -12,7 +12,10 @@ export const Dropup: Component<{ children: any }> = (props) => {
   return (
     <div class="relative text-sm">
       <button
-        onClick={() => setShow(!show())}
+        onClick={(ev) => {
+          ev.preventDefault()
+          setShow(!show())
+        }}
         class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronUp />
@@ -30,7 +33,10 @@ export const Dropdown: Component<{ children: any }> = (props) => {
   return (
     <div class="relative text-sm">
       <button
-        onClick={() => setShow(!show())}
+        onClick={(ev) => {
+          ev.preventDefault()
+          setShow(!show())
+        }}
         class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronDown />
