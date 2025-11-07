@@ -1,4 +1,4 @@
-import { Component, createMemo } from 'solid-js'
+import { Component, createMemo, onCleanup } from 'solid-js'
 import Select from '/web/shared/Select'
 import { FormLabel } from '/web/shared/FormLabel'
 import { userStore } from '/web/store/user'
@@ -7,13 +7,19 @@ import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import ColorPicker from '/web/shared/ColorPicker'
 import Button from '/web/shared/Button'
 import { X } from 'lucide-solid'
+import { createDebounce } from '/web/shared/util'
+import { InlineRangeInput } from '/web/shared/RangeInput'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
-export const ThemeUISettings: Component<{ tryCustom: (update: Partial<UI.CustomUI>) => void }> = (
-  props
-) => {
+export const ThemeUISettings: Component = (props) => {
   const state = userStore((s) => ({ ui: s.ui, current: s.current, background: s.background }))
+
+  const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
+    userStore.tryCustomUI(update)
+  }, 50)
+
+  onCleanup(() => unsubCustomUi())
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
@@ -52,6 +58,24 @@ export const ThemeUISettings: Component<{ tryCustom: (update: Partial<UI.CustomU
           onChange={(item) => userStore.saveUI({ mode: item.value as any })}
         />
       </div>
+      <div class="flex gap-2">
+        <InlineRangeInput
+          label="Site Font Size"
+          parentClass="w-full"
+          value={state.ui.fontSize ?? 16}
+          min={4}
+          max={32}
+          onChange={(ev) => userStore.tryUI({ fontSize: ev })}
+          step={1}
+        />
+        <Button
+          size="sm"
+          class="!py-2"
+          onClick={() => userStore.saveUI({ fontSize: state.ui.fontSize })}
+        >
+          Save
+        </Button>
+      </div>
       <div class="flex flex-col">
         <FormLabel
           label="Backgrounds"
@@ -75,7 +99,7 @@ export const ThemeUISettings: Component<{ tryCustom: (update: Partial<UI.CustomU
           <ColorPicker
             fieldName="customBg"
             onChange={(color) => userStore.saveCustomUI({ bgCustom: color })}
-            onInput={(color) => props.tryCustom({ bgCustom: color })}
+            onInput={(color) => tryCustomUI({ bgCustom: color })}
             value={state.current.bgCustom ?? state.ui[state.ui.mode].bgCustom}
           />
         </div>

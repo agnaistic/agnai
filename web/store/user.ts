@@ -962,6 +962,10 @@ async function updateTheme(ui: UI.UISettings) {
 
   const mode = ui[ui.mode]
 
+  if (ui.fontSize) {
+    root.style.setProperty(`--sitewide-font-size`, `${ui.fontSize}px`)
+  }
+
   const hex = mode.bgCustom || getSettingColor('--bg-800')
   const colors = mode.bgCustom
     ? new Values(`${hex}`)

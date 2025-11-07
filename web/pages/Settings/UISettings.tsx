@@ -1,7 +1,4 @@
-import { Component, Show, onCleanup } from 'solid-js'
-import { createDebounce } from '../../shared/util'
-import { userStore } from '../../store'
-import { UI } from '/common/types'
+import { Component } from 'solid-js'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import { MessageUISettings } from './ui/MessageUISettings'
 import { ChatUISettings } from './ui/ChatUISettings'
@@ -14,29 +11,23 @@ const TABS = {
 }
 
 const UISettings: Component<{}> = () => {
-  const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
-    userStore.tryCustomUI(update)
-  }, 50)
-
-  onCleanup(() => unsubCustomUi())
-
   const tabs = useTabs([TABS.Theme, TABS.Chat, TABS.Messages])
 
   return (
     <>
-      <Tabs display="tabs" tabs={tabs.tabs()} select={tabs.select} selected={tabs.selected} />
+      <Tabs tabs={tabs.tabs()} select={tabs.select} selected={tabs.selected} />
 
-      <Show when={tabs.current() === TABS.Theme}>
-        <ThemeUISettings tryCustom={tryCustomUI} />
-      </Show>
+      <div classList={{ hidden: tabs.current() !== TABS.Theme }}>
+        <ThemeUISettings />
+      </div>
 
-      <Show when={tabs.current() === TABS.Chat}>
+      <div classList={{ hidden: tabs.current() !== TABS.Chat }}>
         <ChatUISettings />
-      </Show>
+      </div>
 
-      <Show when={tabs.current() === TABS.Messages}>
-        <MessageUISettings tryUpdate={tryCustomUI} />
-      </Show>
+      <div classList={{ hidden: tabs.current() !== TABS.Messages }}>
+        <MessageUISettings />
+      </div>
     </>
   )
 }

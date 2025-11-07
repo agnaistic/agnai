@@ -1,7 +1,7 @@
-import { Component, createEffect, createSignal, on, Show } from 'solid-js'
+import { Component, createEffect, createSignal, on, onCleanup, Show } from 'solid-js'
 import { userStore } from '/web/store/user'
 import { characterStore } from '/web/store/character'
-import { toDropdownItems } from '/web/shared/util'
+import { createDebounce, toDropdownItems } from '/web/shared/util'
 import Select from '/web/shared/Select'
 import { UI } from '/common/types'
 import ColorPicker from '/web/shared/ColorPicker'
@@ -13,9 +13,7 @@ import Message from '../../Chat/components/Message'
 import { defaultUIsettings } from '/common/types/ui'
 import { toInlineList } from './common'
 
-export const MessageUISettings: Component<{
-  tryUpdate: (update: Partial<UI.CustomUI>) => void
-}> = (props) => {
+export const MessageUISettings: Component = (props) => {
   const state = userStore((s) => ({
     ui: s.ui,
     current: s.current,
@@ -27,6 +25,12 @@ export const MessageUISettings: Component<{
     characters: s.characters,
     impersonating: s.impersonating,
   }))
+
+  const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
+    userStore.tryCustomUI(update)
+  }, 50)
+
+  onCleanup(() => unsubCustomUi())
 
   const [inline, setInline] = createSignal<SortItem[]>([])
 
@@ -99,7 +103,7 @@ export const MessageUISettings: Component<{
             Reset to Default
           </span>
         }
-        onInput={(color) => props.tryUpdate({ msgBackground: color })}
+        onInput={(color) => tryCustomUI({ msgBackground: color })}
         onChange={(color) => userStore.saveCustomUI({ msgBackground: color })}
         value={state.current.msgBackground}
       />
@@ -113,7 +117,7 @@ export const MessageUISettings: Component<{
             </span>
           </>
         }
-        onInput={(color) => props.tryUpdate({ botBackground: color })}
+        onInput={(color) => tryCustomUI({ botBackground: color })}
         onChange={(color) => userStore.saveCustomUI({ botBackground: color })}
         value={state.current.botBackground}
       />
@@ -125,7 +129,7 @@ export const MessageUISettings: Component<{
             Reset to Default
           </span>
         }
-        onInput={(color) => props.tryUpdate({ chatTextColor: color })}
+        onInput={(color) => tryCustomUI({ chatTextColor: color })}
         onChange={(color) => userStore.saveCustomUI({ chatTextColor: color })}
         value={state.current.chatTextColor}
       />
@@ -140,7 +144,7 @@ export const MessageUISettings: Component<{
             Reset to Default
           </span>
         }
-        onInput={(color) => props.tryUpdate({ chatEmphasisColor: color })}
+        onInput={(color) => tryCustomUI({ chatEmphasisColor: color })}
         onChange={(color) => userStore.saveCustomUI({ chatEmphasisColor: color })}
         value={state.current.chatEmphasisColor}
       />
@@ -152,7 +156,7 @@ export const MessageUISettings: Component<{
             Reset to Default
           </span>
         }
-        onInput={(color) => props.tryUpdate({ chatQuoteColor: color })}
+        onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
         onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
         value={state.current.chatQuoteColor || '--text-800'}
       />
@@ -167,7 +171,7 @@ export const MessageUISettings: Component<{
             Reset to Default
           </span>
         }
-        onInput={(color) => props.tryUpdate({ chatQuoteEmphasisColor: color })}
+        onInput={(color) => tryCustomUI({ chatQuoteEmphasisColor: color })}
         onChange={(color) => userStore.saveCustomUI({ chatQuoteEmphasisColor: color })}
         value={state.current.chatQuoteEmphasisColor || '--text-800'}
       />
