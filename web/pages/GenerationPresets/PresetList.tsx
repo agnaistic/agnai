@@ -6,7 +6,7 @@ import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { presetValidator } from '../../../common/presets'
 import { exportPreset, presetStore, toastStore, userStore } from '../../store'
-import { capitalize, setComponentPageTitle } from '../../shared/util'
+import { capitalize, setComponentPageTitle, tryParseImport } from '../../shared/util'
 import { getPresetLabel, getServiceName, sortByLabel } from '/web/shared/adapter'
 import FileInput, { FileInputResult, getFileAsString } from '/web/shared/FileInput'
 import { validateBody } from '/common/valid'
@@ -192,7 +192,7 @@ const ImportPreset: Component<{ close: () => void; success: () => void }> = (pro
 
     try {
       const content = await getFileAsString(files[0])
-      const parsed = JSON.parse(content)
+      const parsed = tryParseImport(content)
 
       const { errors, original } = validateBody(importValid, parsed, { notThrow: true })
       if (errors.length) {

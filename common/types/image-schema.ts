@@ -47,6 +47,13 @@ export type ImageSettings = BaseImageSettings & {
   // defaults?: ImageDefaults
 }
 
+export type ImageProviderLora = {
+  id: string
+  clipStrength: number
+  modelStrength: number
+  enabled: boolean
+}
+
 export type ImageProviderSettings = {
   _id?: string
   type: ImageType['type']
@@ -62,7 +69,7 @@ export type ImageProviderSettings = {
 
   // SwarmUI
   local?: boolean
-  loras?: Array<{ id: string; clipStrength: number; modelStrength: number; enabled: boolean }>
+  loras?: Array<ImageProviderLora>
 
   // NovelAI
   ucPreset?: string

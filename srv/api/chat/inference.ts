@@ -461,7 +461,9 @@ export const inferenceStream = wrap(async (req, res) => {
     }
   }
 
-  await obtainLock(userId ? userId : socketId, 15)
+  const lockId = body.chatId ? body.chatId : userId ? userId : socketId
+
+  await obtainLock(lockId, 10)
 
   let promptSent = false
 
@@ -522,7 +524,7 @@ export const inferenceStream = wrap(async (req, res) => {
   }
 
   wrapped({ type: 'inference', requestId, response })
-  await releaseLock(userId ? userId : socketId)
+  await releaseLock(lockId)
 
   if (isEventStream) {
     res.write(`data: [DONE]`)

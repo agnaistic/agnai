@@ -7,6 +7,7 @@ import {
   HatGlasses,
   Mail,
   Plus,
+  Speech,
   Trash,
 } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
@@ -14,7 +15,7 @@ import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, toastStore, userStore } from '../../store'
+import { characterStore, chatStore, responseStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { isLoggedIn } from '/web/store/api'
@@ -154,7 +155,7 @@ const ParticipantsList: Component<{
   edit: (charId: string) => void
 }> = (props) => {
   const self = userStore((s) => ({ user: s.user, profile: s.profile }))
-  const state = chatStore((s) => ({ active: s.details[s.lastChatId] }))
+  const state = chatStore((s) => ({ active: s.details[s.lastChatId], chatId: s.lastChatId }))
 
   const lists = useParticipantList()
 
@@ -176,6 +177,7 @@ const ParticipantsList: Component<{
 
   return (
     <>
+      <div>{state.active?.chat._id}</div>
       <For each={lists().users}>
         {(member) => (
           <UserParticipant
@@ -194,6 +196,7 @@ const ParticipantsList: Component<{
             canRemove={props.charId !== char._id}
             isMain={props.charId === char._id}
             edit={props.edit}
+            chat={state.active.chat}
           />
         )}
       </For>
@@ -395,7 +398,7 @@ const CharacterParticipant: Component<{
   canRemove: boolean
   isMain: boolean
   remove: (charId: string) => void
-  chat?: AppSchema.Chat
+  chat: AppSchema.Chat | undefined
   edit?: (charId: string) => void
 }> = (props) => {
   const isTemp = createMemo(() => props.char._id.startsWith('temp-'))
@@ -446,6 +449,16 @@ const CharacterParticipant: Component<{
       </div>
 
       <div class="flex gap-2">
+        <Show when={!props.char.deletedAt}>
+          <Button
+            schema="clear"
+            class="px-2"
+            onClick={() => responseStore.request(props.chat?._id!, props.char._id)}
+          >
+            <Speech size={16} />
+          </Button>
+        </Show>
+
         <Show when={!isTemp()}>
           <Button schema="clear" onClick={() => characterStore.impersonate(props.char)}>
             <HatGlasses size={16} />{' '}

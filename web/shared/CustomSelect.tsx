@@ -46,6 +46,7 @@ export const CustomSelect: Component<{
   buttonClass?: string
   classList?: Record<string, boolean>
   search?: (value: string, search: string) => boolean
+  autoSearch?: boolean
   disabled?: boolean
   footer?: any
 
@@ -116,11 +117,13 @@ export const CustomSelect: Component<{
     const input = filter().trim().toLowerCase()
     if (!input) return props.options
 
+    const searchFunc = props.search || fallbackSearch
+
     return props.options.filter((opt) =>
       typeof opt.label === 'string'
-        ? props.search?.(opt.label.toLowerCase(), input) ||
-          props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
-        : props.search?.(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+        ? searchFunc(opt.label.toLowerCase(), input) ||
+          searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+        : searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
     )
   })
 
@@ -130,11 +133,13 @@ export const CustomSelect: Component<{
     const input = filter().trim()
     if (!input) return props.categories
 
+    const searchFunc = props.search || fallbackSearch
+
     return props.categories.map((cat) => {
       const options = cat.options.filter((opt) =>
         typeof opt.label === 'string'
-          ? props.search?.(opt.label, input) || props.search?.(opt.value, input)
-          : props.search?.(opt.value, input)
+          ? searchFunc(opt.label, input) || props.search?.(opt.value, input)
+          : searchFunc(opt.value, input)
       )
 
       return { name: cat.name, options }
@@ -174,7 +179,7 @@ export const CustomSelect: Component<{
         footer={props.footer}
       >
         <div class="flex flex-col gap-4">
-          <Show when={props.search}>
+          <Show when={props.search || props.autoSearch === true}>
             <TextInput
               parentClass="text-sm"
               fieldName="options-filter"
@@ -267,4 +272,16 @@ const OptionList: Component<{
       </Match>
     </Switch>
   )
+}
+
+function fallbackSearch(value: string, search: string) {
+  const lower = value.toLowerCase()
+  if (lower.includes(search.toLowerCase())) return true
+
+  const splits = search.trim().split(' ')
+  for (const split of splits) {
+    if (!lower.includes(split)) return false
+  }
+
+  return true
 }

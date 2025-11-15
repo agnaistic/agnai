@@ -49,12 +49,12 @@ async function getSessionId(hostname: string | undefined) {
   return session.session_id as string
 }
 
-async function getModelList(hostname?: string) {
+async function getModelList(hostname?: string, subtype?: string) {
   const session_id = await getSessionId(hostname)
 
   const res = (await fetch(getUrl({ host: hostname, path: '/ListModels' }), {
     method: 'post',
-    body: JSON.stringify({ session_id, path: '', depth: 10 }),
+    body: JSON.stringify({ session_id, path: '', depth: 10, subtype }),
     headers: { 'content-type': 'application/json' },
   }).then((res) => res.json())) as {
     files: Array<{
@@ -63,15 +63,21 @@ async function getModelList(hostname?: string) {
       class?: string
       compat_class?: string
       architecture?: string
+      trigger_phrase?: string
     }>
     folders: string[]
   }
 
   const models = res.files
-    .map((file) => ({ ...file, title: file.name.split('.').slice(0, -1).join('.') }))
+    .map((file) => ({
+      ...file,
+      title: file.name.split('.').slice(0, -1).join('.'),
+      tags: file.trigger_phrase?.split(','),
+    }))
     .filter((file) => !!file.architecture) as Array<{
     name: string
     title: string
+    tags?: string[]
   }>
 
   return { models, json: res }
@@ -199,7 +205,7 @@ async function processBase64(base64: string) {
 
 async function getPayload(req: ImageRequestOpts) {
   const session_id = await getSessionId(req.settings?.swarm?.url)
-  const payload = {
+  const payload: any = {
     session_id,
     prompt: req.prompt,
     negativeprompt: req.negative || '',
@@ -210,6 +216,21 @@ async function getPayload(req: ImageRequestOpts) {
     model: req.settings?.swarm?.model || '',
     sampler: req.settings?.swarm?.sampler || 'euler_ancestral',
     images: `1`,
+  }
+
+  if (req.settings?.swarm?.loras) {
+    const loras: string[] = []
+    const weights: number[] = []
+    for (const lora of req.settings?.swarm?.loras) {
+      if (!lora.id || !lora.enabled) continue
+      loras.push(lora.id)
+      weights.push(lora.modelStrength)
+    }
+
+    if (loras.length) {
+      payload.loras = loras.join(',')
+      payload.loraweighs = weights.join(',')
+    }
   }
 
   return payload

@@ -162,6 +162,30 @@ function getUserCacheKey(key: string) {
   return `user-${userId}_${key}`
 }
 
+export function tryParseImport(content: string) {
+  try {
+    const json = JSON.parse(content)
+    return json
+  } catch (ex) {}
+
+  try {
+    const data = decodeURIComponent(content)
+    const json = JSON.parse(data)
+    return json
+  } catch (ex) {}
+
+  if (content.startsWith('data:')) {
+    try {
+      const index = content.indexOf(',')
+      const data = decodeURIComponent(content.slice(index + 1))
+      const json = JSON.parse(data)
+      return json
+    } catch (ex) {}
+  }
+
+  throw new Error(`Could not parse imported content`)
+}
+
 export function getUtterableText(msg: string) {
   const { details, lastChatId } = getStore('chat').getState()
   const { ui, user } = getStore('user').getState()
@@ -176,13 +200,12 @@ export function getUtterableText(msg: string) {
 }
 
 export function downloadJson(content: string | object, filename: string = 'agnai_export') {
-  const output = encodeURIComponent(
-    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
-  )
+  const output = typeof content === 'string' ? content : JSON.stringify(content, null, 2)
 
+  const encode: boolean = false
   const anchor = document.createElement('a')
-  const blob = new Blob([`data:text/json:charset=utf-8,${output}`])
-  anchor.href = URL.createObjectURL(blob)
+  const href = `data:text/json:charset=utf-8,${output}`
+  anchor.href = encode ? URL.createObjectURL(new Blob([href])) : href
   anchor.download = `${filename}.json`
   anchor.click()
   URL.revokeObjectURL(anchor.href)

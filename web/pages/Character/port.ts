@@ -4,6 +4,7 @@ import { characterBookToNative } from '/common/memory'
 import { AppSchema } from '/common/types'
 import { slugify } from '/common/util'
 import { FileInputResult, getFileAsString } from '/web/shared/FileInput'
+import { tryParseImport } from '/web/shared/util'
 import { NewCharacter, toastStore } from '/web/store'
 import { CHUB_URL } from '/web/store/chub'
 
@@ -212,7 +213,7 @@ async function processImage(file: FileInputResult) {
 
 async function processJSON(file: FileInputResult) {
   const content = await getFileAsString(file)
-  const json = JSON.parse(content)
+  const json = tryParseImport(content)
   const char = jsonToCharacter(json)
   char.tags = char.tags || []
   toastStore.success('Character file accepted')

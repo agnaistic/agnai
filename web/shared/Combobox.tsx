@@ -15,6 +15,7 @@ export const Combobox: Component<{
   onClearClicked?: () => void
   selected?: string[]
   autoClose?: boolean
+  parentClass?: string
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [text, setText] = createSignal('')
@@ -44,7 +45,7 @@ export const Combobox: Component<{
   })
 
   return (
-    <div class="relative max-w-sm" data-combo-box="">
+    <div class={`relative max-w-sm ${props.parentClass || ''}`} data-combo-box="">
       <div class="relative">
         <TextInput
           placeholder={props.placeholder || 'Filter...'}
@@ -53,7 +54,7 @@ export const Combobox: Component<{
             setText(ev.currentTarget.value)
             setOpen(true)
           }}
-          class="!py-1"
+          class="w-full !py-1"
           onKeyUp={(ev) => {
             if (ev.key === 'Escape') {
               setOpen(false)

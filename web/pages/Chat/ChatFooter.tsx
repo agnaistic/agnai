@@ -81,7 +81,7 @@ export const ChatFooter: Component<{
       </Show>
       <Show when={props.isOwner && props.ctx.activeBots.length > 1 && !!chats.chat}>
         <div
-          class={`flex max-h-[42px] min-h-[42px] flex-wrap justify-center gap-2 overflow-y-auto py-1 ${
+          class={`flex max-h-[84px] min-h-[42px] flex-wrap justify-center gap-2 overflow-y-auto py-1 ${
             response.waiting ? 'opacity-70 saturate-0' : ''
           }`}
         >

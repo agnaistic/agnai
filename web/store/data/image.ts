@@ -2,9 +2,7 @@ import * as horde from '../../../common/horde-gen'
 import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
-import { msgsApi } from './messages'
-import { decode, encode, getEncoder } from '/common/tokenize'
-import { parseTemplate } from '/common/template-parser'
+import { decode, encode } from '/common/tokenize'
 import { neat, wait } from '/common/util'
 import { AppSchema } from '/common/types'
 import { localApi } from './storage'
@@ -13,10 +11,9 @@ import { getAssetUrl } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { md5 } from './md5'
 import { getImagePromptEntities, getPromptEntities } from './common'
-import { genApi, inferenceHelper } from './inference'
+import { inferenceHelper } from './inference'
 import { TickHandler } from '/common/prompt'
 import { extractReasoning } from '/common/reasoning'
-import { replaceTags } from '/common/presets/templates'
 import { swarmApi } from '/common/requests/swarmui'
 import { ImageRequestOpts } from '/srv/image/types'
 import { getImagePrompt, getImageSettings } from '/common/image'
@@ -63,7 +60,6 @@ export const imageApi = {
   generateImageWithPrompt,
   generateImageAsync,
   getSummaryTemplate,
-  getChatSummary,
   dataURLtoFile,
   getImageData,
   getSDModelList,
@@ -93,7 +89,11 @@ export async function generateImagePrompt(opts: {
 }) {
   const imgEnts = await getImagePromptEntities(opts.messageId)
   const helper = inferenceHelper({ preset: imgEnts.preset, onTick: opts.onTick })
-  const template = getSummaryTemplate({ preset: imgEnts.preset, question: opts.question })
+  const template = getSummaryTemplate({
+    preset: imgEnts.preset,
+    summaryPrompt: imgEnts.summary,
+    question: opts.question,
+  })
   const settings = imgEnts.preset || imgEnts.entities.settings
 
   console.log(
@@ -150,7 +150,8 @@ export async function getImageModelList(opts: {
 }) {
   if (opts.type === 'swarm' && opts.local) {
     const models = await swarmApi.getModelList(opts.url)
-    return models
+    const loras = await swarmApi.getModelList(opts.url, 'LoRA')
+    return { ...models, loras: loras.models }
   }
 
   const res = await api.post<{ models: SDModel[] }>('/chat/image-models', opts)
@@ -472,56 +473,13 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-async function getChatSummary(
-  settings: Partial<AppSchema.GenSettings>,
-  params: {
-    prompt: string
-    question?: string
-    onTick?: TickHandler
-    signal?: AbortController
-  }
-) {
-  const active = await msgsApi.getActiveTemplateParts()
-  active.limit = {
-    context: settings.maxContextLength!,
-    encoder: await getEncoder(),
-  }
-
-  const template = getSummaryTemplate({
-    preset: settings,
-    question: params.question,
-  })
-
-  if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
-
-  const parsed = await parseTemplate(template, active)
-
-  let prompt = parsed.parsed
-  prompt = replaceTags(prompt, settings.modelFormat || 'None')
-
-  const response = await genApi.inferenceStream(
-    {
-      prompt,
-      settings,
-      messages: parsed.blocks,
-      signal: params.signal,
-    },
-    (text, state) => {
-      if (!params.onTick) return
-      const { content } = extractReasoning(text)
-      params.onTick?.(content.trim(), state)
-    }
-  )
-
-  return response
-}
-
 function getSummaryTemplate(opts: {
   preset: Partial<AppSchema.GenSettings> | undefined
+  summaryPrompt: string | undefined
   question?: string
 }) {
   let prompt =
-    opts?.preset?.imageSettings?.summaryPrompt ||
+    opts.summaryPrompt ||
     neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
 
   if (opts?.question) {
@@ -529,7 +487,7 @@ function getSummaryTemplate(opts: {
   }
 
   return neat`
-      <system>Your task is to generate an Image Caption using only Comma-separated List of Booru Tags by summarizing the most recent moment in a roleplay scenario.
+      <system>Your task is to generate an Image Caption in the format that is specified by the user using the details of the conversation below at the current moment in the roleplay scenario.
       Generate an image caption using the details and conversation below.</system>
 
       <instruct>

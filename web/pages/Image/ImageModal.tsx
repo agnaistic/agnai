@@ -359,6 +359,7 @@ const PromptSettings: Component<{
 
     const template = imageApi.getSummaryTemplate({
       preset: ents.preset,
+      summaryPrompt: ents.summary,
       question: persist.imageHint,
     })
 

@@ -166,6 +166,15 @@ export const ImageSettingsModal = () => {
               value={ctx.store.summaryPrompt}
               onChange={(ev) => ctx.update('summaryPrompt', ev.currentTarget.value)}
             />
+
+            <div class="flex gap-1">
+              <Button size="sm" onClick={() => ctx.update('summaryPrompt', SUMMARY_PROMPTS.booru)}>
+                Booru/Tag Style
+              </Button>
+              <Button size="sm" onClick={() => ctx.update('summaryPrompt', SUMMARY_PROMPTS.plain)}>
+                Flux/Plain Style
+              </Button>
+            </div>
           </Accordian>
 
           <div class="flex gap-2">
@@ -416,3 +425,10 @@ export function useCurrentChatImageSettings() {
 
   return cfg
 }
+
+const SUMMARY_PROMPTS = {
+  booru: `Write an image caption of the current moment using physical descriptions without names. Respond using comma-separated BOORU TAGS`,
+  plain: `Write an image caption of the current moment using physical descriptions without names. Respond using comma-separated simple descriptors`,
+  simple: `Write a Brief image caption of the current moment using physical descriptions without names. Respond using comma-separated simple descriptors`,
+}
+// `Write an image caption of the current moment in time using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
