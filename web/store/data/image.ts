@@ -32,6 +32,7 @@ type GenerateOpts = {
   source: string
   parent?: string
   question?: string
+  signal?: AbortController
 
   /** If true, the Image Settings prefix and suffix won't be applied */
   noAffix?: boolean
@@ -57,7 +58,6 @@ export function getImageType(image: string) {
 export const imageApi = {
   generateImage,
   generateImagePrompt,
-  generateImageWithPrompt,
   generateImageAsync,
   getSummaryTemplate,
   dataURLtoFile,
@@ -213,8 +213,31 @@ export async function generateImage(
 }
 
 async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requestId: string) {
+  if (req.provider?.type === 'horde') {
+    try {
+      const { text: image } = await horde.generateImage(
+        req.entities.user,
+        req.request.prompt,
+        req.request.negative,
+        (status) => {}
+      )
+
+      const file = await dataURLtoFile(image)
+      const buffer = await file.arrayBuffer()
+      const data = await getImageData(file)
+
+      return { buffer, file, content: data }
+    } catch (ex: any) {
+      throw ex
+    }
+  }
+
   if (req.provider?.local && req.provider.type === 'swarm') {
+    const signal = opts.signal || new AbortController()
+    imageStore.setState({ signal })
+
     const result = await swarmApi.generateImageWS(req.request, {
+      signal,
       onDone: () => imageStore.setState({ preview: undefined }),
       onError: () => imageStore.setState({ preview: undefined }),
       onPreview: (step) => imageStore.setState({ preview: step }),
@@ -256,55 +279,13 @@ async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requ
   return { content: base64, file: proc.file, buffer }
 }
 
-export async function generateImageWithPrompt(opts: {
-  prompt: string
-  source: string
-  onDone: (result: { image: string; file: File; data?: string }) => void
-  onTick?: (status: horde.HordeCheck) => void
-}) {
-  const { prompt, source, onDone } = opts
-  const user = getStore('user').getState().user
-
-  if (!user) {
-    throw new Error('Could not get user settings')
-  }
-
-  if (!user.images || user.images.type === 'horde') {
-    try {
-      const { text: image } = await horde.generateImage(
-        user,
-        prompt,
-        user.images?.negative || horde.defaults.image.negative,
-        (status) => {
-          opts.onTick?.(status)
-        }
-      )
-
-      const file = await dataURLtoFile(image)
-      const data = await getImageData(file)
-
-      onDone({ image, file, data })
-      return localApi.result({})
-    } catch (ex: any) {
-      return localApi.error(ex.message)
-    }
-  }
-
-  const res = await api.post<{ success: boolean; requestId: string }>(`/character/image`, {
-    prompt,
-    user,
-    ephemeral: true,
-    source,
-  })
-
-  return res
-}
-
 export type ImageResult = { image: string; file: File; data?: string; error?: string }
 
 export async function generateImageAsync(
   prompt: string,
   opts: {
+    chatId?: string
+    messageId?: string
     model?: string
     requestId?: string
     noAffix?: boolean
@@ -319,92 +300,112 @@ export async function generateImageAsync(
     throw new Error('Could not get user settings')
   }
 
-  const req = await createImageRequest({ prompt, noAffix: opts.noAffix })
-
-  if (req.provider?.type === 'horde') {
-    try {
-      const { text: image } = await horde.generateImage(
-        user,
-        prompt,
-        user.images?.negative || '',
-        (status) => {
-          opts.onTick?.(status)
-        }
-      )
-
-      const file = await dataURLtoFile(image)
-      const data = await getImageData(file)
-
-      opts.onDone?.({ image, file, data })
-
-      return { image, file, data }
-    } catch (ex: any) {
-      throw ex
-    }
-  }
-
+  const req = await createImageRequest({ prompt, noAffix: opts.noAffix, messageId: opts.messageId })
   const requestId = opts.requestId || v4()
 
-  if (req.provider?.local && req.provider.type === 'swarm') {
-    const signal = new AbortController()
+  const image = await dispatchImage(
+    req,
+    {
+      source,
+      noAffix: opts.noAffix,
+      ephemeral: true,
+      chatId: opts.chatId,
+      messageId: opts.messageId,
+    },
+    requestId
+  )
 
-    imageStore.setState({ signal })
-
-    const res = await swarmApi.generateImageWS(req.request, {
-      signal,
-      onDone: () => imageStore.setState({ preview: undefined }),
-      onError: () => imageStore.setState({ preview: undefined }),
-      onPreview: (step) => imageStore.setState({ preview: step }),
-    })
-    opts.onDone?.({ file: res.file, image: res.content, data: res.content })
-    return {
-      image: res.content,
-      file: res.file,
-      data: res.content,
-    }
+  const payload = {
+    type: 'image-generated',
+    chatId: opts.chatId,
+    messageId: opts.messageId,
+    image: image.content,
+    requestId,
+    source,
   }
 
-  // const promise = new Promise<ImageResult>((resolve, reject) => {
-  //   callbacks.set(requestId, (image) => {
-  //     opts.onDone?.(image)
-  //     if (image.error) {
-  //       toastStore.error(image.error)
-  //       return reject(new Error(image.error))
-  //     }
-  //     resolve(image)
+  localEmit(payload)
+  opts.onDone?.({ file: image.file, image: image.content!, data: image.content })
+
+  const result: ImageResult = {
+    file: image.file,
+    image: image.content!,
+    data: image.content!,
+  }
+
+  return result
+
+  // if (req.provider?.type === 'horde') {
+  //   try {
+  //     const { text: image } = await horde.generateImage(
+  //       user,
+  //       prompt,
+  //       user.images?.negative || '',
+  //       (status) => {
+  //         opts.onTick?.(status)
+  //       }
+  //     )
+
+  //     const file = await dataURLtoFile(image)
+  //     const data = await getImageData(file)
+
+  //     opts.onDone?.({ image, file, data })
+
+  //     return { image, file, data }
+  //   } catch (ex: any) {
+  //     throw ex
+  //   }
+  // }
+
+  // if (req.provider?.local && req.provider.type === 'swarm') {
+  //   const signal = new AbortController()
+
+  //   imageStore.setState({ signal })
+
+  //   const res = await swarmApi.generateImageWS(req.request, {
+  //     signal,
+  //     onDone: () => imageStore.setState({ preview: undefined }),
+  //     onError: () => imageStore.setState({ preview: undefined }),
+  //     onPreview: (step) => imageStore.setState({ preview: step }),
   //   })
+  //   opts.onDone?.({ file: res.file, image: res.content, data: res.content })
+  //   return {
+  //     image: res.content,
+  //     file: res.file,
+  //     data: res.content,
+  //   }
+  // }
+
+  // const res = await api.post<{ success: boolean; output?: string }>(`/character/image`, {
+  //   sync: true,
+  //   prompt,
+  //   user,
+  //   ephemeral: true,
+  //   source,
+  //   noAffix: opts.noAffix,
+  //   model: opts.model,
+  //   requestId,
   // })
 
-  const res = await api.post<{ success: boolean; output?: string }>(`/character/image`, {
-    sync: true,
-    prompt,
-    user,
-    ephemeral: true,
-    source,
-    noAffix: opts.noAffix,
-    model: opts.model,
-    requestId,
-  })
+  // if (res.result?.output) {
+  //   const type = getImageType(res.result.output)
+  //   const base64 = type.type === 'url' ? await getImageBase64(res.result.output) : type.image
+  //   const proc = processBase64(base64)
 
-  if (res.result?.output) {
-    const type = getImageType(res.result.output)
-    const base64 = type.type === 'url' ? await getImageBase64(res.result.output) : type.image
-    const proc = processBase64(base64)
+  //   const result: ImageResult = {
+  //     file: proc.file,
+  //     image: base64,
+  //     data: res.result.output,
+  //   }
 
-    const result: ImageResult = {
-      file: proc.file,
-      image: base64,
-      data: res.result.output,
-    }
+  //   return result
+  // }
 
-    return result
-  }
+  // if (res.error) {
+  //   throw new Error(res.error)
+  // }
 
-  if (res.error) {
-    throw new Error(res.error)
-  }
-
-  throw new Error(`Image generation failed: Empty result`)
+  // throw new Error(`Image generation failed: Empty result`)
 }
 
 export async function getImageBase64(image: string) {

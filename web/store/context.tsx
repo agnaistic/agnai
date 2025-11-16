@@ -15,6 +15,7 @@ import { ChatTree } from '/common/chat'
 import { PresetStateProvider } from './preset-context'
 import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
+import { imageStore } from './images'
 
 export type ContextState = {
   appReady: boolean
@@ -59,6 +60,7 @@ export type ContextState = {
   msgDeleting?: boolean
   waiting?: ResponseState['waiting']
   imgWaiting?: MsgState['imgWaiting']
+  imgPreview?: string
   status?: MsgState['hordeStatus']
   attachments: MsgState['attachments']
   ui: UI.UISettings
@@ -97,6 +99,7 @@ const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] 
 export function ContextProvider(props: { children: any }) {
   const [state, setState] = createStore(initial)
 
+  const image = imageStore((s) => ({ preview: s.preview, signal: s.signal }))
   const chars = characterStore((s) => ({
     chatChars: s.chatChars,
     characters: s.characters,
@@ -217,6 +220,7 @@ export function ContextProvider(props: { children: any }) {
       chatTree: msgs.graph.tree,
       waiting: response.waiting,
       imgWaiting: msgs.imgWaiting,
+      imgPreview: msgs.imgWaiting ? image.preview?.base64 : undefined,
       status: msgs.hordeStatus,
       attachments: msgs.attachments,
       // canUseAttachments: canAttachImage(detail?.conn, subModel()),

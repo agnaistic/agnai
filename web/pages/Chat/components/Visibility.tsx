@@ -19,18 +19,21 @@ import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
 import { Pill, TitleCard } from '/web/shared/Card'
 import { Check, Minus, X } from 'lucide-solid'
+import { isMessageInvisible } from '/common/prompt'
 
 export const MessageVisibility: Component<{ ctx: ContextState; messageId: string }> = (props) => {
   const lists = useParticipantList()
   const [flags, setFlags] = createSignal<Record<string, boolean | undefined>>({})
 
   const currents = createMemo(() => {
-    const msg = flags()
-    const chat = props.ctx.chat?.invisible || {}
     const all = lists()
       .chars.concat(lists().tempsActive)
       .map((char) => {
-        const invis = msg[char._id] ?? chat[char._id] ?? false
+        const invis = isMessageInvisible(
+          props.ctx.chat!,
+          props.ctx.chatTree[props.messageId]?.msg!,
+          char._id
+        )
 
         return { char, invis }
       })

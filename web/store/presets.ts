@@ -59,7 +59,7 @@ export const presetStore = createStore<PresetState>(
     },
     async *testConnection(
       _,
-      opts: { providerType?: string; url: string; key: string },
+      opts: { providerId?: string; providerType?: string; url: string; key: string },
       cb: (success: boolean, url: string) => void
     ) {
       if (!opts.url) return

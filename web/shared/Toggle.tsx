@@ -44,7 +44,7 @@ export const Toggle: Component<{
         ...props.classList,
       }}
     >
-      <Show when={props.label || !props.reverse || props.helperMarkdown || props.helperText}>
+      <Show when={!props.reverse && (props.label || props.helperMarkdown || props.helperText)}>
         <FormLabel
           label={
             <span>
@@ -76,8 +76,12 @@ export const Toggle: Component<{
         />
         <div class={`toggle-switch ${props.disabled ? 'toggle-disabled' : ''}`}></div>
       </label>
-      <Show when={props.label && props.reverse}>
-        <FormLabel label={props.label} helperText={props.helperText} />
+      <Show when={props.reverse && (props.label || props.helperText || props.helperMarkdown)}>
+        <FormLabel
+          label={props.label}
+          helperText={props.helperText}
+          helperMarkdown={props.helperMarkdown}
+        />
       </Show>
     </div>
   )

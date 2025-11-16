@@ -6,7 +6,8 @@ import TextInput from './TextInput'
 import { chatStore } from '../store'
 import { toMap } from './util'
 import { Pill } from './Card'
-import { isChatPageMemo } from './hooks'
+import { isChatPageMemo, useLocalStorage } from './hooks'
+import { Toggle } from './Toggle'
 
 export type Option<T extends string = string> = {
   label: string
@@ -25,6 +26,7 @@ const CharacterSelectList: Component<{
   const chats = chatStore((s) => ({ active: s.details[s.lastChatId] }))
   const [_ref, setRef] = createSignal<any>()
   const [search, setSearch] = createSignal('')
+  const [noDesc, setNoDesc] = useLocalStorage('impersonate-no-descriptions', false)
   const chatPage = isChatPageMemo()
 
   const current = createMemo(() => {
@@ -50,7 +52,7 @@ const CharacterSelectList: Component<{
   })
 
   const sorted = createMemo(() => {
-    return narrow(props.items, search(), current()?.map)
+    return narrow(props.items, search(), noDesc(), current()?.map)
   })
 
   const onChange = (value: AppSchema.Character | undefined) => {
@@ -72,6 +74,14 @@ const CharacterSelectList: Component<{
             onKeyUp={(e) => setSearch(e.currentTarget.value)}
             ref={assignRef}
           />
+
+          <Toggle
+            reverse
+            value={noDesc()}
+            onChange={(ev) => setNoDesc(ev)}
+            helperText={`Don't Search Descriptions`}
+          />
+
           <Show when={props.items.length > MAX_DISPLAY}>
             <div class="flex w-full justify-center">
               <Pill type="orange" small>
@@ -151,9 +161,10 @@ export const CharacterSelectItem: Component<{
   )
 }
 
-function wordMatch(char: AppSchema.Character, word: string) {
+function wordMatch(char: AppSchema.Character, word: string, noDesc?: boolean) {
   if (char.name.toLowerCase().includes(word)) return true
-  if (char.description && char.description.toLowerCase().includes(word)) return true
+  if (!noDesc && char.description && char.description.toLowerCase().includes(word)) return true
+
   return false
 }
 
@@ -162,7 +173,8 @@ export default CharacterSelectList
 function narrow(
   chars: AppSchema.Character[],
   search: string,
-  exclude?: Record<string, AppSchema.Character>
+  noDesc: boolean,
+  exclude: Record<string, AppSchema.Character> | undefined
 ) {
   const words = search
     .trim()
@@ -176,7 +188,7 @@ function narrow(
       if (exclude && i._id in exclude) return false
       if (!words.length) return true
       for (let word of words) {
-        return wordMatch(i, word)
+        return wordMatch(i, word, noDesc)
       }
     })
     .sort(faveSort)

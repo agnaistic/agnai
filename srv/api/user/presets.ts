@@ -30,7 +30,7 @@ export const testConnectionUrl = handle(async ({ body, userId, authed }) => {
     const provider = authed?.providers?.find((p) => p._id === body.providerId)
 
     if (provider?.key) {
-      body.key = body.key = decryptText(provider.key || '', true)
+      body.key = decryptText(provider.key || '', true)
     }
   }
 

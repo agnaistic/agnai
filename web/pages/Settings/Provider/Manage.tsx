@@ -224,7 +224,13 @@ export const ManageProvider: Component<{
     try {
       new URL(url()) // Validate the URL
       presetStore.testConnection(
-        { providerType: provider(), url: url(), key: key() },
+        {
+          // if the user is providing a new key, ignore the saved key
+          providerId: key() ? undefined : props.provider?._id,
+          providerType: provider(),
+          url: url(),
+          key: key(),
+        },
         (success, goodUrl) => {
           if (!success) {
             setTested(false)

@@ -59,7 +59,7 @@ import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
-import { RelativeSpinner } from '/web/shared/Loading'
+import { RelativeSpinner, Spinner } from '/web/shared/Loading'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
 import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
@@ -603,8 +603,13 @@ const Message: Component<MessageProps> = (props) => {
                     </span>
                   </Show>
                   <Show when={ctx.imgWaiting?.pos && ctx.imgWaiting.messageId === msg()._id}>
-                    <div class="flex w-full justify-center">
-                      <RelativeSpinner speed={imageSpeed()} />{' '}
+                    <div class="relative flex w-full justify-center">
+                      <Show when={ctx.imgPreview}>
+                        <img class="rounded-md object-contain" src={ctx.imgPreview} />
+                      </Show>
+                      <div class="absolute bottom-1/2">
+                        <Spinner speed={imageSpeed()} />{' '}
+                      </div>
                       <span
                         class="text-500 text-xs italic"
                         classList={{ hidden: !ctx.status?.wait_time }}
