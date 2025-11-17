@@ -7,13 +7,13 @@ import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
-import { HydratedJson, jsonHydrator, parsePartialJson } from '/common/util'
+import { HydratedJson, parsePartialJson } from '/common/util'
 import { resolveScenario } from '/common/prompt'
 import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { Response } from 'express'
 import { getAdapter } from '/common/adapters'
-import { formatJsonSchemaVars, getResponseVariable } from '/common/guidance/json-schema'
+import { getResponseVariable, prepareJsonSchema } from '/common/guidance/json-schema'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 type MsgEntities = Awaited<ReturnType<typeof getMessageEntities>>
@@ -217,9 +217,8 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
   }
 
-  const schema = ents.preset.jsonSource === 'character' ? replyAs.json : ents.preset.json
-  formatJsonSchemaVars(schema, body)
-  const hydrator = ents.preset.jsonEnabled && schema ? jsonHydrator(schema) : undefined
+  const schemaSrc = ents.preset.jsonSource === 'character' ? replyAs.json : ents.preset.json
+  const schema = ents.preset.jsonEnabled ? prepareJsonSchema(schemaSrc, body) : undefined
 
   let hydration: HydratedJson | undefined
   let jsonPartial: any
@@ -348,9 +347,9 @@ export const generateMessageV2 = handle(async (req, res) => {
 
         if ('partial' in gen) {
           const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
-          if (metadata.json && hydrator) {
+          if (metadata.json && schema) {
             jsonPartial = parsePartialJson(gen.partial, aliases) || jsonPartial
-            hydration = hydrator(jsonPartial || {})
+            hydration = schema?.hydrator(jsonPartial || {})
           }
 
           partial = `${prefix}${gen.partial}`

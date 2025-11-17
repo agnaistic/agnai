@@ -4,7 +4,6 @@ import { api } from '../api'
 import { getStore } from '../create'
 import { decode, encode } from '/common/tokenize'
 import { neat, wait } from '/common/util'
-import { AppSchema } from '/common/types'
 import { localApi } from './storage'
 import { localEmit, subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
@@ -90,9 +89,9 @@ export async function generateImagePrompt(opts: {
   const imgEnts = await getImagePromptEntities(opts.messageId)
   const helper = inferenceHelper({ preset: imgEnts.preset, onTick: opts.onTick })
   const template = getSummaryTemplate({
-    preset: imgEnts.preset,
-    summaryPrompt: imgEnts.summary,
-    question: opts.question,
+    task: imgEnts.summary,
+    generate: 'Image Caption',
+    focus: opts.question,
   })
   const settings = imgEnts.preset || imgEnts.entities.settings
 
@@ -474,22 +473,21 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
   callback({ file: {} as any, image: '', error: body.error })
 })
 
-function getSummaryTemplate(opts: {
-  preset: Partial<AppSchema.GenSettings> | undefined
-  summaryPrompt: string | undefined
-  question?: string
-}) {
+function getSummaryTemplate(opts: { task: string | undefined; focus?: string; generate?: string }) {
   let prompt =
-    opts.summaryPrompt ||
+    opts.task ||
     neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
 
-  if (opts?.question) {
-    prompt += `\nSpecifically focus on: ${opts.question}`
+  if (opts?.focus) {
+    prompt += `\nSpecifically focus on: ${opts.focus}`
   }
 
+  const generate = opts.generate || 'Chat Summary'
+  const prefix = ['a', 'e', 'i', 'o', 'u'].includes(generate[0].toLowerCase()) ? 'an' : 'a'
+
   return neat`
-      <system>Your task is to generate an Image Caption in the format that is specified by the user using the details of the conversation below at the current moment in the roleplay scenario.
-      Generate an image caption using the details and conversation below.</system>
+      <system>Your task is to generate ${prefix} ${generate} in the format that is specified by the user using the details of the conversation below at the current moment in the roleplay scenario.
+      Generate ${prefix} ${generate} using the details and conversation below.</system>
 
       <instruct>
       {{char}}'s Persona: {{personality}}
@@ -503,7 +501,7 @@ function getSummaryTemplate(opts: {
 
       <instruct>${prompt}</instruct>
 
-      <assistant>Image caption:</assistant>`
+      <assistant>${generate}:</assistant>`
 }
 
 export async function dataURLtoFile(base64: string, name?: string): Promise<File> {

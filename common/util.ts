@@ -668,6 +668,8 @@ export function parsePartialJson(value: string, aliases?: Record<string, string>
     const obj = tryParse(value.trim() + '"}', aliases)
     if (obj) return obj
   }
+
+  return {}
 }
 
 const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
@@ -736,7 +738,10 @@ export type HydratedJson = {
 
 export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+}}/g
 
-export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
+export function jsonHydrator(
+  def: Ensure<AppSchema.Character['json']>,
+  aliases?: Record<string, string>
+) {
   const map = new Map<string, string>()
   const resVars = (def.response || '').match(JSON_NAME_RE())
   const histVars = (def.history || '').match(JSON_NAME_RE())
@@ -745,7 +750,9 @@ export function jsonHydrator(def: Ensure<AppSchema.Character['json']>) {
     map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
   }
 
-  const hydrate = (json: any) => {
+  const hydrate = (incoming: any) => {
+    const json = typeof incoming === 'string' ? parsePartialJson(incoming, aliases) : incoming
+
     const output: any = {}
 
     for (const [key, value] of Object.entries(json)) {

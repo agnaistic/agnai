@@ -128,10 +128,9 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
     lists: opts.lists,
     previous: opts.previous,
     json_schema_v2: ensureSafeSchema(json_schema),
-    json_schema_v3:
-      opts.jsonSchema && gen.jsonEnabled
-        ? getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
-        : undefined,
+    json_schema_v3: opts.jsonSchema
+      ? getJsonSchemaPayload(opts.jsonSchema, 'guided_json', opts)
+      : undefined,
     reschema_prompt: opts.reschemaPrompt,
     context_size: opts.contextSize,
     xtc_threshold: gen.xtcThreshold,

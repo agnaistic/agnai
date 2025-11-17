@@ -74,6 +74,7 @@ export interface ResponseSchema {
   schema: JsonField[]
   response: string
   history: string
+  separateCall: boolean
 }
 
 type BaseLibaryItem = { _id: string; kind: 'library-item'; userId: string }

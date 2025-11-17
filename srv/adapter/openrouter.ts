@@ -69,7 +69,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.thirdPartyModel
   }
 
-  if (opts.gen.jsonEnabled && opts.jsonSchema) {
+  if (opts.jsonSchema) {
     payload.response_format = getJsonSchemaPayload(opts.jsonSchema, 'openai', opts)
   }
 

@@ -69,7 +69,8 @@ export const responseStore = createStore<ResponseState>(
       return { waiting: undefined, partial: undefined, retrying: undefined }
     },
 
-    async *retry(_, opts: { chatId: string; msgId?: string }) {
+    async *retry({ waiting }, opts: { chatId: string; msgId?: string }) {
+      if (!waiting) return
       const { msgs, activeCharId } = getStore('messages').getState()
 
       if (!opts.chatId) {
@@ -178,6 +179,7 @@ export const responseStore = createStore<ResponseState>(
       opts: {
         chatId: string
         msg: string
+        msgId?: string
         mode: SendModes
         onSuccess?: () => void
         onError?: (error?: string) => void
@@ -216,7 +218,7 @@ export const responseStore = createStore<ResponseState>(
         case 'self':
         case 'retry':
           res = await botGen
-            .stream({ signal, kind: opts.mode })
+            .stream({ signal, kind: opts.mode, messageId: opts.msgId })
             .catch((err) => ({ error: err.message, result: undefined }))
           break
 

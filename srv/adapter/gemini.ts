@@ -55,10 +55,9 @@ export const handleGemini: ModelAdapter = async function* (opts) {
     presencePenalty: opts.gen.presencePenalty,
     frequencyPenalty: opts.gen.frequencyPenalty,
     abortSignal: opts.signal.signal,
-    responseSchema:
-      opts.gen.jsonEnabled && opts.jsonSchema
-        ? getJsonSchemaPayload(opts.jsonSchema, 'gemini', opts)
-        : undefined,
+    responseSchema: opts.jsonSchema
+      ? getJsonSchemaPayload(opts.jsonSchema, 'gemini', opts)
+      : undefined,
   }
 
   if (opts.gen.reasoning?.enabled) {

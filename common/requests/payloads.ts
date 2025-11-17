@@ -101,7 +101,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   const conn = getPresetConnection(gen, opts.user.providers)
   const format = opts.subscription?.preset?.thirdPartyFormat || conn.format
 
-  const json_schema = opts.jsonSchema && gen.jsonEnabled ? toJsonSchema(opts.jsonSchema) : undefined
+  const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
 
   const characterNames = Object.values(opts.characters || {})
     .map((c) => c.name.split(' '))
@@ -206,7 +206,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       body.top_k = -1
     }
 
-    if (gen.jsonEnabled && opts.jsonSchema && opts.char) {
+    if (opts.jsonSchema && opts.char) {
       const char = opts.char! // TypeScript being stupid
       const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', { ...opts, char })
       body.guided_json = schema

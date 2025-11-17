@@ -17,6 +17,7 @@ import { assertValid } from '/common/valid'
 import { useActivePreset } from '/web/store/data/common'
 import { useAppContext } from '/web/store/context'
 import { createStore } from 'solid-js/store'
+import { Toggle } from '/web/shared/Toggle'
 
 const helpMarkdown = neat`
 
@@ -53,6 +54,7 @@ const exampleSchema: ResponseSchema = {
   history: '{{response}}',
   response: '{{response}}',
   schema: [],
+  separateCall: false,
 }
 
 export const CharacterSchema: Component<{
@@ -76,6 +78,7 @@ export const CharacterSchema: Component<{
     response: '',
     history: '',
     schema: [] as JsonField[],
+    separateCall: false,
   })
 
   const vars = createMemo(() => {
@@ -205,7 +208,9 @@ export const CharacterSchema: Component<{
         history: store.history,
         response: store.response,
         schema: store.schema,
+        separateCall: store.separateCall,
       }
+
       props.update(update)
 
       if (ctx.chat?._id && props.characterId && props.characterId.startsWith('temp-')) {
@@ -305,9 +310,7 @@ export const CharacterSchema: Component<{
         >
           <div class="flex flex-col gap-2 text-sm">
             <div class="flex w-full justify-center gap-2">
-              <Pill type="premium">
-                This feature is in beta. Please share issues and feedback on Discord or GitHub.
-              </Pill>
+              <Pill type="premium">Warning: Not all models support JSON Output/Responses.</Pill>
 
               <HelpModal
                 title="Information"
@@ -332,7 +335,7 @@ export const CharacterSchema: Component<{
               <TextInput
                 isMultiline
                 fieldName="jsonSchemaResponse"
-                label="Response Template"
+                label={<b>Response Template</b>}
                 ref={(r) => (respRef = r)}
                 onKeyDown={(ev) => {
                   if (ev.key === '{') setAuto('response')
@@ -356,6 +359,19 @@ export const CharacterSchema: Component<{
                 class="font-mono text-xs"
                 onChange={(ev) => setStore('response', ev.currentTarget.value)}
               />
+
+              <Toggle
+                label={<b>Perform Separate Call</b>}
+                value={store.separateCall}
+                onChange={(ev) => setStore('separateCall', ev)}
+                helperText={
+                  <>
+                    When enabled: Perform the JSON output generation in a separate call
+                    <br />
+                    <b>WARNING</b> This will incur additional costs with third-party models.
+                  </>
+                }
+              />
             </Card>
 
             <Card class="relative">
@@ -370,7 +386,7 @@ export const CharacterSchema: Component<{
               <TextInput
                 class="font-mono text-xs"
                 fieldName="jsonSchemaHistory"
-                label="History Template"
+                label={<b>History Template</b>}
                 ref={(r) => (histRef = r)}
                 onKeyDown={(ev) => {
                   if (ev.key === '{') setAuto('history')
@@ -438,7 +454,13 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
 
       curr = json
       assertValid(
-        { response: 'string', history: 'string', fields: ['any?'], schema: ['any?'] },
+        {
+          response: 'string',
+          history: 'string',
+          fields: ['any?'],
+          schema: ['any?'],
+          separateCall: 'boolean?',
+        },
         json
       )
 
@@ -449,7 +471,12 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
         assertValid({ type: { type: 'string' }, name: 'string' }, field)
       }
 
-      props.close({ response: json.response, history: json.history, schema })
+      props.close({
+        response: json.response,
+        history: json.history,
+        schema,
+        separateCall: json.separateCall ?? false,
+      })
     } catch (ex: any) {
       toastStore.error(`Invalid JSON Schema: ${ex.message}`)
       console.error(ex)

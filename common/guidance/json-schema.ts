@@ -2,6 +2,7 @@ import { AppSchema } from '../types'
 import { ResponseSchema } from '../types/library'
 import { JsonField } from '../prompt'
 import { GenerationConfig, Schema, Type } from '@google/genai'
+import { jsonHydrator } from '../util'
 
 export const SCHEMA_VARS = {
   user: `Your name: unformatted`,
@@ -23,14 +24,19 @@ export type StructureEntities = {
 /**
  * @destructive Mutates `schema` field names and templates if required
  */
-export function formatJsonSchemaVars(schema: ResponseSchema, ents: StructureEntities) {
-  if (!schema?.schema?.length) return
-  schema.history = parseVariableName(schema.history, ents)
-  schema.response = parseVariableName(schema.response, ents)
-  for (const field of schema.schema) {
+export function formatJsonSchemaVars(
+  schema: ResponseSchema,
+  ents: StructureEntities
+): ResponseSchema {
+  if (!schema?.schema?.length) schema
+  const history = parseVariableName(schema.history, ents)
+  const response = parseVariableName(schema.response, ents)
+  const fields = schema.schema.map((s) => ({ ...s }))
+  for (const field of fields) {
     field.name = parseVariableName(field.name, ents)
   }
-  return
+
+  return { history, response, schema: fields, separateCall: schema.separateCall }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
@@ -65,9 +71,7 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   format: T,
   entities: StructureEntities
 ): OutboundJsonSchema<T> {
-  const response = getResponseVariable(entities)
-
-  const base = { [response]: { type: 'string' } }
+  const base = {}
   // const base: any = {}
   const fields = json.reduce((prev: any, field: JsonField) => {
     const {
@@ -179,6 +183,38 @@ function toResponseSchema(fields: JsonField[], entities: StructureEntities) {
 export function getResponseVariable(entities: StructureEntities) {
   const { char } = getNames(entities)
   return `${char}'s response`
+}
+
+export function prepareJsonSchema(
+  def: Ensure<AppSchema.Character['json']>,
+  entities: StructureEntities
+) {
+  const names = getNames(entities)
+  const aliases: Record<string, string> = {}
+  const parsed = formatJsonSchemaVars(def, entities)
+  const fields = parsed.schema.slice()
+
+  if (!def.separateCall) {
+    const responseVar = getResponseVariable(entities)
+    fields.unshift({ type: { type: 'string', maxLength: 0 }, name: responseVar, disabled: false })
+    aliases[responseVar] = 'response'
+  }
+
+  const nextSchema: ResponseSchema = {
+    response: parsed.response,
+    history: parsed.history,
+    schema: fields,
+    separateCall: def.separateCall,
+  }
+
+  const hydrator = jsonHydrator(nextSchema)
+
+  return {
+    names,
+    hydrator,
+    aliases,
+    ...nextSchema,
+  }
 }
 
 function getNames(entities: StructureEntities) {

@@ -112,7 +112,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
   }
 
-  if (gen.jsonEnabled && opts.jsonSchema) {
+  if (opts.jsonSchema) {
     const responseField = `${opts.replyAs?.name || opts.char?.name}'s response`
     const base = {
       [responseField]: { type: 'string' },

@@ -358,9 +358,9 @@ const PromptSettings: Component<{
     const ents = await getImagePromptEntities(props.messageId)
 
     const template = imageApi.getSummaryTemplate({
-      preset: ents.preset,
-      summaryPrompt: ents.summary,
-      question: persist.imageHint,
+      task: ents.summary,
+      generate: 'Image Caption',
+      focus: persist.imageHint,
     })
 
     await gen.send({ prompt: template, preset: ents.preset })
