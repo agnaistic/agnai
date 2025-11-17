@@ -94,7 +94,7 @@ async function streamResponse(opts: StreamOpts, onTick?: TickHandler) {
     )
   }
 
-  if (assembled.linesAddedCount === 0 && req.props.messages.length) {
+  if (assembled.linesAddedCount === 0 && req.prompt.lines.length) {
     return localApi.error(
       `Could not fit any messages in prompt. Check your character definition, context size, and template`
     )

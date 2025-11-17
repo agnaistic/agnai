@@ -21,7 +21,6 @@ import {
   updateChatTreeNode,
 } from '/common/chat'
 import { embedApi } from './embeddings'
-import { TickHandler } from '/common/prompt'
 import { HordeCheck } from '/common/horde-gen'
 import type { MsgAttachment } from '/srv/adapter/type'
 import { debug } from '/common/debug'
@@ -474,52 +473,52 @@ export const msgStore = createStore<MsgState>(
       yield { deleting: false }
     },
 
-    async *generateImagePrompt(
-      { activeChatId, activeCharId, msgs },
-      opts: {
-        messageId?: string
-        onSummary?: (summary: string) => void
-        onTick?: TickHandler
-        question?: string
-      }
-    ) {
-      const messageId = opts.messageId || msgs.slice(-1)[0]._id
+    // async *generateImagePrompt(
+    //   { activeChatId, activeCharId, msgs },
+    //   opts: {
+    //     messageId?: string
+    //     onSummary?: (summary: string) => void
+    //     onTick?: TickHandler
+    //     question?: string
+    //   }
+    // ) {
+    //   const messageId = opts.messageId || msgs.slice(-1)[0]._id
 
-      if (!messageId) {
-        toastStore.warn('Could not generate image prompt: Current chat has no messages')
-        return
-      }
+    //   if (!messageId) {
+    //     toastStore.warn('Could not generate image prompt: Current chat has no messages')
+    //     return
+    //   }
 
-      const signal = new AbortController()
+    //   const signal = new AbortController()
 
-      yield {
-        hordeStatus: undefined,
-        waiting: {
-          chatId: activeChatId,
-          mode: 'send',
-          characterId: activeCharId,
-          messageId,
-          started: Date.now(),
-          signal,
-        },
-      }
+    //   yield {
+    //     hordeStatus: undefined,
+    //     waiting: {
+    //       chatId: activeChatId,
+    //       mode: 'send',
+    //       characterId: activeCharId,
+    //       messageId,
+    //       started: Date.now(),
+    //       signal,
+    //     },
+    //   }
 
-      const res = await imageApi.generateImagePrompt({
-        onTick: opts.onTick,
-        question: opts.question,
-        messageId,
-        signal,
-      })
+    //   const res = await imageApi.generateImagePrompt({
+    //     onTick: opts.onTick,
+    //     question: opts.question,
+    //     messageId,
+    //     signal,
+    //   })
 
-      yield { waiting: undefined }
-      if (res.result?.response) {
-        console.log(`Image Prompt:\n${res.result.response}`)
-        opts.onSummary?.(res.result?.response)
-        return
-      }
+    //   yield { waiting: undefined }
+    //   if (res.result?.response) {
+    //     console.log(`Image Prompt:\n${res.result.response}`)
+    //     opts.onSummary?.(res.result?.response)
+    //     return
+    //   }
 
-      toastStore.error(`Image prompt failed to generate`)
-    },
+    //   toastStore.error(`Image prompt failed to generate`)
+    // },
 
     async *createImage(
       { msgs, activeChatId, activeCharId, imgWaiting },

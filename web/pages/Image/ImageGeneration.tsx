@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, on, Show } from 'solid-js'
+import { Component, createEffect, createSignal, on, Show } from 'solid-js'
 import { RootModal } from '/web/shared/Modal'
 import { getStore } from '/web/store/create'
 import { imageApi } from '/web/store/data/image'
@@ -6,7 +6,7 @@ import { ImageHost, ImageSamplers } from '/common/types/presets'
 import { SD_SAMPLER } from '/common/image'
 import { createStore } from 'solid-js/store'
 import TextInput from '/web/shared/TextInput'
-import { isChatPageMemo, useImageCache } from '/web/shared/hooks'
+import { useChatPageId, useImageCache } from '/web/shared/hooks'
 import { RelativeSpinner } from '/web/shared/Loading'
 import Button from '/web/shared/Button'
 import {
@@ -26,7 +26,7 @@ import { cleanPrompt } from '/common/util'
 // }
 
 export const GenerateImageModal: Component = () => {
-  const isChat = isChatPageMemo()
+  const chat = useChatPageId()
   const user = getStore('user')((s) => ({ id: s.user?._id || 'guest', image: s.user?.images }))
   const reel = useImageCache({ id: `img-gen-${user.id}`, clean: true })
   const emitter = createEmitter('width')
@@ -52,14 +52,10 @@ export const GenerateImageModal: Component = () => {
     }
   }
 
-  const canGeneratePrompt = createMemo(() => {
-    if (!isChat()) return false
-    return true
-  })
-
   const generatePrompt = async () => {
-    if (!canGeneratePrompt()) return
-    getStore('messages').generateImagePrompt({
+    if (!chat.chatId) return
+    getStore('responses').generateImagePrompt({
+      chatId: chat.chatId!,
       onSummary: (summary) => setters.update('prompt', summary),
       onTick: (res, state) => (state === 'partial' ? setters.update('prompt', res) : null),
     })
@@ -138,7 +134,7 @@ export const GenerateImageModal: Component = () => {
                 <BrushCleaning size={20} />
                 Clean
               </Button>
-              <Show when={canGeneratePrompt()}>
+              <Show when={chat.chatId}>
                 <Button size="sm" disabled={loading()} onClick={generatePrompt}>
                   <WandSparkles size={20} />
                 </Button>

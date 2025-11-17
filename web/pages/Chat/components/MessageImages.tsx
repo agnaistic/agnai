@@ -7,15 +7,18 @@ import { MessageImagePrompt } from './MessageMeta'
 import Button from '/web/shared/Button'
 import { ICON_SIZES } from '/web/icons/AppIcon'
 import { ImageButton, imageStore } from '/web/store/images'
+import { ContextState } from '/web/store/context'
 
 type MessageImage = {
   src: string
   btn?: ImageButton
 }
 
-export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick: () => void }> = (
-  props
-) => {
+export const MessageImages: Component<{
+  msg: AppSchema.ChatMessage
+  onEditClick: () => void
+  ctx: ContextState
+}> = (props) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
   const [showPrompt, setShowPrompt] = createSignal(false)
   const [override, setOverride] = createSignal('')
@@ -75,6 +78,13 @@ export const MessageImages: Component<{ msg: AppSchema.ChatMessage; onEditClick:
             />
           )}
         </For>
+
+        <Show when={props.ctx.imgPreview && props.ctx.imgWaiting?.messageId === props.msg._id}>
+          <img
+            class="mt-2 max-h-12 max-w-[unset] rounded-md sm:max-h-16"
+            src={props.ctx.imgPreview}
+          />
+        </Show>
 
         <Show when={images().length || !!props.msg.imagePrompt}>
           <div class="ml-2 flex items-center gap-3">

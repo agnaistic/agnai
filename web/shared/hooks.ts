@@ -10,7 +10,7 @@ import {
   onMount,
 } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { useLocation, useSearchParams } from '@solidjs/router'
+import { useLocation, useParams, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
@@ -99,6 +99,26 @@ export function useRef<T = HTMLElement>() {
   }
 
   return [ref, onRef] as const
+}
+
+export function useChatPageId() {
+  const memo = isChatPageMemo()
+  const params = useParams()
+  const [state, setState] = createStore({
+    isChat: isChatPage(),
+    chatId: isChatPage() ? params.id : undefined,
+  })
+
+  createEffect(
+    on(
+      () => memo(),
+      (next) => {
+        setState({ isChat: next, chatId: next ? params.id : undefined })
+      }
+    )
+  )
+
+  return state
 }
 
 export function isChatPageMemo(noSaga?: boolean) {

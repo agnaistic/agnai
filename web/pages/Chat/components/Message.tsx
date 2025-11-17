@@ -557,7 +557,7 @@ const Message: Component<MessageProps> = (props) => {
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
                 <Match when={msg().adapter === 'image'}>
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
+                  <MessageImages msg={msg()} onEditClick={editMessageMeta} ctx={ctx} />
                 </Match>
 
                 <Match when={!edit()}>
@@ -604,12 +604,7 @@ const Message: Component<MessageProps> = (props) => {
                   </Show>
                   <Show when={ctx.imgWaiting?.pos && ctx.imgWaiting.messageId === msg()._id}>
                     <div class="relative flex w-full justify-center">
-                      <Show when={ctx.imgPreview}>
-                        <img class="rounded-md object-contain" src={ctx.imgPreview} />
-                      </Show>
-                      <div class="absolute bottom-1/2">
-                        <Spinner speed={imageSpeed()} />{' '}
-                      </div>
+                      <Spinner speed={imageSpeed()} />{' '}
                       <span
                         class="text-500 text-xs italic"
                         classList={{ hidden: !ctx.status?.wait_time }}
@@ -619,7 +614,7 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
 
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} />
+                  <MessageImages msg={msg()} onEditClick={editMessageMeta} ctx={ctx} />
                   <MessageAttachments msg={msg()} ctx={ctx} />
 
                   <Show when={!props.partial && props.last}>

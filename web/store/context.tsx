@@ -59,6 +59,7 @@ export type ContextState = {
   chatTree: ChatTree
   msgDeleting?: boolean
   waiting?: ResponseState['waiting']
+  imgPrompt?: ResponseState['imgWaiting']
   imgWaiting?: MsgState['imgWaiting']
   imgPreview?: string
   status?: MsgState['hordeStatus']
@@ -129,6 +130,7 @@ export function ContextProvider(props: { children: any }) {
 
   const response = responseStore((s) => ({
     waiting: s.waiting,
+    imgWaiting: s.imgWaiting,
   }))
 
   const page = pageStore((s) => ({ flags: s.flags }))
@@ -219,6 +221,7 @@ export function ContextProvider(props: { children: any }) {
       promptHistory: chats.promptHistory,
       chatTree: msgs.graph.tree,
       waiting: response.waiting,
+      imgPrompt: response.imgWaiting,
       imgWaiting: msgs.imgWaiting,
       imgPreview: msgs.imgWaiting ? image.preview?.base64 : undefined,
       status: msgs.hordeStatus,
