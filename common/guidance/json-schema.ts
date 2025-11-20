@@ -187,14 +187,15 @@ export function getResponseVariable(entities: StructureEntities) {
 
 export function prepareJsonSchema(
   def: Ensure<AppSchema.Character['json']>,
-  entities: StructureEntities
+  entities: StructureEntities,
+  forceSeparate?: boolean
 ) {
   const names = getNames(entities)
   const aliases: Record<string, string> = {}
   const parsed = formatJsonSchemaVars(def, entities)
   const fields = parsed.schema.slice()
 
-  if (!def.separateCall) {
+  if (!def.separateCall && !forceSeparate) {
     const responseVar = getResponseVariable(entities)
     fields.unshift({ type: { type: 'string', maxLength: 0 }, name: responseVar, disabled: false })
     aliases[responseVar] = 'response'

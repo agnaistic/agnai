@@ -12,6 +12,7 @@ import Sortable, { SortItem } from '/web/shared/Sortable'
 import Message from '../../Chat/components/Message'
 import { defaultUIsettings } from '/common/types/ui'
 import { toInlineList } from './common'
+import { Card } from '/web/shared/Card'
 
 export const MessageUISettings: Component = (props) => {
   const state = userStore((s) => ({
@@ -79,22 +80,47 @@ export const MessageUISettings: Component = (props) => {
             <Save />
           </Button>
         </div> */}
-      <div class="flex flex-row justify-start gap-4">
-        <Select
-          fieldName="avatarSize"
-          label="Size"
-          items={toDropdownItems(UI.AVATAR_SIZES)}
-          value={state.ui.avatarSize}
-          onChange={(item) => userStore.saveUI({ avatarSize: item.value as any })}
-        />
-        <Select
-          fieldName="avatarCorners"
-          label="Corner Radius"
-          items={toDropdownItems(UI.AVATAR_CORNERS)}
-          value={state.ui.avatarCorners}
-          onChange={(item) => userStore.saveUI({ avatarCorners: item.value as any })}
-        />
-      </div>
+      <Card>
+        <FormLabel helperText="Avatars" />
+        <div class="flex flex-row justify-start gap-4">
+          <Select
+            fieldName="avatarSize"
+            label="Size"
+            items={toDropdownItems(UI.AVATAR_SIZES)}
+            value={state.ui.avatarSize}
+            onChange={(item) => userStore.saveUI({ avatarSize: item.value as any })}
+          />
+          <Select
+            fieldName="avatarCorners"
+            label="Corner Radius"
+            items={toDropdownItems(UI.AVATAR_CORNERS)}
+            value={state.ui.avatarCorners}
+            onChange={(item) => userStore.saveUI({ avatarCorners: item.value as any })}
+          />
+        </div>
+        <div class="flex flex-row gap-4">
+          <RangeInput
+            value={state.ui.customAvatarWidth ?? 32}
+            label="Width"
+            onChange={(item) => userStore.saveUI({ customAvatarWidth: item })}
+            step={1}
+            min={8}
+            max={128}
+            disabled={state.ui.avatarSize !== 'custom'}
+          />
+
+          <RangeInput
+            value={state.ui.customAvatarHeight ?? 32}
+            label="Height"
+            onChange={(item) => userStore.saveUI({ customAvatarHeight: item })}
+            step={1}
+            min={8}
+            max={128}
+            disabled={state.ui.avatarSize !== 'custom'}
+          />
+        </div>
+      </Card>
+
       <ColorPicker
         label="Message Background Color"
         fieldName="messageColor"

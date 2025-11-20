@@ -1,4 +1,4 @@
-import { Component, JSX, Show, createMemo, createSignal } from 'solid-js'
+import { Component, For, JSX, Show, createMemo, createSignal } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -201,6 +201,48 @@ export const ToggleButton: Component<{
         <Show when={!props.value && props.offText}>{props.offText}</Show>
       </button>
     </>
+  )
+}
+
+type MultiButton = {
+  content: any
+  onClick?: () => void
+  schema?: ButtonSchema
+  disabled?: boolean
+}
+
+export const MultiButton: Component<{
+  size?: 'sm' | 'md' | 'lg' | 'pill'
+  buttons: MultiButton[]
+}> = (props) => {
+  const buttons = createMemo(() =>
+    props.buttons.map((btn, i) => ({
+      ...btn,
+      first: i === 0,
+      last: i === props.buttons.length - 1,
+    }))
+  )
+
+  return (
+    <div class="flex gap-0">
+      <For each={buttons()}>
+        {(button) => (
+          <Button
+            size={props.size}
+            schema={button.schema}
+            onClick={button.onClick}
+            disabled={button.disabled}
+            // class={`${!button.first ? '!rounded-l-none' : ''} ${!button.last ? '!rounded-r-none' : ''}`}
+            classList={{
+              '!rounded-l-none': !button.first,
+              '!rounded-r-none': !button.last,
+            }}
+          >
+            {button.content}
+          </Button>
+        )}
+      </For>
+    </div>
   )
 }
 

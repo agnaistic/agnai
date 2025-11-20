@@ -67,7 +67,7 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import { ComponentEmitter, isToday, toShortDuration } from '/web/shared/util'
+import { ComponentEventEmitter, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
 import { PresetState } from '/web/store/preset-context'
@@ -477,6 +477,7 @@ const Message: Component<MessageProps> = (props) => {
                       <span class="block sm:hidden">{toShortDuration(msg().createdAt)} ago</span>
                     </Match>
                   </Switch>
+
                   <Show when={ctx.flags.debug || canShowMeta(msg(), ctx.promptHistory[msg()._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
@@ -557,7 +558,12 @@ const Message: Component<MessageProps> = (props) => {
             <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
                 <Match when={msg().adapter === 'image'}>
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} ctx={ctx} />
+                  <MessageImages
+                    messageId={props.messageId}
+                    msg={msg()}
+                    onEditClick={editMessageMeta}
+                    ctx={ctx}
+                  />
                 </Match>
 
                 <Match when={!edit()}>
@@ -614,7 +620,12 @@ const Message: Component<MessageProps> = (props) => {
                     </div>
                   </Show>
 
-                  <MessageImages msg={msg()} onEditClick={editMessageMeta} ctx={ctx} />
+                  <MessageImages
+                    messageId={props.messageId}
+                    msg={msg()}
+                    onEditClick={editMessageMeta}
+                    ctx={ctx}
+                  />
                   <MessageAttachments msg={msg()} ctx={ctx} />
 
                   <Show when={!props.partial && props.last}>
@@ -968,7 +979,7 @@ export const Typewriter: Component<{
   class?: string
   speed?: number
   generating?: boolean
-  reset?: ComponentEmitter<'reset'>
+  reset?: ComponentEventEmitter<'reset'>
 }> = (props) => {
   const [length, setLength] = createSignal(0)
   const [getTimer, setTimer] = createSignal<{ timer: NodeJS.Timeout; speed: number }>()
@@ -1206,15 +1217,8 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
 }
 
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
-  if (!msg) return false
   if (msg._id === 'partial-response') return false
-
-  return (
-    !!msg.adapter ||
-    !!history ||
-    (!!msg.meta && Object.keys(msg.meta).length >= 1) ||
-    msg.imagePrompt
-  )
+  return true
 }
 
 function getMessageContent(

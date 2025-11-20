@@ -9,6 +9,7 @@ import Button from '/web/shared/Button'
 import { X } from 'lucide-solid'
 import { createDebounce } from '/web/shared/util'
 import { InlineRangeInput } from '/web/shared/RangeInput'
+import { FONT_FACES } from '/common/types/ui'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -18,6 +19,15 @@ export const ThemeUISettings: Component = (props) => {
   const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
     userStore.tryCustomUI(update)
   }, 50)
+
+  const fonts = createMemo(() => {
+    const options = Object.entries(FONT_FACES).map(([key, value]) => ({
+      label: value.label,
+      value: key,
+    }))
+
+    return options
+  })
 
   onCleanup(() => unsubCustomUi())
 
@@ -121,10 +131,7 @@ export const ThemeUISettings: Component = (props) => {
       <Select
         fieldName="font"
         label="Font"
-        items={[
-          { label: 'Default', value: 'default' },
-          { label: 'Lato (Roko)', value: 'lato' },
-        ]}
+        items={fonts()}
         value={state.ui.font}
         onChange={(item) => userStore.saveUI({ font: item.value as any })}
       />

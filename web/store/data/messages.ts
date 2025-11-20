@@ -6,7 +6,7 @@ import { localApi } from './storage'
 import { toastStore } from '../toasts'
 import { parseTemplate, TemplateOpts } from '/common/template-parser'
 import { exclude, replace } from '/common/util'
-import { toMap } from '/web/shared/util'
+import { storage, toMap } from '/web/shared/util'
 import { localEmit, subscribe } from '../socket'
 import { genApi } from './inference'
 import { botGen } from './bot-generate'
@@ -14,6 +14,7 @@ import { getPromptEntities } from './common'
 import { emptyMsg } from '/web/pages/Chat/helpers'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
+import { getStore } from '../create'
 
 export const msgsApi = {
   createMessage,
@@ -54,6 +55,7 @@ export async function createMessage(opts: {
   ooc?: boolean
 
   meta?: any
+  json?: any
 }) {
   const props = await getPromptEntities()
   const messageId = opts.messageId || v4()
@@ -94,8 +96,10 @@ export async function createMessage(opts: {
     bot: opts.bot,
     messageId,
     meta: opts.meta,
+    json: opts.json,
   })
 
+  await record('add', opts.chatId, messageId, opts.parent)
   if (isLoggedIn() && result.result?.message) {
     localEmit({ type: 'message-created', msg: result.result.message, chatId: opts.chatId })
   }
@@ -129,6 +133,14 @@ export async function editMessageProps(
   const update = { ...payload }
   if (update.meta && Object.keys(update.meta).length === 0) {
     delete update.meta
+  }
+
+  if ('parent' in payload && !payload.parent) {
+    delete payload.parent
+  }
+
+  if (payload.parent) {
+    await record('edit', msg.chatId, msg._id, payload.parent)
   }
 
   if (isLoggedIn()) {
@@ -205,6 +217,13 @@ export async function deleteMessages(
   if (!chatId) {
     throw new Error(`Chat ID not set`)
   }
+
+  const { graph } = getStore('messages').getState()
+  for (const msgId of msgIds) {
+    const msg = graph.tree[msgId]
+    await record('del', chatId, msgId, msg?.msg?.parent)
+  }
+
   if (isLoggedIn()) {
     const res = await api.method('delete', `/chat/${chatId}/messages`, {
       ids: msgIds,
@@ -258,6 +277,15 @@ function messageToLine(opts: {
       'You'
     return `${entity}: ${msg.json?.history || msg.msg}`
   }
+}
+
+async function record(type: 'add' | 'del' | 'edit', chatId: string, id: string, parent?: string) {
+  const key = `debug-${chatId}`
+  const raw = await storage.getItem(key).then((res) => res || '[]')
+  const history: any[] = JSON.parse(raw)
+
+  history.push({ type, id, parent })
+  await storage.setItem(`debug-${chatId}`, JSON.stringify(history))
 }
 
 /**

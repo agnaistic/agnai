@@ -15,7 +15,12 @@ import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 import { extractReasoning } from './reasoning'
 
-export type TickHandler<T = any> = (response: string, state: InferenceState, json?: T) => void
+export type JsonOutput = { values: any; response: string; history: string }
+export type TickHandler<T = JsonOutput> = (
+  response: string,
+  state: InferenceState,
+  json?: T
+) => void
 
 export type InferenceState = 'partial' | 'done' | 'error' | 'warning' | 'headers' | 'meta'
 
@@ -654,7 +659,7 @@ function createPostPrompt(
   const post = []
 
   if (opts.kind === 'chat-query') {
-    post.push(`Query Response:`)
+    // post.push(`Query Response:`)
   } else {
     post.push(`${opts.replyAs.name}:`)
   }
@@ -986,7 +991,7 @@ export function getContextLimit(
     case 'openrouter-completion':
     case 'openrouter':
       if (gen?.openRouterModel?.context_length && gen.useMaxContext) {
-        return gen.openRouterModel.context_length - genAmount
+        return gen.openRouterModel.context_length * 0.98 - genAmount
       }
 
       return configuredMax - genAmount

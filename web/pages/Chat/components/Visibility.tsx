@@ -17,7 +17,7 @@ import { ParticipantList, useParticipantList } from '../util'
 import { AppSchema } from '/common/types'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import Button from '/web/shared/Button'
-import { Pill, TitleCard } from '/web/shared/Card'
+import { Card, Pill } from '/web/shared/Card'
 import { Check, Minus, X } from 'lucide-solid'
 import { isMessageInvisible } from '/common/prompt'
 
@@ -193,14 +193,15 @@ export const CharacterDefaultVisibility: Component<{
       </div>{' '}
       <For each={props.participants.chars.concat(props.participants.tempsActive)}>
         {(perspective) => (
-          <TitleCard
-            title={
-              <div class="flex items-center gap-1">
-                <CharacterAvatar char={perspective} format={{ corners: 'circle', size: 'xs' }} />
-                <span class="text-sm font-bold">{perspective.name}</span>
-              </div>
-            }
-          >
+          <Card class="my-1 shadow-sm">
+            <div class="flex flex-wrap">
+              <VisibilityToggle
+                char={perspective}
+                invisible={flags()[perspective._id]?.[perspective._id]}
+                onClick={() => toggle(perspective._id, perspective._id)}
+              />
+            </div>
+            <div class="my-1 border-b border-[var(--bg-700)]" />
             <div class="flex flex-wrap items-center gap-1">
               <For
                 each={props.participants.chars
@@ -216,7 +217,7 @@ export const CharacterDefaultVisibility: Component<{
                 )}
               </For>
             </div>
-          </TitleCard>
+          </Card>
         )}
       </For>
     </div>

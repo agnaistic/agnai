@@ -1,13 +1,13 @@
 import cyto from 'cytoscape'
 import dagre from 'cytoscape-dagre'
-import { Component, createEffect, createSignal, on, onCleanup } from 'solid-js'
+import { Component, createEffect, createSignal, on, onCleanup, onMount } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
 import { msgStore, pageStore } from '/web/store'
 import { getSettingColor } from '/web/shared/colors'
 import { FeatureFlags } from '/web/store/flags'
 import { AppSchema } from '/common/types'
 import { SetStoreFunction } from 'solid-js/store'
-import { toShortDuration } from '/web/shared/util'
+import { ComponentEmit, ComponentSubscriber, toShortDuration } from '/web/shared/util'
 import { debug } from '/common/debug'
 import { getStore } from '/web/store/create'
 
@@ -18,8 +18,12 @@ cyto.use(dagre as any)
 export type GraphState = {
   hovered: string
   clicked: string
+  rejoin: string
+  parent: string
   msg?: AppSchema.ChatMessage
 }
+
+const log = debug('graph')
 
 export const ChatGraph: Component<{
   leafId: string
@@ -27,33 +31,13 @@ export const ChatGraph: Component<{
   nodes: 'short' | 'full'
   state: GraphState
   setter: SetStoreFunction<GraphState>
+  emit: ComponentEmit<'reset' | 'click' | 'hover' | 'unhover'>
+  sub: ComponentSubscriber<'reset' | 'click' | 'hover' | 'unhover'>
 }> = (props) => {
-  const log = debug('graph')
   let cyRef: any
 
   const graph = msgStore((s) => ({ tree: s.graph.tree, root: s.graph.root }))
   const flags = pageStore((s) => s.flags)
-
-  createEffect(
-    on(
-      () => [props.state.hovered, props.state.clicked],
-      () => {
-        const id = props.state.hovered || props.state.clicked
-        if (!id) {
-          props.setter({ msg: undefined })
-          return
-        }
-
-        const {
-          graph: { tree },
-        } = getStore('messages').getState()
-        const msg = tree[id]
-        log('node-event %s [parent:%s]', id.slice(0, 4), msg?.msg.parent?.slice(0, 4) || 'nil')
-
-        props.setter({ msg: msg?.msg })
-      }
-    )
-  )
 
   const [instance, setInstance] = createSignal<cyto.Core>()
   const init = (ref: HTMLDivElement, tree: ChatTree) => {
@@ -112,26 +96,31 @@ export const ChatGraph: Component<{
           : getElements(tree, root, props.leafId, flags),
     })
 
-    cy.on('click', 'node', function (this: any, evt) {
-      const id = this.id()
-      props.setter('clicked', props.state.clicked === id ? '' : id)
-      msgStore.fork(id)
-    })
+    // cy.on('click', 'node', function (this: any, evt) {
+    //   console.log(this.id(), 'click')
+    //   props.emit.click(this.id(), this)
+    // })
 
     cy.on('tap', 'node', function (this: any, evt) {
-      const id = this.id()
-      props.setter('clicked', props.state.clicked === id ? '' : id)
-      msgStore.fork(id)
+      props.emit.click(this.id(), this)
     })
 
     cy.on('mouseover', 'node', function (this: any, evt) {
-      props.setter('hovered', this.id())
+      props.emit.hover(this.id(), this)
       document.body.style.cursor = 'pointer'
       this.style('border-color', getSettingColor('hl-200'))
       this.style('border-width', '1')
     })
 
     cy.on('mouseout', 'node', function (this: any) {
+      props.emit.unhover()
+      const id = this.id()
+      if (props.state.clicked === id) {
+        this.style('border-color', getSettingColor('green-400'))
+        this.style('border-width', '1')
+        return
+      }
+
       document.body.style.cursor = ''
       this.style('border-width', '0')
     })
@@ -144,6 +133,23 @@ export const ChatGraph: Component<{
 
     setInstance(cy)
     return cy
+  }
+
+  const recolor = () => {
+    const {
+      graph: { tree },
+    } = getStore('messages').getState()
+    const cy = instance()
+    if (!cy) return
+
+    const nodes = cy.nodes()
+
+    nodes.each((ele) => {
+      const color =
+        ele.id() === props.leafId ? 'green-500' : tree[ele.id()]?.msg.userId ? 'bg-500' : 'hl-500'
+
+      ele.style({ 'background-color': getSettingColor(color) })
+    })
   }
 
   createEffect(
@@ -171,6 +177,7 @@ export const ChatGraph: Component<{
         if (!cy) return
 
         redraw()
+        recolor()
       }
     )
   )
@@ -178,23 +185,8 @@ export const ChatGraph: Component<{
   createEffect(
     on(
       () => props.leafId,
-      (leafId, prev) => {
-        const {
-          graph: { tree },
-        } = getStore('messages').getState()
-        const cy = instance()
-        if (!cy) return
-
-        log('leaf id: %s [was: %s]', props.leafId.slice(0, 4), prev?.slice(0, 4) || '----')
-
-        const nodes = cy.nodes()
-
-        nodes.each((ele) => {
-          const color =
-            ele.id() === leafId ? 'green-500' : tree[ele.id()]?.msg.userId ? 'bg-500' : 'hl-500'
-
-          ele.style({ 'background-color': getSettingColor(color) })
-        })
+      () => {
+        recolor()
       }
     )
   )
@@ -206,10 +198,18 @@ export const ChatGraph: Component<{
         log('direction: %s', props.dir)
         const result = instance()?.layout({ name: 'dagre', rankDir: dir || 'LR' } as any)
         result?.run()
-        instance()?.fit()
+        redraw()
+        recolor()
       }
     )
   )
+
+  onMount(() => {
+    props.sub('reset', () => {
+      redraw()
+      recolor()
+    })
+  })
 
   onCleanup(() => {
     instance()?.destroy()
@@ -217,7 +217,7 @@ export const ChatGraph: Component<{
 
   return (
     <div
-      class="flex min-h-[400px] w-full justify-center p-4"
+      class="flex h-full min-h-[400px] w-full justify-center p-4"
       ref={(ref) => init(ref, graph.tree)}
     ></div>
   )
@@ -299,20 +299,17 @@ function getAllElements(tree: ChatTree, leafId: string) {
 
   for (const node of Object.values(tree)) {
     if (node.msg.parent) {
+      const parent = tree[node.msg.parent]
+      if (!parent) {
+        log(`[${node.msg._id.slice(0, 4)}] parent missing: ${node.msg.parent}`)
+        continue
+      }
+
       elements.push({
         group: 'edges',
         data: { source: node.msg.parent, target: node.msg._id },
       })
     }
-
-    // if (Object.keys(node.children).length === 0) continue
-
-    // for (const child of Object.keys(node.children)) {
-    //   elements.push({
-    //     group: 'edges',
-    //     data: { source: node.msg._id, target: child },
-    //   })
-    // }
   }
 
   return elements
@@ -325,11 +322,32 @@ function getShorthandTree(tree: ChatTree, root: string, flags: FeatureFlags) {
     console.log('eval: ', root)
   }
 
-  const skips = getPathSkips(tree, root, flags)
-  return skips || []
+  const skips = getPathSkips(tree, root) || []
+  const orphans: string[] = []
+
+  for (const msgId in tree) {
+    const msg = tree[msgId]
+    if (!msg) continue
+
+    if (!msg.msg.parent) continue
+    const parent = tree[msg.msg.parent]
+    if (parent) continue
+
+    orphans.push(msgId)
+  }
+
+  for (const orphan of orphans) {
+    const orphanSkips = getPathSkips(tree, orphan)
+    if (orphanSkips) {
+      log('sub-tree: %s', orphan.slice(0, 4))
+      skips.push(...orphanSkips)
+    }
+  }
+
+  return skips
 }
 
-function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip[] | undefined {
+function getPathSkips(tree: ChatTree, id: string): PathSkip[] | undefined {
   const start = tree[id]
 
   const visited = new Set<string>([id])
@@ -366,37 +384,11 @@ function getPathSkips(tree: ChatTree, id: string, flags: FeatureFlags): PathSkip
 
       edges.push({ start: curr, end, length: 1 })
 
-      const inner = getPathSkips(tree, child, flags)
+      const inner = getPathSkips(tree, child)
       if (inner) {
         edges.push(...inner)
       }
     }
-    return edges
-
-    // for (const child of curr.children) {
-    //   const end = tree[child]
-    //   if (!end) continue
-
-    //   if (flags.debug) {
-    //     // if (end.children.size === 1) {
-    //     //   const subpath = getPathSkips(tree, end.msg._id, flags)
-    //     //   if (!subpath) continue
-    //     //   if (!Array.isArray(subpath)) {
-    //     //     paths.push({ start, end: subpath.end, length: length + subpath.length })
-    //     //     continue
-    //     //   }
-    //     //   const mapped = subpath.map((sub) => ({
-    //     //     start,
-    //     //     end: sub.end,
-    //     //     length: length + sub.length,
-    //     //   }))
-    //     //   paths.push(...mapped)
-    //     //   continue
-    //     // }
-    //   }
-
-    //   paths.push({ start: curr, end, length })
-    // }
     return edges
   } while (true)
 }

@@ -1,7 +1,7 @@
-import { Component, createEffect, createSignal, For, on, onMount, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, on, Show } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
-import { hydrateMessageImages, msgStore } from '/web/store/message'
+import { getMessageImages, msgStore } from '/web/store/message'
 import { Pencil, PlusCircle, X } from 'lucide-solid'
 import { MessageImagePrompt } from './MessageMeta'
 import Button from '/web/shared/Button'
@@ -18,6 +18,7 @@ export const MessageImages: Component<{
   msg: AppSchema.ChatMessage
   onEditClick: () => void
   ctx: ContextState
+  messageId: string
 }> = (props) => {
   const [images, setImages] = createSignal<MessageImage[]>([])
   const [showPrompt, setShowPrompt] = createSignal(false)
@@ -25,12 +26,13 @@ export const MessageImages: Component<{
 
   createEffect(
     on(
-      () => props.msg.extras,
-      async (extras) => {
+      () => props.messageId,
+      async () => {
+        const real = await getMessageImages(props.messageId)
         const next: MessageImage[] = []
 
         let index = 0
-        for (const img of extras || []) {
+        for (const img of real) {
           const src = img.startsWith('cache:') ? await storage.getItem(img) : img
           if (!src) {
             index++
@@ -45,8 +47,6 @@ export const MessageImages: Component<{
       }
     )
   )
-
-  onMount(() => hydrateMessageImages(props.msg._id))
 
   return (
     <>

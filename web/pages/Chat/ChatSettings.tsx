@@ -377,9 +377,13 @@ const ChatSettings: Component<{
               Chat name{' '}
               <div
                 onClick={() =>
-                  responseStore.chatQuery('Generate a name for this conversation', (msg, state) => {
-                    setEdit('name', msg)
-                  })
+                  responseStore.chatQuery(
+                    { question: '', assistant: 'Chat Analyzer' },
+                    (msg, state) => {
+                      if (state !== 'partial' && state !== 'done') return
+                      setEdit('name', msg)
+                    }
+                  )
                 }
               >
                 <Wand />

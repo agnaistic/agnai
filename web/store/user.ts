@@ -10,7 +10,7 @@ import { usersApi } from './data/user'
 import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { UI } from '/common/types'
-import { UISettings, defaultUIsettings } from '/common/types/ui'
+import { FONT_FACES, UISettings, defaultUIsettings } from '/common/types/ui'
 import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { getUserSubscriptionTier, getUserType } from '/common/util'
@@ -28,11 +28,6 @@ const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
 
 type ConfigUpdate = Partial<AppSchema.User & { hordeModels?: string[] }>
-
-const fontFaces: { [key in UI.FontSetting]: string } = {
-  lato: 'Lato, sans-serif',
-  default: 'unset',
-}
 
 const [debouceUI] = createDebounce((update: UI.UISettings) => {
   updateTheme(update)
@@ -966,6 +961,9 @@ async function updateTheme(ui: UI.UISettings) {
     root.style.setProperty(`--sitewide-font-size`, `${ui.fontSize}px`)
   }
 
+  setRootVariable(`--avatar-user-width`, `${ui.customAvatarWidth || 32}px`)
+  setRootVariable(`--avatar-user-height`, `${ui.customAvatarHeight || 32}px`)
+
   const hex = mode.bgCustom || getSettingColor('--bg-800')
   const colors = mode.bgCustom
     ? new Values(`${hex}`)
@@ -1032,7 +1030,10 @@ async function updateTheme(ui: UI.UISettings) {
     'text-quote-emphasis-weight',
     mode.chatQuoteEmphasisWeight
   ) /*Controls the thickness of the font. default: 'unset'*/
-  root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
+
+  const font = FONT_FACES[ui.font]
+  root.style.setProperty(`--sitewide-font`, font?.face)
+  root.style.setProperty(`--sitewide-fontstyle`, font?.style)
 }
 
 function getUIsettings(guest = false) {

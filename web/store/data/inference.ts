@@ -210,7 +210,7 @@ export function inferenceSignal(init: {
   }
 }
 
-export function inferenceSubscribe<T = any>(requestId: string, handler: TickHandler<T>) {
+export function inferenceSubscribe(requestId: string, handler: TickHandler) {
   inferenceCallbacks.set(requestId, handler)
 
   setTimeout(() => {

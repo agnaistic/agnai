@@ -31,7 +31,7 @@ export const Card: Component<{
 
   return (
     <div
-      class={`rounded-lg ${props.class ?? ''}`}
+      class={`rounded-lg shadow-sm shadow-[var(--bg-500)] ${props.class ?? ''}`}
       classList={{
         hidden: hide(),
         'p-1': props.size === 'sm',
@@ -102,7 +102,7 @@ export const SolidCard: Component<{
 
   return (
     <div
-      class={`rounded-lg ${props.class ?? ''}`}
+      class={`rounded-lg shadow-[var(--bg-500)] ${props.class ?? ''}`}
       classList={{
         'p-1': props.size === 'sm',
         'p-2': props.size === 'md',
@@ -184,7 +184,7 @@ export const TitleCard: Component<{
 
   return (
     <div
-      class={`flex flex-col gap-2 ${props.class || ''}`}
+      class={`flex flex-col gap-2 shadow-[var(--bg-500)] ${props.class || ''}`}
       style={bg()}
       role={props.ariaRole}
       aria-label={props.ariaLabel}

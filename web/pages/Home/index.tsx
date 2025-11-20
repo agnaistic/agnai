@@ -2,7 +2,7 @@ import './home.scss'
 
 import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
 import {
-  ComponentEmitter,
+  ComponentEventEmitter,
   createEmitter,
   getAssetUrl,
   setComponentPageTitle,
@@ -193,7 +193,7 @@ const HomePage: Component = () => {
 
 export default HomePage
 
-const RecentChats: Component<{ emitter: ComponentEmitter<'loaded'> }> = (props) => {
+const RecentChats: Component<{ emitter: ComponentEventEmitter<'loaded'> }> = (props) => {
   const nav = useNavigate()
 
   const chars = characterStore((s) => ({ map: s.characters.map }))

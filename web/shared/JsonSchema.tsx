@@ -7,6 +7,7 @@ import TextInput from './TextInput'
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash } from 'lucide-solid'
 import Button from './Button'
 import { SCHEMA_VARS } from '/common/guidance/json-schema'
+import { useMobileDetect } from './hooks'
 
 export const JsonSchema: Component<{
   inherit?: JsonField[]
@@ -151,43 +152,66 @@ const SchemaField: Component<{
   updateType: (partial: Partial<JsonType>, index: number) => void
 }> = (props) => {
   const border = createMemo(() => (!props.item.disabled ? 'bg-500' : 'red-800'))
+  const mobile = useMobileDetect()
 
   return (
     <div class="flex flex-col">
-      <div class="flex w-full gap-1">
-        <Pill small class="text-800 flex w-full gap-1 rounded-b-none rounded-t-md sm:w-1/2">
-          <Select
-            class="text-800 text-xs"
-            items={[
-              { label: 'Boolean', value: 'bool' },
-              { label: 'String', value: 'string' },
-              { label: 'Number', value: 'integer' },
-              { label: 'Enum', value: 'enum' },
-            ]}
-            value={props.item.type.type}
-            onChange={(ev) => props.updateType({ type: ev.value as any }, props.index)}
-          />
+      <div class="bg-700 flex w-full flex-col items-center justify-between gap-1 rounded-b-none rounded-t-md p-1">
+        <div class="flex w-full items-center gap-1">
+          <div class="flex w-full gap-1">
+            <Select
+              class="text-800 text-xs"
+              items={[
+                { label: 'Boolean', value: 'bool' },
+                { label: 'String', value: 'string' },
+                { label: 'Number', value: 'integer' },
+                { label: 'Enum', value: 'enum' },
+              ]}
+              value={props.item.type.type}
+              onChange={(ev) => props.updateType({ type: ev.value as any }, props.index)}
+            />
+
+            <Show when={!mobile()}>
+              <TextInput
+                placeholder="Name. E.g. brief_summary"
+                value={props.item.name}
+                class="h-8"
+                parentClass="w-full sm:"
+                onChange={(ev) => props.update({ name: ev.currentTarget.value }, props.index)}
+              />
+            </Show>
+          </div>
+
+          <div class="flex min-w-fit gap-1">
+            <Button
+              schema="clear"
+              disabled={props.index === 0}
+              onClick={() => props.moveUp(props.index)}
+            >
+              <ArrowUp size={12} />
+            </Button>
+
+            <Button
+              schema="clear"
+              disabled={props.last}
+              onClick={() => props.moveDown(props.index)}
+            >
+              <ArrowDown size={12} />
+            </Button>
+          </div>
+        </div>
+        <Show when={mobile()}>
           <TextInput
             placeholder="Name. E.g. brief_summary"
             value={props.item.name}
             class="h-8"
-            parentClass="w-full"
+            parentClass="w-full my-1"
             onChange={(ev) => props.update({ name: ev.currentTarget.value }, props.index)}
           />
-        </Pill>
-        <Button
-          schema="clear"
-          disabled={props.index === 0}
-          onClick={() => props.moveUp(props.index)}
-        >
-          <ArrowUp size={12} />
-        </Button>
-
-        <Button schema="clear" disabled={props.last} onClick={() => props.moveDown(props.index)}>
-          <ArrowDown size={12} />
-        </Button>
+        </Show>
       </div>
-      <SolidCard borderColor={border()} class="rounded-tl-none ">
+
+      <SolidCard borderColor={border()} class="rounded-tl-none rounded-tr-none">
         <div class="flex flex-col gap-2">
           <div class="flex justify-between gap-2">
             <div class="hidden w-full">

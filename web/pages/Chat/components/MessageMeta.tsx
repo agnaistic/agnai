@@ -50,6 +50,18 @@ export const MessageMeta: Component = () => {
             <tbody>
               <tr>
                 <td class="pr-2">
+                  <b>id</b>
+                </td>
+                <td>{state.msg?._id}</td>
+              </tr>
+              <tr>
+                <td class="pr-2">
+                  <b>chat</b>
+                </td>
+                <td>{state.msg?.chatId}</td>
+              </tr>
+              <tr>
+                <td class="pr-2">
                   <b>created</b>
                 </td>
                 <td>{new Date(state.msg!.createdAt).toLocaleString()}</td>

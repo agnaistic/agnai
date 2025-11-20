@@ -6,7 +6,7 @@ import Tabs, { TabHook } from './Tabs'
 import { markdown } from './markdown'
 import { Portal } from 'solid-js/web'
 import { useMobileDetect } from './hooks'
-import { PartialEmitter } from './util'
+import { PartialEventEmitter } from './util'
 
 interface Props {
   title?: string | JSX.Element
@@ -28,7 +28,7 @@ interface Props {
   ariaLabel?: string
   ariaDescription?: string
 
-  emitter?: PartialEmitter<'width'>
+  emitter?: PartialEventEmitter<'width'>
 
   contentClass?: string
 }

@@ -9,7 +9,7 @@ import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import { JSON_NAME_RE, neat } from '/common/util'
 import { JsonField } from '/common/prompt'
 import { AutoComplete } from '/web/shared/AutoComplete'
-import { characterStore, chatStore, presetStore, toastStore } from '/web/store'
+import { characterStore, chatStore, presetStore, responseStore, toastStore } from '/web/store'
 import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
@@ -73,7 +73,7 @@ export const CharacterSchema: Component<{
   const [showImport, setShowImport] = createSignal(false)
   const [auto, setAuto] = createSignal('')
   const [hotkey, setHotkey] = createSignal(false)
-
+  const [result, setResult] = createSignal<any>()
   const [store, setStore] = createStore({
     response: '',
     history: '',
@@ -88,6 +88,30 @@ export const CharacterSchema: Component<{
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
   const activePreset = useActivePreset()
+
+  const runSchemaTest = () => {
+    setResult()
+    responseStore.chatQuery(
+      {
+        fields: store.schema,
+        assistant: 'Chat Analysis',
+        question: 'Details from the above conversation:',
+      },
+      (resp, state, json) => {
+        switch (state) {
+          case 'headers': {
+            if (`${resp}` === `200`) setResult('Generating...')
+            break
+          }
+
+          case 'partial':
+          case 'done':
+            setResult(json || resp)
+            return
+        }
+      }
+    )
+  }
 
   createEffect(
     on(
@@ -297,15 +321,20 @@ export const CharacterSchema: Component<{
           maxWidth="half"
           close={() => setShow(false)}
           footer={
-            <>
-              <Button schema="secondary" onClick={() => close(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => close(true)}>
-                <Show when={props.characterId}>Save</Show>
-                <Show when={!props.characterId}>Accept</Show>
-              </Button>
-            </>
+            <div class="flex w-full justify-between">
+              <div>
+                <Button onClick={runSchemaTest}>Test Schema</Button>
+              </div>
+              <div class="flex gap-2">
+                <Button schema="secondary" onClick={() => close(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => close(true)}>
+                  <Show when={props.characterId}>Save</Show>
+                  <Show when={!props.characterId}>Accept</Show>
+                </Button>
+              </div>
+            </div>
           }
         >
           <div class="flex flex-col gap-2 text-sm">
@@ -431,6 +460,10 @@ export const CharacterSchema: Component<{
               update={(ev) => setStore('schema', ev)}
               onNameChange={onFieldNameChange}
             />
+
+            <Show when={result()}>
+              <code class="whitespace-pre-wrap">{JSON.stringify(result(), null, 2)}</code>
+            </Show>
           </div>
         </RootModal>
       </Show>

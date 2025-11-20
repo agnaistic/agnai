@@ -897,6 +897,12 @@ export function toPropMap<T extends object, U extends PickProps<T, string>>(
 
 type PickProps<T, U = string> = keyof { [key in keyof T as T[key] extends U ? key : never]: T[key] }
 
+export type LazyPromise<T = any> = {
+  resolve: (result: T) => void
+  reject: (error: any) => void
+  promise: Promise<T>
+}
+
 export function lazyPromise<T = any>() {
   const parts = {
     resolve: (result: T) => {},
