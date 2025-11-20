@@ -22,7 +22,7 @@ import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../common/types/schema'
 import { Import, Plus, SortAsc, SortDesc, LayoutList, Image, RefreshCcw } from 'lucide-solid'
-import { A, useSearchParams } from '@solidjs/router'
+import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
 import { storage, setComponentPageTitle } from '../../shared/util'
@@ -64,6 +64,7 @@ const CharacterList: Component = () => {
 
   const cached = getListCache()
   const [query, setQuery] = useSearchParams()
+  const nav = useNavigate()
   const [selected, setSelected] = createStore<Record<string, boolean>>({})
 
   const [search, setSearch] = createSignal('')
@@ -276,12 +277,10 @@ const CharacterList: Component = () => {
                 <span class="hidden sm:inline">Import</span>
               </Button>
 
-              <A href="/character/create">
-                <Button size="sm">
-                  <Plus />
-                  <span class="hidden sm:inline">Create</span>
-                </Button>
-              </A>
+              <Button size="sm" onClick={() => nav('/character/create')}>
+                <Plus />
+                <span class="hidden sm:inline">Create</span>
+              </Button>
 
               <Button size="sm" class="!h-[32px]" onClick={() => setMulti(true)}>
                 Select
