@@ -58,7 +58,7 @@ const Button: Component<{
       }}
       disabled={props.disabled}
       onClick={(ev) => {
-        ev.preventDefault()
+        // ev.preventDefault()
         props.onClick?.(ev)
       }}
       aria-label={props.ariaLabel}
@@ -147,7 +147,7 @@ export const ModeButton: Component<{
         }
         disabled={props.disabled}
         onClick={(ev) => {
-          ev.preventDefault()
+          // ev.preventDefault()
           onClick(ev)
         }}
       >

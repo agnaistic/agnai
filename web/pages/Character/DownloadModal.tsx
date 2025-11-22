@@ -83,10 +83,11 @@ export const DownloadModal: Component<{
   const objectUrl = createMemo(() => {
     if (!char()) return
 
-    const url = URL.createObjectURL(
-      new Blob([charToJson(char()!, format())], { type: 'text/json' })
-    )
-    return url
+    const json = charToJson(char()!, format())
+    const encode = `data:text/json;charset=utf-8,${encodeURIComponent(json)}`
+    return encode
+    // const url = URL.createObjectURL(new Blob([json], { type: 'text/json' }))
+    // return url
   })
 
   return (

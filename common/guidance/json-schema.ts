@@ -238,7 +238,7 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
 
   switch (entity) {
     case 'char': {
-      const formatted = varname
+      const formatted = (varname || '')
         .replace(/%snake_char%/gi, snake)
         .replace(/%kebak_char%/gi, kebab)
         .replace(/%char%/gi, entityName)
@@ -246,7 +246,7 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
     }
 
     case 'user': {
-      const formatted = varname
+      const formatted = (varname || '')
         .replace(/%snake_user%/gi, snake)
         .replace(/%kebak_user%/gi, snake)
         .replace(/%user%/gi, entityName)

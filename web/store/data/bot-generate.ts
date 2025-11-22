@@ -503,7 +503,7 @@ async function getActivePromptOptions(
 
   const schemaSrc =
     entities.settings.jsonSource === 'character' ? props.replyAs.json : entities.settings.json
-  const schema = schemaSrc ? formatJsonSchemaVars(schemaSrc, promptOpts) : undefined
+  const schema = schemaSrc?.schema?.length ? formatJsonSchemaVars(schemaSrc, promptOpts) : undefined
 
   const { lines } = await getLinesForPrompt(promptOpts, encoder)
   const parts = await buildPromptPlaceholders(promptOpts, lines, encoder)
