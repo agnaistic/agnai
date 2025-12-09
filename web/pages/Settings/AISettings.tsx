@@ -2,7 +2,7 @@ import { presetStore, settingStore, userStore } from '../../store'
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
-import { SolidCard } from '/web/shared/Card'
+import { Card, SolidCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
@@ -95,6 +95,34 @@ const AISettings: Component<{
             helperMarkdown={`Improves site performance when disabled. Disable long-term memory if your chat is _laggy_ and unresponsive.`}
           />
         </Show> */}
+
+      <Card>
+        <div class="font-bold">Presets</div>
+
+        <div class="flex flex-col gap-2">
+          <PresetSelect
+            helperText="Character Field Generation"
+            options={presetOptions()}
+            selected={props.state.chargenPreset}
+            setPresetId={(ev) => props.setter('chargenPreset', ev)}
+            noneOption={{ label: 'Use Server Default', value: '' }}
+          />
+          <PresetSelect
+            helperText="Chat Summary"
+            options={presetOptions()}
+            selected={props.state.summaryPreset || state.user?.images?.summaryPresetId}
+            setPresetId={(ev) => props.setter('summaryPreset', ev)}
+            noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+          />
+          <PresetSelect
+            helperText="JSON Schemas/Output"
+            options={presetOptions()}
+            selected={props.state.jsonPreset}
+            setPresetId={(ev) => props.setter('jsonPreset', ev)}
+            noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+          />
+        </div>
+      </Card>
 
       <Show when={!canUseApi()}>
         <PresetSelect

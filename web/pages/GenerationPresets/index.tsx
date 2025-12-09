@@ -79,7 +79,7 @@ export const GenerationPresetsPage: Component = () => {
       return
     }
 
-    if (params.id && store._id !== params.id) {
+    if (params.id && store.current._id !== params.id) {
       setters.load(params.id)
       // return
     }
@@ -90,7 +90,7 @@ export const GenerationPresetsPage: Component = () => {
     // }
 
     if (params.id && store) {
-      updateTitle(`Edit preset ${store.name}`)
+      updateTitle(`Edit preset ${store.current.name}`)
     }
   })
 
@@ -99,7 +99,7 @@ export const GenerationPresetsPage: Component = () => {
   }
 
   const deletePreset = () => {
-    presetStore.deletePreset(store._id, () => nav('/presets'))
+    presetStore.deletePreset(store.current._id, () => nav('/presets'))
     setters.setState(emptyPreset)
   }
 
@@ -148,21 +148,26 @@ export const GenerationPresetsPage: Component = () => {
               </Button>
             </div>
             <div class="flex flex-col">
-              <div>ID: {store._id || 'New Preset'}</div>
-              <TextInput fieldName="id" value={store._id || 'New Preset'} disabled class="hidden" />
+              <div>ID: {store.current._id || 'New Preset'}</div>
+              <TextInput
+                fieldName="id"
+                value={store.current._id || 'New Preset'}
+                disabled
+                class="hidden"
+              />
               <TextInput
                 label="Name"
                 helperText="A name or short description of your preset"
                 placeholder="Preset name"
-                value={store.name}
+                value={store.current.name}
                 onChange={(ev) => setters.setState('name', ev.currentTarget.value)}
                 required
                 parentClass="mb-2"
               />
 
-              <PresetSettings state={store} setters={setters} noSave />
+              <PresetSettings state={store.current} setters={setters} noSave />
             </div>
-            <Show when={store.userId !== 'SYSTEM'}>
+            <Show when={store.current.userId !== 'SYSTEM'}>
               <div class="flex flex-row justify-end">
                 <Button disabled={presets.saving} onClick={onSave}>
                   <Save /> Save

@@ -311,8 +311,8 @@ export const responseStore = createStore<ResponseState>(
 
     async *chatQuery(
       { waiting },
-      opts: { assistant?: string; question: string; fields?: JsonField[] },
-      onTick: TickHandler
+      opts: { assistant?: string; question: string; fields?: JsonField[]; messageId?: string },
+      onTick?: TickHandler
     ) {
       if (waiting) return
       const { activeChatId } = getStore('messages').getState()
@@ -328,10 +328,11 @@ export const responseStore = createStore<ResponseState>(
         .stream({
           signal,
           kind: 'chat-query',
-          text: opts.question || '',
+          text: opts.question || 'Details from the above conversation',
           assistant: opts.assistant,
           schema: opts.fields,
           onTick,
+          messageId: opts.messageId,
         })
         .catch((err) => ({ error: err.message, result: undefined }))
 

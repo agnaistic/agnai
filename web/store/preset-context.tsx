@@ -20,6 +20,8 @@ import { getRemotePreset, presetStore } from './presets'
 import { chatStore } from './chat'
 import { v4 } from 'uuid'
 
+export { ContextState as PresetContext }
+
 export type PresetProps = {
   state: PresetState
   setters: PresetFuncs
@@ -45,7 +47,7 @@ export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {
   disabled?: boolean
 }
 
-export type HideState = ReturnType<typeof usePresetContext>[1]['context']['hides']
+export type HideState = ReturnType<typeof usePresetContext>[0]['hides']
 
 export type SetPresetState = SetStoreFunction<PresetState>
 
@@ -71,10 +73,7 @@ export function getSubPresetForm(state: PresetState) {
   return { ...form, kind: 'subscription-setting' as const }
 }
 
-export const initPreset = (): Omit<AppSchema.SubscriptionModel, 'kind'> & {
-  userId: string
-  disabled: boolean
-} => ({
+const initPreset = (): PresetState => ({
   _id: '',
   ...agnaiPresets.agnai,
   reasoning: { enabled: false, effort: 'medium', exclude: true, start: '', end: '', maxTokens: 0 },
@@ -114,17 +113,16 @@ const initContext = (id?: string): ContextState => ({
   data: [],
   providerId: '',
   hides: {},
+
+  current: initPreset(),
+  json: undefined,
+  summary: undefined,
+  chargen: undefined,
 })
 
-const noopPreset: SetStoreFunction<PresetState> = (...args: any[]) => {}
 const noopModels: SetStoreFunction<ContextState> = (...args: any[]) => {}
 
-const PresetContext = createContext([
-  initPreset(),
-  noopPreset,
-  initContext('global'),
-  noopModels,
-] as const)
+const PresetContext = createContext([initContext('global'), noopModels] as const)
 
 type ContextState = {
   __: string
@@ -140,16 +138,18 @@ type ContextState = {
   attachments?: boolean
   sub?: SubscriptionModelOption
   hides: { [key in keyof AppSchema.GenSettings]?: boolean }
+
+  current: PresetState
+  json: AppSchema.UserGenPreset | undefined
+  summary: AppSchema.UserGenPreset | undefined
+  chargen: AppSchema.UserGenPreset | undefined
 }
 
 export function PresetStateProvider(props: { children: any }) {
-  const [store, setStore] = createStore(initPreset())
   const [context, setContext] = createStore(initContext())
 
   return (
-    <PresetContext.Provider value={[store, setStore, context, setContext]}>
-      {props.children}
-    </PresetContext.Provider>
+    <PresetContext.Provider value={[context, setContext]}>{props.children}</PresetContext.Provider>
   )
 }
 
@@ -163,12 +163,25 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const [failedChatId, setFailedChatId] = createSignal('')
 
-  const [state, setState, context, setContext] = opts?.anonymous
-    ? [...createStore(initPreset()), ...createStore(initContext())]
+  const [context, setContext] = opts?.anonymous
+    ? createStore(initContext())
     : useContext(PresetContext)
 
+  const setState: SetStoreFunction<PresetState> = (...args: any[]) => {
+    const [first, second] = args
+    if (args.length === 1) {
+      setContext({ current: { ...context.current, ...first } })
+    } else {
+      const update = { [first]: second }
+      setContext({ current: { ...context.current, ...update } })
+    }
+  }
+
   const log = (...args: any[]) =>
-    debug(`preset[${state._id ? state._id.slice(0, 4) : '....'}]`).apply(null, args as any)
+    debug(`preset[${context.current._id ? context.current._id.slice(0, 4) : '....'}]`).apply(
+      null,
+      args as any
+    )
 
   // Always clear the loading flag
   if (!opts?.anonymous) {
@@ -176,21 +189,21 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const onStateUpdated = (source: string) => {
-    if (state.providerId && context.provider?._id === state.providerId) {
-      log('state updated cancelled %s', state.providerId)
+    if (context.current.providerId && context.provider?._id === context.current.providerId) {
+      log('state updated cancelled %s', context.current.providerId)
       return
     }
 
     const list = user.user?.providers
 
-    const conn = getPresetConnection(state, list)
+    const conn = getPresetConnection(context.current, list)
 
     log(
       '[%s:%s] changing provider FROM:%s --> TO:%s (CONN:%s)',
       context.__,
       source,
       context.provider?._id?.slice(0, 4) || 'nil',
-      state.providerId?.slice(0, 4) || 'nil',
+      context.current.providerId?.slice(0, 4) || 'nil',
       conn.provider?._id?.slice(0, 4) || 'nil'
     )
     const subId =
@@ -208,9 +221,28 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       attachments,
     })
 
-    const hides = createHides(state, conn)
+    const hides = createHides(context.current, conn)
     setContext('hides', hides)
   }
+
+  const assignTaskPresets = () => {
+    log('json %s, presets: #%s', user.user?.jsonPreset, presets.list.length)
+    setContext({
+      json: maybeDeepClone(presets.list.find((p) => p._id === user.user?.jsonPreset)),
+      summary: maybeDeepClone(presets.list.find((p) => p._id === user.user?.summaryPreset)),
+      chargen: maybeDeepClone(presets.list.find((p) => p._id === user.user?.chargenPreset)),
+    })
+  }
+
+  createEffect(
+    () => [
+      user.user?.jsonPreset,
+      user.user?.summaryPreset,
+      user.user?.chargenPreset,
+      presets.list.length,
+    ],
+    assignTaskPresets
+  )
 
   createEffect(
     on(
@@ -266,7 +298,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
   const loadChat = async (chat: AppSchema.Chat, alert?: boolean) => {
     const expectingUserPreset = !!chat.genPreset && !isDefaultPreset(chat.genPreset)
-    if (chat.genPreset && state._id === chat.genPreset) {
+    if (chat.genPreset && context.current._id === chat.genPreset) {
       log(`load-by-chat called --> preset already loaded`)
       return
     }
@@ -364,6 +396,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const load = async (preset: Partial<AppSchema.UserGenPreset> | undefined) => {
+    assignTaskPresets()
     setState({ providerId: '', thirdPartyKeySet: false, providerModels: {}, ...preset })
     await loadModels({ preset })
     onStateUpdated('load')
@@ -373,7 +406,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     preset?: Partial<AppSchema.GenSettings>
     force?: boolean
   }) => {
-    const providerId = opts?.preset ? opts.preset.providerId : state.providerId
+    const providerId = opts?.preset ? opts.preset.providerId : context.current.providerId
 
     if (!providerId) {
       log('models cancelled: no provider id')
@@ -400,7 +433,10 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     setContext('loading', true)
 
     try {
-      const list = await presetApi.getModelListByPreset(opts?.preset || state, opts?.force)
+      const list = await presetApi.getModelListByPreset(
+        opts?.preset || context.current,
+        opts?.force
+      )
       if (list) {
         log('models success: %s', list?.list.length)
         setContext({
@@ -429,9 +465,9 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     onCreated?: (preset: AppSchema.UserGenPreset) => void
     onUpdated?: (preset: AppSchema.UserGenPreset) => void
   }) => {
-    const form = getPresetForm(state)
-    if (state._id && !isDefaultPreset(state._id)) {
-      getStore('presets').updatePreset(state._id, form, {
+    const form = getPresetForm(context.current)
+    if (context.current._id && !isDefaultPreset(context.current._id)) {
+      getStore('presets').updatePreset(context.current._id, form, {
         quiet: opts?.quiet,
         onSuccess: opts?.onUpdated,
       })
@@ -452,9 +488,14 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       onSuccess?: (preset: AppSchema.GenSettings) => void
     }
   ) => {
-    if (!state._id || state._id === 'new' || isDefaultPreset(state._id)) return
+    if (
+      !context.current._id ||
+      context.current._id === 'new' ||
+      isDefaultPreset(context.current._id)
+    )
+      return
 
-    getStore('presets').updatePreset(state._id, update, {
+    getStore('presets').updatePreset(context.current._id, update, {
       quiet: opts?.quiet,
       onSuccess: (next) => {
         opts?.onSuccess?.(next)
@@ -480,7 +521,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   return [
-    state,
+    context,
     {
       context,
       setState,
@@ -526,6 +567,12 @@ function createHides(store: PresetState, ctx: PresetConnection) {
   }
 
   return hides
+}
+
+function maybeDeepClone(obj: any | undefined) {
+  if (!obj) return undefined
+
+  return deepClone(obj)
 }
 
 function hidePresetSetting(

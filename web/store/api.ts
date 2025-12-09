@@ -37,7 +37,7 @@ export const baseUrl = API_OVERRIDE
   : HOST === 'prd-assets.agnai.chat'
   ? `${PROTO}//edge-api.agnai.chat`
   : HOST === 'dev.agnai.chat' || HOST === 'dev-assets.agnai.chat'
-  ? `${PROTO}//api.agnai.chat`
+  ? `${PROTO}//edge-api.agnai.chat`
   : HOST === 'stg.agnai.chat'
   ? `${PROTO}//stg-api.agnai.chat`
   : location.origin
@@ -407,6 +407,7 @@ export function fetchSSE(opts: SSEOpts) {
           opts.onTick?.(json.message, 'done')
           break
 
+        case 'chat-json':
         case 'chat-query':
         case 'inference':
           done = true

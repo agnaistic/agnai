@@ -119,7 +119,7 @@
     "pino-pretty": "^9.2.0",
     "redis": "^4.6.5",
     "shepherd.js": "^13.0.3",
-    "stripe": "^13.7.0",
+    "stripe": "^20.0.0",
     "supports-color": "^10.2.0",
     "svgo": "^3.3.2",
     "symmetry": "^0.6.1",

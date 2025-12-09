@@ -2,7 +2,7 @@ import { Component, createMemo, Show } from 'solid-js'
 import TextInput from '../TextInput'
 import Select from '../Select'
 import { Toggle } from '../Toggle'
-import { chatStore } from '../../store'
+import { chatStore, userStore } from '../../store'
 import PromptEditor, { BasicPromptTemplate } from '../PromptEditor'
 import { defaultTemplate } from '/common/mode-templates'
 import { CharacterSchema } from '/web/pages/Character/CharacterSchema'
@@ -15,7 +15,8 @@ import { PresetTabProps } from '/web/store/preset-context'
 import Accordian from '../Accordian'
 
 export const PromptSettings: Component<PresetTabProps> = (props) => {
-  const character = chatStore((s) => s.details[s.lastChatId]?.char)
+  const character = chatStore((s) => ({ char: s.details[s.lastChatId]?.char }))
+  const state = userStore((s) => ({ user: s.user }))
   const isChat = isChatPageMemo()
 
   const jsonCharId = createMemo(() => {
@@ -23,7 +24,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
     if (src !== 'character') return
     if (!isChat()) return
 
-    return character?._id
+    return character.char?._id
   })
 
   const reasonWarning = createMemo(() => {
@@ -41,24 +42,33 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
     return null
   })
 
+  const sources = createMemo(() => {
+    const base = [
+      { label: 'Source: Chat Preset', value: 'preset' },
+      { label: 'Source: Character', value: 'character' },
+    ]
+
+    if (state.user?.jsonPreset) {
+      base.unshift({ label: 'Source: JSON Preset', value: 'json-preset' })
+    }
+
+    return base
+  })
+
   return (
     <div class="flex flex-col gap-4" classList={{ hidden: props.tab !== 'Prompt' }}>
       <div class="flex flex-col items-center gap-2">
         <div class="flex w-full flex-col gap-4">
           <CharacterSchema
             characterId={jsonCharId()}
-            presetId={props.state._id}
+            preset={props.state}
             update={(schema) => {
               props.setters.setState('json', schema)
             }}
-            inherit={props.state.json}
           >
             <Select
               fieldName="jsonSource"
-              items={[
-                { label: 'Source: Preset', value: 'preset' },
-                { label: 'Source: Character', value: 'character' },
-              ]}
+              items={sources()}
               value={props.state.jsonSource}
               onChange={(ev) => props.setters.setState('jsonSource', ev.value as any)}
             />
@@ -174,9 +184,9 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
             fieldName="gaslight"
             value={props.state.gaslight!}
             state={props.state}
-            onChange={(ev) =>
+            onChange={(ev) => {
               props.setters.setState({ promptTemplateId: ev.templateId, gaslight: ev.prompt })
-            }
+            }}
             placeholder={defaultTemplate}
             disabled={props.state.disabled}
             showHelp

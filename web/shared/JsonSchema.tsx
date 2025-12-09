@@ -104,6 +104,13 @@ export const JsonSchema: Component<{
     <>
       <div class="flex flex-col gap-2">
         <div class="flex flex-col gap-1">
+          <div>
+            <span class="font-bold">Alias: </span>
+            <span>
+              A short-hand name that you can reference in Prompt Templates. E.g.{' '}
+              <code class="text-sm">{'{{json.my-alias-name}}'}</code>
+            </span>
+          </div>
           <div class="font-bold">Variables:</div>
           <div class="flex flex-wrap gap-1">
             {pills().map((pill) => (
@@ -234,6 +241,11 @@ const SchemaField: Component<{
             </div>
 
             <div class="flex gap-2">
+              <TextInput
+                prelabel="Alias"
+                value={props.item.alias || ''}
+                onChange={(ev) => props.update({ alias: ev.currentTarget.value }, props.index)}
+              />
               <Button
                 size="md"
                 schema={!props.item.disabled ? 'success' : 'hollow'}

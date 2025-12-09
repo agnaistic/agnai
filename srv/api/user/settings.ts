@@ -191,8 +191,12 @@ const validConfig = {
   speechtotext: 'any?',
   texttospeech: 'any?',
   images: 'any?',
+
   defaultPreset: 'string?',
   chargenPreset: 'string?',
+  summaryPreset: 'string?',
+  jsonPreset: 'string?',
+
   adapterConfig: 'any?',
   disableLTM: 'boolean?',
 } as const
@@ -200,7 +204,7 @@ const validConfig = {
 /**
  * Just for updating keys at the moment
  */
-export const updatePartialConfig = handle(async ({ userId, body }) => {
+export const updatePartialConfig = handle(async ({ userId, body, authed }) => {
   assertValid(
     {
       novelApiKey: 'string?',
@@ -215,6 +219,8 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       announcement: 'string?',
       defaultPreset: 'string?',
       chargenPreset: 'string?',
+      summaryPreset: 'string?',
+      jsonPreset: 'string?',
       images: 'any?',
       disableLTM: 'boolean?',
       imageDefaults: 'any?',
@@ -240,12 +246,22 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
     update.disableLTM = body.disableLTM
   }
 
-  if (body.chargenPreset) {
+  if (body.chargenPreset && body.chargenPreset !== authed?.chargenPreset) {
     const preset = await store.presets.getUserPresetInternal(body.chargenPreset)
-    if (!preset || preset.userId !== userId) {
-      throw new StatusError(`Invalid preset`, 403)
-    }
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Chargen`, 403)
     update.chargenPreset = body.chargenPreset
+  }
+
+  if (body.jsonPreset && body.jsonPreset !== authed?.jsonPreset) {
+    const preset = await store.presets.getUserPresetInternal(body.jsonPreset)
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Json`, 403)
+    update.jsonPreset = body.jsonPreset
+  }
+
+  if (body.summaryPreset && body.summaryPreset !== authed?.summaryPreset) {
+    const preset = await store.presets.getUserPresetInternal(body.summaryPreset)
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Summary`, 403)
+    update.summaryPreset = body.summaryPreset
   }
 
   if (body.announcement) {
@@ -345,7 +361,7 @@ export const deleteProvider = handle(async ({ userId, body }) => {
   return next
 })
 
-export const updateConfig = handle(async ({ userId, body }) => {
+export const updateConfig = handle(async ({ userId, body, authed }) => {
   assertValid(validConfig, body)
 
   const prevUser = await store.users.getUser(userId!)
@@ -380,6 +396,24 @@ export const updateConfig = handle(async ({ userId, body }) => {
     }
 
     update.hordeKey = encryptText(incomingKey)
+  }
+
+  if (body.chargenPreset && body.chargenPreset !== authed?.chargenPreset) {
+    const preset = await store.presets.getUserPresetInternal(body.chargenPreset)
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Chargen`, 403)
+    update.chargenPreset = body.chargenPreset
+  }
+
+  if (body.jsonPreset && body.jsonPreset !== authed?.jsonPreset) {
+    const preset = await store.presets.getUserPresetInternal(body.jsonPreset)
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Json`, 403)
+    update.jsonPreset = body.jsonPreset
+  }
+
+  if (body.summaryPreset && body.summaryPreset !== authed?.summaryPreset) {
+    const preset = await store.presets.getUserPresetInternal(body.summaryPreset)
+    if (!preset || preset.userId !== userId) throw new StatusError(`Invalid preset - Summary`, 403)
+    update.summaryPreset = body.summaryPreset
   }
 
   const validatedThirdPartyUrl =

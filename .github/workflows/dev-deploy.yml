@@ -1,4 +1,4 @@
-name: Deploy to DEV
+name: Deploy to DEV (Web Only)
 
 on: workflow_dispatch
 

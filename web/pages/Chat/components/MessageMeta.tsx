@@ -41,6 +41,16 @@ export const MessageMeta: Component = () => {
     return state.graph.tree[state.msg._id]?.depth || -1
   })
 
+  const jsonValues = createMemo(() => {
+    if (!state.msg?.json?.values) return
+    const entries = Object.entries(state.msg.json.values)
+
+    if (!entries.length) return
+
+    const list = entries.map(([field, value]) => ({ field, value: value as string }))
+    return list
+  })
+
   return (
     <Modal show={!!state.msg} close={close} title="Message Info" maxWidth="half">
       <div class="flex w-full flex-col gap-2">
@@ -104,6 +114,25 @@ export const MessageMeta: Component = () => {
                   </tr>
                 )}
               </For>
+
+              <Show when={jsonValues()?.length}>
+                <tr>
+                  <td colspan={2}>
+                    <span class="font-bold">json output</span>
+                  </td>
+                </tr>
+
+                <For each={jsonValues()!}>
+                  {(item) => (
+                    <tr>
+                      <td colSpan={2}>
+                        <div class="font-bold">{item.field}</div>
+                        <div class="text-600 font-normal">{item.value}</div>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </Show>
             </tbody>
           </table>
         </Card>

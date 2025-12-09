@@ -37,6 +37,9 @@ export function toUserStoreObject(user: AppSchema.User) {
     'elevenLabsApiKeySet',
     'speechtotext',
     'texttospeech',
+    'chargenPreset',
+    'summaryPreset',
+    'jsonPreset',
   ] satisfies Array<keyof AppSchema.User>
 
   const obj: any = {} as any

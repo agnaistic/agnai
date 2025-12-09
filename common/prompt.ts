@@ -10,7 +10,6 @@ import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
 import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
-import { PromptTemplate } from './types/presets'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 import { extractReasoning } from './reasoning'
@@ -98,6 +97,7 @@ export type PromptOpts = {
   jsonValues: Record<string, any> | undefined
   contextBuffer?: number
   props?: Record<string, string>
+  schema?: JsonField[]
 }
 
 export type BuildPromptOpts = {
@@ -114,6 +114,7 @@ export type BuildPromptOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
   history?: HistoryLine[]
+  schema?: JsonField[]
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -267,12 +268,19 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   const prompt = await injectPlaceholders(template, {
     opts,
     parts,
-    history: lines.map((l) => l.msg),
+    history: lines,
+    lines: lines.map((l) => l.msg),
+
     lastMessage: opts.lastMessage,
     characters: opts.characters,
     encoder,
-    jsonValues: opts.jsonValues,
+
+    // We want the template-parser to find the relevant JSON outputs on it's own from the message history
+    // We'll omit explicit JSON values for now
+    jsonValues: undefined, // opts.jsonValues
   })
+
+  // parts.post = prompt.sections.sections.post.slice()
 
   if (opts.modelFormat) {
     prompt.parsed = replaceTags(prompt.parsed, opts.modelFormat)
@@ -297,13 +305,14 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
 
   let { parsed, inserts, length, sections, linesAddedCount, history, addedLines, blocks } =
     await injectPlaceholders(template, {
-      opts,
+      opts: { ...opts, schema: opts.jsonSchema },
       parts: opts.parts,
-      history: opts.lines,
+      lines: opts.lines,
+      history: opts.history,
       characters: opts.characters,
       lastMessage: opts.lastMessage,
       encoder,
-      jsonValues: opts.jsonValues,
+      jsonValues: undefined,
       format: getFormatOverride(opts),
     })
 
@@ -347,12 +356,9 @@ function getFormatOverride(
   }
 }
 
-export function getTemplate(
-  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
-  templates?: PromptTemplate[]
-) {
-  if (opts.settings?.promptTemplateId && templates) {
-    const template = templates.find((t) => t._id === opts.settings?.promptTemplateId)
+export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
+  if (opts.settings?.promptTemplateId) {
+    const template = _templateLocator(opts.settings?.promptTemplateId)
     if (template) return template.template
   }
 
@@ -385,20 +391,22 @@ type InjectOpts = {
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
   jsonValues: Record<string, any> | undefined
-  history?: string[]
+  lines?: string[]
+  history?: HistoryLine[]
   encoder: TokenCounter
   format?: ModelFormat
 }
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
-  const { opts, parts, history: hist, encoder, ...rest } = inject
+  const { opts, parts, lines, history, encoder, ...rest } = inject
 
   const templateOpts = {
     ...opts,
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
-    lines: hist || [],
+    lines: inject.lines || [],
+    history: inject.history,
     ...rest,
   }
 
@@ -722,7 +730,7 @@ export async function getLinesForPrompt(
     msg.msg = removeReasoning(msg.msg, settings?.reasoning)
     const filled = fillPlaceholders({ msg, author: author.name, char, user: sender }).trim()
 
-    return { _id: msg._id, msg: filled, role: author.role }
+    return { _id: msg._id, msg: filled, role: author.role, json: msg.json?.values || {} }
   }
 
   /**
@@ -789,7 +797,7 @@ export function getMessageVisibility(
 }
 
 function trimAddedLine(added: HistoryLine): HistoryLine {
-  return { msg: trimSentence(added.msg), _id: added._id, role: added.role }
+  return { msg: trimSentence(added.msg), _id: added._id, role: added.role, json: added.json }
 }
 
 /** This function is not used for Claude or Chat */
@@ -1068,6 +1076,7 @@ export interface JsonField {
   name: string
   disabled: boolean
   type: JsonType
+  alias?: string
 }
 
 export const schema = {
@@ -1309,4 +1318,13 @@ export function simplifyPreset(
   Object.assign(next, recommends, { useMaxContext: true })
 
   return next
+}
+
+let _templateLocator = (id: string): AppSchema.PromptTemplate | undefined => {
+  return
+}
+export function registerTemplateLocator(
+  callback: (id: string) => AppSchema.PromptTemplate | undefined
+) {
+  _templateLocator = callback
 }

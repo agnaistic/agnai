@@ -80,7 +80,7 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
         <Convertible close={closePane} footer={paneFooter()}>
           <ModeGenSettings
             page="mode"
-            preset={preset}
+            preset={preset.current}
             setters={setters}
             footer={setPaneFooter}
             presetId={state.presetId}

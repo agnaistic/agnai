@@ -81,7 +81,7 @@ const InputBar: Component<{
   let ref: HTMLTextAreaElement | undefined
 
   const [ctx] = useAppContext()
-  const [preset, setters] = usePresetContext()
+  const [preset] = usePresetContext()
 
   const prompt = promptStore((s) => ({ hintsEnabled: s.hintsEnabled, hint: s.hint }))
   const user = userStore((s) => ({ user: s.user, profile: s.profile, ui: s.ui }))
@@ -222,7 +222,7 @@ const InputBar: Component<{
     if (!char?.voice) return
 
     const text = extractReasoning(lastTextMsg.msg, {
-      tags: preset?.reasoning,
+      tags: preset.current?.reasoning,
       display: ctx.ui.displayReasoning,
     })
 
@@ -501,7 +501,7 @@ const InputBar: Component<{
                 </Button>
               </Show>
             </Show>
-            <Show when={setters.context.attachments}>
+            <Show when={preset.attachments}>
               <FileInput
                 fieldName="imageCaption"
                 parentClass="hidden"

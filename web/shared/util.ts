@@ -970,6 +970,38 @@ export function isUsableService(
   return false
 }
 
+export function getJsonSchema(opts: {
+  characterId?: string
+  preset: Pick<AppSchema.GenSettings, 'json' | 'jsonSource'>
+}) {
+  const { chatChars } = getStore('character').getState()
+  const { user } = getStore('user').getState()
+  const { presets } = getStore('presets').getState()
+
+  const source = opts.preset.jsonSource
+
+  switch (source) {
+    case 'character': {
+      if (!opts.characterId) return
+      const char = chatChars.map[opts.characterId]
+      return { source: 'character' as const, schema: char?.json }
+    }
+
+    case 'json-preset': {
+      if (!user?.jsonPreset) return
+      const preset = presets.find((p) => p._id === user.jsonPreset)
+
+      return { source: 'json-preset' as const, schema: preset?.json }
+    }
+
+    case 'preset':
+    case undefined:
+    default: {
+      return { source: 'preset' as const, schema: opts.preset.json }
+    }
+  }
+}
+
 export function toLocalTime(date: string) {
   const d = new Date(date)
   const Y = d.getFullYear()

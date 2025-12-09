@@ -14,10 +14,12 @@ import { CircleHelp } from 'lucide-solid'
 import { downloadJson, ExtractProps } from '/web/shared/util'
 import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
-import { useActivePreset } from '/web/store/data/common'
 import { useAppContext } from '/web/store/context'
 import { createStore } from 'solid-js/store'
 import { Toggle } from '/web/shared/Toggle'
+import { usePresetContext } from '/web/store/preset-context'
+import { AppSchema } from '/common/types'
+import { Option } from '/web/shared/Select'
 
 const helpMarkdown = neat`
 
@@ -53,21 +55,23 @@ History Template
 const exampleSchema: ResponseSchema = {
   history: '{{response}}',
   response: '{{response}}',
+  imageCaption: ``,
   schema: [],
   separateCall: false,
 }
 
 export const CharacterSchema: Component<{
   characterId?: string
-  presetId?: string
-  inherit?: ResponseSchema
+  preset?: AppSchema.GenSettings & { _id: string }
   children?: any
   update: (next: ResponseSchema) => void
 }> = (props) => {
   const [ctx] = useAppContext()
+  const [preset] = usePresetContext()
 
   let respRef: HTMLTextAreaElement
   let histRef: HTMLTextAreaElement
+  let captionRef: HTMLTextAreaElement
 
   const [show, setShow] = createSignal(false)
   const [showImport, setShowImport] = createSignal(false)
@@ -77,17 +81,27 @@ export const CharacterSchema: Component<{
   const [store, setStore] = createStore({
     response: '',
     history: '',
+    imageCaption: '',
     schema: [] as JsonField[],
     separateCall: false,
   })
 
   const vars = createMemo(() => {
-    return store.schema.map((s) => ({ label: s.name, value: s.name }))
+    const list = store.schema.reduce((prev, curr) => {
+      prev.push({ label: curr.name, value: curr.name })
+
+      if (curr.alias) {
+        prev.push({ label: curr.alias, value: curr.alias })
+      }
+
+      return prev
+    }, [] as Option[])
+    return list
   })
 
   const [resErr, setResErr] = createSignal('')
   const [histErr, setHistErr] = createSignal('')
-  const activePreset = useActivePreset()
+  const [captionErr, setCaptionErr] = createSignal('')
 
   const runSchemaTest = () => {
     setResult()
@@ -113,6 +127,22 @@ export const CharacterSchema: Component<{
     )
   }
 
+  const saveTarget = createMemo(() => {
+    if (!props.preset) return
+
+    switch (props.preset.jsonSource) {
+      case undefined:
+      case 'preset':
+      case 'character': {
+        return { label: 'Current Preset', id: props.preset._id }
+      }
+
+      case 'json-preset': {
+        return { label: 'JSON Preset', id: preset.json?._id }
+      }
+    }
+  })
+
   createEffect(
     on(
       () => show(),
@@ -123,21 +153,40 @@ export const CharacterSchema: Component<{
         if (props.characterId) {
           const char = ctx.allBots[props.characterId]
           json = char ? char.json : ctx.char?.json
-        } else if (props.presetId || props.inherit) {
-          json = props.inherit || activePreset()?.json
+        } else if (props.preset) {
+          switch (props.preset.jsonSource) {
+            case 'character': {
+              json = ctx.char?.json
+              break
+            }
+
+            case undefined:
+            case 'preset': {
+              json = props.preset.json
+              break
+            }
+
+            case 'json-preset': {
+              json = preset.json?.json
+              break
+            }
+          }
         }
 
-        const hasValue = !!json?.schema?.length || !!json?.history || !!json?.response
+        const hasValue =
+          !!json?.schema?.length || !!json?.history || !!json?.response || !!json?.imageCaption
         if (json && hasValue) {
           setStore({
             schema: json.schema || [],
             history: json.history || '',
             response: json.response || '',
+            imageCaption: json.imageCaption || '',
           })
         } else {
           setStore({
             history: exampleSchema.history,
             response: exampleSchema.response,
+            imageCaption: exampleSchema.imageCaption,
             schema: exampleSchema.schema.slice(),
           })
         }
@@ -148,8 +197,13 @@ export const CharacterSchema: Component<{
   createEffect(() => {
     const resVars = store.response.match(JSON_NAME_RE())
     const histVars = store.history.match(JSON_NAME_RE())
+    const captionVars = store.imageCaption.match(JSON_NAME_RE())
 
     const names = new Set(store.schema.map((s) => s.name))
+
+    for (const field of store.schema) {
+      if (field.alias) names.add(field.alias)
+    }
 
     if (resVars) {
       const bad: string[] = []
@@ -172,6 +226,18 @@ export const CharacterSchema: Component<{
       }
       setHistErr(bad.length ? bad.join(', ') : '')
     }
+
+    if (captionVars) {
+      const bad: string[] = []
+      for (const res of captionVars) {
+        const name = res.slice(2, -2)
+        if (!names.has(name) && name !== 'response') {
+          bad.push(name)
+        }
+      }
+
+      setCaptionErr(bad.length ? bad.join(', ') : '')
+    }
   })
 
   const onFieldNameChange = (from: string, to: string) => {
@@ -181,40 +247,56 @@ export const CharacterSchema: Component<{
     setStore({ history: his, response: res })
   }
 
-  const onAutoComplete = (field: 'history' | 'response') => (opt: { label: string }) => {
-    const ref = auto() === 'history' ? histRef : auto() === 'response' ? respRef : undefined
-    const prev = store[field]
+  const onAutoComplete =
+    (field: 'history' | 'response' | 'imageCaption') => (opt: { label: string }) => {
+      let ref = undefined
 
-    if (ref) {
-      let before = prev.slice(0, ref.selectionStart - (hotkey() ? 0 : 1))
-      let after = prev.slice(ref.selectionStart)
+      switch (auto()) {
+        case 'history':
+          ref = histRef
+          break
 
-      if (before.endsWith('{{')) {
-        // Do nothing
-      } else if (before.endsWith('{')) {
-        before = before + '{'
-      } else if (!before.endsWith('{')) {
-        before = before + '{{'
+        case 'response':
+          ref = respRef
+          break
+
+        case 'imageCaption':
+          ref = captionRef
+          break
       }
 
-      if (!after.startsWith('}')) {
-        after = '}}' + after
+      const prev = store[field]
+
+      if (ref) {
+        let before = prev.slice(0, ref.selectionStart - (hotkey() ? 0 : 1))
+        let after = prev.slice(ref.selectionStart)
+
+        if (before.endsWith('{{')) {
+          // Do nothing
+        } else if (before.endsWith('{')) {
+          before = before + '{'
+        } else if (!before.endsWith('{')) {
+          before = before + '{{'
+        }
+
+        if (!after.startsWith('}')) {
+          after = '}}' + after
+        }
+
+        const next = `${before}${opt.label}${after}`
+        ref.value = next
+        setStore(field as any, next)
+        ref.focus()
+        ref.setSelectionRange(
+          before.length + opt.label.length,
+          before.length + opt.label.length,
+          'none'
+        )
       }
 
-      const next = `${before}${opt.label}${after}`
-      ref.value = next
-      setStore(field as any, next)
-      ref.focus()
-      ref.setSelectionRange(
-        before.length + opt.label.length,
-        before.length + opt.label.length,
-        'none'
-      )
+      setHotkey(false)
+      setAuto('')
     }
-
-    setHotkey(false)
-    setAuto('')
-  }
 
   const importSchema = (schema?: ResponseSchema) => {
     setShowImport(false)
@@ -226,11 +308,15 @@ export const CharacterSchema: Component<{
     close(true)
   }
 
-  const close = (save?: boolean | ResponseSchema) => {
-    if (typeof save === 'boolean' && save) {
+  const close = (save: boolean) => {
+    const saveTargetId = saveTarget()
+    if (save) {
+      preset.json
+
       const update = {
         history: store.history,
         response: store.response,
+        imageCaption: store.imageCaption,
         schema: store.schema,
         separateCall: store.separateCall,
       }
@@ -248,21 +334,21 @@ export const CharacterSchema: Component<{
         }
       } else if (props.characterId) {
         characterStore.editPartialCharacter(props.characterId, { json: update })
-      } else if (props.presetId) {
-        presetStore.updatePreset(props.presetId, { json: update })
+      } else if (saveTargetId?.id) {
+        presetStore.updatePreset(saveTargetId.id, { json: update })
       }
     }
 
-    if (save && typeof save !== 'boolean') {
-      props.update(save)
-      setStore('schema', save.schema)
+    // if (save && typeof save !== 'boolean') {
+    //   props.update(save)
+    //   setStore('schema', save.schema)
 
-      if (props.characterId) {
-        characterStore.editPartialCharacter(props.characterId, { json: save })
-      } else if (props.presetId) {
-        presetStore.updatePreset(props.presetId, { json: save })
-      }
-    }
+    //   if (props.characterId) {
+    //     characterStore.editPartialCharacter(props.characterId, { json: save })
+    //   } else if (saveTargetId?.id) {
+    //     presetStore.updatePreset(saveTargetId.id, { json: save })
+    //   }
+    // }
 
     setHistErr('')
     setResErr('')
@@ -272,8 +358,8 @@ export const CharacterSchema: Component<{
   const filename = createMemo(() =>
     props.characterId
       ? `schema-char-${props.characterId.slice(0, 4)}`
-      : props.presetId
-      ? `schema-preset-${props.presetId.slice(0, 4)}`
+      : props.preset
+      ? `schema-preset-${props.preset._id.slice(0, 4)}`
       : 'schema'
   )
 
@@ -311,10 +397,12 @@ export const CharacterSchema: Component<{
         <RootModal
           title={
             <>
-              Editing Schema:
-              <Show when={props.characterId} fallback="Preset">
-                {ctx.allBots[props.characterId!]?.name || 'Character'}
-              </Show>
+              Editing Schema
+              <div class="text-600 !text-[1rem] font-normal">
+                <Show when={props.characterId} fallback={saveTarget()?.label}>
+                  {ctx.allBots[props.characterId!]?.name || 'Character'}
+                </Show>
+              </div>
             </>
           }
           show={show()}
@@ -329,10 +417,7 @@ export const CharacterSchema: Component<{
                 <Button schema="secondary" onClick={() => close(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => close(true)}>
-                  <Show when={props.characterId}>Save</Show>
-                  <Show when={!props.characterId}>Accept</Show>
-                </Button>
+                <Button onClick={() => close(true)}>Save</Button>
               </div>
             </div>
           }
@@ -443,6 +528,46 @@ export const CharacterSchema: Component<{
               />
             </Card>
 
+            <Card class="relative">
+              <Show when={auto() === 'imageCaption'}>
+                <AutoComplete
+                  options={vars()}
+                  close={() => setAuto('')}
+                  dir="down"
+                  onSelect={onAutoComplete('imageCaption')}
+                />
+              </Show>
+              <TextInput
+                class="font-mono text-xs"
+                fieldName="jsonSchemaImageCaption"
+                label={<b>Image Caption Template</b>}
+                ref={(r) => (captionRef = r)}
+                onKeyDown={(ev) => {
+                  if (ev.key === '{') setAuto('imageCaption')
+                  if (ev.ctrlKey && ev.code === 'Space') {
+                    setHotkey(true)
+                    setAuto('imageCaption')
+                  }
+                }}
+                helperText={
+                  <>
+                    <>
+                      <div>Used to auto-populate the "Image Prompt" for image generation.</div>
+                      <Show when={!!captionErr()}>
+                        <TitleCard type="rose">
+                          Template references undefined placeholders: {captionErr()}
+                        </TitleCard>
+                      </Show>
+                    </>
+                  </>
+                }
+                isMultiline
+                value={store.imageCaption}
+                placeholder="Image Caption Template"
+                onChange={(ev) => setStore('imageCaption', ev.currentTarget.value)}
+              />
+            </Card>
+
             <Show
               when={
                 !store.history.includes('{{response}}') || !store.response.includes('{{response}}')
@@ -490,6 +615,7 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
         {
           response: 'string',
           history: 'string',
+          imageCaption: 'string?',
           fields: ['any?'],
           schema: ['any?'],
           separateCall: 'boolean?',
@@ -507,6 +633,7 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
       props.close({
         response: json.response,
         history: json.history,
+        imageCaption: json.imageCaption || '',
         schema,
         separateCall: json.separateCall ?? false,
       })

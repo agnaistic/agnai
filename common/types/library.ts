@@ -74,6 +74,7 @@ export interface ResponseSchema {
   schema: JsonField[]
   response: string
   history: string
+  imageCaption: string
   separateCall: boolean
 }
 

@@ -474,7 +474,15 @@ function processError(json: any) {
   // OpenRouter provider errors
   const suberror = tryParse(json?.error?.metadata?.raw)
   const providerError =
-    suberror?.detail || suberror?.message || suberror?.error?.message || json?.error?.metadata?.raw
+    suberror?.detail ||
+    suberror?.message?.detail?.[0]?.msg ||
+    suberror?.message?.detail?.msg ||
+    suberror?.message ||
+    suberror?.error?.message ||
+    json?.message?.detail?.[0]?.msg ||
+    json?.message?.detail?.msg ||
+    json?.message ||
+    json?.error?.metadata?.raw
 
   // Generic errors
   const msg = json?.error?.message || json?.message

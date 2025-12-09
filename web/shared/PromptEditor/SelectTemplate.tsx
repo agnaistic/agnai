@@ -10,6 +10,8 @@ import { PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggesti
 import { DefinitionsModal } from './Definitions'
 import { Interp, Placeholder, placeholders, v2placeholders } from './types'
 import { Pill } from '../Card'
+import { PresetState } from '/web/store/preset-context'
+import { getJsonSchema } from '../util'
 
 const builtinTemplates = Object.keys(templates).map((key) => ({
   label: `(Built-in) ${key}`,
@@ -22,7 +24,7 @@ export const SelectTemplate: Component<{
   select: (id: string, template: string) => void
   currentTemplateId: string | undefined
   currentTemplate: string | undefined
-  presetId: string | undefined
+  preset: PresetState | undefined
 }> = (props) => {
   let ref: HTMLTextAreaElement
   const state = presetStore((s) => ({ templates: s.templates }))
@@ -34,6 +36,21 @@ export const SelectTemplate: Component<{
   const [filter, setFilter] = createSignal('')
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [help, showHelp] = createSignal(false)
+
+  const suggestions = createMemo(() => {
+    if (!props.preset) return []
+
+    const schema = getJsonSchema({ preset: props.preset })
+    if (!schema?.schema) return []
+
+    const names = schema.schema.schema.reduce((prev, curr) => {
+      prev.push(curr.name)
+      if (curr.alias) prev.push(curr.alias)
+      return prev
+    }, [] as string[])
+
+    return names
+  })
 
   const templateOpts = createMemo(() => {
     const base = Object.entries(templates).reduce(
@@ -107,7 +124,7 @@ export const SelectTemplate: Component<{
         Cancel
       </Button>
       <Switch>
-        <Match when={canSaveTemplate() && !!props.presetId}>
+        <Match when={canSaveTemplate() && !!props.preset?._id}>
           <Button
             onClick={() => {
               const id = opt()
@@ -120,7 +137,7 @@ export const SelectTemplate: Component<{
 
               presetStore.updateTemplate(
                 opt(),
-                { name: templateName(), template: update, presetId: props.presetId },
+                { name: templateName(), template: update, presetId: props.preset?._id },
                 () => {
                   toastStore.success('Prompt template updated')
                   props.select(id, update)
@@ -133,7 +150,7 @@ export const SelectTemplate: Component<{
           </Button>
         </Match>
 
-        <Match when={canSaveTemplate() && !props.presetId}>
+        <Match when={canSaveTemplate() && !props.preset?._id}>
           <Button
             onClick={() => {
               const id = opt()
@@ -159,7 +176,7 @@ export const SelectTemplate: Component<{
           <Button
             schema="primary"
             onClick={() => {
-              presetStore.createTemplate(templateName(), template(), props.presetId, (id) => {
+              presetStore.createTemplate(templateName(), template(), props.preset?._id, (id) => {
                 props.select(id, template())
                 props.close()
               })
@@ -238,7 +255,7 @@ export const SelectTemplate: Component<{
             onComplete={(opt) => onPromptAutoComplete(ref, opt)}
             open={autoOpen()}
             close={() => setAutoOpen(false)}
-            jsonValues={{ example: '', 'another long example': '', response: '' }}
+            jsonValues={suggestions()}
           />
           <TextInput
             fieldName="templateName"

@@ -103,6 +103,20 @@ export type PresetParser =
   | { type: 'replace'; from: string; to: string }
   | { type: 'remove'; text: string }
 
+export type Sampler =
+  | 'topK'
+  | 'typicalP'
+  | 'topP'
+  | 'topA'
+  | 'repetitionPenalty'
+  | 'frequencyPenalty'
+  | 'minP'
+  | 'tailFreeSampling'
+  | 'temperature'
+  | 'maxTokens'
+
+export type SamplerState = 'on' | 'off' | 'auto' | string
+
 export interface GenSettings {
   name: string
   userId?: string
@@ -244,9 +258,7 @@ export interface GenSettings {
 
   json?: ResponseSchema
   jsonEnabled?: boolean
-  jsonSource?: 'preset' | 'character'
-
-  useCharacterSchema?: boolean
+  jsonSource?: 'preset' | 'character' | 'json-preset'
 
   temporary?: Record<string, any>
   registered?: { [key in AIAdapter]?: Record<string, any> }
@@ -254,6 +266,8 @@ export interface GenSettings {
   updatedAt?: string
 
   parsers?: PresetParser[]
+
+  samplers?: { [key in Sampler]?: SamplerState }
 }
 
 export interface PromptTemplate {

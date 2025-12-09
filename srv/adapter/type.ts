@@ -8,7 +8,12 @@ import { Memory, TokenCounter } from '/common/types'
 
 export type MsgAttachment = { type: 'image'; image: string }
 export type RequestAttachments = { [messageId: string]: MsgAttachment[] }
-export type HistoryLine = { _id: string; msg: string; role: 'user' | 'model' }
+export type HistoryLine = {
+  _id: string
+  msg: string
+  role: 'user' | 'model'
+  json: Record<string, string>
+}
 
 export type ChatRole = 'user' | 'assistant' | 'system'
 
@@ -148,6 +153,7 @@ export type AdapterProps = {
   messages?: Array<{ role: string; content: string }>
 
   parts: PromptPlaceholders
+
   lines: string[]
   promptLines: PromptLine[]
 

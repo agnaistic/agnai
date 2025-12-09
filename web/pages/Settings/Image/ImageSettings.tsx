@@ -386,7 +386,7 @@ export const ImageSettingsModal = () => {
       >
         <ModeGenSettings
           page="image-settings"
-          preset={summaryPreset}
+          preset={summaryPreset.current}
           setters={presetSetters}
           close={() => setEditPreset(false)}
           presetId={ctx.store.summaryPresetId}

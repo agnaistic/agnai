@@ -146,9 +146,9 @@ const ChatPanes: Component<{}> = (props) => {
           <Convertible close={closePane} footer={paneFooter()}>
             <ModeGenSettings
               page="mode"
-              preset={preset}
+              preset={preset.current}
               setters={setters}
-              presetId={preset._id}
+              presetId={preset.current._id}
               onPresetChanged={onPresetChanged}
               close={closePane}
               footer={setPaneFooter}

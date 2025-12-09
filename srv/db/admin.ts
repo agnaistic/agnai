@@ -136,14 +136,14 @@ export async function getUserInfo(userId: string) {
     }
   )
   const profile = await db('profile').findOne({ userId })
-  const chats = await db('chat').countDocuments({ userId })
-  const characters = await db('character').countDocuments({ userId })
+  // const chats = await db('chat').countDocuments({ userId })
+  // const characters = await db('character').countDocuments({ userId })
   const state = await domain.subscription.getAggregate(userId)
 
   return {
     userId,
-    chats,
-    characters,
+    chats: 0,
+    characters: 0,
     handle: profile?.handle,
     avatar: profile?.avatar,
     state,

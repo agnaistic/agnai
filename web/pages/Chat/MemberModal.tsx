@@ -177,7 +177,6 @@ const ParticipantsList: Component<{
 
   return (
     <>
-      <div>{state.active?.chat._id}</div>
       <For each={lists().users}>
         {(member) => (
           <UserParticipant

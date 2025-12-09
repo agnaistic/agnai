@@ -665,16 +665,26 @@ type OutgoingFields = Record<
 >
 
 export function toCompatStructured(opts: MinOpts, jsonSchema: any) {
-  const responseField = `${opts.replyAs?.name || opts.char?.name}'s response`
-  const base: OutgoingFields = {
-    [responseField]: { type: 'string' },
+  const base: OutgoingFields = {}
+
+  const defaultName = opts.replyAs?.name || opts.char?.name
+  if (defaultName) {
+    const responseField = `${defaultName}'s response`
+    base[responseField] = { type: 'string' }
   }
+
   const fields: OutgoingFields = jsonSchema.reduce((prev: OutgoingFields, field: JsonField) => {
-    const { disabled, name, type, ...rest } = field
+    let { disabled, name, type, ...rest } = field
+
+    if ('maxLength' in rest) {
+      rest.maxLength = +(rest.maxLength as string)
+    }
+
     prev[field.name] = {
       type: type.type,
       ...rest,
     }
+
     return prev
   }, base)
 
@@ -686,9 +696,8 @@ export function toCompatStructured(opts: MinOpts, jsonSchema: any) {
     type: 'json_schema',
     json_schema: {
       name: 'response',
-      type: 'object',
-      strict: true,
       schema: {
+        type: 'object',
         strict: true,
         properties: fields,
         required,

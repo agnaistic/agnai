@@ -42,6 +42,7 @@ const REASONING_MODELS: Record<string, boolean> = {
   'gpt-5-mini-2025-08-07': true,
   'gpt-5-nano': true,
   'gpt-5-nano-2025-08-07': true,
+  'gpt-5.1-chat-latest': true,
   o1: true,
   'o1-2024-12-17': true,
   o3: true,
@@ -80,6 +81,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: maxResponseLength,
     // max_completion_tokens: maxResponseLength,
+    // max_response_tokens: maxResponseLength,
     top_p: gen.topP ?? 1,
     stop: stops,
   }
@@ -113,10 +115,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   if (opts.jsonSchema) {
-    const responseField = `${opts.replyAs?.name || opts.char?.name}'s response`
-    const base = {
-      [responseField]: { type: 'string' },
+    const base: any = {}
+
+    const responseName = opts.replyAs?.name || opts.char?.name
+    if (responseName) {
+      const field = `${responseName}'s response`
+      base[field] = { type: 'string' }
     }
+
     const fields = opts.jsonSchema.reduce((prev: any, field: JsonField) => {
       const { disabled, name, type, ...rest } = field
       prev[field.name] = {
@@ -133,10 +139,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       type: 'json_schema',
       json_schema: {
         name: 'response',
-        type: 'object',
-        strict: true,
+        // type: 'object',
+        // strict: true,
         schema: {
           strict: true,
+          type: 'object',
           properties: fields,
           required,
           additionalProperties: false,

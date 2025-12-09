@@ -13,6 +13,7 @@ import { msgStore } from '/web/store'
 import type cytoscape from 'cytoscape'
 import { debug } from '/common/debug'
 import { Pill } from '/web/shared/Card'
+import { Split } from 'lucide-solid'
 
 const log = debug('graph')
 
@@ -201,7 +202,7 @@ export const ChatGraphModal: Component<{
 
         <div class="flex gap-2">
           <Button disabled={!store.clicked} onClick={() => msgStore.fork(store.clicked)} size="sm">
-            Fork
+            <Split size={12} /> Fork
           </Button>
 
           <Show when={canRejoin() || store.rejoin}>

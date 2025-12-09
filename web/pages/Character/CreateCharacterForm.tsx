@@ -700,7 +700,7 @@ export const CreateCharacterForm: Component<{
           <sub>This preset used for character generation</sub>
           <ModeGenSettings
             presetId={user.user?.chargenPreset || user.user?.defaultPreset}
-            preset={preset}
+            preset={preset.current}
             setters={presetSetters}
             onPresetChanged={(id) => userStore.updatePartialConfig({ chargenPreset: id })}
             close={() => setOpenPreset(false)}

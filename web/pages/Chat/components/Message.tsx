@@ -19,6 +19,7 @@ import {
   ImagePlus,
   Eye,
   EyeOff,
+  BracesIcon,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -67,10 +68,10 @@ import { resizeImage } from '/web/shared/image-resize'
 import { MsgAttachment } from '/srv/adapter/type'
 import { ALLOWED_TYPES } from '/web/store/data/image'
 import { MessageAttachments } from './Attachments'
-import { ComponentEventEmitter, isToday, toShortDuration } from '/web/shared/util'
+import { ComponentEventEmitter, getJsonSchema, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
-import { PresetState } from '/web/store/preset-context'
+import { PresetContext, PresetState } from '/web/store/preset-context'
 
 type MessageProps = {
   messageId: string
@@ -98,7 +99,7 @@ type MessageProps = {
   userId?: string
   handle?: string
 
-  preset: PresetState | undefined
+  preset: PresetContext | undefined
   canUseAttachments?: boolean
 }
 
@@ -171,6 +172,7 @@ const Message: Component<MessageProps> = (props) => {
   const [img, setImg] = createSignal('h-full')
   const opts = createSignal(false)
   const [jsonValues, setJsonValues] = createSignal(msg().json?.values || {})
+  const [jsonMsg, setJsonMsg] = createSignal('')
 
   const showOpt = createSignal(false)
 
@@ -187,7 +189,7 @@ const Message: Component<MessageProps> = (props) => {
   const content = createMemo(() => {
     const message = msg()
 
-    const msgV2 = getMessageContent(ctx, props.preset, props, state.chatProfiles, {
+    const msgV2 = getMessageContent(ctx, props.preset?.current, props, state.chatProfiles, {
       ...message,
       msg: props.content,
     })
@@ -201,18 +203,19 @@ const Message: Component<MessageProps> = (props) => {
 
     if (message.json) {
       const json = jsonValues()
-      const update = getJsonUpdate(
-        ctx,
-        props.preset?.jsonSource === 'character'
-          ? ctx.activeMap[message.characterId!]?.json
-          : props.preset?.json,
-        json
-      )
+
+      const autoDefs = getJsonSchema({
+        characterId: message.characterId,
+        preset: props.preset?.current!,
+      })
+
+      const update = getJsonUpdate(ctx, autoDefs?.schema, json)
 
       if (update) {
         msgStore.editMessageProp(message._id, {
           ...update,
           ...sender,
+          msg: jsonMsg(),
         })
       }
 
@@ -234,6 +237,8 @@ const Message: Component<MessageProps> = (props) => {
   const startEdit = () => {
     setEdit(true)
     const message = msg()
+
+    setJsonMsg(message.msg)
 
     if (!message.characterId) {
       setEditSender(JSON.stringify({ userId: message.userId }))
@@ -513,6 +518,7 @@ const Message: Component<MessageProps> = (props) => {
                     showMore={showOpt}
                     textBeforeGenMore={props.textBeforeGenMore}
                     ctx={ctx}
+                    preset={props.preset}
                     canUseAttachments={props.canUseAttachments}
                   />
                 </Match>
@@ -646,7 +652,11 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
 
                 <Match when={edit() && msg().json}>
-                  <JsonEdit msg={msg()} update={(next) => setJsonValues(next)} />
+                  <JsonEdit
+                    msg={msg()}
+                    update={(next) => setJsonValues(next)}
+                    message={(text: string) => setJsonMsg(text)}
+                  />
                 </Match>
                 <Match when={edit()}>
                   <div
@@ -683,6 +693,7 @@ function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
 const JsonEdit: Component<{
   msg: SplitMessage
   update: (next: any) => void
+  message: (next: string) => void
 }> = (props) => {
   const entries = createMemo(() => Object.keys(props.msg.json?.values || {}))
   const [editing, setEditing] = createStore<Record<string, string>>(props.msg.json?.values || {})
@@ -693,6 +704,20 @@ const JsonEdit: Component<{
 
   return (
     <div class="flex flex-col gap-2">
+      <Show when={!props.msg.json?.values?.response}>
+        <div class="flex flex-col">
+          <Pill type="bg" small opacity={0.5} class="rounded-b-none rounded-t-md">
+            message
+          </Pill>
+          <div
+            ref={(r) => (r.innerText = props.msg.msg)}
+            class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1"
+            contentEditable={true}
+            onKeyUp={(ev: any) => props.message(ev.target.innerText)}
+          ></div>
+        </div>
+      </Show>
+
       <For each={entries()}>
         {(key) => (
           <div class="flex flex-col">
@@ -729,6 +754,7 @@ const MessageOptions: Component<{
   onRemove: () => void
   showMore: Signal<boolean>
   ctx: ContextState
+  preset: PresetContext | undefined
   canUseAttachments: boolean | undefined
 }> = (props) => {
   let menuParent: any
@@ -866,6 +892,17 @@ const MessageOptions: Component<{
         onClick: (msg) => msgStore.createImage({ sourceMsgId: msg._id }),
         icon: ImagePlus,
         class: '',
+      },
+
+      'gen-json': {
+        key: 'gen-json',
+        label: 'Gen JSON',
+        show: !!props.preset?.current?.json || !!props.preset?.json?.json,
+        class: '',
+        icon: BracesIcon,
+        onClick: () => responseStore.chatQuery({ messageId: props.msg._id, question: '' }),
+        outer: props.ui.msgOptsInline['gen-json'],
+        disabled: !props.preset?.current?.json && !props.preset?.json?.json,
       },
     }
 

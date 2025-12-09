@@ -3,7 +3,7 @@ import express from 'express'
 import multer from 'multer'
 import { logMiddleware } from './middleware'
 import api, { keyed } from './api'
-import { errors } from './api/wrap'
+import { errors, wrap } from './api/wrap'
 import { resolve } from 'path'
 import { setupSockets } from './api/ws'
 import { config } from './config'
@@ -11,6 +11,7 @@ import { createServer } from './server'
 import pipeline from './api/pipeline'
 import { getDb } from './db/client'
 import { isConnected } from './api/ws/redis'
+import { wait } from './db/util'
 
 export function createApp() {
   const upload = multer({
@@ -22,14 +23,6 @@ export function createApp() {
 
   const app = express()
   const server = createServer(app)
-
-  if (!config.clustering) {
-    app.use((req, res, next) => {
-      req
-      res
-      next()
-    })
-  }
 
   app.use(
     cors({
@@ -52,31 +45,40 @@ export function createApp() {
 
   app.use('/api', api)
 
-  app.get('/healthcheck', (_, res) => {
-    const dbHost = config.db.host || config.db.uri
-    if (!config.redis.host && !dbHost) {
-      return res.status(200).json({ message: 'ok', status: true, db: false, redis: false })
-    }
-
-    let db = !config.db.host
-
-    try {
-      if (dbHost) getDb()
-      db = true
-
-      if (!!config.redis.host && !isConnected()) {
-        throw new Error('Redis not ready')
+  app.get(
+    '/healthcheck',
+    wrap(async (req, res) => {
+      const sleep = +(req.query.sleep || '0')
+      if (sleep > 0) {
+        req.log.info(`sleeping ${sleep}s`)
+        await wait(sleep * 1000)
       }
 
-      res
-        .status(200)
-        .json({ message: 'ok', status: true, db: !!dbHost, redis: !!config.redis.host })
-    } catch (ex) {
-      res
-        .status(503)
-        .json({ message: 'Database(s) not ready', status: false, db, redis: !isConnected() })
-    }
-  })
+      const dbHost = config.db.host || config.db.uri
+      if (!config.redis.host && !dbHost) {
+        return res.status(200).json({ message: 'ok', status: true, db: false, redis: false })
+      }
+
+      let db = !config.db.host
+
+      try {
+        if (dbHost) getDb()
+        db = true
+
+        if (!!config.redis.host && !isConnected()) {
+          throw new Error('Redis not ready')
+        }
+
+        res
+          .status(200)
+          .json({ message: 'ok', status: true, db: !!dbHost, redis: !!config.redis.host })
+      } catch (ex) {
+        res
+          .status(503)
+          .json({ message: 'Database(s) not ready', status: false, db, redis: !isConnected() })
+      }
+    })
+  )
 
   if (config.pipelineProxy) {
     app.use('/pipeline', pipeline)

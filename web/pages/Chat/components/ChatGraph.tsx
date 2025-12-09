@@ -92,8 +92,8 @@ export const ChatGraph: Component<{
       wheelSensitivity: 0.1,
       elements:
         props.nodes === 'full'
-          ? getAllElements(tree, props.leafId)
-          : getElements(tree, root, props.leafId, flags),
+          ? getAllElements(tree, props.state, props.leafId)
+          : getElements(tree, props.state, root, props.leafId, flags),
     })
 
     // cy.on('click', 'node', function (this: any, evt) {
@@ -103,13 +103,14 @@ export const ChatGraph: Component<{
 
     cy.on('tap', 'node', function (this: any, evt) {
       props.emit.click(this.id(), this)
+      recolor()
     })
 
     cy.on('mouseover', 'node', function (this: any, evt) {
       props.emit.hover(this.id(), this)
       document.body.style.cursor = 'pointer'
       this.style('border-color', getSettingColor('hl-200'))
-      this.style('border-width', '1')
+      this.style('border-width', '4')
     })
 
     cy.on('mouseout', 'node', function (this: any) {
@@ -117,7 +118,7 @@ export const ChatGraph: Component<{
       const id = this.id()
       if (props.state.clicked === id) {
         this.style('border-color', getSettingColor('green-400'))
-        this.style('border-width', '1')
+        this.style('border-width', '4')
         return
       }
 
@@ -145,10 +146,10 @@ export const ChatGraph: Component<{
     const nodes = cy.nodes()
 
     nodes.each((ele) => {
-      const color =
-        ele.id() === props.leafId ? 'green-500' : tree[ele.id()]?.msg.userId ? 'bg-500' : 'hl-500'
+      const thisId = ele.id()
+      const color = getNodeColor(tree, props.state, props.leafId, thisId)
 
-      ele.style({ 'background-color': getSettingColor(color) })
+      ele.style({ 'background-color': color })
     })
   }
 
@@ -223,7 +224,13 @@ export const ChatGraph: Component<{
   )
 }
 
-function getElements(tree: ChatTree, root: string, leafId: string, flags: FeatureFlags) {
+function getElements(
+  tree: ChatTree,
+  state: GraphState,
+  root: string,
+  leafId: string,
+  flags: FeatureFlags
+) {
   const elements: cyto.ElementDefinition[] = []
 
   const short = getShorthandTree(tree, root, flags)
@@ -244,12 +251,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
         data: { id: smsg._id, label: toLabel(smsg) },
         style: {
           shape: smsg._id === root ? 'star' : 'ellipse',
-          'background-color':
-            root === smsg._id || leafId === smsg._id
-              ? getSettingColor('green-500')
-              : !smsg.userId
-              ? getSettingColor('hl-500')
-              : getSettingColor('bg-500'),
+          'background-color': getNodeColor(tree, state, leafId, smsg._id),
         },
       })
     }
@@ -260,12 +262,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
         group: 'nodes',
         data: { id: emsg._id, label: toLabel(emsg) },
         style: {
-          'background-color':
-            leafId === emsg._id
-              ? getSettingColor('green-500')
-              : !emsg.userId
-              ? getSettingColor('hl-500')
-              : getSettingColor('bg-500'),
+          'background-color': getNodeColor(tree, state, leafId, emsg._id),
         },
       })
     }
@@ -283,7 +280,7 @@ function getElements(tree: ChatTree, root: string, leafId: string, flags: Featur
   return elements
 }
 
-function getAllElements(tree: ChatTree, leafId: string) {
+function getAllElements(tree: ChatTree, state: GraphState, leafId: string) {
   const elements: cyto.ElementDefinition[] = []
 
   for (const node of Object.values(tree)) {
@@ -291,8 +288,7 @@ function getAllElements(tree: ChatTree, leafId: string) {
       group: 'nodes',
       data: { id: node.msg._id, label: toLabel(node.msg) },
       style: {
-        'background-color':
-          leafId === node.msg._id ? getSettingColor('hl-500') : getSettingColor('bg-500'),
+        'background-color': getNodeColor(tree, state, leafId, node.msg._id),
       },
     })
   }
@@ -399,4 +395,13 @@ function toLabel(msg: AppSchema.ChatMessage) {
   const self = msg._id.slice(0, 4)
   return self
   return `${up} - ${duration} - ${self}`
+}
+
+function getNodeColor(tree: ChatTree, state: GraphState, leafId: string, nodeId: string) {
+  if (nodeId === state.clicked) return getSettingColor('red-500')
+  if (nodeId === leafId) return getSettingColor('green-500')
+  const node = tree[nodeId]?.msg
+
+  if (node?.userId) return getSettingColor('bg-500')
+  return getSettingColor('hl-500')
 }

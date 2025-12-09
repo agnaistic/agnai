@@ -10,6 +10,7 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   'schema-regen': 'Retry Schema',
   visible: 'Visibility',
   'gen-image': 'Gen Image',
+  'gen-json': 'Gen JSON',
 }
 
 export function toInlineList(opts: UI.UISettings['msgOptsInline']) {

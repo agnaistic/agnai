@@ -15,10 +15,10 @@ export const SCHEMA_VARS = {
 }
 
 export type StructureEntities = {
-  replyAs?: AppSchema.Character
-  char: AppSchema.Character
-  impersonate?: AppSchema.Character
-  sender?: AppSchema.Profile
+  replyAs?: Pick<AppSchema.Character, 'name'>
+  char: Pick<AppSchema.Character, 'name'>
+  impersonate?: Pick<AppSchema.Character, 'name'>
+  sender?: Pick<AppSchema.Profile, 'handle'>
 }
 
 /**
@@ -29,14 +29,17 @@ export function formatJsonSchemaVars(
   ents: StructureEntities
 ): ResponseSchema {
   if (!schema?.schema?.length) schema
-  const history = parseVariableName(schema.history, ents)
-  const response = parseVariableName(schema.response, ents)
+  const aliases = getSchemaAliases(schema.schema)
+  const history = parseVariableName(schema.history, ents, aliases)
+  const response = parseVariableName(schema.response, ents, aliases)
+  const imageCaption = parseVariableName(schema.imageCaption, ents, aliases)
   const fields = schema.schema.map((s) => ({ ...s }))
+
   for (const field of fields) {
-    field.name = parseVariableName(field.name, ents)
+    field.name = parseVariableName(field.name, ents, aliases)
   }
 
-  return { history, response, schema: fields, separateCall: schema.separateCall }
+  return { history, response, imageCaption, schema: fields, separateCall: schema.separateCall }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
@@ -74,9 +77,17 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   const base = {}
   // const base: any = {}
   const fields = json.reduce((prev: any, field: JsonField) => {
-    const {
+    let {
       type: { type, ...subtype },
     } = field
+
+    if ('maxLength' in subtype) {
+      subtype.maxLength = +(subtype.maxLength as any)
+    }
+
+    if (type === 'enum') {
+      type = 'string'
+    }
 
     const spec: any = { type, ...subtype }
     if (spec.maxLength !== undefined && spec.maxLength <= 0) {
@@ -204,11 +215,12 @@ export function prepareJsonSchema(
   const nextSchema: ResponseSchema = {
     response: parsed.response,
     history: parsed.history,
+    imageCaption: parsed.imageCaption,
     schema: fields,
     separateCall: def.separateCall,
   }
 
-  const hydrator = jsonHydrator(nextSchema)
+  const hydrator = jsonHydrator(nextSchema, aliases)
 
   return {
     names,
@@ -224,11 +236,16 @@ function getNames(entities: StructureEntities) {
   return { char, user }
 }
 
-export function parseVariableName(varname: string, opts: StructureEntities) {
+export function parseVariableName(
+  varname: string,
+  opts: StructureEntities,
+  aliases: Record<string, string>
+) {
+  const fieldName = aliases[varname] || varname
   const user = opts.impersonate?.name || opts.sender?.handle || 'You'
   const char = opts.replyAs?.name || opts.char?.name || 'Bot'
 
-  const parsed = formatPlaceholder(formatPlaceholder(varname, 'user', user), 'char', char)
+  const parsed = formatPlaceholder(formatPlaceholder(fieldName, 'user', user), 'char', char)
   return parsed
 }
 
@@ -253,4 +270,16 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
       return formatted
     }
   }
+}
+
+export function getSchemaAliases(fields: JsonField[]) {
+  const aliases: Record<string, string> = {}
+
+  for (const field of fields) {
+    if (field.alias) {
+      aliases[field.alias] = field.name
+    }
+  }
+
+  return aliases
 }

@@ -1,4 +1,15 @@
-import { JSX, Component, createMemo, createSignal, For, Show, createEffect, on } from 'solid-js'
+import {
+  JSX,
+  Component,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+  createEffect,
+  on,
+  Switch,
+  Match,
+} from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
 import Button from './Button'
@@ -23,6 +34,7 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
   children?: any
+  noneOption?: { label: string; value: string }
 }> = (props) => {
   const [filter, setFilter] = createSignal('')
   const [newPreset, setNewPreset] = createSignal(false)
@@ -34,16 +46,25 @@ export const PresetSelect: Component<{
       (o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase())
     )
 
+    if (props.noneOption) {
+      filtered.unshift({
+        ...props.noneOption,
+        custom: false,
+        provider: '',
+        name: props.noneOption.label,
+      })
+    }
+
     return filtered
   })
 
   const selectedLabel = createMemo(() => {
-    const opt = props.options.find((o) => o.value === props.selected)
+    const opt = custom().find((o) => (props.selected ? o.value === props.selected : o.value === ''))
     if (opt === undefined) return <strong>None</strong>
 
     return (
       <div class="flex flex-col">
-        <div class="text-500 text-xs">{opt.provider}</div>
+        <div class="text-600 text-xs">{opt.provider || 'Automatic'}</div>
         <div class="font-bold">{opt.name}</div>
       </div>
     )
@@ -66,12 +87,19 @@ export const PresetSelect: Component<{
   return (
     <>
       <div class="flex flex-col text-sm">
-        <Show
-          when={props.label && props.helperText}
-          fallback={<div class="text-lg">{props.label || ''}</div>}
-        >
-          <FormLabel label={props.label} helperText={props.helperText} />
-        </Show>
+        <Switch>
+          <Match when={props.label && props.helperText}>
+            <FormLabel label={props.label} helperText={props.helperText} />
+          </Match>
+
+          <Match when={props.label}>
+            <div class="font-bold">{props.label || ''}</div>
+          </Match>
+
+          <Match when={props.helperText}>
+            <div class="text-500 text-sm">{props.helperText || ''}</div>
+          </Match>
+        </Switch>
 
         <Show when={props.fieldName}>
           <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />

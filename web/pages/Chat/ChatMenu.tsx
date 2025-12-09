@@ -51,9 +51,9 @@ export const ChatMenu: Component<{
   }
 
   const adapterLabel = createMemo(() => {
-    if (!preset._id) return `None`
+    if (!preset.current._id) return `None`
 
-    const suffix = preset.name
+    const suffix = preset.current.name
 
     return suffix || 'Unnamed Preset'
   })
@@ -147,12 +147,12 @@ const ChatNav: Component<NavProps> = (props) => {
 
       <div class="flex flex-col gap-1">
         <PresetProvider
-          state={preset}
+          state={preset.current}
           setters={setters}
           page="menu"
           openSub={openProviders.on}
         ></PresetProvider>
-        <ThirdPartyModel state={preset} setters={setters} page="mode" />
+        <ThirdPartyModel state={preset.current} setters={setters} page="mode" />
       </div>
 
       <div class="flex flex-wrap justify-center gap-1 text-sm">

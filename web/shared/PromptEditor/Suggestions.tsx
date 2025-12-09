@@ -2,14 +2,19 @@ import { Component, Show, createMemo } from 'solid-js'
 import { AutoComplete } from '../AutoComplete'
 
 export const PromptSuggestions: Component<{
-  jsonValues: any
+  jsonValues: Record<string, string> | string[]
   onComplete: (opt: { label: string }) => void
   open: boolean
   close: () => void
 }> = (props) => {
   const options = createMemo(() => {
-    const keys = Object.keys(props.jsonValues)
+    if (!props.jsonValues) return []
 
+    if (Array.isArray(props.jsonValues)) {
+      return props.jsonValues.map((value) => ({ label: value, value }))
+    }
+
+    const keys = Object.keys(props.jsonValues)
     return keys.map((key) => ({ label: key, value: key }))
   })
 

@@ -1,4 +1,4 @@
-name: Deploy to STG (Web + API)
+name: Deploy to DEV (API Only)
 
 on: workflow_dispatch
 
@@ -17,20 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
-        with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
-
-      - name: Get cached dependencies
-        # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
-        id: cache-step
-        uses: actions/cache@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -41,30 +27,19 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
 
-      - name: Install project dependencies
-        if: steps.cache-step.outputs.cache-hit != 'true'
+      - name: Build
         run: |
-          ls -la
-          echo $NODE_ENV
-          pnpm install --frozen-lockfile
+          docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest --build-arg SHA=$GITHUB_SHA .
+          docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:staging ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
 
-      - name: Build frontend
-        env:
-          INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Publish
         run: |
-          pnpm run build:prod
-          cp dist/index.html dist/original.html
-          node .github/inject.js
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
 
-      - name: Update Backend
+      - name: Update Service
         run: |
           sh .github/deploy.sh ${{ secrets.SSH_SERVER }}
-
-      - name: Update Frontend
-        uses: shallwefootball/s3-upload-action@master
-        with:
-          aws_key_id: ${{ secrets.S3_ASSET_ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.S3_ASSET_SECRET_KEY }}
-          aws_bucket: ${{ secrets.S3_DEV_ASSET_BUCKET }}
-          source_dir: 'dist'
-          destination_dir: ''

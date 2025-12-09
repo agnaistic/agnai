@@ -11,12 +11,12 @@ import {
   promptStore,
   toastStore,
 } from '../../store'
-import { getAssetUrl } from '../../shared/util'
+import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
 import { useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
-import { cleanPrompt } from '/common/util'
+import { cleanPrompt, hydrateTemplate } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
@@ -27,6 +27,8 @@ import { downloadImage } from '../Character/util'
 import { debug } from '/common/debug'
 import { genApi } from '/web/store/data/inference'
 import { getImagePromptEntities } from '/web/store/data/common'
+import { usePresetContext } from '/web/store/preset-context'
+import { useAppContext } from '/web/store/context'
 
 const log = debug('image-modal')
 
@@ -98,7 +100,9 @@ const ImageUrlModal: Component<{
 }
 
 const ImageCollectionModal: Component<{}> = (props) => {
-  // const [ctx] = useImageContext()
+  const [context] = useAppContext()
+  const [presets] = usePresetContext()
+
   const reel = useImageCache()
   const store = imageStore((s) => {
     return {
@@ -129,6 +133,33 @@ const ImageCollectionModal: Component<{}> = (props) => {
 
     return 'Image: 0/0'
   })
+
+  const getSchemaPrompt = () => {
+    if (!store.src?.messageId) return ''
+
+    const msg = context.chatTree[store.src?.messageId]
+    if (!msg) return
+
+    const autoDefs = getJsonSchema({
+      characterId: msg.msg.characterId,
+      preset: presets.current,
+    })
+
+    if (!autoDefs?.schema) return ''
+
+    const reply = msg.msg.characterId
+      ? context.allBots[msg.msg.characterId]?.name
+      : msg.msg.name || ''
+
+    const rendered = hydrateTemplate(autoDefs.schema, msg.msg.json?.values, {
+      replyAs: { name: reply },
+      char: { name: context.char?.name || '' },
+      impersonate: { name: context.impersonate?.name || '' },
+      sender: context.profile,
+    })
+
+    return rendered.imageCaption || ''
+  }
 
   const attachImage = () => {
     const chatId = imageSettings().chatId
@@ -167,6 +198,13 @@ const ImageCollectionModal: Component<{}> = (props) => {
         }
         if (store.src?.type === 'message') {
           const msg = getGraphMessage(store.src.messageId)
+
+          if (!msg?.imagePrompt) {
+            const schemaPrompt = getSchemaPrompt()
+            update('prompt', schemaPrompt || '')
+            return
+          }
+
           update('prompt', msg?.imagePrompt || '')
           return
         }

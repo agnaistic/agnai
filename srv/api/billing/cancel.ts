@@ -10,6 +10,13 @@ export const cancelSubscription = handle(async ({ body, userId }) => {
   }
 
   const sub = await findValidSubscription(user)
+  if (sub instanceof Error) {
+    throw new StatusError(
+      `Error occurred while cancelling subscription: Contact support for a manual cancellation`,
+      500
+    )
+  }
+
   if (!sub) {
     throw new StatusError('Subscription already cancelled', 400)
   }

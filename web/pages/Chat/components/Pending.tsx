@@ -1,6 +1,6 @@
 import { Component, Show } from 'solid-js'
 import Message from './Message'
-import { PresetState } from '/web/store/preset-context'
+import { PresetContext } from '/web/store/preset-context'
 import { ContextState } from '/web/store/context'
 import { responseStore } from '/web/store'
 
@@ -10,7 +10,7 @@ export const PendingMessages: Component<{
   userId?: string
   handle: string
   isPaneOpen: boolean
-  preset: PresetState
+  preset: PresetContext
 }> = (props) => {
   const response = responseStore((s) => ({
     waiting: s.waiting,

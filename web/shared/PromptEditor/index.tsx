@@ -1,14 +1,13 @@
 import { Component, For, Show, createEffect, createMemo, createSignal, on, onMount } from 'solid-js'
 import { FormLabel } from '../FormLabel'
-import { AIAdapter } from '/common/adapters'
-import { toMap } from '../util'
+import { getJsonSchema, toMap } from '../util'
 import { useEffect } from '../hooks'
 import { HelpCircle } from 'lucide-solid'
 import { Card, Pill } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { ensureValidTemplate, buildPromptPlaceholders } from '/common/prompt'
+import { buildPromptPlaceholders } from '/common/prompt'
 import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
@@ -22,7 +21,6 @@ import { PresetFuncs, PresetState } from '/web/store/preset-context'
 
 const PromptEditor: Component<
   {
-    service?: AIAdapter
     fieldName?: string
     state?: PresetState
     disabled?: boolean
@@ -53,6 +51,19 @@ const PromptEditor: Component<
   const [preview, setPreview] = createSignal(false)
   const [rendered, setRendered] = createSignal('')
 
+  const currentPrompt = createMemo(() => {
+    if (!props.state?.promptTemplateId) {
+      return props.value
+    }
+
+    const template = presets.templates.find((t) => props.state?.promptTemplateId)
+    if (template) {
+      return template.template
+    }
+
+    return props.value
+  })
+
   const openTemplate = () => {
     setTemplates(true)
     setTemplate(ref.value)
@@ -73,9 +84,24 @@ const PromptEditor: Component<
     return template?.name || ''
   })
 
+  const suggestions = createMemo(() => {
+    if (!props.state) return []
+
+    const schema = getJsonSchema({ preset: props.state })
+    if (!schema?.schema) return []
+
+    const names = schema.schema.schema.reduce((prev, curr) => {
+      prev.push(curr.name)
+      if (curr.alias) prev.push(curr.alias)
+      return prev
+    }, [] as string[])
+
+    return names
+  })
+
   const togglePreview = async () => {
     const opts = await getExampleOpts(props.state)
-    const template = props.noDummyPreview ? props.value : ensureValidTemplate(props.value)
+    const template = currentPrompt()
     let { parsed } = await parseTemplate(template, opts)
 
     if (props.state?.modelFormat) {
@@ -234,7 +260,7 @@ const PromptEditor: Component<
         onComplete={(opt) => onPromptAutoComplete(ref, opt)}
         open={autoOpen()}
         close={() => setAutoOpen(false)}
-        jsonValues={{ example: '', 'example with spaces': '', response: '' }}
+        jsonValues={suggestions()}
       />
       <textarea
         class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl border border-[var(--bg-600)] px-4 py-2 font-mono !text-xs"
@@ -270,7 +296,7 @@ const PromptEditor: Component<
           }}
           currentTemplateId={props.state?.promptTemplateId}
           currentTemplate={template()}
-          presetId={props.state?._id}
+          preset={props.state}
         />
       </Show>
     </div>

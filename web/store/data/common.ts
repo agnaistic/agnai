@@ -1,36 +1,18 @@
 import { createMemo } from 'solid-js'
-import { isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { toastStore } from '../toasts'
-import { loadItem } from './storage'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { AppSchema } from '/common/types'
 import { deepClone, trimSentence } from '/common/util'
 import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
-import { ChatMessageExt, MsgState } from '../message'
+import { ChatMessageExt } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
 import { simplifyPreset } from '/common/prompt'
 
-export type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
-
-export type PromptEntities = {
-  chat: AppSchema.Chat
-  char: AppSchema.Character
-  user: AppSchema.User
-  profile: AppSchema.Profile
-  book?: AppSchema.MemoryBook
-  messages: AppSchema.ChatMessage[]
-  settings: Partial<AppSchema.GenSettings>
-  members: AppSchema.Profile[]
-  chatBots: AppSchema.Character[]
-  autoReplyAs?: string
-  characters: Record<string, AppSchema.Character>
-  impersonating?: AppSchema.Character
+export type PromptEntities = NonNullable<Awaited<ReturnType<typeof getAuthedPromptEntities>>> & {
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
-  scenarios?: AppSchema.ScenarioBook[]
-  attachments?: MsgState['attachments']
   props: Record<string, string>
 }
 
@@ -62,7 +44,7 @@ export async function getImagePromptEntities(messageId?: string) {
   switch (source) {
     case 'settings': {
       summary = entities.user.images?.summaryPrompt || ''
-      presetId = entities.user.images?.summaryPresetId || ''
+      presetId = entities.user.summaryPreset || entities.user.images?.summaryPresetId || ''
       break
     }
 
@@ -96,7 +78,7 @@ export async function getPromptEntities(opts?: { messageId?: string }): Promise<
     hint: promptState.hintsEnabled ? promptState.hint : '',
   }
 
-  const entities = isLoggedIn() ? getAuthedPromptEntities() : await getGuestEntities()
+  const entities = getAuthedPromptEntities() //isLoggedIn() ?  : await getGuestEntities()
 
   if (!entities) throw new Error(`Could not collate data for prompting`)
 
@@ -146,57 +128,57 @@ export function replaceUniversalTags(prompt: string, format?: ModelFormat) {
   return replaceTags(prompt, format)
 }
 
-async function getGuestEntities() {
-  const { details, lastChatId } = getStore('chat').getState()
-  const active = details[lastChatId]
+// async function getGuestEntities() {
+//   const { details, lastChatId } = getStore('chat').getState()
+//   const active = details[lastChatId]
 
-  if (!active) return
-  const { msgs, messageHistory, attachments } = getStore('messages').getState()
+//   if (!active) return
+//   const { msgs, messageHistory, attachments } = getStore('messages').getState()
 
-  const chat = active.chat
-  const char = active.char
+//   const chat = active.chat
+//   const char = active.char
 
-  if (!chat || !char) return
+//   if (!chat || !char) return
 
-  const book = chat?.memoryId
-    ? await loadItem('memory').then((res) => res.find((mem) => mem._id === chat.memoryId))
-    : undefined
+//   const book = chat?.memoryId
+//     ? await loadItem('memory').then((res) => res.find((mem) => mem._id === chat.memoryId))
+//     : undefined
 
-  const allScenarios = await loadItem('scenario')
-  const profile = await loadItem('profile')
-  const user = await loadItem('config')
-  const settings = await getGuestPreset(user, chat)
-  const scenarios = allScenarios?.filter(
-    (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
-  )
+//   const allScenarios = await loadItem('scenario')
+//   const profile = await loadItem('profile')
+//   const user = await loadItem('config')
+//   const settings = await getGuestPreset(user, chat)
+//   const scenarios = allScenarios?.filter(
+//     (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
+//   )
 
-  const { impersonating, chatChars } = getStore('character').getState()
+//   const { impersonating, chatChars } = getStore('character').getState()
 
-  const characters = getBotsForChat(chat, char, chatChars.map)
-  const conn = getPresetConnection(settings, user.providers)
-  const messages = trimMessages(user, messageHistory.concat(msgs))
+//   const characters = getBotsForChat(chat, char, chatChars.map)
+//   const conn = getPresetConnection(settings, user.providers)
+//   const messages = trimMessages(user, messageHistory.concat(msgs))
 
-  const sub = getPresetSubscription(conn.preset)
-  const simple = simplifyPreset(user, conn.preset, sub?.preset)
+//   const sub = getPresetSubscription(conn.preset)
+//   const simple = simplifyPreset(user, conn.preset, sub?.preset)
 
-  return {
-    chat,
-    char,
-    user,
-    profile,
-    book,
-    messages,
-    settings: simple,
-    members: [profile] as AppSchema.Profile[],
-    chatBots: chatChars.list,
-    autoReplyAs: active.replyAs,
-    characters,
-    impersonating,
-    scenarios,
-    attachments: getChatAttachments(chat._id, messages, attachments),
-    conn,
-  }
-}
+//   return {
+//     chat,
+//     char,
+//     user,
+//     profile,
+//     book,
+//     messages,
+//     settings: simple,
+//     members: [profile] as AppSchema.Profile[],
+//     chatBots: chatChars.list,
+//     autoReplyAs: active.replyAs,
+//     characters,
+//     impersonating,
+//     scenarios,
+//     attachments: getChatAttachments(chat._id, messages, attachments),
+//     conn,
+//   }
+// }
 
 function trimMessages(user: AppSchema.User, messages: ChatMessageExt[]) {
   if (!user.ui?.trimSentences) return messages
@@ -236,8 +218,8 @@ function getAuthedPromptEntities() {
     .books.list.find((book) => book._id === chat.memoryId)
 
   const { msgs, messageHistory, attachments } = getStore('messages').getState()
-  const settings = getActivePreset(chat, user)!
-  const conn = getPresetConnection(settings, user.providers)
+  const presets = getActivePreset(chat, user)!
+  const conn = getPresetConnection(presets.current, user.providers)
   const scenarios = getStore('scenario')
     .getState()
     .scenarios.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
@@ -266,6 +248,12 @@ function getAuthedPromptEntities() {
     scenarios,
     attachments: getChatAttachments(chat._id, messages, attachments),
     conn,
+    presets: {
+      current: presets.current,
+      json: presets.json,
+      summary: presets.summary,
+      chargen: presets.chargen,
+    },
   }
 }
 
@@ -302,10 +290,7 @@ export function useActivePreset() {
   return preset
 }
 
-export function getActivePreset(
-  chat?: AppSchema.Chat,
-  user?: AppSchema.User
-): Partial<AppSchema.GenSettings> | undefined {
+export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (!chat) {
     const { details, lastChatId } = getStore('chat').getState()
     chat = details[lastChatId]?.chat
@@ -329,9 +314,13 @@ export function getActivePreset(
     preset.gaslight = template?.template || preset.gaslight
   }
 
+  const json = user.jsonPreset ? presets.find((p) => p._id === user.jsonPreset) : undefined
+  const summary = user.summaryPreset ? presets.find((p) => p._id === user.summaryPreset) : undefined
+  const chargen = user.chargenPreset ? presets.find((p) => p._id === user.chargenPreset) : undefined
+
   applySubscriptionAdjustment(preset)
 
-  return preset
+  return { current: preset, json, summary, chargen }
 }
 
 function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
@@ -349,12 +338,12 @@ function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
   }
 }
 
-async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
-  // The server does not store presets for users
-  // Override the `genSettings` property with the locally stored preset data if found
-  const presets = await loadItem('presets')
-  return getChatPreset(chat, user, presets)
-}
+// async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
+//   // The server does not store presets for users
+//   // Override the `genSettings` property with the locally stored preset data if found
+//   const presets = await loadItem('presets')
+//   return getChatPreset(chat, user, presets)
+// }
 
 function getLastUserMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
