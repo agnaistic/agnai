@@ -635,5 +635,15 @@ subscribe(
 )
 
 events.on(EVENTS.setWaiting, (next) => {
+  if (next === undefined) {
+    responseStore.setState({
+      waiting: next,
+      retrying: undefined,
+      partial: undefined,
+      partialId: undefined,
+    })
+    return
+  }
+
   responseStore.setState({ waiting: next })
 })

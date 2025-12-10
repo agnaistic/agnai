@@ -50,7 +50,7 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
       const ancestor = tree[msg.parent]
 
       if (ancestor) {
-        log(base)
+        // log(base)
         ancestor.children[msg._id] = true
       } else {
         log('%s: ancestor not found', base)

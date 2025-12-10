@@ -257,7 +257,7 @@ export interface GenSettings {
   imageSettings?: BaseImageSettings
 
   json?: ResponseSchema
-  jsonEnabled?: boolean
+  jsonEnabled?: boolean | 'off' | 'standard' | 'separate'
   jsonSource?: 'preset' | 'character' | 'json-preset'
 
   temporary?: Record<string, any>

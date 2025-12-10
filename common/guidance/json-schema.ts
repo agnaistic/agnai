@@ -39,7 +39,7 @@ export function formatJsonSchemaVars(
     field.name = parseVariableName(field.name, ents, aliases)
   }
 
-  return { history, response, imageCaption, schema: fields, separateCall: schema.separateCall }
+  return { history, response, imageCaption, schema: fields }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
@@ -199,14 +199,14 @@ export function getResponseVariable(entities: StructureEntities) {
 export function prepareJsonSchema(
   def: Ensure<AppSchema.Character['json']>,
   entities: StructureEntities,
-  forceSeparate?: boolean
+  includeResponse?: boolean
 ) {
   const names = getNames(entities)
   const aliases: Record<string, string> = {}
   const parsed = formatJsonSchemaVars(def, entities)
   const fields = parsed.schema.slice()
 
-  if (!def.separateCall && !forceSeparate) {
+  if (!includeResponse) {
     const responseVar = getResponseVariable(entities)
     fields.unshift({ type: { type: 'string', maxLength: 0 }, name: responseVar, disabled: false })
     aliases[responseVar] = 'response'
@@ -217,7 +217,6 @@ export function prepareJsonSchema(
     history: parsed.history,
     imageCaption: parsed.imageCaption,
     schema: fields,
-    separateCall: def.separateCall,
   }
 
   const hydrator = jsonHydrator(nextSchema, entities, aliases)

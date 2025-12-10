@@ -16,7 +16,6 @@ import FileInput, { getFileAsString } from '/web/shared/FileInput'
 import { assertValid } from '/common/valid'
 import { useAppContext } from '/web/store/context'
 import { createStore } from 'solid-js/store'
-import { Toggle } from '/web/shared/Toggle'
 import { usePresetContext } from '/web/store/preset-context'
 import { AppSchema } from '/common/types'
 import { Option } from '/web/shared/Select'
@@ -57,7 +56,6 @@ const exampleSchema: ResponseSchema = {
   response: '{{response}}',
   imageCaption: ``,
   schema: [],
-  separateCall: false,
 }
 
 export const CharacterSchema: Component<{
@@ -83,7 +81,6 @@ export const CharacterSchema: Component<{
     history: '',
     imageCaption: '',
     schema: [] as JsonField[],
-    separateCall: false,
   })
 
   const vars = createMemo(() => {
@@ -318,7 +315,6 @@ export const CharacterSchema: Component<{
         response: store.response,
         imageCaption: store.imageCaption,
         schema: store.schema,
-        separateCall: store.separateCall,
       }
 
       props.update(update)
@@ -473,19 +469,6 @@ export const CharacterSchema: Component<{
                 class="font-mono text-xs"
                 onChange={(ev) => setStore('response', ev.currentTarget.value)}
               />
-
-              <Toggle
-                label={<b>Perform Separate Call</b>}
-                value={store.separateCall}
-                onChange={(ev) => setStore('separateCall', ev)}
-                helperText={
-                  <>
-                    When enabled: Perform the JSON output generation in a separate call
-                    <br />
-                    <b>WARNING</b> This will incur additional costs with third-party models.
-                  </>
-                }
-              />
             </Card>
 
             <Card class="relative">
@@ -635,7 +618,6 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
         history: json.history,
         imageCaption: json.imageCaption || '',
         schema,
-        separateCall: json.separateCall ?? false,
       })
     } catch (ex: any) {
       toastStore.error(`Invalid JSON Schema: ${ex.message}`)

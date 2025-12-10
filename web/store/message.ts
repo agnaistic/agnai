@@ -692,12 +692,7 @@ async function onMessageReceived(body: {
   } else {
     msgStore.setState({ msgs: nextMsgs })
     debug('waiting')('msg-received:not-user-msg or no-generate')
-    getStore('responses').setState({
-      speaking: speech?.speaking,
-      partial: undefined,
-      waiting: undefined,
-      retrying: undefined,
-    })
+    getStore('responses').setState({ speaking: speech?.speaking })
   }
 
   const chatAttachments = attachments[body.chatId]

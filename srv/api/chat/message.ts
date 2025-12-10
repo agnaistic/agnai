@@ -218,7 +218,8 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const schemaSrc = ents.preset.jsonSource === 'character' ? replyAs.json : ents.preset.json
-  const schema = ents.preset.jsonEnabled ? prepareJsonSchema(schemaSrc, body) : undefined
+  const jsonEnabled = ents.preset.jsonEnabled === true || ents.preset.jsonEnabled === 'standard'
+  const schema = jsonEnabled ? prepareJsonSchema(schemaSrc, body) : undefined
 
   let hydration: JsonOutput | undefined
   let jsonPartial: any

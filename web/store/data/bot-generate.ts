@@ -185,7 +185,9 @@ async function streamResponse(opts: StreamOpts) {
   localEmit({ type: 'service-prompt', id: messageId, prompt: JSON.stringify(messages, null, 2) })
 
   const jsonSchema =
-    opts.kind === 'chat-query' || !req.schema?.separateCall ? req.schema?.schema : undefined
+    opts.kind === 'chat-query' || req.entities.settings.jsonEnabled === 'standard'
+      ? req.schema?.schema
+      : undefined
 
   await genApi.inferenceStream(
     {
@@ -199,34 +201,41 @@ async function streamResponse(opts: StreamOpts) {
       chatId: req.request.chat._id,
     },
     async (response, state, json) => {
-      await handleStreamTick({ opts, req, lazy, meta, active, sanitize }, { response, state, json })
+      await handleStreamTick(
+        { opts, req, lazy, meta, active, sanitize, jsonCall: !!jsonSchema },
+        { response, state, json }
+      )
     }
   )
 
   /** In development: Performing JSON output in a separate call if specified by the schema */
-  if (window.flags.debug) {
-    if (opts.kind !== 'chat-query' && req.schema?.separateCall) {
-      await genApi.inferenceStream(
-        {
-          settings: req.entities.presets.json || req.request.settings,
-          jsonSchema: req.schema.schema,
-          messages: messages,
-          prompt: assembled.prompt,
-          payload,
-          signal: opts.signal,
-          stop: stops,
-          chatId: req.request.chat._id,
-        },
-        async (response, state, json) => {
-          await handleSecondaryStreamTick(
-            { opts, req, lazy, meta, active, sanitize, jsonCall: true },
-            { response, state, json }
-          )
-        }
-      )
-    }
+
+  if (
+    opts.kind !== 'chat-query' &&
+    req.entities.settings.jsonEnabled === 'separate' &&
+    req.schema
+  ) {
+    await genApi.inferenceStream(
+      {
+        settings: req.entities.presets.json || req.request.settings,
+        jsonSchema: req.schema.schema,
+        messages: messages,
+        prompt: assembled.prompt,
+        payload,
+        signal: opts.signal,
+        stop: stops,
+        chatId: req.request.chat._id,
+      },
+      async (response, state, json) => {
+        await handleSecondaryStreamTick(
+          { opts, req, lazy, meta, active, sanitize, jsonCall: true },
+          { response, state, json }
+        )
+      }
+    )
   }
 
+  waiting(undefined)
   return lazy.promise
 }
 
@@ -253,7 +262,7 @@ async function handleStreamTick(
     case 'error':
       input.lazy.reject(tick.response)
       toastStore.error(tick.response)
-      waiting(undefined)
+      // waiting(undefined)
       break
 
     case 'meta':
@@ -272,7 +281,7 @@ async function handleStreamTick(
     case 'partial': {
       const trimmed = sanitize(prefix + tick.response)
       if (req.request.settings?.streamResponse) {
-        const hydrated = req.schema?.hydrator?.(trimmed)
+        const hydrated = input.jsonCall ? req.schema?.hydrator?.(trimmed) : undefined
 
         if (hydrated) {
           tick.json = hydrated
@@ -293,12 +302,13 @@ async function handleStreamTick(
 
     case 'done': {
       const trimmed = sanitize(prefix + tick.response)
-      const hydrated = req.schema?.hydrator?.(trimmed)
+      const hydrated = input.jsonCall ? req.schema?.hydrator?.(trimmed) : undefined
 
       if (hydrated) {
         tick.json = hydrated
         console.log(inline(tick.json))
       }
+
       await handlePostStreamResponse({
         opts,
         req,
@@ -307,7 +317,7 @@ async function handleStreamTick(
         json: tick.json,
         jsonCall: input.jsonCall,
       })
-      waiting(undefined)
+
       break
     }
   }
@@ -340,6 +350,7 @@ async function handleSecondaryStreamTick(
   switch (tick.state) {
     case 'error':
       toastStore.warn(`JSON response failed: ${tick.response}`)
+      // waiting(undefined)
       break
 
     case 'meta':
@@ -351,25 +362,24 @@ async function handleSecondaryStreamTick(
     }
 
     case 'partial': {
-      const trimmed = sanitize(prefix + tick.response)
-      const hydrated = req.schema?.hydrator?.(trimmed)
+      // const trimmed = sanitize(prefix + tick.response)
+      // const hydrated = req.schema?.hydrator?.(trimmed)
 
-      if (hydrated) {
-        console.log(hydrated)
-      }
-
+      // if (hydrated) {
+      //   console.log(hydrated)
+      // }
       break
     }
 
     case 'done': {
       const trimmed = sanitize(prefix + tick.response)
-      const hydrated = req.schema?.hydrator?.(trimmed)
+      const hydrated = input.jsonCall ? req.schema?.hydrator?.(trimmed) : undefined
 
       if (!hydrated) break
 
       tick.json = hydrated
       console.log(inline(tick.json))
-
+      // waiting(undefined)
       await msgsApi.editMessageProps({ _id: messageId, chatId }, { json: tick.json })
 
       break
@@ -475,7 +485,6 @@ async function handlePostStreamResponse(input: {
   })
 
   getStore('responses').setState({
-    waiting: undefined,
     retrying: undefined,
     partial: undefined,
     partialId: undefined,
@@ -641,7 +650,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
 
   const realDefs: ResponseSchema | undefined =
     opts.kind === 'chat-query' && opts.schema?.length
-      ? { schema: opts.schema, history: '', response: '', imageCaption: '', separateCall: true }
+      ? { schema: opts.schema, history: '', response: '', imageCaption: '' }
       : presetDefs?.schema
 
   debug('request')(
@@ -650,12 +659,17 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
     (!!presetDefs?.schema).toString()
   )
 
-  const schemaEnabled = opts.kind === 'chat-query' || entities.settings.jsonEnabled
+  const jsonEnabled =
+    entities.settings.jsonEnabled === true ||
+    entities.settings.jsonEnabled === 'standard' ||
+    entities.settings.jsonEnabled === 'separate'
+  const schemaEnabled = opts.kind === 'chat-query' || jsonEnabled
+  const includeResponse =
+    opts.kind !== 'chat-query' &&
+    (entities.settings.jsonEnabled === 'standard' || entities.settings.jsonEnabled === true)
 
   const schema =
-    realDefs && schemaEnabled
-      ? prepareJsonSchema(realDefs, entities, opts.kind === 'chat-query')
-      : undefined
+    realDefs && schemaEnabled ? prepareJsonSchema(realDefs, entities, includeResponse) : undefined
 
   const prompt = await createPromptParts(
     {
