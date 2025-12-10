@@ -7,8 +7,8 @@ import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
-import { HydratedJson, parsePartialJson } from '/common/util'
-import { resolveScenario } from '/common/prompt'
+import { parsePartialJson } from '/common/util'
+import { JsonOutput, resolveScenario } from '/common/prompt'
 import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
 import { Response } from 'express'
@@ -220,7 +220,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   const schemaSrc = ents.preset.jsonSource === 'character' ? replyAs.json : ents.preset.json
   const schema = ents.preset.jsonEnabled ? prepareJsonSchema(schemaSrc, body) : undefined
 
-  let hydration: HydratedJson | undefined
+  let hydration: JsonOutput | undefined
   let jsonPartial: any
 
   let generated = body.response || ''
@@ -486,7 +486,7 @@ function newMessage(
     event: undefined | AppSchema.ScenarioEventType
     retries?: string[]
     parent?: string
-    json?: HydratedJson
+    json?: JsonOutput
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {

@@ -347,6 +347,7 @@ export namespace AppSchema {
     json?: {
       response: string
       history: string
+      imageCaption: string
       values: any
     }
 

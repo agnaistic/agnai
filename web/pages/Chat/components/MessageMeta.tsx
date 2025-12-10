@@ -19,6 +19,7 @@ import { cleanPrompt } from '/common/util'
 import { AppSchema } from '/common/types'
 import { SquareArrowOutUpRight, WandSparkles } from 'lucide-solid'
 import { RelativeSpinner } from '/web/shared/Loading'
+import { getMessageImagePrompt } from '/web/shared/hooks'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
@@ -50,6 +51,16 @@ export const MessageMeta: Component = () => {
     const list = entries.map(([field, value]) => ({ field, value: value as string }))
     return list
   })
+
+  createEffect(
+    on(
+      () => state.msg,
+      (msg) => {
+        if (!msg || !window.flags.debug) return
+        console.log(JSON.stringify(msg, null, 2))
+      }
+    )
+  )
 
   return (
     <Modal show={!!state.msg} close={close} title="Message Info" maxWidth="half">
@@ -176,8 +187,11 @@ export const MessageImagePrompt: Component<{
     on(
       () => props.msg.imagePrompt,
       (next) => {
-        if (!next?.trim()) return
-        receivePrompt(next)
+        const imagePrompt = getMessageImagePrompt(props.msg._id)
+        if (imagePrompt?.trim()) {
+          receivePrompt(imagePrompt)
+          return
+        }
       }
     )
   )

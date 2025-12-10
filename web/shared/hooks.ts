@@ -14,17 +14,47 @@ import { useLocation, useParams, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
-import { getAssetUrl, storage } from './util'
+import { getAssetUrl, getJsonSchema, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
-import { clamp, inline, tryParse } from '/common/util'
+import { clamp, hydrateTemplate, inline, tryParse } from '/common/util'
 import { debug } from '/common/debug'
+import { getActivePreset } from '../store/data/common'
+import { getAppContext } from '../store/context'
 
 const PANE_BREAKPOINT = 1280
 
 export function getPlatform() {
   return window.innerWidth >= 1280 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+}
+
+export function getMessageImagePrompt(messageId: string) {
+  const { graph } = getStore('messages').getState()
+
+  const msg = graph.tree[messageId]
+
+  if (!msg) return ''
+
+  if (msg.msg.imagePrompt) return msg.msg.imagePrompt
+
+  if (msg.msg.json?.imageCaption) {
+    return msg.msg.json.imageCaption
+  }
+
+  if (!msg.msg.json?.values) return ''
+
+  const presets = getActivePreset()
+  const schema = getJsonSchema({ characterId: msg.msg.characterId, preset: presets.current })
+
+  if (!schema?.schema?.imageCaption) return ''
+  const context = getAppContext()
+  const rendered = hydrateTemplate(schema.schema, msg.msg.json.values, {
+    char: context.char?.name || '',
+    sender: context.handle,
+  })
+
+  return rendered.imageCaption || ''
 }
 
 export function usePresetOptions() {

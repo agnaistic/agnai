@@ -25,6 +25,7 @@ import { HordeCheck } from '/common/horde-gen'
 import type { MsgAttachment } from '/srv/adapter/type'
 import { debug } from '/common/debug'
 import { responseStore } from './response'
+import { getMessageImagePrompt } from '../shared/hooks'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -501,7 +502,8 @@ export const msgStore = createStore<MsgState>(
       if (imgWaiting) return
 
       const messageId = opts.sourceMsgId || msgs.slice(-1)[0]._id
-      const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
+      const messageImagePromt =
+        messageId && !opts.prompt ? getMessageImagePrompt(messageId) : undefined
 
       yield {
         hordeStatus: undefined,
@@ -518,7 +520,7 @@ export const msgStore = createStore<MsgState>(
         {
           messageId,
           chatId: activeChatId,
-          prompt: opts.prompt || prev?.imagePrompt,
+          prompt: opts.prompt || messageImagePromt,
           append: opts.append,
           source: 'summary',
         },

@@ -677,13 +677,14 @@ const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
 export function hydrateTemplate(
   def: Ensure<AppSchema.Character['json']>,
   json: any,
-  opts: StructureEntities
+  opts: StructureEntities,
+  aliases?: Record<string, string>
 ) {
   const map = new Map<string, string>()
-  const aliases = getSchemaAliases(def.schema)
+  const allAliases = { ...aliases, ...getSchemaAliases(def.schema) }
 
   for (const field of def.schema) {
-    const parsed = parseVariableName(field.name, opts, aliases)
+    const parsed = parseVariableName(field.name, opts, allAliases)
     map.set(parsed.toLowerCase().replace(SAFE_NAME, ' '), field.name)
   }
 
@@ -711,9 +712,10 @@ export function hydrateTemplate(
   if (resVars) {
     for (const holder of resVars) {
       const trimmed = holder.slice(2, -2)
-      const parsed = parseVariableName(trimmed, opts, aliases)
+      const parsed = parseVariableName(trimmed, opts, allAliases)
       const safe = parsed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[parsed]
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
       response = response.split(holder).join(value ?? '')
     }
@@ -722,9 +724,10 @@ export function hydrateTemplate(
   if (histVars) {
     for (const holder of histVars) {
       const trimmed = holder.slice(2, -2)
-      const parsed = parseVariableName(trimmed, opts, aliases)
+      const parsed = parseVariableName(trimmed, opts, allAliases)
       const safe = parsed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[parsed]
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
       history = history.split(holder).join(value ?? '')
     }
@@ -733,9 +736,10 @@ export function hydrateTemplate(
   if (captionVars) {
     for (const holder of captionVars) {
       const trimmed = holder.slice(2, -2)
-      const parsed = parseVariableName(trimmed, opts, aliases)
+      const parsed = parseVariableName(trimmed, opts, allAliases)
       const safe = parsed.replace(SAFE_NAME, ' ')
-      const value = output[safe] ?? output[parsed]
+      const value =
+        output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
       imageCaption = imageCaption.split(holder).join(value ?? '')
     }
@@ -744,79 +748,23 @@ export function hydrateTemplate(
   return { values: output, response, history, imageCaption }
 }
 
-export type HydratedJson = {
-  values: any
-  response: string
-  history: string
-}
-
 export const JSON_NAME_RE = () => /{{[a-zA-Z0-9 _'!@#$&*%()^=+-:;",\.<>?\/\[\]]+}}/g
 
 export function jsonHydrator(
   def: Ensure<AppSchema.Character['json']>,
+  opts: StructureEntities,
   aliases?: Record<string, string>
 ) {
-  const allAliases = { ...aliases, ...getSchemaAliases(def.schema) }
   const map = new Map<string, string>()
-  const resVars = (def.response || '').match(JSON_NAME_RE())
-  const histVars = (def.history || '').match(JSON_NAME_RE())
-  const captionVars = (def.imageCaption || '').match(JSON_NAME_RE())
 
   for (const key in def.schema) {
     map.set(key.toLowerCase().replace(SAFE_NAME, ' '), key)
   }
 
   const hydrate = (incoming: any) => {
-    const json = typeof incoming === 'string' ? parsePartialJson(incoming, allAliases) : incoming
-
-    const output: any = {}
-
-    for (const [key, value] of Object.entries(json)) {
-      const safe = key.replace(SAFE_NAME, ' ')
-      const alias = map.get(safe)
-
-      if (alias) {
-        output[alias] = value
-      } else {
-        output[key] = value
-      }
-    }
-
-    let response = def.response || ''
-    let history = def.history || ''
-    let imageCaption = def.imageCaption || ''
-
-    if (resVars) {
-      for (const holder of resVars) {
-        const trimmed = holder.slice(2, -2)
-        const safe = trimmed.replace(SAFE_NAME, ' ')
-        const value = output[safe] ?? output[trimmed]
-
-        response = response.split(holder).join(value ?? '')
-      }
-    }
-
-    if (histVars) {
-      for (const holder of histVars) {
-        const trimmed = holder.slice(2, -2)
-        const safe = trimmed.replace(SAFE_NAME, ' ')
-        const value = output[safe] ?? output[trimmed]
-
-        history = history.split(holder).join(value ?? '')
-      }
-    }
-
-    if (captionVars) {
-      for (const holder of captionVars) {
-        const trimmed = holder.slice(2, -2)
-        const safe = trimmed.replace(SAFE_NAME, ' ')
-        const value = output[safe] ?? output[trimmed]
-
-        imageCaption = imageCaption.split(holder).join(value ?? '')
-      }
-    }
-
-    return { values: output, response, history, imageCaption }
+    const json = typeof incoming === 'string' ? parsePartialJson(incoming, aliases) : incoming
+    const hydrated = hydrateTemplate(def, json, opts, aliases)
+    return hydrated
   }
 
   return hydrate

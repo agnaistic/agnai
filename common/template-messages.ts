@@ -113,7 +113,17 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     messages.push({ role, content: `${postContent}${prefill}` })
   }
 
-  return { messages, assembled }
+  if (req.settings?.skipRoleMerging) {
+    return { messages, assembled }
+  }
+
+  return {
+    messages: ensureMessagesAlternate(messages),
+    assembled: {
+      ...assembled,
+      blocks: ensureMessagesAlternate(assembled.blocks),
+    },
+  }
 }
 
 function getAttachments(req: Pick<GenerateRequestV2, 'attachments'>, id: string | undefined) {

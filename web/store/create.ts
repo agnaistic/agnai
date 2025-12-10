@@ -174,8 +174,17 @@ export function createStore<State extends {}>(
       return solid as T
     }
 
-    type PatchedStore = typeof useStore & Wrapped & typeof store
+    const mapState = <T>(mapFn: (state: State) => T) => {
+      const current = store.getState()
+      const mapped = mapFn(current)
+      return mapped
+    }
+
+    type PatchedStore = typeof useStore & Wrapped & typeof store & { mapState: typeof mapState }
     const patchedStore = useStore as PatchedStore
+
+    patchedStore.mapState = mapState
+
     Object.assign(patchedStore, store)
 
     for (const key of Object.keys(wrapped) as Array<keyof Handler>) {

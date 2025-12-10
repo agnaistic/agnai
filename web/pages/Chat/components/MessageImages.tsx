@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, For, on, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, on, Show } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { getAssetUrl, storage } from '/web/shared/util'
 import { getMessageImages, msgStore } from '/web/store/message'
@@ -23,6 +23,11 @@ export const MessageImages: Component<{
   const [images, setImages] = createSignal<MessageImage[]>([])
   const [showPrompt, setShowPrompt] = createSignal(false)
   const [override, setOverride] = createSignal('')
+
+  const canShow = createMemo(() => {
+    const show = images().length > 0 || !!props.msg.imagePrompt || !!props.msg.json?.imageCaption
+    return show
+  })
 
   createEffect(
     on(
@@ -63,7 +68,7 @@ export const MessageImages: Component<{
         </MessageImagePrompt>
       </Show>
 
-      <div class="flex flex-wrap gap-2" classList={{ hidden: images().length === 0 }}>
+      <div class="flex flex-wrap gap-2" classList={{ hidden: !canShow() }}>
         <For each={images()}>
           {(img, pos) => (
             <img
@@ -86,32 +91,30 @@ export const MessageImages: Component<{
           />
         </Show>
 
-        <Show when={images().length || !!props.msg.imagePrompt}>
-          <div class="ml-2 flex items-center gap-3">
-            <div
-              class="icon-button"
-              onClick={() =>
-                msgStore.createImage({
-                  prompt: override().trim() || props.msg.imagePrompt,
-                  sourceMsgId: props.msg._id,
-                  append: true,
-                })
-              }
-            >
-              <PlusCircle size={16} />
-            </div>
-
-            <div
-              class="icon-button"
-              onClick={() => {
-                setShowPrompt(true)
-                // props.onEditClick()
-              }}
-            >
-              <Pencil size={16} />
-            </div>
+        <div class="ml-2 flex items-center gap-3">
+          <div
+            class="icon-button"
+            onClick={() =>
+              msgStore.createImage({
+                prompt: override().trim(),
+                sourceMsgId: props.msg._id,
+                append: true,
+              })
+            }
+          >
+            <PlusCircle size={16} />
           </div>
-        </Show>
+
+          <div
+            class="icon-button"
+            onClick={() => {
+              setShowPrompt(true)
+              // props.onEditClick()
+            }}
+          >
+            <Pencil size={16} />
+          </div>
+        </div>
       </div>
     </>
   )

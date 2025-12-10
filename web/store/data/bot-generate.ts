@@ -276,7 +276,6 @@ async function handleStreamTick(
 
         if (hydrated) {
           tick.json = hydrated
-          console.log(inline(tick.json.values))
         }
 
         if (opts.kind === 'chat-query') break

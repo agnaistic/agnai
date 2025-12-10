@@ -15,10 +15,10 @@ export const SCHEMA_VARS = {
 }
 
 export type StructureEntities = {
-  replyAs?: Pick<AppSchema.Character, 'name'>
-  char: Pick<AppSchema.Character, 'name'>
-  impersonate?: Pick<AppSchema.Character, 'name'>
-  sender?: Pick<AppSchema.Profile, 'handle'>
+  replyAs?: Pick<AppSchema.Character, 'name'> | string
+  char: Pick<AppSchema.Character, 'name'> | string
+  impersonate?: Pick<AppSchema.Character, 'name'> | string
+  sender?: Pick<AppSchema.Profile, 'handle'> | string
 }
 
 /**
@@ -220,7 +220,7 @@ export function prepareJsonSchema(
     separateCall: def.separateCall,
   }
 
-  const hydrator = jsonHydrator(nextSchema, aliases)
+  const hydrator = jsonHydrator(nextSchema, entities, aliases)
 
   return {
     names,
@@ -231,8 +231,8 @@ export function prepareJsonSchema(
 }
 
 function getNames(entities: StructureEntities) {
-  const char = entities.replyAs?.name || entities.char?.name || 'Bot'
-  const user = entities.impersonate?.name || entities.sender?.handle || 'You'
+  const char = readName(entities.replyAs, entities.char, 'Bot')
+  const user = readName(entities.impersonate, entities.sender, 'You')
   return { char, user }
 }
 
@@ -242,8 +242,8 @@ export function parseVariableName(
   aliases: Record<string, string>
 ) {
   const fieldName = aliases[varname] || varname
-  const user = opts.impersonate?.name || opts.sender?.handle || 'You'
-  const char = opts.replyAs?.name || opts.char?.name || 'Bot'
+  const user = readName(opts.impersonate, opts.sender, 'You')
+  const char = readName(opts.replyAs, opts.char, 'Bot')
 
   const parsed = formatPlaceholder(formatPlaceholder(fieldName, 'user', user), 'char', char)
   return parsed
@@ -282,4 +282,15 @@ export function getSchemaAliases(fields: JsonField[]) {
   }
 
   return aliases
+}
+
+function readName(...ents: Array<{ name: string } | { handle: string } | string | undefined>) {
+  for (const ent of ents) {
+    if (!ent) continue
+    if (typeof ent === 'string') return ent
+    if ('name' in ent === true) return ent.name
+    return ent.handle
+  }
+
+  return ''
 }

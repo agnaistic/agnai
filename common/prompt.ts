@@ -14,7 +14,7 @@ import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 import { extractReasoning } from './reasoning'
 
-export type JsonOutput = { values: any; response: string; history: string }
+export type JsonOutput = { values: any; response: string; history: string; imageCaption: string }
 export type TickHandler<T = JsonOutput> = (
   response: string,
   state: InferenceState,

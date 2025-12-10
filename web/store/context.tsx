@@ -8,7 +8,7 @@ import { userStore } from './user'
 import { toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
-import { distinct } from '/common/util'
+import { combine, distinct } from '/common/util'
 import { getRgbaFromVar } from '../shared/colors'
 import { MsgState, msgStore } from './message'
 import { ChatTree } from '/common/chat'
@@ -245,4 +245,93 @@ export function useAppContext() {
   const [state, setState] = useContext(AppContext)
 
   return [state, { setState }] as const
+}
+
+export function getAppContext() {
+  const chars = characterStore.mapState((s) => ({
+    chatChars: s.chatChars,
+    characters: s.characters,
+    impersonating: s.impersonating,
+  }))
+  const chats = chatStore.mapState((s) => ({
+    active: s.details[s.lastChatId || ''],
+    allChats: s.allChats,
+    lastChatId: s.lastChatId,
+    chatProfiles: s.chatProfiles,
+    promptHistory: s.promptHistory,
+  }))
+  const users = userStore.mapState((s) => ({
+    current: s.current,
+    ui: s.ui,
+    profile: s.profile,
+    user: s.user,
+  }))
+  const cfg = settingStore.mapState((s) => ({
+    anonymize: s.anonymize,
+    config: s.config,
+    inited: !!s.init,
+  }))
+  const msgs = msgStore.mapState((s) => ({
+    graph: s.graph,
+    imgWaiting: s.imgWaiting,
+    hordeStatus: s.hordeStatus,
+    attachments: s.attachments,
+    deleting: s.deleting,
+  }))
+
+  const chat =
+    chats.active?.chat ||
+    chats.allChats.find((c) => (chats.lastChatId ? c._id === chats.lastChatId : undefined))
+
+  const char = chats.active?.char
+    ? chats.active.char
+    : chat?.characterId
+    ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
+    : undefined
+
+  const next = {
+    appReady: cfg.inited,
+    anonymize: cfg.anonymize,
+    config: cfg.config,
+    tempMap: chats.active?.chat.tempCharacters || {},
+
+    allBots: toAllBots(
+      chars.chatChars.list,
+      chars.characters.list,
+      chats.active.chat.tempCharacters
+    ),
+
+    // activeMap: toMap(activeBots()),
+    // activeBots: activeBots(),
+
+    active: chats.active,
+
+    msgDeleting: msgs.deleting,
+    impersonate: chars.impersonating,
+    char: char,
+    chat: chat,
+    replyAs: chats.active?.replyAs,
+    user: users.user,
+    profile: users.profile,
+    chatProfiles: chats.chatProfiles,
+    handle: chars.impersonating?.name || users.profile?.handle || 'You',
+    chatTree: msgs.graph.tree,
+    // attachments: msgs.attachments,
+    // canUseAttachments: canAttachImage(detail?.conn, subModel()),
+  }
+
+  return next
+}
+
+function toAllBots(
+  chatChars: AppSchema.Character[],
+  allChars: AppSchema.Character[],
+  tempChars: Record<string, AppSchema.Character> | undefined
+) {
+  const temps = Object.values(tempChars || {})
+
+  const all = combine(allChars, chatChars.concat(temps))
+  const map = toMap(all)
+
+  return map
 }
