@@ -292,7 +292,7 @@ const PromptEditor: Component<
           show={templates()}
           close={() => setTemplates(false)}
           select={(id, template) => {
-            props.onChange({ templateId: id, prompt: props.value })
+            props.onChange({ templateId: id, prompt: template })
           }}
           currentTemplateId={props.state?.promptTemplateId}
           currentTemplate={template()}

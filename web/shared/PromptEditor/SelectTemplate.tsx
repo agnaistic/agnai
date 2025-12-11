@@ -1,6 +1,6 @@
 import { Component, Match, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import { RootModal } from '../Modal'
-import { HelpCircle, RefreshCcw } from 'lucide-solid'
+import { HelpCircle, Plus, RefreshCcw } from 'lucide-solid'
 import Button from '../Button'
 import { templates } from '../../../common/presets/templates'
 import Select from '../Select'
@@ -29,10 +29,11 @@ export const SelectTemplate: Component<{
   let ref: HTMLTextAreaElement
   const state = presetStore((s) => ({ templates: s.templates }))
 
-  const [opt, setOpt] = createSignal(props.currentTemplateId || 'Alpaca')
-  const [templateName, setName] = createSignal(props.currentTemplate || 'Alpaca')
+  const [templateId, setTemplateId] = createSignal(props.currentTemplateId || 'Universal')
+  const [templateName, setName] = createSignal(props.currentTemplate || 'Universal')
   const [template, setTemplate] = createSignal(templates.Universal)
   const [builtin, setBuiltin] = createSignal(templates.Universal)
+
   const [filter, setFilter] = createSignal('')
   const [autoOpen, setAutoOpen] = createSignal(false)
   const [help, showHelp] = createSignal(false)
@@ -86,7 +87,7 @@ export const SelectTemplate: Component<{
   })
 
   const canSaveTemplate = createMemo(() => {
-    if (opt() in templates === true) return false
+    if (templateId() in templates === true) return false
     return true
   })
 
@@ -100,7 +101,7 @@ export const SelectTemplate: Component<{
 
       if (!match) return opts.length
 
-      setOpt(id)
+      setTemplateId(id)
       const existing = state.templates.find((t) => t._id === id)
       setName(existing?.name || '')
       setTemplate(existing?.template || props.currentTemplate || match.template)
@@ -118,6 +119,12 @@ export const SelectTemplate: Component<{
     return all
   })
 
+  const newTemplate = () => {
+    setTemplateId('Universal')
+    setName('New Template')
+    setTemplate(templates.Universal)
+  }
+
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
@@ -127,7 +134,7 @@ export const SelectTemplate: Component<{
         <Match when={canSaveTemplate() && !!props.preset?._id}>
           <Button
             onClick={() => {
-              const id = opt()
+              const id = templateId()
               const orig = state.templates.find((t) => t._id === id)
               const update = template()
               if (!orig) {
@@ -136,7 +143,7 @@ export const SelectTemplate: Component<{
               }
 
               presetStore.updateTemplate(
-                opt(),
+                templateId(),
                 { name: templateName(), template: update, presetId: props.preset?._id },
                 () => {
                   toastStore.success('Prompt template updated')
@@ -153,7 +160,7 @@ export const SelectTemplate: Component<{
         <Match when={canSaveTemplate() && !props.preset?._id}>
           <Button
             onClick={() => {
-              const id = opt()
+              const id = templateId()
               const orig = state.templates.find((t) => t._id === id)
               const update = template()
               if (!orig) {
@@ -161,18 +168,22 @@ export const SelectTemplate: Component<{
                 return
               }
 
-              presetStore.updateTemplate(opt(), { name: templateName(), template: update }, () => {
-                toastStore.success('Prompt template updated')
-                props.select(id, update)
-                props.close()
-              })
+              presetStore.updateTemplate(
+                templateId(),
+                { name: templateName(), template: update },
+                () => {
+                  toastStore.success('Prompt template updated')
+                  props.select(id, update)
+                  props.close()
+                }
+              )
             }}
           >
             Save and Use
           </Button>
         </Match>
 
-        <Match when={template() !== builtin()}>
+        <Match when={templateId() in templates && template() !== builtin()}>
           <Button
             schema="primary"
             onClick={() => {
@@ -190,7 +201,7 @@ export const SelectTemplate: Component<{
           <Button
             schema="primary"
             onClick={() => {
-              props.select(opt(), template())
+              props.select(templateId(), template())
               props.close()
             }}
           >
@@ -229,27 +240,34 @@ export const SelectTemplate: Component<{
               <RefreshCcw onClick={() => presetStore.getTemplates()} />
             </Button>
           </div>
-          <div class="h-min-[6rem]">
+          <div class="h-min-[6rem] flex gap-2">
             <Select
               fieldName="templateId"
-              items={options().filter((opt) => opt.label.toLowerCase().includes(filter()))}
-              value={opt()}
+              items={options().filter((opt) =>
+                opt.label.toLowerCase().includes(filter().toLowerCase())
+              )}
+              value={templateId()}
               onChange={(ev) => {
-                setOpt(ev.value)
+                setTemplateId(ev.value)
 
-                const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
-                const name = ev.label.startsWith('(Built-in)')
-                  ? matches.length > 0
-                    ? `Custom ${opt()} #${matches.length + 1}`
-                    : `Custom ${opt()}`
-                  : templateOpts()[ev.value].name
-                if (ev.label.startsWith('(Built-in)')) {
-                }
+                const matches = state.templates.filter((t) =>
+                  t.name.startsWith(`Custom ${ev.value}`)
+                )
+
+                const name =
+                  ev.value in templates
+                    ? matches.length > 0
+                      ? `Custom ${templateId()} #${matches.length + 1}`
+                      : `Custom ${templateId()}`
+                    : templateOpts()[ev.value].name
 
                 setName(name)
                 setTemplate(templateOpts()[ev.value].template)
               }}
             />
+            <Button size="sm" minHeight={36} onClick={newTemplate}>
+              New <Plus />
+            </Button>
           </div>
           <PromptSuggestions
             onComplete={(opt) => onPromptAutoComplete(ref, opt)}

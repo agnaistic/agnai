@@ -89,7 +89,7 @@ async function saveSession(session: Saga.Session) {
 async function createSession(templateId: string) {
   const session: Saga.Session = {
     _id: v4(),
-    format: 'Alpaca',
+    format: 'None',
     userId: '',
     templateId,
     overrides: {},

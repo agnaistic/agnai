@@ -50,7 +50,8 @@ export const PresetProvider: Component<{
       .filter((v) => !!v)
       .join('/')
 
-    if (props.state.service !== 'agnaistic') {
+    const containsLegacy = list.some((l) => l.value === '')
+    if (props.state.service !== 'agnaistic' && !containsLegacy) {
       list.push({ label: 'Legacy: ' + label, value: '' })
     }
 

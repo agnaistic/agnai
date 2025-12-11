@@ -204,9 +204,9 @@ export function prepareJsonSchema(
   const names = getNames(entities)
   const aliases: Record<string, string> = {}
   const parsed = formatJsonSchemaVars(def, entities)
-  const fields = parsed.schema.slice()
+  const fields = parsed.schema.slice().filter((f) => !f.disabled)
 
-  if (!includeResponse) {
+  if (includeResponse) {
     const responseVar = getResponseVariable(entities)
     fields.unshift({ type: { type: 'string', maxLength: 0 }, name: responseVar, disabled: false })
     aliases[responseVar] = 'response'

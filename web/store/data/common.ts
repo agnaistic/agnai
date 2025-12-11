@@ -250,7 +250,7 @@ function getAuthedPromptEntities() {
     conn,
     presets: {
       current: presets.current,
-      json: presets.json,
+      json: presets.json || presets.current,
       summary: presets.summary,
       chargen: presets.chargen,
     },

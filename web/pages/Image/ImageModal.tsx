@@ -441,8 +441,8 @@ const PromptSettings: Component<{
         </Show>
 
         <TextInput
-          parentClass="w-full !h-[80px]"
-          class="!h-[80px] !max-h-[80px] !py-1 !text-sm"
+          parentClass="w-full sm:h-[200px] h-[80px]"
+          class="h-[80px] max-h-[80px] !py-1 !text-sm sm:h-[200px] sm:max-h-[200px]"
           prelabel="Prompt"
           value={props.state.prompt}
           onChange={(ev) => props.update('prompt', ev.currentTarget.value)}

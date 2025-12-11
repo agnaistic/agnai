@@ -386,6 +386,15 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         msgStore.createImage({})
       }
+
+      if (ev.key === 'j' || ev.key === 'KeyJ') {
+        ev.preventDefault()
+        const messageId = chatMsgs().slice(-1)[0]?._id
+
+        if (messageId) {
+          responseStore.chatQuery({ question: '', messageId })
+        }
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)

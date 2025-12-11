@@ -380,8 +380,13 @@ async function handleSecondaryStreamTick(
       tick.json = hydrated
       console.log(inline(tick.json))
       // waiting(undefined)
-      await msgsApi.editMessageProps({ _id: messageId, chatId }, { json: tick.json })
 
+      const update: Partial<AppSchema.ChatMessage> = { json: tick.json }
+      if (hydrated.imageCaption) {
+        update.imagePrompt = hydrated.imageCaption
+      }
+
+      await msgsApi.editMessageProps({ _id: messageId, chatId }, update)
       break
     }
   }
@@ -445,7 +450,12 @@ async function handlePostStreamResponse(input: {
     case 'chat-query': {
       if (!opts.messageId || !input.json) return
 
-      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, { json: input.json })
+      const update: Partial<AppSchema.ChatMessage> = { json: input.json }
+      if (input.json.imageCaption) {
+        update.imagePrompt = input.json.imageCaption
+      }
+
+      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, update)
       return
     }
 
@@ -626,7 +636,10 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
 
   const props = await getGenerateProps(opts, active)
   const entities = props.entities
-  const template = getTemplate({ settings: entities.settings, chat: entities.chat })
+  const template = getTemplate({
+    settings: opts.kind === 'chat-query' ? entities.presets.json : entities.settings,
+    chat: entities.chat,
+  })
 
   const resolvedScenario = resolveScenario(entities.chat, entities.char, entities.scenarios || [])
 
@@ -669,7 +682,17 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
     (entities.settings.jsonEnabled === 'standard' || entities.settings.jsonEnabled === true)
 
   const schema =
-    realDefs && schemaEnabled ? prepareJsonSchema(realDefs, entities, includeResponse) : undefined
+    realDefs && schemaEnabled
+      ? prepareJsonSchema(
+          realDefs,
+          {
+            char: props.replyAs.name,
+            impersonate: props.impersonate?.name,
+            sender: entities.profile.handle,
+          },
+          includeResponse
+        )
+      : undefined
 
   const prompt = await createPromptParts(
     {

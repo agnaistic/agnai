@@ -135,14 +135,11 @@ function onMessage(msg: MessageEvent<any>) {
         }
 
         default: {
-          const image = payload.image || ''
           console.log(
             now,
-            JSON.stringify({
-              ...payload,
-              image: image.startsWith('http') ? image : `${image.slice(0, 60)}'...'`,
-            })
+            JSON.stringify(truncate(redact(payload, ['image', 'retries']), ['message']))
           )
+          break
         }
       }
     } else {
@@ -202,3 +199,25 @@ subscribe('connected', { uid: 'string' }, (body) => {
 subscribe('ping', {}, () => {
   publish({ type: 'pong' })
 })
+
+function redact(obj: any, keys: string[]) {
+  const next = { ...obj }
+
+  for (const key of keys) {
+    if (key in next === false) continue
+    next[key] = '...'
+  }
+
+  return next
+}
+
+function truncate(obj: any, keys: string[]) {
+  const next = { ...obj }
+
+  for (const key of keys) {
+    if (typeof next[key] !== 'string') continue
+    next[key] = next[key].slice(0, 20) + '...'
+  }
+
+  return next
+}

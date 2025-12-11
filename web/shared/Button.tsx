@@ -33,6 +33,7 @@ const Button: Component<{
   schema?: ButtonSchema
   type?: 'submit' | 'reset' | 'button'
   size?: 'sm' | 'md' | 'lg' | 'pill'
+  minHeight?: number
   disabled?: boolean
   class?: string
   alignLeft?: boolean
@@ -56,6 +57,7 @@ const Button: Component<{
         'text-lg': props.size === 'lg',
         'justify-center': !props.alignLeft,
       }}
+      style={{ 'min-height': props.minHeight ? `${props.minHeight}px` : '' }}
       disabled={props.disabled}
       onClick={(ev) => {
         // ev.preventDefault()

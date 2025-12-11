@@ -691,8 +691,8 @@ export function hydrateTemplate(
   const output: any = {}
 
   for (const [key, value] of Object.entries(json)) {
-    const safe = key.replace(SAFE_NAME, ' ')
-    const alias = map.get(safe)
+    // const safe = key.replace(SAFE_NAME, ' ')
+    const alias = map.get(key)
 
     if (alias) {
       output[alias] = value
@@ -713,7 +713,7 @@ export function hydrateTemplate(
     for (const holder of resVars) {
       const trimmed = holder.slice(2, -2)
       const parsed = parseVariableName(trimmed, opts, allAliases)
-      const safe = parsed.replace(SAFE_NAME, ' ')
+      const safe = parsed //.replace(SAFE_NAME, ' ')
       const value =
         output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
@@ -725,7 +725,7 @@ export function hydrateTemplate(
     for (const holder of histVars) {
       const trimmed = holder.slice(2, -2)
       const parsed = parseVariableName(trimmed, opts, allAliases)
-      const safe = parsed.replace(SAFE_NAME, ' ')
+      const safe = parsed //.replace(SAFE_NAME, ' ')
       const value =
         output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
@@ -737,7 +737,7 @@ export function hydrateTemplate(
     for (const holder of captionVars) {
       const trimmed = holder.slice(2, -2)
       const parsed = parseVariableName(trimmed, opts, allAliases)
-      const safe = parsed.replace(SAFE_NAME, ' ')
+      const safe = parsed //.replace(SAFE_NAME, ' ')
       const value =
         output[safe] ?? output[parsed] ?? output[trimmed] ?? json[trimmed] ?? json[parsed]
 
