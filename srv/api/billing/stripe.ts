@@ -127,44 +127,27 @@ export async function resyncSubscription(user: AppSchema.User) {
 }
 
 export async function findValidSubscription(user: AppSchema.User) {
-  const subs: Stripe.Subscription[] = []
-  const toCheck: Stripe.Subscription[] = []
-
-  const customer = user.billing?.customerId
-    ? ((await stripe.customers.retrieve(user.billing.customerId, {
-        expand: ['subscriptions'],
-      })) as Stripe.Customer)
-    : null
-
-  if (customer?.subscriptions?.data?.length) {
-    subs.push(...customer.subscriptions.data)
+  const customerIds = new Set<string>()
+  if (user.billing?.customerId) {
+    customerIds.add(user.billing.customerId)
   }
 
   const sessionIds = (user.stripeSessions || []).slice().reverse()
-
-  let errored = false
-
   for (const sessionId of sessionIds) {
     const agg = await domain.billing.getAggregate(sessionId)
+
+    // Likelyu failed to complete, skip it
     if (!agg.session?.subscription) continue
-
-    const subId = agg.session?.subscription as string
-    const exists = subs.some((d) => d.id === subId)
-    if (exists) continue
-
-    const sub = await stripe.subscriptions.retrieve(subId)
-    toCheck.push(sub)
-  }
-
-  for (const sub of toCheck) {
-    if (sub.status !== 'active') {
-      continue
+    if (agg.session.customer) {
+      customerIds.add(agg.session.customer as string)
     }
 
-    if (isActive(sub.current_period_end)) {
-      subs.push(sub)
-    }
+    continue
   }
+
+  const subs = await getActiveCustomerSubscriptions(Array.from(customerIds.values()))
+
+  let errored = false
 
   if (!subs.length && !errored) return
   if (!subs.length && errored) {
@@ -234,4 +217,24 @@ export function isActive(until: Date | number | string, hours = 2) {
   const now = Date.now() - ONE_HOUR_MS * hours
 
   return now < valid.valueOf()
+}
+
+async function getActiveCustomerSubscriptions(customerIds: string[]) {
+  const subs: Stripe.Subscription[] = []
+
+  for (const customerId of customerIds) {
+    const customer = await stripe.customers.retrieve(customerId, {
+      expand: ['subscriptions'],
+    })
+
+    if (customer.deleted) continue
+    if (!customer?.subscriptions?.data?.length) continue
+
+    for (const sub of customer.subscriptions.data) {
+      if (sub.status !== 'active') continue
+      subs.push(sub)
+    }
+  }
+
+  return subs
 }
