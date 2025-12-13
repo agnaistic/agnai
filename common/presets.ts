@@ -2,7 +2,7 @@ import { AppSchema } from './types/schema'
 import { AIAdapter, AI_ADAPTERS, ChatAdapter, THIRDPARTY_FORMATS } from './adapters'
 import { defaultPresets, presetDefaults } from './default-preset'
 import { deepClone } from './util'
-import { SamplerState } from './types/presets'
+import { Sampler, SamplerState } from './types/presets'
 
 export { defaultPresets }
 
