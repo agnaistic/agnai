@@ -327,12 +327,8 @@ export async function* fetchStream(
               return
             }
           } else {
-            const reasoning = getChoiceProp(json, 'reasoning') || getChoiceProp(json, 'thought')
-            const token: string =
-              getChoiceProp(json, 'content') ||
-              getChoiceProp(json, 'text') ||
-              json.token ||
-              json.response
+            const reasoning = getNextThoughts(json) || json.reasoning_content
+            const token: string = getNextTokens(json) || json.token || json.response
 
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 
@@ -401,7 +397,7 @@ export async function* fetchStream(
               yield { token: suffix + token }
             }
 
-            if (DEBUG) {
+            if (DEBUG || true) {
               const choice = json.choices?.[0]
               if (choice) console.log(`#${type} `, inline(choice))
               else console.log(`#${type} `, inline(json))
@@ -519,6 +515,53 @@ function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   }
 
   return value as T
+}
+
+function getNextTokens(json: any) {
+  const props = ['content', 'text']
+
+  const choice = json?.choices?.[0]
+  let value: any = undefined
+
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
+
+    value = match
+    break
+  }
+
+  return value
+}
+
+function getNextThoughts(json: any) {
+  const props = ['reasoning', 'thought', 'reasoning_content']
+  const choice = json?.choices?.[0]
+
+  let value: any = undefined
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
+
+    value = match
+    break
+  }
+
+  if (!value) return
+
+  if (typeof value === 'string') return value
+
+  // Mistral returns thoughts in an array for some reason string
+  if (Array.isArray(value)) {
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
+  }
+
+  return
 }
 
 function tryParse(value: any) {

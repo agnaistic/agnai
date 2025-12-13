@@ -85,6 +85,20 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
       { type: 'format', value: 'openai' },
     ],
   },
+  zai: {
+    name: 'Z.ai',
+    url: `https://api.z.ai/api/paas/v4`,
+    formats: [
+      {
+        type: 'format',
+        value: 'openai-chatv2',
+        subs: [
+          { name: 'Standard', value: '' },
+          { name: 'Reasoning', value: 'reasoning' },
+        ],
+      },
+    ],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {

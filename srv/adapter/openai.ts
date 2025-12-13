@@ -104,14 +104,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   // }
 
   if (gen.reasoning?.enabled) {
-    body.reasoning = {
-      exclude: !!gen.reasoning.exclude,
-    }
-
-    if (gen.reasoning.effort === 'custom') {
-      body.reasoning.max_tokens = gen.reasoning.maxTokens
+    if (opts.conn.provider?.provider === 'known-zai') {
+      body.thinking = { type: 'enabled' }
     } else {
-      body.reasoning.effort = gen.reasoning.effort || 'low'
+      body.reasoning = {
+        exclude: !!gen.reasoning.exclude,
+      }
+
+      if (gen.reasoning.effort === 'custom') {
+        body.reasoning.max_tokens = gen.reasoning.maxTokens
+      } else {
+        body.reasoning.effort = gen.reasoning.effort || 'low'
+      }
     }
   }
 
