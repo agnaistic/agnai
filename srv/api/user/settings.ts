@@ -334,6 +334,7 @@ export const saveProvider = handle(async ({ userId, body }) => {
         provider: 'string',
         url: 'string',
         key: 'string',
+        subFormat: 'string?',
         format: optional({
           type: ['service', 'format'],
           name: 'string?',

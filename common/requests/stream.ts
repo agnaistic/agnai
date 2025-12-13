@@ -205,7 +205,7 @@ export async function* fetchStream(
       if (done) {
         if (buffer.trim().length > 0) {
           yield { warn: 'End of request contained incomplete data' }
-          opts?.log?.warn({ buffer }, '[fetch] incomplete buffer')
+          opts?.log?.warn({ buffer: buffer?.slice(0, 500) }, '[fetch] incomplete buffer')
 
           // End of reader processing, if we have an error and we get here, we need to respond with a fallback error message
           if (flags.errored) {
@@ -235,9 +235,7 @@ export async function* fetchStream(
       let chunk = decoder.decode(value)
 
       if (DEBUG) {
-        console.log(
-          `[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk, buffer }, null, 2)}`
-        )
+        console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk: chunk }, null, 2)}`)
       }
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
@@ -498,7 +496,23 @@ function processError(json: any) {
 
 function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
   const choice = json?.choices?.[0]
-  const value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+  let value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+
+  const isThought = prop === 'reasoning' || prop === 'thought'
+  const isToken = prop === 'content' || prop === 'text'
+
+  // Mistral returns arrays as in their deltas for some bizarre reason
+  if (Array.isArray(value)) {
+    if (!isThought) return
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
+  }
+
+  if (typeof value !== 'string' && (isToken || isThought)) return
 
   if (assign && value) {
     assign[prop] = value

@@ -47,6 +47,7 @@ export const ManageProvider: Component<{
   const [url, setUrl] = createSignal(props.provider?.url || '')
   const [key, setKey] = createSignal('')
   const [format, setFormat] = createSignal('')
+  const [subFormat, setSubFormat] = createSignal('')
   const [autourl, setAutourl] = createSignal(false)
 
   const state = presetStore((s) => ({ testLoading: s.testLoading }))
@@ -100,6 +101,7 @@ export const ManageProvider: Component<{
         if (!props.show) return
         setTested(undefined)
         setProvider(props.provider?.provider || '')
+        setSubFormat(props.provider?.subFormat || '')
         setUrl(props.provider?.url || '')
         setName(props.provider?.name || '')
         setKey('')
@@ -116,6 +118,7 @@ export const ManageProvider: Component<{
           if (fmt.type !== props.provider.format.type) continue
           if (fmt.value !== props.provider.format.value) continue
           setFormat(`${idx}`)
+          setSubFormat(props.provider.subFormat || fmt?.subs?.[0]?.value || '')
           break
         }
       }
@@ -139,6 +142,7 @@ export const ManageProvider: Component<{
       provider: provider(),
       url: url(),
       disableAutoUrl: autourl(),
+      subFormat: subFormat(),
     }
 
     if (fmt >= 0 && def.detail?.formats) {
@@ -169,6 +173,7 @@ export const ManageProvider: Component<{
       setUrl(detail.detail?.url?.trim())
     }
 
+    setSubFormat(detail.detail?.formats?.[0]?.subs?.[0]?.value || '')
     setFormat('0')
   }
 
@@ -217,6 +222,26 @@ export const ManageProvider: Component<{
         ? ADAPTER_LABELS[format.value]
         : FORMAT_LABEL[format.value]
       return { label, value: `${index}` }
+    })
+  })
+
+  const subFormatOptions = createMemo(() => {
+    const prv = provider()
+    const detail = getSafeProviderDetail(prv)
+    const formats = detail?.detail?.formats
+    if (!formats) return []
+
+    const formatId = format()
+    const selected = format() ? formats[+formatId] : undefined
+    if (!selected) return []
+
+    const list = selected?.subs
+    if (!list) {
+      return []
+    }
+
+    return list.map((format) => {
+      return { label: format.name, value: format.value }
     })
   })
 
@@ -326,13 +351,23 @@ export const ManageProvider: Component<{
           />
         </Show>
 
-        <Select
-          items={formatOptions()}
-          helperText={'Request Format'}
-          value={format()}
-          onChange={(ev) => onFormatChange(ev.value)}
-          hide={formatOptions().length <= 1}
-        />
+        <div class="flex gap-2">
+          <Select
+            items={formatOptions()}
+            helperText={'Request Format'}
+            value={format()}
+            onChange={(ev) => onFormatChange(ev.value)}
+            hide={formatOptions().length <= 1}
+          />
+
+          <Select
+            items={subFormatOptions()}
+            value={subFormat()}
+            hide={subFormatOptions().length === 0}
+            helperText="‎"
+            onChange={(ev) => setSubFormat(ev.value)}
+          />
+        </div>
 
         <CustomProviderContent
           setKey={setKey}

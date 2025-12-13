@@ -15,7 +15,14 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     name: 'OpenRouter',
     url: 'https://openrouter.ai/api/v1',
     formats: [
-      { type: 'service', value: 'openrouter' },
+      {
+        type: 'service',
+        value: 'openrouter',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'mistral', name: 'Mistral' },
+        ],
+      },
       { type: 'service', value: 'openrouter-completion' },
     ],
   },
@@ -32,12 +39,23 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
   openai: {
     name: 'OpenAI',
     url: 'https://api.openai.com/v1',
-    formats: [{ type: 'service', value: 'openai' }],
+    formats: [
+      {
+        type: 'service',
+        value: 'openai',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'Reasoning' },
+        ],
+      },
+    ],
   },
   mistral: {
     name: 'Mistral',
     url: 'https://api.mistral.ai/v1',
-    formats: [{ type: 'format', value: 'openai-chatv2' }],
+    formats: [
+      { type: 'format', value: 'openai-chatv2', subs: [{ value: 'mistral', name: 'Mistral' }] },
+    ],
   },
   deepseek: {
     name: 'DeepSeek',
@@ -97,8 +115,22 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
   'openai-chatv2': {
     name: 'OpenAI Compatible',
     formats: [
-      { type: 'format', value: 'openai-chatv2' },
-      { type: 'format', value: 'openai-chat' },
+      {
+        type: 'format',
+        value: 'openai-chatv2',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'GPT-5/Reasoning' },
+        ],
+      },
+      {
+        type: 'format',
+        value: 'openai-chat',
+        subs: [
+          { value: '', name: 'Standard' },
+          { value: 'reasoning', name: 'GPT-5/Reasoning' },
+        ],
+      },
       { type: 'format', value: 'openai' },
     ],
   },
@@ -117,7 +149,7 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
       {
         type: 'format',
         name: 'LM Studio',
-        value: 'openai-chatv2',
+        value: 'lm-studio',
       },
       { type: 'format', value: 'ooba' },
       { type: 'format', name: 'Other (Generic OpenAI)', value: 'openai-chatv2' },
@@ -126,8 +158,16 @@ export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
 }
 
 export type ProviderFormat =
-  | { type: 'service'; name?: string; value: AIAdapter; url?: string }
-  | { type: 'format'; name?: string; value: ThirdPartyFormat; url?: string }
+  | { type: 'service'; name?: string; value: AIAdapter; url?: string; subs?: ProviderSubFormat[] }
+  | {
+      type: 'format'
+      name?: string
+      value: ThirdPartyFormat
+      url?: string
+      subs?: ProviderSubFormat[]
+    }
+
+export type ProviderSubFormat = { value: string; name: string }
 
 export type ProviderDefinition = {
   name: string
@@ -267,7 +307,7 @@ export function getSafeProviderDetail(provider: string) {
       return { category, type, detail: KNOWN_SELF_HOST[type] }
 
     case 'agnai':
-      return { category, type: category, defail: undefined }
+      return { category, type: category, detail: undefined }
   }
 }
 

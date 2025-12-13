@@ -69,7 +69,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
       req.hasAttachments = true
       messages.push({
         role: `${role}`,
-        content: [{ type: 'text', content: text, text }, ...attachments],
+        content: [{ type: 'text', text }, ...attachments],
+        // content: [{ type: 'text', content: text, text }, ...attachments],
       })
     } else {
       messages.push({ role, content: text })
@@ -88,7 +89,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     req.hasAttachments = true
     const msg = messages[lastUserIndex]
     if (!Array.isArray(msg.content)) {
-      msg.content = [{ type: 'text', content: `${msg.content}`, text: msg.content }]
+      // msg.content = [{ type: 'text', content: `${msg.content}`, text: msg.content }]
+      msg.content = [{ type: 'text', text: msg.content }]
     }
 
     for (const image of unused) {
@@ -117,11 +119,13 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
     return { messages, assembled }
   }
 
+  const mergedMsgs = ensureMessagesAlternate(messages)
+  const mergedBlocks = ensureMessagesAlternate(assembled.blocks)
   return {
-    messages: ensureMessagesAlternate(messages),
+    messages: mergedMsgs,
     assembled: {
       ...assembled,
-      blocks: ensureMessagesAlternate(assembled.blocks),
+      blocks: mergedBlocks,
     },
   }
 }
@@ -238,7 +242,8 @@ function joinMessages(head: OutgoingMsg, tail: OutgoingMsg) {
 
   return {
     role: second.role,
-    content: [{ type: 'text', text, content: text }, ...first.attachments, ...second.attachments],
+    // content: [{ type: 'text', text, content: text }, ...first.attachments, ...second.attachments],
+    content: [{ type: 'text', text }, ...first.attachments, ...second.attachments],
   }
 }
 
@@ -317,7 +322,7 @@ export function ensureMessagesAlternate(
 
   const processed: CompletionItem[] = merges.map((merge) => {
     const first = merge[0]
-    return { role: first.role, content: mergeCompletionItems(merge) }
+    return { role: first.role, content: mergeCompletionItems(merge) as any }
   })
 
   // We do this after merging
@@ -359,11 +364,39 @@ export function ensureMessagesAlternate(
 }
 
 function mergeCompletionItems(items: CompletionItem[]) {
-  const contents: string[] = []
+  const texts: string[] = []
+  const others: any[] = []
 
+  const contents: any[] = []
   for (const item of items) {
-    contents.push(item.content)
+    if (Array.isArray(item.content)) {
+      contents.push(...item.content)
+      continue
+    }
+
+    contents.push(item)
   }
 
-  return contents.join('\n\n')
+  for (const item of contents) {
+    if (item.type === 'text') {
+      texts.push(item.text)
+      continue
+    }
+
+    if (typeof item.content === 'string') {
+      texts.push(item.content)
+      continue
+    }
+
+    others.push(item)
+  }
+
+  const content = texts.join('\n\n')
+
+  if (!others.length) {
+    return content
+  }
+
+  const merged = [{ type: 'text', text: content }, ...others]
+  return merged
 }

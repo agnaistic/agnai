@@ -70,7 +70,7 @@ export const RelativeSpinner: Component<{
 
   return (
     <div
-      class="animate-spin"
+      class={'animate-spin ' + props.class || ''}
       style={{
         'animation-duration': speed(),
         'animation-timing-function': 'linear',

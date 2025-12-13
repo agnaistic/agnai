@@ -128,6 +128,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     format === 'openai' ||
     format === 'openai-chat' ||
     format === 'openai-chatv2' ||
+    format === 'lm-studio' ||
     format === 'kobold'
   ) {
     const model = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel

@@ -60,7 +60,6 @@ import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
-import { Spinner } from '/web/shared/Loading'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'
 import { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
@@ -259,11 +258,6 @@ const Message: Component<MessageProps> = (props) => {
       'margin-right': ctx.user?._id === message.userId ? percent : undefined,
       'margin-left': ctx.user?._id !== message.userId ? percent : undefined,
     }
-  })
-
-  const imageSpeed = createMemo(() => {
-    const next = ctx.imgWaiting?.pos ?? 1
-    return next
   })
 
   const senderOptions = createMemo(() => {
@@ -613,17 +607,6 @@ const Message: Component<MessageProps> = (props) => {
                     <span class="flex h-8 w-12 items-center justify-center">
                       <span class="dot-flashing bg-[var(--hl-700)]"></span>
                     </span>
-                  </Show>
-                  <Show when={ctx.imgWaiting?.pos && ctx.imgWaiting.messageId === msg()._id}>
-                    <div class="relative flex w-full justify-center">
-                      <Spinner speed={imageSpeed()} />{' '}
-                      <span
-                        class="text-500 text-xs italic"
-                        classList={{ hidden: !ctx.status?.wait_time }}
-                      >
-                        {ctx.status?.wait_time || '0'}s
-                      </span>
-                    </div>
                   </Show>
 
                   <MessageImages

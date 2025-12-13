@@ -88,6 +88,7 @@ export async function saveUserProvider(
         provider: prv.provider,
         format: prv.format,
         userKey: undefined,
+        subFormat: prv.subFormat || '',
         disableAutoUrl: !!prv.disableAutoUrl,
       }
     })

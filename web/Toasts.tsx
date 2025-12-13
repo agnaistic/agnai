@@ -187,7 +187,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
             </div>
           </Show>
 
-          <div>{props.toast.message}</div>
+          <div class="break-words">{props.toast.message}</div>
         </div>
       </div>
     </div>

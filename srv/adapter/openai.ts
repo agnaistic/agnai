@@ -14,6 +14,7 @@ import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
+import { adjustMessageFormatting } from './util'
 
 type CompletionContent<T = {}> = Array<
   {
@@ -86,7 +87,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: stops,
   }
 
-  if (REASONING_MODELS[oaiModel]) {
+  if (REASONING_MODELS[oaiModel] || opts.conn.provider?.subFormat === 'reasoning') {
     body.max_completion_tokens = maxResponseLength
     delete body.max_tokens
     delete body.stop
@@ -157,7 +158,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   const isChatFormat =
-    gen.thirdPartyFormat === 'openai-chat' || gen.thirdPartyFormat == 'openai-chatv2'
+    gen.thirdPartyFormat === 'openai-chat' ||
+    gen.thirdPartyFormat == 'openai-chatv2' ||
+    gen.thirdPartyFormat === 'lm-studio'
   const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
@@ -217,6 +220,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (opts.conn.provider?.provider === 'known-mistral' && body.messages) {
     const merged = ensureMessagesAlternate(body.messages, { userFirst: true, userLast: true })
     body.messages = merged
+  }
+
+  if (body.messages) {
+    body.messages = adjustMessageFormatting(opts.conn, body.messages)
   }
 
   const iter = body.stream

@@ -75,6 +75,7 @@ function startRequest(request: GenerateRequestV2, signal: AbortController, promp
     case 'ollama':
     case 'koboldcpp':
     case 'kobold':
+    case 'lm-studio':
       return handleOAI(opts, signal, payload)
 
     case 'mistral':

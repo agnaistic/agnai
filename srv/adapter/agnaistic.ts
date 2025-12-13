@@ -479,6 +479,7 @@ export function getHandlers(opts: {
 
     case 'openai-chat':
     case 'openai-chatv2':
+    case 'lm-studio':
       return handlers.openai
 
     case 'featherless':

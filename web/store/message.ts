@@ -257,18 +257,32 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
+    async *softEditMessageParent(
+      { msgs, graph },
+      msgId: string,
+      update: Partial<AppSchema.ChatMessage>,
+      onSuccess?: Function
+    ) {
+      const prev = graph.tree[msgId]
+      if (!prev) return toastStore.error(`Cannot find message`)
+
+      const next = { ...prev.msg, ...update, voiceUrl: undefined }
+      updateGraphAndReload(msgId, next)
+      onSuccess?.()
+    },
+
     async *editMessageParent(
       { msgs, graph },
       msgId: string,
       update: Partial<AppSchema.ChatMessage>,
       onSuccess?: Function
     ) {
-      const prev = findOne(msgId, msgs)
+      const prev = graph.tree[msgId]
       if (!prev) return toastStore.error(`Cannot find message`)
 
-      const res = await msgsApi.editMessageProps(prev, update)
+      const res = await msgsApi.editMessageProps(prev.msg, update)
       if (res.result) {
-        const next = { ...prev, ...update, voiceUrl: undefined }
+        const next = { ...prev.msg, ...update, voiceUrl: undefined }
         updateGraphAndReload(msgId, next)
         onSuccess?.()
       }

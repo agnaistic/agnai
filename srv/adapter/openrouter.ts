@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
-import { ModelAdapter } from './type'
+import { CompletionItem, ModelAdapter } from './type'
 import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
@@ -12,6 +12,8 @@ import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
 import { modelNeedsUserRoleLast } from './chat-completion'
 import { stripImageContent } from '/common/template-messages'
+import { PresetConnection } from '/common/providers'
+import { adjustMessageFormatting } from './util'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -91,6 +93,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.messages = opts.messages
   } else {
     payload.prompt = opts.prompt
+  }
+
+  if (payload.messages) {
+    payload.messages = adjustMessageFormatting(opts.conn, payload.messages)
   }
 
   yield {

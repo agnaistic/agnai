@@ -8,6 +8,7 @@ import Button from '/web/shared/Button'
 import { ICON_SIZES } from '/web/icons/AppIcon'
 import { ImageButton, imageStore } from '/web/store/images'
 import { ContextState } from '/web/store/context'
+import { RelativeSpinner } from '/web/shared/Loading'
 
 type MessageImage = {
   src: string
@@ -84,11 +85,21 @@ export const MessageImages: Component<{
           )}
         </For>
 
-        <Show when={props.ctx.imgPreview && props.ctx.imgWaiting?.messageId === props.msg._id}>
+        <Show when={props.ctx.imgWaiting?.messageId === props.msg._id}>
           <img
             class="mt-2 max-h-12 max-w-[unset] rounded-md sm:max-h-16"
+            classList={{ hidden: !props.ctx.imgPreview }}
             src={props.ctx.imgPreview}
           />
+          <Show when={!props.ctx.imgPreview}>
+            <RelativeSpinner class="flex items-center" speed={props.ctx.imgWaiting?.pos ?? 1} />{' '}
+          </Show>
+          <span
+            class="text-500 text-xs italic"
+            classList={{ hidden: !props.ctx.status?.wait_time }}
+          >
+            {props.ctx.status?.wait_time || '0'}s
+          </span>
         </Show>
 
         <div class="ml-2 flex items-center gap-3">

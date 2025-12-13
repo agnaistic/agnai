@@ -68,6 +68,9 @@ export const ChatGraphModal: Component<{
     // The real root node can't be rejoined
     if (!msg.msg.parent) return false
     let curr = msg.msg.parent
+
+    if (ctx.chatTree[msg.msg.parent]) return false
+
     do {
       // The target (re-joining node) can't be a descendant of itself (graph must remain acyclic)
       if (curr === store.rejoin) return false

@@ -233,6 +233,7 @@ async function dispatch(opts: AdapterProps, body: any) {
 
     case 'openai':
     case 'openai-chat':
+    case 'lm-studio':
     case 'openai-chatv2': {
       if (opts.gen.thirdPartyFormat === 'openai') {
         body.prompt = opts.prompt

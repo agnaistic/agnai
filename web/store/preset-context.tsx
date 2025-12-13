@@ -623,6 +623,7 @@ function canAttachImage(
     claude: true,
     mistral: true,
     koboldcpp: true,
+    'lm-studio': true,
   }
 
   return !!conn.format && !!supportedFormats[conn.format]

@@ -1,4 +1,4 @@
-import cyto from 'cytoscape'
+import cyto, { NodeSingular } from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import { Component, createEffect, createSignal, on, onCleanup, onMount } from 'solid-js'
 import { ChatNode, ChatTree } from '/common/chat'
@@ -109,21 +109,23 @@ export const ChatGraph: Component<{
     cy.on('mouseover', 'node', function (this: any, evt) {
       props.emit.hover(this.id(), this)
       document.body.style.cursor = 'pointer'
-      this.style('border-color', getSettingColor('hl-200'))
-      this.style('border-width', '4')
+      styleNode(tree, props.state, this, props.leafId)
+      // this.style('border-color', getSettingColor('hl-200'))
+      // this.style('border-width', '4')
     })
 
     cy.on('mouseout', 'node', function (this: any) {
       props.emit.unhover()
-      const id = this.id()
-      if (props.state.clicked === id) {
-        this.style('border-color', getSettingColor('green-400'))
-        this.style('border-width', '4')
-        return
-      }
-
+      styleNode(tree, props.state, this, props.leafId)
       document.body.style.cursor = ''
-      this.style('border-width', '0')
+
+      // const id = this.id()
+      // if (props.state.clicked === id) {
+      //   this.style('border-color', getSettingColor('green-400'))
+      //   this.style('border-width', '4')
+      //   return
+      // }
+      // this.style('border-width', '0')
     })
 
     const win: any = window
@@ -146,10 +148,7 @@ export const ChatGraph: Component<{
     const nodes = cy.nodes()
 
     nodes.each((ele) => {
-      const thisId = ele.id()
-      const color = getNodeColor(tree, props.state, props.leafId, thisId)
-
-      ele.style({ 'background-color': color })
+      styleNode(tree, props.state, ele, props.leafId)
     })
   }
 
@@ -404,4 +403,36 @@ function getNodeColor(tree: ChatTree, state: GraphState, leafId: string, nodeId:
 
   if (node?.userId) return getSettingColor('bg-500')
   return getSettingColor('hl-500')
+}
+
+function getNodeStyles(tree: ChatTree, state: GraphState, leafId: string, nodeId: string) {
+  const color = getNodeColor(tree, state, leafId, nodeId)
+  if (state.hovered === nodeId) {
+    return {
+      'background-color': color,
+      'border-color': getSettingColor('green-400'),
+      'border-width': '4',
+    }
+  }
+
+  if (state.clicked === nodeId) {
+    return {
+      'background-color': color,
+      'border-color': getSettingColor('hl-200'),
+      'border-width': '4',
+    }
+  }
+
+  return {
+    'background-color': color,
+    'border-color': color,
+    'border-width': '4',
+  }
+}
+
+function styleNode(tree: ChatTree, state: GraphState, node: NodeSingular, leafId: string) {
+  const id = node.id()
+
+  const styles = getNodeStyles(tree, state, leafId, id)
+  node.style(styles)
 }

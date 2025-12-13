@@ -88,6 +88,7 @@ export const ThirdPartyModel: Component<{
       case 'openai':
       case 'openai-chat':
       case 'openai-chatv2':
+      case 'lm-studio':
       case 'vllm':
       case 'tabby':
         return 'compat'

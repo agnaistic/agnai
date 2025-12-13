@@ -11,6 +11,10 @@ export interface Provider {
 
   /** For providers that have multiple formats (Claude, OpenAI, ...) */
   format?: ProviderFormat
+
+  /** For annoying providers like OpenAI and Mistral that don't version their APIs correctly */
+  subFormat?: string
+
   /** User-provided name */
   name: string
   url: string
