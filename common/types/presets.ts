@@ -117,7 +117,6 @@ export type Sampler =
   | 'minP'
   | 'tailFreeSampling'
   | 'temperature'
-  | 'maxTokens'
 
 export type SamplerState = 'on' | 'off' | 'auto' | string
 
