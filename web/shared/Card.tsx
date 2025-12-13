@@ -2,7 +2,7 @@ import { Accessor, Component, JSX, Show, createMemo } from 'solid-js'
 import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
-import { getAsCssVar, getRgbaFromVar, getRootVariable, getSettingColor } from './colors'
+import { getAsCssVar, getRgbaFromVar, getSafeVariableName, getSettingColor } from './colors'
 
 type Size = 'sm' | 'md' | 'lg'
 
@@ -169,9 +169,9 @@ export const TitleCard: Component<{
 
     const glowColor =
       props.glow === true
-        ? `0 0px 16px var(--${type}-${base + mod})`
+        ? `0 0px 16px var(--${type}-${500})`
         : props.glow
-        ? `0 0px 16px ${getRootVariable(props.glow)}`
+        ? `0 0px 16px var(${getSafeVariableName(props.glow)})`
         : undefined
 
     return {

@@ -41,6 +41,10 @@ export function getRootVariable(name: string) {
   return value
 }
 
+export function getSafeVariableName(name: string) {
+  return name.startsWith('--') ? name : `--${name}`
+}
+
 export function setRootVariable(name: string, value: string) {
   const root = document.documentElement
   root.style.setProperty(name.startsWith('--') ? name : `--${name}`, value)
