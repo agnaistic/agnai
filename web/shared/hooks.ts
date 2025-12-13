@@ -282,7 +282,11 @@ export function useImageCache(opts: ImageCacheOpts = {}) {
     const imageIds = await reel.getImageIds()
     const images = imageIds.map(cleanIds)
 
-    const current = clamp(col.pos !== undefined ? col.pos : images.length - 1, images.length - 1, 0)
+    const current = clamp(
+      col.pos !== undefined && col.pos >= 0 ? col.pos : images.length - 1,
+      images.length - 1,
+      0
+    )
 
     const image = await reel.getImage(images[current])
     setState({ pos: current, image, images, imageId: images[current] })

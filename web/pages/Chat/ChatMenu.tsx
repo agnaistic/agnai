@@ -94,7 +94,7 @@ const ChatNav: Component<NavProps> = (props) => {
       return
     }
 
-    imageStore.showMessageImages({ id: last._id, position: 0 })
+    imageStore.showMessageImages({ id: last._id, position: -1 })
   }
 
   return (
