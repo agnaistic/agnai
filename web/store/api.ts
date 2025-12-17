@@ -6,6 +6,7 @@ import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/
 import { debug } from '/common/debug'
 import { TickHandler } from '/common/prompt'
 import { joinUrl } from '/common/requests/util'
+import { ClientRequest, ClientRequest as type } from 'http'
 
 let socketId = ''
 
@@ -319,7 +320,7 @@ function getToken(json: any) {
 
 export function fetchSSE(opts: SSEOpts) {
   const { path, headers, body, signal } = opts
-  const resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
+  let resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
 
@@ -329,6 +330,8 @@ export function fetchSSE(opts: SSEOpts) {
       'Content-Type': 'application/json',
     },
   })
+
+  let request = (resp as any).request as any
 
   let error = ''
   let incomplete = ''
@@ -346,6 +349,7 @@ export function fetchSSE(opts: SSEOpts) {
       done = true
       opts.onTick?.(accum, 'done')
       opts.onDone?.()
+      request.destroy()
     }
   )
 
@@ -354,6 +358,7 @@ export function fetchSSE(opts: SSEOpts) {
     done = true
     opts.onTick?.(accum, 'done')
     opts.onDone?.()
+    request.destroy()
   })
 
   resp.on('data', (chunk: Buffer) => {
@@ -392,6 +397,7 @@ export function fetchSSE(opts: SSEOpts) {
         case 'message-error':
         case 'inference-error':
           opts.onTick?.(json.error, 'error')
+          request.destroy()
           break
 
         case 'message-warning':
@@ -413,6 +419,7 @@ export function fetchSSE(opts: SSEOpts) {
           done = true
           opts.onTick?.(json.response, 'done')
           opts.onDone?.()
+          request.destroy()
           break
 
         case 'chat-summary':
