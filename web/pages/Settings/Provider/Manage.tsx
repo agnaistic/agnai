@@ -351,22 +351,23 @@ export const ManageProvider: Component<{
           />
         </Show>
 
-        <div class="flex gap-2">
-          <Select
-            items={formatOptions()}
-            helperText={'Request Format'}
-            value={format()}
-            onChange={(ev) => onFormatChange(ev.value)}
-            hide={formatOptions().length <= 1}
-          />
+        <div class="flex flex-col">
+          <div class="text-500 text-sm">Request Format</div>
+          <div class="flex gap-1">
+            <Select
+              items={formatOptions()}
+              value={format()}
+              onChange={(ev) => onFormatChange(ev.value)}
+              hide={formatOptions().length <= 1}
+            />
 
-          <Select
-            items={subFormatOptions()}
-            value={subFormat()}
-            hide={subFormatOptions().length === 0}
-            helperText="‎"
-            onChange={(ev) => setSubFormat(ev.value)}
-          />
+            <Select
+              items={subFormatOptions()}
+              value={subFormat()}
+              hide={subFormatOptions().length === 0}
+              onChange={(ev) => setSubFormat(ev.value)}
+            />
+          </div>
         </div>
 
         <CustomProviderContent
