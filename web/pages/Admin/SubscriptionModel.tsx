@@ -271,7 +271,7 @@ export const SubscriptionModel: Component = () => {
                     />
                   </Card>
 
-                  <Card hide={state.service !== 'agnaistic'} class="mt-4">
+                  <Card class="mt-4">
                     <TextInput
                       fieldName="subModel"
                       label="Model"
