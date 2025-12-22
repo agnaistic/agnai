@@ -1,4 +1,4 @@
-import { For, Index, createMemo } from 'solid-js'
+import { For, Index, Match, Switch, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
@@ -6,6 +6,8 @@ import Button from './Button'
 import { isValidServiceSetting } from './util'
 import { InlineRangeInput } from './RangeInput'
 import { Field } from './PresetSettings/Fields'
+import { PresetParser } from '/common/types/presets'
+import Select from './Select'
 
 export const PhraseBias: Field = (props) => {
   const hide = createMemo(() => {
@@ -122,6 +124,96 @@ export const StoppingStrings: Field = (props) => {
                 }}
               />
               <Button class="icon-button" schema="clear" onClick={() => removeString(i)}>
+                <MinusCircle />
+              </Button>
+            </div>
+          )}
+        </Index>
+      </div>
+    </div>
+  )
+}
+
+export const MessageParsers: Field = (props) => {
+  const addParser = () => {
+    const next = (props.state.parsers || []).concat({ type: 'remove', text: '' })
+    props.setters.setState('parsers', next)
+  }
+
+  const removeparser = (i: number) => {
+    const next = (props.state.parsers || []).slice()
+    next.splice(i, 1)
+    props.setters.setState('parsers', next)
+  }
+
+  const updateParser = (
+    i: number,
+    update: { type?: PresetParser['type']; text?: string; to?: string }
+  ) => {
+    const next = props.state.parsers!.map((item, index) => {
+      if (index !== i) return item
+      return { ...item, ...update }
+    })
+
+    props.setters.setState('parsers', next as any)
+  }
+
+  return (
+    <div>
+      <FormLabel
+        label={
+          <div class="flex gap-2">
+            Message Parsers{' '}
+            <a class="link" onClick={addParser}>
+              Add +
+            </a>
+          </div>
+        }
+        helperText="Alter the text in a message to remove or modify unwanted text. Only affects how the message is displayed."
+      />
+      <div class="flex flex-col gap-2 text-sm">
+        <Index each={props.state.parsers || []}>
+          {(each, i) => (
+            <div class="flex gap-1 text-sm">
+              <Select
+                items={[
+                  { label: 'Remove', value: 'remove' },
+                  { label: 'Replace', value: 'replace' },
+                ]}
+                value={each().type}
+                onChange={(ev) => updateParser(i, { type: ev.value as any })}
+              />
+              <Switch>
+                <Match when={each().type === 'remove'}>
+                  <div class="flex w-full gap-1">
+                    <TextInput
+                      value={each().text}
+                      parentClass="w-full"
+                      placeholder="Remove text. E.g. \n<|user|>"
+                      onChange={(ev) => updateParser(i, { text: ev.currentTarget.value })}
+                    />
+                  </div>
+                </Match>
+
+                <Match when={each().type === 'replace'}>
+                  <div class="flex w-full gap-1">
+                    <TextInput
+                      value={each().text}
+                      parentClass="w-1/2"
+                      placeholder="Text to Replace. E.g. \n<|user|>"
+                      onChange={(ev) => updateParser(i, { text: ev.currentTarget.value })}
+                    />
+
+                    <TextInput
+                      value={each().to}
+                      parentClass="w-1/2"
+                      placeholder="New Text. E.g. \n<|user|>"
+                      onChange={(ev) => updateParser(i, { to: ev.currentTarget.value })}
+                    />
+                  </div>
+                </Match>
+              </Switch>
+              <Button class="icon-button" schema="clear" onClick={() => removeparser(i)}>
                 <MinusCircle />
               </Button>
             </div>

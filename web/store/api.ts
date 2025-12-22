@@ -6,7 +6,6 @@ import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/
 import { debug } from '/common/debug'
 import { TickHandler } from '/common/prompt'
 import { joinUrl } from '/common/requests/util'
-import { ClientRequest, ClientRequest as type } from 'http'
 
 let socketId = ''
 

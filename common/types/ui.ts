@@ -73,7 +73,6 @@ export type MessageOption =
   | 'trash'
   | 'fork'
   | 'prompt'
-  | 'schema-regen'
   | 'attach'
   | 'visible'
   | 'gen-image'
@@ -198,7 +197,6 @@ export const defaultUIsettings: UISettings = {
     regen: { outer: true, pos: 1 },
     attach: { outer: false, pos: 6 },
     trash: { outer: false, pos: 4 },
-    'schema-regen': { outer: false, pos: 5 },
     visible: { outer: false, pos: 3.9 },
     'gen-image': { outer: false, pos: 3.8 },
     'gen-json': { outer: false, pos: 3.81 },

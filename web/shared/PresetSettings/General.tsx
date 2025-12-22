@@ -2,7 +2,7 @@ import { Component, createMemo, Show } from 'solid-js'
 import RangeInput from '../RangeInput'
 import { Toggle } from '../Toggle'
 import { userStore } from '../../store'
-import { PhraseBias, StoppingStrings } from '../PhraseBias'
+import { MessageParsers, PhraseBias, StoppingStrings } from '../PhraseBias'
 import { BUILTIN_FORMATS } from '/common/presets/templates'
 import { getSubscriptionModelLimits } from '/common/util'
 import { ContextSize, ModelFormat, ResponseLength, Temperature } from './Fields'
@@ -129,6 +129,14 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           sub={props.sub}
           page={props.page}
         />
+
+        <MessageParsers
+          state={props.state}
+          setters={props.setters}
+          sub={props.sub}
+          page={props.page}
+        />
+
         <Toggle
           fieldName="disableNameStops"
           label="Disable Name Stops"

@@ -77,6 +77,7 @@ export const presetValidator = {
   phraseRepPenalty: 'string?',
 
   stopSequences: ['string?'],
+  parsers: [{ type: ['remove', 'replace'], text: 'string', to: 'string?' }],
   trimStop: 'boolean?',
   thirdPartyUrl: 'string?',
   thirdPartyKey: 'string?',

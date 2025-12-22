@@ -7,7 +7,6 @@ const msgInlineLabels: Record<UI.MessageOption, string> = {
   fork: 'Fork',
   trash: 'Delete',
   attach: 'Attach',
-  'schema-regen': 'Retry Schema',
   visible: 'Visibility',
   'gen-image': 'Gen Image',
   'gen-json': 'Gen JSON',

@@ -1,5 +1,6 @@
 import { debug } from './debug'
 import { AppSchema } from './types'
+import { PresetParser } from './types/presets'
 
 type Created = { _id: string; createdAt: string }
 
@@ -12,6 +13,27 @@ export type ChatNode = {
 }
 
 export type ChatDepths = Record<number, string[]>
+
+export function runPresetParsers(parsers: PresetParser[], message: string) {
+  let current = message || ''
+
+  for (const parser of parsers) {
+    if (!parser.text?.trim()) continue
+    switch (parser.type) {
+      case 'remove': {
+        current = current.split(parser.text).join('')
+        break
+      }
+
+      case 'replace': {
+        current = current.replaceAll(parser.text, parser.to || '')
+        break
+      }
+    }
+  }
+
+  return current
+}
 
 export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree; root: string } {
   const log = debug('build-graph')

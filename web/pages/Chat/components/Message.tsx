@@ -15,7 +15,6 @@ import {
   Zap,
   Split,
   MoreHorizontal,
-  Braces,
   ImagePlus,
   Eye,
   EyeOff,
@@ -71,6 +70,7 @@ import { ComponentEventEmitter, getJsonSchema, isToday, toShortDuration } from '
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
 import { PresetContext, PresetState } from '/web/store/preset-context'
+import { runPresetParsers } from '/common/chat'
 
 type MessageProps = {
   messageId: string
@@ -809,20 +809,6 @@ const MessageOptions: Component<{
         icon: RefreshCw,
       },
 
-      'schema-regen': {
-        key: 'schema-regen',
-        class: 'refresh-btn',
-        label: 'Schema Regen',
-        outer: props.ui.msgOptsInline['schema-regen'],
-        show:
-          window.flags.reschema &&
-          ((props.msg.json && props.last) ||
-            (props.msg.adapter === 'image' && !!props.msg.imagePrompt)) &&
-          !!props.msg.characterId,
-        onClick: () => !props.partial && retryJsonSchema(props.msg, props.msg),
-        icon: Braces,
-      },
-
       attach: {
         key: 'attach',
         class: '',
@@ -917,6 +903,7 @@ const MessageOptions: Component<{
       <For each={order()}>
         {(item) => {
           const def = logic()[item.key]
+          if (!def) return null
 
           return (
             <MessageOption
@@ -1152,11 +1139,13 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   }
 }
 
-function retryJsonSchema(original: AppSchema.ChatMessage, split: SplitMessage) {
-  responseStore.retrySchema(split.chatId, original._id)
-}
-
-function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {
+function renderMessage(
+  ctx: ContextState,
+  preset: PresetState | undefined,
+  text: string,
+  isUser: boolean,
+  adapter?: string
+) {
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
@@ -1165,7 +1154,9 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
   const html = Purify.sanitize(
     wrapWithQuoteElement(
-      markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+      markdown
+        .makeHtml(parseMessage(text, ctx, preset, isUser, adapter))
+        .replace(/&amp;nbsp;/g, '&nbsp;')
     ),
     {
       ADD_TAGS: ['qem'],
@@ -1227,12 +1218,31 @@ function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAc
   events.emit(EVENTS.setInputText, action.action)
 }
 
-function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
+function parseMessage(
+  msg: string,
+  ctx: ContextState,
+  preset: PresetState | undefined,
+  isUser: boolean,
+  adapter?: string
+) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
 
-  const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+  let parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
+
+  if (preset?.parsers) {
+    parsed = runPresetParsers(preset.parsers, parsed)
+  } else {
+    parsed = runPresetParsers(
+      [
+        { type: 'remove', text: '<|begin_of_box|>' },
+        { type: 'remove', text: '<|end_of_box|>' },
+      ],
+      parsed
+    )
+  }
+
   return parsed
 }
 
@@ -1259,7 +1269,7 @@ function getMessageContent(
     if (props.partial) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, content, false, 'partial'),
+        message: renderMessage(ctx, preset, content, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1269,7 +1279,7 @@ function getMessageContent(
     if (isPartial && msg.msg) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, content, false, 'partial'),
+        message: renderMessage(ctx, preset, content, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1307,7 +1317,7 @@ function getMessageContent(
 
   return {
     type: 'message' as const,
-    message: renderMessage(ctx, message, !!msg.userId, msg.adapter),
+    message: renderMessage(ctx, preset, message, !!msg.userId, msg.adapter),
     thoughts,
     class: 'not-streaming',
   }
