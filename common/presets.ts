@@ -3,6 +3,7 @@ import { AIAdapter, AI_ADAPTERS, ChatAdapter, THIRDPARTY_FORMATS } from './adapt
 import { defaultPresets, presetDefaults } from './default-preset'
 import { deepClone } from './util'
 import { Sampler, SamplerState } from './types/presets'
+import { optionalArray } from './valid/types'
 
 export { defaultPresets }
 
@@ -77,7 +78,7 @@ export const presetValidator = {
   phraseRepPenalty: 'string?',
 
   stopSequences: ['string?'],
-  parsers: [{ type: ['remove', 'replace'], text: 'string', to: 'string?' }],
+  parsers: optionalArray([{ type: ['remove', 'replace'], text: 'string', to: 'string?' }]),
   trimStop: 'boolean?',
   thirdPartyUrl: 'string?',
   thirdPartyKey: 'string?',

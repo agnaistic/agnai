@@ -8,6 +8,7 @@ import {
   Index,
   Match,
   on,
+  onMount,
   Show,
   Switch,
 } from 'solid-js'
@@ -94,7 +95,7 @@ export const SubscriptionModel: Component = () => {
     )
   )
 
-  createEffect(async () => {
+  onMount(async () => {
     if (params.id === 'new') {
       const copySource = query.preset
       if (copySource) {
