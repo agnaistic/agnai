@@ -5,7 +5,7 @@ import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 import { debug } from '/common/debug'
 import { TickHandler } from '/common/prompt'
-import { joinUrl } from '/common/requests/util'
+import { getNextThoughts, getNextTokens, joinThoughtTokens, joinUrl } from '/common/requests/util'
 
 let socketId = ''
 
@@ -215,6 +215,7 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
   let accum = ''
   let error = ''
   let incomplete = ''
+  let thoughts = ''
   let meta: any = {}
   let done = false
 
@@ -227,14 +228,14 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
     () => {
       if (done) return
       done = true
-      opts.onTick?.(accum, 'done')
+      opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
       opts.onDone?.()
     }
   )
 
   resp.on('done', () => {
     if (done) return
-    opts.onTick?.(accum, 'done')
+    opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
     opts.onDone?.()
   })
 
@@ -266,7 +267,14 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
         opts.onTick('', 'meta', meta)
       }
 
-      const token = getToken(json)
+      const thought = getNextThoughts(json)
+      const token = getNextTokens(json) || json?.token || json?.response
+
+      if (thought) {
+        opts.onTick?.(thought, 'thought')
+        thoughts += thought
+      }
+
       if (token) {
         accum += token
         opts.onTick?.(accum, 'partial')
@@ -275,14 +283,14 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
 
       if (done) continue
       if (changed.matches.finish_reason) {
-        opts?.onTick(accum, 'done')
+        opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
         done = true
         continue
       }
 
       const response = json.response
       if (response) {
-        opts?.onTick(accum, 'done')
+        opts?.onTick(joinThoughtTokens(accum, thoughts), 'done')
         done = true
         continue
       }
@@ -309,13 +317,13 @@ function getChoiceProp<T = any>(json: any, assign: any, props: string[]) {
   return { found, matches }
 }
 
-function getToken(json: any) {
-  const choice = json?.choices?.[0]
-  if (!choice) return
+// function getToken(json: any) {
+//   const choice = json?.choices?.[0]
+//   if (!choice) return
 
-  const token = choice.delta?.content || choice.delta?.text || choice.content || choice.text
-  return token
-}
+//   const token = choice.delta?.content || choice.delta?.text || choice.content || choice.text
+//   return token
+// }
 
 export function fetchSSE(opts: SSEOpts) {
   const { path, headers, body, signal } = opts
@@ -335,6 +343,7 @@ export function fetchSSE(opts: SSEOpts) {
   let error = ''
   let incomplete = ''
   let accum = ''
+  let thoughts = ''
   let done = false
 
   handleNonData(
@@ -346,7 +355,7 @@ export function fetchSSE(opts: SSEOpts) {
     () => {
       if (done) return
       done = true
-      opts.onTick?.(accum, 'done')
+      opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
       opts.onDone?.()
       request.destroy()
     }
@@ -355,7 +364,7 @@ export function fetchSSE(opts: SSEOpts) {
   resp.on('done', () => {
     if (done) return
     done = true
-    opts.onTick?.(accum, 'done')
+    opts.onTick?.(joinThoughtTokens(accum, thoughts), 'done')
     opts.onDone?.()
     request.destroy()
   })
@@ -416,13 +425,18 @@ export function fetchSSE(opts: SSEOpts) {
         case 'chat-query':
         case 'inference':
           done = true
-          opts.onTick?.(json.response, 'done')
+          opts.onTick?.(joinThoughtTokens(json.response || accum, thoughts), 'done')
           opts.onDone?.()
           request.destroy()
           break
 
         case 'chat-summary':
           opts.onTick?.(json.summary, 'done')
+          break
+
+        case 'inference-thought':
+          opts.onTick?.(json.thoughts, 'thought')
+          thoughts += json.thoughts
           break
 
         case 'inference-meta':

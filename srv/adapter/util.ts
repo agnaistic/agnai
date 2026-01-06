@@ -39,3 +39,10 @@ export function adjustMessageFormatting(conn: PresetConnection, messages: Comple
 
   return next
 }
+
+export const LLM_DEBUG =
+  typeof window !== 'undefined'
+    ? false
+    : typeof process !== 'undefined'
+    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
+    : false

@@ -110,6 +110,10 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
       }
     }
 
+    if ('thoughts' in generated.value) {
+      yield { thoughts: generated.value.thoughts! }
+    }
+
     if ('tokens' in generated) {
       const gens = 'gens' in generated ? generated.gens : undefined
       if (gens) {

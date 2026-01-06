@@ -60,7 +60,7 @@ const Button: Component<{
       style={{ 'min-height': props.minHeight ? `${props.minHeight}px` : '' }}
       disabled={props.disabled}
       onClick={(ev) => {
-        // ev.preventDefault()
+        ev.preventDefault()
         props.onClick?.(ev)
       }}
       aria-label={props.ariaLabel}

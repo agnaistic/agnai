@@ -1,12 +1,21 @@
 import { AppSchema } from './types'
 
 export function extractReasoning(
-  content: string,
+  message: string | { thoughts?: string; tokens?: string },
   opts?: { tags?: AppSchema.UserGenPreset['reasoning']; display?: 'all' | 'post' | 'pre' }
 ) {
+  let content = ''
+
   const display = opts?.display || 'all'
   const open = opts?.tags?.start || '<think>'
   const close = opts?.tags?.end || '</think>'
+
+  if (message && typeof message !== 'string') {
+    if (message.thoughts) content = `${open}${message.thoughts}${close}${message.tokens || ''}`
+    else content = message.tokens || ''
+  } else {
+    content = message || ''
+  }
 
   if (!open || !close) return { thoughts: [], content }
 

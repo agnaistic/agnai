@@ -103,21 +103,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   //   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   // }
 
-  if (gen.reasoning?.enabled) {
-    if (opts.conn.provider?.provider === 'known-zai') {
-      body.thinking = { type: 'enabled' }
-    } else {
-      body.reasoning = {
-        exclude: !!gen.reasoning.exclude,
-      }
-
-      if (gen.reasoning.effort === 'custom') {
-        body.reasoning.max_tokens = gen.reasoning.maxTokens
-      } else {
-        body.reasoning.effort = gen.reasoning.effort || 'low'
-      }
-    }
-  }
+  applyReasoningPayload(opts, body)
 
   if (opts.jsonSchema) {
     const base: any = {}
@@ -262,6 +248,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       break
     }
 
+    if ('thoughts' in generated.value) {
+      yield { thoughts: generated.value.thoughts! }
+    }
+
     if ('error' in generated.value) {
       if (typeof generated.value.error === 'object') {
         const msg = JSON.stringify(generated.value.error)
@@ -296,7 +286,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   try {
-    let text = accumulated ? accumulated : getCompletionContent(response, log)
+    let text = accumulated ? accumulated : getCompletionContent(response, accumulated, log)
     if (text instanceof Error) {
       yield { error: `[Chat] Request returned an error: ${text.message}` }
       return
@@ -336,9 +326,13 @@ export type OAIUsage = {
   total_usage: number
 }
 
-export function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {
+export function getCompletionContent(
+  completion: Completion<Inference> | undefined,
+  accumulated: string,
+  log: AppLog
+) {
   if (!completion) {
-    return ''
+    return accumulated
   }
 
   if (completion.error?.message) {
@@ -382,5 +376,24 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
 
   if (modelNeedsUserRoleLast(opts.gen, model)) {
     lastMsg.role = 'user'
+  }
+}
+
+function applyReasoningPayload(opts: AdapterProps, body: any) {
+  if (opts.conn.provider?.provider === 'known-zai') {
+    body.thinking = { type: opts.gen.reasoning?.enabled ? 'enabled' : 'disabled' }
+    return
+  }
+
+  if (!opts.gen.reasoning?.enabled) return
+
+  body.reasoning = {
+    exclude: !!opts.gen.reasoning?.exclude,
+  }
+
+  if (opts.gen.reasoning.effort === 'custom') {
+    body.reasoning.max_tokens = opts.gen.reasoning.maxTokens
+  } else {
+    body.reasoning.effort = opts.gen.reasoning.effort || 'low'
   }
 }

@@ -15,17 +15,11 @@ import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
 import { toChatMessages } from '/common/template-messages'
+import { LLM_DEBUG } from './util'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
   'gemini-1.0-pro-latest': true,
 }
-
-const DEBUG =
-  typeof window !== 'undefined'
-    ? false
-    : typeof process !== 'undefined'
-    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
-    : false
 
 export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
@@ -219,34 +213,29 @@ export const handleGemini: ModelAdapter = async function* (opts) {
 
       if (!text) continue
 
-      if (thought) {
-        thoughts += text
-      }
-
-      if (DEBUG) {
+      if (LLM_DEBUG) {
         console.log([`[g:chunk] ${JSON.stringify(tick)}`])
       }
 
-      if (!thought) {
+      if (thought) {
+        thoughts += text
+        yield { thoughts: text }
+      } else {
         accum += text || ''
-      }
-
-      yield {
-        partial: sanitiseAndTrim({
-          text: (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum,
-          char: opts.replyAs,
-          members: opts.members,
-          gen: opts.gen,
-          stops: generationConfig.stopSequences,
-        }),
+        yield {
+          partial: sanitiseAndTrim({
+            text: accum,
+            char: opts.replyAs,
+            members: opts.members,
+            gen: opts.gen,
+            stops: generationConfig.stopSequences,
+          }),
+        }
       }
     }
   }
 
-  const parsed = sanitise(
-    (thoughts ? '<think>' : '') + thoughts + (thoughts ? '</think>' : '') + accum
-  )
-
+  const parsed = sanitise(accum)
   const trimmed = trimResponseV2(
     parsed,
     opts.replyAs,

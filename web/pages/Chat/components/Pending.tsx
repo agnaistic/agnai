@@ -46,7 +46,7 @@ export const PendingMessages: Component<{
         <Message
           index={-1}
           messageId={'partial-response'}
-          content={response.partial || ''}
+          content={response.partial?.tokens || ''}
           last={true}
           onRemove={noop}
           swipe={false}

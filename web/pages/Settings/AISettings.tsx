@@ -7,13 +7,16 @@ import { PresetSelect } from '/web/shared/PresetSelect'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { neat } from '/common/util'
-import { HelpModal } from '/web/shared/Modal'
+import Modal, { HelpModal } from '/web/shared/Modal'
 import { SetStoreFunction } from 'solid-js/store'
 import { UserSettings } from './util'
 import { FormLabel } from '/web/shared/FormLabel'
 import Select from '/web/shared/Select'
 import { EMBED_MODELS_OPTS } from '/web/store/embeddings'
 import { Copy } from '/web/shared/Copy'
+import { usePresetContext } from '/web/store/preset-context'
+import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
+import { Pencil } from 'lucide-solid'
 
 const AISettings: Component<{
   state: UserSettings
@@ -25,7 +28,10 @@ const AISettings: Component<{
   }))
 
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
+  const [summaryPreset, presetSetters] = usePresetContext({ anonymous: true })
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
+  const [editPreset, setEditPreset] = createSignal('')
+  const [presetFooter, setPresetFooter] = createSignal<any>()
 
   const revealKey = async () => {
     const prev = apiKey()
@@ -61,6 +67,11 @@ const AISettings: Component<{
 
     return true
   })
+
+  const openPreset = (id: string) => {
+    setEditPreset(id)
+    presetSetters.load(id)
+  }
 
   return (
     <>
@@ -100,27 +111,49 @@ const AISettings: Component<{
         <div class="font-bold">Presets</div>
 
         <div class="flex flex-col gap-2">
-          <PresetSelect
-            helperText="Character Field Generation"
-            options={presetOptions()}
-            selected={props.state.chargenPreset}
-            setPresetId={(ev) => props.setter('chargenPreset', ev)}
-            noneOption={{ label: 'Use Server Default', value: '' }}
-          />
-          <PresetSelect
-            helperText="Chat Summary"
-            options={presetOptions()}
-            selected={props.state.summaryPreset || state.user?.images?.summaryPresetId}
-            setPresetId={(ev) => props.setter('summaryPreset', ev)}
-            noneOption={{ label: 'Use Active Chat Preset', value: '' }}
-          />
-          <PresetSelect
-            helperText="JSON Schemas/Output"
-            options={presetOptions()}
-            selected={props.state.jsonPreset}
-            setPresetId={(ev) => props.setter('jsonPreset', ev)}
-            noneOption={{ label: 'Use Active Chat Preset', value: '' }}
-          />
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="Character Field Generation"
+              options={presetOptions()}
+              selected={props.state.chargenPreset}
+              setPresetId={(ev) => props.setter('chargenPreset', ev)}
+              noneOption={{ label: 'Use Server Default', value: '' }}
+            />
+            <Button disabled={!props.state.chargenPreset}>
+              <Pencil size={20} onClick={() => openPreset(props.state.chargenPreset || '')} />
+            </Button>
+          </div>
+
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="Chat Summary"
+              options={presetOptions()}
+              selected={props.state.summaryPreset || state.user?.images?.summaryPresetId}
+              setPresetId={(ev) => props.setter('summaryPreset', ev)}
+              noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+            />
+            <Button disabled={!props.state.summaryPreset && !state.user?.images?.summaryPresetId}>
+              <Pencil
+                size={20}
+                onClick={() =>
+                  openPreset(props.state.summaryPreset || state.user?.images?.summaryPresetId || '')
+                }
+              />
+            </Button>
+          </div>
+
+          <div class="flex items-end gap-2">
+            <PresetSelect
+              helperText="JSON Schemas/Output"
+              options={presetOptions()}
+              selected={props.state.jsonPreset}
+              setPresetId={(ev) => props.setter('jsonPreset', ev)}
+              noneOption={{ label: 'Use Active Chat Preset', value: '' }}
+            />
+            <Button disabled={!props.state.jsonPreset}>
+              <Pencil size={20} onClick={() => openPreset(props.state.jsonPreset || '')} />
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -195,6 +228,24 @@ const AISettings: Component<{
           page
         </SolidCard>
       </div>
+
+      <Modal
+        title="Edit Summary Preset"
+        show={!!editPreset()}
+        close={() => setEditPreset('')}
+        maxWidth="half"
+        footer={presetFooter()}
+      >
+        <ModeGenSettings
+          page="image-settings"
+          preset={summaryPreset.current}
+          setters={presetSetters}
+          close={() => setEditPreset('')}
+          presetId={editPreset()}
+          onPresetChanged={() => setEditPreset('')}
+          footer={setPresetFooter}
+        />
+      </Modal>
     </>
   )
 }

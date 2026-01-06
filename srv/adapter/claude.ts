@@ -260,6 +260,15 @@ export const handleClaude: ModelAdapter = async function* (opts) {
         }),
       }
     }
+
+    if ('thoughts' in generated.value) {
+      yield { thoughts: generated.value.thoughts! as string }
+    }
+
+    if ('tokens' in generated.value) {
+      acc = generated.value.tokens! as string
+      break
+    }
   }
 
   try {

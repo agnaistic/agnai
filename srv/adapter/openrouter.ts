@@ -122,6 +122,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
       })
     : getCompletion(opts.signal, payload, headers)
 
+  let thoughts = ''
   let accum = ''
   let fullText: string | undefined
   let response: any
@@ -133,6 +134,16 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     if (gen.done) {
       response = gen.value
       break
+    }
+
+    if ('thoughts' in gen.value) {
+      thoughts += gen.value.thoughts || ''
+      yield { thoughts: gen.value.thoughts || '' }
+    }
+
+    if ('tokens' in gen.value) {
+      accum = gen.value.tokens
+      fullText = gen.value.tokens
     }
 
     if ('error' in gen.value) {
@@ -165,7 +176,8 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     yield { meta: { model: response.model, provider: response.provider, ...response.usage } }
   }
 
-  const text = fullText === undefined ? getResponseText(response, opts.log) : fullText
+  const text = getResponseText(response, fullText || accum, opts.log)
+
   if (text instanceof Error) {
     yield { error: `OpenRouter response failed: ${text.message}` }
     return
@@ -228,14 +240,18 @@ registerAdapter('openrouter', handleOpenRouter, {
   options: ['temp', 'maxTokens'],
 })
 
-function getResponseText(resp: any, log: AppLog) {
+function getResponseText(resp: any, accum: string, log: AppLog) {
+  if (resp) {
+    return accum
+  }
+
   if (typeof resp === 'string') {
     resp = JSON.parse(resp)
   }
 
   if (resp.type === 'Buffer') {
     const buffer = Buffer.from(resp.data).toString()
-    return getResponseText(buffer, log)
+    return getResponseText(buffer, accum, log)
   }
 
   log.debug({ resp }, 'Get response text')

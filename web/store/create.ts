@@ -49,8 +49,15 @@ type MaybeState<S> = Partial<S> | void
 type SetterFunction<S> = (state: S, ...args: any[]) => HandlerReturn<S>
 
 const win: any = window
-const devTools = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.() || {
+
+const devTools = {
   send: () => {},
+} as any
+
+const canDebug = localStorage.getItem('devtools') === 'true'
+
+if (canDebug) {
+  win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.()
 }
 
 type CachedStore = (() => any) & StoreApi<any>

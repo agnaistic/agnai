@@ -1,6 +1,7 @@
 import { ThirdPartyFormat } from '../adapters'
 import type { AppLog } from '../logger'
-import { inline, round } from '../util'
+import { round } from '../util'
+import { getChoiceProp, getNextThoughts, getNextTokens } from './util'
 import type { CompletionGenerator } from '/srv/adapter/type'
 
 export type ServerSentEvent = {
@@ -46,11 +47,19 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     }
   }
 
+  // We need to be able to cancel a request without triggering the 'user aborted' listeners
+  const doneSignal = new AbortController()
+  if (signal) {
+    signal.signal.addEventListener('abort', () => {
+      doneSignal.abort()
+    })
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: headers as any,
     body: JSON.stringify(body),
-    signal: signal.signal,
+    signal: doneSignal.signal,
   }).catch((err) => ({ err }))
 
   if ('err' in response) {
@@ -98,6 +107,10 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
       yield { token }
     }
 
+    if (data.thoughts) {
+      yield { thoughts: data.thoughts }
+    }
+
     if (data.meta) {
       if (data.meta.finish_reason) meta.stop = data.meta.finish_reason
       if (data.meta.model) meta.model = meta.model = data.meta.model
@@ -120,8 +133,14 @@ export const streamGenerator: CompletionGenerator = async function* (opts) {
     if (data.tokens) {
       sentTokens = true
       yield data
+      break
     }
   }
+
+  // Always terminate the request to ensure cleanup
+  try {
+    doneSignal.abort()
+  } catch (ex) {}
 
   if (errored && !sentError) {
     switch (response.status) {
@@ -225,18 +244,19 @@ export async function* fetchStream(
           yield { tokens: accum, gens: swipes }
         }
 
-        if (DEBUG) {
-          console.log(`[fetch] response: ${accum}`)
-        }
-        yield { tokens: thoughts + accum }
+        // if (DEBUG) {
+        //   console.log(`[fetch] response: ${accum}`)
+        // }
+
+        yield { tokens: accum }
         return
       }
 
       let chunk = decoder.decode(value)
 
-      if (DEBUG) {
-        console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk: chunk }, null, 2)}`)
-      }
+      // if (DEBUG) {
+      //   console.log(`[fetch] chunk - ${response.url}\n${JSON.stringify({ chunk: chunk }, null, 2)}`)
+      // }
 
       if (chunk.includes(': OPENROUTER PROCESSING\n')) {
         chunk = chunk.replace(/: OPENROUTER PROCESSING/g, '').trimStart()
@@ -330,80 +350,32 @@ export async function* fetchStream(
             const reasoning = getNextThoughts(json) || json.reasoning_content
             const token: string = getNextTokens(json) || json.token || json.response
 
+            if (DEBUG && reasoning) console.log(`[fetch] thoughts: ${reasoning}`)
+            if (DEBUG && token) console.log(`[fetch] tokens: ${token}`)
+
             const index = +(getChoiceProp<string>(json, 'index') || '0')
 
-            /**
-             * Reasoning can come before and after the response
-             * We need to make sure that we concatenate properly in both circumstances
-             * When yielding, only yield the new tokens
-             */
-            const isMultigen = index && index > 0
+            if (reasoning) {
+              thoughts += reasoning
+              yield { thoughts: reasoning }
+            }
 
-            if (isMultigen) {
+            const isMultigen = index && index > 0
+            if (isMultigen && token) {
               if (!gens[index]) gens[index] = ''
               gens[index] += token || ''
             }
 
-            const hasReason = reasoning !== undefined
-            const hasTokens = token !== undefined && !isMultigen
-            let type = ''
-
-            if (hasReason) flags.reason_started = true
-
-            // Main case 1.
-            if (hasReason && hasTokens) {
-              let prefix = thoughts ? '' : '<think>'
-              let suffix = thoughts ? '</think>' : ''
-
-              if (suffix) {
-                flags.reason_ended = true
-              }
-
-              thoughts += prefix + reasoning + suffix
-
-              // Case: Reasoning after the response
-              // Having a prefix means it's the first reasoning tokens
-              if (prefix) {
-                type = '1.1'
-                accum += token
-                yield { token: token + prefix + reasoning + suffix }
-              }
-
-              // Case: Reasoning before response
-              else {
-                type = '1.2'
-                accum += token
-                yield { token: prefix + reasoning + suffix + token }
-              }
+            if (token) {
+              accum += token
+              yield { token }
             }
 
-            // Main case 2.
-            if (hasReason && !hasTokens) {
-              type = '2'
-              let prefix = thoughts ? '' : '<think>'
-              thoughts += prefix + reasoning
-              yield { token: prefix + reasoning }
-            }
-
-            // Main case 3.
-            if (!hasReason && hasTokens) {
-              type = '3'
-              let suffix = flags.reason_started && !flags.reason_ended ? '</think>' : ''
-              if (suffix) {
-                flags.reason_ended = true
-              }
-
-              accum += suffix + token
-              yield { token: suffix + token }
-            }
-
-            if (DEBUG || true) {
-              const choice = json.choices?.[0]
-              if (choice) console.log(`#${type} `, inline(choice))
-              else console.log(`#${type} `, inline(json))
-              // if (token) console.log(`[token:${type}] ${token.trim()}`)
-              // if (reasoning) console.log(`[think:${type}] ${reasoning.trim()}`)
-            }
+            // if (DEBUG) {
+            // const choice = json.choices?.[0]
+            // if (choice) console.log(inline(choice))
+            // else console.log(inline(json))
+            // }
 
             const meta: any = {}
 
@@ -488,80 +460,6 @@ function processError(json: any) {
   const finalMsg = [msg, providerError].filter((m) => !!m).join(' - ')
 
   return { message: finalMsg }
-}
-
-function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
-  const choice = json?.choices?.[0]
-  let value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
-
-  const isThought = prop === 'reasoning' || prop === 'thought'
-  const isToken = prop === 'content' || prop === 'text'
-
-  // Mistral returns arrays as in their deltas for some bizarre reason
-  if (Array.isArray(value)) {
-    if (!isThought) return
-    const first = value[0]
-    if (!first) return
-
-    if (first.type !== 'thinking') return
-    if (!first.thinking?.[0]) return
-    return first.thinking?.[0]?.text
-  }
-
-  if (typeof value !== 'string' && (isToken || isThought)) return
-
-  if (assign && value) {
-    assign[prop] = value
-  }
-
-  return value as T
-}
-
-function getNextTokens(json: any) {
-  const props = ['content', 'text']
-
-  const choice = json?.choices?.[0]
-  let value: any = undefined
-
-  for (const prop of props) {
-    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
-    if (!match) continue
-
-    value = match
-    break
-  }
-
-  return value
-}
-
-function getNextThoughts(json: any) {
-  const props = ['reasoning', 'thought', 'reasoning_content']
-  const choice = json?.choices?.[0]
-
-  let value: any = undefined
-  for (const prop of props) {
-    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
-    if (!match) continue
-
-    value = match
-    break
-  }
-
-  if (!value) return
-
-  if (typeof value === 'string') return value
-
-  // Mistral returns thoughts in an array for some reason string
-  if (Array.isArray(value)) {
-    const first = value[0]
-    if (!first) return
-
-    if (first.type !== 'thinking') return
-    if (!first.thinking?.[0]) return
-    return first.thinking?.[0]?.text
-  }
-
-  return
 }
 
 function tryParse(value: any) {

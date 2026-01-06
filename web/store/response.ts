@@ -20,8 +20,7 @@ import { imageApi } from './data/image'
 export type VoiceState = 'generating' | 'playing'
 
 export type ResponseState = {
-  partialId?: string
-  partial?: string
+  partial?: { id?: string; tokens?: string; thoughts?: string }
 
   /** Primarily controlled in bot-gen, but can be cleared in here in specific error conditions */
   waiting?: {
@@ -88,7 +87,7 @@ export const responseStore = createStore<ResponseState>(
       const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
       const signal = new AbortController()
 
-      yield { partial: '', retrying: replace }
+      yield { partial: {}, retrying: replace }
 
       const res = await botGen
         .stream({
@@ -132,7 +131,7 @@ export const responseStore = createStore<ResponseState>(
 
       const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
       const signal = new AbortController()
-      yield { partial: '', retrying: replace }
+      yield { partial: {}, retrying: replace }
 
       const res = await botGen
         .stream({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
@@ -202,7 +201,7 @@ export const responseStore = createStore<ResponseState>(
 
       let res: { result?: any; error?: string }
 
-      yield { partial: '' }
+      yield { partial: {} }
 
       const created = await handlePreSend(opts)
 
@@ -252,7 +251,7 @@ export const responseStore = createStore<ResponseState>(
       }
 
       if (res.result?.messageId) {
-        yield { partial: '' }
+        yield { partial: {} }
       }
     },
 
@@ -273,7 +272,7 @@ export const responseStore = createStore<ResponseState>(
       const signal = new AbortController()
 
       const [_, replace] = msgs.slice(-2)
-      yield { partial: '', retrying: replace }
+      yield { partial: {}, retrying: replace }
 
       const msgState = getStore('messages').getState()
       const textBeforeGenMore = retryLatestGenMoreOutput
@@ -512,7 +511,7 @@ subscribe(
     const { activeChatId } = getStore('messages').getState()
     if (body.chatId !== activeChatId) return
 
-    responseStore.setState({ partial: '' })
+    responseStore.setState({ partial: {} })
   }
 )
 
@@ -521,13 +520,31 @@ subscribe(
   { partial: 'string', partialId: 'string?', chatId: 'string', kind: 'string?', json: 'any?' },
   (body) => {
     const { activeChatId } = getStore('messages').getState()
-    const { waiting } = responseStore.getState()
+    const { waiting, partial } = responseStore.getState()
     if (!waiting) return
     if (body.chatId !== activeChatId) return
 
     if (body.kind !== 'chat-query') {
-      responseStore.setState({ partial: body.partial, partialId: body.partialId })
+      responseStore.setState({
+        partial: { id: body.partialId, tokens: body.partial, thoughts: partial?.thoughts },
+      })
     }
+  }
+)
+
+subscribe(
+  'inference-thought',
+  { thought: 'string', partialId: 'string', chatId: 'string' },
+  (body) => {
+    const { activeChatId } = getStore('messages').getState()
+    const { waiting, partial } = responseStore.getState()
+    if (!waiting) return
+    if (body.chatId !== activeChatId) return
+
+    const next = (partial?.thoughts || '') + body.thought
+    responseStore.setState({
+      partial: { id: body.partialId, thoughts: next, tokens: partial?.tokens },
+    })
   }
 )
 
@@ -640,7 +657,6 @@ events.on(EVENTS.setWaiting, (next) => {
       waiting: next,
       retrying: undefined,
       partial: undefined,
-      partialId: undefined,
     })
     return
   }

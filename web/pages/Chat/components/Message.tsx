@@ -84,7 +84,7 @@ type MessageProps = {
   tts?: boolean
   children?: any
   retrying?: AppSchema.ChatMessage
-  partial?: string
+  partial?: { thoughts?: string; tokens?: string }
   sendMessage: SendFunc
   isPaneOpen: boolean
   showHiddenEvents?: boolean
@@ -731,7 +731,7 @@ const MessageOptions: Component<{
   edit: Accessor<boolean>
   startEdit: () => void
   last?: boolean
-  partial?: string
+  partial?: { thoughts?: string; tokens?: string }
   show: Signal<boolean>
   textBeforeGenMore?: string
   onRemove: () => void

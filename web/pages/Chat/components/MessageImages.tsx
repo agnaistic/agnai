@@ -102,7 +102,7 @@ export const MessageImages: Component<{
           </span>
         </Show>
 
-        <div class="ml-2 flex items-center gap-3">
+        <div class="ml-2 flex min-h-[40px] items-center gap-3">
           <div
             class="icon-button"
             onClick={() =>

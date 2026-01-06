@@ -155,7 +155,7 @@ export function inferenceHelper(init: {
 
     const stream = genApi.cancellableStream(
       {
-        prompt: opts.prompt,
+        prompt: parsed.parsed,
         messages: parsed.blocks.length ? parsed.blocks : undefined,
         image: opts.image,
         settings: preset,

@@ -340,6 +340,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       }
     }
 
+    if (generated.thoughts) {
+      yield { thoughts: generated.thoughts }
+    }
+
+    if (generated.tokens) {
+      result = generated.tokens
+      break
+    }
+
     if (typeof generated === 'string') {
       result = generated
       break

@@ -145,7 +145,7 @@ export function useImageContext() {
         settings.config.serverConfig?.imagesModels,
         settings.config.serverConfig?.imagesEnabled,
       ],
-      () => recieveUpdate()
+      () => receiveUpdate()
     )
   )
 
@@ -186,7 +186,7 @@ export function useImageContext() {
     )
   )
 
-  const recieveUpdate = () => {
+  const receiveUpdate = () => {
     if (!page.open) return
 
     const hostingImages =

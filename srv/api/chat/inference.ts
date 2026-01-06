@@ -500,6 +500,10 @@ export const inferenceStream = wrap(async (req, res) => {
         wrapped({ type: 'inference-warning', requestId, warning: gen.warning })
         continue
       }
+
+      if ('thoughts' in gen) {
+        wrapped({ type: 'inference-thought', requestId, thoughts: gen.thoughts })
+      }
     }
 
     if (!promptSent) {

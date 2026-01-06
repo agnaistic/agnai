@@ -352,6 +352,9 @@ export namespace AppSchema {
     }
 
     invisible?: Record<string, boolean | undefined>
+
+    // Emphemeral (lost on page refresh):
+    reasoning?: string
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'

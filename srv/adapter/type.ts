@@ -30,6 +30,7 @@ export type CompletionTick =
   | { token: string }
   | { tokens: string; gens?: string[] }
   | { tokens: string }
+  | { thoughts: string }
   | void
 
 export type CompletionGenerator<T = Completion> = (opts: {
@@ -42,7 +43,7 @@ export type CompletionGenerator<T = Completion> = (opts: {
   log: AppLog | undefined
   format?: ThirdPartyFormat | 'openrouter' | 'raw'
 }) => AsyncGenerator<
-  { error?: string; tokens?: string; token?: string; index?: any } | T,
+  { error?: string; tokens?: string; token?: string; index?: any; thoughts?: string } | T,
   T | undefined
 >
 
@@ -199,4 +200,5 @@ export type ModelAdapter = (
   | { meta: any }
   | { prompt: any }
   | { warning: string }
+  | { thoughts: string }
 >

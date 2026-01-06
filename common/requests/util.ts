@@ -15,6 +15,12 @@ let notifier: Notifier = {
 }
 let emitter = (_payload: { type: string }) => {}
 
+export function joinThoughtTokens(accum: string, thoughts: string) {
+  if (!thoughts.trim()) return accum
+
+  return `<think>${thoughts}</think>${accum}`
+}
+
 export function setEmitter(emit: (payload: { type: string }) => void) {
   emitter = emit
 }
@@ -103,6 +109,80 @@ export function trimResponseV2(
   }
 
   return sanitise(trimmed.split(`${char.name}:`).join(''))
+}
+
+export function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {
+  const choice = json?.choices?.[0]
+  let value = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+
+  const isThought = prop === 'reasoning' || prop === 'thought'
+  const isToken = prop === 'content' || prop === 'text'
+
+  // Mistral returns arrays as in their deltas for some bizarre reason
+  if (Array.isArray(value)) {
+    if (!isThought) return
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
+  }
+
+  if (typeof value !== 'string' && (isToken || isThought)) return
+
+  if (assign && value) {
+    assign[prop] = value
+  }
+
+  return value as T
+}
+
+export function getNextTokens(json: any) {
+  const props = ['content', 'text']
+
+  const choice = json?.choices?.[0]
+  let value: any = undefined
+
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
+
+    value = match
+    break
+  }
+
+  return value
+}
+
+export function getNextThoughts(json: any) {
+  const props = ['reasoning', 'thought', 'reasoning_content']
+  const choice = json?.choices?.[0]
+
+  let value: any = undefined
+  for (const prop of props) {
+    const match = choice?.delta?.[prop] || choice?.[prop] || json?.[prop]
+    if (!match) continue
+
+    value = match
+    break
+  }
+
+  if (!value) return
+
+  if (typeof value === 'string') return value
+
+  // Mistral returns thoughts in an array for some reason string
+  if (Array.isArray(value)) {
+    const first = value[0]
+    if (!first) return
+
+    if (first.type !== 'thinking') return
+    if (!first.thinking?.[0]) return
+    return first.thinking?.[0]?.text
+  }
+
+  return
 }
 
 export function getEndTokens(

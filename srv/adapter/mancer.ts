@@ -129,6 +129,15 @@ export const handleMancer: ModelAdapter = async function* (opts) {
       return
     }
 
+    if ('thoughts' in generated.value) {
+      yield { thoughts: generated.value.thoughts! }
+    }
+
+    if ('tokens' in generated.value) {
+      accumulated = generated.value.tokens!
+      break
+    }
+
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
@@ -144,7 +153,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     }
   }
   try {
-    let text = getCompletionContent(response, opts.log)
+    let text = getCompletionContent(response, accumulated, opts.log)
     if (text instanceof Error) {
       yield { error: `Mancer returned an error: ${text.message}` }
       return

@@ -21,7 +21,14 @@ export type TickHandler<T = JsonOutput> = (
   json?: T
 ) => void
 
-export type InferenceState = 'partial' | 'done' | 'error' | 'warning' | 'headers' | 'meta'
+export type InferenceState =
+  | 'partial'
+  | 'done'
+  | 'error'
+  | 'warning'
+  | 'headers'
+  | 'meta'
+  | 'thought'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
