@@ -673,7 +673,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
 
   const realDefs: ResponseSchema | undefined =
     opts.kind === 'chat-query' && opts.schema?.length
-      ? { schema: opts.schema, history: '', response: '', imageCaption: '' }
+      ? { schema: opts.schema, history: '', response: '', imageCaption: '', systemPrompt: '', jailbreak: '' }
       : presetDefs?.schema
 
   debug('request')(

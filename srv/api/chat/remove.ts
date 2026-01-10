@@ -2,6 +2,49 @@ import { assertValid } from '/common/valid'
 import { store } from '../../db'
 import { errors, handle, StatusError } from '../wrap'
 import { sendMany } from '../ws'
+import { findDeletionRange, toQuickGraph } from '/common/chat'
+import { db, transact } from '/srv/db/client'
+
+export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
+  const chatId = params.id
+  assertValid({ ids: ['string'], leafId: 'string' }, body)
+
+  const { chat, messages } = await store.chats.getChatGraph(chatId)
+  if (!chat) {
+    throw errors.NotFound
+  }
+
+  if (chat.userId !== userId) {
+    throw errors.Forbidden
+  }
+
+  const graph = toQuickGraph(messages, body.leafId)
+  const edges = findDeletionRange(graph, body.ids)
+
+  await transact(async () => {
+    // No parents get updated in a 'tail' delete
+    if (edges.nextLeafId !== undefined) {
+      await store.chats.update(chatId, { treeLeafId: edges.nextLeafId })
+    }
+
+    // We only need to update the parents in a 'middle' delete:
+    // target-tail.children[].parent = target-head.parent
+    // i.e., the 'parents of the immediate descendants' of the 'tail' of the deletes becomes the parent of the 'head' of the deletes
+    if (edges.parents) {
+      await db('chat-message').updateMany(
+        { _id: { $in: edges.parents.ids } },
+        { $set: { parent: edges.parents.parentId } }
+      )
+    }
+
+    await store.msgs.deleteMessages(body.ids)
+  })
+
+  const members = [chat.userId].concat(chat.memberIds || [])
+  sendMany(members, { type: 'messages-deleted-v2', updates: edges.updates, deletes: body.ids })
+
+  return edges.updates
+})
 
 export const deleteMessages = handle(async ({ body, params, userId }) => {
   const chatId = params.id

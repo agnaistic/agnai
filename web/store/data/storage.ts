@@ -479,6 +479,8 @@ export function result<T>(result: T) {
   return Promise.resolve({ result, status: 200, error: undefined })
 }
 
+export type ApiResult<T> = { result?: T; status: number; error?: any }
+
 export const localApi = {
   saveChars,
   saveChat,

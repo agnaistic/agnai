@@ -12,6 +12,16 @@ export async function getChatOnly(id: string) {
   return chat
 }
 
+export async function getChatGraph(id: string) {
+  const chat = await getChatOnly(id)
+  const messages = (await db('chat-message')
+    .find({ chatId: id })
+    .project({ _id: 1, parent: 1, createdAt: 1 })
+    .toArray()) as Array<Pick<AppSchema.ChatMessage, '_id' | 'createdAt' | 'parent'>>
+
+  return { chat, messages }
+}
+
 export async function getChat(id: string, impersonateId?: string) {
   const chat = await db('chat').findOne({ _id: id })
   if (!chat) return

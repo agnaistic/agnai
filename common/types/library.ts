@@ -75,6 +75,8 @@ export interface ResponseSchema {
   response: string
   history: string
   imageCaption: string
+  systemPrompt: string
+  jailbreak: string
 }
 
 type BaseLibaryItem = { _id: string; kind: 'library-item'; userId: string }

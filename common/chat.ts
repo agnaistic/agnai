@@ -21,18 +21,115 @@ export function runPresetParsers(parsers: PresetParser[], message: string) {
     if (!parser.text?.trim()) continue
     switch (parser.type) {
       case 'remove': {
-        current = current.split(parser.text).join('')
+        current = current.split(parser.text.replaceAll('\\n', '\n')).join('')
         break
       }
 
       case 'replace': {
-        current = current.replaceAll(parser.text, parser.to || '')
+        current = current.replaceAll(
+          parser.text.replaceAll('\\n', '\n'),
+          (parser.to || '').replaceAll('\\n', '\n')
+        )
         break
       }
     }
   }
 
   return current
+}
+
+export type QuickChatNode = {
+  _id: string
+  age: string
+  childCount: number
+  parent?: string
+  children: Record<string, true>
+}
+
+export type QuickChatGraph = {
+  tree: Record<string, QuickChatNode>
+  orphans: Array<{ _id: string; age: string; parent?: string }>
+  path: Array<{ _id: string; parent?: string }>
+}
+
+export function toQuickGraph(
+  messages: Array<{ _id: string; createdAt: string; parent?: string }>,
+  currentLeaf?: string
+) {
+  const tree: QuickChatGraph['tree'] = {}
+  const orphans: QuickChatGraph['orphans'] = []
+
+  for (const msg of messages) {
+    tree[msg._id] = {
+      _id: msg._id,
+      age: msg.createdAt,
+      parent: msg.parent,
+      children: {},
+      childCount: 0,
+    }
+  }
+
+  for (const msg of messages) {
+    if (!msg.parent) continue
+    const parent = tree[msg.parent]
+
+    if (!parent) {
+      orphans.push({ _id: msg._id, age: msg.createdAt, parent: msg.parent })
+      continue
+    }
+
+    parent.childCount++
+    parent.children[msg._id] = true
+  }
+
+  const path: QuickChatGraph['path'] = []
+  if (currentLeaf) {
+    let current = currentLeaf
+    while (true) {
+      const msg = tree[current]
+      if (!msg) break
+
+      path.unshift({ _id: msg._id, parent: msg.parent })
+      if (!msg.parent) break
+      current = msg.parent
+    }
+  }
+
+  return { tree, orphans, path }
+}
+
+export function findDeletionRange(graph: QuickChatGraph, deleteIds: string[]) {
+  const deleteSet = new Set(deleteIds)
+  const method = deleteIds.some((id) => graph.tree[id]?.childCount === 0)
+    ? 'tail'
+    : ('middle' as const)
+  const deletes = deleteIds.map((id) => graph.tree[id]).sort((l, r) => l.age.localeCompare(r.age))
+  const head = deletes[0]
+  const tail = deletes.slice(-1)[0]
+
+  let nextLeafId = method === 'tail' ? head.parent || '' : undefined
+  let parents =
+    method === 'middle'
+      ? { ids: Object.keys(tail.children), parentId: head.parent || '' }
+      : undefined
+
+  const leaf = graph.tree[nextLeafId || '']
+
+  // If the next leaf is invalid (we expect one, but it doesn't exist) then what?
+  // For now, we'll walk-up the path until we get a node that exists.
+  if (method === 'tail' && nextLeafId && !leaf) {
+    for (const node of graph.path.toReversed()) {
+      if (deleteSet.has(node._id)) continue
+      nextLeafId = node._id
+    }
+  }
+
+  const updates = {
+    chat: nextLeafId ? { treeLeafId: nextLeafId } : {},
+    messages: parents ? parents.ids.map((id) => ({ _id: id, parent: parents?.parentId })) : [],
+  }
+
+  return { method, deletes, head, tail, nextLeafId, parents, updates }
 }
 
 export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree; root: string } {

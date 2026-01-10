@@ -1,4 +1,5 @@
 import { config } from '../config'
+import { wait } from '../db/util'
 import { logger } from '../middleware'
 
 type V1Model = {
@@ -102,12 +103,14 @@ async function getModelClasses() {
       })
 
       if (res.status > 200) {
-        const json = await res.json()
+        const text = await res.text().catch(() => 'Could not parse')
         logger.warn(
-          { result: json },
+          { warning: text, page },
           `Featherless model classes failed: ${res.status} ${res.statusText}`
         )
-        return
+
+        await wait(3000)
+        continue
       }
 
       const json = await res.json()
@@ -118,10 +121,14 @@ async function getModelClasses() {
       }
 
       if (items.length < 50) break
+      await wait(4000)
       page++
     } catch (ex: any) {
       logger.warn(`Featherless model classes failed: ${ex.message || ex}`)
       return
+    } finally {
+      await wait(60000 * 10)
+      getModelClasses()
     }
   }
 
@@ -129,5 +136,3 @@ async function getModelClasses() {
 }
 
 getModelList()
-
-setInterval(getModelList, 120000)

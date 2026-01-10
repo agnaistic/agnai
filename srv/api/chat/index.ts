@@ -14,7 +14,7 @@ import { guestGenerateMsg } from './guest-msg'
 import { getImageModelList, getSdModelList } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages, createMessage } from './message'
-import { deleteChat, deleteMessages } from './remove'
+import { deleteChat, deleteMessages, deleteMessagesV2 } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
 import { guidance, inference, inferenceApi, inferenceStream } from './inference'
@@ -60,6 +60,7 @@ router.put('/:id/message', updateMessage)
 router.put('/:id/message-props', updateMessageProps)
 router.put('/:id/message-swap', swapMessage)
 router.delete('/:id/messages', deleteMessages)
+router.delete('/:id/messages-v2', deleteMessagesV2)
 router.delete('/:id', deleteChat)
 
 export default router

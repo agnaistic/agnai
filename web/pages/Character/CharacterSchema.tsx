@@ -56,6 +56,8 @@ const exampleSchema: ResponseSchema = {
   response: '{{response}}',
   imageCaption: ``,
   schema: [],
+  systemPrompt: '',
+  jailbreak: '',
 }
 
 export const CharacterSchema: Component<{
@@ -81,6 +83,8 @@ export const CharacterSchema: Component<{
     history: '',
     imageCaption: '',
     schema: [] as JsonField[],
+    systemPrompt: '',
+    jailbreak: '',
   })
 
   const vars = createMemo(() => {
@@ -315,6 +319,8 @@ export const CharacterSchema: Component<{
         response: store.response,
         imageCaption: store.imageCaption,
         schema: store.schema,
+        systemPrompt: store.systemPrompt,
+        jailbreak: store.jailbreak,
       }
 
       props.update(update)
@@ -602,6 +608,8 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
           fields: ['any?'],
           schema: ['any?'],
           separateCall: 'boolean?',
+          systemPrompt: 'string?',
+          jailbreak: 'string?'
         },
         json
       )
@@ -618,6 +626,8 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
         history: json.history,
         imageCaption: json.imageCaption || '',
         schema,
+        systemPrompt: json.systemPrompt || '',
+        jailbreak: json.jailbreak || '',
       })
     } catch (ex: any) {
       toastStore.error(`Invalid JSON Schema: ${ex.message}`)

@@ -39,7 +39,7 @@ export function formatJsonSchemaVars(
     field.name = parseVariableName(field.name, ents, aliases)
   }
 
-  return { history, response, imageCaption, schema: fields }
+  return { history, response, imageCaption, schema: fields, systemPrompt: schema.systemPrompt, jailbreak: schema.jailbreak }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
@@ -217,6 +217,8 @@ export function prepareJsonSchema(
     history: parsed.history,
     imageCaption: parsed.imageCaption,
     schema: fields,
+    systemPrompt: '',
+    jailbreak: ''
   }
 
   const hydrator = jsonHydrator(nextSchema, entities, aliases)

@@ -2,7 +2,7 @@ import { InferenceState } from '../../../common/prompt'
 import { AppSchema } from '../../../common/types/schema'
 import { api, getUserId, isLoggedIn } from '../api'
 import { chatStore } from '../chat'
-import { localApi } from './storage'
+import { ApiResult, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { parseTemplate, TemplateOpts } from '/common/template-parser'
 import { exclude, replace } from '/common/util'
@@ -15,6 +15,7 @@ import { emptyMsg } from '/web/pages/Chat/helpers'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
+import { findDeletionRange, toQuickGraph } from '/common/chat'
 
 export const msgsApi = {
   createMessage,
@@ -204,16 +205,20 @@ async function getActiveTemplateParts() {
  *
  * @param chatId
  * @param msgIds
- * @param leafId
+ * @param leafId Current leaf (tail) of the graph that the user is viewing
  * @param parents Which nodes need their parent updated. Key=node, Value=parentId
  * @returns
  */
 export async function deleteMessages(
   chatId: string,
   msgIds: string[],
-  leafId: string,
-  parents: Record<string, string>
-) {
+  leafId: string
+): Promise<
+  ApiResult<{
+    chat: Partial<AppSchema.Chat>
+    messages: Array<Pick<AppSchema.ChatMessage, '_id' | 'parent'>>
+  }>
+> {
   if (!chatId) {
     throw new Error(`Chat ID not set`)
   }
@@ -225,41 +230,40 @@ export async function deleteMessages(
   }
 
   if (isLoggedIn()) {
-    const res = await api.method('delete', `/chat/${chatId}/messages`, {
+    const res = await api.method('delete', `/chat/${chatId}/messages-v2`, {
       ids: msgIds,
       leafId,
-      parents,
     })
-
-    if (res.result) {
-      localEmit({ type: 'messages-deleted', ids: msgIds })
-    }
 
     return res
   }
 
   const msgs = await localApi.getMessages(chatId)
+  const localGraph = toQuickGraph(msgs, leafId)
+  const edges = findDeletionRange(localGraph, msgIds)
 
-  for (const msg of msgs) {
-    const parent = parents[msg._id]
-    if (!parent) continue
-    msg.parent = parent
-  }
+  const updates = new Map(edges.updates.messages.map((u) => [u._id, u]))
 
-  await localApi.saveMessages(chatId, exclude(msgs, msgIds))
+  const nextMsgs = msgs.map((msg) => {
+    const match = updates.get(msg._id)
+    if (!match) return msg
+    return { ...msg, parent: match.parent }
+  })
+
+  await localApi.saveMessages(chatId, exclude(nextMsgs, msgIds))
 
   const chats = await localApi.loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
   if (chat && leafId) {
     const nextChat: AppSchema.Chat = {
       ...chat,
-      treeLeafId: leafId,
+      ...edges.updates.chat,
       updatedAt: new Date().toISOString(),
     }
     await localApi.saveChats(replace(chatId, chats, nextChat))
   }
 
-  return localApi.result({ success: true })
+  return localApi.result(edges.updates)
 }
 
 function messageToLine(opts: {

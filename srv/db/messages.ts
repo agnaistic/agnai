@@ -135,7 +135,8 @@ export async function getMessage(messageId: string) {
 }
 
 export async function deleteMessages(messageIds: string[]) {
-  await db('chat-message').deleteMany({ _id: { $in: messageIds } })
+  const res = await db('chat-message').deleteMany({ _id: { $in: messageIds } })
+  return res
 }
 
 export async function editChatMessage(
