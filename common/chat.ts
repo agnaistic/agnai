@@ -118,7 +118,7 @@ export function findDeletionRange(graph: QuickChatGraph, deleteIds: string[]) {
   // If the next leaf is invalid (we expect one, but it doesn't exist) then what?
   // For now, we'll walk-up the path until we get a node that exists.
   if (method === 'tail' && nextLeafId && !leaf) {
-    for (const node of graph.path.toReversed()) {
+    for (const node of graph.path.slice().reverse()) {
       if (deleteSet.has(node._id)) continue
       nextLeafId = node._id
     }
