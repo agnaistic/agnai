@@ -21,6 +21,14 @@ export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
   const graph = toQuickGraph(messages, body.leafId)
   const edges = getDeletionChanges(graph, body.ids)
 
+  for (const id of body.ids) {
+    const msg = graph.tree[id]
+
+    if (!msg) {
+      throw new StatusError(`Bad delete request: Message ID not found`, 400)
+    }
+  }
+
   if (!body.soft) {
     // No parents get updated in a 'tail' delete
     await transact(async () => {
