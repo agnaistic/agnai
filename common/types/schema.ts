@@ -481,6 +481,7 @@ export namespace Patreon {
     type: 'member'
     id: string
     attributes: {
+      currently_entitled_amount_cents: number
       campaign_lifetime_support_cents: number
       campaign_entitled_amount_cents: number
       is_gifted: boolean

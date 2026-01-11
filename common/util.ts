@@ -530,9 +530,17 @@ export function getUserSubscriptionTier(
 
   const nativeExpired = isExpired(user.billing?.validUntil) || user.billing?.status === 'cancelled'
   const patronGifted = user.patreon?.member?.attributes?.is_gifted === true
-  const patronExpired =
-    isExpired(user.patreon?.member?.attributes.next_charge_date) ||
-    user.patreon?.member?.attributes.patron_status !== 'active_patron'
+  let patronExpired = isExpired(user.patreon?.member?.attributes.next_charge_date)
+
+  // There is a several hour window when subscriptions renew
+  // We will give the benefit of the doubt during this period
+  if (patronExpired) {
+    const isActive = user.patreon?.member?.attributes.patron_status === 'active_patron'
+    const isEntitled = +(user.patreon?.member?.attributes.currently_entitled_amount_cents || 0) > 0
+    const isPaid = user.patreon?.member?.attributes.last_charge_status === 'Paid'
+
+    patronExpired = !isActive || !isEntitled || !isPaid
+  }
 
   if (nativeExpired) {
     nativeTier = undefined
