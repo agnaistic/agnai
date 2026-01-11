@@ -211,6 +211,9 @@ export function prepareJsonSchema(
   const names = getNames(entities)
   const aliases: Record<string, string> = {}
   const parsed = formatJsonSchemaVars(def, entities)
+
+  if (!parsed.schema) return
+
   const fields = parsed.schema.slice().filter((f) => !f.disabled)
 
   if (includeResponse) {
