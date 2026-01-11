@@ -68,11 +68,11 @@ export function trimResponseV2(
 
   generated = generated.split(`${char.name} :`).join(`${char.name}:`)
   if (gen?.reasoning?.start) {
-    generated = generated.replaceAll('<think>', gen.reasoning.start)
+    generated = generated.replace(/\<think\>/g, gen.reasoning.start)
   }
 
   if (gen?.reasoning?.end) {
-    generated = generated.replaceAll('</think>', gen.reasoning.end)
+    generated = generated.replace(/\<\/think\>/g, gen.reasoning.end)
   }
 
   for (const member of members) {
