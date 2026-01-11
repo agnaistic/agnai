@@ -241,7 +241,7 @@ registerAdapter('openrouter', handleOpenRouter, {
 })
 
 function getResponseText(resp: any, accum: string, log: AppLog) {
-  if (resp) {
+  if (accum) {
     return accum
   }
 
