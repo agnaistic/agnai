@@ -609,7 +609,7 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
           schema: ['any?'],
           separateCall: 'boolean?',
           systemPrompt: 'string?',
-          jailbreak: 'string?'
+          jailbreak: 'string?',
         },
         json
       )
