@@ -15,7 +15,7 @@ import { emptyMsg } from '/web/pages/Chat/helpers'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
-import { findDeletionRange, toQuickGraph } from '/common/chat'
+import { getDeletionChanges, toQuickGraph } from '/common/chat'
 
 export const msgsApi = {
   createMessage,
@@ -233,6 +233,7 @@ export async function deleteMessages(
     const res = await api.method('delete', `/chat/${chatId}/messages-v2`, {
       ids: msgIds,
       leafId,
+      // soft: true,
     })
 
     return res
@@ -240,7 +241,7 @@ export async function deleteMessages(
 
   const msgs = await localApi.getMessages(chatId)
   const localGraph = toQuickGraph(msgs, leafId)
-  const edges = findDeletionRange(localGraph, msgIds)
+  const edges = getDeletionChanges(localGraph, msgIds)
 
   const updates = new Map(edges.updates.messages.map((u) => [u._id, u]))
 

@@ -98,7 +98,7 @@ export function toQuickGraph(
   return { tree, orphans, path }
 }
 
-export function findDeletionRange(graph: QuickChatGraph, deleteIds: string[]) {
+export function getDeletionChanges(graph: QuickChatGraph, deleteIds: string[]) {
   const deleteSet = new Set(deleteIds)
   const method = deleteIds.some((id) => graph.tree[id]?.childCount === 0)
     ? 'tail'

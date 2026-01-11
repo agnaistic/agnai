@@ -832,6 +832,17 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   })
 })
 
+subscribe(
+  'messaged-deleted-v2',
+  {
+    updates: { chat: 'any?', messages: [{ _id: 'string', parent: 'string?' }] },
+    deletes: ['string?'],
+  },
+  (body) => {
+    applyGraphUpdates({ updates: body.updates.messages, deletes: body.deletes })
+  }
+)
+
 const updateMsgSub = (body: {
   type: string
   chatId: string
@@ -1022,7 +1033,8 @@ function applyGraphUpdates(params: {
   }
 
   for (const deleteId of params.deletes || []) {
-    delete tree[deleteId]
+    const { [deleteId]: removed, ...nextTree } = tree
+    tree = nextTree
   }
 
   const deletes = new Set(params.deletes || [])
@@ -1030,10 +1042,9 @@ function applyGraphUpdates(params: {
   const nextHistory = messageHistory
     .filter((m) => !deletes.has(m._id))
     .map((m) => ({ ...tree[m._id].msg }))
-  const nextTree = toChatGraph(nextHistory.concat(nextMsgs))
 
   msgStore.setState({
-    graph: { tree: nextTree.tree, root },
+    graph: { tree, root },
     messageHistory: nextHistory,
     msgs: nextMsgs,
   })
@@ -1082,34 +1093,30 @@ function updateMessageInState(messageId: string, updates: Partial<AppSchema.Chat
 }
 
 function getDeletingIds(graph: ChatTree, fromId: string, deleteOne: boolean) {
-  const realDeletes: string[] = [fromId]
   const from = graph[fromId]
 
   if (!from) {
     throw new Error(`Could not locate message to delete`)
   }
 
-  const current: Record<string, true> = { ...from.children }
-
   if (deleteOne) {
-    return { deletes: realDeletes }
+    return { deletes: [fromId] }
   }
 
-  if (!deleteOne) {
-    do {
-      const count = Object.keys(current).length
-      if (count === 0) break
+  const deletes = [fromId].concat(getChildren(graph, fromId))
 
-      for (const childId in current) {
-        realDeletes.push(childId)
-        const child = graph[childId]
-        delete current[childId]
-        if (!child) continue
+  return { deletes }
+}
 
-        Object.assign(current, { ...child.children })
-      }
-    } while (true)
+function getChildren(graph: ChatTree, nodeId: string, prev: string[] = []) {
+  const target = graph[nodeId]
+  if (!target) return prev
+
+  for (const child in target.children) {
+    prev.push(child)
+
+    getChildren(graph, child, prev)
   }
 
-  return { deletes: realDeletes }
+  return prev
 }

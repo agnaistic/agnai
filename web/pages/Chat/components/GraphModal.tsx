@@ -173,7 +173,19 @@ export const ChatGraphModal: Component<{
           </Button>
           <Button onClick={reset}>Reset</Button>
           <Button onClick={toggle}>Rotate</Button>
-          <Button onClick={props.close}>Close</Button>
+          <Button
+            schema="green"
+            disabled={!store.clicked}
+            onClick={() => {
+              msgStore.fork(store.clicked)
+              props.close()
+            }}
+          >
+            Fork
+          </Button>
+          <Button schema="secondary" onClick={props.close}>
+            Close
+          </Button>
         </>
       }
     >
