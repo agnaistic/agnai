@@ -34,7 +34,7 @@ export async function start() {
 
   prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
-  await Promise.allSettled([prepSubscriptionCache(), prepTierCache()])
+  await Promise.allSettled([prepSubscriptionCache(true), prepTierCache(true)])
 
   server.on('error', (err) => {
     logger.error({ cause: err.message }, 'Failed to start API')
