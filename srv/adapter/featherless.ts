@@ -86,6 +86,9 @@ async function getModelList() {
     return classes
   } catch (ex) {
     logger.warn({ err: ex }, `Featherless model list failed`)
+  } finally {
+    await wait(60000 * 10)
+    getModelList()
   }
 }
 
@@ -126,9 +129,6 @@ async function getModelClasses() {
     } catch (ex: any) {
       logger.warn(`Featherless model classes failed: ${ex.message || ex}`)
       return
-    } finally {
-      await wait(60000 * 10)
-      getModelClasses()
     }
   }
 
