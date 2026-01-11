@@ -28,7 +28,7 @@ export function formatJsonSchemaVars(
   schema: ResponseSchema,
   ents: StructureEntities
 ): ResponseSchema {
-  if (!schema?.schema?.length) schema
+  if (!schema?.schema?.length) return schema
   const aliases = getSchemaAliases(schema.schema)
   const history = parseVariableName(schema.history, ents, aliases)
   const response = parseVariableName(schema.response, ents, aliases)
@@ -39,7 +39,14 @@ export function formatJsonSchemaVars(
     field.name = parseVariableName(field.name, ents, aliases)
   }
 
-  return { history, response, imageCaption, schema: fields, systemPrompt: schema.systemPrompt, jailbreak: schema.jailbreak }
+  return {
+    history,
+    response,
+    imageCaption,
+    schema: fields,
+    systemPrompt: schema.systemPrompt,
+    jailbreak: schema.jailbreak,
+  }
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
@@ -218,7 +225,7 @@ export function prepareJsonSchema(
     imageCaption: parsed.imageCaption,
     schema: fields,
     systemPrompt: '',
-    jailbreak: ''
+    jailbreak: '',
   }
 
   const hydrator = jsonHydrator(nextSchema, entities, aliases)
