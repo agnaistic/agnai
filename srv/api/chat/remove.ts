@@ -3,7 +3,7 @@ import { store } from '../../db'
 import { errors, handle, StatusError } from '../wrap'
 import { sendMany } from '../ws'
 import { getDeletionChanges, toQuickGraph } from '/common/chat'
-import { db, transact } from '/srv/db/client'
+import { db } from '/srv/db/client'
 
 export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
   const chatId = params.id
@@ -22,24 +22,22 @@ export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
   const edges = getDeletionChanges(graph, body.ids)
 
   if (!body.soft) {
-    await transact(async () => {
-      // No parents get updated in a 'tail' delete
-      if (edges.nextLeafId !== undefined) {
-        await store.chats.update(chatId, { treeLeafId: edges.nextLeafId })
-      }
+    // No parents get updated in a 'tail' delete
+    if (edges.nextLeafId !== undefined) {
+      await store.chats.update(chatId, { treeLeafId: edges.nextLeafId })
+    }
 
-      // We only need to update the parents in a 'middle' delete:
-      // target-tail.children[].parent = target-head.parent
-      // i.e., the 'parents of the immediate descendants' of the 'tail' of the deletes becomes the parent of the 'head' of the deletes
-      if (edges.parents) {
-        await db('chat-message').updateMany(
-          { _id: { $in: edges.parents.ids } },
-          { $set: { parent: edges.parents.parentId } }
-        )
-      }
+    // We only need to update the parents in a 'middle' delete:
+    // target-tail.children[].parent = target-head.parent
+    // i.e., the 'parents of the immediate descendants' of the 'tail' of the deletes becomes the parent of the 'head' of the deletes
+    if (edges.parents) {
+      await db('chat-message').updateMany(
+        { _id: { $in: edges.parents.ids } },
+        { $set: { parent: edges.parents.parentId } }
+      )
+    }
 
-      await store.msgs.deleteMessages(body.ids)
-    })
+    await store.msgs.deleteMessages(body.ids)
   }
 
   const members = [chat.userId].concat(chat.memberIds || [])
