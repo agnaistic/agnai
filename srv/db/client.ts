@@ -92,11 +92,6 @@ export async function createIndexes() {
 
   await db('chat-message').createIndex({ chatId: 1 }, { name: 'chatmessages_chatId' })
   await db('chat-message').createIndex(
-    { chatId: 1, parent: 1 },
-    { name: 'chatmessages_chatId_parent' }
-  )
-  await db('chat-message').createIndex({ parent: 1 }, { name: 'chatmessages_parent' })
-  await db('chat-message').createIndex(
     { chatId: 1, kind: 1, createdAt: -1 },
     { name: 'chatmessages_chatId_kind_createdAt' }
   )
