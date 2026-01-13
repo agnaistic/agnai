@@ -15,7 +15,7 @@ import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { RootModal } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
-import { setComponentPageTitle } from '../../shared/util'
+import { downloadJson, setComponentPageTitle } from '../../shared/util'
 import { adminStore, pageStore, settingStore, toastStore, userStore } from '../../store'
 import { Pill, TitleCard } from '/web/shared/Card'
 import { useNavigate, useSearchParams } from '@solidjs/router'
@@ -107,7 +107,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
   const [importing, setImporting] = createSignal(false)
-  const [dataHref, setDataHref] = createSignal('')
+  const [downloadData, setDownloadData] = createSignal<any>()
   const google = useGoogleReady()
 
   const canuseGoogle = createMemo(
@@ -358,8 +358,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                     schema="success"
                     onClick={async () => {
                       const data = await localApi.getGuestData()
-                      const href = await localApi.prepareJsonHref(data)
-                      setDataHref(href)
+                      setDownloadData(data)
                     }}
                   >
                     Prepare Backup
@@ -369,12 +368,17 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   </Button>
                 </div>
 
-                <Show when={!!dataHref()} fallback={<span class="text-500">Backup Not Ready</span>}>
+                <Show
+                  when={!!downloadData()}
+                  fallback={<span class="text-500">Backup Not Ready</span>}
+                >
                   <div class="flex justify-center">
                     <a
                       class="link flex gap-1"
-                      href={dataHref()}
-                      download={`guest-data-${Date.now()}.json`}
+                      onClick={() => {
+                        const data = downloadData()
+                        downloadJson(data, `guest-data-${Date.now()}.json`)
+                      }}
                     >
                       Download Guest Data <Download size={16} />
                     </a>
