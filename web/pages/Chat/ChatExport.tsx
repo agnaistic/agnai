@@ -50,7 +50,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
 
   const download = () => {
     const chat = downloadableChat()
-    downloadJson(chat)
+    downloadJson(chat, `chat-${ctx.active?.chat._id.slice(0, 4)}.json`)
   }
 
   const Footer = (
