@@ -248,7 +248,7 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, fo
           id: preset._id || '',
           providerId: preset.providerId,
           url,
-          key: '',
+          key: isLoggedIn() ? '' : provider.key,
         })
 
     return { list: result.models, url, data: result.data }

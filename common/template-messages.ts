@@ -6,7 +6,7 @@ import { findLast } from './util'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 
 export async function toChatMessages(req: GenerateRequestV2, counter: TokenCounter) {
-  const assembled = await assemblePrompt(req, counter)
+  const assembled = await assemblePrompt(req, counter, true)
 
   const { sections } = assembled
   const {
@@ -20,15 +20,21 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   const systemPrompt = strictSystem.join('').trim().replace(/\n\n+/g, '\n\n')
   const postSystem = post_system.join('').trim().replace(/\n\n+/g, '\n\n')
 
-  if (systemPrompt) {
-    messages.push({
-      role: 'system',
-      content: strictSystem.join('').trim().replace(/\n\n+/g, '\n\n'),
-    })
-  }
+  // Legacy:
+  // if (systemPrompt) {
+  //   messages.push({
+  //     role: 'system',
+  //     content: strictSystem.join('').trim().replace(/\n\n+/g, '\n\n'),
+  //   })
+  // }
 
-  if (postSystem) {
-    messages.push({ role: 'user', content: postSystem })
+  // if (postSystem) {
+  //   messages.push({ role: 'user', content: postSystem })
+  // }
+
+  if (systemPrompt || postSystem) {
+    const joined = [systemPrompt || '', postSystem || ''].filter((m) => !!m.trim()).join('\n\n')
+    messages.push({ role: 'system', content: joined.trim().replace(/\n\n+/g, '\n\n') })
   }
 
   const sender = (req.impersonate?.name || req.sender.handle) + ':'

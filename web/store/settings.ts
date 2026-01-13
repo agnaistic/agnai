@@ -195,7 +195,7 @@ export const settingStore = createStore<SettingState>(
         }
 
         if (!isMaint) {
-          handlePostInit(init, caches)
+          handlePostInit(init, caches, userId === 'anon')
         }
 
         const maint = init.config?.maintenance
@@ -485,19 +485,20 @@ async function loadUserCachedEntities() {
 
 async function handlePostInit(
   init: InitEntities,
-  caches: Awaited<ReturnType<typeof loadUserCachedEntities>>
+  caches: Awaited<ReturnType<typeof loadUserCachedEntities>>,
+  guest: boolean
 ) {
   if (init.allChars) {
     getStore('character').loadImpersonate()
   }
 
   await Promise.all([
-    caches?.presets ? getStore('presets').getPresets() : Promise.resolve(),
-    caches?.books ? await getStore('memory').getAll() : Promise.resolve(),
+    caches?.presets || guest ? getStore('presets').getPresets() : Promise.resolve(),
+    caches?.books || guest ? await getStore('memory').getAll() : Promise.resolve(),
     getStore('character').getAllChats(true),
   ])
 
-  if (!init.allChars) {
+  if (!init.allChars || guest) {
     getStore('character').loadImpersonate()
   }
 }

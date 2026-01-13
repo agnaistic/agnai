@@ -306,7 +306,11 @@ export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCounter) {
+export async function assemblePrompt(
+  opts: GenerateRequestV2,
+  encoder: TokenCounter,
+  chat?: boolean
+) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
@@ -320,7 +324,7 @@ export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCoun
       lastMessage: opts.lastMessage,
       encoder,
       jsonValues: undefined,
-      format: getFormatOverride(opts),
+      format: chat ? 'None' : getFormatOverride(opts),
     })
 
   return {

@@ -366,8 +366,8 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
 export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   kobold: 'Kobold',
   openai: 'OpenAI (Completion)',
-  'openai-chat': 'OpenAI Compatible (Chat - Legacy)',
-  'openai-chatv2': 'OpenAI Compatible (Chat)',
+  'openai-chat': 'OpenAI Compat (Chat - Legacy)',
+  'openai-chatv2': 'OpenAI Compat (Chat)',
   aphrodite: 'Aphrodite',
   arli: 'ArliAI',
   claude: 'Claude (Legacy)',

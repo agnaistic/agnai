@@ -106,7 +106,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
     name: 'Self-Host / OpenAI Compatible',
     url: '',
     formats: [
-      { type: 'format', name: 'OpenAI Compatible', url: '', value: 'openai-chatv2' },
+      { type: 'format', name: 'OpenAI Compat', url: '', value: 'openai-chatv2' },
       { type: 'format', value: 'tabby', url: 'http://localhost:5000/v1' },
       { type: 'format', value: 'aphrodite', url: 'http://localhost:2242/v1' },
       { type: 'format', value: 'vllm', url: 'http://localhost:8000/v1' },
@@ -127,7 +127,7 @@ export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
 
 export const CUSTOM_PROVIDERS: Record<string, ProviderDefinition> = {
   'openai-chatv2': {
-    name: 'OpenAI Compatible',
+    name: 'OpenAI Compat',
     formats: [
       {
         type: 'format',

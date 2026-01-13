@@ -192,6 +192,7 @@ async function getGuestInitEntities(config?: AppSchema.AppConfig) {
     if (model) {
       const preset: AppSchema.UserGenPreset = {
         ...model?.preset,
+        modelFormat: 'None',
         service: model?.service,
         _id: v4(),
         name: 'My Preset',
