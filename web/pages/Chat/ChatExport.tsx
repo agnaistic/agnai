@@ -3,8 +3,9 @@ import { Component, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { characterStore, chatStore, msgStore } from '../../store'
-import { resolveChatPath } from '/common/chat'
+import { ChatTree } from '/common/chat'
 import { useAppContext } from '/web/store/context'
+import { downloadJson } from '/web/shared/util'
 
 const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
   const [ctx] = useAppContext()
@@ -12,10 +13,10 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
   const chars = characterStore.getState().characters
   const msgs = msgStore.getState()
 
-  const json = createMemo(() => {
+  const downloadableChat = createMemo(() => {
     const graph = msgs.graph
     const chat = ctx.active?.chat
-    const messages = resolveChatPath(graph.tree, msgs.msgs.slice(-1)[0]._id)
+    const messages = getAllMessasges(graph.tree)
 
     const json = {
       name: 'Exported',
@@ -44,23 +45,23 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
       })),
     }
 
-    return encodeURIComponent(JSON.stringify(json, null, 2))
+    return json
   })
+
+  const download = () => {
+    const chat = downloadableChat()
+    downloadJson(chat)
+  }
 
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
         Close
       </Button>
-      <a
-        href={`data:text/json:charset=utf-8,${json()}`}
-        download={`chat-${ctx.active?.chat._id.slice(0, 4)}.json`}
-        onClick={props.close}
-      >
-        <Button>
-          <Download /> Download
-        </Button>
-      </a>
+
+      <Button onClick={download}>
+        <Download /> Download
+      </Button>
     </>
   )
 
@@ -68,3 +69,10 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
 }
 
 export default ChatExport
+
+function getAllMessasges(tree: ChatTree) {
+  const messages = Object.values(tree)
+    .map((item) => item.msg)
+    .sort((l, r) => l.createdAt.localeCompare(r.createdAt))
+  return messages
+}
