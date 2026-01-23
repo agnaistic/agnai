@@ -98,12 +98,16 @@ async function getModelClasses() {
 
   while (true) {
     try {
-      const res = await fetch(`https://api.featherless.ai/feather/models?page=${page}&perPage=50`, {
+      const res = await fetch(`https://featherless.ai/api/feather/models?page=${page}&perPage=50`, {
         headers: {
           accept: '*/*',
         },
         method: 'GET',
       })
+
+      if (res.status === 404) {
+        break
+      }
 
       if (res.status > 200) {
         const text = await res.text().catch(() => 'Could not parse')
