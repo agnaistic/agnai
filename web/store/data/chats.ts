@@ -114,7 +114,7 @@ export async function restartChat(chatId: string) {
 
 export async function editChat(
   id: string,
-  update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
+  update: Partial<AppSchema.Chat> & { useOverrides?: boolean }
 ) {
   if (isLoggedIn()) {
     const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, {
