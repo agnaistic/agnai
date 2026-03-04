@@ -50,6 +50,15 @@ type CompletionGenerator = (opts: {
   log: AppLog
 }) => AsyncGenerator<{ error?: string; token?: string; meta?: any }, ClaudeCompletion | undefined>
 
+const TEMP_TOPP_EXCLUSIVE: Record<string, boolean> = {
+  'claude-haiku-4-5-20251001': false,
+  'claude-sonnet-4-5-20250929': false,
+  'claude-opus-4-1-20250805': false,
+  'claude-opus-4-20250514': false,
+  'claude-sonnet-4-20250514': false,
+  'claude-3-haiku-20240307': false,
+}
+
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = () => getTokenCounter('claude', '')
 
@@ -61,7 +70,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   const claudeModel =
     gen.service === 'kobold'
-      ? gen.thirdPartyModel || gen.claudeModel
+      ? gen.thirdPartyModel || gen.claudeModel!
       : gen.thirdPartyModel || gen.claudeModel || CLAUDE_MODELS.ClaudeV37_Sonnet_Latest
 
   const base = getBaseUrl(gen, claudeModel || defaultPresets.claude.claudeModel, isThirdParty)
@@ -140,6 +149,11 @@ export const handleClaude: ModelAdapter = async function* (opts) {
    * Claude specifies that the budget must be GTE 1024, but less than MAX_TOKENS
    * Reasoning is not supported in any text (old) models
    */
+  const exclusive = TEMP_TOPP_EXCLUSIVE[claudeModel] ?? true
+  if (formatting === 'v2' && exclusive) {
+    delete payload.top_p
+  }
+
   if (formatting === 'v2' && gen.reasoning?.enabled) {
     const effort = gen.reasoning.effort || 'low'
     const max = opts.gen.maxTokens ?? 1024
