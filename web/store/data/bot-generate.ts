@@ -43,7 +43,6 @@ import { debug } from '/common/debug'
 import { formatJsonSchemaVars, prepareJsonSchema } from '/common/guidance/json-schema'
 import { getJsonSchema } from '/web/shared/util'
 import { ResponseSchema } from '/common/types/library'
-import { chatsApi } from './chats'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -442,8 +441,7 @@ async function handlePostStreamResponse(input: {
         meta,
       }
 
-      await msgsApi.editMessageProps(replacing, payload)
-      await chatsApi.editChat(chatId, { treeLeafId: replacing._id })
+      await msgsApi.editMessageProps(replacing, { ...payload, assignTree: true })
       return
     }
 
@@ -456,9 +454,9 @@ async function handlePostStreamResponse(input: {
         msg: response,
         state: 'continued',
         meta,
+        assignTree: true,
       })
 
-      await chatsApi.editChat(chatId, { treeLeafId: continuing._id })
       return
     }
 

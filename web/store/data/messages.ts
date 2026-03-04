@@ -16,6 +16,7 @@ import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
 import { getDeletionChanges, toQuickGraph } from '/common/chat'
+import { chatsApi } from './chats'
 
 export const msgsApi = {
   createMessage,
@@ -129,7 +130,7 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
 
 export async function editMessageProps(
   msg: Pick<AppSchema.ChatMessage, '_id' | 'chatId'>,
-  payload: Partial<AppSchema.ChatMessage>
+  payload: Partial<AppSchema.ChatMessage> & { assignTree?: boolean }
 ) {
   const update = { ...payload }
   if (update.meta && Object.keys(update.meta).length === 0) {
@@ -153,6 +154,11 @@ export async function editMessageProps(
   }
 
   const messages = await localApi.getMessages(msg.chatId)
+  if (update.assignTree) {
+    await chatsApi.editChat(msg.chatId, { treeLeafId: msg._id })
+    delete update.assignTree
+  }
+
   const next = replace(msg._id, messages, update)
   await localApi.saveMessages(msg.chatId, next)
   localEmit({ type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update })

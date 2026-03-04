@@ -153,6 +153,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
       invisible: 'any?',
       parent: 'string?',
       meta: 'any?',
+      assignTree: 'boolean?',
     },
     body
   )
@@ -180,6 +181,10 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'edited',
   })
+
+  if (message && body.assignTree) {
+    await store.chats.update(message.chatId, { treeLeafId: message._id })
+  }
 
   const members = [prev.chat.userId].concat(prev.chat.memberIds || [])
   sendMany(members, {
