@@ -8,7 +8,7 @@ import EditMemoryForm, { EntrySort } from './EditMemory'
 import { Option } from '../../shared/Select'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
-import { Save } from 'lucide-solid'
+import { Columns, Save } from 'lucide-solid'
 import { emptyBookWithEmptyEntry } from '/common/memory'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
@@ -20,6 +20,7 @@ const EditMemoryPage = () => {
   const books = memoryStore((s) => ({ books: s.books }))
   const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBookWithEmptyEntry())
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+  const [splitView, setSplitView] = createSignal(false)
   const updateEntrySort = (item: Option<string>) => {
     if (item.value === 'creationDate' || item.value === 'alpha') {
       setEntrySort(item.value)
@@ -67,7 +68,11 @@ const EditMemoryPage = () => {
     <Page>
       <PageHeader title="Edit Memory Book" />
 
-      <div class="mt-4 flex justify-end">
+      <div class="mt-4 flex justify-end gap-2">
+        <Button onClick={() => setSplitView(!splitView())}>
+          <Columns />
+          {splitView() ? 'Single View' : 'Import from Book'}
+        </Button>
         <Button onClick={saveBook}>
           <Save />
           {!state._id ? 'Create Book' : 'Update Book'}
@@ -76,6 +81,7 @@ const EditMemoryPage = () => {
       <EditMemoryForm
         state={state}
         entrySort={entrySort()}
+        splitView={splitView()}
         updateEntrySort={updateEntrySort}
         setter={setState}
       />
