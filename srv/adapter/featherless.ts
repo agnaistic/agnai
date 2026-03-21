@@ -29,6 +29,10 @@ export type FeatherlessModel = {
 
 let modelCache: FeatherlessModel[] = []
 let classCache: Record<string, { ctx: number; res: number }> = {}
+const FEATHERLESS_HEADERS = {
+  accept: 'application/json',
+  'user-agent': 'Agnai/1.0 (+https://github.com/agnaistic/agnai)',
+}
 
 export function getFeatherModels() {
   return { models: modelCache, classes: classCache }
@@ -39,29 +43,32 @@ async function getModelList() {
 
   try {
     const models = await fetch('https://api.featherless.ai/v1/models', {
-      headers: {
-        accept: '*/*',
-      },
+      headers: FEATHERLESS_HEADERS,
       method: 'GET',
     })
 
-    const map = await models.json().then((res) => {
-      const list = res?.data as V1Model[]
-      if (!list) return {}
+    const payload = await parseJsonResponse<{ data?: V1Model[] }>(models, 'Featherless model list')
+    if (!payload) {
+      return modelCache
+    }
 
-      const map: { [key: string]: V1Model } = {}
-      for (const model of list) {
-        if (!classCache[model.model_class]) {
-          classCache[model.model_class] = {
-            ctx: model.context_length,
-            res: model.max_completion_tokens,
-          }
+    const list = payload.data as V1Model[] | undefined
+    if (!list?.length) {
+      logger.warn(`Featherless model list returned no models`)
+      return modelCache
+    }
+
+    const map: { [key: string]: V1Model } = {}
+    for (const model of list) {
+      if (!classCache[model.model_class]) {
+        classCache[model.model_class] = {
+          ctx: model.context_length,
+          res: model.max_completion_tokens,
         }
-
-        map[model.id] = model
       }
-      return map
-    })
+
+      map[model.id] = model
+    }
 
     const classes = await getModelClasses()
 
@@ -99,9 +106,7 @@ async function getModelClasses() {
   while (true) {
     try {
       const res = await fetch(`https://api.featherless.ai/feather/models?page=${page}&perPage=50`, {
-        headers: {
-          accept: '*/*',
-        },
+        headers: FEATHERLESS_HEADERS,
         method: 'GET',
       })
 
@@ -116,7 +121,14 @@ async function getModelClasses() {
         continue
       }
 
-      const json = await res.json()
+      const json = await parseJsonResponse<{ items?: any[] }>(res, 'Featherless model classes', {
+        page,
+      })
+      if (!json?.items) {
+        await wait(3000)
+        continue
+      }
+
       const items = json?.items
 
       if (items.length) {
@@ -133,6 +145,57 @@ async function getModelClasses() {
   }
 
   return all
+}
+
+async function parseJsonResponse<T>(
+  res: Response,
+  label: string,
+  extra: Record<string, unknown> = {}
+): Promise<T | undefined> {
+  const contentType = res.headers.get('content-type') || ''
+  const text = await res.text()
+
+  if (!res.ok) {
+    logger.warn(
+      {
+        ...extra,
+        status: res.status,
+        statusText: res.statusText,
+        warning: text.slice(0, 500),
+      },
+      `${label} failed`
+    )
+    return
+  }
+
+  if (!contentType.includes('application/json')) {
+    logger.warn(
+      {
+        ...extra,
+        status: res.status,
+        contentType,
+        warning: text.slice(0, 500),
+      },
+      `${label} returned non-JSON content`
+    )
+    return
+  }
+
+  try {
+    return JSON.parse(text) as T
+  } catch (ex: any) {
+    logger.warn(
+      {
+        ...extra,
+        err: ex,
+        status: res.status,
+        contentType,
+        warning: text.slice(0, 500),
+      },
+      `${label} returned invalid JSON`
+    )
+    return
+  }
 }
 
 getModelList()
