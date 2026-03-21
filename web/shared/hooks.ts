@@ -14,7 +14,7 @@ import { useLocation, useParams, useSearchParams } from '@solidjs/router'
 import { createImageCache } from '../store/images'
 import { createStore } from 'solid-js/store'
 import { getSettingColor, hexToRgb } from './colors'
-import { getAssetUrl, getJsonSchema, storage } from './util'
+import { firstString, getAssetUrl, getJsonSchema, storage } from './util'
 import { AutoPreset, getPresetOptions } from './adapter'
 import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
@@ -538,18 +538,17 @@ export function useEffect(callback: () => void | Function): void {
 
 export const usePaneManager = () => {
   const [search, setSearch] = useSearchParams()
-  const [showing, setShowing] = createSignal(
-    search.pane !== undefined && typeof search.pane === 'string'
-  )
-  const [pane, setPane] = createSignal(search.pane)
+  const initialPane = firstString(search.pane)
+  const [showing, setShowing] = createSignal(initialPane !== undefined)
+  const [pane, setPane] = createSignal<string | undefined>(initialPane)
 
   createEffect(
     on(
       () => search.pane,
       () => {
-        const next = search.pane !== undefined && typeof search.pane === 'string'
-        setShowing(next)
-        setPane(search.pane)
+        const pane = firstString(search.pane)
+        setShowing(pane !== undefined)
+        setPane(pane)
       }
     )
   )

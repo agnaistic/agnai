@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Search, X } from 'lucide-solid'
 import { Pill } from '/web/shared/Card'
 import { Combobox } from '/web/shared/Combobox'
 import { useSearchParams } from '@solidjs/router'
+import { firstString } from '/web/shared/util'
 
 const ChubNavigation: Component<{ page: 'books' | 'chars' }> = (props) => {
   const state = chubStore((s) => ({ search: s.search, page: s.page }))
@@ -165,7 +166,7 @@ const Tags = () => {
       return
     }
 
-    const tags = search.c_tags || ''
+    const tags = firstString(search.c_tags) || ''
     if (!tags) return
 
     chubStore.setTags(tags)

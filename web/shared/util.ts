@@ -603,6 +603,10 @@ export function capitalize(input: string) {
   return input.slice(0, 1).toUpperCase() + input.slice(1)
 }
 
+export function firstString(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value
+}
+
 export function toDropdownItems(
   values: string[] | readonly string[] | Record<string, string>
 ): Option[] {

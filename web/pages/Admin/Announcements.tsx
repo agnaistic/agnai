@@ -150,6 +150,7 @@ const Announcement: Component<{}> = (props) => {
   onMount(() => announceStore.getAllAdmin())
 
   const onSave = () => {
+    const id = params.id
     const showAt = new Date(state.showAt)
     if (isNaN(showAt.valueOf())) {
       toastStore.error(`"Display At" is required`)
@@ -157,12 +158,12 @@ const Announcement: Component<{}> = (props) => {
     }
     const body = { ...state, showAt: new Date(showAt).toISOString() }
 
-    if (params.id === 'new') {
+    if (id === 'new') {
       announceStore.create(body, (announce) => {
         nav(`/admin/announcements/${announce._id}`)
       })
-    } else {
-      announceStore.update(params.id, body)
+    } else if (id) {
+      announceStore.update(id, body)
     }
   }
 

@@ -32,6 +32,7 @@ import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 import Divider from '/web/shared/Divider'
 import { useResizeObserver } from '/web/shared/hooks'
 import { Selectable } from '/web/shared/Selectable'
+import { firstString } from '/web/shared/util'
 
 type FolderTree = { [folder: string]: Folder }
 
@@ -46,7 +47,7 @@ export const CharacterFolderView: Component<
   const size = useResizeObserver()
 
   const [changeFolder, setChangeFolder] = createSignal<AppSchema.Character>()
-  const [folder, setFolder] = createSignal(search.folder || '/')
+  const [folder, setFolder] = createSignal(firstString(search.folder) || '/')
   const [dragging, setDragging] = createSignal<ListCharacter>()
   const newDrop = createDroppable('new-folder')
 

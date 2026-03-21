@@ -18,7 +18,7 @@ import Select, { Option } from '../../shared/Select'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { setComponentPageTitle } from '../../shared/util'
+import { firstString, setComponentPageTitle } from '../../shared/util'
 import { presetStore, settingStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
@@ -65,6 +65,11 @@ export const SubscriptionModel: Component = () => {
 
   const params = useParams()
   const [query] = useSearchParams()
+  const presetId = () => firstString(query.preset)
+  const defaultPreset = () => {
+    const id = presetId()
+    return isDefaultPreset(id) ? defaultPresets[id] : undefined
+  }
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
@@ -82,7 +87,7 @@ export const SubscriptionModel: Component = () => {
     saving,
     subs,
     items: subs.map<Option>((p) => ({ label: p.name, value: p._id })),
-    editing: subs.find((pre) => pre._id === query.preset || params.id),
+    editing: defaultPreset() || subs.find((pre) => pre._id === presetId() || params.id),
   }))
 
   createEffect(
@@ -97,24 +102,25 @@ export const SubscriptionModel: Component = () => {
 
   onMount(async () => {
     if (params.id === 'new') {
-      const copySource = query.preset
+      const copySource = presetId()
       if (copySource) {
         updateTitle(`Copy subscription ${copySource}`)
       } else {
         updateTitle(`Create subscription`)
       }
 
-      const importing = presets.subs.find((p) => p._id === query.preset)
+      const importing = presets.subs.find((p) => p._id === presetId())
       setters.clear()
       if (importing) {
         setters.setState({ ...importing, _id: '' })
       }
       return
     } else if (params.id === 'default') {
-      if (!isDefaultPreset(query.preset)) return
+      const preset = defaultPreset()
+      if (!preset) return
       setters.setState({
         ...emptyPreset,
-        ...defaultPresets[query.preset],
+        ...preset,
         _id: '',
         subLevel: 0,
         subModel: '',
@@ -412,6 +418,7 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
   const onSubmit = () => {
     const subscriptionId = params.id
 
+    if (!subscriptionId) return
     if (!replaceId()) {
       toastStore.warn('Replacement ID not set')
       return

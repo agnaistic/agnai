@@ -7,15 +7,17 @@ import { createStore } from 'solid-js/store'
 import Button from '/web/shared/Button'
 import { toastStore, userStore } from '/web/store'
 import { Card } from '/web/shared/Card'
+import { firstString } from '/web/shared/util'
 
 export const ResetPasswordPage: Component = () => {
   const [params] = useSearchParams()
   const nav = useNavigate()
+  const code = () => firstString(params.code)
 
   const [state, setState] = createStore({ username: '', password: '', confirm: '' })
 
   const resetPassword = () => {
-    if (!params.code) return
+    if (!code()) return
     if (!state.username) return
     if (!state.password || !state.confirm) return
 
@@ -24,13 +26,13 @@ export const ResetPasswordPage: Component = () => {
       return
     }
 
-    userStore.resetPassword(params.code!, state.username, state.password, state.confirm, () => {
+    userStore.resetPassword(code()!, state.username, state.password, state.confirm, () => {
       nav('/login')
     })
   }
 
   onMount(() => {
-    if (params.code) return
+    if (code()) return
     nav('/')
   })
 

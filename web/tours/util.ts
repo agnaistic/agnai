@@ -1,4 +1,4 @@
-import Shepherd from 'shepherd.js'
+import type { Tour } from 'shepherd.js'
 
 export function tourTitle(text: string, cancel: string) {
   return `
@@ -11,7 +11,7 @@ export function tourTitle(text: string, cancel: string) {
 }
 
 export const btn = {
-  next: (tour: Shepherd.Tour, action?: () => void) => {
+  next: (tour: Tour, action?: () => void) => {
     return {
       text: 'Next',
       classes: 'btn btn-primary',
@@ -21,7 +21,7 @@ export const btn = {
       },
     }
   },
-  prev: (tour: Shepherd.Tour, action?: () => void) => {
+  prev: (tour: Tour, action?: () => void) => {
     return {
       text: 'Back',
       classes: 'btn btn-primary',
@@ -31,7 +31,7 @@ export const btn = {
       },
     }
   },
-  done: (tour: Shepherd.Tour, action?: () => void) => {
+  done: (tour: Tour, action?: () => void) => {
     return {
       text: 'Done',
       classes: 'btn btn-primary',

@@ -32,6 +32,7 @@ import Tabs from '/web/shared/Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { Saga } from '/common/types'
 import { usePresetContext } from '/web/store/preset-context'
+import { firstString } from '/web/shared/util'
 
 const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
@@ -104,7 +105,7 @@ export const SagaPane: Component<{ close: () => void }> = (props) => {
     seen: {} as Record<string, boolean>,
   })
 
-  const [tab, setTabs] = createSignal(search.tab || tabs[0])
+  const [tab, setTabs] = createSignal(firstString(search.tab) || tabs[0])
 
   const currentTab = createMemo(() => {
     const name = tab()

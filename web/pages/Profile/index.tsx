@@ -15,7 +15,7 @@ import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { RootModal } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
-import { downloadJson, setComponentPageTitle } from '../../shared/util'
+import { downloadJson, firstString, setComponentPageTitle } from '../../shared/util'
 import { adminStore, pageStore, settingStore, toastStore, userStore } from '../../store'
 import { Pill, TitleCard } from '/web/shared/Card'
 import { useNavigate, useSearchParams } from '@solidjs/router'
@@ -36,7 +36,7 @@ export const ProfileModal: Component = () => {
   const [search, setSearch] = useSearchParams()
 
   createEffect(() => {
-    const name = search.profile_tab || ''
+    const name = firstString(search.profile_tab) || ''
     if (!name) return
 
     const index = tabs.tabs().findIndex((t) => t.toLowerCase() === name.toLowerCase())

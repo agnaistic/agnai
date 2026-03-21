@@ -5,12 +5,15 @@ import Button from '/web/shared/Button'
 import { useSearchParams } from '@solidjs/router'
 import { userStore } from '/web/store'
 import { Page } from '/web/Layout'
+import { firstString } from '/web/shared/util'
 
 export const CheckoutSuccess: Component = (props) => {
   const [query] = useSearchParams()
 
   onMount(() => {
-    userStore.finishCheckout(query.session_id!, 'success', () => {
+    const sessionId = firstString(query.session_id)
+    if (!sessionId) return
+    userStore.finishCheckout(sessionId, 'success', () => {
       window.close()
     })
   })
@@ -37,7 +40,9 @@ export const CheckoutCancel: Component = (props) => {
   const [query] = useSearchParams()
 
   onMount(() => {
-    userStore.finishCheckout(query.session_id!, 'cancel')
+    const sessionId = firstString(query.session_id)
+    if (!sessionId) return
+    userStore.finishCheckout(sessionId, 'cancel')
   })
 
   return (

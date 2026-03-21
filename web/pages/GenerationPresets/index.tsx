@@ -8,7 +8,7 @@ import Select, { Option } from '../../shared/Select'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { setComponentPageTitle } from '../../shared/util'
+import { firstString, setComponentPageTitle } from '../../shared/util'
 import { presetStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
@@ -21,6 +21,11 @@ export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
   const params = useParams()
   const [query] = useSearchParams()
+  const presetId = () => firstString(query.preset)
+  const defaultPreset = () => {
+    const id = presetId()
+    return isDefaultPreset(id) ? defaultPresets[id] : undefined
+  }
 
   const nav = useNavigate()
   const [selecting, setSelecting] = createSignal(false)
@@ -36,14 +41,12 @@ export const GenerationPresetsPage: Component = () => {
     presets,
     items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
     importing,
-    editing: isDefaultPreset(query.preset)
-      ? defaultPresets[query.preset]
-      : presets.find((pre) => pre._id === query.preset || params.id),
+    editing: defaultPreset() || presets.find((pre) => pre._id === presetId() || params.id),
   }))
 
   onMount(async () => {
     if (params.id === 'new') {
-      const copySource = query.preset
+      const copySource = presetId()
       if (copySource) {
         updateTitle(`Copy preset ${copySource}`)
       } else if (presets.importing) {
@@ -62,17 +65,16 @@ export const GenerationPresetsPage: Component = () => {
         return
       }
 
-      const template = isDefaultPreset(query.preset)
-        ? defaultPresets[query.preset]
-        : presets.presets.find((p) => p._id === query.preset)
+      const template = defaultPreset() || presets.presets.find((p) => p._id === presetId())
       const preset = template ? { ...template } : { ...emptyPreset }
       setters.setState({ ...emptyPreset, ...preset, _id: '' })
       return
     } else if (params.id === 'default') {
-      if (!isDefaultPreset(query.preset)) return
+      const preset = defaultPreset()
+      if (!preset) return
       setters.setState({
         ...emptyPreset,
-        ...defaultPresets[query.preset],
+        ...preset,
         _id: '',
         userId: 'SYSTEM',
       })

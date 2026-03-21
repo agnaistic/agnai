@@ -25,7 +25,7 @@ import { Import, Plus, SortAsc, SortDesc, LayoutList, Image, RefreshCcw } from '
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
-import { storage, setComponentPageTitle } from '../../shared/util'
+import { firstString, storage, setComponentPageTitle } from '../../shared/util'
 import Button from '../../shared/Button'
 import Loading from '../../shared/Loading'
 import TagSelect from '../../shared/TagSelect'
@@ -135,7 +135,7 @@ const CharacterList: Component = () => {
 
   const [view, setView] = createSignal(cached.view || 'list')
   const [showImport, setImport] = createSignal(false)
-  const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
+  const [importPath, setImportPath] = createSignal<string | undefined>(firstString(query.import))
   const importQueue: NewCharacter[] = []
 
   const pager = usePagination({

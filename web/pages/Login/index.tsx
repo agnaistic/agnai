@@ -4,7 +4,7 @@ import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
 import { ACCOUNT_KEY, settingStore, toastStore, userStore } from '../../store'
-import { setComponentPageTitle, storage } from '../../shared/util'
+import { firstString, setComponentPageTitle, storage } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
@@ -167,6 +167,7 @@ const LoginForm: Component<FormProps> = (props) => {
   let refGoogle: any
   const navigate = useNavigate()
   const [query] = useSearchParams()
+  const callback = () => firstString(query.callback)
   const loc = useLocation()
   const state = settingStore((s) => ({ config: s.config, initLoading: s.initLoading }))
   const user = userStore((s) => ({ loggedIn: s.loggedIn }))
@@ -182,9 +183,9 @@ const LoginForm: Component<FormProps> = (props) => {
   createEffect(() => {
     if (state.initLoading) return
 
-    if (query.callback && isLoggedIn()) {
+    if (callback() && isLoggedIn()) {
       for (const authUrl of state.config.authUrls) {
-        if (query.callback.startsWith(authUrl)) return handleLogin()
+        if (callback()!.startsWith(authUrl)) return handleLogin()
       }
       setError('Invalid callback URL')
       return
@@ -221,7 +222,7 @@ const LoginForm: Component<FormProps> = (props) => {
 
   const handleLogin = () => {
     userStore.thirdPartyLogin((token) => {
-      location.href = `${query.callback}?access_token=${token}`
+      location.href = `${callback()}?access_token=${token}`
     })
   }
 
@@ -230,15 +231,15 @@ const LoginForm: Component<FormProps> = (props) => {
     if (!username || !password) return
 
     userStore.login(username, password, async () => {
-      if (query.callback) {
+      if (callback()) {
         for (const authUrl of state.config.authUrls) {
-          if (!query.callback.startsWith(authUrl)) continue
+          if (!callback()!.startsWith(authUrl)) continue
           await wait(0.1)
           return handleLogin()
         }
       }
 
-      if (query.callback) return
+      if (callback()) return
       navigate('/dashboard')
     })
   }
