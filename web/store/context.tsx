@@ -191,8 +191,8 @@ export function ContextProvider(props: { children: any }) {
     const char = chats.active?.char
       ? chats.active.char
       : chat?.characterId
-      ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
-      : undefined
+        ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
+        : undefined
 
     const next: Partial<ContextState> = {
       bg: visuals(),
@@ -286,8 +286,8 @@ export function getAppContext() {
   const char = chats.active?.char
     ? chats.active.char
     : chat?.characterId
-    ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
-    : undefined
+      ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
+      : undefined
 
   const next = {
     appReady: cfg.inited,

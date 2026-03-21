@@ -231,7 +231,7 @@ export const VisibilityToggle: Component<{
 }> = (props) => {
   return (
     <div
-      class={`character-reply-btn flex max-w-[200px] cursor-pointer select-none items-center overflow-hidden rounded-md border-[1px] border-[var(--bg-700)] px-2 py-1  `}
+      class={`character-reply-btn flex max-w-[200px] cursor-pointer select-none items-center overflow-hidden rounded-md border-[1px] border-[var(--bg-700)] px-2 py-1`}
       onclick={props.onClick}
       classList={{
         'bg-900 hover:bg-[var(--bg-700)]': props.invisible === undefined || true,

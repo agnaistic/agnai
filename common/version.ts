@@ -6,7 +6,10 @@ export class VersionController<T extends { _id: string }, U extends Array<keyof 
   current: Pick<T, U[number]>
   changes: ObjectPatch<Pick<T, U[number]>>[] = []
 
-  constructor(public base: T, private keys: U) {
+  constructor(
+    public base: T,
+    private keys: U
+  ) {
     this.current = getBase(base, keys)
     console.log(`[vers] ${inline(this.current)}`)
   }

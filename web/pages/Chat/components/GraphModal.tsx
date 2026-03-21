@@ -100,17 +100,17 @@ export const ChatGraphModal: Component<{
       state !== 'Select Parent'
         ? '....'
         : !store.clicked
-        ? '....'
-        : store.clicked === store.rejoin
-        ? '....'
-        : store.clicked.slice(0, 4)
+          ? '....'
+          : store.clicked === store.rejoin
+            ? '....'
+            : store.clicked.slice(0, 4)
 
     const content =
       state === 'Re-join Node'
         ? state
         : state === 'Select Parent'
-        ? `${state}: ${candidate}`
-        : `${state}: ${store.parent.slice(0, 4)}`
+          ? `${state}: ${candidate}`
+          : `${state}: ${store.parent.slice(0, 4)}`
 
     return { state, choose, content } as const
   })

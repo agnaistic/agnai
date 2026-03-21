@@ -789,10 +789,10 @@ async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
   const requestId = body.requestId || v4()
   const messageId =
     body.kind === 'retry'
-      ? body.replacing?._id ?? requestId
+      ? (body.replacing?._id ?? requestId)
       : body.kind === 'continue'
-      ? body.continuing?._id
-      : requestId
+        ? body.continuing?._id
+        : requestId
   const version = req.body.v || 1
 
   if (isGuest(req)) {
@@ -833,8 +833,8 @@ async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
   const impersonate: AppSchema.Character | undefined = !impersonateId
     ? undefined
     : impersonateId.startsWith('temp-')
-    ? body.impersonate
-    : await store.characters.getCharacter(userId, impersonateId)
+      ? body.impersonate
+      : await store.characters.getCharacter(userId, impersonateId)
 
   const chat = await store.chats.getChatOnly(req.params.id as string)
   if (!chat) throw errors.ChatNotFound

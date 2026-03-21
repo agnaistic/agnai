@@ -158,8 +158,8 @@ export const HordeDetails: Component<{ maxTokens: number; maxContextLength: numb
       Array.isArray(user.user?.hordeModel)
         ? user.user?.hordeModel
         : !!user.user?.hordeModel && user.user.hordeModel !== 'any'
-        ? [user.user?.hordeModel]
-        : []
+          ? [user.user?.hordeModel]
+          : []
     )
     const w = new Set(user.user?.hordeWorkers || [])
 
@@ -332,7 +332,7 @@ export const HordeWorkerModal: Component<{
           <br />
           E.g. <b>(1024/80)</b>
         </div>
-        <div class="flex  items-center justify-between gap-4">
+        <div class="flex items-center justify-between gap-4">
           <p>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</p>
           <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
             De-select All

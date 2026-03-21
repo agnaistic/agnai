@@ -40,8 +40,8 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     chat?.imageSource === 'main-character'
       ? chat.characterId
       : chat?.imageSource === 'last-character'
-      ? opts.characterId
-      : undefined
+        ? opts.characterId
+        : undefined
   const character =
     chat && characterId ? await store.characters.getCharacter(chat.userId, characterId) : undefined
 

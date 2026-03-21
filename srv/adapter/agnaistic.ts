@@ -42,7 +42,7 @@ export async function getSubscriptionPreset(
   if (gen.service !== 'agnaistic' && gen.providerId !== 'agnaistic') return
 
   const tier = store.users.getUserSubTier(user)
-  const level = user.admin ? 999999 : tier?.level ?? -1
+  const level = user.admin ? 999999 : (tier?.level ?? -1)
   let error: string | undefined = undefined
   let warning: string | undefined = undefined
 
@@ -93,7 +93,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     yield { warning: opts.subscription.warning }
   }
 
-  const level = opts.user.admin ? 99999 : opts.subscription.level ?? -1
+  const level = opts.user.admin ? 99999 : (opts.subscription.level ?? -1)
   const subPreset = opts.subscription.preset
 
   let newLevel = await store.users.validateSubscription(opts.user)

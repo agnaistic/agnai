@@ -199,8 +199,8 @@ export function useCharacterBg(src: 'layout' | 'page') {
     const chatImage = chat.active?.chat.background
       ? chat.active.chat.background
       : isBg
-      ? char?.avatar
-      : undefined
+        ? char?.avatar
+        : undefined
 
     if (isChat() && chat.active?.chat.background) {
       const cfg = chat.active.chat.localSettings || {}
@@ -208,10 +208,10 @@ export function useCharacterBg(src: 'layout' | 'page') {
         cfg.bgFormat === 'contain'
           ? 'contain'
           : cfg.bgFormat === 'cover'
-          ? 'cover'
-          : mobile
-          ? 'contain'
-          : 'auto'
+            ? 'cover'
+            : mobile
+              ? 'contain'
+              : 'auto'
 
       return {
         ...base,
@@ -223,10 +223,10 @@ export function useCharacterBg(src: 'layout' | 'page') {
         state.ui.viewMode === 'background-contain'
           ? 'contain'
           : state.ui.viewMode === 'background-cover'
-          ? 'cover'
-          : mobile
-          ? 'contain'
-          : 'auto'
+            ? 'cover'
+            : mobile
+              ? 'contain'
+              : 'auto'
 
       return {
         ...base,

@@ -97,8 +97,8 @@ export function useImageContext() {
     isChat() && entity.chat?.imageSource === 'chat'
       ? 1
       : entity.chat?.imageSource?.includes('character')
-      ? 2
-      : 0
+        ? 2
+        : 0
   )
 
   createEffect(

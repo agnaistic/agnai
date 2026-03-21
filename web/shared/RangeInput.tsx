@@ -37,7 +37,7 @@ const RangeInput: Component<{
       return
     }
 
-    const parsed = next !== undefined ? next ?? '' : ''
+    const parsed = next !== undefined ? (next ?? '') : ''
 
     if (isNaN(+parsed)) {
       range.value = parsed
@@ -116,18 +116,7 @@ const RangeInput: Component<{
         <input
           ref={range}
           type="range"
-          class="
-        form-field
-        form-range
-        h-1
-        w-full
-        cursor-ew-resize
-        appearance-none
-        rounded-xl
-        text-opacity-50
-        accent-[var(--hl-400)]
-        focus:shadow-none focus:outline-none focus:ring-0
-        "
+          class="form-field form-range h-1 w-full cursor-ew-resize appearance-none rounded-xl text-opacity-50 accent-[var(--hl-400)] focus:shadow-none focus:outline-none focus:ring-0"
           min={props.min}
           max={props.max}
           step={props.step}
@@ -177,7 +166,7 @@ export const InlineRangeInput: Component<{
       return
     }
 
-    const parsed = next !== undefined ? next ?? '' : ''
+    const parsed = next !== undefined ? (next ?? '') : ''
 
     if (isNaN(+parsed)) {
       range.value = parsed
@@ -233,18 +222,7 @@ export const InlineRangeInput: Component<{
       <input
         ref={range}
         type="range"
-        class="
-        form-field
-        form-range
-        h-1
-        w-full
-        cursor-ew-resize
-        appearance-none
-        rounded-xl
-        text-opacity-50
-        accent-[var(--hl-400)]
-        focus:shadow-none focus:outline-none focus:ring-0
-      "
+        class="form-field form-range h-1 w-full cursor-ew-resize appearance-none rounded-xl text-opacity-50 accent-[var(--hl-400)] focus:shadow-none focus:outline-none focus:ring-0"
         min={props.min}
         max={props.max}
         step={props.step}

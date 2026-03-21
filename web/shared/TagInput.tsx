@@ -131,7 +131,7 @@ const TagInput: Component<TagInputProps> = (props) => {
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}
           onBlur={handleBlur}
-          placeholder={tags().length || inputValue() ? '' : props.placeholder ?? 'Add tags...'}
+          placeholder={tags().length || inputValue() ? '' : (props.placeholder ?? 'Add tags...')}
           disabled={props.disabled}
           autocomplete="off"
         />

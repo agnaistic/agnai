@@ -152,7 +152,7 @@ const Model: Component<{
         <Card
           bg="bg-900"
           bgOpacity={1}
-          class="box-border flex flex-col gap-3 !border-[1px] !border-solid !border-[var(--bg-700)] "
+          class="box-border flex flex-col gap-3 !border-[1px] !border-solid !border-[var(--bg-700)]"
         >
           <div class="flex gap-3">
             <TextInput

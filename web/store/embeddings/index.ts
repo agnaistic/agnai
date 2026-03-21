@@ -267,8 +267,8 @@ function post<T extends WorkerRequest['type']>(
     type === 'decode' || type === 'encode'
       ? tokenWorker
       : type === 'captionImage' || type === 'initCaptioning'
-      ? imageWorker
-      : embedWorker
+        ? imageWorker
+        : embedWorker
 
   worker.postMessage({ type, ...payload })
 }

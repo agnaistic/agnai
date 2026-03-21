@@ -92,7 +92,10 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.msgs.editMessage(params.id as string, { msg: body.message, state: 'edited' })
+  const message = await store.msgs.editMessage(params.id as string, {
+    msg: body.message,
+    state: 'edited',
+  })
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',

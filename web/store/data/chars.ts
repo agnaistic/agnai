@@ -75,10 +75,10 @@ async function editMany(
     action.type === 'add-tag'
       ? addTag
       : action.type === 'remove-tag'
-      ? removeTag
-      : action.type === 'archive'
-      ? addTag
-      : setFolder
+        ? removeTag
+        : action.type === 'archive'
+          ? addTag
+          : setFolder
 
   const value =
     action.type === 'add-tag' || action.type === 'remove-tag' || action.type === 'folder'
@@ -372,8 +372,8 @@ export async function createCharacter(char: NewCharacter) {
   const avatar = file
     ? await getImageData(file)
     : char.originalAvatar
-    ? char.originalAvatar
-    : undefined
+      ? char.originalAvatar
+      : undefined
 
   const newChar: AppSchema.Character = { ...props, ...baseChar(), avatar, _id: v4() }
 

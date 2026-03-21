@@ -165,8 +165,8 @@ async function dispatch(opts: AdapterProps, body: any) {
         !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
           ? baseURL
           : body.messages
-          ? `${baseURL}/v1/chat/completions`
-          : `${baseURL}/v1/completions`
+            ? `${baseURL}/v1/chat/completions`
+            : `${baseURL}/v1/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })

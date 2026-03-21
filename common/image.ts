@@ -110,8 +110,8 @@ export function getImageSettings(
     chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
       ? character?.imageSettings
       : chat?.imageSource === 'chat'
-      ? chat?.imageSettings
-      : user?.images
+        ? chat?.imageSettings
+        : user?.images
 
   if (!imageSettings) {
     imageSettings = user?.images

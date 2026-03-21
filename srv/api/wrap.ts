@@ -55,7 +55,10 @@ export function handle(handler: Handler): express.RequestHandler {
 export const wrap = handle
 
 export class StatusError extends Error {
-  constructor(public msg: string, public status: number) {
+  constructor(
+    public msg: string,
+    public status: number
+  ) {
     super(msg)
   }
 }

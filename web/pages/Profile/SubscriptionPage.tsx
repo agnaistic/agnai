@@ -147,10 +147,10 @@ export const SubscriptionPage: Component<{}> = (props) => {
                   {user.sub?.type === 'manual'
                     ? 'Gift'
                     : user.sub?.type === 'patreon'
-                    ? 'Patreon'
-                    : user.sub?.type === 'native'
-                    ? 'Stripe'
-                    : 'None'}
+                      ? 'Patreon'
+                      : user.sub?.type === 'native'
+                        ? 'Stripe'
+                        : 'None'}
                 </Pill>
                 <Switch>
                   <Match when={cfg.downgrade && cfg.tier!._id !== cfg.downgrade}>

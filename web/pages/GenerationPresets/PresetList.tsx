@@ -110,14 +110,14 @@ const PresetList: Component = () => {
             const label = getPresetLabel(preset)
             return (
               <div
-                class="flex w-full items-center gap-1 rounded-xl py-1 "
+                class="flex w-full items-center gap-1 rounded-xl py-1"
                 classList={{
                   'bg-800 hover:bg-[var(--bg-600)]': self.user?.defaultPreset !== preset._id,
                   'bg-[var(--hl-800)] hover:bg-[var(--hl-600)]':
                     self.user?.defaultPreset === preset._id,
                 }}
               >
-                <A href={`/presets/${preset._id}`} class=" flex w-full">
+                <A href={`/presets/${preset._id}`} class="flex w-full">
                   <div class="ml-4 flex w-full flex-col items-start">
                     <div>
                       <div>{preset.name}</div>

@@ -204,8 +204,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     opts.conn.provider?.disableAutoUrl
       ? base.url
       : useChat
-      ? joinUrl(base.url, 'chat/completions')
-      : joinUrl(base.url, 'completions')
+        ? joinUrl(base.url, 'chat/completions')
+        : joinUrl(base.url, 'completions')
 
   if (opts.conn.provider?.provider === 'known-mistral' && body.messages) {
     const merged = ensureMessagesAlternate(body.messages, { userFirst: true, userLast: true })

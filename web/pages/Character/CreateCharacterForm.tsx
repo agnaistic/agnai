@@ -622,7 +622,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="culture"
                   label="Language"
                   helperText={`The language this character speaks and understands.${
-                    editor.state.culture.startsWith('en') ?? true
+                    (editor.state.culture.startsWith('en') ?? true)
                       ? ''
                       : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
                   }`}

@@ -77,8 +77,8 @@ export const SolidCard: Component<{
         border: borderColor
           ? `1px solid ${borderColor}`
           : props.border
-          ? '1px solid var(--bg-600)'
-          : 0,
+            ? '1px solid var(--bg-600)'
+            : 0,
       }
     }
 
@@ -168,8 +168,8 @@ export const TitleCard: Component<{
       props.glow === true
         ? `0 0px 16px var(--${type}-${500})`
         : props.glow
-        ? `0 0px 16px var(${getSafeVariableName(props.glow)})`
-        : undefined
+          ? `0 0px 16px var(${getSafeVariableName(props.glow)})`
+          : undefined
 
     return {
       'background-color': bgColor,

@@ -276,7 +276,7 @@ export const responseStore = createStore<ResponseState>(
 
       const msgState = getStore('messages').getState()
       const textBeforeGenMore = retryLatestGenMoreOutput
-        ? msgState.textBeforeGenMore ?? replace.msg
+        ? (msgState.textBeforeGenMore ?? replace.msg)
         : replace.msg
       const res = await botGen
         .stream({

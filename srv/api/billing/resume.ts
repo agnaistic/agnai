@@ -1,9 +1,10 @@
 import { StatusError, handle } from '../wrap'
 import { store } from '../../db'
-import { stripe } from './stripe'
+import { requireStripe } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 
 export const resumeSubscription = handle(async ({ body, userId }) => {
+  const stripe = requireStripe()
   const user = await store.users.getUser(userId)
   if (!user?.billing?.subscriptionId || !user.sub?.tierId) {
     throw new StatusError('No subscription present', 400)

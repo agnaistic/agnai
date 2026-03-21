@@ -317,10 +317,10 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                     {state.info?.state.downgrade
                       ? 'Downgrading at'
                       : state.info?.state.state === 'cancelled'
-                      ? 'Cancelled at'
-                      : state.info?.billing?.cancelling
-                      ? 'Cancels at'
-                      : 'Renews at'}
+                        ? 'Cancelled at'
+                        : state.info?.billing?.cancelling
+                          ? 'Cancels at'
+                          : 'Renews at'}
                   </th>
                   <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
                 </tr>

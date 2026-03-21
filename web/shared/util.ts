@@ -22,9 +22,8 @@ const css = hooks.styleSheet()
 
 export { hooks, css }
 
-export type ExtractProps<TComponent> = TComponent extends Component<infer TProps>
-  ? TProps
-  : TComponent
+export type ExtractProps<TComponent> =
+  TComponent extends Component<infer TProps> ? TProps : TComponent
 
 type ChanceArg<T extends keyof Chance.Chance> = Chance.Chance[T] extends (arg: infer U) => any
   ? U
@@ -553,10 +552,13 @@ function toRawDuration(valueSecs: number) {
 }
 
 export function toEntityMap<T extends { _id: string }>(list: T[]): Record<string, T> {
-  const map = list.reduce((prev, curr) => {
-    prev[curr._id] = curr
-    return prev
-  }, {} as Record<string, T>)
+  const map = list.reduce(
+    (prev, curr) => {
+      prev[curr._id] = curr
+      return prev
+    },
+    {} as Record<string, T>
+  )
 
   return map
 }
@@ -913,7 +915,7 @@ export function isUsableService(
 ) {
   switch (service) {
     case 'agnaistic': {
-      const level = user?.admin ? Infinity : user?.sub?.level ?? -1
+      const level = user?.admin ? Infinity : (user?.sub?.level ?? -1)
       const match = config.subs.some((sub) => sub.level <= level)
       return match
     }

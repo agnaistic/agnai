@@ -128,8 +128,8 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       typeof body.characterBook === 'string'
         ? JSON.parse(body.characterBook)
         : typeof body.characterBook === 'object'
-        ? body.characterBook
-        : undefined,
+          ? body.characterBook
+          : undefined,
     visualType: body.visualType,
     sprite: body.sprite,
     culture: body.culture,

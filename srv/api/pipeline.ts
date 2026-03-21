@@ -7,6 +7,7 @@ const router = Router()
 const proxy = wrap(async (req) => {
   const method = req.method === 'GET' ? 'get' : req.method === 'DELETE' ? 'delete' : 'post'
   const body = method === 'post' ? req.body : undefined
+  const target = `http://localhost:5001${req.url}`
 
   /**
    * @todo
@@ -16,8 +17,8 @@ const proxy = wrap(async (req) => {
 
   const res =
     method === 'post'
-      ? await needle(method, `http://localhost:5001${req.baseUrl}`, body, { json: true })
-      : await needle(method, `http://localhost:5001${req.baseUrl}`, { json: true })
+      ? await needle(method, target, body, { json: true })
+      : await needle(method, target, { json: true })
 
   if (res.statusCode && res.statusCode >= 400) {
     throw new StatusError(res.statusMessage || res.body, res.statusCode)
@@ -25,6 +26,6 @@ const proxy = wrap(async (req) => {
   return res.body
 })
 
-router.use('/*', proxy)
+router.use(proxy)
 
 export default router

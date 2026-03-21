@@ -30,8 +30,8 @@ const transport =
   typeof window !== 'undefined'
     ? { target: 'pino-pretty', options: { translateTime: `UTC:yyyy-mm-dd'T'HH:MM:ss'Z'` } }
     : process.env.NODE_ENV !== 'production'
-    ? { target: 'pino-pretty', options: { translateTime: `UTC:yyyy-mm-dd'T'HH:MM:ss'Z'` } }
-    : undefined
+      ? { target: 'pino-pretty', options: { translateTime: `UTC:yyyy-mm-dd'T'HH:MM:ss'Z'` } }
+      : undefined
 
 function getLogLevel() {
   if (typeof window !== 'undefined') {

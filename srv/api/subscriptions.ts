@@ -5,7 +5,8 @@ import { isAdmin } from './auth'
 import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { encryptText } from '../db/util'
-import billing, { stripe } from './billing'
+import billing from './billing'
+import { isBillingConfigured, requireStripe } from './billing/stripe'
 import { config } from '../config'
 import { patreon } from './user/patreon'
 import { sendAll } from './ws'
@@ -150,7 +151,9 @@ const updateTier = handle(async ({ body, params }) => {
 })
 
 const getProducts = handle(async (req) => {
-  if (!config.billing.private) return { products: [], prices: [] }
+  if (!isBillingConfigured()) return { products: [], prices: [] }
+
+  const stripe = requireStripe()
 
   const products = await stripe.products.list()
   const prices = await stripe.prices.list()

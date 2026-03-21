@@ -14,7 +14,7 @@ export const AlternateGreetingsInput: Component<{
 
   const onChange = (ev: { currentTarget: HTMLInputElement | HTMLTextAreaElement }, i: number) => {
     props.setGreetings(
-      props.greetings.map((orig, j) => (j === i ? ev.currentTarget?.value ?? '' : orig))
+      props.greetings.map((orig, j) => (j === i ? (ev.currentTarget?.value ?? '') : orig))
     )
   }
 

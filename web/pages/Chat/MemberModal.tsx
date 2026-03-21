@@ -441,8 +441,8 @@ const CharacterParticipant: Component<{
             {props.isMain
               ? 'Main Character'
               : props.char._id.startsWith('temp-')
-              ? 'Temporary Character'
-              : 'Character'}
+                ? 'Temporary Character'
+                : 'Character'}
           </div>
         </div>
       </div>

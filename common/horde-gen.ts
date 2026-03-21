@@ -135,8 +135,8 @@ export async function generateImage(
   let key = user.hordeKey
     ? user.hordeKey
     : user.userHordeKey
-    ? decryptText(user.userHordeKey)
-    : HORDE_GUEST_KEY
+      ? decryptText(user.userHordeKey)
+      : HORDE_GUEST_KEY
 
   const image = await generate({
     type: 'image',

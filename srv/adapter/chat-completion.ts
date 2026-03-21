@@ -207,8 +207,8 @@ export async function splitSampleChat(opts: SplitSampleChatProps, counter: Token
     const role = sample.startsWith(char + ':')
       ? 'assistant'
       : sample.startsWith(sender + ':')
-      ? 'user'
-      : 'system'
+        ? 'user'
+        : 'system'
 
     const msg: CompletionItem = {
       role: role,

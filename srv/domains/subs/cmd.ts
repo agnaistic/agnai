@@ -22,7 +22,9 @@ export const subsCmd = createCommands<SubsEvt, SubsAgg, SubsCmd>(domain.subscrip
     return {
       type: 'subscribed',
       customerId: cmd.customerId,
-      periodStart: new Date(cmd.subscription.items.data[0].current_period_start * 1000).toISOString(),
+      periodStart: new Date(
+        cmd.subscription.items.data[0].current_period_start * 1000
+      ).toISOString(),
       priceId: cmd.priceId,
       subscriptionId: cmd.subscriptionId,
       tierId: cmd.tierId,
@@ -53,7 +55,9 @@ export const subsCmd = createCommands<SubsEvt, SubsAgg, SubsCmd>(domain.subscrip
     return {
       type: 'subscribed',
       customerId: cmd.customerId,
-      periodStart: new Date(cmd.subscription.items.data[0].current_period_start * 1000).toISOString(),
+      periodStart: new Date(
+        cmd.subscription.items.data[0].current_period_start * 1000
+      ).toISOString(),
       priceId: cmd.priceId,
       subscriptionId: cmd.subscriptionId,
       tierId: cmd.tierId,

@@ -441,7 +441,7 @@ export const AgnaiSettings: Component<{
 
       <Show when={!!model()}>
         <div>
-          <table class="table-auto border-separate border-spacing-1 text-sm ">
+          <table class="table-auto border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
                 <Th />

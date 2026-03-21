@@ -542,12 +542,15 @@ const FeatherlessModels: Selector = (props) => {
   const availableClasses = createMemo(() => {
     const seen = new Set<string>()
     const list = (props.setters.context.data as FLModel[])
-      .reduce((prev, curr) => {
-        if (!curr.model_class || seen.has(curr.model_class)) return prev
-        seen.add(curr.model_class)
-        prev.push({ label: curr.model_class, ctx: curr.context_length })
-        return prev
-      }, [] as Array<{ label: string; ctx: number }>)
+      .reduce(
+        (prev, curr) => {
+          if (!curr.model_class || seen.has(curr.model_class)) return prev
+          seen.add(curr.model_class)
+          prev.push({ label: curr.model_class, ctx: curr.context_length })
+          return prev
+        },
+        [] as Array<{ label: string; ctx: number }>
+      )
       .map(({ label, ctx }) => ({
         label: `${label} - ${Math.round(ctx / 1024)}k`,
         value: label,
@@ -555,10 +558,13 @@ const FeatherlessModels: Selector = (props) => {
       }))
       .sort((l, r) => l.label.localeCompare(r.label))
 
-    const map = list.reduce((prev, curr) => {
-      prev[curr.value] = { label: curr.value, ctx: curr.ctx }
-      return prev
-    }, {} as Record<string, { ctx: number; label: string }>)
+    const map = list.reduce(
+      (prev, curr) => {
+        prev[curr.value] = { label: curr.value, ctx: curr.ctx }
+        return prev
+      },
+      {} as Record<string, { ctx: number; label: string }>
+    )
 
     return { list, map }
   })

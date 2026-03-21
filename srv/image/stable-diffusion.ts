@@ -140,7 +140,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     return m.id === settings?.agnai?.model || m.name === settings?.agnai?.model
   })
 
-  const model = models.length === 1 ? models[0] : match ?? models[0]
+  const model = models.length === 1 ? models[0] : (match ?? models[0])
 
   if (!temp && !model) {
     return { kind: 'user', host: userHost.url, provider: userHost.provider, headers }
@@ -150,7 +150,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     `type=image`,
     `key=${config.auth.inferenceKey}`,
     `id=${user._id}`,
-    `level=${user.admin ? 99999 : sub?.level ?? -1}`,
+    `level=${user.admin ? 99999 : (sub?.level ?? -1)}`,
     `model=${temp?.name || model.name}`,
   ]
 

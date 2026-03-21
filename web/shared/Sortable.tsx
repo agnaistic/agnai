@@ -43,10 +43,13 @@ const Sortable: Component<{
   }
 
   const items = createMemo(() => {
-    return props.items.reduce((prev, curr) => {
-      prev[curr.id] = curr
-      return prev
-    }, {} as Record<number, SortItem>)
+    return props.items.reduce(
+      (prev, curr) => {
+        prev[curr.id] = curr
+        return prev
+      },
+      {} as Record<number, SortItem>
+    )
   })
 
   const sortables = createMemo(() => {

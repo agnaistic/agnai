@@ -1,17 +1,46 @@
 import Stripe from 'stripe'
 import { config } from '/srv/config'
 import { AppSchema } from '/common/types'
+import { StatusError } from '../wrap'
 import { logger } from '../../middleware'
 import { store } from '/srv/db'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
 import { subsCmd } from '/srv/domains/subs/cmd'
 
-export const stripe = new Stripe(config.billing.private, { apiVersion: '2026-02-25.clover' })
+const STRIPE_API_VERSION = '2026-02-25.clover'
+let stripeClient: Stripe | undefined
 
 const ONE_HOUR_MS = 60000 * 60
 
+export function isBillingConfigured() {
+  return !!config.billing.private.trim()
+}
+
+export function getStripe() {
+  if (!isBillingConfigured()) return
+
+  if (!stripeClient) {
+    stripeClient = new Stripe(config.billing.private, { apiVersion: STRIPE_API_VERSION })
+  }
+
+  return stripeClient
+}
+
+export function requireStripe() {
+  const stripe = getStripe()
+  if (!stripe) {
+    throw new StatusError('Billing is not configured', 503)
+  }
+
+  return stripe
+}
+
 export async function resyncSubscription(user: AppSchema.User) {
+  if (!isBillingConfigured()) {
+    return user.sub?.level
+  }
+
   const subscription = await findValidSubscription(user)
 
   if (subscription instanceof Error) {
@@ -126,6 +155,8 @@ export async function resyncSubscription(user: AppSchema.User) {
 }
 
 export async function findValidSubscription(user: AppSchema.User) {
+  if (!isBillingConfigured()) return
+
   const customerIds = new Set<string>()
   if (user.billing?.customerId) {
     customerIds.add(user.billing.customerId)
@@ -209,8 +240,8 @@ export function isActive(until: Date | number | string, hours = 2) {
     typeof until === 'string'
       ? new Date(until).valueOf()
       : typeof until === 'number'
-      ? until
-      : until.valueOf()
+        ? until
+        : until.valueOf()
 
   const valid = new Date(ms * 1000)
   const now = Date.now() - ONE_HOUR_MS * hours
@@ -220,6 +251,11 @@ export function isActive(until: Date | number | string, hours = 2) {
 
 async function getActiveCustomerSubscriptions(customerIds: string[]) {
   const subs: Stripe.Subscription[] = []
+  const stripe = getStripe()
+
+  if (!stripe) {
+    return subs
+  }
 
   for (const customerId of customerIds) {
     const customer = await stripe.customers.retrieve(customerId, {

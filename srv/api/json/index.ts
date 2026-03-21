@@ -127,10 +127,10 @@ async function saveAvatar(avatar: string) {
   const ext = avatar.includes('image/png')
     ? '.png'
     : avatar.includes('image/jpeg')
-    ? '.jpeg'
-    : avatar.includes('jpg')
-    ? '.jpg'
-    : null
+      ? '.jpeg'
+      : avatar.includes('jpg')
+        ? '.jpg'
+        : null
 
   if (!ext) {
     return avatar

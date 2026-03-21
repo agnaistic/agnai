@@ -146,8 +146,8 @@ export const settingStore = createStore<SettingState>(
           const allChars = Array.isArray(caches.allChars)
             ? caches.allChars
             : Array.isArray((caches.allChars as any)?.list)
-            ? (caches.allChars as any).list
-            : []
+              ? (caches.allChars as any).list
+              : []
 
           getStore('character').receiveCharacterList(allChars)
         }
@@ -330,7 +330,7 @@ setContextLimitStrategy((user, gen) => {
   const tier = subs.find((sub) => sub._id === modelId)
   if (!tier) return
 
-  const level = user.admin ? Infinity : sub?.level ?? -1
+  const level = user.admin ? Infinity : (sub?.level ?? -1)
 
   const limits = getSubscriptionModelLimits(tier.preset, level)
   if (!limits) return

@@ -511,7 +511,7 @@ export async function buildPromptPlaceholders(
       persona: replace(
         formatCharacter(
           replyAs.name,
-          replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+          replyAs._id === char._id ? (chat.overrides ?? replyAs.persona) : replyAs.persona
         )
       ),
       prefill: opts.settings?.prefill || '',
@@ -565,7 +565,7 @@ export async function buildPromptPlaceholders(
 
     const sampleChat =
       replyAs._id === char._id && !!chat.overrides
-        ? chat.sampleChat ?? replyAs.sampleChat
+        ? (chat.sampleChat ?? replyAs.sampleChat)
         : replyAs.sampleChat
 
     parts.sampleChat = (sampleChat || '')

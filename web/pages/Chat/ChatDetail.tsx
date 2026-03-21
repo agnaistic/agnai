@@ -276,8 +276,8 @@ const ChatDetail: Component = () => {
     const kind = opts.ooc
       ? 'ooc'
       : chats.replyAs || ctx.activeBots.length <= 1
-      ? 'send'
-      : 'send-noreply'
+        ? 'send'
+        : 'send-noreply'
     if (!opts.ooc) setSwipe(0)
 
     responseStore.send({

@@ -92,7 +92,10 @@ export const MessageImages: Component<{
             src={props.ctx.imgPreview}
           />
           <Show when={!props.ctx.imgPreview}>
-            <RelativeSpinner class="flex items-center" speed={props.ctx.imgWaiting?.pos ?? 1} />{' '}
+            <RelativeSpinner
+              class="flex items-center"
+              speed={props.ctx.imgWaiting?.pos ?? 1}
+            />{' '}
           </Show>
           <span
             class="text-500 text-xs italic"

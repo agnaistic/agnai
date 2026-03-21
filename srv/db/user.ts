@@ -8,7 +8,7 @@ import { logger } from '../middleware'
 import { errors, StatusError } from '../api/wrap'
 import { decryptText, encryptPassword, encryptText, encryptUserText, now } from './util'
 import { defaultChars } from '/common/characters'
-import { resyncSubscription } from '../api/billing/stripe'
+import { isBillingConfigured, resyncSubscription } from '../api/billing/stripe'
 import { getCachedSubscriptionModels, getCachedTiers, getTier } from './subscriptions'
 import { store } from '.'
 import { patreon } from '../api/user/patreon'
@@ -504,6 +504,10 @@ export async function validateSubscription(user: AppSchema.User) {
   // We check the billing information regularly and it is updated immediately after up or downgrading
   // We will check this less frequently
   // @todo consider using the cached billing info if Stripe fails to respond (e.g. 5xx error)
+  if (!isBillingConfigured()) {
+    return sub?.level ?? -1
+  }
+
   if (user.billing?.lastChecked) {
     const hourAgo = Date.now() - ONE_HOUR_MS
     const checked = new Date(user.billing.lastChecked).valueOf()

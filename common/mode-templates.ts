@@ -34,18 +34,18 @@ export const cyoaTemplate = (service: AIAdapter, model?: string) => {
   const jailbreak = !INSTRUCT_SERVICES[service as AIAdapter]
     ? ''
     : service !== 'openai'
-    ? ''
-    : model === OPENAI_MODELS.Turbo0613 || model === OPENAI_MODELS.Turbo
-    ? modernJailbreak
-    : originalJailbreak
+      ? ''
+      : model === OPENAI_MODELS.Turbo0613 || model === OPENAI_MODELS.Turbo
+        ? modernJailbreak
+        : originalJailbreak
   return (
     service === 'claude'
       ? claudeCyoa
       : service === 'novel'
-      ? novelCyoa
-      : service === 'agnaistic' || service === 'kobold' || service === 'ooba'
-      ? alpacaCyoa
-      : typicalCyoa
+        ? novelCyoa
+        : service === 'agnaistic' || service === 'kobold' || service === 'ooba'
+          ? alpacaCyoa
+          : typicalCyoa
   ).replace(/{{jailbreak}}/gi, jailbreak || '')
 }
 

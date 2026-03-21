@@ -111,8 +111,8 @@ export async function getAppConfig(user?: AppSchema.User) {
       assetPrefix: config.assetUrl
         ? config.assetUrl
         : config.storage.enabled
-        ? `https://${config.storage.bucket}.${config.storage.endpoint}`
-        : '',
+          ? `https://${config.storage.bucket}.${config.storage.endpoint}`
+          : '',
       registered: getRegisteredAdapters(user).map(toRegisteredAdapter),
       maintenance: config.ui.maintenance,
       patreon: config.ui.patreon,

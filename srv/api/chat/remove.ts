@@ -131,6 +131,9 @@ export const deleteChat = handle(async ({ params, userId }) => {
   }
 
   await store.chats.deleteChat(params.id as string)
-  sendMany(chat.memberIds.concat(chat.userId), { type: 'chat-deleted', chatId: params.id as string })
+  sendMany(chat.memberIds.concat(chat.userId), {
+    type: 'chat-deleted',
+    chatId: params.id as string,
+  })
   return { success: true }
 })

@@ -16,8 +16,8 @@ const DEBUG =
   typeof window !== 'undefined'
     ? false
     : typeof process !== 'undefined'
-    ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
-    : false
+      ? process.env.LOG_LEVEL === 'debug' && !!process.env.LOG_CHUNKS
+      : false
 
 export const streamGenerator: CompletionGenerator = async function* (opts) {
   const { signal, url, headers, body, format } = opts

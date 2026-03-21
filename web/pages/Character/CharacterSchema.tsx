@@ -361,8 +361,8 @@ export const CharacterSchema: Component<{
     props.characterId
       ? `schema-char-${props.characterId.slice(0, 4)}`
       : props.preset
-      ? `schema-preset-${props.preset._id.slice(0, 4)}`
-      : 'schema'
+        ? `schema-preset-${props.preset._id.slice(0, 4)}`
+        : 'schema'
   )
 
   return (

@@ -1,7 +1,7 @@
 import { StatusError, handle } from '../wrap'
 import { assertValid } from '/common/valid'
 import { store } from '../../db'
-import { resyncSubscription, stripe } from './stripe'
+import { isBillingConfigured, requireStripe, resyncSubscription } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 import { domain } from '/srv/domains'
 import { getSafeUserConfig } from '../user/settings'
@@ -10,6 +10,7 @@ import { patreon } from '../user/patreon'
 
 export const modifySubscription = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string' }, body)
+  const stripe = requireStripe()
   const user = await store.users.getUser(userId)
 
   if (!user?.billing?.subscriptionId || !user?.sub?.tierId) {
@@ -72,6 +73,7 @@ export const modifySubscription = handle(async ({ body, userId }) => {
 })
 
 export const verifySubscription = handle(async ({ userId }) => {
+  requireStripe()
   const user = await store.users.getUser(userId)
 
   if (!user?.billing?.subscriptionId) throw new StatusError('No subscription present', 402)
@@ -90,11 +92,15 @@ export const retrieveSubscription = handle(async ({ userId }) => {
   const errors: string[] = []
 
   if (user?.billing?.subscriptionId || user?.stripeSessions?.length) {
-    const result = await resyncSubscription(user).catch((err: Error) => ({ err }))
-    if (!result) {
-      errors.push(`Error occurred while retrieving subscription infomation`)
-    } else if (typeof result === 'object' && 'err' in result && result.err?.message) {
-      errors.push(result.err.message)
+    if (!isBillingConfigured()) {
+      errors.push('Billing is not configured')
+    } else {
+      const result = await resyncSubscription(user).catch((err: Error) => ({ err }))
+      if (!result) {
+        errors.push(`Error occurred while retrieving subscription infomation`)
+      } else if (typeof result === 'object' && 'err' in result && result.err?.message) {
+        errors.push(result.err.message)
+      }
     }
   }
 
@@ -110,7 +116,7 @@ export const retrieveSubscription = handle(async ({ userId }) => {
 })
 
 export const subscriptionStatus = handle(async ({ userId, params, user }) => {
-  const id = user?.admin && params.id ? params.id as string : userId
+  const id = user?.admin && params.id ? (params.id as string) : userId
   const agg = await domain.subscription.getAggregate(id)
 
   return {

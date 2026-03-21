@@ -219,8 +219,8 @@ export const ManageProvider: Component<{
       const label = format.name
         ? format.name
         : format.type === 'service'
-        ? ADAPTER_LABELS[format.value]
-        : FORMAT_LABEL[format.value]
+          ? ADAPTER_LABELS[format.value]
+          : FORMAT_LABEL[format.value]
       return { label, value: `${index}` }
     })
   })

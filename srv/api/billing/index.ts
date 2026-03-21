@@ -26,4 +26,3 @@ router.post('/session', isAdmin, viewSession)
 router.post('/retrieve', retrieveSubscription)
 
 export { router as default }
-export { stripe } from './stripe'

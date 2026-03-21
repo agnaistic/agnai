@@ -1,7 +1,7 @@
 import { StatusError, handle } from '../wrap'
 import { assertValid } from '/common/valid'
 import { store } from '../../db'
-import { stripe } from './stripe'
+import { requireStripe } from './stripe'
 import { v4 } from 'uuid'
 import { config } from '../../config'
 import { billingCmd, domain } from '../../domains'
@@ -10,6 +10,7 @@ import { AppSchema } from '/common/types'
 
 export const startCheckout = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string', callback: 'string' }, body)
+  const stripe = requireStripe()
 
   const tier = await store.subs.getTier(body.tierId)
   if (!tier) {
@@ -59,6 +60,7 @@ export const startCheckout = handle(async ({ body, userId }) => {
 
 export const viewSession = handle(async ({ body }) => {
   assertValid({ sessionId: 'string' }, body)
+  const stripe = requireStripe()
 
   const session = await stripe.checkout.sessions.retrieve(body.sessionId)
   if (!session) {
@@ -69,6 +71,7 @@ export const viewSession = handle(async ({ body }) => {
 
 export const assignSubscription = handle(async ({ body, log }) => {
   assertValid({ subscriptionId: 'string', userId: 'string' }, body)
+  const stripe = requireStripe()
 
   const subscription = await stripe.subscriptions.retrieve(body.subscriptionId)
   if (!subscription) {
@@ -135,6 +138,7 @@ export const assignSubscription = handle(async ({ body, log }) => {
 
 export const finishCheckout = handle(async ({ body, userId }) => {
   assertValid({ sessionId: 'string', state: 'string' }, body)
+  const stripe = requireStripe()
 
   const session = await stripe.checkout.sessions.retrieve(body.sessionId)
   const user = await store.users.getUser(userId)
@@ -214,6 +218,7 @@ export const finishCheckout = handle(async ({ body, userId }) => {
 async function ensureOnlyActiveSubscription(user: AppSchema.User, subscriptionId: string) {
   // The user isn't an existing customer -- ignore
   if (!user.billing?.customerId) return
+  const stripe = requireStripe()
 
   const subs = await stripe.subscriptions
     .list({ customer: user.billing.customerId, status: 'active' })

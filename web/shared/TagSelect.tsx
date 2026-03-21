@@ -39,8 +39,8 @@ const TagSelect: Component<{
           l.tag === 'archived'
             ? -1
             : r.tag === 'archived'
-            ? 1
-            : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
+              ? 1
+              : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
         )
 
     const low = search.toLowerCase()
@@ -50,8 +50,8 @@ const TagSelect: Component<{
         l.tag === 'archived'
           ? -1
           : r.tag === 'archived'
-          ? 1
-          : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
+            ? 1
+            : l.tag.toLocaleLowerCase().localeCompare(r.tag.toLocaleLowerCase())
       )
     return filtered
   })

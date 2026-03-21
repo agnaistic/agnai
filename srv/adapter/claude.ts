@@ -89,8 +89,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   const formatting = CLAUDE_TEXT_MODELS[claudeModel || '']
     ? 'text'
     : gen.service === 'claude-v2'
-    ? 'v2'
-    : 'v1'
+      ? 'v2'
+      : 'v1'
   const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
   const userStops = getStoppingStrings(opts, opts.gen)
 
@@ -621,10 +621,10 @@ async function createClaudePrompt(opts: AdapterProps) {
     const lineType: LineType = line.startsWith(sender)
       ? 'user'
       : line.startsWith('System:')
-      ? 'system'
-      : line.startsWith(sampleAmble)
-      ? 'example'
-      : 'char'
+        ? 'system'
+        : line.startsWith(sampleAmble)
+          ? 'example'
+          : 'char'
     if (distanceFromBottom === examplePos) {
       addRemainingInserts()
       addedAllInserts = true

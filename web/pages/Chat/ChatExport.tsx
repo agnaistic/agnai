@@ -35,8 +35,8 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
         handle: msg.characterId
           ? chars.map[msg.characterId!]?.name
           : msg.userId
-          ? chats.memberIds[msg.userId]?.handle || 'You'
-          : undefined,
+            ? chats.memberIds[msg.userId]?.handle || 'You'
+            : undefined,
         userId: msg.userId ? msg.userId : undefined,
         characterId: msg.characterId === chat?.characterId ? 'imported' : msg.characterId,
         name: chars.map[msg.characterId!]?.name || chats.memberIds[msg.userId!]?.handle,

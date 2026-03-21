@@ -69,12 +69,12 @@ type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
       }
     }
   : T extends 'gemini'
-  ? GeminiResponseSchema
-  : {
-      type: 'object'
-      properties: Record<string, any>
-      required: string[]
-    }
+    ? GeminiResponseSchema
+    : {
+        type: 'object'
+        properties: Record<string, any>
+        required: string[]
+      }
 
 export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   json: JsonField[],

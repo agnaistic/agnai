@@ -254,8 +254,8 @@ export const inferenceApi = wrap(async (req, res) => {
     prompt: body.prompt
       ? replaceTags(body.prompt, subPreset?.modelFormat || preset?.modelFormat || 'None')
       : body.messages
-      ? rendered?.prompt || ''
-      : '',
+        ? rendered?.prompt || ''
+        : '',
     messages: body.messages,
     user: req.authed!,
     log: req.log,

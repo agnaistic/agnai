@@ -80,8 +80,8 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 typeof props.state.jsonEnabled === 'string'
                   ? props.state.jsonEnabled
                   : props.state.jsonEnabled
-                  ? 'standard'
-                  : 'off'
+                    ? 'standard'
+                    : 'off'
               }
               items={[
                 { value: 'off', label: 'Disabled' },

@@ -131,7 +131,7 @@ export const ModeDetail: Component<{
             {props.footer}
           </footer>
           <section
-            class="pane ml-2 w-[480px] 2xl:w-[600px] "
+            class="pane ml-2 w-[480px] 2xl:w-[600px]"
             style={{ 'grid-area': 'pane' }}
             classList={{
               hidden: !size.pane() || !props.showPane,

@@ -1,9 +1,10 @@
 import { StatusError, handle } from '../wrap'
 import { store } from '../../db'
-import { findValidSubscription, stripe } from './stripe'
+import { findValidSubscription, requireStripe } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 
 export const cancelSubscription = handle(async ({ body, userId }) => {
+  const stripe = requireStripe()
   const user = await store.users.getUser(userId)
   if (!user?.billing?.subscriptionId) {
     throw new StatusError('No subscription present', 400)

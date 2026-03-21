@@ -55,17 +55,7 @@ const VolumeControl: Component<{
         <input
           ref={input}
           type="range"
-          class="
-                my-auto
-                h-1
-                w-full
-                cursor-ew-resize
-                appearance-none
-                rounded-xl
-                text-opacity-50
-                accent-[var(--hl-400)]
-                focus:shadow-none focus:outline-none focus:ring-0
-                "
+          class="my-auto h-1 w-full cursor-ew-resize appearance-none rounded-xl text-opacity-50 accent-[var(--hl-400)] focus:shadow-none focus:outline-none focus:ring-0"
           min="0"
           max="100"
           step="1"

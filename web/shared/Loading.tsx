@@ -50,7 +50,7 @@ export const PageSpinner: Component<{ size?: number; class?: string; speed?: num
   return (
     <Portal>
       <div
-        class={`fixed inset-0  top-0 z-[110] flex h-screen w-screen items-center justify-center bg-gray-900 bg-opacity-60`}
+        class={`fixed inset-0 top-0 z-[110] flex h-screen w-screen items-center justify-center bg-gray-900 bg-opacity-60`}
       >
         <RelativeSpinner size={props.size} speed={props.speed} class={props.class} />
       </div>

@@ -441,7 +441,7 @@ const Message: Component<MessageProps> = (props) => {
                   }
                 >
                   <b
-                    class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
+                    class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
                     // Necessary to override text-md and text-lg's line height, for proper alignment
                     style="line-height: 1;"
                     data-bot-name={isBot()}

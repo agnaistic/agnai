@@ -190,7 +190,7 @@ setContextLimitStrategy((user, gen) => {
   if (gen.service !== 'agnaistic') return
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
-  const level = user.admin ? Infinity : sub?.level ?? -1
+  const level = user.admin ? Infinity : (sub?.level ?? -1)
 
   const tierId = gen.providerModels?.agnaistic || gen.registered?.agnaistic?.subscriptionId || ''
   const tier = subCache.get(tierId)

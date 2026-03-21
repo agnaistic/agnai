@@ -46,7 +46,7 @@ export const getInitialLoad = handle(async ({ userId, query }) => {
 })
 
 export const getProfile = handle(async ({ userId, params }) => {
-  const id = params.id ? params.id as string : userId!
+  const id = params.id ? (params.id as string) : userId!
   const profile = await store.users.getProfile(id!)
   return profile
 })

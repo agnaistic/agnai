@@ -108,10 +108,10 @@ const Notifications: Component = () => {
                         toast.type === 'admin'
                           ? 'blue'
                           : toast.type === 'error'
-                          ? 'rose'
-                          : toast.type === 'warn'
-                          ? 'orange'
-                          : 'bg'
+                            ? 'rose'
+                            : toast.type === 'warn'
+                              ? 'orange'
+                              : 'bg'
                       }
                     >
                       <p>

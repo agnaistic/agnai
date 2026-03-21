@@ -232,7 +232,9 @@ export const updateTemplate = handle(async ({ body, userId, params }) => {
   })
 
   if (body.presetId) {
-    await store.presets.updateUserPreset(userId, body.presetId, { promptTemplateId: params.id as string })
+    await store.presets.updateUserPreset(userId, body.presetId, {
+      promptTemplateId: params.id as string,
+    })
   }
 
   const next = await store.presets.getTemplate(params.id as string)
