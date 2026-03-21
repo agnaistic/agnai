@@ -60,7 +60,7 @@ export const modifySubscription = handle(async ({ body, userId }) => {
       metadata: { tierId: body.tierId },
       items: [{ id: item.id, price: tier.priceId }],
     })
-    const activeAt = new Date(next.current_period_end * 1000)
+    const activeAt = new Date(next.items.data[0].current_period_end * 1000)
     await subsCmd.downgrade(userId, {
       activeAt: activeAt.toISOString(),
       priceId: tier.priceId,
@@ -110,7 +110,7 @@ export const retrieveSubscription = handle(async ({ userId }) => {
 })
 
 export const subscriptionStatus = handle(async ({ userId, params, user }) => {
-  const id = user?.admin && params.id ? params.id : userId
+  const id = user?.admin && params.id ? params.id as string : userId
   const agg = await domain.subscription.getAggregate(id)
 
   return {

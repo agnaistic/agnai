@@ -27,7 +27,7 @@ const searchUsers = handle(async (req) => {
 })
 
 const generatePasswordReset = handle(async (req) => {
-  const userId = req.params.userId
+  const userId = req.params.userId as string
 
   const user = await store.users.getUser(userId)
   if (!user) {
@@ -43,24 +43,24 @@ const generatePasswordReset = handle(async (req) => {
 })
 
 const banUser = handle(async (req) => {
-  const user = await store.users.getUser(req.params.userId)
+  const user = await store.users.getUser(req.params.userId as string)
   assertValid({ reason: 'string' }, req.body)
 
   if (!user) {
     throw new StatusError('User not found', 404)
   }
 
-  const next = await store.admin.banUser(req.params.userId, req.body.reason)
+  const next = await store.admin.banUser(req.params.userId as string, req.body.reason)
   return next
 })
 
 const unbanUser = handle(async (req) => {
-  const next = await store.admin.unbanUser(req.params.userId)
+  const next = await store.admin.unbanUser(req.params.userId as string)
   return next
 })
 
 const impersonateUser = handle(async (req) => {
-  const userId = req.params.userId
+  const userId = req.params.userId as string
   const user = await store.users.getUser(userId)
   if (!user) {
     throw new StatusError('User not found', 404)
@@ -77,7 +77,7 @@ const setUserPassword = handle(async (req) => {
 })
 
 const getUserInfo = handle(async ({ params }) => {
-  const info = await store.admin.getUserInfo(params.id)
+  const info = await store.admin.getUserInfo(params.id as string)
   return info
 })
 
@@ -159,7 +159,7 @@ const updateConfiguration = handle(async ({ body }) => {
 
 const updateTier = handle(async (req) => {
   assertValid({ tierId: 'string' }, req.body)
-  await store.users.updateUserTier(req.params.userId, req.body.tierId)
+  await store.users.updateUserTier(req.params.userId as string, req.body.tierId)
   return { success: true }
 })
 

@@ -11,10 +11,10 @@ import { optional } from '/common/valid/types'
 
 export const addCharacter = handle(async ({ body, params, userId }) => {
   assertValid({ charId: 'string' }, body)
-  const chatId = params.id
+  const chatId = params.id as string
   const charId = body.charId
 
-  const chat = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id as string)
   if (!chat) throw errors.NotFound
 
   if (chat.userId !== userId) throw errors.Forbidden
@@ -39,10 +39,10 @@ export const addCharacter = handle(async ({ body, params, userId }) => {
 })
 
 export const removeCharacter = handle(async ({ params, userId }, _) => {
-  const chatId = params.id
-  const charId = params.charId
+  const chatId = params.id as string
+  const charId = params.charId as string
 
-  const chat = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id as string)
 
   if (!chat) throw errors.NotFound
   if (chat.userId !== userId) throw errors.Forbidden
@@ -93,7 +93,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     body
   )
 
-  const chat = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id as string)
   if (!chat) throw errors.NotFound
   if (chat.userId !== userId) throw errors.Forbidden
 
@@ -143,13 +143,13 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     upserted.avatar = filename + '?' + v4().slice(0, 4)
   }
 
-  const members = await store.chats.getActiveMembers(params.id)
+  const members = await store.chats.getActiveMembers(params.id as string)
 
-  await store.chats.update(params.id, { tempCharacters })
+  await store.chats.update(params.id as string, { tempCharacters })
 
   sendMany(members.concat(chat.userId), {
     type: 'chat-temp-character',
-    chatId: params.id,
+    chatId: params.id as string,
     character: upserted,
   })
 

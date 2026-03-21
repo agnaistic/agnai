@@ -156,7 +156,7 @@ const getCharacters = handle(async ({ userId }) => {
 })
 
 const editPartCharacter = handle(async ({ body, params, userId }) => {
-  const id = params.id
+  const id = params.id as string
   assertStrict({ type: characterPost }, body)
 
   const update: CharacterUpdate = body
@@ -234,7 +234,7 @@ export const bulkUpdate = handle(async (req) => {
 })
 
 const editFullCharacter = handle(async (req) => {
-  const id = req.params.id
+  const id = req.params.id as string
   const body = handleForm(req, characterForm)
 
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
@@ -304,15 +304,15 @@ const editFullCharacter = handle(async (req) => {
 })
 
 const removeAvatar = handle(async ({ userId, params }) => {
-  const char = await store.characters.getCharacter(userId, params.id)
+  const char = await store.characters.getCharacter(userId, params.id as string)
   if (!char) throw errors.NotFound
 
-  await store.characters.updateCharacter(params.id, userId, { avatar: '' })
+  await store.characters.updateCharacter(params.id as string, userId, { avatar: '' })
   return { ...char, avatar: '' }
 })
 
 const getCharacter = handle(async ({ userId, params }) => {
-  const char = await store.characters.getCharacter(userId!, params.id)
+  const char = await store.characters.getCharacter(userId!, params.id as string)
   if (!char) {
     throw new StatusError('Character not found', 404)
   }
@@ -329,13 +329,13 @@ const getDetailCharacters = handle(async ({ userId, body }) => {
 })
 
 const deleteCharacter = handle(async ({ userId, params }) => {
-  const id = params.id
+  const id = params.id as string
   await store.characters.deleteCharacter({ userId: userId!, charId: id })
   return { success: true }
 })
 
 const editCharacterFavorite = handle(async (req) => {
-  const id = req.params.id
+  const id = req.params.id as string
   const favorite = req.body.favorite === true
 
   const char = await store.characters.updateCharacter(id, req.userId!, {

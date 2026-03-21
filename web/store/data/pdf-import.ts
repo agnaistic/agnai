@@ -1,11 +1,10 @@
 import * as PDFDE from 'pdfdataextract'
-import * as GlobalWorkerOptions from 'pdfjs-dist/lib/display/worker_options.js'
-import * as PDFWorker from 'pdfjs-dist/build/pdf.worker.entry.js'
+import { GlobalWorkerOptions } from 'pdfjs-dist'
+// @ts-ignore
+import pdfWorkerSrc from 'url:pdfjs-dist/build/pdf.worker.mjs'
 import { getFileAsBuffer } from '/web/shared/FileInput'
 
-const gwo: any = GlobalWorkerOptions
-
-gwo.workerSrc = PDFWorker
+GlobalWorkerOptions.workerSrc = pdfWorkerSrc
 
 export async function extractPdf(file: File) {
   const buffer = await getFileAsBuffer(file)

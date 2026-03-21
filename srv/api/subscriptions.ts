@@ -60,7 +60,7 @@ const update = handle(async ({ body, params }) => {
     disabledSamplers: samplers?.disabled,
   }
 
-  const preset = await store.subs.updateSubscription(params.id, update)
+  const preset = await store.subs.updateSubscription(params.id as string, update)
 
   if (!preset) {
     throw new StatusError('Subscription not found', 404)
@@ -75,12 +75,12 @@ const update = handle(async ({ body, params }) => {
 })
 
 const remove = handle(async (req) => {
-  await store.subs.deleteSubscription(req.params.id)
+  await store.subs.deleteSubscription(req.params.id as string)
   return { success: true }
 })
 
 const replaceSubPreset = handle(async ({ body, params }) => {
-  const id = params.id
+  const id = params.id as string
   assertValid({ replacementId: 'string' }, body)
 
   await store.subs.replaceSubscription(id, body.replacementId)
@@ -95,7 +95,7 @@ const replaceSubPreset = handle(async ({ body, params }) => {
 })
 
 const getTier = handle(async (req) => {
-  const tier = await store.subs.getTier(req.params.id)
+  const tier = await store.subs.getTier(req.params.id as string)
   return tier
 })
 
@@ -145,7 +145,7 @@ const updateTier = handle(async ({ body, params }) => {
     body,
     true
   )
-  const tier = await store.subs.updateTier(params.id, body)
+  const tier = await store.subs.updateTier(params.id as string, body)
   return tier
 })
 

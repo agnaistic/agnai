@@ -1,4 +1,4 @@
-import { createHooks, recommended } from '@css-hooks/solid'
+import { createHooks } from '@css-hooks/solid'
 import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '/common/adapters'
@@ -17,7 +17,8 @@ import { extractReasoning } from '/common/reasoning'
 import { getUserId, isLoggedIn } from '../store/api'
 import { debug } from '/common/debug'
 
-const [css, hooks] = createHooks(recommended)
+const hooks = createHooks('&:hover')
+const css = hooks.styleSheet()
 
 export { hooks, css }
 

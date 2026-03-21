@@ -1,4 +1,4 @@
-import create, { StoreApi } from 'zustand/vanilla'
+import { createStore as zustandCreate, StoreApi } from 'zustand/vanilla'
 import * as solidstore from 'solid-js/store'
 import { onCleanup } from 'solid-js'
 import type { pageStore } from './page'
@@ -106,7 +106,7 @@ export function createStore<State extends {}>(
   let setter: any
   let getter: any
 
-  const store = create<State>((set, get) => {
+  const store = zustandCreate<State>((set, get) => {
     setter = set
     getter = get
 

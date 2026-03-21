@@ -6,7 +6,7 @@ import { getDeletionChanges, toQuickGraph } from '/common/chat'
 import { db, transact } from '/srv/db/client'
 
 export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
-  const chatId = params.id
+  const chatId = params.id as string
   assertValid({ ids: ['string'], leafId: 'string', soft: 'boolean?' }, body)
 
   const { chat, messages } = await store.chats.getChatGraph(chatId)
@@ -57,7 +57,7 @@ export const deleteMessagesV2 = handle(async ({ body, params, userId }) => {
 })
 
 export const deleteMessages = handle(async ({ body, params, userId }) => {
-  const chatId = params.id
+  const chatId = params.id as string
   assertValid({ ids: ['string'], leafId: 'string?', parents: 'any?' }, body)
 
   const chat = await store.chats.getChatOnly(chatId)
@@ -110,7 +110,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
 })
 
 export const deleteChat = handle(async ({ params, userId }) => {
-  const chat = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id as string)
   if (!chat) {
     throw errors.NotFound
   }
@@ -119,10 +119,10 @@ export const deleteChat = handle(async ({ params, userId }) => {
   if (chat.userId !== userId && chat.memberIds.includes(userId)) {
     sendMany([userId, ...chat.memberIds, chat.userId], {
       type: 'member-removed',
-      chatId: params.id,
+      chatId: params.id as string,
       memberId: userId,
     })
-    await store.invites.removeMember(params.id, userId, userId)
+    await store.invites.removeMember(params.id as string, userId, userId)
     return
   }
 
@@ -130,7 +130,7 @@ export const deleteChat = handle(async ({ params, userId }) => {
     throw errors.Forbidden
   }
 
-  await store.chats.deleteChat(params.id)
-  sendMany(chat.memberIds.concat(chat.userId), { type: 'chat-deleted', chatId: params.id })
+  await store.chats.deleteChat(params.id as string)
+  sendMany(chat.memberIds.concat(chat.userId), { type: 'chat-deleted', chatId: params.id as string })
   return { success: true }
 })

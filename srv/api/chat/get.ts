@@ -3,17 +3,17 @@ import { store } from '../../db'
 import { errors, handle } from '../wrap'
 
 export const getCharacterChats = handle(async (req) => {
-  const character = await store.characters.getCharacter(req.userId!, req.params.id)
+  const character = await store.characters.getCharacter(req.userId!, req.params.id as string)
   if (!character) {
     throw errors.NotFound
   }
 
-  const list = await store.chats.listByCharacter(req.userId, req.params.id)
+  const list = await store.chats.listByCharacter(req.userId, req.params.id as string)
   return { character, chats: list }
 })
 
 export const getChatDetail = handle(async ({ userId, params, query }) => {
-  const id = params.id
+  const id = params.id as string
   const detail = await store.chats.getChat(id, query.impersonating as string)
 
   if (!detail) throw errors.NotFound

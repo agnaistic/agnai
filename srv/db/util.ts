@@ -21,7 +21,9 @@ export async function encryptPassword(value: string) {
 }
 
 export function encryptUserText(text: string, key: string) {
-  const cipher = crypto.createCipher('aes256', key)
+  const iv = Buffer.alloc(16, 0)
+  const derivedKey = crypto.scryptSync(key, 'salt', 32)
+  const cipher = crypto.createCipheriv('aes256', derivedKey, iv)
   const encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex')
   return encrypted
 }

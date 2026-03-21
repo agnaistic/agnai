@@ -89,7 +89,7 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body, authed })
 })
 
 export const getUserPreset = handle(async ({ userId, params }) => {
-  const preset = await store.presets.getSafeUserPreset(params.id, userId)
+  const preset = await store.presets.getSafeUserPreset(params.id as string, userId)
 
   if (!preset || preset.userId !== userId) {
     throw new StatusError('Preset not found', 404)
@@ -99,7 +99,7 @@ export const getUserPreset = handle(async ({ userId, params }) => {
 })
 
 export const getChatPreset = handle(async ({ userId, params }) => {
-  const chat = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id as string)
   if (!chat) {
     throw new StatusError(`Preset not found (Invalid chat id)`, 404)
   }
@@ -123,7 +123,7 @@ export const getChatPreset = handle(async ({ userId, params }) => {
     return preset
   }
 
-  const members = await store.chats.getActiveMembers(params.id)
+  const members = await store.chats.getActiveMembers(params.id as string)
   if (!members.includes(userId)) {
     throw new StatusError(`Preset not found: Not allowed`, 402)
   }
@@ -200,12 +200,12 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
     }
   }
 
-  const preset = await store.presets.updateUserPreset(userId!, params.id, body)
+  const preset = await store.presets.updateUserPreset(userId!, params.id as string, body)
   return preset
 })
 
 export const deleteUserPreset = handle(async ({ params }) => {
-  await store.presets.deleteUserPreset(params.id)
+  await store.presets.deleteUserPreset(params.id as string)
 
   return { success: true }
 })
@@ -226,21 +226,21 @@ export const createTemplate = handle(async ({ body, userId }) => {
 
 export const updateTemplate = handle(async ({ body, userId, params }) => {
   assertValid({ name: 'string', template: 'string', presetId: 'string?' }, body)
-  await store.presets.updateTemplate(userId, params.id, {
+  await store.presets.updateTemplate(userId, params.id as string, {
     name: body.name,
     template: body.template,
   })
 
   if (body.presetId) {
-    await store.presets.updateUserPreset(userId, body.presetId, { promptTemplateId: params.id })
+    await store.presets.updateUserPreset(userId, body.presetId, { promptTemplateId: params.id as string })
   }
 
-  const next = await store.presets.getTemplate(params.id)
+  const next = await store.presets.getTemplate(params.id as string)
   return next
 })
 
 export const deleteTemplate = handle(async ({ userId, params }) => {
-  await store.presets.deleteTemplate(userId, params.id)
+  await store.presets.deleteTemplate(userId, params.id as string)
   return { success: true }
 })
 
@@ -250,7 +250,7 @@ export const getPromptTemplates = handle(async ({ userId }) => {
 })
 
 export const deleteUserPresetKey = handle(async ({ userId, params }) => {
-  const preset = await store.presets.deleteUserPresetKey(userId, params.id)
+  const preset = await store.presets.deleteUserPresetKey(userId, params.id as string)
   if (!preset) {
     throw new StatusError('Preset not found', 404)
   }

@@ -22,7 +22,7 @@ export const textToSpeech = handle(async ({ body, userId, socketId, log, params 
     {
       user,
       text: body.text,
-      chatId: params.id,
+      chatId: params.id as string,
       messageId: body.messageId,
       voice: body.voice as VoiceSettings,
       culture: body.culture || 'en-us',

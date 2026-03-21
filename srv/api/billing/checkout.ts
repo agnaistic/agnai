@@ -85,8 +85,8 @@ export const assignSubscription = handle(async ({ body, log }) => {
     throw new StatusError('Cannot find user', 404)
   }
 
-  const lastRenewed = new Date(subscription.current_period_start * 1000).toISOString()
-  const validUntil = new Date(subscription.current_period_end * 1000).toISOString()
+  const lastRenewed = new Date(subscription.items.data[0].current_period_start * 1000).toISOString()
+  const validUntil = new Date(subscription.items.data[0].current_period_end * 1000).toISOString()
   const customerId = subscription.customer as string
   const priceId = subscription.items.data[0].price.id
   const productId = subscription.items.data[0].price.product as string

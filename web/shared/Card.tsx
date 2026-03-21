@@ -39,10 +39,10 @@ export const Card: Component<{
         'p-3': !props.size || props.size === 'lg',
         ...props.classList,
       }}
-      style={hooks({
+      style={{
         border: props.border ? '1px solid var(--bg-600)' : 0,
         ...cardBg(),
-      })}
+      }}
       role={props.ariaRole}
       aria-label={props.ariaLabel}
     >
@@ -108,10 +108,7 @@ export const SolidCard: Component<{
         'p-2': props.size === 'md',
         'p-3': !props.size || props.size === 'lg',
       }}
-      style={hooks({
-        ...bg(),
-        hover: hover(),
-      })}
+      style={hooks.on('&:hover', hover())(bg())}
     >
       <Show when={props.title}>
         <div

@@ -295,7 +295,8 @@ function wait(secs: number) {
 
 function decryptText(text: string) {
   try {
-    const decipher = crypto.createDecipher(ALGO, HORDE_SEED)
+    const iv = Buffer.alloc(16, 0)
+    const decipher = crypto.createDecipheriv(ALGO, HORDE_SEED.slice(0, 32), iv)
     const decrypted = decipher.update(text, 'hex', 'utf8') + decipher.final('utf8')
     return decrypted
   } catch (ex) {

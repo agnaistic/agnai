@@ -91,7 +91,7 @@ const genValidator = {
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {
-  const chatId = params.id
+  const chatId = params.id as string
 
   assertValid({ before: 'string' }, query)
   const before = query.before
@@ -102,7 +102,7 @@ export const getMessages = handle(async ({ userId, params, query }) => {
 
 export const createMessage = handle(async (req) => {
   const { userId, body, params } = req
-  const chatId = params.id
+  const chatId = params.id as string
   assertValid(sendValidator, body)
 
   const impersonate: AppSchema.Character | undefined = body.impersonate
@@ -149,7 +149,7 @@ export const createMessage = handle(async (req) => {
 
 export const generateMessageV2 = handle(async (req, res) => {
   const { userId, body, params, log } = req
-  const chatId = params.id
+  const chatId = params.id as string
   assertValid(genValidator, body)
 
   // if (isGuest(req)) {
@@ -809,7 +809,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
       socketId: req.socketId,
       user: body.user,
       chat,
-      chatId: req.params.id,
+      chatId: req.params.id as string,
       mainCharacter: body.char,
       replyAs,
       impersonate,
@@ -836,7 +836,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
     ? body.impersonate
     : await store.characters.getCharacter(userId, impersonateId)
 
-  const chat = await store.chats.getChatOnly(req.params.id)
+  const chat = await store.chats.getChatOnly(req.params.id as string)
   if (!chat) throw errors.ChatNotFound
 
   const mainCharacter = await store.characters.getCharacter(chat.userId, body.char._id)
@@ -910,7 +910,7 @@ async function getMessageEntities(req: AppRequest<GenRequest>, res: Response) {
     user,
     chat,
     preset: settings,
-    chatId: req.params.id,
+    chatId: req.params.id as string,
     replyAs,
     impersonate,
     members,

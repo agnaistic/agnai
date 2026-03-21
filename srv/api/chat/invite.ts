@@ -12,7 +12,7 @@ export const getInvites = handle(async (req) => {
 export const createInvite = handle(async (req) => {
   // TODO: Invite limits. A user should only have a max of 10 invitations pending.
 
-  const chatId = req.params.id
+  const chatId = req.params.id as string
   assertValid({ userId: 'string' }, req.body)
 
   const invite = await store.invites.create({
@@ -28,21 +28,21 @@ export const createInvite = handle(async (req) => {
 })
 
 export const acceptInvite = handle(async (req) => {
-  const inviteId = req.params.inviteId
+  const inviteId = req.params.inviteId as string
 
   const member = await store.invites.answer(req.userId!, inviteId, true)
   return member
 })
 
 export const rejectInvite = handle(async (req) => {
-  const inviteId = req.params.inviteId
+  const inviteId = req.params.inviteId as string
 
   await store.invites.answer(req.userId!, inviteId, false)
   return { success: true }
 })
 
 export const uninviteMember = handle(async (req) => {
-  const chatId = req.params.id
+  const chatId = req.params.id as string
   assertValid({ userId: 'string' }, req.body)
 
   await store.invites.removeMember(chatId, req.userId, req.body.userId)

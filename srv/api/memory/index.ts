@@ -35,7 +35,7 @@ const createBook = handle(async ({ body, userId }) => {
 })
 
 const updateBook = handle(async ({ body, userId, params }) => {
-  const id = params.id
+  const id = params.id as string
   assertValid(validBook, body)
   await store.memory.updateBook(userId!, id!, body)
 
@@ -43,7 +43,7 @@ const updateBook = handle(async ({ body, userId, params }) => {
 })
 
 const removeBook = handle(async ({ userId, params }) => {
-  await store.memory.deleteBook(userId, params.id)
+  await store.memory.deleteBook(userId, params.id as string)
   return { success: true }
 })
 

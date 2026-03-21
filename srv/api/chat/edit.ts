@@ -33,7 +33,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     true
   )
 
-  const id = params.id
+  const id = params.id as string
   const prev = await store.chats.getChatOnly(id)
   if (!prev || prev?.userId !== user?.userId) throw errors.Forbidden
 
@@ -87,17 +87,17 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
  */
 export const updateMessage = handle(async ({ body, params, userId }) => {
   assertValid({ message: 'string' }, body)
-  const prev = await store.chats.getMessageAndChat(params.id)
+  const prev = await store.chats.getMessageAndChat(params.id as string)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.msgs.editMessage(params.id, { msg: body.message, state: 'edited' })
+  const message = await store.msgs.editMessage(params.id as string, { msg: body.message, state: 'edited' })
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
     chatId: prev.chat._id,
-    messageId: params.id,
+    messageId: params.id as string,
     message: body.message,
   })
 
@@ -110,7 +110,7 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
     body
   )
 
-  const prev = await store.chats.getMessageAndChat(params.id)
+  const prev = await store.chats.getMessageAndChat(params.id as string)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
@@ -122,7 +122,7 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
     extras: body.extras || prev.msg.extras,
   }
 
-  const message = await store.msgs.editMessage(params.id, {
+  const message = await store.msgs.editMessage(params.id as string, {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'swapped',
   })
@@ -130,7 +130,7 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-swapped',
     chatId: prev.chat._id,
-    messageId: params.id,
+    messageId: params.id as string,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     message: body.msg || prev.msg.msg,
     extras: body.extras || prev.msg.extras,
@@ -158,7 +158,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     body
   )
 
-  const prev = await store.chats.getMessageAndChat(params.id)
+  const prev = await store.chats.getMessageAndChat(params.id as string)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
@@ -177,7 +177,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   if (body.parent) update.parent = body.parent
   if (body.meta) update.meta = body.meta
 
-  const message = await store.msgs.editMessage(params.id, {
+  const message = await store.msgs.editMessage(params.id as string, {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'edited',
   })
@@ -191,7 +191,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     type: 'message-edited',
     ...update,
     chatId: prev.chat._id,
-    messageId: params.id,
+    messageId: params.id as string,
     message: body.msg ?? prev.msg.msg, // Backwards compatibility
   })
 
@@ -205,13 +205,13 @@ export const restartChat = handle(async ({ params, body, userId }) => {
     ? await store.characters.getCharacter(userId, body.impersonating)
     : undefined
 
-  const chatId = params.id
+  const chatId = params.id as string
   await store.chats.restartChat(userId, chatId, profile!, impersonate)
   return { success: true }
 })
 
 export const updateChatGenPreset = handle(async ({ params, userId, body }) => {
-  const chatId = params.id
+  const chatId = params.id as string
   assertValid({ preset: 'string' }, body)
 
   const chat = await store.chats.getChatOnly(chatId)

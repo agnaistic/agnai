@@ -7,8 +7,7 @@ import { getCachedTiers } from '/srv/db/subscriptions'
 import { domain } from '/srv/domains'
 import { subsCmd } from '/srv/domains/subs/cmd'
 
-// export const stripe = new Stripe(config.billing.private, { apiVersion: '2025-11-17.clover' })
-export const stripe = new Stripe(config.billing.private, { apiVersion: '2023-08-16' })
+export const stripe = new Stripe(config.billing.private, { apiVersion: '2026-02-25.clover' })
 
 const ONE_HOUR_MS = 60000 * 60
 
@@ -74,8 +73,8 @@ export async function resyncSubscription(user: AppSchema.User) {
 
   // Provide a buffer (1 or more hours) to allow subscriptions to auto-renew
   // Automatic invoices seem to be in a draft status for ~1 hour so provide enough time for it to clear
-  const renewedAt = new Date(subscription.current_period_start * 1000)
-  const validUntil = new Date(subscription.current_period_end * 1000)
+  const renewedAt = new Date(subscription.items.data[0].current_period_start * 1000)
+  const validUntil = new Date(subscription.items.data[0].current_period_end * 1000)
 
   const billing: AppSchema.User['billing'] = user.billing
     ? user.billing

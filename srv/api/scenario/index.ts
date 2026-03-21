@@ -51,7 +51,7 @@ const getUserScenarios = handle(async ({ userId }) => {
 })
 
 const getScenario = handle(async ({ userId, params }) => {
-  const id = params.id
+  const id = params.id as string
   const scenario = await store.scenario.getScenario(id!)
   if (scenario?.userId !== userId) throw errors.Unauthorized
   return scenario
@@ -66,7 +66,7 @@ const createScenario = handle(async ({ body, userId }) => {
 })
 
 const updateScenario = handle(async ({ body, userId, params }) => {
-  const id = params.id
+  const id = params.id as string
   assertScenario(body)
   await store.scenario.updateScenario(userId!, id!, body)
 
@@ -74,7 +74,7 @@ const updateScenario = handle(async ({ body, userId, params }) => {
 })
 
 const removeScenario = handle(async ({ userId, params }) => {
-  await store.scenario.deleteScenario(userId, params.id)
+  await store.scenario.deleteScenario(userId, params.id as string)
   return { success: true }
 })
 
