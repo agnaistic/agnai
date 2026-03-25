@@ -51,7 +51,7 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
         Are you sure you wish to delete the one or the last {count()} messages?
         <Show when={count() > 1}>
           <br />
-          Deleteing "one" will delete the selected message only.
+          Deleting "one" will only delete the selected message.
         </Show>
       </Show>
       <Show when={state.msg?.adapter === 'image'}>
