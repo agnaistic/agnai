@@ -176,7 +176,7 @@ export const Jailbreak: Field = (props) => {
         helperText={
           <>
             <p>
-              <b>Uncensored Models</b>: Typically stylstic instructions. E.g. "Respond succinctly
+              <b>Uncensored Models</b>: Typically stylistic instructions. E.g. "Respond succinctly
               using slang"
             </p>
             <p>
