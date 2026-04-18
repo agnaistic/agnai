@@ -23,6 +23,7 @@ export type CharacterUpdate = Partial<
     | 'extensions'
     | 'systemPrompt'
     | 'postHistoryInstructions'
+    | 'prefill'
     | 'insert'
     | 'creator'
     | 'characterVersion'

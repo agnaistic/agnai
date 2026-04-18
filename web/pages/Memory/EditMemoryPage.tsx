@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { A, useNavigate, useParams } from '@solidjs/router'
 import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore } from '../../store'
@@ -8,7 +8,7 @@ import EditMemoryForm, { EntrySort } from './EditMemory'
 import { Option } from '../../shared/Select'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
-import { Save } from 'lucide-solid'
+import { ArrowLeft, Save } from 'lucide-solid'
 import { emptyBookWithEmptyEntry } from '/common/memory'
 import { Page } from '/web/Layout'
 import { createStore } from 'solid-js/store'
@@ -67,7 +67,11 @@ const EditMemoryPage = () => {
     <Page>
       <PageHeader title="Edit Memory Book" />
 
-      <div class="mt-4 flex justify-end">
+      <div class="mt-4 flex justify-between">
+        <A class="link flex items-center" href="/memory?tab=0">
+          <ArrowLeft size={16} /> Back to List
+        </A>
+
         <Button onClick={saveBook}>
           <Save />
           {!state._id ? 'Create Book' : 'Update Book'}

@@ -1,3 +1,4 @@
+import { useNavigate } from '@solidjs/router'
 import { Component, For, JSX, Show, createMemo, createSignal } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
@@ -39,7 +40,9 @@ const Button: Component<{
   alignLeft?: boolean
   classList?: { [key: string]: boolean }
   ariaLabel?: string
+  href?: string
 }> = (props) => {
+  const nav = useNavigate()
   const schema = createMemo(() => kinds[props.schema || 'primary'])
   return (
     <button
@@ -60,8 +63,11 @@ const Button: Component<{
       style={{ 'min-height': props.minHeight ? `${props.minHeight}px` : '' }}
       disabled={props.disabled}
       onClick={(ev) => {
-        ev.preventDefault()
-        props.onClick?.(ev)
+        if (props.onClick) props.onClick(ev)
+        if (props.href) {
+          nav(props.href)
+          return
+        }
       }}
       aria-label={props.ariaLabel}
     >

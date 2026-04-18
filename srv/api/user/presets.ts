@@ -60,7 +60,8 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body, authed })
   if (body.providerId) {
     const provider = authed?.providers?.find((p) => p._id === body.providerId)
     if (provider?.key) {
-      body.key = decryptText(provider.key, true)
+      const decrypted = decryptText(provider.key, true)
+      body.key = decrypted
     }
   }
 

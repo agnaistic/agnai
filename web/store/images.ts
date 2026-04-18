@@ -48,13 +48,13 @@ export const imageStore = createStore<ImageState>('image', {
   showImgSettings: false,
 })(() => {
   return {
-    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton }) => {
+    openImageGen: (_, opts?: { prompt?: string; handler?: ImageButton; collectionId?: string }) => {
       return {
         showImage: {
           options: opts?.handler ? [opts.handler] : [],
           src: {
             type: 'collection',
-            id: '', // No ID = ephemeral
+            id: opts?.collectionId || '', // No ID = ephemeral
             initial: 0,
             prompt: opts?.prompt || '',
           },
@@ -124,10 +124,10 @@ export function createImageCache(collection: string): ImageReel {
 
 async function getImageIds(collection: string): Promise<string[]> {
   log(`loading %s`, collection.slice(0, 20) + '...')
-  const json = await storage.getItem(`${collection}`)
-  if (!json) return []
+  const json = (await storage.getItem(`${collection}`)) || JSON.stringify([])
 
   const ids = JSON.parse(json as string) as string[]
+  log(`loaded %s: %s`, collection.slice(0, 20) + '...', ids.length)
   return ids
 }
 
@@ -187,5 +187,6 @@ async function removeAll(collection: string) {
 
 async function saveImageIds(collection: string, ids: string[]) {
   await storage.setItem(`${collection}`, JSON.stringify(ids))
+  log(`saved ${collection.slice(0, 2)}: ${ids.length}`)
   return ids
 }

@@ -291,6 +291,7 @@ export async function editCharacter(
     appendFormOptional(form, 'insert', char.insert, JSON.stringify)
     strictAppendFormOptional(form, 'systemPrompt', char.systemPrompt)
     strictAppendFormOptional(form, 'postHistoryInstructions', char.postHistoryInstructions)
+    strictAppendFormOptional(form, 'prefill', char.prefill)
     strictAppendFormOptional(form, 'creator', char.creator)
     strictAppendFormOptional(form, 'characterVersion', char.characterVersion)
     appendFormOptional(form, 'voiceDisabled', char.voiceDisabled)

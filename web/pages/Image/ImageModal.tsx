@@ -13,7 +13,7 @@ import {
 } from '../../store'
 import { getAssetUrl, getJsonSchema } from '../../shared/util'
 import Button from '/web/shared/Button'
-import { useImageCache } from '/web/shared/hooks'
+import { useDraft, useImageCache } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
 import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
 import { cleanPrompt, hydrateTemplate } from '/common/util'
@@ -104,6 +104,8 @@ const ImageCollectionModal: Component<{}> = (props) => {
   const [presets] = usePresetContext()
 
   const reel = useImageCache()
+  const nonChatPrompt = useDraft('image-prompt-global')
+
   const store = imageStore((s) => {
     return {
       src: s.showImage?.src,
@@ -111,6 +113,12 @@ const ImageCollectionModal: Component<{}> = (props) => {
       onClose: s.showImage?.onClose,
       preview: s.preview,
     }
+  })
+
+  const collectionId = createMemo(() => {
+    const id = store.src?.id
+    if (!id) return ''
+    return id
   })
 
   const show = createMemo(() => {
@@ -190,12 +198,22 @@ const ImageCollectionModal: Component<{}> = (props) => {
 
   createEffect(
     on(
+      () => state.prompt,
+      () => {
+        if (store.src?.type !== 'collection' || !collectionId()) return
+        console.log('global-prompt', state.prompt)
+        nonChatPrompt.update(state.prompt)
+      }
+    )
+  )
+
+  createEffect(
+    on(
       () => store.src?.id,
-      (id) => {
-        log('loading #%s %s ', store.src?.initial || 0, id)
-        if (id) {
-          reel.load(id, store.src?.initial)
-        }
+      () => {
+        log('loading #%s %s ', store.src?.initial || 0, collectionId())
+        reel.load(collectionId(), store.src?.initial)
+
         if (store.src?.type === 'message') {
           const msg = getGraphMessage(store.src.messageId)
 
@@ -208,6 +226,13 @@ const ImageCollectionModal: Component<{}> = (props) => {
           update('prompt', msg?.imagePrompt || '')
           return
         }
+
+        if (store.src?.type === 'collection' && collectionId()) {
+          const prompt = nonChatPrompt.open(`image-prompt-${collectionId()}`)
+          update('prompt', prompt)
+          return
+        }
+
         update('prompt', store.src?.prompt || '')
       }
     )
@@ -234,20 +259,25 @@ const ImageCollectionModal: Component<{}> = (props) => {
     update('loading', true)
 
     try {
-      const result = await imageApi.generateImageAsync(imagePrompt, {
-        model: '',
-        noAffix: false,
-      })
-
-      const { cacheId } = await reel.addImage(result.image, {
-        id: result.file.name,
-        prompt: imagePrompt,
-      })
-
-      const msg = getGraphMessage(store.src?.messageId)
-      if (!msg) return
-      const nextExtras = msg.extras?.slice() || []
-      msgStore.localEditMessageProp(msg._id, { extras: nextExtras.concat(cacheId) })
+      // If the source is a message, use the standardized message flow
+      if (store.src?.messageId) {
+        await msgStore.createImage({
+          prompt: imagePrompt,
+          sourceMsgId: store.src.messageId,
+          append: true,
+          onImage: (image) => reel.reload(),
+          onPrompt: (prompt) => update('prompt', prompt),
+        })
+      } else {
+        const result = await imageApi.generateImageAsync(imagePrompt, {
+          model: '',
+          noAffix: false,
+        })
+        await reel.addImage(result.image, {
+          id: result.file.name,
+          prompt: imagePrompt,
+        })
+      }
     } catch (ex: any) {
       toastStore.error(`Image Generation Error: ${ex.message || ex}`)
       console.error(ex)

@@ -684,10 +684,11 @@ const SAFE_NAME = /[_\/'"!@#$%^&*()\[\],\.:;=+-]+/g
 
 export function hydrateTemplate(
   def: Ensure<AppSchema.Character['json']>,
-  json: any,
+  values: any,
   opts: StructureEntities,
   aliases?: Record<string, string>
 ) {
+  const json = values || {}
   const map = new Map<string, string>()
   const allAliases = { ...aliases, ...getSchemaAliases(def.schema) }
 
@@ -922,4 +923,28 @@ export function lazySimplePromise<T = any>() {
   })
 
   return parts
+}
+
+export function sortAlpha<T extends {}>(opts: {
+  prop: keyof T
+
+  /** Descending order? */
+  desc?: boolean
+
+  /** Case insensitive */
+  ignoreCase?: boolean
+}) {
+  const sorter = (left: T, right: T) => {
+    let l = '' + (left[opts.prop] || '')
+    let r = '' + (right[opts.prop] || '')
+
+    if (opts.ignoreCase) {
+      l = l.toLowerCase()
+      r = r.toLowerCase()
+    }
+
+    return l.localeCompare(r) * (opts.desc ? -1 : 1)
+  }
+
+  return sorter
 }

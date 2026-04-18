@@ -93,12 +93,11 @@ const PresetList: Component = () => {
             />
           </div>
           <div class="flex w-full justify-end gap-2">
-            <A href="/presets/new">
-              <Button>
-                <Plus />
-                New
-              </Button>
-            </A>
+            <Button href="/presets/new">
+              <Plus />
+              New
+            </Button>
+
             <Button onClick={() => setImporting(true)}>
               <Import size={20} /> Import
             </Button>

@@ -35,6 +35,7 @@ const characterForm = {
   voiceDisabled: 'string?',
   tags: 'string?',
   json: 'any?',
+  prefill: 'string?',
 
   imageSettings: 'string?',
 
@@ -268,6 +269,7 @@ const editFullCharacter = handle(async (req) => {
     systemPrompt: body.systemPrompt,
     postHistoryInstructions: body.postHistoryInstructions,
     creator: body.creator,
+    prefill: body.prefill,
     characterVersion: body.characterVersion,
     voiceDisabled: body.voiceDisabled === 'true',
     imageSettings,

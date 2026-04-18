@@ -176,7 +176,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     yield { meta: { model: response.model, provider: response.provider, ...response.usage } }
   }
 
-  const text = getResponseText(response, fullText || accum, opts.log)
+  const text = getResponseText(response, fullText || accum, opts.log, stops)
 
   if (text instanceof Error) {
     yield { error: `OpenRouter response failed: ${text.message}` }
@@ -240,7 +240,7 @@ registerAdapter('openrouter', handleOpenRouter, {
   options: ['temp', 'maxTokens'],
 })
 
-function getResponseText(resp: any, accum: string, log: AppLog) {
+function getResponseText(resp: any, accum: string, log: AppLog, stops: string[]) {
   if (accum) {
     return accum
   }
@@ -251,7 +251,7 @@ function getResponseText(resp: any, accum: string, log: AppLog) {
 
   if (resp.type === 'Buffer') {
     const buffer = Buffer.from(resp.data).toString()
-    return getResponseText(buffer, accum, log)
+    return getResponseText(buffer, accum, log, stops)
   }
 
   log.debug({ resp }, 'Get response text')
@@ -268,7 +268,7 @@ function getResponseText(resp: any, accum: string, log: AppLog) {
   if (typeof message === 'string') return message
 
   if (!message || !message.content) {
-    log.warn({ resp }, 'OpenRouter response was empty (No text)')
+    log.warn({ resp, stops }, 'OpenRouter response was empty (No text)')
     return new Error(`Response contained no data (No text)`)
   }
 

@@ -461,7 +461,7 @@ const NavIcons: Component<{
         </Item>
 
         <Item
-          onClick={() => imageStore.openImageGen()}
+          onClick={() => imageStore.openImageGen({ collectionId: 'global' })}
           ariaLabel="Image Generation"
           tooltip="Image Generation"
         >

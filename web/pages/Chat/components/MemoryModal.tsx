@@ -1,5 +1,15 @@
-import { Edit, Save } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, JSX, on, onMount, Show } from 'solid-js'
+import { Edit, PlusIcon, Save, X } from 'lucide-solid'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  on,
+  onMount,
+  Show,
+} from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
@@ -13,6 +23,9 @@ import { Portal } from 'solid-js/web'
 import { createStore } from 'solid-js/store'
 import { emptyBook } from '/common/memory'
 import { embedApi } from '/web/store/embeddings'
+import Modal from '/web/shared/Modal'
+import { Pill } from '/web/shared/Card'
+import { sortAlpha } from '/common/util'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat | undefined
@@ -25,15 +38,38 @@ const ChatMemoryModal: Component<{
     embeds: s.embeds,
   }))
 
+  const [bookId, setBookId] = createSignal('')
   const [embedId, setEmbedId] = createSignal(props.chat?.userEmbedId)
   const [editingEmbed, setEditingEmbed] = createSignal<boolean>(false)
   const [state, setState] = createStore<AppSchema.MemoryBook>(emptyBook())
+  const [openId, setOpenId] = createSignal<string>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+
   const updateEntrySort = (item: Option<string>) => {
     if (item.value === 'creationDate' || item.value === 'alpha') {
       setEntrySort(item.value)
     }
   }
+
+  const usedBooks = createMemo(() => {
+    const memoryId = props.chat?.memoryId || ''
+    const ids = memoryId.split(',').filter((id) => !!id.trim())
+    const list = books.books.list.filter((item) => ids.includes(item._id)).sort(bookSorter)
+    const validIds = list.map((item) => item._id)
+    return { ids: validIds, list }
+  })
+
+  const availableBooks = createMemo(() => {
+    const used = usedBooks()
+    const set = new Set(used.ids)
+
+    const available = books.books.list
+      .filter((item) => !set.has(item._id))
+      .map((item) => ({ label: item.name, value: item._id }))
+      .sort(selectSorter)
+
+    return [{ label: 'Select Book...', value: '' }].concat(available)
+  })
 
   createEffect(
     on(
@@ -44,6 +80,32 @@ const ChatMemoryModal: Component<{
       }
     )
   )
+
+  const removeBook = async (removeId: string) => {
+    if (!props.chat?._id) return
+    const nextId = usedBooks()
+      .ids.filter((id) => id !== removeId)
+      .join(',')
+
+    chatStore.editChat(props.chat._id, { memoryId: nextId })
+  }
+
+  const addBook = async (addId: string) => {
+    const nextId = usedBooks().ids.concat(addId).join(',')
+
+    useMemoryBook(nextId)
+  }
+
+  const useMemoryBook = (addBookId?: string) => {
+    if (!props.chat?._id) return
+    if (!addBookId) return
+
+    const alreadyAssigned = usedBooks().ids.includes(addBookId)
+    if (alreadyAssigned) return
+
+    const nextId = usedBooks().ids.concat(addBookId).join(',')
+    chatStore.editChat(props.chat._id, { memoryId: nextId })
+  }
 
   const changeBook = async (id: string) => {
     const match: AppSchema.MemoryBook | undefined =
@@ -81,11 +143,6 @@ const ChatMemoryModal: Component<{
     }
   }
 
-  const useMemoryBook = (nextId?: string) => {
-    if (!props.chat?._id) return
-    chatStore.editChat(props.chat._id, { memoryId: nextId === undefined ? state._id : nextId })
-  }
-
   const useUserEmbed = () => {
     if (!props.chat?._id) return
     const id = embedId()
@@ -121,20 +178,47 @@ const ChatMemoryModal: Component<{
   return (
     <>
       <div class="flex flex-col gap-2">
-        <Select
-          fieldName="memoryId"
-          label="Chat Memory Book"
-          helperText="The memory book your chat will use"
-          items={[{ label: 'None', value: '' }].concat(books.items)}
-          value={state._id}
-          onChange={(item) => {
-            changeBook(item.value)
-            useMemoryBook(item.value)
-          }}
-        />
-        <div>
-          <Button onClick={() => changeBook('new')}>Create New Memory Book</Button>
+        <div class="flex items-end gap-2">
+          <Button
+            disabled={!bookId()}
+            onClick={() => {
+              addBook(bookId())
+              setBookId('')
+            }}
+          >
+            <PlusIcon /> Use
+          </Button>
+          <Select
+            fieldName="memoryId"
+            label={
+              <div class="flex items-center gap-2">
+                Chat Memory Books{' '}
+                <Button size="pill" onClick={() => changeBook('new')}>
+                  + New Book
+                </Button>
+              </div>
+            }
+            helperText={`Assign Book(s) to Chat: ${props.chat?.memoryId}`}
+            items={availableBooks()}
+            value={bookId()}
+            onChange={(item) => setBookId(item.value)}
+          />
         </div>
+
+        <ul class="flex w-full flex-col gap-2">
+          <For each={usedBooks().list}>
+            {(book) => (
+              <li class="flex w-full">
+                <Pill class="w-full justify-between">
+                  <div>{book.name}</div>
+                  <Button size="sm" schema="clear" onClick={() => removeBook(book._id)}>
+                    <X size={12} />
+                  </Button>
+                </Pill>
+              </li>
+            )}
+          </For>
+        </ul>
 
         <Divider />
         <Show when={books.embeds.length > 0}>
@@ -185,18 +269,23 @@ const ChatMemoryModal: Component<{
         </Show>
         <EmbedContent />
 
-        <div class="text-sm">
-          <EditMemoryForm
-            hideSave
-            state={state}
-            entrySort={entrySort()}
-            updateEntrySort={updateEntrySort}
-            setter={setState}
-          />
-        </div>
+        <Modal show={!!openId()} close={() => setOpenId('')}>
+          <div class="text-sm">
+            <EditMemoryForm
+              hideSave
+              state={state}
+              entrySort={entrySort()}
+              updateEntrySort={updateEntrySort}
+              setter={setState}
+            />
+          </div>
+        </Modal>
       </div>
     </>
   )
 }
 
 export default ChatMemoryModal
+
+const bookSorter = sortAlpha<AppSchema.MemoryBook>({ prop: 'name', ignoreCase: true })
+const selectSorter = sortAlpha<{ label: string }>({ prop: 'label', ignoreCase: true })

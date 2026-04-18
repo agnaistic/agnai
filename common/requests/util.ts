@@ -217,7 +217,12 @@ export function joinUrl(base: string, path: string) {
 }
 
 export async function getThirdPartyModels(url: string, key: string) {
-  const headers: any = { Accept: 'application/json', 'anthropic-version': '2023-06-01' }
+  const headers: any = {
+    Accept: 'application/json',
+    'anthropic-version': '2023-06-01',
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0',
+  }
 
   if (key) {
     headers.Authorization = `Bearer ${key}`

@@ -85,18 +85,15 @@ const SubscriptionList: Component = () => {
         ← Back to Manage
       </A>
       <div class="mb-4 flex w-full justify-end gap-2">
-        <A href="/admin/tiers/new">
-          <Button>
-            <Plus />
-            Tier
-          </Button>
-        </A>
-        <A href="/admin/subscriptions/new">
-          <Button>
-            <Plus />
-            Model
-          </Button>
-        </A>
+        <Button href="/admin/tiers/new">
+          <Plus />
+          Tier
+        </Button>
+
+        <Button href="/admin/subscriptions/new">
+          <Plus />
+          Model
+        </Button>
       </div>
       <div class="flex flex-col items-center gap-2">
         <Show when={cfg.tiers.length === 0}>

@@ -213,9 +213,10 @@ function getAuthedPromptEntities() {
   const chat = active.chat
   const char = active.char
 
-  const book = getStore('memory')
+  const bookIds = new Set((chat.memoryId || '').split(',').filter((id) => !!id.trim()))
+  const books = getStore('memory')
     .getState()
-    .books.list.find((book) => book._id === chat.memoryId)
+    .books.list.filter((book) => bookIds.has(book._id))
 
   const { msgs, messageHistory, attachments } = getStore('messages').getState()
   const presets = getActivePreset(chat, user)!
@@ -237,7 +238,7 @@ function getAuthedPromptEntities() {
     char: tryReplaceCharacter(chatChars.map, char)!,
     user,
     profile,
-    book,
+    books,
     messages,
     settings: simple,
     members,

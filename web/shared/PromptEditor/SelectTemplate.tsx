@@ -236,8 +236,8 @@ export const SelectTemplate: Component<{
               onChange={(ev) => setFilter(ev.currentTarget.value)}
               parentClass="w-full"
             />
-            <Button>
-              <RefreshCcw onClick={() => presetStore.getTemplates()} />
+            <Button onClick={() => presetStore.getTemplates()}>
+              <RefreshCcw />
             </Button>
           </div>
           <div class="h-min-[6rem] flex gap-2">

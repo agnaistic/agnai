@@ -57,6 +57,7 @@ export interface Character extends BaseCharacter {
   creator?: string
   characterVersion?: string
   imageSettings?: ImageSettings
+  prefill?: string
 }
 
 export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {

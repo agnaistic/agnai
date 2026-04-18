@@ -30,7 +30,7 @@ import iconv from 'iconv-lite'
 import { genApi } from './inference'
 import { localEmit } from '../socket'
 import { getProviderConnection } from '/common/providers'
-import { toChatMessages } from '/common/template-messages'
+import { stripImageContent, toChatMessages } from '/common/template-messages'
 import { msgsApi } from './messages'
 import { getProvider } from '../preset-context'
 import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
@@ -182,7 +182,11 @@ async function streamResponse(opts: StreamOpts) {
     userId: undefined, // Do we ever need this?
   })
 
-  localEmit({ type: 'service-prompt', id: messageId, prompt: JSON.stringify(messages, null, 2) })
+  localEmit({
+    type: 'service-prompt',
+    id: messageId,
+    prompt: JSON.stringify(stripImageContent(messages), null, 2),
+  })
 
   const jsonSchema =
     opts.kind === 'chat-query' || req.entities.settings.jsonEnabled === 'standard'
@@ -418,6 +422,15 @@ async function handlePostStreamResponse(input: {
 }) {
   const { req, opts, response, json, meta } = input
 
+  if (opts.signal.signal.aborted) {
+    getStore('responses').setState({
+      retrying: undefined,
+      partial: undefined,
+    })
+    console.log('aborted -- ignoring post stream handler')
+    return
+  }
+
   const { replacing, parent, replyAs, continuing } = req.request
   const messageId = replacing?._id || req.request.requestId
   const chatId = req.request.chat._id
@@ -604,7 +617,7 @@ async function getActivePromptOptions(
     replyAs: props.replyAs,
     user: entities.user,
     userEmbeds: [],
-    book: entities.book,
+    books: entities.books,
     continue: props.continue,
     impersonate: entities.impersonating,
     chatEmbeds: [],
@@ -727,7 +740,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
       user: entities.user,
       members: entities.members.concat([entities.profile]),
       continue: props?.continue,
-      book: entities.book,
+      books: entities.books,
       retry: props?.retry,
       settings: entities.settings,
       messages: props.messages,
@@ -1066,4 +1079,8 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
 
 function waiting(next: ResponseState['waiting']) {
   events.emit(EVENTS.setWaiting, next)
+
+  if (next) {
+    console.log(`${EVENTS.setWaiting}: ${inline(next)}`)
+  }
 }

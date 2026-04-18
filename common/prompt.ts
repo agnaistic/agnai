@@ -92,6 +92,7 @@ export type PromptOpts = {
   retry?: AppSchema.ChatMessage
   continue?: string
   book?: AppSchema.MemoryBook
+  books?: AppSchema.MemoryBook[]
   replyAs: AppSchema.Character
   characters: GenerateRequestV2['characters']
   impersonate?: AppSchema.Character
@@ -492,6 +493,7 @@ type PromptPartsOptions = Pick<
   | 'userEmbeds'
   | 'resolvedScenario'
   | 'props'
+  | 'books'
 >
 
 export async function buildPromptPlaceholders(
@@ -514,7 +516,7 @@ export async function buildPromptPlaceholders(
           replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
         )
       ),
-      prefill: opts.settings?.prefill || '',
+      prefill: replyAs.prefill || opts.settings?.prefill || '',
       post: [],
       allPersonas: [],
       chatEmbeds: [],
@@ -587,6 +589,7 @@ export async function buildPromptPlaceholders(
     // }
 
     const books: AppSchema.MemoryBook[] = []
+    if (opts.books) books.push(...opts.books)
     if (replyAs.characterBook) books.push(replyAs.characterBook)
     if (opts.book) books.push(opts.book)
 
