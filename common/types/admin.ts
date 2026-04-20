@@ -9,6 +9,24 @@ import { SubscriptionModelOption, SubscriptionTier } from './presets'
 import { ThemeColor } from './ui'
 
 export type UserType = 'guests' | 'all' | 'users' | 'subscribers' | 'moderators' | 'admins'
+
+export type ServerEmbedding = {
+  _id: string
+
+  /** Fully qualified URL, will not be modified */
+  url: string
+
+  /** API key, encrypted */
+  key: string
+
+  /** Is batching supported */
+  batch: boolean
+
+  model: string
+
+  /** Optional: Some APIs use slight variations of the `input` prop when batching supported */
+  inputProp: string
+}
 export interface AppConfig {
   adapters: AIAdapter[]
   version: string
@@ -140,6 +158,9 @@ export interface Configuration {
   maxGuidanceVariables: number
 
   actionCalls: ActionCall[]
+
+  embeddings: ServerEmbedding[]
+  embedding: string
 }
 
 export interface ActionCall {

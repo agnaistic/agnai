@@ -10,6 +10,35 @@ const router = Router()
 
 router.use(loggedIn, isAdmin)
 
+const configGuard = {
+  slots: 'string',
+  maintenance: 'boolean',
+  maintenanceMessage: 'string',
+  apiAccess: ['off', 'users', 'subscribers', 'admins'],
+  policiesEnabled: 'boolean',
+  termsOfService: 'string',
+  privacyStatement: 'string',
+  enabledAdapters: ['string'],
+  imagesEnabled: 'boolean',
+  imagesHost: 'string',
+  ttsAccess: ['off', 'users', 'subscribers', 'admins'],
+  ttsHost: 'string',
+  ttsApiKey: 'string?',
+  imagesModels: ['any'],
+  supportEmail: 'string',
+  googleClientId: 'string',
+  stripeCustomerPortal: 'string',
+} as const
+
+const embedGuard = {
+  _id: 'string',
+  model: 'string',
+  url: 'string',
+  key: 'string',
+  batch: 'boolean',
+  inputProp: 'string',
+} as const
+
 const searchUsers = handle(async (req) => {
   const { body } = req
   assertValid(
@@ -113,29 +142,35 @@ const getMetrics = handle(async () => {
   }
 })
 
+const createEmbedding = handle(async ({ body }) => {
+  assertValid(embedGuard, body)
+
+  body.key = encryptText(body.key)
+
+  const next = await store.admin.createServerEmbedding(body)
+  return next
+})
+
+const updateEmbedding = handle(async ({ body }) => {
+  assertValid(embedGuard, body)
+
+  if (body.key) body.key = encryptText(body.key)
+  const next = await store.admin.updateServerEmbedding(body)
+  return next
+})
+
+const updateConfigurationPartial = handle(async ({ body }) => {
+  assertValid(configGuard, body, true)
+
+  const update = { ...body }
+  encryptProps(update, ['ttsApiKey'])
+
+  const next = await store.admin.updateServerConfiguration(update)
+  return next
+})
+
 const updateConfiguration = handle(async ({ body }) => {
-  assertValid(
-    {
-      slots: 'string',
-      maintenance: 'boolean',
-      maintenanceMessage: 'string',
-      apiAccess: ['off', 'users', 'subscribers', 'admins'],
-      policiesEnabled: 'boolean',
-      termsOfService: 'string',
-      privacyStatement: 'string',
-      enabledAdapters: ['string'],
-      imagesEnabled: 'boolean',
-      imagesHost: 'string',
-      ttsAccess: ['off', 'users', 'subscribers', 'admins'],
-      ttsHost: 'string',
-      ttsApiKey: 'string?',
-      imagesModels: ['any'],
-      supportEmail: 'string',
-      googleClientId: 'string',
-      stripeCustomerPortal: 'string',
-    },
-    body
-  )
+  assertValid(configGuard, body)
 
   const update = {
     kind: 'configuration' as const,
@@ -163,6 +198,8 @@ const updateTier = handle(async (req) => {
   return { success: true }
 })
 
+router.post('/embedding', createEmbedding)
+router.post('/update-embedding', updateEmbedding)
 router.post('/impersonate/:userId', impersonateUser)
 router.post('/users', searchUsers)
 router.post('/users/:userId/tier', updateTier)
@@ -171,8 +208,22 @@ router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)
 router.post('/notify', notifyAll)
 router.post('/configuration', updateConfiguration)
+router.post('/configuration-partial', updateConfigurationPartial)
 router.post('/ban/:userId', banUser)
 router.post('/unban/:userId', unbanUser)
 router.post('/password-reset/:userId', generatePasswordReset)
 
 export default router
+
+/** @destructive */
+function encryptProps<T extends {}>(obj: T, props: Array<keyof T>) {
+  for (const prop of props) {
+    if (!obj[prop]) continue
+    if (typeof obj[prop] === 'string') {
+      // @ts-ignore
+      obj[prop] = encryptText(obj[prop])
+    }
+  }
+
+  return obj
+}

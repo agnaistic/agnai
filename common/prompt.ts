@@ -226,12 +226,33 @@ function titlize(str: string) {
   return `${str[0].toUpperCase()}${str.slice(1).toLowerCase()}`
 }
 
+export async function getPromptHistory(opts: PromptOpts, encoder: TokenCounter) {
+  /**
+   * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
+   * are retrieved based on the number of history messages we return here.
+   *
+   * If we ambitiously include the entire history then embeddings will never be included.
+   * The queryable embeddings are messages that are _NOT_ included in the context
+   */
+  const contextBuffer = opts.contextBuffer ?? 0
+  const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
+  /**
+   * The lines from `getLinesForPrompt` are returned in time-ascending order
+   */
+  const { lines } = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  return lines
+}
+
 /**
  * This is only ever invoked client-side
  * @param opts
  * @returns
  */
-export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter) {
+export async function createPromptParts(
+  opts: PromptOpts,
+  encoder: TokenCounter,
+  history?: HistoryLine[]
+) {
   if (opts.trimSentences || opts.user.ui?.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -249,22 +270,9 @@ export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter)
   const sortedMsgs = opts.messages.filter((msg) => msg.adapter !== 'image')
 
   opts.messages = sortedMsgs
+  const template = getTemplate(opts)
 
-  /**
-   * The lines from `getLinesForPrompt` are returned in time-ascending order
-   */
-  let template = getTemplate(opts)
-
-  /**
-   * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
-   * are retrieved based on the number of history messages we return here.
-   *
-   * If we ambitiously include the entire history then embeddings will never be included.
-   * The queryable embeddings are messages that are _NOT_ included in the context
-   */
-  const contextBuffer = opts.contextBuffer ?? 0
-  const maxContext = opts.settings ? getContextLimit(opts.user, opts.settings) : undefined
-  const { lines } = await getLinesForPrompt(opts, encoder, (maxContext || 0) + contextBuffer)
+  const lines = history || (await getPromptHistory(opts, encoder))
   const parts = await buildPromptPlaceholders(
     opts,
     lines.map((l) => l.msg),

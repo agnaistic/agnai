@@ -6,11 +6,12 @@ import {
   buildPromptPlaceholders,
   createPromptParts,
   getLinesForPrompt,
+  getPromptHistory,
   getTemplate,
   InferenceState,
   JsonField,
   JsonOutput,
-  PromptLine,
+  PromptOpts,
   registerTemplateLocator,
   resolveScenario,
   TickHandler,
@@ -19,7 +20,7 @@ import { parseTemplate } from '/common/template-parser'
 import { countTokens, getEncoder } from '/common/tokenize'
 import { AppSchema } from '/common/types'
 import { UserEmbed } from '/common/types/memory'
-import { GenerateRequestV2 } from '/srv/adapter/type'
+import { GenerateRequestV2, HistoryLine } from '/srv/adapter/type'
 import { getPromptEntities, PromptEntities } from './common'
 import { embedApi } from '../embeddings'
 import { ChatDetail } from '../chat'
@@ -726,45 +727,42 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
         )
       : undefined
 
-  const prompt = await createPromptParts(
-    {
-      kind: opts.kind,
-      sender: entities.profile,
+  const promptOpts: PromptOpts = {
+    kind: opts.kind,
+    sender: entities.profile,
 
-      // Relevant characters
-      char: entities.char,
-      replyAs: props.replyAs,
-      impersonate: props.impersonate,
+    // Relevant characters
+    char: entities.char,
+    replyAs: props.replyAs,
+    impersonate: props.impersonate,
 
-      chat: entities.chat,
-      user: entities.user,
-      members: entities.members.concat([entities.profile]),
-      continue: props?.continue,
-      books: entities.books,
-      retry: props?.retry,
-      settings: entities.settings,
-      messages: props.messages,
-      characters: entities.characters,
-      lastMessage: entities.lastMessage?.date || '',
-      trimSentences: ui.trimSentences,
-      chatEmbeds,
-      userEmbeds,
-      resolvedScenario,
-      jsonValues: props.json,
-      contextBuffer: entities.settings.maxTokens,
-      props: entities.props,
-      schema: schema?.schema,
-    },
-    encoder
-  )
-
-  if (entities.settings.modelFormat) {
-    prompt.template.parsed = replaceTags(prompt.template.parsed, entities.settings.modelFormat)
+    chat: entities.chat,
+    user: entities.user,
+    members: entities.members.concat([entities.profile]),
+    continue: props?.continue,
+    books: entities.books,
+    retry: props?.retry,
+    settings: entities.settings,
+    messages: props.messages,
+    characters: entities.characters,
+    lastMessage: entities.lastMessage?.date || '',
+    trimSentences: ui.trimSentences,
+    chatEmbeds,
+    userEmbeds,
+    resolvedScenario,
+    jsonValues: props.json,
+    contextBuffer: entities.settings.maxTokens,
+    props: entities.props,
+    schema: schema?.schema,
   }
 
-  const embedLines = (prompt.template.history || prompt.lines).slice()
-
-  const { users, chats } = await getRetrievalBreakpoint(text, entities, props.messages, embedLines)
+  const lines = await getPromptHistory(promptOpts, encoder)
+  const { users, chats } = await getRetrievalBreakpoint(
+    text,
+    entities,
+    props.messages,
+    lines.slice()
+  )
 
   if (chats?.messages.length) {
     for (const chat of chats.messages) {
@@ -782,6 +780,14 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
       userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
     }
   }
+
+  const prompt = await createPromptParts(promptOpts, encoder)
+
+  if (entities.settings.modelFormat) {
+    prompt.template.parsed = replaceTags(prompt.template.parsed, entities.settings.modelFormat)
+  }
+
+  // const embedLines = (prompt.template.history || prompt.lines).slice()
 
   // if (opts.kind === 'chat-query') {
   //   const assistant = opts.assistant || 'Chat Query'
@@ -801,7 +807,7 @@ async function getRetrievalBreakpoint(
   text: string | undefined,
   ents: PromptEntities,
   messages: AppSchema.ChatMessage[],
-  lines: PromptLine[]
+  lines: HistoryLine[]
 ) {
   const { settings, chat } = ents
   if (!text?.trim()) return { users: undefined, chats: undefined }
@@ -810,13 +816,15 @@ async function getRetrievalBreakpoint(
   let removed = 0
   let count = 0
 
+  let contextLength =
+    +localStorage.test_embed > 0 ? localStorage.test_embed : settings.maxContextLength!
   for (let i = 0; i < lines.length; i++) {
     const line = lines[lines.length - 1 - i]
-    const size = await encoder(line.line)
+    const size = await encoder(line.msg)
     removed += size
     count++
 
-    if (removed > settings.maxContextLength!) break
+    if (removed > contextLength) break
   }
 
   const users = text && chat.userEmbedId ? await embedApi.query(chat.userEmbedId, text) : undefined
@@ -824,7 +832,8 @@ async function getRetrievalBreakpoint(
   const bp = messages[messages.length - count - 1]
   if (!bp) return { users, chats: undefined }
 
-  const chats = settings.memoryChatEmbedLimit
+  const embedLimit = settings.memoryChatEmbedLimit ?? 500
+  const chats = embedLimit
     ? await embedApi.queryChat(
         chat._id,
         text,

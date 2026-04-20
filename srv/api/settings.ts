@@ -89,6 +89,11 @@ export async function getAppConfig(user?: AppSchema.User) {
     configuration.ttsHost = ''
     configuration.ttsApiKey = ''
 
+    // @ts-ignore
+    configuration.embedding = undefined
+    // @ts-ignore
+    configuration.embeddings = undefined
+
     if (configuration.imagesModels) {
       configuration.imagesModels = filterImageModels(
         user!,

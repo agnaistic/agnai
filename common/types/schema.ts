@@ -60,6 +60,7 @@ export namespace AppSchema {
   export type AppConfig = Admin.AppConfig
   export type Configuration = Admin.Configuration
   export type ImageModel = Admin.ImageModel
+  export type ServerEmbedding = Admin.ServerEmbedding
   export type ImageSettingsSource = 'last-character' | 'main-character' | 'chat' | 'settings'
 
   export type ChatMode = 'standard' | 'adventure'
@@ -323,7 +324,10 @@ export namespace AppSchema {
     _id: string
     kind: 'chat-message'
     chatId: string
+
     msg: string
+    msgEmbed?: string
+
     retries?: string[]
     extras?: string[]
     characterId?: string

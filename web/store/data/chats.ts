@@ -6,6 +6,7 @@ import { loadItem, localApi, saveChats } from './storage'
 import { replace } from '/common/util'
 import { getStore } from '../create'
 import { parseTemplate } from '/common/template-parser'
+import { debug } from '/common/debug'
 
 export type AllChat = AppSchema.Chat & { character?: { name: string } }
 
@@ -23,6 +24,7 @@ export const chatsApi = {
   upsertTempCharacter,
   removeCharacter,
   restartChat,
+  embedChat,
 }
 
 export async function getChat(id: string) {
@@ -64,6 +66,15 @@ export async function getChat(id: string) {
     active: [],
     characters,
   })
+}
+
+export async function embedChat(chatId: string) {
+  if (!isLoggedIn()) return
+
+  const res = await api.post(`/chat/${chatId}/embed-messages`)
+  if (res.result) {
+    debug('svr-embed')('response: %s', res.result.success)
+  }
 }
 
 export async function restartChat(chatId: string) {

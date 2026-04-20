@@ -14,6 +14,7 @@ import { v4 } from 'uuid'
 import { ImageModel } from '/common/types/admin'
 import { createStore } from 'solid-js/store'
 import { ConfigState } from './types'
+import { EmbeddingConfig } from './Config/Embeddings'
 
 export { ServerConfiguration as default }
 
@@ -26,7 +27,7 @@ const ServerConfiguration: Component = () => {
   const nav = useNavigate()
   const [search, setSearch] = useSearchParams()
 
-  const tab = useTabs(['General', 'Images', 'Voice'], +(search.cfg_tab || '0'))
+  const tab = useTabs(['General', 'Images', 'Voice', 'Embeddings'], +(search.cfg_tab || '0'))
 
   createEffect(() => {
     setSearch({ cfg_tab: tab.selected().toString() })
@@ -88,7 +89,11 @@ const ServerConfiguration: Component = () => {
               <Images state={store} setters={setStore} />
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex flex-col gap-2" classList={{ hidden: tab.current() !== 'Embeddings' }}>
+              <EmbeddingConfig />
+            </div>
+
+            <div class="flex justify-end" classList={{ hidden: tab.current() === 'Embeddings' }}>
               <Button onClick={submit} class="w-fit">
                 <SaveIcon /> Save
               </Button>

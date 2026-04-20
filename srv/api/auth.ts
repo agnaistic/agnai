@@ -9,7 +9,7 @@ export const loggedIn: any = (req: AppRequest, _: any, next: NextFunction) => {
 }
 
 export const isAdmin: any = (req: AppRequest, _: any, next: NextFunction) => {
-  if (!req.user?.admin) return next(errors.Forbidden)
+  if (!req.authed?.admin) return next(errors.Forbidden)
   next()
 }
 

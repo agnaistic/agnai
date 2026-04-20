@@ -7,6 +7,7 @@ import { docCache } from './cache'
 import type { MemoryState } from '../memory'
 import type { Tiktoken } from 'js-tiktoken'
 import { getStore } from '../create'
+import { getAuthHeaders } from '../api'
 
 type Callback = () => void
 type QueryResult = Extract<WorkerResponse, { type: 'result' }>
@@ -25,6 +26,7 @@ export const EMBED_MODELS = {
   Medium: 'Xenova/all-mpnet-base-v2', // 110MB quantized, 218MB fp16
   'Large - Multi-lingual': 'Xenova/bge-base-en-v1.5', // 110MB quantized, 218MB fp16
   'Large - English': 'nomic-ai/nomic-embed-text-v1.5', // 96MB quantized, 274MB fp16
+  Server: 'server',
 } as const
 
 export const CAPTION_MODELS = {
@@ -85,15 +87,17 @@ export const embedApi = {
     const chat = details[lastChatId]?.chat
 
     // WIP: Only use small model on mobile
-    if (isMobile()) {
-      model = EMBED_MODELS.Small
-      console.log('[embed:init] skipped due to mobile')
-      return
-    }
+    // if (isMobile()) {
+    //   model = EMBED_MODELS.Small
+    //   console.log('[embed:init] skipped due to mobile')
+    //   return
+    // }
 
-    post('initSimilarity', { model, dtype: getLocalModelDtype() })
+    post('initSimilarity', { model: 'server', dtype: 'na' })
+    EMBED_ALLOWED = true
 
-    EMBED_ALLOWED = !!model
+    // post('initSimilarity', { model, dtype: getLocalModelDtype() })
+    // EMBED_ALLOWED = !!model
 
     // Load the document when embeddings are ready
     if (chat?.userEmbedId) {
@@ -150,11 +154,15 @@ const handlers: {
   },
   init: (type) => {
     try {
-      if (isMobile()) {
-        console.log('[embeds] skipped due to mobile')
+      const user = getStore('user').getState()
+
+      let embeddingModel = user.ui.embeddingModel || ''
+      if (isMobile() && embeddingModel && embeddingModel !== 'server') {
+        embeddingModel = EMBED_MODELS.Small
+        console.log('[embeds] forcing mobile embed model to Small (unless server)')
         return
       }
-      const user = getStore('user').getState()
+
       const { details, lastChatId } = getStore('chat').getState()
       const chat = details[lastChatId]?.chat
 
@@ -180,7 +188,7 @@ const handlers: {
     onEmbedReady()
 
     if (embedQueue) {
-      post('embedChat', embedQueue)
+      post('embedChat', { ...embedQueue, auth: getAuthHeaders() })
       embedQueue = undefined
     }
 
@@ -189,7 +197,7 @@ const handlers: {
       if (!id) return
       const document = await docCache.getDoc(id)
       if (!document) continue
-      post('embedDocument', document)
+      post('embedDocument', { ...document, auth: getAuthHeaders() })
     } while (true)
   },
   captionLoaded: () => {
@@ -279,7 +287,7 @@ function embedChat(chatId: string, messages: AppSchema.ChatMessage[]) {
     return
   }
 
-  post('embedChat', { chatId, messages })
+  post('embedChat', { chatId, messages, auth: getAuthHeaders() })
 }
 
 function deleteChatCache(chatId: string) {
@@ -289,14 +297,14 @@ function deleteChatCache(chatId: string) {
 async function queryChat(chatId: string, text: string, before: string, path: string[]) {
   const requestId = v4()
   if (!EMBED_READY) {
-    return { type: 'result', requestId, messages: [] }
+    return { type: 'result', requestId, messages: [], ready: EMBED_READY }
   }
 
   const promise = new Promise<QueryResult>((resolve) => {
     const timer = setTimeout(() => {
       console.warn('Embedding request timed out')
       resolve({ type: 'result', requestId, messages: [] })
-    }, 1000)
+    }, 5000)
     embedCallbacks.set(requestId, (msg) => {
       clearTimeout(timer)
       resolve(msg)
@@ -389,7 +397,7 @@ async function loadDocument(documentId: string) {
   const doc = await docCache.getDoc(documentId)
   if (!doc) return
 
-  post('embedDocument', doc)
+  post('embedDocument', { ...doc, auth: getAuthHeaders() })
 }
 
 async function embedArticle(wikipage: string) {
@@ -435,7 +443,12 @@ async function embedArticle(wikipage: string) {
 
   const id = v4()
   upsertEmbeddingId(id, wikipage)
-  post('embedDocument', { documentId: id, name: wikipage, documents: embeds })
+  post('embedDocument', {
+    documentId: id,
+    name: wikipage,
+    documents: embeds,
+    auth: getAuthHeaders(),
+  })
 }
 
 async function embedPdf(id: string, name: string, file: File) {
@@ -464,7 +477,7 @@ async function embedPdf(id: string, name: string, file: File) {
   }
 
   upsertEmbeddingId(id, name)
-  post('embedDocument', { documentId: id, name, documents: embed })
+  post('embedDocument', { documentId: id, name, documents: embed, auth: getAuthHeaders() })
 }
 
 async function embedFile(id: string, name: string, file: File) {
@@ -486,7 +499,7 @@ async function embedPlainText(id: string, name: string, text: string) {
   const embeds = lines.map((line, i) => ({ msg: line, meta: { line: i + 1 } }))
 
   upsertEmbeddingId(id, name)
-  post('embedDocument', { documentId: id, name, documents: embeds })
+  post('embedDocument', { documentId: id, name, documents: embeds, auth: getAuthHeaders() })
 }
 
 function addSection<T>(

@@ -2,11 +2,12 @@ import * as UI from './ui'
 import * as Sprite from './sprite'
 import * as Memory from './memory'
 import * as Saga from './saga'
+import * as Admin from './admin'
 
 export * from './schema'
 export * from './texttospeech-schema'
 
-export { UI, Sprite, Memory, Saga }
+export { UI, Sprite, Memory, Saga, Admin }
 
 export type TokenCounter = (text: string) => number | Promise<number>
 

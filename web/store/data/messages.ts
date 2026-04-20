@@ -30,8 +30,13 @@ export const msgsApi = {
 
 export type StreamCallback = (res: string, state: InferenceState) => any
 
-export async function swapMessage(msg: AppSchema.ChatMessage, text: string, retries: string[]) {
-  return swapMessageProps(msg, { msg: text, retries })
+export async function swapMessage(
+  msg: AppSchema.ChatMessage,
+  text: string,
+  retries: AppSchema.ChatMessage['retries'],
+  embed?: string
+) {
+  return swapMessageProps(msg, { msg: text, msgEmbed: embed || '', retries })
 }
 
 export async function createMessage(opts: {

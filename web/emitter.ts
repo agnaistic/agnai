@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { send } from './store/create'
+// import { send } from './store/create'
 
 export const EVENTS = {
   loggedIn: 'logged-in',
@@ -40,6 +40,6 @@ export const events = {
     emitter.removeListener(event, listener),
 }
 
-for (const event of Object.values(EVENTS)) {
-  emitter.on(event, (...args) => send('[***] emitter', { type: event, args }, undefined))
-}
+// for (const event of Object.values(EVENTS)) {
+//   emitter.on(event, (...args) => send('[***] emitter', { type: event, args }, undefined))
+// }

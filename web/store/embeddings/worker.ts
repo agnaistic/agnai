@@ -10,8 +10,10 @@ import {
 import { docCache } from './cache'
 import { getEncoding } from 'js-tiktoken'
 import { AllTasks, TaskType } from '@huggingface/transformers'
+import { api } from '../api'
 
 const encoder = getEncoding('cl100k_base')
+const log = (...args: any[]) => console.log('[worker]', ...args)
 const DEVICE = undefined
 
 // Absolutely awful workaround due to Parcel.js being extremely sucky
@@ -19,6 +21,7 @@ const dynamicImport = new Function('a', 'return import(a);')
 
 type Vector = { data: number[] }
 
+type ChatEmbeddings = { __info: any; [msgId: string]: TextEmbed }
 type TextEmbed = { msg: string; entityId: string; embed: Vector; meta: any }
 type RankedMsg = { msg: string; entityId: string; similarity: number; meta: any }
 // type Tensor = { data: number[]; dims: number[]; size: number; type: string }
@@ -42,6 +45,10 @@ const CAPTION = {
   pipeline: null as HF.PreTrainedModel | null,
 }
 
+const AUTH = {
+  cache: {},
+}
+
 const embeddings: Embeddings = {}
 const documents: Record<string, VectorizedDocument> = {}
 
@@ -61,7 +68,7 @@ const handlers: {
   initSimilarity: async (msg) => {
     if (!msg.model) {
       if (EMBED.inited) {
-        console.log('[embed] unloaded')
+        log('[embed] unloaded')
       }
 
       EMBED.model = ''
@@ -70,7 +77,7 @@ const handlers: {
       return
     }
     if (EMBED.inited && msg.model === EMBED.model) {
-      console.log('[embed] already inited')
+      log('[embed] already inited')
       return
     }
 
@@ -79,12 +86,14 @@ const handlers: {
     EMBED.inited = true
     EMBED.model = msg.model
 
-    const embedder = await pipeline('feature-extraction', msg.model, (data) => {
-      post('progress', data)
-    })
-    EMBED.pipeline = embedder
+    if (msg.model !== 'server') {
+      const embedder = await pipeline('feature-extraction', msg.model, (data) => {
+        post('progress', data)
+      })
+      EMBED.pipeline = embedder
+    }
 
-    console.log(`[embed] ready`)
+    log(`[embed] ready`)
     post('embedLoaded', {})
   },
   initCaptioning: async (msg) => {
@@ -92,7 +101,7 @@ const handlers: {
       CAPTION.inited = false
       CAPTION.pipeline = null
       CAPTION.model = ''
-      console.log('[caption] model unloaded')
+      log('[caption] model unloaded')
       return
     }
 
@@ -102,19 +111,19 @@ const handlers: {
     CAPTION.model = msg.model
 
     if (msg.model.startsWith('http')) {
-      console.log('[caption] http captioner not supported', msg.model)
+      log('[caption] http captioner not supported', msg.model)
       return
     }
 
-    console.log(`[caption] loading: ${msg.model} using device:${DEVICE}`)
+    log(`[caption] loading: ${msg.model} using device:${DEVICE}`)
     await initCaptioner(msg.model)
 
-    console.log(`[caption] ready`)
+    log(`[caption] ready`)
     post('captionLoaded', {})
   },
   captionImage: async (msg) => {
     if (!CAPTION.inited || !CAPTION.pipeline || !CAPTION.proc) {
-      console.log('[caption] no model loaded', CAPTION.inited, !!CAPTION.pipeline, !!CAPTION.proc)
+      log('[caption] no model loaded', CAPTION.inited, !!CAPTION.pipeline, !!CAPTION.proc)
       return
     }
 
@@ -134,7 +143,7 @@ const handlers: {
 
     const inputs = await CAPTION.proc(prompt, image, { num_crops: 4 })
 
-    console.log(`[caption] starting`)
+    log(`[caption] starting`)
     try {
       const streamer = new api.TextStreamer(CAPTION.proc.tokenizer!, {
         skip_prompt: true,
@@ -147,20 +156,22 @@ const handlers: {
         max_new_tokens: 512,
       })
 
-      console.log(output)
+      log(output)
 
       const result = await CAPTION.pipeline(image)
       const text = result[0].generated_text
-      console.log(`[caption] done: ${text}`)
+      log(`[caption] done: ${text}`)
       post('caption', { requestId: msg.requestId, caption: text })
     } catch (ex) {
-      console.log(`[caption] caption failed`)
-      console.error(ex)
+      log(`[caption] caption failed`)
+      log('error: %s', ex)
     }
   },
   embedChat: async (msg) => {
+    AUTH.cache = msg.auth
+    log('embed chat: ', msg.chatId)
     if (!EMBED.inited) return
-    if (!EMBED.pipeline) return
+    if (!EMBED.pipeline && EMBED.model !== 'server') return
     if (!embeddings[msg.chatId]) {
       const cached = await reviveChatEmbeddings(msg.chatId)
       embeddings[msg.chatId] = cached
@@ -172,6 +183,7 @@ const handlers: {
     await deleteChatCache(msg.chatId)
   },
   embedDocument: async (msg) => {
+    AUTH.cache = msg.auth
     if (!documents[msg.documentId]) {
       documents[msg.documentId] = []
     }
@@ -180,18 +192,29 @@ const handlers: {
     embed(msg)
   },
   queryChat: async (query) => {
-    if (!EMBED.pipeline) return
+    if (!EMBED.pipeline && EMBED.model !== 'server') return
     if (!embeddings[query.chatId]) return
-    const embed = await EMBED.pipeline(query.text, { pooling: 'mean', normalize: true })
+    const embed = await vectorize(query.text)
 
     const path = new Set(query.path)
 
-    const embeds = Object.values(embeddings[query.chatId])
-      .filter((msg) => {
-        if (!path.has(msg.meta.id)) return false
-        const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
-        return msg.msg !== query.text && isBefore
-      })
+    const usable = Object.values(embeddings[query.chatId]).filter((msg) => {
+      const inPath = path.has(msg.meta.id)
+      const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
+      const usable = msg.msg !== query.text && isBefore && inPath
+      if (!usable) {
+        const similarity = calculateCosineSimilarity(embed.data as number[], msg.embed.data)
+        log(
+          `id: ${msg.meta.id.slice(
+            0,
+            4
+          )} | before: ${isBefore} | rank #${similarity} | in-path: ${inPath}`
+        )
+      }
+      return usable
+    })
+
+    const embeds = usable
       .map((msg) => {
         const similarity = calculateCosineSimilarity(embed.data as number[], msg.embed.data)
         return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
@@ -218,7 +241,7 @@ const handlers: {
         .sort(rank)
       post('result', { messages: embeds, requestId: query.requestId })
     }
-    console.log(`[embed] ${Date.now() - start}ms`)
+    log(`[embed] ${Date.now() - start}ms`)
   },
 }
 
@@ -263,26 +286,29 @@ const embedQueue: Array<RequestChatEmbed | RequestDocEmbed> = []
 
 let EMBEDDING = false
 async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
-  if (!EMBED.inited || !EMBED.pipeline) return
+  AUTH.cache = msg.auth
+  if (!EMBED.inited) return
+  if (!EMBED.pipeline && EMBED.model !== 'server') return
 
   const type = msg.type === 'embedChat' ? 'chat' : 'document'
   const id = msg.type === 'embedChat' ? msg.chatId : msg.documentId
   if (EMBEDDING) {
     embedQueue.push(msg)
     post('status', { id, kind: type, status: 'queued' })
-    console.log(`[${type}] ${id} queued`)
+    log(`[${type}] ${id} queued`)
     return
   }
 
   EMBEDDING = true
   post('status', { id, kind: type, status: 'loading' })
-  console.log(`[${type}] ${id} started`)
+  log(`[${type}] ${id} started`)
   const now = Date.now()
+
   if (msg.type === 'embedChat') {
     const seen = new Set<string>()
     const cache = embeddings[msg.chatId]
 
-    console.log(`[${type}] cached: ${Object.keys(cache).length}`)
+    log(`[${type}] cached: ${Object.keys(cache).length}`)
 
     const filtered = msg.messages.filter((msg) => {
       seen.add(msg._id)
@@ -292,21 +318,58 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
       return false
     })
 
-    for (const msg of filtered) {
-      if (msg.adapter === 'image' || msg.ooc) continue
-      const original = cache[msg._id]
-      if (original && original.msg === msg.msg) continue
+    if (EMBED.model === 'server') {
+      const docs = filtered.slice()
 
-      try {
-        const embedding = await vectorize(msg.msg)
-        cache[msg._id] = {
-          entityId: msg.characterId || msg.userId || '',
-          msg: msg.msg,
-          embed: embedding,
-          meta: { id: msg._id, created: msg.createdAt },
+      while (docs.length) {
+        const spliced = docs.splice(0, 10)
+        const inputs = spliced.map((doc) => doc.msg)
+        const res = await api.callApi('/chat/embed-texts', {
+          method: 'post',
+          headers: Object.assign(msg.auth, { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ inputs }),
+        })
+
+        if (!res.result) {
+          log(`vectorize failed: ${res.error || 'reason unknown'}`)
+          return
         }
-      } catch (ex: any) {
-        console.log(`vectorized failed: ${ex?.message || ex}`)
+
+        for (let i = 0; i < res.result.embeds.length; i++) {
+          const msg = spliced[i]
+          cache[msg._id] = {
+            entityId: msg.characterId || msg.userId || '',
+            msg: msg.msg,
+            embed: { data: res.result.embeds[i] },
+            meta: { id: msg._id, created: msg.createdAt },
+          }
+        }
+        await new Promise((resolve) => {
+          setTimeout(resolve, 100)
+        })
+      }
+
+      await cacheChatEmbeddings(msg.chatId, cache)
+      log(`[${type}] done #${filtered.length} ${(Date.now() - now) / 1000}s`)
+    }
+    // Non-server-side embedding
+    else {
+      for (const msg of filtered) {
+        if (msg.adapter === 'image' || msg.ooc) continue
+        const original = cache[msg._id]
+        if (original && original.msg === msg.msg) continue
+
+        try {
+          const embedding = await vectorize(msg.msg)
+          cache[msg._id] = {
+            entityId: msg.characterId || msg.userId || '',
+            msg: msg.msg,
+            embed: embedding,
+            meta: { id: msg._id, created: msg.createdAt },
+          }
+        } catch (ex: any) {
+          log(`vectorized failed: ${ex?.message || ex}`)
+        }
       }
     }
 
@@ -317,11 +380,11 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
     //   deleted++
     // }
 
-    console.log(`[${type}] done ${(Date.now() - now) / 1000}s`)
+    log(`[${type}] done #${filtered.length} ${(Date.now() - now) / 1000}s`)
     await cacheChatEmbeddings(msg.chatId, cache)
 
     // const pre = deleted > 0 ? '+' : ''
-    // console.log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
+    // log(`[chat] ${msg.chatId} embedded (${pre}${deleted})`)
   }
 
   if (msg.type === 'embedDocument') {
@@ -331,71 +394,163 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
     const doc = documents[msg.documentId]
     const nextDoc: VectorizedDocument = []
 
-    let pos = 0
-    for (const item of msg.documents) {
-      const exist = doc[pos]
-      pos++
+    if (EMBED.model === 'server') {
+      const docs = msg.documents.slice()
 
-      if (exist && exist.msg === item.msg) {
-        nextDoc[pos] = exist
-        continue
+      let pos = 0
+      while (docs.length) {
+        const spliced = docs.splice(0, 10)
+        const inputs = spliced.map((doc) => doc.msg)
+        const embeds = await api.callApi('/chat/embed-texts', {
+          method: 'post',
+          headers: Object.assign(msg.auth, { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ inputs }),
+        })
+
+        for (let i = 0; i < embeds.result.embeds.length; i++) {
+          const item = spliced[i]
+          nextDoc[pos] = {
+            msg: item.msg,
+            embed: { data: embeds.result.embeds[i] },
+            meta: item.meta,
+          }
+          pos++
+        }
       }
 
-      const embed = await vectorize(item.msg)
-      embedded++
-      const percent = ((embedded / msg.documents.length) * 100).toFixed(1)
-      post('status', { id, kind: type, status: `loading (${percent}%)` })
-      nextDoc[pos] = { msg: item.msg, embed, meta: item.meta }
+      documents[msg.documentId] = nextDoc
+      await cacheDocumentEmbeddings(msg.documentId, nextDoc)
+      log(`[document] ${msg.documentId} embedded`)
     }
 
-    documents[msg.documentId] = nextDoc
-    await cacheDocumentEmbeddings(msg.documentId, nextDoc)
-    console.log(`[document] ${msg.documentId} embedded`)
+    // Non-server-side Embedding
+    else {
+      let pos = 0
+      for (const item of msg.documents) {
+        const exist = doc[pos]
+        pos++
+
+        if (exist && exist.msg === item.msg) {
+          nextDoc[pos] = exist
+          continue
+        }
+
+        const embed = await vectorize(item.msg)
+        embedded++
+        const percent = ((embedded / msg.documents.length) * 100).toFixed(1)
+        post('status', { id, kind: type, status: `loading (${percent}%)` })
+        nextDoc[pos] = { msg: item.msg, embed, meta: item.meta }
+      }
+
+      documents[msg.documentId] = nextDoc
+      await cacheDocumentEmbeddings(msg.documentId, nextDoc)
+      log(`[document] ${msg.documentId} embedded`)
+    }
   }
 
   post('status', { id, kind: type, status: 'loaded' })
   EMBEDDING = false
+}
+
+setInterval(processQueue, 50)
+
+async function processQueue() {
+  if (!embedQueue.length) return
+  if (EMBEDDING) return
 
   const next = embedQueue.shift()
   if (next) {
-    await new Promise((res) => setTimeout(res, 50))
     embed(next)
   }
 }
 
 async function vectorize(msg: string) {
-  console.log(`vectorizing ${msg.length} chars`)
+  if (EMBED.model === 'server') {
+    const embeds = await apiVectorize([msg])
+
+    if (!embeds.length) {
+      throw new Error(`Server failed to vectorize text`)
+    }
+
+    const embed = embeds[0]
+    return { data: embed }
+  }
+
+  log(`vectorizing ${msg.length} chars`)
   const embed = await EMBED.pipeline!(msg, { pooling: 'mean', normalize: true })
-  console.log('vectorized')
+  log('vectorized')
   return { data: embed.data as number[] }
+}
+
+async function apiVectorize(msgs: string[]) {
+  const res = await api.callApi<{ embeds: Array<number[]> }>('/chat/embed-texts', {
+    method: 'post',
+    headers: Object.assign(AUTH.cache, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ inputs: msgs }),
+  })
+
+  if (res.result) {
+    return res.result.embeds
+  }
+
+  return []
 }
 
 async function cacheDocumentEmbeddings(docId: string, embeddings: VectorizedDocument) {
   await lf.setItem(`document-embeddings-${docId}`, JSON.stringify(embeddings))
-  console.log('[embed] document cached', docId)
+  log('[embed] document cached', docId)
 }
 
 async function reviveDocumentEmbeddings(docId: string): Promise<VectorizedDocument> {
   const existing = await lf.getItem(`document-embeddings-${docId}`)
 
-  console.log(`[embed] document revived`, docId, !!existing)
+  log(`[embed] document revived`, docId, !!existing)
 
   if (!existing) return []
   return JSON.parse(existing as string)
 }
 
 async function cacheChatEmbeddings(chatId: string, embeddings: Record<string, TextEmbed>) {
-  await lf.setItem(`chat-embeddings-${chatId}`, JSON.stringify(embeddings))
-  console.log('[embed] chat cached', chatId)
+  await lf.setItem(
+    `chat-embeddings-${chatId}`,
+    JSON.stringify({ ...embeddings, __info: { model: EMBED.model, cached: Date.now() } })
+  )
+  log('[embed] chat cached', chatId)
 }
 
-async function reviveChatEmbeddings(chatId: string): Promise<Record<string, TextEmbed>> {
-  const existing = await lf.getItem(`chat-embeddings-${chatId}`)
+async function reviveChatEmbeddings(chatId: string): Promise<ChatEmbeddings> {
+  const existing: any = await lf.getItem(`chat-embeddings-${chatId}`)
 
-  console.log(`[embed] chat revived`, chatId, !!existing)
+  if (!existing) {
+    log(`[embed] chat revival: new`, chatId)
+    return {} as ChatEmbeddings
+  }
 
-  if (!existing) return {}
-  return JSON.parse(existing as string)
+  const parsed = JSON.parse(existing as string)
+
+  if (!parsed?.__info || parsed.__info.model !== EMBED.model) {
+    log(`[embed] chat revival: changed model`, `c:${parsed.__info} --> e:${EMBED.model}`)
+    return {} as ChatEmbeddings
+  }
+
+  log(`[embed] chat revival: exists`, chatId)
+  const { __info, ...embeds } = parsed
+
+  let malformed = 0
+  for (const key in parsed) {
+    if (key === '__info') continue
+    if (parsed[key].embed.data) continue
+
+    // If embed is malformed, delete it
+    delete parsed[key]
+    malformed++
+  }
+
+  if (malformed) {
+    log(`deleted malformed: #${malformed}`)
+  }
+
+  return embeds
 }
 
 async function deleteChatCache(chatId: string) {
@@ -411,15 +566,15 @@ async function hf() {
 
 async function initCaptioner(model: string) {
   const api = await hf()
-  console.log(`[caption] loading processor: ${model}`)
+  log(`[caption] loading processor: ${model}`)
   CAPTION.proc = await api.AutoProcessor.from_pretrained(model, {})
-  console.log(`[caption] loading model: ${model}`)
+  log(`[caption] loading model: ${model}`)
   CAPTION.pipeline = await api.AutoModelForCausalLM.from_pretrained(model, {
     device: DEVICE,
     // use_external_data_format: true,
     dtype: 'q4f16',
   })
-  console.log(`[caption] ${model} loaded`)
+  log(`[caption] ${model} loaded`)
 }
 
 async function pipeline<T extends TaskType>(

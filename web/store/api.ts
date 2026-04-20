@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode'
 import needle from 'needle'
 import { parseSearchQuery, tryParse, incompleteJson, parseEvent } from '/common/util'
 import { debug } from '/common/debug'
-import { TickHandler } from '/common/prompt'
+import type { TickHandler } from '/common/prompt'
 import { getNextThoughts, getNextTokens, joinThoughtTokens, joinUrl } from '/common/requests/util'
 
 let socketId = ''
@@ -19,14 +19,14 @@ const PORT = location.port
 
 // Sometimes a user has DNS issues with a particular API url.
 // We can provide them a `?api_url=...` url to try alternate API urls
-if (location.search) {
+if (location.search && typeof localStorage !== 'undefined') {
   const search = parseSearchQuery(location.search)
   if (search.api_url && search.api_url.endsWith('.agnai.chat')) {
     localStorage.setItem('api_url', search.api_url)
   }
 }
 
-const API_OVERRIDE = localStorage.getItem('api_url')
+const API_OVERRIDE = typeof localStorage !== 'undefined' ? localStorage.getItem('api_url') : ''
 
 export const baseUrl = API_OVERRIDE
   ? `${PROTO}//${API_OVERRIDE}`
@@ -45,6 +45,7 @@ export const baseUrl = API_OVERRIDE
 export const api = {
   get,
   post,
+  callApi,
   method,
   upload,
   streamGet,

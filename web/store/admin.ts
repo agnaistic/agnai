@@ -5,6 +5,7 @@ import { api, isImpersonating, revertAuth, setAltAuth } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
 import type { SubsAgg } from '/srv/domains/subs/types'
+import { ServerEmbedding } from '/common/types/admin'
 
 type UserInfo = {
   userId: string
@@ -197,6 +198,51 @@ export const adminStore = createStore<AdminState>('admin', {
         toastStore.error(`Failed to create tier: ${res.error}`)
       }
     },
+
+    async assignEmbedding(_, id: string) {
+      const res = await api.post('/admin/configuration-partial', { embedding: id })
+
+      if (res.error) {
+        toastStore.error(`Failed to assign Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Assigned Server Embedding')
+        return { config: res.result }
+      }
+    },
+
+    async *updateEmbedding(_, embed: ServerEmbedding, onSuccess?: () => void) {
+      const res = await api.post('/admin/update-embedding', embed)
+
+      if (res.error) {
+        toastStore.error(`Failed to update Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Updated Server Embedding')
+        yield { config: res.result }
+        onSuccess?.()
+      }
+    },
+
+    async *createEmbedding(_, embed: ServerEmbedding, onSuccess?: () => void) {
+      const res = await api.post('/admin/embedding', embed)
+
+      if (res.error) {
+        toastStore.error(`Failed to create Server Embedding: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Created Server Embedding')
+        yield { config: res.result }
+        onSuccess?.()
+      }
+    },
+
     async updateTier(_, id: string, update: Partial<OmitId<AppSchema.SubscriptionTier, Dates>>) {
       const res = await api.post(`/admin/tiers/${id}`, update)
       if (res.result) {

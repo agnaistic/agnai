@@ -106,6 +106,7 @@ export function logMiddleware() {
 
       const sub = getUserSubscriptionTier(user, getCachedTiers())
       req.authed = user
+      req.user.admin = user.admin
       req.tier = sub?.tier
     }
 
