@@ -90,6 +90,10 @@ export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
     body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
   }
 
+  if (!body.stop?.length) {
+    delete body.stop
+  }
+
   return body
 }
 
@@ -649,7 +653,7 @@ export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelForma
 
 function getReasoningEffort(gen: Partial<AppSchema.GenSettings>) {
   const cfg = gen.reasoning
-  if (!cfg?.enabled) return
+  if (!cfg?.enabled) return 'none'
   if (cfg.effort !== 'custom') return cfg.effort
 
   if (!cfg.maxTokens || cfg.maxTokens < 0 || isNaN(cfg.maxTokens) || !gen.maxTokens) return

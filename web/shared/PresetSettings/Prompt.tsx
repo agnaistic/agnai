@@ -153,6 +153,7 @@ export const PromptSettings: Component<PresetTabProps> = (props) => {
                 <Select
                   inline
                   items={[
+                    { label: 'None', value: 'none' },
                     { label: 'Low (20%)', value: 'low' },
                     { label: 'Medium (50%)', value: 'medium' },
                     { label: 'High (80%)', value: 'high' },

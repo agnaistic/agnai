@@ -216,6 +216,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.messages = adjustMessageFormatting(opts.conn, body.messages)
   }
 
+  if (!body.stop?.length) {
+    delete body.stop
+  }
+
   const iter = body.stream
     ? streamGenerator({
         userId: opts.user._id,
@@ -236,7 +240,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         signal: opts.signal,
       })
 
-  let accumulated = ''
+  const accum = {
+    tokens: '',
+    thoughts: '',
+  }
+
+  // let accumulated = ''
   let response: Completion<Inference> | undefined
 
   while (true) {
@@ -249,6 +258,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if ('thoughts' in generated.value) {
+      accum.thoughts += generated.value.thoughts
       yield { thoughts: generated.value.thoughts! }
     }
 
@@ -264,10 +274,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
-      accumulated += generated.value.token
+      accum.tokens += generated.value.token
       yield {
         partial: sanitiseAndTrim({
-          text: accumulated,
+          text: accum.tokens,
           char,
           members,
           gen: opts.gen,
@@ -281,38 +291,49 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if ('tokens' in generated.value && typeof generated.value.tokens === 'string') {
-      accumulated = generated.value.tokens
+      accum.tokens = generated.value.tokens
     }
   }
 
   try {
-    let text = accumulated ? accumulated : getCompletionContent(response, accumulated, log)
+    const text = accum.tokens ? accum.tokens : getCompletionContent(response, accum.tokens, log)
+
     if (text instanceof Error) {
       yield { error: `[Chat] Request returned an error: ${text.message}` }
       return
     }
 
-    if (!text?.length) {
+    if (!text?.length && !accum.thoughts.length) {
       log.error({ body: response }, '[Chat] Request failed: Empty response')
       yield { error: `[Chat] Request failed: Received empty response. Try again.` }
       return
     }
 
-    gen.swipesPerGeneration! > 1
-      ? yield sanitiseAndTrim({
-          text: accumulated,
-          char,
-          members,
-          gen: opts.gen,
-          stops: allStops,
-        })
-      : yield sanitiseAndTrim({
-          text,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-          stops: allStops,
-        })
+    if (gen.swipesPerGeneration! > 1) {
+      yield sanitiseAndTrim({
+        text: accum.tokens,
+        char,
+        members,
+        gen: opts.gen,
+        stops: allStops,
+      })
+    } else if (text?.length) {
+      yield sanitiseAndTrim({
+        text,
+        char: opts.replyAs,
+        members,
+        gen: opts.gen,
+        stops: allStops,
+      })
+    } else if (accum.thoughts) {
+      sanitiseAndTrim({
+        text: accum.thoughts,
+        char: opts.replyAs,
+        members,
+        gen: opts.gen,
+        stops: allStops,
+      })
+    }
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }

@@ -99,6 +99,11 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
       },
     ],
   },
+  deepinfra: {
+    name: 'DeepInfra',
+    url: `https://api.deepinfra.com/v1/openai`,
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {

@@ -17,6 +17,9 @@ let emitter = (_payload: { type: string }) => {}
 
 export function joinThoughtTokens(accum: string, thoughts: string) {
   if (!thoughts.trim()) return accum
+  if (!accum.trim() && thoughts) {
+    return thoughts
+  }
 
   return `<think>${thoughts}</think>${accum}`
 }
