@@ -388,14 +388,14 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
     }
 
     case 'known-openrouter': {
-      if (!modelNeedsUserRoleLast(opts.gen, body.model)) return
+      if (!modelNeedsUserRoleLast(opts, body.model)) return
       if (!lastMsg) return
       lastMsg.role = 'user'
       return
     }
   }
 
-  if (modelNeedsUserRoleLast(opts.gen, model)) {
+  if (modelNeedsUserRoleLast(opts, model)) {
     lastMsg.role = 'user'
   }
 }

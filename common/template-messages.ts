@@ -116,7 +116,8 @@ export async function toChatMessages(req: GenerateRequestV2, counter: TokenCount
   //   })
   // }
 
-  const role = req.settings?.postUserRole ? 'user' : 'assistant'
+  const ensureLastRoleIsUser = req.settings?.postUserRole || req.subscription?.preset?.postUserRole
+  const role = ensureLastRoleIsUser ? 'user' : 'assistant'
   if (postContent || prefill) {
     messages.push({ role, content: `${postContent}${prefill}` })
   }
