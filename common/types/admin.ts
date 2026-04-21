@@ -39,6 +39,7 @@ export interface AppConfig {
   patreon?: boolean
   policies?: boolean
   apiAccess?: boolean
+  serverEmbeddings?: boolean
   guidanceAccess?: boolean
   flags?: string
   patreonAuth?: {

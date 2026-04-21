@@ -326,7 +326,6 @@ export namespace AppSchema {
     chatId: string
 
     msg: string
-    msgEmbed?: string
 
     retries?: string[]
     extras?: string[]

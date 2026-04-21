@@ -7,21 +7,6 @@ import { assertValid } from '/common/valid'
 
 const CACHED_KEYS: Record<string, string> = {}
 
-export const embedChat = handle(async (req, res) => {
-  const match = await getEmbeddingServer()
-  if (!match) return { server: false }
-
-  res.json({ success: true })
-
-  const messages = await store.msgs.getMessages(req.params.id)
-  match.key = decryptText(match.key)
-
-  const texts = messages.filter((m) => !m.msgEmbed && !!m.msg.trim()).map((m) => m.msg)
-  const embeds = match.batch ? await embedMultiple(texts, match) : await embedSingle(texts, match)
-
-  return embeds
-})
-
 export const embedText = handle(async (req, res) => {
   assertValid({ inputs: ['string'] }, req.body)
 

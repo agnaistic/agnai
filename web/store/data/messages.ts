@@ -36,7 +36,7 @@ export async function swapMessage(
   retries: AppSchema.ChatMessage['retries'],
   embed?: string
 ) {
-  return swapMessageProps(msg, { msg: text, msgEmbed: embed || '', retries })
+  return swapMessageProps(msg, { msg: text, retries })
 }
 
 export async function createMessage(opts: {

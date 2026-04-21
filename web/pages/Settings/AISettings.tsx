@@ -24,6 +24,7 @@ const AISettings: Component<{
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user, sub: s.sub, ui: s.ui }))
   const cfg = settingStore((s) => ({
+    serverEmbeddings: s.config.serverEmbeddings,
     server: s.config.serverConfig,
   }))
 
@@ -32,6 +33,12 @@ const AISettings: Component<{
   const [apiKey, setApiKey] = createSignal(state.user?.apiKey || '')
   const [editPreset, setEditPreset] = createSignal('')
   const [presetFooter, setPresetFooter] = createSignal<any>()
+
+  const embeddingOpts = createMemo(() => {
+    if (!!cfg.serverEmbeddings) return EMBED_MODELS_OPTS
+
+    return EMBED_MODELS_OPTS.filter((opt) => opt.value !== 'server')
+  })
 
   const revealKey = async () => {
     const prev = apiKey()
@@ -81,7 +88,7 @@ const AISettings: Component<{
             <div>Embeddings/Long-Term Memory</div>
             <Select
               parentClass="text-sm py-1 px-2"
-              items={EMBED_MODELS_OPTS}
+              items={embeddingOpts()}
               value={state.ui.embeddingModel || ''}
               onChange={(ev) => userStore.updateEmbeddingModel(ev.value)}
             />

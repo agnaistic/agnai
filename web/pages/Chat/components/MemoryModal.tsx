@@ -121,25 +121,18 @@ const ChatMemoryModal: Component<{
         : books.books.list.find((book) => book._id === id)
 
     if (match) setState(match)
+    setOpenId(id)
   }
 
-  createEffect(() => {
-    if (!props.chat) return
-    if (!props.chat.memoryId) return
-
-    if (props.chat.memoryId) {
-      changeBook(props.chat.memoryId)
-    }
-  })
-
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (!state._id) {
       memoryStore.create(state, (next) => {
         setState('_id', next._id)
-        useMemoryBook(next._id)
+        setOpenId('')
       })
     } else {
-      memoryStore.update(state._id, state)
+      await memoryStore.update(state._id, state)
+      setOpenId('')
     }
   }
 
@@ -198,7 +191,6 @@ const ChatMemoryModal: Component<{
                 </Button>
               </div>
             }
-            helperText={`Assign Book(s) to Chat: ${props.chat?.memoryId}`}
             items={availableBooks()}
             value={bookId()}
             onChange={(item) => setBookId(item.value)}
@@ -269,7 +261,22 @@ const ChatMemoryModal: Component<{
         </Show>
         <EmbedContent />
 
-        <Modal show={!!openId()} close={() => setOpenId('')}>
+        <Modal
+          show={!!openId()}
+          close={() => setOpenId('')}
+          title="Memory Book Editor"
+          maxWidth="full"
+          footer={
+            <>
+              <Button schema="secondary" onClick={() => setOpenId('')}>
+                Cancel
+              </Button>
+              <Button schema="success" onClick={() => onSubmit()}>
+                Save
+              </Button>
+            </>
+          }
+        >
           <div class="text-sm">
             <EditMemoryForm
               hideSave

@@ -12,6 +12,8 @@ import { getEncoding } from 'js-tiktoken'
 import { AllTasks, TaskType } from '@huggingface/transformers'
 import { api } from '../api'
 
+const EMBED_INPUT_MAX = 20
+
 const encoder = getEncoding('cl100k_base')
 const log = (...args: any[]) => console.log('[worker]', ...args)
 const DEVICE = undefined
@@ -322,7 +324,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
       const docs = filtered.slice()
 
       while (docs.length) {
-        const spliced = docs.splice(0, 10)
+        const spliced = docs.splice(0, EMBED_INPUT_MAX)
         const inputs = spliced.map((doc) => doc.msg)
         const res = await api.callApi('/chat/embed-texts', {
           method: 'post',
@@ -399,7 +401,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
       let pos = 0
       while (docs.length) {
-        const spliced = docs.splice(0, 10)
+        const spliced = docs.splice(0, EMBED_INPUT_MAX)
         const inputs = spliced.map((doc) => doc.msg)
         const embeds = await api.callApi('/chat/embed-texts', {
           method: 'post',

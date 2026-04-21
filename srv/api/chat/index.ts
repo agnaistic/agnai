@@ -19,7 +19,7 @@ import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
 import { guidance, inference, inferenceApi, inferenceStream } from './inference'
 import { generateAppImage } from '../image-api'
-import { embedChat, embedText } from './embedding'
+import { embedText } from './embedding'
 
 const router = Router()
 
@@ -48,7 +48,6 @@ router.put('/:id/preset', updateChatGenPreset)
 
 router.post('/', createChat)
 router.post('/import', importChat)
-router.post('/:id/embed-messages', embedChat)
 router.post('/:id/invite', createInvite)
 router.post('/:id/uninvite', uninviteMember)
 router.post('/:inviteId/accept', acceptInvite)

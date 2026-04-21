@@ -375,9 +375,8 @@ export const msgStore = createStore<MsgState>(
       const retries = msg.retries.slice()
       retries[position - 1] = original
 
-      const text = typeof replacement === 'string' ? replacement : replacement.msg
-      const embed = typeof replacement === 'string' ? '' : replacement.embed
-      const res = await msgsApi.swapMessage(msg, text, retries, embed)
+      const text = replacement
+      const res = await msgsApi.swapMessage(msg, text, retries)
       if (res.error) {
         toastStore.error(`Failed to swap message: ${res.error}`)
       }
@@ -385,7 +384,7 @@ export const msgStore = createStore<MsgState>(
       if (res.result) {
         const next = msgs.map((msg) => {
           if (msgId !== msg._id) return msg
-          return { ...msg, msg: text, msgEmbed: embed, retries }
+          return { ...msg, msg: text, retries }
         })
         yield { msgs: next }
         onSuccess?.()
@@ -414,16 +413,13 @@ export const msgStore = createStore<MsgState>(
         retries.splice(0, 1)
       }
 
-      const text = typeof replacement === 'string' ? replacement : replacement.msg
-      const embed = typeof replacement === 'string' ? '' : replacement.embed
-      const res = await msgsApi.swapMessage(msg, text, retries, embed)
+      const text = replacement
+      const res = await msgsApi.swapMessage(msg, text, retries)
       if (res.error) {
         toastStore.error(`Failed to discard message: ${res.error}`)
       }
       if (res.result) {
-        const nextMsgs = msgs.map((m) =>
-          m._id === msgId ? { ...m, msg: text, msgEmbed: embed, retries } : m
-        )
+        const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, msg: text, retries } : m))
         yield { msgs: nextMsgs }
         onSuccess?.()
         toastStore.success(`Swipe deleted`, 2)

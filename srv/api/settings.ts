@@ -131,6 +131,7 @@ export async function getAppConfig(user?: AppSchema.User) {
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
+      serverEmbeddings: !!configuration?.embedding,
     }
   }
 
@@ -166,6 +167,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration
   appConfig.subs = subs
+  appConfig.serverEmbeddings = !!configuration?.embedding
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {
