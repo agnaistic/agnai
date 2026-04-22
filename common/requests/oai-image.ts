@@ -2,18 +2,7 @@ import { ImageRequestOpts } from '/srv/image/types'
 
 export const oaiImageApi = {
   generateImage,
-}
-
-export type ImageResponse = Awaited<ReturnType<typeof processImage>>
-
-async function getSessionId(hostname: string) {
-  const session = await fetch(getUrl(hostname), {
-    method: 'post',
-    body: JSON.stringify({}),
-    headers: { 'content-type': 'application/json' },
-  }).then((res) => res.json())
-
-  return session.session_id as string
+  getUrl,
 }
 
 async function generateImage(req: ImageRequestOpts, events?: { signal?: AbortController }) {
@@ -27,28 +16,12 @@ async function generateImage(req: ImageRequestOpts, events?: { signal?: AbortCon
   }).then((res) => res.json())
 
   if (result.error) {
-    throw new Error(`SwarmUI failed: ${result.error}`)
+    throw new Error(`OpenAI-Compat Image failed: ${result.error}`)
   }
 
-  const imagePath = result.images[0]
-  const image = await processImage(req.provider.url || '', imagePath)
+  const imageResult = result.body[0]?.b64_json
+  const image = await processBase64(imageResult)
   return image
-}
-
-async function processImage(baseUrl: string, imagePath: string) {
-  const image = await fetch(getUrl(baseUrl), {
-    headers: { accept: 'image/png' },
-  })
-    .then((res) => res.blob())
-    .then(async (blob) => {
-      const buf = await blob.arrayBuffer()
-      const buffer = Buffer.from(buf)
-      const base64 = `data:image/png;base64,` + buffer.toString('base64')
-      return { content: base64, blob, buffer }
-    })
-
-  const file = new File([image.blob], `swarm_${Date.now()}.png`, { type: image.blob.type })
-  return { content: image.content, file, buffer: image.buffer }
 }
 
 async function processBase64(base64: string) {
@@ -59,18 +32,12 @@ async function processBase64(base64: string) {
 }
 
 async function getPayload(req: ImageRequestOpts) {
-  const session_id = await getSessionId(req.provider.url || '')
+  const size = `${req.settings?.width || 1024}x${req.settings?.height || 10234}`
   const payload: any = {
-    session_id,
     prompt: req.prompt,
-    negativeprompt: req.negative || '',
-    cfgscale: `${req.settings?.cfg || 5}`,
+    size,
     steps: `${req.settings?.steps || 20}`,
-    width: `${req.settings?.width || 1024}`,
-    height: `${req.settings?.height || 1024}`,
     model: req.provider.model || '',
-    sampler: req.provider.sampler || 'euler_ancestral',
-    images: `1`,
   }
 
   return payload

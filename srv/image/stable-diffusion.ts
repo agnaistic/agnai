@@ -11,6 +11,7 @@ import { config } from '../config'
 import { fixImagePrompt } from '/common/image-prompt'
 import { decryptText } from '../db/util'
 import { swarmApi } from '/common/requests/swarmui'
+import { oaiImageApi } from '/common/requests/oai-image'
 
 const defaultSettings: SDSettings = {
   type: 'sd',
@@ -126,7 +127,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
     if (type === 'openai') {
       return {
         kind: 'user',
-        host: getOpenAIUrl(opts.provider.url),
+        host: oaiImageApi.getUrl(opts.provider.url),
         headers,
         provider: userHost.provider,
       }
@@ -418,22 +419,4 @@ function getUserHostUrl(opts: ImageRequestOpts) {
 
   const userHost = opts.provider.url || defaultSettings.url
   return { url: userHost, key, provider: undefined }
-}
-
-function getOpenAIUrl(host: string) {
-  const affix = host.endsWith('/') ? '' : '/'
-  let lower = host.toLowerCase()
-  if (lower.endsWith('/')) {
-    lower = lower.slice(0, -1)
-  }
-
-  if (lower.endsWith('/images/generations')) {
-    return host
-  }
-
-  if (lower.endsWith('/images')) {
-    return host + affix + 'generations'
-  }
-
-  return host + affix + 'images/generations'
 }
