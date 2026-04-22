@@ -16,6 +16,7 @@ import { getUserSubscriptionTier } from '/common/util'
 import { command } from '../domains'
 import { getRegisteredAdapters } from '../adapter/register'
 import { NOVEL_MODELS } from '/common/presets/novel'
+import { ImageProviderSettings } from '/common/types/image-schema'
 
 export type NewUser = {
   username: string
@@ -315,6 +316,23 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   }
 
   return { profile, token, user: toSafeUser(user) }
+}
+
+export async function upsertImageProvider(user: AppSchema.User, provider: ImageProviderSettings) {
+  if (!provider._id) {
+    provider._id = v4()
+  }
+
+  const providers = user.imageProviders || []
+  const isUpdate = providers.some((prv) => prv._id === provider._id)
+
+  const next = isUpdate
+    ? providers.map((prv) => (prv._id === provider._id ? { ...prv, ...provider } : prv))
+    : providers.concat(provider)
+
+  await db('user').updateOne({ _id: user._id }, { $set: { imageProviders: next } })
+  user.imageProviders = next
+  return user
 }
 
 export async function createAccessToken(username: string, user: AppSchema.User) {

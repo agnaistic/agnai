@@ -54,6 +54,7 @@ import {
   saveProvider,
   deleteProvider,
   removeProviderKey,
+  upsertImageProvider,
 } from './settings'
 import { deleteUserAccount } from './delete-user'
 
@@ -99,6 +100,7 @@ router.delete('/config/third-party', loggedIn, deleteThirdPartyPassword)
 router.delete('/config/elevenlabs', loggedIn, deleteElevenLabsKey)
 router.delete('/config/featherless', loggedIn, deleteFeatherlessKey)
 router.delete('/presets/:id', loggedIn, deleteUserPreset)
+router.post('/image-provider', loggedIn, upsertImageProvider)
 router.post('/password', loggedIn, changePassword)
 router.post('/ui', loggedIn, updateUI)
 router.post('/config/partial', loggedIn, updatePartialConfig)

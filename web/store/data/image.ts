@@ -577,6 +577,7 @@ export async function createImageRequest(input: {
     settings,
     user: user!,
     override: '',
+    provider,
     params: {
       cfg_scale: settings?.cfg,
       clip_skip: settings?.clipSkip,

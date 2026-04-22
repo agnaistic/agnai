@@ -9,8 +9,9 @@ import { handleSDImage, handleSwarmImage } from './stable-diffusion'
 import { sendGuest, sendMany, sendOne } from '../api/ws'
 import { handleHordeImage } from './horde'
 import { AppSchema } from '/common/types'
-import { ImageSettings } from '/common/types/image-schema'
+import { BaseImageSettings, ImageProviderSettings } from '/common/types/image-schema'
 import { getImagePrompt, getImageSettings } from '/common/image'
+import { StatusError } from '../api/wrap'
 
 const DEFAULT_NEGATIVE = ``
 
@@ -19,8 +20,21 @@ export async function generateImageSync(opts: ImageGenerateRequest, log: AppLog)
   const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
   opts.raw_prompt = rawPrompt
 
+  const id = opts.user.imageProviderId || opts.user.images?.type || 'horde'
+  let provider = opts.user.imageProviders?.find((i) => i._id === id)
+
+  if (!provider) {
+    const type = opts.user.images?.type || 'horde'
+    provider = opts.user.images?.[type] as any
+  }
+
+  if (!provider) {
+    throw new StatusError('Cannot locate Image Provider settings', 500)
+  }
+
   let { error, image } = await runImageGenerate({
     imageSettings,
+    provider,
     user: opts.user,
     prompt,
     log,
@@ -53,7 +67,12 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     }
   }
 
-  const { settings: imageSettings } = getImageSettings(chat, character, user)
+  const { settings: imageSettings, provider } = getImageSettings(chat, character, user)
+
+  if (!provider) {
+    throw new StatusError('Cannot locate Image Provider', 500)
+  }
+
   const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
   opts.raw_prompt = rawPrompt
 
@@ -71,6 +90,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
 
   let { image, output, error } = await runImageGenerate({
     imageSettings,
+    provider,
     user,
     prompt,
     log,
@@ -164,14 +184,15 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
 }
 
 async function runImageGenerate(options: {
-  imageSettings: ImageSettings | undefined
+  imageSettings: BaseImageSettings | undefined
+  provider: ImageProviderSettings
   user: AppSchema.User
   prompt: string
   log: AppLog
   guestId: string | undefined
   opts: ImageGenerateRequest
 }) {
-  const { imageSettings, user, prompt, log, guestId, opts } = options
+  const { imageSettings, user, prompt, log, guestId, opts, provider } = options
 
   let image: ImageAdapterResponse | undefined
   let output: string = ''
@@ -180,7 +201,7 @@ async function runImageGenerate(options: {
   const negative = imageSettings?.negative || DEFAULT_NEGATIVE
 
   try {
-    switch (imageSettings?.type || 'horde') {
+    switch (provider.type) {
       case 'swarm': {
         image = await handleSwarmImage(
           {
@@ -188,6 +209,7 @@ async function runImageGenerate(options: {
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             override: opts.model,
             params: opts.params,
             raw_prompt: opts.prompt,
@@ -205,6 +227,7 @@ async function runImageGenerate(options: {
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             params: opts.params,
             raw_prompt: opts.prompt,
           },
@@ -215,12 +238,14 @@ async function runImageGenerate(options: {
 
       case 'sd':
       case 'agnai':
+      case 'openai':
         image = await handleSDImage(
           {
             user,
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             override: opts.model,
             params: opts.params,
             raw_prompt: opts.prompt,
@@ -238,6 +263,7 @@ async function runImageGenerate(options: {
             prompt,
             negative,
             settings: imageSettings,
+            provider,
             params: opts.params,
             raw_prompt: opts.prompt,
           },

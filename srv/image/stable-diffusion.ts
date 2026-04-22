@@ -61,12 +61,15 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
 
   logger.debug(payload, 'Image: Stable Diffusion payload')
 
-  const result = await needle(
-    'post',
-    `${config.host}/sdapi/v1/txt2img${config.params || ''}`,
-    payload,
-    { json: true, headers: config.headers }
-  ).catch((err) => ({ err }))
+  const url =
+    opts.provider.type === 'openai'
+      ? config.host
+      : `${config.host}/sdapi/v1/txt2img${config.params || ''}`
+
+  const result = await needle('post', url, payload, {
+    json: true,
+    headers: config.headers,
+  }).catch((err) => ({ err }))
 
   if ('err' in result) {
     if ('syscall' in result.err && 'code' in result.err) {
@@ -84,7 +87,9 @@ export const handleSDImage: ImageAdapter = async (opts, log, guestId) => {
     )
   }
 
-  const image = result.body.images[0]
+  const image =
+    opts.provider.type === 'openai' ? result.body.data[0]?.b64_json : result.body.images[0]
+
   if (!image) {
     throw new Error(`Failed to generate image: Response did not contain an image`)
   }
@@ -108,17 +113,31 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   provider?: AppSchema.Provider
 }> {
   const { user, settings, override } = opts
-  const type = settings?.type || user.images?.type
+  const type = opts.provider.type || settings?.type || user.images?.type
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
 
-  // Stable Diffusion URL always comes from user settings
   const userHost = getUserHostUrl(opts)
+
   if (type !== 'agnai') {
     if (userHost.key) {
       headers.Authorization = `Bearer ${userHost.key}`
     }
 
-    return { kind: 'user', host: userHost.url, headers, provider: userHost.provider }
+    if (type === 'openai') {
+      return {
+        kind: 'user',
+        host: getOpenAIUrl(opts.provider.url),
+        headers,
+        provider: userHost.provider,
+      }
+    }
+
+    return {
+      kind: 'user',
+      host: opts.provider.url || userHost.url,
+      headers,
+      provider: userHost.provider,
+    }
   }
 
   const srv = await store.admin.getServerConfiguration()
@@ -137,7 +156,7 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   const temp = override ? models.find((m) => m.id === override || m.name === override) : undefined
 
   const match = models.find((m) => {
-    return m.id === settings?.agnai?.model || m.name === settings?.agnai?.model
+    return m.id === opts.provider.model || m.name === opts.provider.model
   })
 
   const model = models.length === 1 ? models[0] : match ?? models[0]
@@ -172,6 +191,21 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
 
 function getPayload(config: InternalConfig, opts: ImageRequestOpts) {
   const { model } = config
+
+  if (opts.provider.type === 'openai') {
+    if (opts.provider.type === 'openai') {
+      const payload: any = {
+        prompt: opts.prompt,
+        model: opts.provider.model,
+      }
+
+      if (opts.params?.width && opts.params.height) {
+        payload.size = `${opts.params.width}x${opts.params.height}`
+      }
+
+      return payload
+    }
+  }
 
   const payload = getBasePayload(config, opts)
 
@@ -233,15 +267,13 @@ function getPayload(config: InternalConfig, opts: ImageRequestOpts) {
 function getBasePayload(config: InternalConfig, opts: ImageRequestOpts): SDRequest {
   const { kind, model, temp, provider } = config
 
-  const sampler =
-    (kind === 'agnai' ? opts.settings?.agnai?.sampler : opts.settings?.sd?.sampler) ||
-    defaultSettings.sampler
+  const sampler = opts.provider.sampler || defaultSettings.sampler
 
-  if (kind === 'agnai') {
+  if (opts.provider.type === 'agnai') {
     const loras: string[] = []
     const lora_strengths: NonNullable<SDRequest['lora_strengths']> = {}
 
-    for (const lora of opts.settings?.agnai.loras || []) {
+    for (const lora of opts.provider.loras || []) {
       if (!lora.id) continue
       if (!lora.enabled) continue
 
@@ -264,17 +296,17 @@ function getBasePayload(config: InternalConfig, opts: ImageRequestOpts): SDReque
       steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
       model_override: temp ? temp.override : model?.override,
       denoise: temp ? temp.init.denoise : model?.init.denoise,
-      draft_mode: opts.settings?.agnai?.draftMode,
+      draft_mode: opts.provider.draftMode,
       loras,
       lora_strengths,
-      sd_model_checkpoint: kind !== 'agnai' ? opts.settings?.sd.model : undefined,
+      sd_model_checkpoint: kind !== 'agnai' ? opts.provider.model : undefined,
     }
   }
 
   if (provider?.provider === 'known-arli') {
     const payload: SDRequest = {
       prompt: opts.prompt,
-      sd_model_checkpoint: opts.settings?.sd.model,
+      sd_model_checkpoint: opts.provider.model,
       negative_prompt: opts.negative,
       cfg_scale: opts.params?.cfg_scale ?? opts.settings?.cfg ?? model?.init.cfg ?? 9,
       batch_size: 1,
@@ -314,10 +346,10 @@ function getBasePayload(config: InternalConfig, opts: ImageRequestOpts): SDReque
     send_images: true,
     model_override: temp ? temp.override : model?.override,
     denoise: temp ? temp.init.denoise : model?.init.denoise,
-    draft_mode: opts.settings?.agnai?.draftMode,
+    draft_mode: opts.provider?.draftMode,
 
     override_settings: {
-      sd_model_checkpoint: opts.settings?.sd.model || undefined,
+      sd_model_checkpoint: opts.provider.model || undefined,
     },
   }
 }
@@ -364,8 +396,9 @@ function getDefaultConfig(user: AppSchema.User) {
 }
 
 function getUserHostUrl(opts: ImageRequestOpts) {
-  const providerId = opts.settings ? opts.settings.sd.providerId : opts.user.images?.sd.providerId
-  const provider = providerId ? opts.user.providers?.find((p) => p._id === providerId) : undefined
+  const provider = opts.provider.providerId
+    ? opts.user.providers?.find((p) => p._id === opts.provider.providerId)
+    : undefined
   let key = ''
 
   if (provider) {
@@ -383,8 +416,24 @@ function getUserHostUrl(opts: ImageRequestOpts) {
     }
   }
 
-  const userHost = opts.settings
-    ? opts.settings.sd?.url
-    : opts.user.images?.sd.url || defaultSettings.url
+  const userHost = opts.provider.url || defaultSettings.url
   return { url: userHost, key, provider: undefined }
+}
+
+function getOpenAIUrl(host: string) {
+  const affix = host.endsWith('/') ? '' : '/'
+  let lower = host.toLowerCase()
+  if (lower.endsWith('/')) {
+    lower = lower.slice(0, -1)
+  }
+
+  if (lower.endsWith('/images/generations')) {
+    return host
+  }
+
+  if (lower.endsWith('/images')) {
+    return host + affix + 'generations'
+  }
+
+  return host + affix + 'images/generations'
 }

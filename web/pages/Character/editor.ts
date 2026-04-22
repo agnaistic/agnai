@@ -101,8 +101,12 @@ const initState: EditorState = {
     summariseChat: true,
     summaryPrompt: '',
     template: '',
+    imageProviderId: '',
+    openai: {} as any,
 
     agnai: {
+      _id: 'agnai',
+      name: 'Agnaistic',
       type: 'agnai',
       url: '',
       model: '',
@@ -111,6 +115,8 @@ const initState: EditorState = {
     },
 
     horde: {
+      _id: 'horde',
+      name: 'Horde',
       type: 'horde',
       url: '',
       model: '',
@@ -118,6 +124,8 @@ const initState: EditorState = {
     },
 
     novel: {
+      _id: 'novel',
+      name: 'NovelAI',
       type: 'novel',
       url: '',
       model: '',
@@ -127,6 +135,8 @@ const initState: EditorState = {
     },
 
     sd: {
+      _id: 'sd',
+      name: 'Stable Diffusion',
       type: 'sd',
       url: '',
       sampler: '',
@@ -134,6 +144,8 @@ const initState: EditorState = {
     },
 
     swarm: {
+      _id: 'swarm',
+      name: 'SwarmUI',
       type: 'swarm',
       url: '',
       sampler: '',

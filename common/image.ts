@@ -1,4 +1,4 @@
-import { ImageProviderSettings, ImageSettings } from './types/image-schema'
+import { BaseImageSettings } from './types/image-schema'
 import { AppSchema } from './types/schema'
 
 export const IMAGE_SUMMARY_PROMPT = {
@@ -117,27 +117,32 @@ export function getImageSettings(
     imageSettings = user?.images
   }
 
-  let provider: ImageProviderSettings | undefined
+  const { id } = getImageSource(chat, character, user)
+
+  let provider = user.imageProviders?.find((prov) => prov._id === id)
+  if (provider) {
+    return { settings: imageSettings, provider }
+  }
 
   switch (imageSettings?.type) {
     case 'agnai':
-      provider = imageSettings.agnai
+      provider = user.images?.agnai
       break
 
     case 'horde':
-      provider = imageSettings.horde
+      provider = user.images?.horde
       break
 
     case 'novel':
-      provider = imageSettings.novel
+      provider = user.images?.novel
       break
 
     case 'sd':
-      provider = imageSettings.sd
+      provider = user.images?.sd
       break
 
     case 'swarm':
-      provider = imageSettings.swarm
+      provider = user.images?.swarm
       break
   }
 
@@ -145,12 +150,43 @@ export function getImageSettings(
     provider.type = imageSettings.type
   }
 
+  if (!provider) {
+    throw new Error('Cannot locate Image Provider for request')
+  }
+
   return { settings: imageSettings, provider }
+}
+
+function getImageSource(
+  chat: AppSchema.Chat | null | undefined,
+  char: AppSchema.Character | undefined,
+  user: AppSchema.User
+) {
+  const source = chat?.imageSource || 'settings'
+
+  switch (source) {
+    case 'chat': {
+      return { source, id: chat?.imageProviderId || chat?.imageSettings?.type }
+    }
+
+    case 'main-character':
+    case 'last-character': {
+      return {
+        source: 'character',
+        id: char?.imageProviderId || char?.imageSettings?.type,
+      }
+    }
+
+    case 'settings':
+    default: {
+      return { source: 'character', id: user.imageProviderId || user.images?.type }
+    }
+  }
 }
 
 export function getImagePrompt(
   opts: { prompt: string; noAffix?: boolean },
-  imageSettings: ImageSettings | undefined
+  imageSettings: BaseImageSettings | undefined
 ) {
   let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
   let prompt = parsed

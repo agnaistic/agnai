@@ -1,7 +1,6 @@
 import { Match, Show, Switch, createMemo, createSignal } from 'solid-js'
 import Divider from '../../../shared/Divider'
 import { InlineRangeInput } from '../../../shared/RangeInput'
-import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, imageStore, presetStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
@@ -12,13 +11,6 @@ import Button, { ToggleButton } from '/web/shared/Button'
 import { Pencil, Save, X } from 'lucide-solid'
 import Modal, { RootModal } from '/web/shared/Modal'
 import { isChatPageMemo } from '/web/shared/hooks'
-import {
-  AgnaiSettings,
-  HordeSettings,
-  NovelSettings,
-  SDSettings,
-  SwarmSettings,
-} from './ServiceSettings'
 import { FormLabel } from '/web/shared/FormLabel'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { getPresetOptions } from '/web/shared/adapter'
@@ -26,6 +18,7 @@ import Accordian from '/web/shared/Accordian'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 import { usePresetContext } from '/web/store/preset-context'
 import { useImageContext } from './image-context'
+import { SelectImageProvider } from './ImageProvider'
 
 export const ImageSettingsModal = () => {
   const isChat = isChatPageMemo(true)
@@ -57,8 +50,6 @@ export const ImageSettingsModal = () => {
   const presetOptions = createMemo(() =>
     getPresetOptions(presets.list, { builtin: true, base: true })
   )
-
-  const subclass = 'flex flex-col gap-4'
 
   return (
     <>
@@ -178,18 +169,7 @@ export const ImageSettingsModal = () => {
           </Accordian>
 
           <div class="flex gap-2">
-            <Select
-              fieldName="imageType"
-              items={ctx.state.hosts}
-              value={ctx.store.type ?? (ctx.state.canUseImages ? 'agnai' : 'horde')}
-              onChange={(value) => ctx.update('type', value.value as any)}
-              class="!py-1"
-              inline
-            />
-            {/* <Button size="sm" class="h-[36px]">
-              <Plus size={20} />
-              Service
-            </Button> */}
+            <SelectImageProvider ctx={ctx} />
           </div>
 
           <Show when={ctx.state.canUseImages && ctx.store.type === 'agnai'}>
@@ -249,33 +229,6 @@ export const ImageSettingsModal = () => {
               </ToggleButton>
             </div>
           </Show>
-
-          <div class={ctx.store.type === 'novel' ? subclass : 'hidden'}>
-            <NovelSettings cfg={ctx.store} setter={ctx.update} />
-          </div>
-
-          <div class={ctx.store.type === 'horde' ? subclass : 'hidden'}>
-            <HordeSettings cfg={ctx.store} setter={ctx.update} />
-          </div>
-
-          <div
-            class={ctx.tab.current() === 'Shared' && ctx.store.type === 'sd' ? subclass : 'hidden'}
-          >
-            <SDSettings cfg={ctx.store} setter={ctx.update} />
-          </div>
-
-          <div
-            class={
-              ctx.tab.current() === 'Shared' && ctx.store.type === 'swarm' ? subclass : 'hidden'
-            }
-          >
-            <SwarmSettings cfg={ctx.store} setter={ctx.update} />
-          </div>
-
-          <div class={ctx.store.type === 'agnai' ? subclass : 'hidden'}>
-            <AgnaiSettings cfg={ctx.store} setter={ctx.update} />
-          </div>
-
           <Divider />
 
           <Show when={ctx.store.type === 'agnai'}>

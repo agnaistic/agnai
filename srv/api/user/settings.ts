@@ -21,6 +21,7 @@ import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
 import { optional } from '/common/valid/types'
 import { assertStrict } from '/common/valid/validate'
+import { ImageProviderSettings, ImageProviderType } from '/common/types/image-schema'
 
 export const getInitialLoad = handle(async ({ userId, query }) => {
   const replicate = await getLanguageModels()
@@ -207,6 +208,7 @@ const validConfig = {
 export const updatePartialConfig = handle(async ({ userId, body, authed }) => {
   assertValid(
     {
+      imageProviderId: 'string?',
       novelApiKey: 'string?',
       thirdPartyPassword: 'string?',
       hordeKey: 'string?',
@@ -236,6 +238,10 @@ export const updatePartialConfig = handle(async ({ userId, body, authed }) => {
       throw new StatusError(`Invalid preset`, 403)
     }
     update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.imageProviderId !== undefined) {
+    update.imageProviderId = body.imageProviderId
   }
 
   if (body.imageDefaults) {
@@ -322,6 +328,32 @@ export const removeProviderKey = handle(async ({ userId, body }) => {
 
   const update = { ...provider, key: '' }
   const next = await store.users.saveUserProvider(userId, update, true)
+  return next
+})
+
+const imgProviderGuard = {
+  _id: 'string',
+  name: 'string',
+  type: ['agnai', 'swarm', 'sd', 'openai', 'horde', 'novel'],
+  url: 'string',
+  sampler: 'string',
+  model: 'string',
+  providerId: 'string?',
+  draftMode: 'boolean?',
+  local: 'boolean?',
+  loras: ['any?'],
+  ucPreset: 'string?',
+  qualityTags: 'boolean?',
+} as const
+
+export const upsertImageProvider = handle(async (req) => {
+  assertValid(imgProviderGuard, req.body)
+  const user = await getSafeUserConfig(req.userId)
+  if (!user) {
+    throw new StatusError('Not found', 404)
+  }
+
+  const next = await store.users.upsertImageProvider(user, req.body)
   return next
 })
 
@@ -606,8 +638,42 @@ export async function getSafeUserConfig(userId: string, seed?: string) {
 
   const sub = getUserSubscriptionTier(user, getCachedTiers())
   const next = sub ? { type: sub?.type, level: sub?.level, tierId: sub.tier._id } : undefined
-  await store.users.updateUser(userId, { sub: next })
+
+  if (!user.imageProviders) {
+    const list: ImageProviderSettings[] = []
+    user.imageProviderId = user.images?.type || ''
+    addImageProvider(list, 'agnai', 'Agnaistic', user.images?.agnai)
+    addImageProvider(list, 'novel', 'Novel', user.images?.novel)
+    addImageProvider(list, 'horde', 'Horde', user.images?.horde)
+    addImageProvider(list, 'swarm', 'SwarmUI', user.images?.swarm)
+    addImageProvider(list, 'sd', 'Stable Diffusion', user.images?.sd)
+    user.imageProviders = list
+  }
+
+  await store.users.updateUser(userId, {
+    sub: next,
+    imageProviders: user.imageProviders,
+    imageProviderId: user.imageProviderId,
+  })
   user.sub = next
 
   return toSafeUser(user, seed)
+}
+
+function addImageProvider(
+  list: ImageProviderSettings[],
+  id: ImageProviderType,
+  name: string,
+  prv: ImageProviderSettings | undefined
+) {
+  if (!prv) return list
+
+  list.push({
+    ...prv,
+    _id: id,
+    type: id,
+    name,
+  })
+
+  return list
 }

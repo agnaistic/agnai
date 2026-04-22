@@ -23,27 +23,37 @@ const init = (): ImageSettings => ({
   summaryPrompt: '',
   template: '',
   type: 'horde',
+  imageProviderId: '',
+  openai: {} as any,
   agnai: {
+    _id: 'agnai',
     type: 'agnai',
+    name: 'Agnaistic',
     url: '',
     model: '',
     sampler: SD_SAMPLER['Euler a'],
     draftMode: false,
   },
   horde: {
+    _id: 'horde',
     type: 'horde',
+    name: 'Horde',
     url: '',
     sampler: SD_SAMPLER['Euler a'],
     model: '',
   },
   sd: {
+    _id: 'sd',
     type: 'sd',
+    name: 'Stable Diffusion',
     model: '',
     url: '',
     sampler: SD_SAMPLER['Euler a'],
   },
   novel: {
+    _id: 'novel',
     type: 'novel',
+    name: 'NovelAI',
     url: '',
     model: '',
     sampler: SD_SAMPLER['Euler a'],
@@ -51,7 +61,9 @@ const init = (): ImageSettings => ({
     qualityTags: true,
   },
   swarm: {
+    _id: 'swarm',
     type: 'swarm',
+    name: 'SwarmUI',
     model: '',
     sampler: SD_SAMPLER['Euler a'],
     url: 'http://localhost:7801',
@@ -158,17 +170,29 @@ export function useImageContext() {
 
         switch (view) {
           case 'Character':
-            setCfg({ ...init(), ...entity.chat?.imageSettings })
+            setCfg({
+              ...init(),
+              ...entity.chat?.imageSettings,
+              imageProviderId: entity.char.imageProviderId || entity.char.imageSettings?.type,
+            })
             setState('editing', 'main-character')
             break
 
           case 'Chat':
-            setCfg({ ...init(), ...entity.char?.imageSettings })
+            setCfg({
+              ...init(),
+              ...entity.char?.imageSettings,
+              imageProviderId: entity.chat.imageProviderId || entity.chat.imageSettings?.type,
+            })
             setState('editing', 'chat')
             break
 
           default:
-            setCfg({ ...init(), ...user.user?.images })
+            setCfg({
+              ...init(),
+              ...user.user?.images,
+              imageProviderId: user.user?.imageProviderId || user.user?.images?.type,
+            })
             setState('editing', 'settings')
             break
         }
@@ -198,7 +222,8 @@ export function useImageContext() {
       { label: 'NovelAI', value: 'novel' },
       { label: 'Stable Diffusion', value: 'sd' },
       { label: 'Swarm UI', value: 'swarm' },
-    ].map((item) => ({ label: `Service: ${item.label}`, value: item.value }))
+      { label: 'OpenAI Compatible', value: 'openai' },
+    ].map((item) => ({ label: `${item.label}`, value: item.value }))
 
     if (hostingImages) {
       hosts.unshift({ label: 'Agnaistic', value: 'agnai' })
@@ -233,14 +258,21 @@ async function saveImageSettings(
 ) {
   switch (tab) {
     case 'Shared': {
-      await userStore.updatePartialConfig({ images: store, imageDefaults: defaults })
+      await userStore.updatePartialConfig({
+        images: store,
+        imageDefaults: defaults,
+        imageProviderId: store.imageProviderId,
+      })
       imageStore.imageSettings(false)
       return
     }
 
     case 'Chat': {
       await Promise.all([
-        chatStore.editChat(entity.chat?._id!, { imageSettings: store }),
+        chatStore.editChat(entity.chat?._id!, {
+          imageSettings: store,
+          imageProviderId: store.imageProviderId,
+        }),
         userStore.updatePartialConfig({ imageDefaults: defaults }),
       ])
       imageStore.imageSettings(false)
@@ -249,7 +281,10 @@ async function saveImageSettings(
 
     case 'Character': {
       await Promise.all([
-        characterStore.editPartialCharacter(entity.char?._id!, { imageSettings: store }),
+        characterStore.editPartialCharacter(entity.char?._id!, {
+          imageSettings: store,
+          imageProviderId: store.imageProviderId,
+        }),
         userStore.updatePartialConfig({ imageDefaults: defaults }),
       ])
       imageStore.imageSettings(false)

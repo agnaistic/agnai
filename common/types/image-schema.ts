@@ -1,14 +1,8 @@
-export type ImageType =
-  | NovelSettings
-  | HordeSettings
-  | SDSettings
-  | AgnaiSettings
-  | ImageProvider
-  | SwarmSettings
+export type ImageType = NovelSettings | HordeSettings | SDSettings | AgnaiSettings | SwarmSettings
 
 export type BaseImageSettings = {
   presetId?: string
-  type: ImageType['type']
+  type: ImageProviderType
 
   summaryPresetId?: string
   summaryPrompt?: string
@@ -42,10 +36,13 @@ export type ImageSettings = BaseImageSettings & {
   sd: ImageProviderSettings
   agnai: ImageProviderSettings
   swarm: ImageProviderSettings
+  openai: ImageProviderSettings /** Never actually exists, just for backwards compat */
 
-  active?: 'novel' | 'horde' | 'sd' | 'agnai' | 'swarm'
-  // defaults?: ImageDefaults
+  active?: ImageProviderType
+  imageProviderId: string
 }
+
+export type ImageProviderType = 'novel' | 'horde' | 'sd' | 'agnai' | 'swarm' | 'openai'
 
 export type ImageProviderLora = {
   id: string
@@ -55,8 +52,9 @@ export type ImageProviderLora = {
 }
 
 export type ImageProviderSettings = {
-  _id?: string
-  type: ImageType['type']
+  _id: string
+  name: string
+  type: ImageProviderType
   url: string
   sampler: string
   model: string
