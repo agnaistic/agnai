@@ -24,7 +24,7 @@ const AISettings: Component<{
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user, sub: s.sub, ui: s.ui }))
   const cfg = settingStore((s) => ({
-    serverEmbeddings: s.config.serverEmbeddings,
+    all: s.config,
     server: s.config.serverConfig,
   }))
 
@@ -35,7 +35,7 @@ const AISettings: Component<{
   const [presetFooter, setPresetFooter] = createSignal<any>()
 
   const embeddingOpts = createMemo(() => {
-    if (!!cfg.serverEmbeddings) return EMBED_MODELS_OPTS
+    if (!!cfg.all.embeddingsAccess && !!cfg.all.serverEmbeddings) return EMBED_MODELS_OPTS
 
     return EMBED_MODELS_OPTS.filter((opt) => opt.value !== 'server')
   })

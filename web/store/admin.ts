@@ -199,6 +199,20 @@ export const adminStore = createStore<AdminState>('admin', {
       }
     },
 
+    async updateConfigPartial(_, update: Partial<AppSchema.Configuration>) {
+      const res = await api.post('/admin/configuration-partial', update)
+
+      if (res.error) {
+        toastStore.error(`Failed to Update Configuration: ${res.error}`)
+        return
+      }
+
+      if (res.result) {
+        toastStore.success('Configuration Updated')
+        return { config: res.result }
+      }
+    },
+
     async assignEmbedding(_, id: string) {
       const res = await api.post('/admin/configuration-partial', { embedding: id })
 

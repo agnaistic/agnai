@@ -8,6 +8,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { createStore } from 'solid-js/store'
 import { v4 } from 'uuid'
 import { SaveIcon } from 'lucide-solid'
+import { FeatureAccess } from '/common/types/admin'
 
 export const EmbeddingConfig: Component = () => {
   const state = adminStore((s) => ({ config: s.config }))
@@ -107,6 +108,20 @@ export const EmbeddingConfig: Component = () => {
   return (
     <>
       <Card class="bg-500">
+        <Select
+          label="Embeddings Access Level"
+          value={state.config?.embeddingsAccess}
+          items={[
+            { label: 'None', value: 'off' },
+            { label: 'All', value: 'all' },
+            { label: 'Users', value: 'users' },
+            { label: 'Subscribers', value: 'subscribers' },
+            { label: 'Admins', value: 'admins' },
+          ]}
+          onChange={(ev) =>
+            adminStore.updateConfigPartial({ embeddingsAccess: ev.value as FeatureAccess })
+          }
+        />
         <TextInput disabled label="Selected Embedding" value={current().label} />
 
         <div class="flex items-end gap-1">

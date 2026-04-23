@@ -9,6 +9,7 @@ import { SubscriptionModelOption, SubscriptionTier } from './presets'
 import { ThemeColor } from './ui'
 
 export type UserType = 'guests' | 'all' | 'users' | 'subscribers' | 'moderators' | 'admins'
+export type FeatureAccess = 'off' | 'all' | 'users' | 'subscribers' | 'admins'
 
 export type ServerEmbedding = {
   _id: string
@@ -40,6 +41,7 @@ export interface AppConfig {
   policies?: boolean
   apiAccess?: boolean
   serverEmbeddings?: boolean
+  embeddingsAccess?: boolean
   guidanceAccess?: boolean
   flags?: string
   patreonAuth?: {
@@ -113,7 +115,7 @@ export interface Configuration {
   slots: string
 
   /** Determines who can use API access for inferencing */
-  apiAccess: 'off' | 'users' | 'subscribers' | 'admins'
+  apiAccess: FeatureAccess
 
   maintenance: boolean
 
@@ -153,7 +155,7 @@ export interface Configuration {
 
   ttsHost: string
   ttsApiKey: string
-  ttsAccess: 'off' | 'users' | 'subscribers' | 'admins'
+  ttsAccess: FeatureAccess
 
   maxGuidanceTokens: number
   maxGuidanceVariables: number
@@ -162,6 +164,7 @@ export interface Configuration {
 
   embeddings: ServerEmbedding[]
   embedding: string
+  embeddingsAccess?: FeatureAccess
 }
 
 export interface ActionCall {

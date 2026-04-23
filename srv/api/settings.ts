@@ -14,6 +14,7 @@ import { updateRegisteredSubs } from '../adapter/agnaistic'
 import { getFeatherModels } from '../adapter/featherless'
 import { filterImageModels } from '/common/image-util'
 import { getArliModels } from '../adapter/arli'
+import { canUseFeature, getUserFeatureAccess } from '/common/util'
 
 const router = Router()
 
@@ -135,6 +136,8 @@ export async function getAppConfig(user?: AppSchema.User) {
     }
   }
 
+  const userLevel = getUserFeatureAccess(user, userTier)
+
   if (user && configuration) {
     switch (configuration.apiAccess) {
       case 'off':
@@ -162,6 +165,7 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.access_token
   )
 
+  appConfig.embeddingsAccess = canUseFeature(configuration?.embeddingsAccess || 'off', userLevel)
   appConfig.guidanceAccess = !!userTier?.tier.guidanceAccess
   appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined

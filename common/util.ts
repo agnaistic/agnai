@@ -1,5 +1,6 @@
 import { getSchemaAliases, parseVariableName, StructureEntities } from './guidance/json-schema'
-import { UserType } from './types/admin'
+import { Admin } from './types'
+import { FeatureAccess, UserType } from './types/admin'
 import type { AppSchema } from './types/schema'
 import type { GenerateRequestV2 } from '/srv/adapter/type'
 
@@ -947,4 +948,46 @@ export function sortAlpha<T extends {}>(opts: {
   }
 
   return sorter
+}
+
+export function getUserFeatureAccess(
+  user: AppSchema.User | undefined,
+  tier: UserSub | undefined
+): Admin.UserType {
+  if (!user) return 'guests'
+  if (user.admin) return 'admins'
+  if (tier && tier.level > 0) return 'subscribers'
+  if (tier && tier.level === 0) return 'users'
+  if (user._id !== 'anon') return 'users'
+
+  return 'guests'
+}
+
+export function canUseFeature(requires: FeatureAccess, userType: UserType): boolean {
+  switch (requires) {
+    case 'off': {
+      return false
+    }
+
+    case 'admins': {
+      return userType === 'admins'
+    }
+
+    case 'subscribers': {
+      return userType === 'subscribers' || userType === 'moderators' || userType === 'admins'
+    }
+
+    case 'users': {
+      return (
+        userType === 'users' ||
+        userType === 'subscribers' ||
+        userType === 'moderators' ||
+        userType === 'admins'
+      )
+    }
+
+    case 'all': {
+      return true
+    }
+  }
 }

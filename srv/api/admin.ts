@@ -10,24 +10,28 @@ const router = Router()
 
 router.use(loggedIn, isAdmin)
 
+const featureAccess = ['off', 'all', 'users', 'subscribers', 'admins'] as const
+
 const configGuard = {
   slots: 'string',
   maintenance: 'boolean',
   maintenanceMessage: 'string',
-  apiAccess: ['off', 'users', 'subscribers', 'admins'],
+  apiAccess: featureAccess,
   policiesEnabled: 'boolean',
   termsOfService: 'string',
   privacyStatement: 'string',
   enabledAdapters: ['string'],
   imagesEnabled: 'boolean',
   imagesHost: 'string',
-  ttsAccess: ['off', 'users', 'subscribers', 'admins'],
+  ttsAccess: featureAccess,
   ttsHost: 'string',
   ttsApiKey: 'string?',
   imagesModels: ['any'],
   supportEmail: 'string',
   googleClientId: 'string',
   stripeCustomerPortal: 'string',
+  embedding: 'string',
+  embeddingsAccess: featureAccess,
 } as const
 
 const embedGuard = {
