@@ -32,7 +32,7 @@ import { imageApi } from '/web/store/data/image'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import TextInput from '/web/shared/TextInput'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, RefreshCcw, X } from 'lucide-solid'
+import { Info, RefreshCcw, SaveIcon, X } from 'lucide-solid'
 import { useProviderList } from '../Provider/hooks'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
@@ -42,11 +42,44 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
   const state = userStore((s) => ({ providers: s.user?.imageProviders || [] }))
 
   const [editPrv, setEditPrv] = createSignal<ImageProviderSettings | undefined>()
+  const [current, setCurrent] = createSignal({ id: '', model: '' })
+
+  createEffect(
+    on(
+      () => props.ctx.store.imageProviderId,
+      () => {
+        if (!props.ctx.store.imageProviderId) {
+          setCurrent({ id: '', model: '' })
+          return
+        }
+
+        const match = state.providers.find((s) => s._id === props.ctx.store.imageProviderId)
+
+        if (match?.type !== 'openai') {
+          setCurrent({ id: '', model: '' })
+          return
+        }
+
+        setCurrent({ id: match?._id || '', model: match?.model || '', prv: match })
+      }
+    )
+  )
 
   const providers = createMemo(() => {
     const list = state.providers.map((prv) => {
+      let name = ''
+      if (!prv.name) {
+        try {
+          name = new URL(prv.url).host
+        } catch (ex) {
+          name = prv.type + ': unnamed'
+        }
+      } else {
+        name = prv.name
+      }
+
       return {
-        label: prv.name || `${prv.type}`,
+        label: name,
         value: prv._id || '',
         prv,
       }
@@ -67,34 +100,66 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
     })
   }
 
+  const saveModel = () => {
+    const curr = current()
+    if (!curr.id) return
+
+    const match = state.providers.find((p) => p._id === curr.id)
+    if (!match) return
+
+    const payload = { ...match, model: curr.model }
+    userStore.upsertImageProvider(payload)
+  }
+
   return (
     <>
-      <div class="flex w-full items-end gap-2">
-        <Select
-          label={
-            <div class="mb-1 flex items-center gap-1">
-              Image Provider{' '}
-              <Button size="sm" onClick={newProvider}>
-                New +
-              </Button>
-            </div>
-          }
-          items={providers()}
-          value={props.ctx.store.imageProviderId || ''}
-          onChange={(ev) => props.ctx.update('imageProviderId', ev.value)}
-        />
-        <Button
-          disabled={!props.ctx.store.imageProviderId}
-          onClick={() => {
-            if (!props.ctx.store.imageProviderId) return
-            const match = state.providers.find((prv) => prv._id === props.ctx.store.imageProviderId)
+      <div class="flex w-full flex-col gap-2">
+        <div class="flex w-full items-end gap-2">
+          <Select
+            label={
+              <div class="mb-1 flex items-center gap-1">
+                Image Provider{' '}
+                <Button size="sm" onClick={newProvider}>
+                  New +
+                </Button>
+              </div>
+            }
+            items={providers()}
+            value={props.ctx.store.imageProviderId || ''}
+            onChange={(ev) => props.ctx.update('imageProviderId', ev.value)}
+          />
+          <Button
+            disabled={!props.ctx.store.imageProviderId}
+            onClick={() => {
+              if (!props.ctx.store.imageProviderId) return
+              const match = state.providers.find(
+                (prv) => prv._id === props.ctx.store.imageProviderId
+              )
 
-            if (!match) return
-            setEditPrv(match)
-          }}
-        >
-          Edit
-        </Button>
+              if (!match) return
+              setEditPrv(match)
+            }}
+          >
+            Edit
+          </Button>
+        </div>
+
+        <Show when={current().id}>
+          <div class="flex w-full items-center gap-1">
+            <TextInput
+              parentClass="w-full"
+              class="w-full"
+              prelabel="Model ID"
+              value={current().model}
+              onChange={(ev) =>
+                setCurrent((prev) => ({ id: prev.id, model: ev.currentTarget.value }))
+              }
+            />
+            <Button class="!w-fit" onClick={saveModel}>
+              <SaveIcon size={24} />
+            </Button>
+          </div>
+        </Show>
       </div>
 
       <Show when={editPrv()}>

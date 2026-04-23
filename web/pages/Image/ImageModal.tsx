@@ -39,7 +39,11 @@ export const ImageModal: Component = () => {
 
   return (
     <>
-      <ImageCollectionModal />
+      <Show
+        when={state.showImage?.src.type === 'collection' || state.showImage?.src.type === 'message'}
+      >
+        <ImageCollectionModal />
+      </Show>
 
       <Show when={state.showImage?.src.type === 'url'}>
         <ImageUrlModal
