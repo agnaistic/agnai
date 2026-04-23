@@ -160,7 +160,7 @@ async function dispatch(opts: AdapterProps, body: any) {
   switch (opts.gen.thirdPartyFormat) {
     case 'llamacpp':
     case 'vllm': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       const url =
         !opts.gen.providerId && opts.gen.thirdPartyUrlNoSuffix
           ? baseURL
@@ -175,7 +175,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'ooba':
     case 'aphrodite':
     case 'tabby': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       let url = opts.gen.thirdPartyUrlNoSuffix ? baseURL : `${baseURL}/v1/`
       if (useChat) {
         url += 'chat/completions'
@@ -189,14 +189,14 @@ async function dispatch(opts: AdapterProps, body: any) {
     }
 
     case 'exllamav2': {
-      body.messages = opts.hasAttachments ? opts.messages : undefined
+      body.messages = opts.messages
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url: baseURL, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url: baseURL, service: opts.gen.thirdPartyFormat })
     }
 
     case 'mistral': {
-      body.messages = opts.hasAttachments ? opts.messages : body.messages
+      body.messages = opts.messages
       const url = 'https://api.mistral.ai/v1/chat/completions'
       const stream = opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: 'mistral' })
@@ -258,6 +258,8 @@ async function dispatch(opts: AdapterProps, body: any) {
         : fullCompletion({ ...base, url: fullUrl, service: opts.gen.thirdPartyFormat })
     }
 
+    case 'koboldcpp':
+    case 'kobold':
     default: {
       const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
       const url =

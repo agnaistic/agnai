@@ -80,6 +80,10 @@ export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
     } else {
       body.reasoning.effort = gen.reasoning.effort ?? 'low'
     }
+
+    if (body.reasoning_effort && body.reasoning?.effort) {
+      body.reasoning_effort = body.reasoning?.effort
+    }
   }
 
   // if (opts.kind === 'continue') {
@@ -125,6 +129,20 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (!gen.temp) {
     gen.temp = 0.75
+  }
+
+  let reasoningEffort = gen.reasoning?.enabled ? gen.reasoning.effort : 'none'
+  if (reasoningEffort === 'custom') {
+    const percent = gen.reasoning?.maxTokens ?? 0
+    if (percent >= 0.8) {
+      reasoningEffort = 'high'
+    } else if (percent >= 0.5) {
+      reasoningEffort = 'medium'
+    } else if (percent > 0) {
+      reasoningEffort = 'low'
+    } else {
+      reasoningEffort = 'none'
+    }
   }
 
   if (
@@ -382,6 +400,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
       json_schema,
+      reasoning_effort: reasoningEffort,
+      chat_template_kwargs: { enable_thinking: reasoningEffort !== 'none' },
     }
     return body
   }
