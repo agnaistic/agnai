@@ -253,8 +253,7 @@ const OptionList: Component<{
           <div class={`flex flex-col gap-2 p-2`}>
             <For each={props.options}>
               {(option) => (
-                <div class="w-full flex gap-1">
-
+                <div class="flex w-full gap-1">
                   <div
                     classList={{
                       'bg-[var(--hl-800)]': props.selected === option.value,
@@ -274,7 +273,7 @@ const OptionList: Component<{
                     <div class="font-bold">{option.label}</div>
                   </div>
                   <For each={props.actions || []}>
-                    {action => action.comp({ optionValue: option.value })}
+                    {(action) => action.comp({ optionValue: option.value })}
                   </For>
                 </div>
               )}

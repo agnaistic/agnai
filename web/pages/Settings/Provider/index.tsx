@@ -88,7 +88,7 @@ export const PresetProvider: Component<{
   }
 
   const editProviderById = (value: string) => {
-    const match = state.providers.find(p => p._id === value)
+    const match = state.providers.find((p) => p._id === value)
     if (!match) return
     setEditing(match)
     setOpen(true)
@@ -170,13 +170,17 @@ export const PresetProvider: Component<{
           buttonClass="break-all"
           buttonLabel={label()}
           options={services()}
-          actions={
-            [{
-              comp: (props) => <Show when={!!props.optionValue && props.optionValue !== 'agnaistic'}>
-                <Button schema='clear' onClick={() => editProviderById(props.optionValue)}><Pencil size={12} /></ Button>
-              </Show>
-            }]
-          }
+          actions={[
+            {
+              comp: (props) => (
+                <Show when={!!props.optionValue && props.optionValue !== 'agnaistic'}>
+                  <Button schema="clear" onClick={() => editProviderById(props.optionValue)}>
+                    <Pencil size={12} />
+                  </Button>
+                </Show>
+              ),
+            },
+          ]}
           onSelect={(ev) => changeProvider(ev.value)}
           openSub={props.openSub}
           closeSub={emitter.on}
@@ -222,7 +226,7 @@ export const PresetProvider: Component<{
             </Button>
           </Show>
         </CustomSelect>
-      </div >
+      </div>
       <ManageProvider
         user={state.user}
         show={open()}

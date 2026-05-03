@@ -379,7 +379,8 @@ const ChatSettings: Component<{
                 onClick={() =>
                   responseStore.chatQuery(
                     {
-                      question: 'Generate one name for this conversation. Reply only with the one chat name only and no other formatting or commentary.',
+                      question:
+                        'Generate one name for this conversation. Reply only with the one chat name only and no other formatting or commentary.',
                       assistant: 'Conversation Name Generator',
                     },
                     (msg, state) => {
