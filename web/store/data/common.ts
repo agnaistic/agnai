@@ -44,7 +44,7 @@ export async function getImagePromptEntities(messageId?: string) {
   switch (source) {
     case 'settings': {
       summary = entities.user.images?.summaryPrompt || ''
-      presetId = entities.user.summaryPreset || entities.user.images?.summaryPresetId || ''
+      presetId = entities.user.images?.summaryPresetId || entities.user.summaryPreset || ''
       break
     }
 
