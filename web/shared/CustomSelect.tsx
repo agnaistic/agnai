@@ -125,7 +125,7 @@ export const CustomSelect: Component<{
     return props.options.filter((opt) =>
       typeof opt.label === 'string'
         ? searchFunc(opt.label.toLowerCase(), input) ||
-        searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+          searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
         : searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
     )
   })
