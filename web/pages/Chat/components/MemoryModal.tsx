@@ -1,4 +1,4 @@
-import { Edit, PlusIcon, Save, X } from 'lucide-solid'
+import { Edit, Pencil, PlusIcon, Save, X } from 'lucide-solid'
 import {
   Component,
   createEffect,
@@ -203,9 +203,14 @@ const ChatMemoryModal: Component<{
               <li class="flex w-full">
                 <Pill class="w-full justify-between">
                   <div>{book.name}</div>
-                  <Button size="sm" schema="clear" onClick={() => removeBook(book._id)}>
-                    <X size={12} />
-                  </Button>
+                  <div class="flex gap-3">
+                    <Button size="sm" schema="clear" onClick={() => changeBook(book._id)}>
+                      <Pencil size={12} />
+                    </Button>
+                    <Button size="sm" schema="clear" onClick={() => removeBook(book._id)}>
+                      <X size={12} />
+                    </Button>
+                  </div>
                 </Pill>
               </li>
             )}
