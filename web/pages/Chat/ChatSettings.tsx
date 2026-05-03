@@ -378,7 +378,10 @@ const ChatSettings: Component<{
               <div
                 onClick={() =>
                   responseStore.chatQuery(
-                    { question: '', assistant: 'Chat Analyzer' },
+                    {
+                      question: 'Generate one name for this conversation. Reply only with the one chat name only and no other formatting or commentary.',
+                      assistant: 'Conversation Name Generator',
+                    },
                     (msg, state) => {
                       if (state !== 'partial' && state !== 'done') return
                       setEdit('name', msg)

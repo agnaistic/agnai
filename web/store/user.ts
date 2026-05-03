@@ -1196,3 +1196,17 @@ async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user:
 
   userStore.updateConfig({ images: next })
 }
+
+userStore.subscribe((next, prev) => {
+  if (next.user?.hordeKey || next.user?.userHordeKey) return
+
+  if ((next && prev.user?.hordeKey) || prev.user?.userHordeKey) {
+    const nextUser: AppSchema.User = {
+      ...next.user,
+      hordeKey: prev.user.hordeKey,
+      userHordeKey: prev.user.userHordeKey,
+    } as any
+    console.log('Kept UHK')
+    userStore.setState({ user: nextUser })
+  }
+})

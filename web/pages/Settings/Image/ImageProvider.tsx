@@ -182,6 +182,10 @@ export const EditImageProvider: Component<{
       payload._id = ''
     }
 
+    if (!payload.url) {
+      payload.url = ''
+    }
+
     await userStore.upsertImageProvider(payload, props.close)
   }
 

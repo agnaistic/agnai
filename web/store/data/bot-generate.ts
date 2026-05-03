@@ -59,7 +59,7 @@ export const botGen = {
   getMessageParent,
 }
 
-export type GenerateOpts = { signal: AbortController; hint?: string } & /**
+export type GenerateOpts = { signal: AbortController; hint?: string; systemPrompt?: string } & /**
  * A user sending a new message
  */ (
   | { kind: 'send'; text: string; messageId?: string }
@@ -84,7 +84,7 @@ export type GenerateOpts = { signal: AbortController; hint?: string } & /**
    * Generate a message on behalf of the user
    */
   | { kind: 'self' }
-  | { kind: 'summary' }
+  | { kind: 'summary'; text: string; assistant?: string; messageId?: string }
   | {
       kind: 'chat-query'
       messageId?: string
@@ -115,6 +115,13 @@ async function streamResponse(opts: StreamOpts) {
     messages.push({
       role: 'user',
       content: `${assistant}: ${opts.text}`,
+    })
+  }
+
+  if (opts.kind === 'summary') {
+    messages.push({
+      role: 'user',
+      content: `${opts.assistant || 'Chat Summary Query'}`,
     })
   }
 
@@ -541,6 +548,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     kind: opts.kind,
     chat: entities.chat,
     user: entities.user,
+    systemPrompt: opts.systemPrompt,
     char: removeAvatar(entities.char),
     sender: removeAvatar(entities.profile),
     members: entities.members.map(removeAvatar),
@@ -581,7 +589,8 @@ async function buildChatRequest(opts: GenerateOpts) {
     opts.kind === 'continue' ||
     opts.kind === 'retry' ||
     opts.kind === 'self' ||
-    opts.kind === 'chat-query'
+    opts.kind === 'chat-query' ||
+    opts.kind === 'summary'
   ) {
     request.attachments = entities.attachments
   }
@@ -663,7 +672,12 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
   const props = await getGenerateProps(opts, active)
   const entities = props.entities
   const template = getTemplate({
-    settings: opts.kind === 'chat-query' ? entities.presets.json : entities.settings,
+    settings:
+      opts.kind === 'chat-query'
+        ? entities.presets.json
+        : opts.kind === 'summary'
+        ? entities.presets.summary
+        : entities.settings,
     chat: entities.chat,
   })
 
@@ -757,27 +771,38 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
   }
 
   const lines = await getPromptHistory(promptOpts, encoder)
-  const { users, chats } = await getRetrievalBreakpoint(
-    text,
-    entities,
-    props.messages,
-    lines.slice()
-  )
 
-  if (chats?.messages.length) {
-    for (const chat of chats.messages) {
-      const name =
-        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
-        entities.members.find((m) => m._id === chat.entityId)?.handle ||
-        'You'
+  const retrievalAllowed =
+    opts.kind === 'request' ||
+    opts.kind === 'self' ||
+    opts.kind === 'continue' ||
+    opts.kind === 'send' ||
+    opts.kind === 'retry' ||
+    opts.kind === 'chat-query'
 
-      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
+  if (retrievalAllowed) {
+    const { users, chats } = await getSemanticRetrievalContent(
+      text,
+      entities,
+      props.messages,
+      lines.slice()
+    )
+
+    if (chats?.messages.length) {
+      for (const chat of chats.messages) {
+        const name =
+          entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
+          entities.members.find((m) => m._id === chat.entityId)?.handle ||
+          'You'
+
+        chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
+      }
     }
-  }
 
-  if (users?.messages.length) {
-    for (const chat of users.messages) {
-      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
+    if (users?.messages.length) {
+      for (const chat of users.messages) {
+        userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
+      }
     }
   }
 
@@ -803,7 +828,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
   return { prompt, props, entities, chatEmbeds, userEmbeds, template, schema }
 }
 
-async function getRetrievalBreakpoint(
+async function getSemanticRetrievalContent(
   text: string | undefined,
   ents: PromptEntities,
   messages: AppSchema.ChatMessage[],
@@ -893,6 +918,10 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
 
   if (opts.kind === 'chat-query' && entities.presets.json) {
     entities.settings = entities.presets.json
+  }
+
+  if (opts.kind === 'summary' && entities.presets.summary) {
+    entities.settings = entities.presets.summary
   }
 
   if ('text' in opts) {

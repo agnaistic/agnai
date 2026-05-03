@@ -78,6 +78,9 @@ export type GenerateRequestV2 = {
     | 'plain'
     | 'chat-query'
 
+  /** For chat-adjacent tasks such as captioning, summarizing, etc */
+  systemPrompt?: string
+
   chat: AppSchema.Chat
   char: AppSchema.Character
   replyAs: AppSchema.Character

@@ -18,6 +18,8 @@ import { RootModal } from './Modal'
 import { ComponentSubscriber, PartialListener } from './util'
 import TextInput from './TextInput'
 
+export type OptionAction = { comp: (props: { optionValue: string }) => JSX.Element }
+
 export type CustomOption = {
   label: string | JSX.Element
   value: any
@@ -57,6 +59,7 @@ export const CustomSelect: Component<{
   listener?: PartialListener<'close' | 'open'>
   closeSub?: ComponentSubscriber<'close'>
   openSub?: ComponentSubscriber<'open'>
+  actions?: OptionAction[]
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
@@ -122,7 +125,7 @@ export const CustomSelect: Component<{
     return props.options.filter((opt) =>
       typeof opt.label === 'string'
         ? searchFunc(opt.label.toLowerCase(), input) ||
-          searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
+        searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
         : searchFunc(typeof opt.value === 'string' ? opt.value.toLowerCase() : opt.value, input)
     )
   })
@@ -205,6 +208,7 @@ export const CustomSelect: Component<{
                     options={category.options}
                     onSelect={onSelect}
                     selected={props.selected}
+                    actions={props.actions}
                   />
                 </div>
               )}
@@ -217,6 +221,7 @@ export const CustomSelect: Component<{
                 options={filteredOpts()!}
                 onSelect={onSelect}
                 selected={props.selected}
+                actions={props.actions}
               />
             </div>
           </Show>
@@ -232,6 +237,7 @@ const OptionList: Component<{
   title?: string
   selected?: string
   header?: JSX.Element
+  actions?: OptionAction[]
 }> = (props) => {
   return (
     <Switch>
@@ -247,23 +253,29 @@ const OptionList: Component<{
           <div class={`flex flex-col gap-2 p-2`}>
             <For each={props.options}>
               {(option) => (
-                <div
-                  classList={{
-                    'bg-[var(--hl-800)]': props.selected === option.value,
-                    'bg-700': !option.disabled && props.selected !== option.value,
-                    'bg-[var(--error-900)] text-700':
-                      option.disabled && props.selected !== option.value,
-                    'cursor-not-allowed': option.disabled,
-                    'cursor-pointer': !option.disabled,
-                  }}
-                  class={`w-full gap-4 rounded-md px-2 py-1 text-sm`}
-                  onClick={() => {
-                    if (!option.disabled) {
-                      props.onSelect(option)
-                    }
-                  }}
-                >
-                  <div class="font-bold">{option.label}</div>
+                <div class="w-full flex gap-1">
+
+                  <div
+                    classList={{
+                      'bg-[var(--hl-800)]': props.selected === option.value,
+                      'bg-700': !option.disabled && props.selected !== option.value,
+                      'bg-[var(--error-900)] text-700':
+                        option.disabled && props.selected !== option.value,
+                      'cursor-not-allowed': option.disabled,
+                      'cursor-pointer': !option.disabled,
+                    }}
+                    class={`flex w-full gap-4 rounded-md px-2 py-1 text-sm`}
+                    onClick={() => {
+                      if (!option.disabled) {
+                        props.onSelect(option)
+                      }
+                    }}
+                  >
+                    <div class="font-bold">{option.label}</div>
+                  </div>
+                  <For each={props.actions || []}>
+                    {action => action.comp({ optionValue: option.value })}
+                  </For>
                 </div>
               )}
             </For>

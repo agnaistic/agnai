@@ -138,6 +138,7 @@ export const ThirdPartyModel: Component<{
 }
 
 const CompatModel: Selector = (props) => {
+  const page = pageStore((s) => ({ flags: s.flags }))
   const emitter = createEmitter('close')
 
   const [customId, setCustomId] = createSignal('')
@@ -168,7 +169,7 @@ const CompatModel: Selector = (props) => {
 
   return (
     <div class="flex w-full flex-col gap-1">
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
         <CustomSelect
           size="sm"
           closeSub={emitter.on}
@@ -221,6 +222,16 @@ const CompatModel: Selector = (props) => {
         <Button size="sm" onClick={() => props.setters.refreshModels(true)}>
           <RefreshCcw size={20} />
         </Button>
+
+        <div class="flex" classList={{ hidden: !page.flags.debug }}>
+          <Copy
+            text={
+              props.state.providerModels?.[props.state.providerId || 'na'] ||
+              props.state.thirdPartyModel ||
+              ''
+            }
+          />
+        </div>
       </div>
 
       <div class="flex w-full flex-col gap-1">

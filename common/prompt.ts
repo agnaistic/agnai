@@ -688,7 +688,7 @@ function createPostPrompt(
 ) {
   const post = []
 
-  if (opts.kind === 'chat-query') {
+  if (opts.kind === 'chat-query' || opts.kind === 'summary') {
     // post.push(`Query Response:`)
   } else {
     post.push(`${opts.replyAs.name}:`)
