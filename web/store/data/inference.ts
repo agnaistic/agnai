@@ -352,7 +352,8 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   if (opts.signal) {
     opts.signal.signal.onabort = () => {
       inferenceCallbacks.delete(requestId)
-      lazy.resolve({ response: lastResponse })
+      tickWrapper(lastResponse, 'done')
+      // lazy.resolve({ response: lastResponse })
     }
   }
   if (conn?.local) {

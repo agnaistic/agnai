@@ -435,8 +435,8 @@ async function handlePostStreamResponse(input: {
       retrying: undefined,
       partial: undefined,
     })
-    console.log('aborted -- ignoring post stream handler')
-    return
+    // console.log('aborted -- ignoring post stream handler')
+    // return
   }
 
   const { replacing, parent, replyAs, continuing } = req.request

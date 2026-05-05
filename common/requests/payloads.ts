@@ -378,6 +378,15 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   }
 
   if (format === 'llamacpp') {
+    const budget =
+      reasoningEffort === 'none'
+        ? 0
+        : reasoningEffort === 'low'
+        ? gen.maxTokens! * 0.2
+        : reasoningEffort === 'medium'
+        ? gen.maxTokens! * 0.5
+        : gen.maxTokens! * 0.75
+
     const body = {
       prompt: messages ? undefined : prompt,
       messages,
@@ -401,6 +410,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       tfs_z: gen.tailFreeSampling,
       json_schema,
       reasoning_effort: reasoningEffort,
+      thinking_budget_tokens: budget,
       chat_template_kwargs: { enable_thinking: reasoningEffort !== 'none' },
     }
     return body
@@ -648,7 +658,7 @@ export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelForma
     {%- if message['content'] is string %}
       {{- message['content'] }}
     {%- else %}
-      
+
     {%- for block in message['content'] %}
       {%- if block['type'] == 'text' %}
         {{- block['text'] }}
@@ -658,7 +668,7 @@ export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelForma
         {{- raise_exception('Only text and image blocks are supported in message content!') }}
       {%- endif %}
     {%- endfor %}
-    
+
   {%- endif %}
   {%- elif message['role'] == 'system' %}
     {{- message['content'] }}
