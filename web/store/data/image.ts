@@ -3,7 +3,7 @@ import { getMaxImageContext } from '../../../common/image-prompt'
 import { api } from '../api'
 import { getStore } from '../create'
 import { decode, encode } from '/common/tokenize'
-import { neat, wait } from '/common/util'
+import { cleanPrompt, neat, wait } from '/common/util'
 import { localApi } from './storage'
 import { localEmit, subscribe } from '../socket'
 import { getAssetUrl } from '/web/shared/util'
@@ -333,78 +333,6 @@ export async function generateImageAsync(
   }
 
   return result
-
-  // if (req.provider?.type === 'horde') {
-  //   try {
-  //     const { text: image } = await horde.generateImage(
-  //       user,
-  //       prompt,
-  //       user.images?.negative || '',
-  //       (status) => {
-  //         opts.onTick?.(status)
-  //       }
-  //     )
-
-  //     const file = await dataURLtoFile(image)
-  //     const data = await getImageData(file)
-
-  //     opts.onDone?.({ image, file, data })
-
-  //     return { image, file, data }
-  //   } catch (ex: any) {
-  //     throw ex
-  //   }
-  // }
-
-  // if (req.provider?.local && req.provider.type === 'swarm') {
-  //   const signal = new AbortController()
-
-  //   imageStore.setState({ signal })
-
-  //   const res = await swarmApi.generateImageWS(req.request, {
-  //     signal,
-  //     onDone: () => imageStore.setState({ preview: undefined }),
-  //     onError: () => imageStore.setState({ preview: undefined }),
-  //     onPreview: (step) => imageStore.setState({ preview: step }),
-  //   })
-  //   opts.onDone?.({ file: res.file, image: res.content, data: res.content })
-  //   return {
-  //     image: res.content,
-  //     file: res.file,
-  //     data: res.content,
-  //   }
-  // }
-
-  // const res = await api.post<{ success: boolean; output?: string }>(`/character/image`, {
-  //   sync: true,
-  //   prompt,
-  //   user,
-  //   ephemeral: true,
-  //   source,
-  //   noAffix: opts.noAffix,
-  //   model: opts.model,
-  //   requestId,
-  // })
-
-  // if (res.result?.output) {
-  //   const type = getImageType(res.result.output)
-  //   const base64 = type.type === 'url' ? await getImageBase64(res.result.output) : type.image
-  //   const proc = processBase64(base64)
-
-  //   const result: ImageResult = {
-  //     file: proc.file,
-  //     image: base64,
-  //     data: res.result.output,
-  //   }
-
-  //   return result
-  // }
-
-  // if (res.error) {
-  //   throw new Error(res.error)
-  // }
-
-  // throw new Error(`Image generation failed: Empty result`)
 }
 
 export async function getImageBase64(image: string) {
@@ -495,7 +423,7 @@ function getSummaryTemplate(opts: { task: string | undefined; focus?: string; ge
       The scenario of the conversation: {{scenario}}
 
       Then the roleplay chat begins.</instruct>
-  
+
       {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
       {{/each}}
 
@@ -565,7 +493,7 @@ export async function createImageRequest(input: {
   messageId?: string
   noAffix?: boolean
 }) {
-  const ents = await getImageEntities()
+  const ents = getImageEntities()
   const { user } = getStore('user').getState()
   const { settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
   const { rawPrompt, prompt } = getImagePrompt(input, settings)
@@ -587,6 +515,10 @@ export async function createImageRequest(input: {
       steps: settings?.steps,
       width: settings?.width,
     },
+  }
+
+  if (settings?.autofix) {
+    opts.prompt = cleanPrompt(opts.prompt)
   }
 
   if (!opts.params?.width || !opts.params.height) {

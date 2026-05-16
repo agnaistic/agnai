@@ -24,7 +24,12 @@ export const Copy: Component<{
         setLoading(true)
       }
       const text = props.onClick ? await props.onClick?.() : props.text
-      navigator.clipboard.writeText(text)
+
+      try {
+        navigator.clipboard.writeText(text)
+      } catch (ex) {
+        console.log('Copy:\n', text)
+      }
     } finally {
       setLoading(false)
       setTimeout(() => setClicked(false), 1000)

@@ -401,7 +401,8 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
 }
 
 function applyReasoningPayload(opts: AdapterProps, body: any) {
-  if (opts.conn.provider?.provider === 'known-zai') {
+  const provider = opts.conn.provider?.provider
+  if (provider === 'known-zai' || provider === 'known-deepseek') {
     body.thinking = { type: opts.gen.reasoning?.enabled ? 'enabled' : 'disabled' }
     return
   }

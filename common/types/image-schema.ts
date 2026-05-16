@@ -12,6 +12,7 @@ export type BaseImageSettings = {
   suffix?: string
   negative?: string
 
+  autofix?: boolean
   template?: string
   clipSkip?: number
   width: number

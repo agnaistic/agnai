@@ -178,7 +178,9 @@ export const MessageParsers: Field = (props) => {
               <Select
                 items={[
                   { label: 'Remove', value: 'remove' },
+                  { label: 'Remove (+ Prompt)', value: 'remove-prompt' },
                   { label: 'Replace', value: 'replace' },
+                  { label: 'Replace (+ Prompt)', value: 'replace-prompt' },
                 ]}
                 value={each().type}
                 onChange={(ev) => updateParser(i, { type: ev.value as any })}

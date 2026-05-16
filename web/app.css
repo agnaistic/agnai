@@ -59,6 +59,7 @@ html {
   transition: 400ms ease;
   @apply bg-[var(--bg-800)] sm:top-0 sm:clear-none;
   @apply z-20 sm:z-0;
+  @apply border-r border-[var(--bg-600)];
 }
 
 #main-content {
@@ -94,7 +95,8 @@ html {
 }
 
 .drawer > * > a.active {
-  @apply bg-[var(--hl-900)];
+  @apply border-l-2 border-[var(--hl-400)] bg-[var(--hl-800)];
+  padding-left: calc(0.5rem - 2px);
 }
 
 @keyframes hideDrawer {

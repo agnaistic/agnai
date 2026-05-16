@@ -7,6 +7,12 @@
   @apply outline-none;
 }
 
+*:focus-visible {
+  outline: 2px solid var(--hl-800);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
 * > code {
   @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
 }
@@ -231,7 +237,7 @@ body {
    */
 
   ::-webkit-scrollbar {
-    @apply h-1 w-1;
+    @apply h-1.5 w-1.5;
   }
   ::-webkit-scrollbar-track {
     @apply bg-[var(--bg-700)];
@@ -247,14 +253,14 @@ body {
    * Focus/accessibility-related utilities.
    */
   ._focusable-base {
-    @apply transition-all duration-100;
+    @apply transition-all duration-150;
   }
 
   .focusable-field {
     @apply _focusable-base;
     @apply bg-[var(--bg-800)] hover:bg-[var(--bg-700)];
     @apply placeholder:text-[var(--text-600)];
-    @apply border-[var(--bg-700)];
+    @apply border border-[var(--bg-700)] focus:border-[var(--hl-600)];
   }
 
   .focusable-icon-button,
@@ -289,8 +295,8 @@ body {
    */
   .btn-base {
     @apply flex h-fit gap-1;
-    @apply transition-colors duration-100;
-    @apply rounded-md px-3;
+    @apply transition-colors duration-150;
+    @apply rounded-lg px-3;
     @apply disabled:cursor-not-allowed;
   }
 

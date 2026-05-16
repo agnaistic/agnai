@@ -271,6 +271,10 @@ const ImageCollectionModal: Component<{}> = (props) => {
           append: true,
           onImage: (image) => reel.reload(),
           onPrompt: (prompt) => update('prompt', prompt),
+          onTick: (text, state) => {
+            if (state !== 'partial' && state !== 'done') return
+            update('prompt', text)
+          },
         })
       } else {
         const result = await imageApi.generateImageAsync(imagePrompt, {

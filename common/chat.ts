@@ -14,14 +14,32 @@ export type ChatNode = {
 
 export type ChatDepths = Record<number, string[]>
 
-export function runPresetParsers(parsers: PresetParser[], message: string) {
+export function runPresetParsers(
+  parsers: PresetParser[],
+  message: string,
+  opts?: { preset?: boolean }
+) {
   let current = message || ''
 
   for (const parser of parsers) {
     if (!parser.text?.trim()) continue
     switch (parser.type) {
+      case 'remove-prompt': {
+        if (!opts?.preset) break
+        current = current.split(parser.text.replace(/\\n/g, '\n')).join('')
+        break
+      }
+
       case 'remove': {
         current = current.split(parser.text.replace(/\\n/g, '\n')).join('')
+        break
+      }
+
+      case 'replace-prompt': {
+        if (!opts?.preset) break
+        const from = parser.text.replace(/\\n/g, '\n')
+        const to = (parser.to || '').replace(/\\n/g, '\n')
+        current = current.split(from).join(to)
         break
       }
 

@@ -287,6 +287,13 @@ export const ImageSettingsModal = () => {
             onChange={(ev) => ctx.update('cfg', ev)}
           />
 
+          <Toggle
+            label="Auto-santisize Prompt"
+            helperText="Prompts have underscores replaced and excess whitespace/commas removed"
+            value={ctx.store.autofix ?? false}
+            onChange={(ev) => ctx.update('autofix', ev)}
+          />
+
           <TextInput
             fieldName="seed"
             value={ctx.store.seed ?? 0}

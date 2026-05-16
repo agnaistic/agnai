@@ -213,7 +213,7 @@ export const SubscriptionPage: Component<{}> = (props) => {
               {(each) => (
                 <>
                   <TierCard tier={each} class="sm:w-1/3">
-                    <Show when={user.user?.manualSub?.tierId === each._id}>
+                    <Show when={user.user?.manualSub?.tierId === each._id && !!each._id}>
                       <Pill type="green">This tier is currently gifted to you</Pill>
                     </Show>
                     <div class="mt-4 flex justify-center">

@@ -26,6 +26,7 @@ import type { MsgAttachment } from '/srv/adapter/type'
 import { debug } from '/common/debug'
 import { responseStore } from './response'
 import { getMessageImagePrompt } from '../shared/hooks'
+import { TickHandler } from '/common/prompt'
 
 const SOFT_PAGE_SIZE = 20
 
@@ -524,6 +525,7 @@ export const msgStore = createStore<MsgState>(
         onImage?: (image: string) => void
         onError?: (error: string) => void
         onPrompt?: (prompt: string) => void
+        onTick?: TickHandler
       }
     ) {
       if (imgWaiting) return
@@ -552,6 +554,7 @@ export const msgStore = createStore<MsgState>(
           source: 'summary',
         },
         {
+          onTick: opts.onTick,
           onSummary: async (summary) => {
             const { imgWaiting } = msgStore.getState()
             const next = (imgWaiting?.pos || 1) + 1

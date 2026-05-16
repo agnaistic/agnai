@@ -13,6 +13,7 @@ import { ModelFormat, replaceArrayTags, replaceTags } from './presets/templates'
 import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 import { extractReasoning } from './reasoning'
+import { runPresetParsers } from './chat'
 
 export type JsonOutput = { values: any; response: string; history: string; imageCaption: string }
 export type TickHandler<T = JsonOutput> = (
@@ -323,11 +324,14 @@ export async function assemblePrompt(
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
+  const parsers = opts.settings?.parsers || []
+  const parsedLines = opts.lines.map((line) => runPresetParsers(parsers, line, { preset: true }))
+
   let { parsed, inserts, length, sections, linesAddedCount, history, addedLines, blocks } =
     await injectPlaceholders(template, {
       opts: { ...opts, schema: opts.jsonSchema },
       parts: opts.parts,
-      lines: opts.lines,
+      lines: parsedLines,
       history: opts.history,
       characters: opts.characters,
       lastMessage: opts.lastMessage,

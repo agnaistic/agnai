@@ -103,7 +103,11 @@ export interface UserGenPreset extends GenSettings {
   userId: string
 }
 
-export type PresetParser = { type: 'replace' | 'remove'; text: string; to?: string }
+export type PresetParser = {
+  type: 'replace' | 'remove' | 'remove-prompt' | 'replace-prompt'
+  text: string
+  to?: string
+}
 
 export type Sampler =
   | 'topK'
