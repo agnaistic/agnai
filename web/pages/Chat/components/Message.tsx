@@ -245,7 +245,7 @@ const Message: Component<MessageProps> = (props) => {
       setEditSender(JSON.stringify({ characterId: message.characterId }))
     }
     if (editRef) {
-      editRef.innerText = message.msg
+      editRef.innerText = props.content
     }
     editRef?.focus()
   }
