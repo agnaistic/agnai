@@ -1161,6 +1161,8 @@ function getInitialEmbeddingsModel(user: AppSchema.User) {
 
 async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user: AppSchema.User }) {
   // If it's already set, ignore
+  if (!init.user || !init.config) return
+
   const config = init.config.serverConfig
   if (init.user.images?.type === 'agnai') return
 

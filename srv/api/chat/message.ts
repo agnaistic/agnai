@@ -7,7 +7,7 @@ import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { getScenarioEventType } from '/common/scenario'
-import { parsePartialJson } from '/common/util'
+import { parsePartialJson, round } from '/common/util'
 import { JsonOutput, resolveScenario } from '/common/prompt'
 import { mapPresetsToAdapter } from '/common/presets'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
@@ -260,6 +260,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     setTextStreamHeaders(res, ents, body, userMsg)
 
+    const started = Date.now()
     const chatStream = await createChatStream(
       {
         ...body,
@@ -304,6 +305,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     adapter = metadata.adapter
 
     meta = {
+      tts: 0,
       ctx: metadata.settings.maxContextLength,
       char: metadata.size,
       len: metadata.length,
@@ -333,6 +335,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if (typeof gen === 'string') {
+          if (meta.tts === 0) meta.tts = round((Date.now() - started) / 1000)
           generated = gen
           continue
         }
@@ -342,11 +345,13 @@ export const generateMessageV2 = handle(async (req, res) => {
         }
 
         if ('tokens' in gen) {
+          if (meta.tts === 0) meta.tts = round((Date.now() - started) / 1000)
           generated = gen.tokens as string
           break
         }
 
         if ('partial' in gen) {
+          if (meta.tts === 0) meta.tts = round((Date.now() - started) / 1000)
           const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
           if (metadata.json && schema) {
             jsonPartial = parsePartialJson(gen.partial, aliases) || jsonPartial

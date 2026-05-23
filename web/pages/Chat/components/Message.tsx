@@ -643,7 +643,7 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
                 <Match when={edit()}>
                   <div
-                    class="msg-edit-text-box"
+                    class="msg-edit-text-box p-1"
                     ref={editRef!}
                     contentEditable={true}
                     onKeyUp={(ev) => {
@@ -1181,7 +1181,7 @@ function wrapWithQuoteElement(str: string) {
     Regex magic explained:
     <[\s\S]*?>      - skip all HTML tags   eg. <sumting>
     ```[\s\S]*?```  - skip all code blocks eg. <pre>/``` markdown transform <pre><code> to ```
-    ``[\s\S]*?``    - skip all inline code eg. <code>/`` markdown transform <code> to `` | this is a non standard markup 
+    ``[\s\S]*?``    - skip all inline code eg. <code>/`` markdown transform <code> to `` | this is a non standard markup
     `[\s\S]*?`      - skip all inline code eg. <code>/` markdown transform <code> to `
 
     (\".+?\")       - capture all regular double quotes, which are not part of HTML tags or code blocks

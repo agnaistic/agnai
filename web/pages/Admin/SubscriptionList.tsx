@@ -172,15 +172,32 @@ const SubscriptionList: Component = () => {
                       <div class="ml-4 flex w-full items-center">
                         <div class="flex items-center gap-1">
                           <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                            [Level: {sub.subLevel}] {getServiceName(sub.service)}
+                            <Pill small inverse type={sub.allowGuestUsage ? 'green' : 'premium'}>
+                              {sub.subLevel}
+                            </Pill>
                           </span>
-                          {sub.name}
+                          <div class="flex flex-col gap-0">
+                            <div>{sub.name}</div>
+                            <div class="text-xs leading-3 text-[var(--text-600)]">
+                              {sub.subModel}
+                            </div>
+                          </div>
                           <Show when={sub.description}>
-                            <span class="text-500 ml-1 text-xs">{sub.description}</span>
+                            <Pill small inverse type="hl">
+                              {sub.description}
+                            </Pill>
                           </Show>
                           <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                            {sub.isDefaultSub ? ' default' : ''}
-                            {sub.subDisabled ? ' (disabled)' : ''}
+                            <Show when={sub.isDefaultSub}>
+                              <Pill inverse small>
+                                default
+                              </Pill>
+                            </Show>
+                            <Show when={sub.subDisabled}>
+                              <Pill inverse small type="rose">
+                                disabled
+                              </Pill>
+                            </Show>
                           </span>
                           <Contexts
                             levels={[

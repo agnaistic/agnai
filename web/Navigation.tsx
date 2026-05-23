@@ -745,13 +745,13 @@ export const UserProfile = () => {
           }}
         >
           <Switch>
+            Darkl
             <Match when={chars.impersonating}>
               <CharacterAvatar
                 char={chars.impersonating!}
                 format={{ corners: 'circle', size: 'xs' }}
               />
             </Match>
-
             <Match when>
               <AvatarIcon
                 avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}

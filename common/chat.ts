@@ -24,30 +24,21 @@ export function runPresetParsers(
   for (const parser of parsers) {
     if (!parser.text?.trim()) continue
     switch (parser.type) {
-      case 'remove-prompt': {
-        if (!opts?.preset) break
-        current = current.split(parser.text.replace(/\\n/g, '\n')).join('')
-        break
-      }
-
+      case 'remove-prompt':
       case 'remove': {
-        current = current.split(parser.text.replace(/\\n/g, '\n')).join('')
-        break
+        if (parser.type === 'remove-prompt' && !opts?.preset) continue
+        const remove = parser.text.replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
+        current = current.split(remove).join('')
+        continue
       }
 
-      case 'replace-prompt': {
-        if (!opts?.preset) break
-        const from = parser.text.replace(/\\n/g, '\n')
-        const to = (parser.to || '').replace(/\\n/g, '\n')
-        current = current.split(from).join(to)
-        break
-      }
-
+      case 'replace-prompt':
       case 'replace': {
-        const from = parser.text.replace(/\\n/g, '\n')
-        const to = (parser.to || '').replace(/\\n/g, '\n')
+        if (parser.type === 'replace-prompt' && !opts?.preset) continue
+        const from = parser.text.replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
+        const to = (parser.to || '').replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
         current = current.split(from).join(to)
-        break
+        continue
       }
     }
   }
