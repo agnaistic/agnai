@@ -60,6 +60,7 @@ export const CustomSelect: Component<{
   closeSub?: ComponentSubscriber<'close'>
   openSub?: ComponentSubscriber<'open'>
   actions?: OptionAction[]
+  searchText?: (input: string) => void
 }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [filter, setFilter] = createSignal('')
@@ -187,7 +188,10 @@ export const CustomSelect: Component<{
               parentClass="text-sm"
               fieldName="options-filter"
               placeholder="Filter..."
-              onChange={(ev) => setFilter(ev.currentTarget.value)}
+              onChange={(ev) => {
+                setFilter(ev.currentTarget.value)
+                props.searchText?.(ev.currentTarget.value)
+              }}
               value={filter()}
             />
           </Show>

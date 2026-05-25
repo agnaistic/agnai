@@ -547,6 +547,7 @@ type FLModel = {
 }
 
 const FeatherlessModels: Selector = (props) => {
+  const [inputText, setInputText] = createSignal('')
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
 
@@ -666,6 +667,7 @@ const FeatherlessModels: Selector = (props) => {
 
   const availables = createMemo(() => {
     const map: Record<string, number> = {}
+
     for (const model of props.setters.context.data) {
       if (!map[model.model_class]) {
         map[model.model_class] = 0
@@ -702,8 +704,24 @@ const FeatherlessModels: Selector = (props) => {
       set.add(cls)
     }
 
+    const searchText = inputText().trim()
+    const searchedClasses = new Set<string>()
+
+    for (const cat of options()) {
+      if (!searchText) {
+        searchedClasses.add(cat.name)
+        continue
+      }
+
+      for (const model of cat.options) {
+        if (!search(model.value, searchText)) continue
+        searchedClasses.add(cat.name)
+        break
+      }
+    }
+
     const pills = classes()
-      .filter((cls) => available[cls.value] > 0)
+      .filter((cls) => searchedClasses.has(cls.value) && available[cls.value] > 0)
       .map((cls) => {
         if (set.has(cls.value)) {
           return (
@@ -731,6 +749,7 @@ const FeatherlessModels: Selector = (props) => {
         modalTitle="Select a Model"
         categories={options()}
         search={search}
+        searchText={setInputText}
         header={
           <Accordian
             class="!bg-opacity-10 !p-1"
