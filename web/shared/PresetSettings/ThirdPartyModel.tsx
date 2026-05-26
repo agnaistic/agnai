@@ -547,6 +547,9 @@ type FLModel = {
 }
 
 const FeatherlessModels: Selector = (props) => {
+  const emitter = createEmitter('close')
+
+  const [customId, setCustomId] = createSignal('')
   const [inputText, setInputText] = createSignal('')
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
@@ -580,7 +583,7 @@ const FeatherlessModels: Selector = (props) => {
       ? props.state.providerModels?.[props.state.providerId] || props.state.thirdPartyModel
       : props.state.featherlessModel
     const match = props.setters.context.data.find((s) => s.id === id)
-    if (!match) return 'Model - None selected'
+    if (!match) return `Model - ${id}`
 
     return (
       <span title={`${match.status}, ${(match.health || '...').toLowerCase()}`}>
@@ -678,7 +681,7 @@ const FeatherlessModels: Selector = (props) => {
         continue
       }
 
-      if (!model.status || model.status === 'active') {
+      if (!model.status || model.status === 'active' || model.status === '') {
         map[model.model_class]++
       }
     }
@@ -744,9 +747,35 @@ const FeatherlessModels: Selector = (props) => {
   return (
     <div class="flex items-center gap-1">
       <CustomSelect
+        closeSub={emitter.on}
         maxHeight
         size="sm"
-        modalTitle="Select a Model"
+        modalTitle={
+          <div class="flex flex-col gap-2">
+            <div>Select a Model</div>
+            <div class="flex gap-2">
+              <TextInput
+                prelabel="Manual Model ID"
+                parentClass="w-full !font-normal !text-sm !h-8"
+                class=""
+                value={customId()}
+                onChange={(ev) => {
+                  setCustomId(ev.currentTarget.value)
+                }}
+              />
+              <Button
+                size="sm"
+                schema="primary"
+                onClick={() => {
+                  setProviderModel(props, customId())
+                  emitter.emit.close()
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        }
         categories={options()}
         search={search}
         searchText={setInputText}
