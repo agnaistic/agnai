@@ -441,9 +441,16 @@ export const msgStore = createStore<MsgState>(
       deleteOne?: boolean
     ) {
       let chatId = activeChatId
+
       if (!chatId) {
         chatId = msgs[0]?.chatId
       }
+
+      const { details } = chatStore.getState()
+      const active = details[chatId]?.chat
+
+      if (!active) return
+      const currentLeafId = active.treeLeafId || ''
 
       if (deleting) {
         return
@@ -458,14 +465,20 @@ export const msgStore = createStore<MsgState>(
 
       const changes = getDeletingIds(fromId, !!deleteOne)
 
-      const leaf = msgs.slice(-1)[0]
-      const leafId = leaf._id
+      if (fromMsg.msg.parent) {
+        chatStore.forkChat(fromMsg.msg.parent)
+      }
 
-      const res = await msgsApi.deleteMessages(chatId, changes.deletes, leafId)
+      const res = await msgsApi.deleteMessages(chatId, changes.deletes, currentLeafId)
 
       if (res.error) {
         yield { deleting: false }
         return toastStore.error(`Failed to delete messages: ${res.error}`)
+      }
+
+      const nextLeafId = res.result?.chat.treeLeafId
+      if (nextLeafId && graph.tree[nextLeafId]) {
+        chatStore.forkChat(nextLeafId)
       }
 
       applyGraphUpdates({ updates: res.result?.messages, deletes: changes.deletes })
