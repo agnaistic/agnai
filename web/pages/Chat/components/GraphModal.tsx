@@ -9,7 +9,7 @@ import { CharacterAvatar } from '/web/shared/AvatarIcon'
 import { useAppContext } from '/web/store/context'
 import { MessageShell } from './MessageShell'
 import { createEmitter } from '/web/shared/util'
-import { msgStore } from '/web/store'
+import { chatStore, msgStore } from '/web/store'
 import type cytoscape from 'cytoscape'
 import { debug } from '/common/debug'
 import { Pill } from '/web/shared/Card'
@@ -177,7 +177,7 @@ export const ChatGraphModal: Component<{
             schema="green"
             disabled={!store.clicked}
             onClick={() => {
-              msgStore.fork(store.clicked)
+              chatStore.forkChat(store.clicked)
               props.close()
             }}
           >
@@ -216,7 +216,11 @@ export const ChatGraphModal: Component<{
         </div>
 
         <div class="flex gap-2">
-          <Button disabled={!store.clicked} onClick={() => msgStore.fork(store.clicked)} size="sm">
+          <Button
+            disabled={!store.clicked}
+            onClick={() => chatStore.forkChat(store.clicked)}
+            size="sm"
+          >
             <Split size={12} /> Fork
           </Button>
 

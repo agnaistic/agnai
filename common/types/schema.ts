@@ -362,6 +362,7 @@ export namespace AppSchema {
 
     // Emphemeral (lost on page refresh):
     reasoning?: string
+    deleted?: boolean
   }
 
   export type ScenarioEventType = 'world' | 'character' | 'hidden' | 'ooc'

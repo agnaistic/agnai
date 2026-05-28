@@ -57,6 +57,7 @@ import { MsgAttachment } from '/srv/adapter/type'
 import { extractReasoning } from '/common/reasoning'
 import { usePresetContext } from '/web/store/preset-context'
 import { debug } from '/common/debug'
+import { Pill } from '/web/shared/Card'
 
 export type SendFunc = (opts: {
   msg: string
@@ -95,7 +96,6 @@ const InputBar: Component<{
     msgs: s.msgs,
     canCaption: s.canImageCaption,
   }))
-  const chats = chatStore((s) => ({ replyAs: s.details[s.lastChatId]?.replyAs }))
   const chars = characterStore((s) => ({ impersonating: s.impersonating }))
 
   useEffect(() => {
@@ -148,7 +148,7 @@ const InputBar: Component<{
 
   const placeholder = createMemo(() => {
     if (props.ooc) return 'Send a message... (OOC)'
-    if (chats.replyAs) return `Send a message to ${ctx.allBots[chats.replyAs]?.name}...`
+    if (ctx.replyAs) return `Send a message to ${ctx.allBots[ctx.replyAs]?.name}...`
     return `Send a message...`
   })
 
@@ -236,8 +236,7 @@ const InputBar: Component<{
   }
 
   const triggerEvent = () => {
-    const char =
-      chats.replyAs && chats.replyAs in props.botMap ? props.botMap[chats.replyAs] : undefined
+    const char = ctx.replyAs && ctx.replyAs in props.botMap ? props.botMap[ctx.replyAs] : undefined
 
     eventStore.triggerEvent(props.chat, char)
     setMenu(false)
@@ -304,8 +303,12 @@ const InputBar: Component<{
     <>
       <Show when={prompt.hintsEnabled}>
         <div class="flex w-full justify-center pb-0.5">
-          <div class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]">
+          <div
+            class="flex flex-1 justify-center gap-0.5 sm:w-3/4 sm:max-w-[75%]"
+            classList={{ '!w-full': window.flags.debug === true }}
+          >
             <TextInput
+              class="max-h-[80px] !outline-0"
               parentClass="!p-0.5 text-sm flex flex-1"
               placeholder="Response hint..."
               value={prompt.hint}
@@ -313,7 +316,6 @@ const InputBar: Component<{
                 promptStore.hint({ chatId: props.chat._id, text: ev.currentTarget.value })
               }
               isMultiline
-              class="max-h-[80px]"
               growup
             />
             <div
@@ -322,6 +324,20 @@ const InputBar: Component<{
             >
               <X size={20} />
             </div>
+
+            <Show when={window.flags.debug}>
+              <div class="mb-2 flex justify-center gap-2">
+                <Pill small inverse>
+                  <b>Leaf:&nbsp;</b>
+                  {ctx.active?.chat?.treeLeafId?.slice(0, 4)}
+                </Pill>
+
+                <Pill small inverse>
+                  <b>Cutoff:&nbsp;</b>
+                  {ctx.messageCutoffId.slice(0, 4)}
+                </Pill>
+              </div>
+            </Show>
           </div>
         </div>
       </Show>
@@ -384,7 +400,7 @@ const InputBar: Component<{
           placeholder={placeholder()}
           parentClass="flex w-full"
           classList={{ 'blur-md': dragging() }}
-          class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+          class="input-bar max-h-[120px] min-h-[40px] rounded-r-none !border-0 !outline-0 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
           onKeyDown={(ev) => {
             if (ev.key === '@') {
               setComplete(true)
@@ -451,7 +467,7 @@ const InputBar: Component<{
                 schema="secondary"
                 size="sm"
                 onClick={() => setAutoReplyAs('')}
-                disabled={!chats.replyAs}
+                disabled={!ctx.replyAs}
               >
                 None
               </Button>
@@ -461,7 +477,7 @@ const InputBar: Component<{
                     schema="secondary"
                     size="sm"
                     onClick={() => setAutoReplyAs(char._id)}
-                    disabled={chats.replyAs === char._id}
+                    disabled={ctx.replyAs === char._id}
                   >
                     {char.name}
                   </Button>

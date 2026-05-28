@@ -514,6 +514,9 @@ async function handlePostStreamResponse(input: {
     case 'send-event:world':
     case 'send-event:character':
     case 'send-event:hidden': {
+      if (messageId) {
+        getStore('chat').forkChat(messageId)
+      }
       break
     }
   }
@@ -893,7 +896,7 @@ export type GenerateProps = {
 }
 
 async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
-  const entities = await getPromptEntities()
+  const entities = await getPromptEntities('messageId' in opts ? { messageId: opts.messageId } : {})
 
   const json = entities.messages.reduce<Record<string, any>>(
     (prev, curr) => Object.assign(prev, curr.json?.values || {}),

@@ -177,6 +177,18 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async *forkChat(state, newLeafId: string) {
+      if (!state.lastChatId || !state.details[state.lastChatId]) return
+      const active = state.details[state.lastChatId]
+
+      const nextDetails = {
+        ...state.details,
+        [state.lastChatId]: { ...active, chat: { ...active.chat, treeLeafId: newLeafId } },
+      }
+
+      return { details: nextDetails }
+    },
+
     async *openChat(
       _,
       id: string,
@@ -546,7 +558,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const detail = details[msg.chatId]
       if (!detail) return
 
-      const { msgs, messageHistory } = msgStore.getState()
+      const { msgs } = msgStore.getState()
       const entities = await getPromptEntities()
 
       const encoder = await getEncoder()
@@ -568,7 +580,7 @@ export const chatStore = createStore<ChatState>('chat', {
           lastMessage: entities.lastMessage?.date || '',
           replyAs: perspective || replyAs,
           sender: entities.profile,
-          messages: messageHistory.concat(msgs).filter((m) => m.createdAt < msg.createdAt),
+          messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
           resolvedScenario,

@@ -337,15 +337,18 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
           return
         }
 
-        for (let i = 0; i < res.result.embeds.length; i++) {
-          const msg = spliced[i]
-          cache[msg._id] = {
-            entityId: msg.characterId || msg.userId || '',
-            msg: msg.msg,
-            embed: { data: res.result.embeds[i] },
-            meta: { id: msg._id, created: msg.createdAt },
+        if (res.result.embeds) {
+          for (let i = 0; i < res.result.embeds.length; i++) {
+            const msg = spliced[i]
+            cache[msg._id] = {
+              entityId: msg.characterId || msg.userId || '',
+              msg: msg.msg,
+              embed: { data: res.result.embeds[i] },
+              meta: { id: msg._id, created: msg.createdAt },
+            }
           }
         }
+
         await new Promise((resolve) => {
           setTimeout(resolve, 100)
         })

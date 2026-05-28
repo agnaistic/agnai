@@ -6,6 +6,7 @@ import { now } from './util'
 import { StatusError, errors } from '../api/wrap'
 import { parseTemplate } from '/common/template-parser'
 import { config } from '../config'
+import { sortAsc } from '/common/chat'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
@@ -18,6 +19,8 @@ export async function getChatGraph(id: string) {
     .find({ chatId: id })
     .project({ _id: 1, parent: 1, createdAt: 1 })
     .toArray()) as Array<Pick<AppSchema.ChatMessage, '_id' | 'createdAt' | 'parent'>>
+
+  messages.sort(sortAsc)
 
   return { chat, messages }
 }

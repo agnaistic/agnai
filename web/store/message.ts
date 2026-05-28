@@ -12,14 +12,7 @@ import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
-import {
-  ChatTree,
-  removeChatTreeNodes,
-  resolveChatPath,
-  sortAsc,
-  toChatGraph,
-  updateChatTreeNode,
-} from '/common/chat'
+import { ChatTree, sortAsc, toChatGraph } from '/common/chat'
 import { embedApi } from './embeddings'
 import { HordeCheck } from '/common/horde-gen'
 import type { MsgAttachment } from '/srv/adapter/type'
@@ -47,8 +40,10 @@ export type MsgState = {
   hordeStatus?: HordeCheck
   activeChatId: string
   activeCharId: string
-  messageHistory: ChatMessageExt[]
+  // messageHistory: ChatMessageExt[]
   msgs: ChatMessageExt[]
+  messageCutoffId: string
+
   deleting?: boolean
 
   imgWaiting?: {
@@ -87,7 +82,8 @@ export type MsgState = {
 const initState: MsgState = {
   activeChatId: '',
   activeCharId: '',
-  messageHistory: [],
+  messageCutoffId: '',
+  // messageHistory: [],
   msgs: [],
   nextLoading: false,
   imagesSaved: false,
@@ -171,14 +167,13 @@ export const msgStore = createStore<MsgState>(
         }
       }
 
-      const fullPath = resolveChatPath(graph.tree, leaf)
-      const recent = fullPath.splice(-SOFT_PAGE_SIZE)
+      const cutoff = getNextMessageCutoff(graph.tree, leaf)
 
       return {
         activeCharId: opts.characterId,
         activeChatId: opts.chatId,
-        messageHistory: fullPath,
-        msgs: recent,
+        msgs: opts.messages,
+        messageCutoffId: cutoff,
         graph,
       }
     },
@@ -230,37 +225,14 @@ export const msgStore = createStore<MsgState>(
       // events.emit('msg-attachment', next[msgId])
       return { attachments: next }
     },
-    async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
+    async *getNextMessages({ msgs, activeChatId, nextLoading, graph, messageCutoffId }) {
       if (nextLoading) return
 
       const msg = msgs[0]
       if (!msg || msg.first) return
 
-      yield { nextLoading: true }
-
-      if (messageHistory.length) {
-        const nextHistory = messageHistory.slice()
-        const trailing = nextHistory.splice(-SOFT_PAGE_SIZE)
-        yield { nextLoading: false, msgs: trailing.concat(msgs), messageHistory: nextHistory }
-        return
-      }
-
-      const before = msg.createdAt
-
-      const res = await msgsApi.getMessages(activeChatId, before)
-      yield { nextLoading: false }
-      if (res.result && res.result.messages.length) {
-        return { msgs: res.result.messages.concat(msgs) }
-      }
-
-      if (res.result && !res.result.messages.length) {
-        return {
-          msgs: msgs.map((msg, i) => {
-            if (i === 0) return { ...msg, first: true }
-            return msg
-          }),
-        }
-      }
+      const nextCutoff = getNextMessageCutoff(graph.tree, messageCutoffId)
+      return { messageCutoffId: nextCutoff }
     },
 
     async *softEditMessageParent(
@@ -273,7 +245,8 @@ export const msgStore = createStore<MsgState>(
       if (!prev) return toastStore.error(`Cannot find message`)
 
       const next = { ...prev.msg, ...update, voiceUrl: undefined }
-      updateGraphAndReload(msgId, next)
+      applyGraphUpdates({ updates: [next] })
+      // updateGraphAndReload(msgId, next)
       onSuccess?.()
     },
 
@@ -289,7 +262,8 @@ export const msgStore = createStore<MsgState>(
       const res = await msgsApi.editMessageProps(prev.msg, update)
       if (res.result) {
         const next = { ...prev.msg, ...update, voiceUrl: undefined }
-        updateGraphAndReload(msgId, next)
+        applyGraphUpdates({ updates: [next] })
+        // updateGraphAndReload(msgId, next)
         onSuccess?.()
       }
 
@@ -299,7 +273,7 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *editMessageProp(
-      { msgs, graph },
+      { msgs },
       msgId: string,
       update: Partial<AppSchema.ChatMessage>,
       onSuccess?: Function
@@ -320,15 +294,15 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
-    localEditMessageProp({ msgs, graph }, msgId: string, update: Partial<AppSchema.ChatMessage>) {
+    localEditMessageProp({ msgs }, msgId: string, update: Partial<AppSchema.ChatMessage>) {
       const prev = findOne(msgId, msgs)
       if (!prev) return
 
       const next = { ...prev, ...update, voiceUrl: undefined }
       const nextMsgs = replace(msgId, msgs, next)
-      const tree = updateChatTreeNode(graph.tree, next)
+      const nextGraph = toChatGraph(nextMsgs)
 
-      return { msgs: nextMsgs, graph: { ...graph, tree } }
+      return { msgs: nextMsgs, graph: nextGraph }
     },
 
     async *removeMessageImage({ msgs }, msgId: string, position: number) {
@@ -437,29 +411,13 @@ export const msgStore = createStore<MsgState>(
       }
       if (res.result) {
         const nextMsgs = replace(msgId, msgs, { msg, voiceUrl: undefined })
-        const tree = updateChatTreeNode(graph.tree, { ...prev, msg })
+        const graph = toChatGraph(nextMsgs)
         yield {
           msgs: nextMsgs,
-          graph: { tree, root: graph.root },
+          graph,
         }
         onSuccess?.()
       }
-    },
-
-    async *fork({ graph: { tree }, msgs, messageHistory }, messageId: 'root' | string) {
-      if (messageId === 'root') {
-        const first = messageHistory[0] || msgs[0]
-
-        if (!first) {
-          toastStore.warn('Could not restart: No root message found')
-          return
-        }
-
-        messageId = first._id
-      }
-      const path = resolveChatPath(tree, messageId)
-      const page = path.splice(-SOFT_PAGE_SIZE)
-      yield { msgs: page, messageHistory: path }
     },
 
     *queue({ queue }, chatId: string, message: string, mode: SendModes) {
@@ -491,15 +449,14 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const index = msgs.findIndex((m) => m._id === fromId)
       const fromMsg = graph.tree[fromId]
-      if (index === -1 || !fromMsg) {
+      if (!fromMsg) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
       yield { deleting: true }
 
-      const changes = getDeletingIds(graph.tree, fromId, !!deleteOne)
+      const changes = getDeletingIds(fromId, !!deleteOne)
 
       const leaf = msgs.slice(-1)[0]
       const leafId = leaf._id
@@ -708,7 +665,6 @@ async function onMessageReceived(body: {
   const isRetry = !!existing
 
   const speech = getMessageSpeechInfo(msg, user)
-  const tree = updateChatTreeNode(graph.tree, msg)
 
   const nextMsgs = isRetry
     ? msgs.map((m) => (m._id === msg._id ? msg : m))
@@ -719,10 +675,8 @@ async function onMessageReceived(body: {
 
   msgStore.setState({
     textBeforeGenMore: undefined,
-    graph: {
-      tree,
-      root: graph.root,
-    },
+    msgs: nextMsgs,
+    graph: toChatGraph(nextMsgs),
   })
 
   // If the message is from a user don't clear the "waiting for response" flags
@@ -848,14 +802,15 @@ subscribe(['message-error', 'inference-error'], { error: 'any', chatId: 'string'
 
 subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   const ids = new Set(body.ids)
-  const { msgs, graph } = msgStore.getState()
+  const { msgs } = msgStore.getState()
 
+  // @TODO 27-May:
+
+  const nextMsgs = msgs.filter((msg) => !ids.has(msg._id))
+  const newGraph = toChatGraph(nextMsgs)
   msgStore.setState({
-    msgs: msgs.filter((msg) => !ids.has(msg._id)),
-    graph: {
-      tree: removeChatTreeNodes(graph.tree, body.ids),
-      root: graph.root,
-    },
+    msgs: nextMsgs,
+    graph: newGraph,
   })
 })
 
@@ -886,7 +841,7 @@ const updateMsgSub = (body: {
   invisible?: any
 }) => {
   debug('edit')('updating %s', body.messageId)
-  const { msgs, graph } = msgStore.getState()
+  const { msgs } = msgStore.getState()
   const prev = findOne(body.messageId, msgs)
 
   if (!prev) return
@@ -905,13 +860,11 @@ const updateMsgSub = (body: {
   }
 
   const nextMsgs = replace(body.messageId, msgs, next)
+  const nextGraph = toChatGraph(nextMsgs)
 
   msgStore.setState({
     msgs: nextMsgs,
-    graph: {
-      tree: updateChatTreeNode(graph.tree, next),
-      root: graph.root,
-    },
+    graph: nextGraph,
   })
 }
 
@@ -920,42 +873,21 @@ subscribe('message-parents', { chatId: 'string', parents: 'any' }, (body) => {
 })
 
 function updateMsgParents(chatId: string, parents: Record<string, string>, deleteIds?: string[]) {
-  const { messageHistory, msgs, activeChatId, graph } = msgStore.getState()
+  const { msgs, activeChatId } = msgStore.getState()
   if (activeChatId !== chatId) return
-
-  let tree = { ...graph.tree }
 
   let modified = false
 
-  const nextMsgs = msgs.map((msg) => {
-    if (!parents[msg._id]) return msg
-    return { ...msg, parent: parents[msg._id] }
-  })
-
-  const nextHist = messageHistory.map((msg) => {
-    if (!parents[msg._id]) return msg
-    return { ...msg, parent: parents[msg._id] }
-  })
-
-  for (const [descId, parentId] of Object.entries(parents)) {
-    if (typeof parentId !== 'string') continue
-    const descendant = tree[descId]
-    if (!descendant) continue
-
-    if (descendant.msg.parent === parentId) {
-      continue
-    }
-
-    modified = true
-    const nextDesc = { ...descendant.msg, parent: parentId }
-    tree = updateChatTreeNode(tree, nextDesc)
-    tree[nextDesc._id].children = { ...descendant.children }
-
-    const parent = tree[parentId]
-    if (parent) {
-      parent.children[nextDesc._id] = true
-    }
-  }
+  const deleteSet = new Set(deleteIds || [])
+  const nextMsgs = msgs
+    .filter((m) => !deleteSet.has(m._id))
+    .map((msg) => {
+      if (!parents[msg._id]) return msg
+      if (msg.parent !== parents[msg._id]) {
+        modified = true
+      }
+      return { ...msg, parent: parents[msg._id] }
+    })
 
   // The caller will immediately update the tree when deleting messages
   // This prevents this function running twice due to the 'message-parents' subscription
@@ -963,19 +895,11 @@ function updateMsgParents(chatId: string, parents: Record<string, string>, delet
     return
   }
 
-  if (deleteIds) {
-    for (const id of deleteIds) {
-      delete tree[id]
-    }
-  }
+  const newGraph = toChatGraph(nextMsgs)
 
   msgStore.setState({
     msgs: nextMsgs,
-    messageHistory: nextHist,
-    graph: {
-      tree,
-      root: graph.root,
-    },
+    graph: newGraph,
   })
 }
 
@@ -1045,82 +969,49 @@ function applyGraphUpdates(params: {
   updates?: Array<{ _id: string } & Partial<AppSchema.ChatMessage>>
   deletes?: string[]
 }) {
-  let {
-    graph: { tree, root },
-    messageHistory,
-    msgs,
-  } = msgStore.getState()
+  const { msgs } = msgStore.getState()
 
+  const updateMap: Record<string, { _id: string } & Partial<AppSchema.ChatMessage>> = {}
   if (params.updates) {
     for (const { _id, ...update } of params.updates) {
-      const prev = tree[_id]
-      if (!prev) continue
-      tree = updateChatTreeNode(tree, { ...prev.msg, ...update })
+      updateMap[_id] = { _id, ...update }
     }
   }
 
-  for (const deleteId of params.deletes || []) {
-    const { [deleteId]: removed, ...nextTree } = tree
-    tree = nextTree
-  }
-
   const deletes = new Set(params.deletes || [])
-  const nextMsgs = msgs.filter((m) => !deletes.has(m._id)).map((m) => ({ ...tree[m._id].msg }))
-  const nextHistory = messageHistory
+  const nextMsgs = msgs
     .filter((m) => !deletes.has(m._id))
-    .map((m) => ({ ...tree[m._id].msg }))
+    .map((m) => {
+      if (!updateMap[m._id]) return m
+      return { ...m, ...updateMap[m._id] }
+    })
+  const newGraph = toChatGraph(nextMsgs)
 
   msgStore.setState({
-    graph: { tree, root },
-    messageHistory: nextHistory,
+    graph: newGraph,
     msgs: nextMsgs,
   })
 }
 
-function updateGraphAndReload(messageId: string, updates: Partial<AppSchema.ChatMessage>) {
-  const { graph, msgs } = msgStore.getState()
-  const target = graph.tree[messageId]
-
-  if (!target) {
-    throw new Error(`Could not locate message in graph`)
-  }
-
-  const nextMsg = { ...target.msg, ...updates }
-  const nextGraph = updateChatTreeNode(graph.tree, nextMsg)
-
-  const leaf = msgs.slice(-1)[0]
-
-  const fullPath = resolveChatPath(nextGraph, leaf?._id)
-  const recent = fullPath.splice(-SOFT_PAGE_SIZE)
-
-  msgStore.setState({
-    graph: { tree: nextGraph, root: graph.root },
-    messageHistory: fullPath,
-    msgs: recent,
-  })
-}
-
 function updateMessageInState(messageId: string, updates: Partial<AppSchema.ChatMessage>) {
-  const { msgs, messageHistory, graph } = msgStore.getState()
+  const { msgs } = msgStore.getState()
 
   const main = findOne(messageId, msgs)
-  const hist = findOne(messageId, messageHistory)
 
-  if (!main && !hist) return
+  if (!main) return
 
-  const nextMsg = main ? { ...main, ...updates } : { ...hist!, ...updates }
-  const next = replace(messageId, main ? msgs : messageHistory, nextMsg)
-  const nextGraph = updateChatTreeNode(graph.tree, nextMsg)
+  const nextMsg = { ...main, ...updates }
+  const next = replace(messageId, msgs, nextMsg)
+  const newGraph = toChatGraph(next)
 
-  if (main) {
-    msgStore.setState({ msgs: next, graph: { tree: nextGraph, root: graph.root } })
-  } else {
-    msgStore.setState({ messageHistory: next, graph: { tree: nextGraph, root: graph.root } })
-  }
+  msgStore.setState({ msgs: next, graph: { tree: newGraph.tree, root: newGraph.root } })
 }
 
-function getDeletingIds(graph: ChatTree, fromId: string, deleteOne: boolean) {
-  const from = graph[fromId]
+function getDeletingIds(fromId: string, deleteOne: boolean) {
+  const state = msgStore.getState()
+  const graph = toChatGraph(state.msgs.slice())
+
+  const from = graph.tree[fromId]
 
   if (!from) {
     throw new Error(`Could not locate message to delete`)
@@ -1130,7 +1021,7 @@ function getDeletingIds(graph: ChatTree, fromId: string, deleteOne: boolean) {
     return { deletes: [fromId] }
   }
 
-  const deletes = [fromId].concat(getChildren(graph, fromId))
+  const deletes = [fromId].concat(getChildren(graph.tree, fromId))
 
   return { deletes }
 }
@@ -1146,4 +1037,26 @@ function getChildren(graph: ChatTree, nodeId: string, prev: string[] = []) {
   }
 
   return prev
+}
+
+function getNextMessageCutoff(tree: ChatTree, currentCutoffId: string) {
+  let current = tree[currentCutoffId]
+
+  if (!current) {
+    return currentCutoffId
+  }
+
+  if (!current.msg.parent) return currentCutoffId
+
+  for (let i = 0; i < SOFT_PAGE_SIZE; i++) {
+    const parent = tree[current.msg.parent!]
+    if (parent) {
+      current = parent
+      continue
+    }
+
+    break
+  }
+
+  return current.msg._id
 }

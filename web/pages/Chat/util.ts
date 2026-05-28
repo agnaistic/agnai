@@ -8,7 +8,7 @@ export type ParticipantList = ReturnType<ReturnType<typeof useParticipantList>>
 
 export function useParticipantList(forChat?: boolean) {
   const self = getStore('user')((s) => ({ profile: s.profile }))
-  const msgs = getStore('messages')((s) => ({ msgs: s.msgs, messageHistory: s.messageHistory }))
+  const msgs = getStore('messages')((s) => ({ msgs: s.msgs }))
   const chars = getStore('character')((s) => ({
     impersonating: s.impersonating,
     characters: forChat ? s.chatChars : s.characters,
@@ -33,7 +33,7 @@ export function useParticipantList(forChat?: boolean) {
 
     const ids = new Set(active.map((chr) => chr._id))
 
-    for (const msg of msgs.messageHistory.concat(msgs.msgs)) {
+    for (const msg of msgs.msgs) {
       if (!msg.characterId) continue
       if (state.active?.chat.tempCharacters?.[msg.characterId]) continue
       if (ids.has(msg.characterId)) continue

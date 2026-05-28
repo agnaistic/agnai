@@ -39,7 +39,8 @@ export const SwipeMessage: Component<{
 export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
   const state = msgStore((s) => ({
     msgs: s.msgs,
-    history: s.messageHistory,
+    showMore: s.msgs[0]?._id !== s.messageCutoffId,
+    cutoff: s.messageCutoffId,
   }))
   const chat = chatStore((s) => ({ loaded: s.detailLoaded }))
 
@@ -48,7 +49,7 @@ export const LoadMore: Component<{ canFetch?: boolean }> = (props) => {
       <div class="flex w-full justify-center">
         <a
           class="link"
-          classList={{ hidden: state.history.length === 0 }}
+          classList={{ hidden: !state.showMore }}
           onClick={() => {
             msgStore.getNextMessages()
           }}

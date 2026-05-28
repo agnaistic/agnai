@@ -16,6 +16,7 @@ import { debug } from '/common/debug'
 import { EVENTS, events } from '../emitter'
 import { getScenarioEventType } from '/common/scenario'
 import { imageApi } from './data/image'
+import { resolveChatPath } from '/common/chat'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -252,6 +253,7 @@ export const responseStore = createStore<ResponseState>(
 
       if (res.result?.messageId) {
         yield { partial: {} }
+        getStore('chat').forkChat(res.result.messageId)
       }
     },
 
@@ -470,15 +472,20 @@ async function handlePreSend(opts: {
   }
 
   const { impersonating } = getStore('character').getState()
-  const { messageHistory, msgs } = getStore('messages').getState()
+  const { lastChatId, details } = getStore('chat').getState()
+  const { graph } = getStore('messages').getState()
+
+  const active = details[lastChatId]
+  if (!active) return
 
   const messageId = v4()
+  const msgs = resolveChatPath(graph.tree, active.chat.treeLeafId || '')
 
   if (opts.msg === '#FAIL') {
     return { messageId, error: 'Error test' }
   }
 
-  const parent = botGen.getMessageParent(opts.mode, messageHistory.concat(msgs))
+  const parent = botGen.getMessageParent(opts.mode, msgs)
 
   const res = await msgsApi.createMessage({
     kind: isEvent ? getScenarioEventType(opts.mode) : 'send-noreply',
@@ -492,6 +499,7 @@ async function handlePreSend(opts: {
 
   if (res.result) {
     opts.onSuccess?.()
+    getStore('chat').forkChat(messageId)
   }
 
   if (res.error) {
@@ -556,7 +564,7 @@ responseStore.subscribe((state, prev) => {
   if (state.waiting) return
   if (!msgState.activeChatId) return
   if (msgState.msgs.length) return
-  debouncedEmbed(msgState.activeChatId, msgState.messageHistory.concat(msgState.msgs))
+  debouncedEmbed(msgState.activeChatId, msgState.msgs)
 })
 
 async function playVoiceFromUrl(

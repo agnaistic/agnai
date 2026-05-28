@@ -50,6 +50,7 @@ import { SendFunc } from './components/InputBar'
 import { MessageVisibility } from './components/Visibility'
 import { PendingMessages } from './components/Pending'
 import { debug } from '/common/debug'
+import { resolveChatPath } from '/common/chat'
 
 export { ChatDetail as default }
 
@@ -94,6 +95,8 @@ const ChatDetail: Component = () => {
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     textBeforeGenMore: s.textBeforeGenMore,
+    graph: s.graph,
+    cutoff: s.messageCutoffId,
   }))
 
   const showPane = useValidChatPane()
@@ -136,7 +139,12 @@ const ChatDetail: Component = () => {
 
     const doShowHiddenEvents = showHiddenEvents()
 
-    const filtered = msgs.msgs.filter((msg) => {
+    const leafId = chats.chat.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    const path = resolveChatPath(msgs.graph.tree, leafId)
+
+    const startIndex = msgs.cutoff ? path.findIndex((msg) => msg._id === msgs.cutoff) : 0
+
+    const filtered = path.slice(startIndex).filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
@@ -579,7 +587,8 @@ const ChatDetail: Component = () => {
         }
         show={chats.opts.modal === 'restart'}
         confirm={() => {
-          msgStore.fork('root')
+          const first = msgs.msgs[0]
+          chatStore.forkChat(first?._id || '')
           chatStore.option({ modal: 'none' })
         }}
         close={() => chatStore.option({ modal: 'none' })}

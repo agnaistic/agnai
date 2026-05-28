@@ -77,10 +77,28 @@ export function toQuickGraph(
     }
   }
 
+  let index = -1
   for (const msg of messages) {
-    if (!msg.parent) continue
-    const parent = tree[msg.parent]
+    index++
 
+    // Handle chats before graphs existed
+    if (!msg.parent) {
+      // Ignore root message, always has no parent
+      if (index === 0) continue
+      const parentSrc = messages[index - 1]
+      const parent = tree[parentSrc?._id]
+      if (!parent) {
+        orphans.push({ _id: msg._id, age: msg.createdAt, parent: msg.parent })
+        continue
+      }
+
+      tree[msg._id].parent = parent._id
+      parent.childCount++
+      parent.children[msg._id] = true
+      continue
+    }
+
+    const parent = tree[msg.parent]
     if (!parent) {
       orphans.push({ _id: msg._id, age: msg.createdAt, parent: msg.parent })
       continue
@@ -115,10 +133,10 @@ export function getDeletionChanges(graph: QuickChatGraph, deleteIds: string[]) {
   const head = deletes[0]
   const tail = deletes.slice(-1)[0]
 
-  let nextLeafId = method === 'tail' ? head.parent || '' : undefined
+  let nextLeafId = method === 'tail' ? head?.parent || '' : undefined
   let parents =
     method === 'middle'
-      ? { ids: Object.keys(tail.children), parentId: head.parent || '' }
+      ? { ids: tail ? Object.keys(tail.children) : [], parentId: head.parent || '' }
       : undefined
 
   const leaf = graph.tree[nextLeafId || '']
@@ -185,73 +203,7 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
     }
   }
 
-  // for (const { msg } of Object.values(tree)) {
-  //   if (!msg.parent) {
-  //     log(`root? %s`, msg._id.slice(0, 4))
-  //     continue
-  //   }
-
-  //   const parent = tree[msg.parent]
-  //   if (!parent) continue
-  //   log('assigned to %s: %s', parent.msg._id.slice(0, 4), msg._id.slice(0, 4))
-  //   parent.children[msg._id] = true
-  // }
-
   return { tree, root: messages[0]?._id || '' }
-}
-
-export function updateChatTreeNode(tree: ChatTree, msg: AppSchema.ChatMessage) {
-  const next: ChatTree = { ...tree }
-
-  next[msg._id] = {
-    msg,
-    children: {},
-    depth: getMessageDepth(tree, msg.parent || '') + 1,
-  }
-
-  for (const node of Object.values(next)) {
-    if (!node.msg.parent) continue
-
-    if (node.msg.parent !== msg._id) continue
-
-    if (!parent) continue
-
-    next[msg._id].children[node.msg._id] = true
-  }
-
-  const nextParent = next[msg.parent || '']
-  if (nextParent) {
-    nextParent.children[msg._id] = true
-  }
-
-  return next
-}
-
-export function removeChatTreeNodes(tree: ChatTree, ids: string[]) {
-  const next = { ...tree }
-
-  for (const id of ids) {
-    const node = next[id]
-    if (!node) continue
-
-    const parent = node.msg.parent ? next[node.msg.parent] : null
-    if (parent) {
-      delete parent.children[id]
-
-      for (const childId in node.children) {
-        parent.children[childId] = true
-
-        const child = next[childId]
-        if (!child) continue
-
-        child.msg.parent = node.msg.parent
-      }
-    }
-
-    delete next[id]
-  }
-
-  return next
 }
 
 export function getChatDepths(tree: ChatTree) {

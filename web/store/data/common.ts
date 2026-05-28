@@ -10,6 +10,7 @@ import { getPresetConnection } from '/common/providers'
 import { ChatMessageExt } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
 import { simplifyPreset } from '/common/prompt'
+import { resolveChatPath } from '/common/chat'
 
 export type PromptEntities = NonNullable<Awaited<ReturnType<typeof getAuthedPromptEntities>>> & {
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
@@ -78,7 +79,7 @@ export async function getPromptEntities(opts?: { messageId?: string }): Promise<
     hint: promptState.hintsEnabled ? promptState.hint : '',
   }
 
-  const entities = getAuthedPromptEntities() //isLoggedIn() ?  : await getGuestEntities()
+  const entities = getAuthedPromptEntities(opts)
 
   if (!entities) throw new Error(`Could not collate data for prompting`)
 
@@ -202,7 +203,7 @@ function getChatAttachments(
   return next
 }
 
-function getAuthedPromptEntities() {
+function getAuthedPromptEntities(opts?: { messageId?: string }) {
   const { details, chatProfiles: members, lastChatId } = getStore('chat').getState()
   const active = details[lastChatId]
   if (!active) return
@@ -218,7 +219,8 @@ function getAuthedPromptEntities() {
     .getState()
     .books.list.filter((book) => bookIds.has(book._id))
 
-  const { msgs, messageHistory, attachments } = getStore('messages').getState()
+  const { attachments, graph } = getStore('messages').getState()
+  const path = resolveChatPath(graph.tree, opts?.messageId || chat.treeLeafId || '')
   const presets = getActivePreset(chat, user)!
   const conn = getPresetConnection(presets.current, user.providers)
   const scenarios = getStore('scenario')
@@ -228,7 +230,7 @@ function getAuthedPromptEntities() {
   const { impersonating, chatChars } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, chatChars.map)
-  const messages = trimMessages(user, messageHistory.concat(msgs))
+  const messages = trimMessages(user, path)
 
   const sub = getPresetSubscription(conn.preset)
   const simple = simplifyPreset(user, conn.preset, sub?.preset)

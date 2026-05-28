@@ -355,7 +355,7 @@ const Message: Component<MessageProps> = (props) => {
             >
               <Show when={ctx.flags.debug}>
                 <span class="text-600 flex w-full justify-center text-[0.5rem]">
-                  {msg().parent?.slice(0, 4) || 'root'}
+                  {msg().parent?.slice(0, 4) || 'root'} #{props.index}
                 </span>
               </Show>
               <Switch>
@@ -793,7 +793,10 @@ const MessageOptions: Component<{
         class: 'fork-btn',
         show: !props.last,
         outer: props.ui.msgOptsInline.fork,
-        onClick: () => !props.partial && msgStore.fork(props.msg._id),
+        onClick: () => {
+          if (props.partial) return
+          chatStore.forkChat(props.msg._id)
+        },
         icon: Split,
       },
 
