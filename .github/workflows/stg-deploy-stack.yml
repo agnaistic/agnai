@@ -66,7 +66,7 @@ jobs:
 
       - name: Publish
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:staging
           docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
 
       - name: Update Frontend
@@ -80,4 +80,4 @@ jobs:
 
       - name: Update Backend
         run: |
-          sh .github/deploy.sh ${{ secrets.SSH_SERVER }}
+          sh .github/deploy-stg.sh ${{ secrets.SSH_SERVER }}
