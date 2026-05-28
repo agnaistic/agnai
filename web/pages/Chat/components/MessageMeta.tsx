@@ -20,6 +20,7 @@ import { AppSchema } from '/common/types'
 import { SquareArrowOutUpRight, WandSparkles } from 'lucide-solid'
 import { RelativeSpinner } from '/web/shared/Loading'
 import { getMessageImagePrompt } from '/web/shared/hooks'
+import { getMessageDepth } from '/common/chat'
 
 export const MessageMeta: Component = () => {
   const [ctx] = useAppContext()
@@ -39,7 +40,9 @@ export const MessageMeta: Component = () => {
 
   const depth = createMemo(() => {
     if (!state.msg) return -1
-    return state.graph.tree[state.msg._id]?.depth || -1
+
+    const result = getMessageDepth(state.graph.tree, state.msg._id)
+    return result
   })
 
   const jsonValues = createMemo(() => {

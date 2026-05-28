@@ -643,7 +643,7 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
                 <Match when={edit()}>
                   <div
-                    class="msg-edit-text-box p-1"
+                    class="msg-edit-text-box p-1 !outline-0"
                     ref={editRef!}
                     contentEditable={true}
                     onKeyUp={(ev) => {
@@ -694,7 +694,7 @@ const JsonEdit: Component<{
           </Pill>
           <div
             ref={(r) => (r.innerText = props.msg.msg)}
-            class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1"
+            class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1 !outline-0"
             contentEditable={true}
             onKeyUp={(ev: any) => props.message(ev.target.innerText)}
           ></div>
@@ -709,7 +709,7 @@ const JsonEdit: Component<{
             </Pill>
             <div
               ref={(r) => (r.innerText = editing[key])}
-              class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1"
+              class="msg-edit-text-box rounded-md rounded-tl-none border border-[var(--bg-500)] p-1 !outline-0"
               contentEditable={true}
               onKeyUp={(ev: any) => {
                 setEditing(key, ev.target.innerText)

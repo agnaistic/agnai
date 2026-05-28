@@ -189,7 +189,7 @@ export function toChatGraph(messages: AppSchema.ChatMessage[]): { tree: ChatTree
       }
     }
 
-    tree[msg._id].depth = getMessageDepth(tree, msg.parent || '') + 1
+    tree[msg._id].depth = 0
     if (msg.parent) {
       const base = `${msg.parent.slice(0, 4)} <-- ${msg._id.slice(0, 4)}`
       const ancestor = tree[msg.parent]
@@ -240,48 +240,7 @@ export function resolveChatPath(tree: ChatTree, leaf: string): AppSchema.ChatMes
   return messages
 }
 
-export function getPathOptions(tree: ChatTree, nodeId: string) {
-  const options: Array<{ id: string; depth: number }> = []
-  const node = tree[nodeId]
-
-  if (!node) {
-    return options
-  }
-
-  const candidates = new Set<string>(Object.keys(tree))
-  candidates.delete(nodeId)
-
-  for (const [id, { msg, depth, children }] of Object.entries(tree)) {
-    if (id === nodeId) continue
-
-    if (!msg.parent) {
-      candidates.delete(id)
-      continue
-    }
-
-    if (depth < node.depth) {
-      candidates.delete(id)
-      continue
-    }
-
-    if (Object.keys(children).length > 0) {
-      candidates.delete(id)
-      continue
-    }
-  }
-
-  options.push({ id: nodeId, depth: node.depth })
-
-  for (const id of candidates.values()) {
-    const candidate = tree[id]
-    if (!candidate) continue
-    options.push({ id, depth: candidate.depth })
-  }
-
-  return options
-}
-
-function getMessageDepth(tree: ChatTree, leaf: string) {
+export function getMessageDepth(tree: ChatTree, leaf: string) {
   const node = tree[leaf]
 
   if (!node) return -1
