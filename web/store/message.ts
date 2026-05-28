@@ -473,6 +473,7 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         yield { deleting: false }
+        chatStore.forkChat(currentLeafId)
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
