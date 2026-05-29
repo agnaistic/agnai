@@ -99,6 +99,12 @@ const ChatDetail: Component = () => {
     cutoff: s.showMessageCount,
   }))
 
+  const pathMessages = createMemo(() => {
+    const leafId = chats.chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    const path = resolveChatPath(msgs.graph.tree, leafId)
+    return path
+  })
+
   const showPane = useValidChatPane()
   const express = useAutoExpression()
 
@@ -117,11 +123,11 @@ const ChatDetail: Component = () => {
     return `calc(${percent}vh - 24px)`
   })
 
-  const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
+  const isGreetingOnlyMsg = createMemo(() => pathMessages().length === 1)
 
   let [evented, setEvented] = createSignal(false)
   const retries = createMemo(() => {
-    const last = msgs.msgs.slice(-1)[0]
+    const last = pathMessages().slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
 
     const list = last.retries?.slice() || []
@@ -133,12 +139,6 @@ const ChatDetail: Component = () => {
   const [removeId, setRemoveId] = createSignal('')
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
-
-  const pathMessages = createMemo(() => {
-    const leafId = chats.chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
-    const path = resolveChatPath(msgs.graph.tree, leafId)
-    return path
-  })
 
   const chatMsgs = createMemo(() => {
     const path = pathMessages()
@@ -167,8 +167,8 @@ const ChatDetail: Component = () => {
         if (evented() || !chats.chat || !chats.char || !chars.ready) return
         setEvented(true)
 
-        const messages = msgs.msgs
-        const isNonEvent = !msgs.msgs[0]?.event
+        const messages = pathMessages()
+        const isNonEvent = !messages[0]?.event
         if (isNonEvent && messages.length <= 1) {
           eventStore.onGreeting(chats.chat)
         } else {
@@ -315,7 +315,7 @@ const ChatDetail: Component = () => {
   }
 
   const indexOfLastRPMessage = createMemo(() => {
-    const msgs = chatMsgs()
+    const msgs = pathMessages()
 
     for (let i = msgs.length - 1; i >= 0; i--) {
       const curr = msgs[i]
@@ -359,7 +359,7 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         if (response.retrying || response.partial) return
         const last = indexOfLastRPMessage()
-        const msg = msgs.msgs[last]
+        const msg = pathMessages()[last]
         if (!msg) return
         if (msg.adapter === 'image') {
           msgStore.createImage({ sourceMsgId: msg._id })
@@ -380,7 +380,7 @@ const ChatDetail: Component = () => {
       if (ev.key === 'a' || ev.code == 'KeyA') {
         ev.preventDefault()
         const last = indexOfLastRPMessage()
-        const msg = msgs.msgs[last]
+        const msg = pathMessages()[last]
         if (!msg?.characterId) return
 
         responseStore.request(msg.chatId, msg.characterId)
