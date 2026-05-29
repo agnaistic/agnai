@@ -127,7 +127,7 @@ const ChatDetail: Component = () => {
 
   let [evented, setEvented] = createSignal(false)
   const retries = createMemo(() => {
-    const last = pathMessages().slice(-1)[0]
+    const last = chatMsgs().slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
 
     const list = last.retries?.slice() || []
@@ -315,7 +315,7 @@ const ChatDetail: Component = () => {
   }
 
   const indexOfLastRPMessage = createMemo(() => {
-    const msgs = pathMessages()
+    const msgs = chatMsgs()
 
     for (let i = msgs.length - 1; i >= 0; i--) {
       const curr = msgs[i]
@@ -359,7 +359,7 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         if (response.retrying || response.partial) return
         const last = indexOfLastRPMessage()
-        const msg = pathMessages()[last]
+        const msg = chatMsgs()[last]
         if (!msg) return
         if (msg.adapter === 'image') {
           msgStore.createImage({ sourceMsgId: msg._id })
@@ -380,7 +380,7 @@ const ChatDetail: Component = () => {
       if (ev.key === 'a' || ev.code == 'KeyA') {
         ev.preventDefault()
         const last = indexOfLastRPMessage()
-        const msg = pathMessages()[last]
+        const msg = chatMsgs()[last]
         if (!msg?.characterId) return
 
         responseStore.request(msg.chatId, msg.characterId)
