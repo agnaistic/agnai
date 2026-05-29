@@ -199,7 +199,9 @@ export async function createInferenceStream(opts: InferenceRequest) {
   const { simple: settings, conn } = await getRequestPreset(opts)
 
   if (opts.stop) {
-    settings.stopSequences = opts.stop
+    conn.preset.stopSequences = opts.stop
+  } else if (opts.settings?.stopSequences) {
+    conn.preset.stopSequences = parseStops(opts.settings.stopSequences)
   }
 
   if (opts.settings?.thirdPartyUrl) {
@@ -208,10 +210,6 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   if (opts.settings?.thirdPartyFormat) {
     opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
-  }
-
-  if (opts.settings?.stopSequences) {
-    opts.settings.stopSequences = parseStops(opts.settings.stopSequences)
   }
 
   const isThirdParty = isThirdPartyPreset(conn)

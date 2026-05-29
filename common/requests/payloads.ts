@@ -1,4 +1,4 @@
-import { clamp, neat, tryParse } from '/common/util'
+import { clamp, neat, parseStops, tryParse } from '/common/util'
 import { JsonField, toJsonSchema } from '/common/prompt'
 import { defaultPresets } from '/common/default-preset'
 import { ModelFormat } from '../presets/templates'
@@ -609,8 +609,8 @@ export function getStoppingStrings(
   }
 
   const uniques = Array.from(unique.values())
-  const stops = uniques.filter((str) => !!str)
-  return stops
+  const stops = parseStops(uniques.filter((str) => !!str))
+  return stops!
 }
 
 export function toImageJinjaTemplate(opts: { jinja?: string; format?: ModelFormat }) {

@@ -160,6 +160,12 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       ...recommended
     } = subPreset
     Object.assign(opts.gen, recommended)
+
+    // Add the recommended stop sequences when the user preset needs recommended settings
+    if (!opts.gen.stopSequences) opts.gen.stopSequences = []
+    if (stopSequences?.length) {
+      opts.gen.stopSequences.push(...stopSequences)
+    }
   }
 
   // Max tokens and max context limit are decided by the subscription preset
@@ -168,12 +174,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.thirdPartyUrl = subPreset.thirdPartyUrl
   opts.gen.thirdPartyFormat = subPreset.thirdPartyFormat
 
+  // Typical requests are always `kind: 'plain'` so we don't automatically always inherit the subPreset stop sequences
   const stops =
     Array.isArray(subPreset.stopSequences) && opts.kind !== 'plain'
       ? new Set(subPreset.stopSequences)
       : new Set<string>()
 
-  if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
+  if (Array.isArray(opts.gen.stopSequences)) {
     for (const stop of opts.gen.stopSequences) {
       stops.add(stop)
     }
