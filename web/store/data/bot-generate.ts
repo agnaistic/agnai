@@ -518,9 +518,6 @@ async function handlePostStreamResponse(input: {
     case 'send-event:world':
     case 'send-event:character':
     case 'send-event:hidden': {
-      if (messageId) {
-        getStore('chat').forkChat(messageId)
-      }
       break
     }
   }

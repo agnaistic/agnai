@@ -301,6 +301,20 @@ const InputBar: Component<{
 
   return (
     <>
+      <Show when={window.flags.debug}>
+        <div class="mb-2 flex justify-center gap-2">
+          <Pill small inverse>
+            <b>Leaf:&nbsp;</b>
+            {ctx.active?.chat?.treeLeafId?.slice(0, 4)}
+          </Pill>
+
+          <Pill small inverse>
+            <b>Cutoff:&nbsp;</b>
+            {ctx.showMessageCount}
+          </Pill>
+        </div>
+      </Show>
+
       <Show when={prompt.hintsEnabled}>
         <div class="flex w-full justify-center pb-0.5">
           <div
@@ -324,20 +338,6 @@ const InputBar: Component<{
             >
               <X size={20} />
             </div>
-
-            <Show when={window.flags.debug}>
-              <div class="mb-2 flex justify-center gap-2">
-                <Pill small inverse>
-                  <b>Leaf:&nbsp;</b>
-                  {ctx.active?.chat?.treeLeafId?.slice(0, 4)}
-                </Pill>
-
-                <Pill small inverse>
-                  <b>Cutoff:&nbsp;</b>
-                  {ctx.showMessageCount}
-                </Pill>
-              </div>
-            </Show>
           </div>
         </div>
       </Show>

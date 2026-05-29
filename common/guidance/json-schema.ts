@@ -286,6 +286,8 @@ function formatPlaceholder(varname: string, entity: 'user' | 'char', entityName:
 export function getSchemaAliases(fields: JsonField[]) {
   const aliases: Record<string, string> = {}
 
+  if (!fields || !Array.isArray(fields)) return aliases
+
   for (const field of fields) {
     if (field.alias) {
       aliases[field.alias] = field.name

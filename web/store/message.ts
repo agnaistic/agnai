@@ -680,14 +680,19 @@ async function onMessageReceived(body: {
     graph: toChatGraph(nextMsgs),
   })
 
+  if (!isRetry) {
+    chatStore.forkChat(msg._id)
+  }
+
   // If the message is from a user don't clear the "waiting for response" flags
-  if (isUserMsg && !body.generate) {
-    msgStore.setState({ msgs: nextMsgs })
+  if (isUserMsg) {
     getStore('responses').setState({ speaking: speech?.speaking })
   } else {
-    msgStore.setState({ msgs: nextMsgs })
-    debug('waiting')('msg-received:not-user-msg or no-generate')
-    getStore('responses').setState({ speaking: speech?.speaking })
+    getStore('responses').setState({
+      speaking: speech?.speaking,
+      partial: undefined,
+      retrying: undefined,
+    })
   }
 
   const chatAttachments = attachments[body.chatId]
@@ -710,8 +715,9 @@ async function onMessageReceived(body: {
 
   if (speech && !isUserMsg) {
     const parsed = getUtterableText(msg.msg)
-    if (parsed?.content)
+    if (parsed?.content) {
       getStore('responses').textToSpeech(msg._id, parsed.content, speech.voice, speech?.culture)
+    }
   }
 
   onCharacterMessageReceived(msg)

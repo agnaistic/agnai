@@ -122,6 +122,7 @@ const ChatDetail: Component = () => {
 
     return filtered.slice(-msgs.cutoff)
   })
+
   const showPane = useValidChatPane()
   const express = useAutoExpression()
 
