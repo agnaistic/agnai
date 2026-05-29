@@ -6,7 +6,7 @@ import { ApiResult, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { parseTemplate, TemplateOpts } from '/common/template-parser'
 import { exclude, replace } from '/common/util'
-import { storage, toMap } from '/web/shared/util'
+import { toMap } from '/web/shared/util'
 import { localEmit, subscribe } from '../socket'
 import { genApi } from './inference'
 import { botGen } from './bot-generate'
@@ -106,7 +106,7 @@ export async function createMessage(opts: {
     json: opts.json,
   })
 
-  await record('add', opts.chatId, messageId, opts.parent)
+  // await record('add', opts.chatId, messageId, opts.parent)
   if (isLoggedIn() && result.result?.message) {
     localEmit({ type: 'message-created', msg: result.result.message, chatId: opts.chatId })
   }
@@ -146,9 +146,9 @@ export async function editMessageProps(
     delete payload.parent
   }
 
-  if (payload.parent) {
-    await record('edit', msg.chatId, msg._id, payload.parent)
-  }
+  // if (payload.parent) {
+  //   await record('edit', msg.chatId, msg._id, payload.parent)
+  // }
 
   if (isLoggedIn()) {
     const { msgs } = getStore('messages').getState()
@@ -240,11 +240,11 @@ export async function deleteMessages(
     throw new Error(`Chat ID not set`)
   }
 
-  const { graph, msgs: storeMsgs } = getStore('messages').getState()
-  for (const msgId of msgIds) {
-    const msg = graph.tree[msgId]
-    await record('del', chatId, msgId, msg?.msg?.parent)
-  }
+  const { msgs: storeMsgs } = getStore('messages').getState()
+  // for (const msgId of msgIds) {
+  // const msg = graph.tree[msgId]
+  // await record('del', chatId, msgId, msg?.msg?.parent)
+  // }
 
   if (isLoggedIn()) {
     if (window.flags.softdel) {
@@ -308,14 +308,14 @@ function messageToLine(opts: {
   }
 }
 
-async function record(type: 'add' | 'del' | 'edit', chatId: string, id: string, parent?: string) {
-  const key = `debug-${chatId}`
-  const raw = await storage.getItem(key).then((res) => res || '[]')
-  const history: any[] = JSON.parse(raw)
+// async function record(type: 'add' | 'del' | 'edit', chatId: string, id: string, parent?: string) {
+//   const key = `debug-${chatId}`
+//   const raw = await storage.getItem(key).then((res) => res || '[]')
+//   const history: any[] = JSON.parse(raw)
 
-  history.push({ type, id, parent })
-  await storage.setItem(`debug-${chatId}`, JSON.stringify(history))
-}
+//   history.push({ type, id, parent })
+//   await storage.setItem(`debug-${chatId}`, JSON.stringify(history))
+// }
 
 /**
  * Partials
