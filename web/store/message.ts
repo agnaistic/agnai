@@ -42,7 +42,7 @@ export type MsgState = {
   activeCharId: string
   // messageHistory: ChatMessageExt[]
   msgs: ChatMessageExt[]
-  messageCutoffId: string
+  showMessageCount: number
 
   deleting?: boolean
 
@@ -82,7 +82,7 @@ export type MsgState = {
 const initState: MsgState = {
   activeChatId: '',
   activeCharId: '',
-  messageCutoffId: '',
+  showMessageCount: SOFT_PAGE_SIZE,
   // messageHistory: [],
   msgs: [],
   nextLoading: false,
@@ -156,24 +156,11 @@ export const msgStore = createStore<MsgState>(
       opts.messages.sort(sortAsc)
       const graph = toChatGraph(opts.messages)
 
-      let leaf = opts.leafId || opts.messages.slice(-1)[0]?._id || ''
-
-      // If the leaf has been deleted then the path won't load
-      // So, if the leaf doesn't exist, use the most recent message
-      if (opts.leafId) {
-        const node = graph.tree[opts.leafId]
-        if (!node) {
-          leaf = opts.messages.slice(-1)[0]?._id || ''
-        }
-      }
-
-      const cutoff = getNextMessageCutoff(graph.tree, leaf)
-
       return {
         activeCharId: opts.characterId,
         activeChatId: opts.chatId,
         msgs: opts.messages,
-        messageCutoffId: cutoff,
+        showMessageCount: 20,
         graph,
       }
     },
@@ -225,14 +212,13 @@ export const msgStore = createStore<MsgState>(
       // events.emit('msg-attachment', next[msgId])
       return { attachments: next }
     },
-    async *getNextMessages({ msgs, activeChatId, nextLoading, graph, messageCutoffId }) {
+    async *getNextMessages({ msgs, nextLoading, showMessageCount }) {
       if (nextLoading) return
 
       const msg = msgs[0]
       if (!msg || msg.first) return
 
-      const nextCutoff = getNextMessageCutoff(graph.tree, messageCutoffId)
-      return { messageCutoffId: nextCutoff }
+      return { showMessageCount: showMessageCount + 20 }
     },
 
     async *softEditMessageParent(
@@ -464,8 +450,9 @@ export const msgStore = createStore<MsgState>(
       yield { deleting: true }
 
       const changes = getDeletingIds(fromId, !!deleteOne)
+      const forkRequired = changes.deletes.includes(currentLeafId)
 
-      if (fromMsg.msg.parent) {
+      if (fromMsg.msg.parent && forkRequired) {
         chatStore.forkChat(fromMsg.msg.parent)
       }
 
@@ -473,12 +460,12 @@ export const msgStore = createStore<MsgState>(
 
       if (res.error) {
         yield { deleting: false }
-        chatStore.forkChat(currentLeafId)
+        if (forkRequired) chatStore.forkChat(currentLeafId)
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
 
       const nextLeafId = res.result?.chat.treeLeafId
-      if (nextLeafId && graph.tree[nextLeafId]) {
+      if (nextLeafId && nextLeafId !== currentLeafId && graph.tree[nextLeafId]) {
         chatStore.forkChat(nextLeafId)
       }
 
@@ -1051,26 +1038,4 @@ function getChildren(graph: ChatTree, nodeId: string, prev: string[] = []) {
   }
 
   return prev
-}
-
-function getNextMessageCutoff(tree: ChatTree, currentCutoffId: string) {
-  let current = tree[currentCutoffId]
-
-  if (!current) {
-    return currentCutoffId
-  }
-
-  if (!current.msg.parent) return currentCutoffId
-
-  for (let i = 0; i < SOFT_PAGE_SIZE; i++) {
-    const parent = tree[current.msg.parent!]
-    if (parent) {
-      current = parent
-      continue
-    }
-
-    break
-  }
-
-  return current.msg._id
 }

@@ -235,13 +235,20 @@ export async function deleteMessages(
     throw new Error(`Chat ID not set`)
   }
 
-  const { graph } = getStore('messages').getState()
+  const { graph, msgs: storeMsgs } = getStore('messages').getState()
   for (const msgId of msgIds) {
     const msg = graph.tree[msgId]
     await record('del', chatId, msgId, msg?.msg?.parent)
   }
 
   if (isLoggedIn()) {
+    if (window.flags.softdel) {
+      const localGraph = toQuickGraph(storeMsgs, leafId)
+      const edges = getDeletionChanges(localGraph, msgIds)
+
+      return localApi.result(edges.updates)
+    }
+
     const res = await api.method('delete', `/chat/${chatId}/messages-v2`, {
       ids: msgIds,
       leafId,

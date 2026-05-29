@@ -96,7 +96,7 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     textBeforeGenMore: s.textBeforeGenMore,
     graph: s.graph,
-    cutoff: s.messageCutoffId,
+    cutoff: s.showMessageCount,
   }))
 
   const showPane = useValidChatPane()
@@ -134,23 +134,24 @@ const ChatDetail: Component = () => {
 
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
+  const pathMessages = createMemo(() => {
+    const leafId = chats.chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    const path = resolveChatPath(msgs.graph.tree, leafId)
+    return path
+  })
+
   const chatMsgs = createMemo(() => {
-    if (!chats.chat || !chats.char) return []
+    const path = pathMessages()
 
     const doShowHiddenEvents = showHiddenEvents()
 
-    const leafId = chats.chat.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
-    const path = resolveChatPath(msgs.graph.tree, leafId)
-
-    const startIndex = msgs.cutoff ? path.findIndex((msg) => msg._id === msgs.cutoff) : 0
-
-    const filtered = path.slice(startIndex).filter((msg) => {
+    const filtered = path.filter((msg) => {
       if (chats.opts.hideOoc && msg.ooc) return false
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
     })
 
-    return filtered
+    return filtered.slice(-msgs.cutoff)
   })
 
   onCleanup(() => {
@@ -479,7 +480,7 @@ const ChatDetail: Component = () => {
               </div>
             </Show>
             {/* Original Slot location */}
-            <LoadMore canFetch={chars.ready} />
+            <LoadMore canFetch={chars.ready} showMore={pathMessages().length > msgs.cutoff} />
 
             <Index each={chatMsgs()}>
               {(msg, i) => (

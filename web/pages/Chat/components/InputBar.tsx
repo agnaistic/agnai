@@ -334,7 +334,7 @@ const InputBar: Component<{
 
                 <Pill small inverse>
                   <b>Cutoff:&nbsp;</b>
-                  {ctx.messageCutoffId.slice(0, 4)}
+                  {ctx.showMessageCount}
                 </Pill>
               </div>
             </Show>

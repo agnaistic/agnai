@@ -443,6 +443,10 @@ async function handlePostStreamResponse(input: {
       retrying: undefined,
       partial: undefined,
     })
+
+    if (!response?.trim()) {
+      return
+    }
     // console.log('aborted -- ignoring post stream handler')
     // return
   }

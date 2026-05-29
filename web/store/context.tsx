@@ -47,7 +47,7 @@ export type ContextState = {
   flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
-  messageCutoffId: string
+  showMessageCount: number
   replyAs?: string
   trimSentences: boolean
   config: AppSchema.AppConfig
@@ -80,7 +80,7 @@ const initial: ContextState = {
   activeMap: {},
   activeBots: [],
 
-  messageCutoffId: '',
+  showMessageCount: 0,
   handle: 'You',
   trimSentences: false,
   flags: {} as any,
@@ -128,7 +128,7 @@ export function ContextProvider(props: { children: any }) {
     hordeStatus: s.hordeStatus,
     attachments: s.attachments,
     deleting: s.deleting,
-    messageCutoffId: s.messageCutoffId,
+    showMessageCount: s.showMessageCount,
   }))
 
   const response = responseStore((s) => ({
@@ -215,7 +215,7 @@ export function ContextProvider(props: { children: any }) {
       impersonate: chars.impersonating,
       char: char,
       chat: chat,
-      messageCutoffId: msgs.messageCutoffId,
+      showMessageCount: msgs.showMessageCount,
       replyAs: chats.active?.replyAs,
       user: users.user,
       profile: users.profile,

@@ -25,7 +25,7 @@ export const ChatFooter: Component<{
 }> = (props) => {
   const user = userStore((s) => ({ profile: s.profile }))
   const response = responseStore((s) => ({ waiting: s.waiting }))
-  const msgs = msgStore((s) => ({ attachments: s.attachments, cutoff: s.messageCutoffId }))
+  const msgs = msgStore((s) => ({ attachments: s.attachments, cutoff: s.showMessageCount }))
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
   const chats = chatStore((s) => ({
     opts: s.opts,
