@@ -99,12 +99,29 @@ const ChatDetail: Component = () => {
     cutoff: s.showMessageCount,
   }))
 
+  const [swipe, setSwipe] = createSignal(0)
+  const [removeId, setRemoveId] = createSignal('')
+  const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
+
   const pathMessages = createMemo(() => {
     const leafId = chats.chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
     const path = resolveChatPath(msgs.graph.tree, leafId)
     return path
   })
 
+  const chatMsgs = createMemo(() => {
+    const path = pathMessages()
+
+    const doShowHiddenEvents = showHiddenEvents()
+
+    const filtered = path.filter((msg) => {
+      if (chats.opts.hideOoc && msg.ooc) return false
+      if (msg.event === 'hidden' && !doShowHiddenEvents) return false
+      return true
+    })
+
+    return filtered.slice(-msgs.cutoff)
+  })
   const showPane = useValidChatPane()
   const express = useAutoExpression()
 
@@ -133,25 +150,6 @@ const ChatDetail: Component = () => {
     const list = last.retries?.slice() || []
     list.unshift(last.msg)
     return { msgId: last._id, list }
-  })
-
-  const [swipe, setSwipe] = createSignal(0)
-  const [removeId, setRemoveId] = createSignal('')
-
-  const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
-
-  const chatMsgs = createMemo(() => {
-    const path = pathMessages()
-
-    const doShowHiddenEvents = showHiddenEvents()
-
-    const filtered = path.filter((msg) => {
-      if (chats.opts.hideOoc && msg.ooc) return false
-      if (msg.event === 'hidden' && !doShowHiddenEvents) return false
-      return true
-    })
-
-    return filtered.slice(-msgs.cutoff)
   })
 
   onCleanup(() => {
