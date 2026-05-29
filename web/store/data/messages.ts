@@ -151,10 +151,15 @@ export async function editMessageProps(
   }
 
   if (isLoggedIn()) {
+    const { msgs } = getStore('messages').getState()
+    const original = msgs.find((m) => m._id === msg._id)
+    const emit = { type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update }
+    if (original) localEmit(emit)
+
     const res = await api.method('put', `/chat/${msg._id}/message-props`, update)
-    if (res.result) {
-      localEmit({ type: 'message-edited', chatId: msg.chatId, messageId: msg._id, ...update })
-    }
+    if (res.result && !original) localEmit(emit)
+    if (res.error && original) localEmit({ ...emit, ...original })
+
     return res
   }
 
