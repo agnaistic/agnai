@@ -90,10 +90,6 @@ export function getThirdPartyPayload(opts: MinOpts, stops: string[] = []) {
   //   gen.tokenHealing = true
   // }
 
-  if (gen.jinjaEnabled) {
-    body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
-  }
-
   if (!body.stop?.length) {
     delete body.stop
   }
@@ -576,6 +572,7 @@ export function getStoppingStrings(
 
   if (!settings?.disableNameStops) {
     const chars = Object.values(opts.characters || {})
+
     if (opts.impersonate) {
       chars.push(opts.impersonate)
     }

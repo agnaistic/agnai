@@ -23,6 +23,13 @@ export function startTour(type: TourType, force?: boolean) {
 }
 
 export function canStartTour(type: TourType, force?: boolean) {
+  if (
+    location.hostname === 'localhost' ||
+    location.hostname === 'dev.agnai.chat' ||
+    location.hostname === 'stg.agnai.chat'
+  )
+    return false
+
   const tour = tours[type]
   const isComplete = getStoredValue(`tour-${type}`, false)
   const forceTours = force || getStoredValue(`force-tours`, false)

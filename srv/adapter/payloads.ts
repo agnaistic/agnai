@@ -40,6 +40,10 @@ export function getServicePayload(opts: AdapterProps, stops: string[] = []) {
     body.chat_template = toImageJinjaTemplate({ format: gen.modelFormat, jinja: gen.jinjaTemplate })
   }
 
+  if (gen.addBosToken) {
+    body.add_bos_token = gen.addBosToken
+  }
+
   return body
 }
 

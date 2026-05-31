@@ -337,7 +337,7 @@ export async function assemblePrompt(
       lastMessage: opts.lastMessage,
       encoder,
       jsonValues: undefined,
-      format: chat ? 'None' : getFormatOverride(opts),
+      format: getFormatOverride(opts),
     })
 
   return {
@@ -448,9 +448,9 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
 
   const format = inject.format || opts.settings?.modelFormat || 'None'
   result.parsed = replaceTags(result.parsed, format)
-  result.blockPrompt = replaceTags(result.blockPrompt, format)
-  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, format)
-  replaceSectionTags(result.sections.sections, format)
+  result.blockPrompt = replaceTags(result.blockPrompt, 'None')
+  result.sections.strictSystem = replaceArrayTags(result.sections.strictSystem, 'None')
+  replaceSectionTags(result.sections.sections, 'None')
 
   return result
 }
