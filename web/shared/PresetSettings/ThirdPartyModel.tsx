@@ -749,6 +749,7 @@ const FeatherlessModels: Selector = (props) => {
       <CustomSelect
         closeSub={emitter.on}
         maxHeight
+        // displayMax={100}
         size="sm"
         modalTitle={
           <div class="flex flex-col gap-2">
