@@ -236,8 +236,12 @@ export const adminStore = createStore<AdminState>('admin', {
       }
 
       if (res.result) {
-        toastStore.success('Updated Server Embedding')
-        yield { config: res.result }
+        if (typeof res.result.test === 'string') {
+          toastStore.warn(`Embedding Test failed: ${res.result.test}`)
+        } else {
+          toastStore.success('Updated Server Embedding: Test passed')
+        }
+        yield { config: res.result.cfg }
         onSuccess?.()
       }
     },

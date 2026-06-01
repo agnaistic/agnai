@@ -31,7 +31,7 @@ export const embedText = handle(async (req, res) => {
   }
 })
 
-async function embedMultiple(inputs: string[], embed: ServerEmbedding) {
+export async function embedMultiple(inputs: string[], embed: ServerEmbedding) {
   const payload: any = { model: embed.model }
 
   if (embed.inputProp) {
@@ -53,7 +53,7 @@ async function embedMultiple(inputs: string[], embed: ServerEmbedding) {
   }
 }
 
-async function embedSingle(texts: string[], embed: ServerEmbedding) {
+export async function embedSingle(texts: string[], embed: ServerEmbedding) {
   const payload: any = { model: embed.model }
 
   const results: any[] = []

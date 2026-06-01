@@ -554,13 +554,19 @@ const FeatherlessModels: Selector = (props) => {
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
 
+  const toModelClass = (className: string) => {
+    if (!className) return ''
+    return className.split('-').slice(0, -1).join('-')
+  }
+
   const availableClasses = createMemo(() => {
     const seen = new Set<string>()
     const list = (props.setters.context.data as FLModel[])
       .reduce((prev, curr) => {
-        if (!curr.model_class || seen.has(curr.model_class)) return prev
-        seen.add(curr.model_class)
-        prev.push({ label: curr.model_class, ctx: curr.context_length })
+        const currClass = toModelClass(curr.model_class)
+        if (!currClass || seen.has(currClass)) return prev
+        seen.add(currClass)
+        prev.push({ label: currClass, ctx: curr.context_length })
         return prev
       }, [] as Array<{ label: string; ctx: number }>)
       .map(({ label, ctx }) => ({
@@ -606,18 +612,19 @@ const FeatherlessModels: Selector = (props) => {
 
     for (const model of props.setters.context.data) {
       // Skip models that cannot be used
+      const modelClass = toModelClass(model.model_class)
       if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
         continue
       }
 
       // If classes are being filtered by the user, skip classes that aren't selected
-      if (modelClasses.size > 0 && !modelClasses.has(model.model_class)) continue
+      if (modelClasses.size > 0 && !modelClasses.has(modelClass)) continue
 
-      if (!categories[model.model_class]) {
-        categories[model.model_class] = { name: model.model_class, options: [] }
+      if (!categories[modelClass]) {
+        categories[modelClass] = { name: modelClass, options: [] }
       }
 
-      categories[model.model_class].options.push({
+      categories[modelClass].options.push({
         label: (
           <div
             class="flex w-full flex-col"
@@ -672,8 +679,9 @@ const FeatherlessModels: Selector = (props) => {
     const map: Record<string, number> = {}
 
     for (const model of props.setters.context.data) {
-      if (!map[model.model_class]) {
-        map[model.model_class] = 0
+      const modelClass = toModelClass(model.model_class)
+      if (!map[modelClass]) {
+        map[modelClass] = 0
       }
 
       const filteredOut = FILTERED_CACHE[model.id]
@@ -682,7 +690,7 @@ const FeatherlessModels: Selector = (props) => {
       }
 
       if (!model.status || model.status === 'active' || model.status === '') {
-        map[model.model_class]++
+        map[modelClass]++
       }
     }
 
@@ -749,7 +757,8 @@ const FeatherlessModels: Selector = (props) => {
       <CustomSelect
         closeSub={emitter.on}
         maxHeight
-        // displayMax={100}
+        maxWidth
+        displayMax={1000}
         size="sm"
         modalTitle={
           <div class="flex flex-col gap-2">

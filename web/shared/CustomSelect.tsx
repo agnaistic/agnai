@@ -34,6 +34,7 @@ export const CustomSelect: Component<{
   displayMax?: number
   // value: any
   maxHeight?: boolean
+  maxWidth?: boolean
 
   header?: JSX.Element
 
@@ -199,7 +200,7 @@ export const CustomSelect: Component<{
 
   createEffect(
     on(
-      () => [filter(), props.options],
+      () => [filter(), props.options, props.categories],
       () => updateFiltering()
     )
   )
@@ -235,6 +236,7 @@ export const CustomSelect: Component<{
         title={props.modalTitle}
         maxHeight={props.maxHeight}
         footer={props.footer}
+        maxWidth={props.maxWidth}
       >
         <div class="flex flex-col gap-4">
           <Show when={props.search || props.autoSearch === true}>

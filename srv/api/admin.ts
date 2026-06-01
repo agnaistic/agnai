@@ -4,7 +4,8 @@ import { store } from '../db'
 import { isAdmin, loggedIn } from './auth'
 import { StatusError, handle } from './wrap'
 import { getLiveCounts, sendAll } from './ws/redis'
-import { encryptText } from '../db/util'
+import { decryptText, encryptText } from '../db/util'
+import { embedMultiple } from './chat/embedding'
 
 const router = Router()
 
@@ -160,7 +161,13 @@ const updateEmbedding = handle(async ({ body }) => {
 
   if (body.key) body.key = encryptText(body.key)
   const next = await store.admin.updateServerEmbedding(body)
-  return next
+
+  const latest = next.embeddings.find((e) => e._id === body._id)!
+  latest.key = decryptText(latest.key, true)
+
+  const test = await embedMultiple(['Embedding '], latest).catch((err) => ({ err: err?.message }))
+
+  return { cfg: next, test }
 })
 
 const updateConfigurationPartial = handle(async ({ body }) => {
