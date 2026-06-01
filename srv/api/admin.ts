@@ -150,10 +150,15 @@ const getMetrics = handle(async () => {
 const createEmbedding = handle(async ({ body }) => {
   assertValid(embedGuard, body)
 
+  const key = body.key
   body.key = encryptText(body.key)
 
   const next = await store.admin.createServerEmbedding(body)
-  return next
+  const test = await embedMultiple(['Embedding test'], { ...body, key }).catch((err) => ({
+    err: err.message,
+  }))
+
+  return { cfg: next, test }
 })
 
 const updateEmbedding = handle(async ({ body }) => {
