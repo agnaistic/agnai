@@ -524,21 +524,29 @@ async function handlePostStreamResponse(input: {
 
   if (input.jsonCall) {
     await msgsApi.editMessageProps({ _id: messageId, chatId }, { json })
+    getStore('responses').setState({
+      retrying: undefined,
+      partial: undefined,
+    })
+    return
   }
 
+  const alreadyDone = !!req.request.response
   req.request.response = response
 
-  await msgsApi.createMessage({
-    kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
-    chatId,
-    messageId,
-    text: response,
-    parent,
-    character: replyAs,
-    bot: true,
-    meta,
-    json,
-  })
+  if (!alreadyDone) {
+    await msgsApi.createMessage({
+      kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
+      chatId,
+      messageId: messageId, // Consider removing deterministic ID creation
+      text: response,
+      parent,
+      character: replyAs,
+      bot: true,
+      meta,
+      json,
+    })
+  }
 
   getStore('responses').setState({
     retrying: undefined,

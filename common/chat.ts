@@ -136,7 +136,7 @@ export function getDeletionChanges(graph: QuickChatGraph, deleteIds: string[]) {
   let nextLeafId = method === 'tail' ? head?.parent || '' : undefined
   let parents =
     method === 'middle'
-      ? { ids: tail ? Object.keys(tail.children) : [], parentId: head.parent || '' }
+      ? { ids: tail ? Object.keys(tail.children) : [], parentId: head?.parent || '' }
       : undefined
 
   const leaf = graph.tree[nextLeafId || '']

@@ -41,8 +41,8 @@ export async function websocketStream(
       return
     }
 
-    emitter.push({ error: err.message || 'failed to connect to inference server' })
-    logger.error({ err }, 'Inference connection error')
+    emitter.push({ error: 'Inference connection failed' })
+    logger.error({ err }, 'Inference connection failed')
     emitter.done()
   })
 
