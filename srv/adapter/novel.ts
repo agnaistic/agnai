@@ -274,7 +274,6 @@ const streamCompletion = async function* (
     })
 
     for await (const event of stream) {
-      opts.log.info({ event }, 'novelai event')
       if (event.error) {
         yield { error: `NovelAI streaming request failed: ${event.error}` }
         return
