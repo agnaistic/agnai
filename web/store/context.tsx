@@ -10,8 +10,8 @@ import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { combine, distinct } from '/common/util'
 import { getRgbaFromVar } from '../shared/colors'
-import { MsgState, msgStore } from './message'
-import { ChatTree } from '/common/chat'
+import { ChatMessageExt, MsgState, msgStore } from './message'
+import { ChatTree, resolveChatPath } from '/common/chat'
 import { PresetStateProvider } from './preset-context'
 import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
@@ -32,6 +32,11 @@ export type ContextState = {
 
   /** All bots from user, chats, current chat */
   allBots: Record<string, AppSchema.Character>
+
+  messages: {
+    path: ChatMessageExt[]
+    viewing: ChatMessageExt[]
+  }
 
   /** All user-owned bots */
   // botMap: Record<string, AppSchema.Character>
@@ -80,6 +85,11 @@ const initial: ContextState = {
   activeMap: {},
   activeBots: [],
 
+  messages: {
+    path: [],
+    viewing: [],
+  },
+
   showMessageCount: 0,
   handle: 'You',
   trimSentences: false,
@@ -114,6 +124,7 @@ export function ContextProvider(props: { children: any }) {
     lastChatId: s.lastChatId,
     chatProfiles: s.chatProfiles,
     promptHistory: s.promptHistory,
+    opts: s.opts,
   }))
   const users = userStore((s) => ({
     current: s.current,
@@ -129,6 +140,7 @@ export function ContextProvider(props: { children: any }) {
     attachments: s.attachments,
     deleting: s.deleting,
     showMessageCount: s.showMessageCount,
+    msgs: s.msgs,
   }))
 
   const response = responseStore((s) => ({
@@ -157,6 +169,29 @@ export function ContextProvider(props: { children: any }) {
       user: userBackground,
       ooc: oocBackground,
     }
+  })
+
+  const pathMessages = createMemo(() => {
+    const chat =
+      chats.active?.chat ||
+      chats.allChats.find((c) => (chats.lastChatId ? c._id === chats.lastChatId : undefined))
+
+    if (!chat) return []
+
+    const leafId = chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    const path = resolveChatPath(msgs.graph.tree, leafId)
+    return path
+  })
+
+  const chatMsgs = createMemo(() => {
+    const path = pathMessages()
+
+    const filtered = path.filter((msg) => {
+      if (chats.opts.hideOoc && msg.ooc) return false
+      return true
+    })
+
+    return filtered.slice(-msgs.showMessageCount)
   })
 
   const allBots = createMemo(() => {
@@ -210,6 +245,11 @@ export function ContextProvider(props: { children: any }) {
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),
       active: chats.active,
+
+      messages: {
+        path: pathMessages(),
+        viewing: chatMsgs(),
+      },
 
       msgDeleting: msgs.deleting,
       impersonate: chars.impersonating,

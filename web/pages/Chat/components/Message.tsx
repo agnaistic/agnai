@@ -772,7 +772,8 @@ const MessageOptions: Component<{
         class: 'prompt-btn',
         outer: props.ui.msgOptsInline.prompt,
         show: !!props.msg.characterId && props.msg.adapter !== 'image',
-        onClick: () => !props.partial && chatStore.computePrompt(props.msg),
+        onClick: () =>
+          !props.partial && chatStore.computePrompt(props.ctx.messages.path, props.msg),
         icon: Terminal,
       },
 

@@ -6,6 +6,7 @@ import { chatStore, userStore } from '../../../store'
 import { AppSchema, TokenCounter } from '/common/types'
 import { useParticipantList } from '../util'
 import CharacterSelect from '/web/shared/CharacterSelect'
+import { useAppContext } from '/web/store/context'
 
 const PromptModal: Component = () => {
   const user = userStore((s) => ({ user: s.user }))
@@ -13,6 +14,7 @@ const PromptModal: Component = () => {
   const [encoder, setEncoder] = createSignal<TokenCounter>()
   const [tokens, setTokens] = createSignal(0)
   const lists = useParticipantList(true)
+  const [ctx] = useAppContext()
 
   const options = createMemo(() => {
     const all = lists()
@@ -36,7 +38,7 @@ const PromptModal: Component = () => {
 
   const setPerspective = (char?: AppSchema.Character) => {
     if (!char) return
-    chatStore.computePrompt(state.prompt?.msg!, char)
+    chatStore.computePrompt(ctx.messages.path, state.prompt?.msg!, char)
   }
 
   return (

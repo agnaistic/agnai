@@ -552,13 +552,13 @@ export const chatStore = createStore<ChatState>('chat', {
 
     async computePrompt(
       { details },
+      path: AppSchema.ChatMessage[],
       msg: AppSchema.ChatMessage,
       perspective?: AppSchema.Character
     ) {
       const detail = details[msg.chatId]
       if (!detail) return
 
-      const { msgs } = msgStore.getState()
       const entities = await getPromptEntities()
 
       const encoder = await getEncoder()
@@ -580,11 +580,11 @@ export const chatStore = createStore<ChatState>('chat', {
           lastMessage: entities.lastMessage?.date || '',
           replyAs: perspective || replyAs,
           sender: entities.profile,
-          messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+          messages: path,
           chatEmbeds: [],
           userEmbeds: [],
           resolvedScenario,
-          jsonValues: msgs.reduce((prev, curr) => Object.assign(prev, curr.json?.values || {}), {}),
+          jsonValues: path.reduce((prev, curr) => Object.assign(prev, curr.json?.values || {}), {}),
         },
         encoder
       )
