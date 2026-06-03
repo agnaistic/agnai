@@ -4,6 +4,7 @@ import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { WithId } from 'mongodb'
 import { StatusError } from '../api/wrap'
+import { logger } from '../middleware'
 
 // let PAGE_SIZE = config.limits.msgPageSize
 // if (isNaN(PAGE_SIZE) || PAGE_SIZE < 20) {
@@ -84,6 +85,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     }
 
     if (existing.chatId !== doc.chatId) {
+      logger.error({ err: ex, payload: { _id: id, chatid: doc.chatId } }, `Failed to write message`)
       throw new StatusError(`Invalid message ID`, 400)
     }
 
