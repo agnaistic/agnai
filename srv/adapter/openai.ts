@@ -382,8 +382,14 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
 
   switch (conn.provider.provider) {
     case 'known-deepseek': {
+      // `.stop` has a limit of 16 for Official DeepSeek
+      if (Array.isArray(body.stop) && body.stop.length > 16) {
+        body.stop = body.stop.slice(0, 16)
+      }
+
       if (!lastMsg) return
       lastMsg.role = 'user'
+
       return
     }
 
