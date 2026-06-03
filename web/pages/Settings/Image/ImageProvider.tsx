@@ -760,14 +760,13 @@ export const AgnaiSettings: Component<{
         <i>No additional options available</i>
       </Show>
       <div class="flex items-end gap-2">
-        <CustomSelect
+        <Select
           label="Image Model"
-          options={settings.names}
-          selected={props.cfg.model || settings.names[0]?.value}
+          items={settings.names}
+          value={props.cfg.model || settings.names[0]?.value}
           disabled={settings.models.length <= 1}
           classList={{ hidden: settings.models.length === 0 }}
-          onSelect={(ev) => props.setter('model', ev.value)}
-          openSub={props.modelOnly}
+          onChange={(ev) => props.setter('model', ev.value)}
         />
         <Show when={settings.loras.length}>
           <Button onClick={() => lhook.add(props.cfg)}>+ Lora</Button>
