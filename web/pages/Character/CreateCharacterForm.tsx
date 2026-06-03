@@ -197,6 +197,11 @@ export const CreateCharacterForm: Component<{
         // We know we're waiting for a character to edit, so let's just wait
         if (!state.edit && srcId()) return
 
+        if (srcId() === 'undefined') {
+          toastStore.error(`Character load failed (ID missing?) - Try again or contact support`)
+          return
+        }
+
         // If this is our first pass: load something no matter what
         if (!editor.original()) {
           if (!srcId()) {
