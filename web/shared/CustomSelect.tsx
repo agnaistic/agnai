@@ -34,7 +34,7 @@ export const CustomSelect: Component<{
   displayMax?: number
   // value: any
   maxHeight?: boolean
-  maxWidth?: boolean
+  maxWidth?: 'full' | 'half'
 
   header?: JSX.Element
 

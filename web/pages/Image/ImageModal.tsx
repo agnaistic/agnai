@@ -464,9 +464,6 @@ const PromptSettings: Component<{
     <div class="image-modal">
       <section class="flex flex-col gap-1" style={{ 'grid-area': 'options' }}>
         <Show when={props.messageId}>
-          <Show when={window.flags.debug}>
-            <span class="text-500 text-xs italic">{props.messageId}</span>
-          </Show>
           <TextInput
             placeholder="Caption Hint: What to focus on when generating the caption?"
             class="!text-sm"

@@ -15,7 +15,7 @@ import {
 } from 'solid-js'
 import { pageStore, settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
-import { ImageContext } from './image-context'
+import { ImageContext, useImageContext } from './image-context'
 import { ImageProviderLora, ImageProviderSettings } from '/common/types/image-schema'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import {
@@ -27,7 +27,7 @@ import {
   SWARM_SAMPLER_REV,
 } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
-import { createEmitter } from '/web/shared/util'
+import { ComponentSubscriber, createEmitter } from '/web/shared/util'
 import { imageApi } from '/web/store/data/image'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import TextInput from '/web/shared/TextInput'
@@ -169,6 +169,76 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
   )
 }
 
+export const EditCurrentImageProvider: Component = () => {
+  const state = userStore((s) => ({ providers: s.user?.imageProviders || [] }))
+  const [ctx] = useImageContext()
+
+  const [store, setStore] = createStore<ImageProviderSettings>({
+    _id: '',
+    name: '',
+    type: 'agnai',
+    url: '',
+    sampler: '',
+    model: '',
+  })
+
+  const setStoreWrapper: typeof setStore = (...args: any[]) => {
+    const prevModel = store?.model || ''
+    const fn: any = setStore
+    fn.apply(null, args)
+
+    if (store?.model && store.model !== prevModel) {
+      save()
+    }
+  }
+
+  const hydrateProvider = () => {
+    const id = ctx.current.imageProviderId
+    if (!id) {
+      setStore({ _id: '' })
+      return
+    }
+
+    const match = state.providers.find((p) => p._id === id)
+    if (!match) {
+      setStore({ _id: '' })
+      return
+    }
+
+    setStore(match)
+  }
+
+  createEffect(on(() => ctx.current.imageProviderId, hydrateProvider))
+  onMount(hydrateProvider)
+
+  // createEffect(on(() => store.))
+
+  const save = async () => {
+    const payload = { ...store }
+    if (!payload?._id) return
+
+    await userStore.upsertImageProvider(payload)
+  }
+
+  const openSub = createEmitter('open')
+
+  return (
+    <Show when={store._id}>
+      <div class="flex w-full justify-end">
+        <Switch>
+          <Match when={store?.type === 'agnai'}>
+            <AgnaiSettings cfg={store} setter={setStoreWrapper} modelOnly={openSub.on} />
+          </Match>
+
+          <Match when={store?.type === 'swarm'}>
+            <SwarmSettings cfg={store} setter={setStoreWrapper} modelOnly={openSub.on} />
+          </Match>
+        </Switch>
+      </div>
+    </Show>
+  )
+}
+
 export const EditImageProvider: Component<{
   provider: ImageProviderSettings
   ctx: ImageContext
@@ -249,6 +319,7 @@ export const EditImageProvider: Component<{
 export const NovelSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user }))
 
@@ -276,44 +347,46 @@ export const NovelSettings: Component<{
         </div>
       </Show>
 
-      <Toggle
-        fieldName="novelQualityTags"
-        label="Add Quality Tags"
-        value={props.cfg.qualityTags}
-        onChange={(ev) => props.setter('qualityTags', ev)}
+      <Show when={!props.modelOnly}>
+        <Toggle
+          fieldName="novelQualityTags"
+          label="Add Quality Tags"
+          value={props.cfg.qualityTags}
+          onChange={(ev) => props.setter('qualityTags', ev)}
+        />
+
+        <Select
+          fieldName="novelUndesiredContent"
+          label="Undesired Content"
+          helperMarkdown="Add `nsfw` to your negative prompt to omit NSFW content"
+          inline
+          class="!py-1"
+          items={[
+            { label: 'Heavy', value: '0' },
+            { label: 'Light', value: '1' },
+            { label: 'None', value: '2' },
+          ]}
+          value={props.cfg.ucPreset || '0'}
+          onChange={(ev) => props.setter('ucPreset', ev.value)}
+        />
+      </Show>
+      <CustomSelect
+        options={models}
+        selected={props.cfg.model}
+        onSelect={(ev) => props.setter('model', ev.value)}
+        openSub={props.modelOnly}
       />
 
-      <Select
-        fieldName="novelUndesiredContent"
-        label="Undesired Content"
-        helperMarkdown="Add `nsfw` to your negative prompt to omit NSFW content"
-        inline
-        class="!py-1"
-        items={[
-          { label: 'Heavy', value: '0' },
-          { label: 'Light', value: '1' },
-          { label: 'None', value: '2' },
-        ]}
-        value={props.cfg.ucPreset || '0'}
-        onChange={(ev) => props.setter('ucPreset', ev.value)}
-      />
-
-      <Select
-        fieldName="novelImageModel"
-        items={models}
-        inline
-        class="!py-1"
-        value={props.cfg.model}
-        onChange={(ev) => props.setter('model', ev.value)}
-      />
-      <Select
-        fieldName="novelSampler"
-        items={samplers}
-        inline
-        class="!py-1"
-        value={props.cfg.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
-        onChange={(ev) => props.setter('sampler', ev.value)}
-      />
+      <Show when={!props.modelOnly}>
+        <Select
+          fieldName="novelSampler"
+          items={samplers}
+          inline
+          class="!py-1"
+          value={props.cfg.sampler || NOVEL_SAMPLER_REV.k_dpmpp_2m}
+          onChange={(ev) => props.setter('sampler', ev.value)}
+        />
+      </Show>
     </>
   )
 }
@@ -321,6 +394,7 @@ export const NovelSettings: Component<{
 export const HordeSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const cfg = settingStore((s) => ({ imageWorkers: s.imageWorkers }))
 
@@ -358,22 +432,23 @@ export const HordeSettings: Component<{
   }))
   return (
     <>
-      <Select
-        fieldName="hordeImageModel"
-        items={models()}
-        inline
-        class="!py-1"
-        value={props.cfg.model || 'stable_diffusion'}
-        onChange={(ev) => props.setter('model', ev.value)}
-      />
-      <Select
-        fieldName="hordeSampler"
-        items={samplers}
-        class="!py-1"
-        inline
-        value={props.cfg.sampler || SD_SAMPLER['DPM++ 2M']}
-        onChange={(ev) => props.setter('sampler', ev.value)}
-      />
+      <div class="flex gap-2">
+        <CustomSelect
+          options={models()}
+          selected={props.cfg.model || 'stable_diffusion'}
+          onSelect={(ev) => props.setter('model', ev.value)}
+          openSub={props.modelOnly}
+        />
+        <Show when={!props.modelOnly}>
+          <Select
+            fieldName="hordeSampler"
+            items={samplers}
+            inline
+            value={props.cfg.sampler || SD_SAMPLER['DPM++ 2M']}
+            onChange={(ev) => props.setter('sampler', ev.value)}
+          />
+        </Show>
+      </div>
     </>
   )
 }
@@ -391,6 +466,7 @@ const SWARM_SAMPLERS = Object.entries(SWARM_SAMPLER_REV).map(([key, value]) => (
 export const SwarmSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const emitter = createEmitter('open')
   const [models, setModels] = createSignal<CustomOption[]>([])
@@ -430,14 +506,16 @@ export const SwarmSettings: Component<{
 
   return (
     <>
-      <TextInput
-        fieldName="sdUrl"
-        label="SwarmUI URL"
-        helperText="Base URL for SwarmUI. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7801"
-        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-        value={props.cfg.url || 'http://localhost:7801'}
-        onChange={(ev) => props.setter('url', ev.currentTarget.value)}
-      />
+      <Show when={!props.modelOnly}>
+        <TextInput
+          fieldName="sdUrl"
+          label="SwarmUI URL"
+          helperText="Base URL for SwarmUI. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7801"
+          placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+          value={props.cfg.url || 'http://localhost:7801'}
+          onChange={(ev) => props.setter('url', ev.currentTarget.value)}
+        />
+      </Show>
 
       <div class="flex items-center gap-1">
         <CustomSelect
@@ -447,35 +525,40 @@ export const SwarmSettings: Component<{
           options={models()}
           buttonLabel={props.cfg.model || 'Automatic'}
           autoSearch={true}
+          openSub={props.modelOnly}
         />
 
-        <Show when={loraList().length}>
-          <Button size="sm" onClick={() => loras.add(props.cfg)}>
-            + Lora
-          </Button>
-        </Show>
+        <Show when={!props.modelOnly}>
+          <Show when={loraList().length}>
+            <Button size="sm" onClick={() => loras.add(props.cfg)}>
+              + Lora
+            </Button>
+          </Show>
 
-        <div class="icon-button" onClick={loadModels}>
-          <RefreshCcw />
-        </div>
+          <div class="icon-button" onClick={loadModels}>
+            <RefreshCcw />
+          </div>
+        </Show>
       </div>
 
-      <LoraSelector cfg={props.cfg} hook={loras} items={loraList()} />
+      <Show when={!props.modelOnly}>
+        <LoraSelector cfg={props.cfg} hook={loras} items={loraList()} />
 
-      <Select
-        fieldName="swarmSampler"
-        items={SWARM_SAMPLERS}
-        inline
-        class="!py-1"
-        value={props.cfg.sampler || SWARM_SAMPLER['Euler a']}
-        onChange={(ev) => props.setter('sampler', ev.value)}
-      />
+        <Select
+          fieldName="swarmSampler"
+          items={SWARM_SAMPLERS}
+          inline
+          class="!py-1"
+          value={props.cfg.sampler || SWARM_SAMPLER['Euler a']}
+          onChange={(ev) => props.setter('sampler', ev.value)}
+        />
 
-      <Toggle
-        label="Use Local Requests"
-        value={props.cfg.local ?? false}
-        onChange={(ev) => props.setter('local', ev)}
-      />
+        <Toggle
+          label="Use Local Requests"
+          value={props.cfg.local ?? false}
+          onChange={(ev) => props.setter('local', ev)}
+        />
+      </Show>
     </>
   )
 }
@@ -483,6 +566,7 @@ export const SwarmSettings: Component<{
 export const SDSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const emitter = createEmitter('open')
   const [providers] = useProviderList(true)
@@ -514,22 +598,24 @@ export const SDSettings: Component<{
 
   return (
     <>
-      <TextInput
-        fieldName="sdUrl"
-        label="SD WebUI URL"
-        helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
-        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-        value={props.cfg.url}
-        onChange={(ev) => props.setter('url', ev.currentTarget.value)}
-      />
+      <Show when={props.modelOnly}>
+        <TextInput
+          fieldName="sdUrl"
+          label="SD WebUI URL"
+          helperText="Base URL for Stable Diffusion. E.g. https://local-tunnel-url-10-20-30-40.loca.lt. If you are self-hosting, you can use http://localhost:7860"
+          placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+          value={props.cfg.url}
+          onChange={(ev) => props.setter('url', ev.currentTarget.value)}
+        />
 
-      <CustomSelect
-        onSelect={(ev) => props.setter('providerId', ev.value)}
-        selected={props.cfg.providerId}
-        helperText="Use API Key from a Provider"
-        options={providers()}
-        buttonLabel={providerLabel()}
-      />
+        <CustomSelect
+          onSelect={(ev) => props.setter('providerId', ev.value)}
+          selected={props.cfg.providerId}
+          helperText="Use API Key from a Provider"
+          options={providers()}
+          buttonLabel={providerLabel()}
+        />
+      </Show>
 
       <div class="flex items-center gap-1">
         <CustomSelect
@@ -539,20 +625,23 @@ export const SDSettings: Component<{
           options={models()}
           buttonLabel={props.cfg.model || 'Automatic'}
           autoSearch={true}
+          openSub={props.modelOnly}
         />
         <div class="icon-button" onClick={loadModels}>
           <RefreshCcw />
         </div>
       </div>
 
-      <Select
-        fieldName="sdSampler"
-        items={SD_SAMPLERS}
-        inline
-        class="!py-1"
-        value={props.cfg.sampler || SD_SAMPLER['DPM++ 2M']}
-        onChange={(ev) => props.setter('sampler', ev.value)}
-      />
+      <Show when={props.modelOnly}>
+        <Select
+          fieldName="sdSampler"
+          items={SD_SAMPLERS}
+          inline
+          class="!py-1"
+          value={props.cfg.sampler || SD_SAMPLER['DPM++ 2M']}
+          onChange={(ev) => props.setter('sampler', ev.value)}
+        />
+      </Show>
     </>
   )
 }
@@ -560,6 +649,7 @@ export const SDSettings: Component<{
 export const OpenAISettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: boolean
 }> = (props) => {
   const [providers] = useProviderList(true)
 
@@ -574,20 +664,22 @@ export const OpenAISettings: Component<{
 
   return (
     <>
-      <TextInput
-        label="OpenAI Compatible Image API Url"
-        placeholder="E.g. https://api.deepinfra.com/v1/openai"
-        value={props.cfg.url}
-        onChange={(ev) => props.setter('url', ev.currentTarget.value)}
-      />
+      <Show when={!props.modelOnly}>
+        <TextInput
+          label="OpenAI Compatible Image API Url"
+          placeholder="E.g. https://api.deepinfra.com/v1/openai"
+          value={props.cfg.url}
+          onChange={(ev) => props.setter('url', ev.currentTarget.value)}
+        />
 
-      <CustomSelect
-        onSelect={(ev) => props.setter('providerId', ev.value)}
-        selected={props.cfg.providerId}
-        label="Use API Key from a Provider"
-        options={providers()}
-        buttonLabel={providerLabel()}
-      />
+        <CustomSelect
+          onSelect={(ev) => props.setter('providerId', ev.value)}
+          selected={props.cfg.providerId}
+          label="Use API Key from a Provider"
+          options={providers()}
+          buttonLabel={providerLabel()}
+        />
+      </Show>
 
       <TextInput
         label="Model ID"
@@ -610,6 +702,7 @@ export const OpenAISettings: Component<{
 export const AgnaiSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
+  modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const settings = settingStore((s) => {
     const models = s.config.serverConfig?.imagesModels || []
@@ -663,97 +756,99 @@ export const AgnaiSettings: Component<{
 
   return (
     <>
-      <Show when={settings.models.length === 0}>
+      <Show when={settings.models.length === 0 && !props.modelOnly}>
         <i>No additional options available</i>
       </Show>
       <div class="flex items-end gap-2">
-        <Select
-          fieldName="agnaiModel"
+        <CustomSelect
           label="Image Model"
-          items={settings.names}
-          value={props.cfg.model || settings.names[0]?.value}
+          options={settings.names}
+          selected={props.cfg.model || settings.names[0]?.value}
           disabled={settings.models.length <= 1}
           classList={{ hidden: settings.models.length === 0 }}
-          onChange={(ev) => props.setter('model', ev.value)}
+          onSelect={(ev) => props.setter('model', ev.value)}
+          openSub={props.modelOnly}
         />
         <Show when={settings.loras.length}>
           <Button onClick={() => lhook.add(props.cfg)}>+ Lora</Button>
         </Show>
       </div>
 
-      <LoraSelector hook={lhook} cfg={props.cfg} items={loraList()} />
+      <Show when={!props.modelOnly}>
+        <LoraSelector hook={lhook} cfg={props.cfg} items={loraList()} />
 
-      <Select
-        fieldName="agnaiSampler"
-        items={samplers()}
-        label={`Sampler`}
-        value={props.cfg.sampler}
-        onChange={(ev) => props.setter('sampler', ev.value)}
-      />
+        <Select
+          fieldName="agnaiSampler"
+          items={samplers()}
+          label={`Sampler`}
+          value={props.cfg.sampler}
+          onChange={(ev) => props.setter('sampler', ev.value)}
+        />
 
-      <Toggle
-        label="Draft Mode"
-        helperText="If available: Quickly generate a lower quality image"
-        value={props.cfg.draftMode}
-        onChange={(ev) => props.setter('draftMode', ev)}
-      />
+        <Toggle
+          label="Draft Mode"
+          helperText="If available: Quickly generate a lower quality image"
+          value={props.cfg.draftMode}
+          onChange={(ev) => props.setter('draftMode', ev)}
+        />
 
-      <Show when={!!model()}>
-        <div>
-          <table class="table-auto border-separate border-spacing-1 text-sm ">
-            <thead>
-              <tr>
-                <Th />
-                <Th>Steps</Th>
-                <Th>CFG</Th>
-                <Th>Width</Th>
-                <Th>Height</Th>
-                <Th>Clip Skip</Th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <Td class="bg-700 !border-0">Recommended</Td>
-                <Td>{model()?.init.steps}</Td>
-                <Td>{model()?.init.cfg}</Td>
-                <Td>{model()?.init.width}</Td>
-                <Td>{model()?.init.height}</Td>
-                <Td>{model()?.init.clipSkip || ''}</Td>
-              </tr>
-
-              <tr>
-                <Td class="bg-700 !border-0">Limits</Td>
-                <Td>{model()?.limit.steps}</Td>
-                <Td>{model()?.limit.cfg}</Td>
-                <Td>{model()?.limit.width}</Td>
-                <Td>{model()?.limit.height}</Td>
-                <Td>{model()?.limit.clipSkip || ''}</Td>
-              </tr>
-
-              <Show when={model()?.init.sampler}>
+        <Show when={!!model()}>
+          <div>
+            <table class="table-auto border-separate border-spacing-1 text-sm ">
+              <thead>
                 <tr>
-                  <Td class="bg-700 !border-0">Sampler</Td>
-                  <Td span={5}>{(SD_SAMPLER_REV as any)[model()?.init.sampler!]}</Td>
+                  <Th />
+                  <Th>Steps</Th>
+                  <Th>CFG</Th>
+                  <Th>Width</Th>
+                  <Th>Height</Th>
+                  <Th>Clip Skip</Th>
                 </tr>
-              </Show>
+              </thead>
+              <tbody>
+                <tr>
+                  <Td class="bg-700 !border-0">Recommended</Td>
+                  <Td>{model()?.init.steps}</Td>
+                  <Td>{model()?.init.cfg}</Td>
+                  <Td>{model()?.init.width}</Td>
+                  <Td>{model()?.init.height}</Td>
+                  <Td>{model()?.init.clipSkip || ''}</Td>
+                </tr>
 
-              <tr>
-                <Td class="bg-700 !border-0">Prefix</Td>
-                <Td span={5}>{model()?.init.prefix}</Td>
-              </tr>
+                <tr>
+                  <Td class="bg-700 !border-0">Limits</Td>
+                  <Td>{model()?.limit.steps}</Td>
+                  <Td>{model()?.limit.cfg}</Td>
+                  <Td>{model()?.limit.width}</Td>
+                  <Td>{model()?.limit.height}</Td>
+                  <Td>{model()?.limit.clipSkip || ''}</Td>
+                </tr>
 
-              <tr>
-                <Td class="bg-700 !border-0">Suffix</Td>
-                <Td span={5}>{model()?.init.suffix}</Td>
-              </tr>
+                <Show when={model()?.init.sampler}>
+                  <tr>
+                    <Td class="bg-700 !border-0">Sampler</Td>
+                    <Td span={5}>{(SD_SAMPLER_REV as any)[model()?.init.sampler!]}</Td>
+                  </tr>
+                </Show>
 
-              <tr>
-                <Td class="bg-700 !border-0">Negative</Td>
-                <Td span={5}>{model()?.init.negative}</Td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                <tr>
+                  <Td class="bg-700 !border-0">Prefix</Td>
+                  <Td span={5}>{model()?.init.prefix}</Td>
+                </tr>
+
+                <tr>
+                  <Td class="bg-700 !border-0">Suffix</Td>
+                  <Td span={5}>{model()?.init.suffix}</Td>
+                </tr>
+
+                <tr>
+                  <Td class="bg-700 !border-0">Negative</Td>
+                  <Td span={5}>{model()?.init.negative}</Td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Show>
       </Show>
     </>
   )

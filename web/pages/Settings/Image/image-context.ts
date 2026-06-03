@@ -85,6 +85,8 @@ export function useImageContext() {
   }))
 
   const [cfg, setCfg] = createStore(init())
+  const [currentCfg, setCurrentCfg] = createStore(init())
+
   const [state, setState] = createStore({
     agnaiModel: undefined as ImageModel | undefined,
     canUseImages: false,
@@ -148,6 +150,55 @@ export function useImageContext() {
     })
   }
 
+  const hydrateConfig = (current?: boolean) => {
+    // if (!page.open) return
+    const currentTarget: SettingSource =
+      isChat() && entity.chat?.imageSource === 'chat'
+        ? 'Chat'
+        : entity.chat?.imageSource?.includes('character')
+        ? 'Character'
+        : 'Shared'
+
+    if (current) {
+      console.log('CURRENT!', currentTarget)
+    }
+    const view = current ? currentTarget : tab.current()
+    const setter = current ? setCurrentCfg : setCfg
+
+    switch (view) {
+      case 'Character':
+        setter({
+          ...init(),
+          ...entity.chat?.imageSettings,
+          imageProviderId: entity.char.imageProviderId || entity.char.imageSettings?.type,
+        })
+        setState('editing', 'main-character')
+        break
+
+      case 'Chat':
+        setter({
+          ...init(),
+          ...entity.char?.imageSettings,
+          imageProviderId: entity.chat.imageProviderId || entity.chat.imageSettings?.type,
+        })
+        setState('editing', 'chat')
+        break
+
+      default:
+        setter({
+          ...init(),
+          ...user.user?.images,
+          imageProviderId: user.user?.imageProviderId || user.user?.images?.type,
+        })
+        setState('editing', 'settings')
+        break
+    }
+
+    if (!current) {
+      hydrateConfig(true)
+    }
+  }
+
   createEffect(
     on(
       () => [
@@ -164,41 +215,10 @@ export function useImageContext() {
   createEffect(
     on(
       () => [tab.current(), page.open],
-      () => {
-        if (!page.open) return
-        const view = tab.current()
-
-        switch (view) {
-          case 'Character':
-            setCfg({
-              ...init(),
-              ...entity.chat?.imageSettings,
-              imageProviderId: entity.char.imageProviderId || entity.char.imageSettings?.type,
-            })
-            setState('editing', 'main-character')
-            break
-
-          case 'Chat':
-            setCfg({
-              ...init(),
-              ...entity.char?.imageSettings,
-              imageProviderId: entity.chat.imageProviderId || entity.chat.imageSettings?.type,
-            })
-            setState('editing', 'chat')
-            break
-
-          default:
-            setCfg({
-              ...init(),
-              ...user.user?.images,
-              imageProviderId: user.user?.imageProviderId || user.user?.images?.type,
-            })
-            setState('editing', 'settings')
-            break
-        }
-      }
+      () => hydrateConfig()
     )
   )
+  // onMount(hydrateConfig)
 
   createEffect(
     on(
@@ -239,6 +259,7 @@ export function useImageContext() {
   return [
     {
       store: cfg,
+      current: currentCfg,
       update: setCfg,
       state: state,
       defaults,

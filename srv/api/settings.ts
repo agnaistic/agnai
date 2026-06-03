@@ -100,7 +100,7 @@ export async function getAppConfig(user?: AppSchema.User) {
         user!,
         configuration.imagesModels,
         userTier?.tier
-      )
+      ).map((model) => ({ ...model, name: '' }))
     }
   }
 

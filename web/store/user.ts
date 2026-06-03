@@ -564,7 +564,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *syncPatreonAccount({ sub: previous, tiers }, quiet?: boolean) {
+    async *syncPatreonAccount({ sub: previous, tiers, userLevel }, quiet?: boolean) {
       const res = await api.post('/user/resync/patreon')
 
       if (res.result) {
@@ -575,7 +575,7 @@ export const userStore = createStore<UserState>(
       if (res.result) {
         toastStore.success('Successfully updated Patreon information')
         const sub = getUserSubscriptionTier(res.result, tiers, previous)
-        return { user: res.result, sub }
+        return { user: res.result, sub, userLevel: sub?.level ?? userLevel }
       }
 
       if (res.error) {
@@ -944,10 +944,11 @@ function init(): UserState {
   }
 
   const cachedSub = storage.localGetItem(CACHED_SUB_KEY)
+  const parsedSub = cachedSub ? (JSON.parse(cachedSub) as SubscriberInfo) : undefined
 
   return {
     userType: undefined,
-    userLevel: 0,
+    userLevel: parsedSub?.level || 0,
     loggedIn: true,
     loading: false,
     jwt: existing,
