@@ -127,19 +127,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     gen.temp = 0.75
   }
 
-  let reasoningEffort = gen.reasoning?.enabled ? gen.reasoning.effort : 'none'
-  if (reasoningEffort === 'custom') {
-    const percent = gen.reasoning?.maxTokens ?? 0
-    if (percent >= 0.8) {
-      reasoningEffort = 'high'
-    } else if (percent >= 0.5) {
-      reasoningEffort = 'medium'
-    } else if (percent > 0) {
-      reasoningEffort = 'low'
-    } else {
-      reasoningEffort = 'none'
-    }
-  }
+  const reasoning = getReasoningParams(gen)
 
   if (
     !format ||
@@ -374,15 +362,6 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   }
 
   if (format === 'llamacpp') {
-    const budget =
-      reasoningEffort === 'none'
-        ? 0
-        : reasoningEffort === 'low'
-        ? gen.maxTokens! * 0.2
-        : reasoningEffort === 'medium'
-        ? gen.maxTokens! * 0.5
-        : gen.maxTokens! * 0.75
-
     const body = {
       prompt: messages ? undefined : prompt,
       messages,
@@ -405,9 +384,9 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
       json_schema,
-      reasoning_effort: reasoningEffort,
-      thinking_budget_tokens: budget,
-      chat_template_kwargs: { enable_thinking: reasoningEffort !== 'none' },
+      reasoning_effort: reasoning.effort,
+      thinking_budget_tokens: reasoning.budget,
+      chat_template_kwargs: { enable_thinking: reasoning.effort !== 'none' },
     }
     return body
   }
@@ -556,10 +535,85 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       max_tokens: gen.maxTokens,
       include_stop_str_in_output: false,
       stream: gen.streamResponse,
+      chat_template_kwargs: {
+        enable_thinking: reasoning.effort !== 'none',
+        thinking_budget: reasoning.budget,
+      },
     }
 
     return payload
   }
+}
+
+function getReasoningParams(gen: Partial<AppSchema.GenSettings>) {
+  type Effort = 'none' | 'low' | 'medium' | 'high' | 'x-high' | 'custom'
+  let effort = (gen.reasoning?.effort || 'none') as Effort
+  let budget = 0
+
+  if (!gen.reasoning?.enabled) {
+    effort = 'none'
+  }
+
+  let percent = 0
+  switch (effort) {
+    case 'x-high': {
+      percent = 0.9
+
+      break
+    }
+
+    case 'custom':
+    case 'high': {
+      percent = 0.8
+      break
+    }
+
+    case 'medium': {
+      percent = 0.5
+      break
+    }
+
+    case 'low': {
+      percent = 0.2
+      break
+    }
+
+    case 'none':
+    default: {
+      percent = 0
+      break
+    }
+  }
+
+  const max = gen.maxTokens ?? 2048
+  if (effort === 'none') {
+    return { effort, budget }
+  }
+
+  if (effort !== 'custom') {
+    return { effort, budget: max * percent }
+  }
+
+  const custom = gen.reasoning?.maxTokens ?? 0
+
+  if (isNaN(custom) || custom <= 0) {
+    return { effort: 'none', budget: 0 }
+  }
+
+  if (custom > max) {
+    return { effort: 'high', budget: max * 0.8 }
+  }
+
+  const ratio = custom / max
+  if (ratio >= 0.8) {
+    return { effort: 'high', budget: custom }
+  }
+
+  if (ratio >= 0.5) {
+    return { effort: 'medium', budget: custom }
+  }
+
+  return { effort: 'low', budget: custom }
 }
 
 export function getStoppingStrings(

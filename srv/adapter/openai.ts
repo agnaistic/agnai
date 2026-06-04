@@ -399,6 +399,11 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
       lastMsg.role = 'user'
       return
     }
+
+    case 'known-xai': {
+      body.stop = undefined
+      return
+    }
   }
 
   if (modelNeedsUserRoleLast(opts, model)) {

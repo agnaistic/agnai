@@ -708,7 +708,6 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classPills = createMemo(() => {
-    const available = availables()
     const set = new Set<string>()
     const selected = selectedClasses()
     for (const cls of selected) {
@@ -724,6 +723,11 @@ const FeatherlessModels: Selector = (props) => {
         continue
       }
 
+      if (set.has(cat.name)) {
+        searchedClasses.add(cat.name)
+        continue
+      }
+
       for (const model of cat.options) {
         if (!search(model.value, searchText)) continue
         searchedClasses.add(cat.name)
@@ -732,7 +736,7 @@ const FeatherlessModels: Selector = (props) => {
     }
 
     const pills = classes()
-      .filter((cls) => searchedClasses.has(cls.value) && available[cls.value] > 0)
+      .filter((cls) => searchedClasses.has(cls.value))
       .map((cls) => {
         if (set.has(cls.value)) {
           return (
@@ -794,6 +798,7 @@ const FeatherlessModels: Selector = (props) => {
             class="!bg-opacity-10 !p-1"
             title={<span class="text-sm">Model Classes</span>}
             open={classesOpen()}
+            titleClickOpen
             onChange={(ev) => setClassesOpen(ev)}
           >
             <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
