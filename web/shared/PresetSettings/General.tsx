@@ -139,8 +139,8 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
 
         <Toggle
           fieldName="disableNameStops"
-          label="Disable Name Stops"
-          helperText="Disable automatic character names stopping strings"
+          label="Exclude Name Stops"
+          helperText="Disables automatically adding character names to stopping strings"
           value={props.state.disableNameStops}
           onChange={(ev) => props.setters.setState('disableNameStops', ev)}
         />

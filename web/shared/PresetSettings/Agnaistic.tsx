@@ -169,11 +169,17 @@ export const ModelList: Component<{ show: boolean; close: () => void }> = (props
   )
 }
 
-function isFoundModel(value: string, search: string) {
-  const name = MODEL_NAMES.get(value)?.toLowerCase()
+function isFoundModel(compare: string, input: string) {
+  const name = MODEL_NAMES.get(compare)?.toLowerCase()
   if (!name) return true
-  if (name.includes(search.toLowerCase())) return true
-  return false
+
+  const words = input.split(' ').map((w) => w.toLocaleLowerCase())
+
+  for (const word of words) {
+    if (!name.includes(word)) return false
+  }
+
+  return true
 }
 
 type ModelOption = {
