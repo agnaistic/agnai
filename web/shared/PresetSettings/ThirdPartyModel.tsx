@@ -532,6 +532,12 @@ const ArliModels: Selector = (props) => {
 }
 
 let FILTERED_CACHE: Record<string, boolean> = {}
+let FL_LAST_SEARCH = {
+  search: '',
+  ctx: '0',
+  min_b: '0',
+  max_b: '0',
+}
 
 type FLModel = {
   id: string
@@ -540,6 +546,7 @@ type FLModel = {
   updated_at: string
   model_class: string
   context_length: number
+  parameters?: number
   max_completion_tokens: number
   available_on_current_plan: boolean
   status: 'active' | 'not_deployed' | 'pending_deploy'
@@ -550,19 +557,27 @@ const FeatherlessModels: Selector = (props) => {
   const emitter = createEmitter('close')
 
   const [customId, setCustomId] = createSignal('')
-  const [inputText, setInputText] = createSignal('')
+  const [inputText, setInputText] = createSignal(FL_LAST_SEARCH.search)
   const [selectedClasses, setClasses] = createSignal<string[]>([])
   const [classesOpen, setClassesOpen] = createSignal(false)
+  const [minctx, setMinctx] = createSignal(FL_LAST_SEARCH.ctx)
+  const [minParameters, setMinParameters] = createSignal(FL_LAST_SEARCH.min_b)
+  const [maxParameters, setMaxParameters] = createSignal(FL_LAST_SEARCH.max_b)
 
   const toModelClass = (className: string) => {
     if (!className) return ''
     return className.split('-').slice(0, -1).join('-')
   }
 
-  const availableClasses = createMemo(() => {
+  const availables = createMemo(() => {
     const seen = new Set<string>()
+    const models: { [id: string]: FLModel } = {}
+
     const list = (props.setters.context.data as FLModel[])
-      .reduce((prev, curr) => {
+      .reduce((prev, orig) => {
+        const curr = { ...orig }
+        flaiParameters(curr)
+        models[curr.id] = curr
         const currClass = toModelClass(curr.model_class)
         if (!currClass || seen.has(currClass)) return prev
         seen.add(currClass)
@@ -581,7 +596,7 @@ const FeatherlessModels: Selector = (props) => {
       return prev
     }, {} as Record<string, { ctx: number; label: string }>)
 
-    return { list, map }
+    return { list, map, models }
   })
 
   const label = createMemo(() => {
@@ -596,13 +611,18 @@ const FeatherlessModels: Selector = (props) => {
         {match.id}
         <span class="text-500 text-xs">
           {' '}
-          {flaiContext(match, availableClasses().map)} {match.status}
+          {flaiContext(match, availables().map)} {match.status}
         </span>
       </span>
     )
   })
 
   const options = createMemo(() => {
+    const ctxThreshold = +minctx() > 0 ? +minctx() * 1024 : 0
+    const minB = +minParameters()
+    const maxB = +maxParameters()
+
+    const classes = availables()
     const modelClasses = selectedClasses().reduce((prev, curr) => {
       prev.add(curr)
       return prev
@@ -613,7 +633,27 @@ const FeatherlessModels: Selector = (props) => {
     for (const model of props.setters.context.data) {
       // Skip models that cannot be used
       const modelClass = toModelClass(model.model_class)
+      const cached = classes.models[model.id]
+
+      const modelParams = cached?.parameters ?? 0
+      const modelCtx: number =
+        model.context_length ||
+        classes.map[model.model_class]?.ctx ||
+        FLAI_CONTEXTS[model.model_class]
+
       if (model.status && model.status !== 'active' && model.health && model.health !== 'HEALTHY') {
+        continue
+      }
+
+      if (ctxThreshold > 0 && modelCtx > 0 && ctxThreshold > modelCtx) {
+        continue
+      }
+
+      if (minB > 0 && modelParams > 0 && minB > modelParams) {
+        continue
+      }
+
+      if (maxB > 0 && modelParams > 0 && maxB < modelParams) {
         continue
       }
 
@@ -632,7 +672,8 @@ const FeatherlessModels: Selector = (props) => {
           >
             <div class="ellipsis">{model.id}</div>
             <div class="text-500 text-xs">
-              {model.model_class} - {flaiContext(model, availableClasses().map)} {model.status}
+              {model.model_class} - {flaiContext(model, classes.map)}{' '}
+              {modelParams ? `${modelParams}B` : ''} {model.status}
             </div>
           </div>
         ),
@@ -667,7 +708,7 @@ const FeatherlessModels: Selector = (props) => {
   }
 
   const classes = createMemo(() => {
-    const list = availableClasses().list
+    const list = availables().list
 
     list
       .map(({ label, ctx }) => ({ label: `${label} - ${Math.round(ctx / 1024)}k`, value: label }))
@@ -770,17 +811,51 @@ const FeatherlessModels: Selector = (props) => {
         }
         categories={options()}
         search={search}
-        searchText={setInputText}
+        searchInit={FL_LAST_SEARCH.search}
+        searchText={(text) => {
+          FL_LAST_SEARCH.search = text
+          setInputText(text)
+        }}
         header={
-          <Accordian
-            class="!bg-opacity-10 !p-1"
-            title={<span class="text-sm">Model Classes</span>}
-            open={classesOpen()}
-            titleClickOpen
-            onChange={(ev) => setClassesOpen(ev)}
-          >
-            <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
-          </Accordian>
+          <>
+            <Accordian
+              class="!bg-opacity-10 !p-1"
+              title={<span class="text-sm">Model Classes</span>}
+              open={classesOpen()}
+              titleClickOpen
+              onChange={(ev) => setClassesOpen(ev)}
+            >
+              <div class="flex w-full flex-wrap gap-1">{classPills()}</div>
+            </Accordian>
+            <div class="flex min-w-fit gap-2">
+              <TextInput
+                value={minctx()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.ctx = ev.currentTarget.value
+                  setMinctx(ev.currentTarget.value)
+                }}
+                prelabel="Min CTX (K)"
+              />
+
+              <TextInput
+                value={minParameters()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.min_b = ev.currentTarget.value
+                  setMinParameters(ev.currentTarget.value)
+                }}
+                prelabel="Min CTX (B)"
+              />
+
+              <TextInput
+                value={maxParameters()}
+                onChange={(ev) => {
+                  FL_LAST_SEARCH.max_b = ev.currentTarget.value
+                  setMaxParameters(ev.currentTarget.value)
+                }}
+                prelabel="Max Params (B)"
+              />
+            </div>
+          </>
         }
         onSelect={(opt) => {
           setProviderModel(props, opt.value, { featherlessModel: opt.value })
@@ -1058,6 +1133,22 @@ function flaiContext(model: FLModel, classes: Record<string, { ctx: number }>) {
   if (!ctx) return ''
 
   return `${Math.round(ctx / 1024)}K`
+}
+
+function flaiParameters(model: FLModel) {
+  if (model.parameters) return model.parameters
+  const parts = model.model_class.split('-')
+  const end = parts.slice(-1)[0]
+  const index = end.lastIndexOf('b')
+  if (index === -1) return
+
+  const val = +end.slice(0, index)
+
+  if (val > 0) {
+    model.parameters = val
+  }
+
+  return model.parameters
 }
 
 function arliContext(model: ArliModel, classes: Record<string, { ctx: number }>) {
