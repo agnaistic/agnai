@@ -147,6 +147,7 @@ export function toModelOption(sub: AppSchema.SubscriptionModel): AppSchema.Subsc
       levels: sub.levels || [],
       subLevel: sub.subLevel,
       subVisionModel: sub.subVisionModel,
+      tokenizer: sub.tokenizer,
     },
   }
 }

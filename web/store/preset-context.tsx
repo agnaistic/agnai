@@ -19,6 +19,7 @@ import { debug } from '/common/debug'
 import { getRemotePreset, presetStore } from './presets'
 import { chatStore } from './chat'
 import { v4 } from 'uuid'
+import { prepareTokenizer } from '/common/tokenize'
 
 export { ContextState as PresetContext }
 
@@ -261,6 +262,20 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     )
   )
 
+  createEffect(
+    on(
+      () => [context.sub?.preset.tokenizer, context.current.tokenizer],
+      () => {
+        const tokenizer = context.sub?.preset.tokenizer || context.current.tokenizer
+        debug('tokenizer')(`sub: %s | tokenizer: %s`, context.sub?.name, tokenizer)
+
+        if (tokenizer) {
+          prepareTokenizer(tokenizer)
+        }
+      }
+    )
+  )
+
   const loadChatId = async (chatId: string, knownPresetId?: string) => {
     try {
       if (knownPresetId) {
@@ -375,7 +390,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
       onStateUpdated('provider-save')
 
       await Promise.all([
-        loadModels({ force: true }),
+        loadModels({}),
         updateAndSave(
           { providerId },
           {
@@ -392,7 +407,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
 
     setState({ providerId })
     onStateUpdated('provider-nosave')
-    loadModels({ force: true })
+    loadModels({})
   }
 
   const load = async (preset: Partial<AppSchema.UserGenPreset> | undefined) => {
@@ -438,7 +453,11 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
         opts?.force
       )
       if (list) {
-        log('models success: %s', list?.list.length)
+        log(
+          'models success: %s [%s]',
+          list?.list.length,
+          `${!!opts?.force === true ? 'true' : 'false'}`
+        )
         setContext({
           list: list?.list || [],
           data: list?.data || [],

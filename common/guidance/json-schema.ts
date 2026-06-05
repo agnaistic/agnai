@@ -50,8 +50,17 @@ export function formatJsonSchemaVars(
 }
 
 type GeminiResponseSchema = NonNullable<GenerationConfig['responseSchema']>
+type LlamaCppResponseSchema = {
+  type: 'json_schema'
+  schema: {
+    strict: boolean
+    properties: Record<string, any>
+    required: string[]
+    additionalProperties: boolean
+  }
+}
 
-type JsonSchemaFormat = 'openai' | 'guided_json' | 'gemini'
+type JsonSchemaFormat = 'openai' | 'guided_json' | 'gemini' | 'llamacpp'
 
 type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
   ? {
@@ -70,6 +79,8 @@ type OutboundJsonSchema<T extends JsonSchemaFormat> = T extends 'openai'
     }
   : T extends 'gemini'
   ? GeminiResponseSchema
+  : T extends 'llamacpp'
+  ? LlamaCppResponseSchema
   : {
       type: 'object'
       properties: Record<string, any>
@@ -107,6 +118,19 @@ export function getJsonSchemaPayload<T extends JsonSchemaFormat>(
   const required = Object.keys(fields)
 
   switch (format) {
+    case 'llamacpp': {
+      const payload: OutboundJsonSchema<'llamacpp'> = {
+        type: 'json_schema',
+        schema: {
+          strict: true,
+          properties: fields,
+          required,
+          additionalProperties: false,
+        },
+      }
+      return payload as OutboundJsonSchema<T>
+    }
+
     case 'openai': {
       const payload: OutboundJsonSchema<'openai'> = {
         type: 'json_schema',
@@ -237,6 +261,7 @@ export function prepareJsonSchema(
     names,
     hydrator,
     aliases,
+    entities,
     ...nextSchema,
   }
 }

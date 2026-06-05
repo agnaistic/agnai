@@ -123,6 +123,13 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           disabled={props.state.disabled}
           onChange={(ev) => props.setters.setState('streamResponse', ev)}
         />
+        <Toggle
+          fieldName="disableNameStops"
+          label="Exclude Name Stops"
+          helperText="Disables automatically adding character names to stopping strings"
+          value={props.state.disableNameStops}
+          onChange={(ev) => props.setters.setState('disableNameStops', ev)}
+        />
         <StoppingStrings
           state={props.state}
           setters={props.setters}
@@ -135,14 +142,6 @@ export const GeneralSettings: Component<PresetTabProps> = (props) => {
           setters={props.setters}
           sub={props.sub}
           page={props.page}
-        />
-
-        <Toggle
-          fieldName="disableNameStops"
-          label="Exclude Name Stops"
-          helperText="Disables automatically adding character names to stopping strings"
-          value={props.state.disableNameStops}
-          onChange={(ev) => props.setters.setState('disableNameStops', ev)}
         />
 
         <PhraseBias state={props.state} setters={props.setters} sub={props.sub} page={props.page} />

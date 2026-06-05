@@ -188,9 +188,24 @@ const Message: Component<MessageProps> = (props) => {
   const content = createMemo(() => {
     const message = msg()
 
+    let display = message.json?.response || props.content
+
+    if (message.json?.values) {
+      const autoDefs = getJsonSchema({
+        characterId: message.characterId,
+        preset: props.preset?.current!,
+      })
+
+      const json = getJsonUpdate(ctx, autoDefs?.schema, {
+        ...message.json.values,
+        response: props.content,
+      })
+      display = json?.json.response || display
+    }
+
     const msgV2 = getMessageContent(ctx, props.preset?.current, props, state.chatProfiles, {
       ...message,
-      msg: props.content,
+      msg: display,
     })
     return msgV2
   })
@@ -201,7 +216,7 @@ const Message: Component<MessageProps> = (props) => {
     const sender = senderJson ? JSON.parse(senderJson) : {}
 
     if (message.json) {
-      const json = jsonValues()
+      const json = { ...jsonValues() }
 
       const autoDefs = getJsonSchema({
         characterId: message.characterId,

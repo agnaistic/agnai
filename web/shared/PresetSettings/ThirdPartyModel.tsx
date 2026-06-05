@@ -675,28 +675,6 @@ const FeatherlessModels: Selector = (props) => {
     return [{ label: 'All', value: '' }].concat(list)
   })
 
-  const availables = createMemo(() => {
-    const map: Record<string, number> = {}
-
-    for (const model of props.setters.context.data) {
-      const modelClass = toModelClass(model.model_class)
-      if (!map[modelClass]) {
-        map[modelClass] = 0
-      }
-
-      const filteredOut = FILTERED_CACHE[model.id]
-      if (filteredOut) {
-        continue
-      }
-
-      if (!model.status || model.status === 'active' || model.status === '') {
-        map[modelClass]++
-      }
-    }
-
-    return map
-  })
-
   const deselectClass = (cls: string) => {
     const next = selectedClasses().filter((s) => s !== cls)
     setClasses(next)
@@ -806,6 +784,7 @@ const FeatherlessModels: Selector = (props) => {
         }
         onSelect={(opt) => {
           setProviderModel(props, opt.value, { featherlessModel: opt.value })
+          console.log(`Model: ${opt.value}`)
         }}
         buttonLabel={label()}
         selected={
@@ -813,7 +792,7 @@ const FeatherlessModels: Selector = (props) => {
           props.state.featherlessModel
         }
         footer={<SelectorFooter state={props.state} setters={props.setters} />}
-      />
+      ></CustomSelect>
 
       <div class="">
         <Copy text={props.state.featherlessModel || ''} />

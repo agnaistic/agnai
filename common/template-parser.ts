@@ -5,7 +5,7 @@ import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
-import { ChatRole, HistoryLine } from '/srv/adapter/type'
+import { ChatRole, GenerateRequestV2, HistoryLine } from '/srv/adapter/type'
 import { replaceTags } from './presets/templates'
 
 export type ParsedSection = 'pre_system' | 'system' | 'post_system' | 'history' | 'post'
@@ -46,7 +46,7 @@ export type TemplateOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
 
-  schema?: JsonField[]
+  schema?: GenerateRequestV2['jsonSchema']
 
   /** If present, history will be rendered last */
   limit?: {
@@ -232,7 +232,7 @@ export async function parseTemplate(
   const flags: InternalState = { pre_render: true, messages: [], jsonAliases: {} }
 
   if (opts.schema) {
-    for (const field of opts.schema) {
+    for (const field of opts.schema.fields) {
       if (!field.alias) continue
       flags.jsonAliases[field.alias] = field.name
     }

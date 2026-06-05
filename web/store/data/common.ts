@@ -321,6 +321,10 @@ export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
   const summary = user.summaryPreset ? presets.find((p) => p._id === user.summaryPreset) : undefined
   const chargen = user.chargenPreset ? presets.find((p) => p._id === user.chargenPreset) : undefined
 
+  if (json?.providerId) json.thirdPartyModel = json.providerModels?.[json.providerId]
+  if (summary?.providerId) summary.thirdPartyModel = summary.providerModels?.[summary.providerId]
+  if (chargen?.providerId) chargen.thirdPartyModel = chargen.providerModels?.[chargen.providerId]
+
   applySubscriptionAdjustment(preset)
 
   return { current: preset, json, summary, chargen }

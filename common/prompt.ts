@@ -14,7 +14,6 @@ import { OPENAI_CONTEXTS } from './presets/openai'
 import { NOVEL_MODELS } from './presets/novel'
 import { extractReasoning } from './reasoning'
 import { runPresetParsers } from './chat'
-
 export type JsonOutput = { values: any; response: string; history: string; imageCaption: string }
 export type TickHandler<T = JsonOutput> = (
   response: string,
@@ -106,7 +105,7 @@ export type PromptOpts = {
   jsonValues: Record<string, any> | undefined
   contextBuffer?: number
   props?: Record<string, string>
-  schema?: JsonField[]
+  schema?: GenerateRequestV2['jsonSchema']
 }
 
 export type BuildPromptOpts = {
@@ -123,7 +122,7 @@ export type BuildPromptOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
   history?: HistoryLine[]
-  schema?: JsonField[]
+  schema?: GenerateRequestV2['jsonSchema']
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */

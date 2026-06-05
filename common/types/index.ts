@@ -17,6 +17,13 @@ export type Encoder = {
   decode: (tokens: number[]) => string
 }
 
+export type AsyncEncoder = {
+  name?: string
+  count: (text: string) => Promise<number>
+  encode: (text: string) => Promise<number[]>
+  decode: (tokens: number[]) => Promise<string>
+}
+
 export type Tokenizer = {
   decode: (tokens: Int32Array) => string
   encode: (value: string) => Int32Array

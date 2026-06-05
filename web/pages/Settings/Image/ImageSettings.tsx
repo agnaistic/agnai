@@ -134,6 +134,7 @@ export const ImageSettingsModal = () => {
             setPresetId={(id) => ctx.update('summaryPresetId', id)}
             selected={ctx.store.summaryPresetId}
           >
+            umm
             <Button disabled={!ctx.store.summaryPresetId} onClick={editPresetClicked}>
               <Pencil size={20} />
             </Button>

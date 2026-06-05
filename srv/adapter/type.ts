@@ -3,6 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
 import { SubscriptionPreset } from './agnaistic'
 import { ThirdPartyFormat } from '/common/adapters'
+import { StructureEntities } from '/common/guidance/json-schema'
 import { PresetConnection } from '/common/providers'
 import { Memory, TokenCounter } from '/common/types'
 
@@ -102,7 +103,7 @@ export type GenerateRequestV2 = {
   book?: AppSchema.MemoryBook
   resolvedScenario?: string
 
-  jsonSchema?: JsonField[]
+  jsonSchema?: { fields: JsonField[]; entities: StructureEntities }
   jsonValues?: Record<string, any>
 
   /** Base64 attachments */

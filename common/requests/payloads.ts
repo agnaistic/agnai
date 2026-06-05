@@ -6,6 +6,7 @@ import { AppSchema } from '../types'
 import type { SubscriptionPreset } from '/srv/adapter/agnaistic'
 import { getPresetConnection } from '../providers'
 import { getJsonSchemaPayload } from '../guidance/json-schema'
+import { GenerateRequestV2 } from '/srv/adapter/type'
 
 type MinOpts = {
   user: AppSchema.User
@@ -16,7 +17,7 @@ type MinOpts = {
   prompt?: string
   messages?: any[]
   requestId?: string
-  jsonSchema?: JsonField[]
+  jsonSchema?: GenerateRequestV2['jsonSchema']
   characters?: Record<string, AppSchema.Character>
   members?: AppSchema.Profile[]
   impersonate?: AppSchema.Character
@@ -105,7 +106,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   const conn = getPresetConnection(gen, opts.user.providers)
   const format = opts.subscription?.preset?.thirdPartyFormat || conn.format
 
-  const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema) : undefined
+  const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema.fields) : undefined
 
   const characterNames = Object.values(opts.characters || {})
     .map((c) => c.name.split(' '))
@@ -214,8 +215,12 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     }
 
     if (opts.jsonSchema && opts.char) {
-      const char = opts.char! // TypeScript being stupid
-      const schema = getJsonSchemaPayload(opts.jsonSchema, 'guided_json', { ...opts, char })
+      // const char = opts.char! // TypeScript being stupid
+      const schema = getJsonSchemaPayload(
+        opts.jsonSchema.fields,
+        'guided_json',
+        opts.jsonSchema.entities
+      )
       body.guided_json = schema
       // body.guided_decoding_backend = 'outlines'
     }
@@ -362,7 +367,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   }
 
   if (format === 'llamacpp') {
-    const body = {
+    const body: any = {
       prompt: messages ? undefined : prompt,
       messages,
       temperature: gen.temp,
@@ -383,10 +388,26 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
-      json_schema,
       reasoning_effort: reasoning.effort,
       thinking_budget_tokens: reasoning.budget,
       chat_template_kwargs: { enable_thinking: reasoning.effort !== 'none' },
+    }
+
+    if (opts.jsonSchema) {
+      const schema = getJsonSchemaPayload(
+        opts.jsonSchema.fields,
+        'llamacpp',
+        opts.jsonSchema.entities
+      )
+
+      body.response_format = {
+        type: 'json_object',
+        schema: {
+          type: 'object',
+          properties: schema.schema.properties,
+          required: schema.schema.required,
+        },
+      }
     }
     return body
   }

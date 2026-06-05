@@ -10,6 +10,7 @@ import { getStore } from '../create'
 import { getSafeProviderDetail } from '/common/providers'
 import { defaultPresets, getFallbackPreset } from '/common/presets'
 import { isDefaultPreset } from '/common/default-preset'
+import { debug } from '/common/debug'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -249,6 +250,7 @@ async function getModelListByPreset(preset: Partial<AppSchema.UserGenPreset>, fo
           providerId: preset.providerId,
           url,
           key: isLoggedIn() ? '' : provider.key,
+          useCache: !force,
         })
 
     return { list: result.models, url, data: result.data }
@@ -320,7 +322,7 @@ async function getPresetModelList(opts: {
 
   models.sort((l, r) => l.localeCompare(r))
 
-  const ttl = Date.now() + 60000 * 5 // 30 minutes
+  const ttl = Date.now() + 60000 * 60 // 1 hour
 
   MODELS_LOADED.add(opts.url)
   await storage.setItem(
@@ -334,14 +336,30 @@ async function getPresetModelList(opts: {
 async function getCachedModelList(url: string, ignoreTtl: boolean = false) {
   const key = `model-list-${url}`
   const cached = await storage.getItem(key)
-  if (!cached) return
+  debug('models')('cache attempt: %s', url)
+  if (!cached) {
+    debug('models')('cache miss: %s', url)
+    return
+  }
 
   try {
     const json = JSON.parse(cached) as { models: string[]; data: any[]; ttl: number }
-    if (!json?.models?.length) return
-    if (json && ignoreTtl) return json
-    if (json.ttl > Date.now()) return json
-  } catch (ex) {}
+    if (!json?.models?.length) {
+      debug('models')('cache hit-empty: %s', url)
+      return
+    }
+    if (json && ignoreTtl) {
+      debug('models')('cache hit-ttl-ignored: %s', url)
+      return json
+    }
+    if (json.ttl > Date.now()) {
+      debug('models')('cache hit-within-ttl: %s', url)
+      return json
+    }
+    debug('models')('cache hit-expired: %s', url)
+  } catch (ex: any) {
+    debug('models')('cache error: %s', ex.message)
+  }
 }
 
 async function getTemplates() {

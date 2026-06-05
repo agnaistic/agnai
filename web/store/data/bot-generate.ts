@@ -157,9 +157,17 @@ async function streamResponse(opts: StreamOpts) {
   const provider = getProvider(req.entities.settings?.providerId)
   const conn = provider ? getProviderConnection(provider) : undefined
 
+  const jsonSchema =
+    opts.kind === 'summary' ||
+    opts.kind === 'chat-query' ||
+    req.entities.settings.jsonEnabled === 'standard'
+      ? req.request.jsonSchema
+      : undefined
+
   const payload = conn?.local
     ? getLocalPayload({
         ...req.request,
+        jsonSchema,
         messages: messages,
         prompt: assembled.prompt,
       })
@@ -205,11 +213,6 @@ async function streamResponse(opts: StreamOpts) {
     prompt: JSON.stringify(stripImageContent(messages), null, 2),
   })
 
-  const jsonSchema =
-    opts.kind === 'chat-query' || req.entities.settings.jsonEnabled === 'standard'
-      ? req.schema?.schema
-      : undefined
-
   await genApi.inferenceStream(
     {
       settings: req.request.settings,
@@ -231,18 +234,15 @@ async function streamResponse(opts: StreamOpts) {
 
   /** In development: Performing JSON output in a separate call if specified by the schema */
 
-  if (
-    opts.kind !== 'chat-query' &&
-    req.entities.settings.jsonEnabled === 'separate' &&
-    req.schema
-  ) {
+  const isInseparableKind = opts.kind === 'chat-query' || opts.kind === 'summary'
+  if (!isInseparableKind && req.entities.settings.jsonEnabled === 'separate' && req.schema) {
     await genApi.inferenceStream(
       {
         settings: req.entities.presets.json || req.request.settings,
-        jsonSchema: req.schema.schema,
-        messages: messages,
+        jsonSchema: req.request.jsonSchema,
+        messages: messages.concat({ role: 'user', content: 'Chat Summary Query' }),
         prompt: assembled.prompt,
-        payload,
+        // payload,
         signal: opts.signal,
         stop: stops,
         chatId: req.request.chat._id,
@@ -603,7 +603,7 @@ async function buildChatRequest(opts: GenerateOpts) {
     jsonValues: props.json,
     reschemaPrompt: props.reschemaPrompt,
     eventStream: true,
-    jsonSchema: schema?.schema,
+    jsonSchema: schema ? { fields: schema.schema, entities: schema.entities } : undefined,
   }
 
   const stops = getStoppingStrings(request, request.settings)
@@ -793,7 +793,7 @@ async function createActiveChatPrompt(opts: GenerateOpts) {
     jsonValues: props.json,
     contextBuffer: entities.settings.maxTokens,
     props: entities.props,
-    schema: schema?.schema,
+    schema: schema ? { fields: schema.schema, entities: schema.entities } : undefined,
   }
 
   const lines = await getPromptHistory(promptOpts, encoder)
