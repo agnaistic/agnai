@@ -26,7 +26,7 @@ export function runPresetParsers(
     switch (parser.type) {
       case 'remove-prompt':
       case 'remove': {
-        if (parser.type === 'remove-prompt' && !opts?.preset) continue
+        if (parser.type === 'remove' && opts?.preset) continue
         const remove = parser.text.replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
         current = current.split(remove).join('')
         continue
@@ -34,7 +34,7 @@ export function runPresetParsers(
 
       case 'replace-prompt':
       case 'replace': {
-        if (parser.type === 'replace-prompt' && !opts?.preset) continue
+        if (parser.type === 'replace' && opts?.preset) continue
         const from = parser.text.replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
         const to = (parser.to || '').replace(/(?<!\\)\\n/g, '\n').replaceAll('\\\\n', '\\n')
         current = current.split(from).join(to)
