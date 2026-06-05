@@ -8,7 +8,7 @@ const DEFAULT_ENCODER: AsyncEncoder = {
   name: 'default',
   encode: embedApi.encode,
   decode: embedApi.decode,
-  count: (text) => embedApi.encode(text).then((res) => res.length),
+  count: (text: string) => embedApi.encode(text).then((res: number[]) => res.length),
 }
 
 const encoderModels: { [encoder in EncoderType]?: string } = {
