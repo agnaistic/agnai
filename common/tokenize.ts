@@ -25,23 +25,23 @@ const encoderModels: { [encoder in EncoderType]?: string } = {
 
 const encoders: Record<string, AsyncEncoder> = {}
 
-let ACTIVE_ENCODER: AsyncEncoder = DEFAULT_ENCODER
+let ACTIVE_TOKENIZER = ''
 
 export async function encode(text: string) {
-  return ACTIVE_ENCODER.encode(text)
+  return getActiveEncoder().encode(text)
 }
 
 export async function decode(tokens: number[]) {
-  return ACTIVE_ENCODER.decode(tokens)
+  return getActiveEncoder().decode(tokens)
 }
 
 export async function tokenize(text: string) {
-  const tokens = await ACTIVE_ENCODER.encode(text)
+  const tokens = await getActiveEncoder().encode(text)
   return tokens.length
 }
 
 export async function getEncoder(encoder?: string) {
-  return ACTIVE_ENCODER.count
+  return getActiveEncoder().count
   // if (!encoder) {
   //   return (text: string) => embedApi.encode(text).then((res: number[]) => res.length)
   // }
@@ -58,8 +58,9 @@ export async function countTokens(text: string) {
 }
 
 export async function prepareTokenizer(encoder: string) {
+  ACTIVE_TOKENIZER = encoder
+
   if (encoders[encoder]) {
-    ACTIVE_ENCODER = encoders[encoder]
     return
   }
 
@@ -69,7 +70,6 @@ export async function prepareTokenizer(encoder: string) {
 
   // To prevent multiple loads of the same model, we will polyfill until the model becomes available
   encoders[encoder] = DEFAULT_ENCODER
-  ACTIVE_ENCODER = encoders[encoder]
 
   const HF = await hf()
   const tokenizer = await HF.AutoTokenizer.from_pretrained(model)
@@ -90,8 +90,6 @@ export async function prepareTokenizer(encoder: string) {
     },
   }
 
-  ACTIVE_ENCODER = encoders[encoder]
-
   console.log(`[encoder] ${encoder} ready`)
 }
 
@@ -107,3 +105,7 @@ async function hf() {
 }
 
 const dynamicImport = new Function('a', 'return import(a);')
+
+function getActiveEncoder() {
+  return encoders[ACTIVE_TOKENIZER] || DEFAULT_ENCODER
+}
