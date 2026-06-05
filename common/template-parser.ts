@@ -1,6 +1,6 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
-import { JsonField, PromptLine, PromptPlaceholders, fillPromptWithLines } from './prompt'
+import { PromptLine, PromptPlaceholders, fillPromptWithLines } from './prompt'
 import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
