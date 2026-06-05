@@ -159,9 +159,6 @@ export function useImageContext() {
         ? 'Character'
         : 'Shared'
 
-    if (current) {
-      console.log('CURRENT!', currentTarget)
-    }
     const view = current ? currentTarget : tab.current()
     const setter = current ? setCurrentCfg : setCfg
 
