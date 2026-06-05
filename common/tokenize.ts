@@ -85,7 +85,6 @@ export async function prepareTokenizer(encoder: string) {
       return Promise.resolve(text)
     },
     count: (text) => {
-      console.log(`[encoding] ${encoder}`)
       const tokens = tokenizer.encode(text)
       return Promise.resolve(tokens.length)
     },
