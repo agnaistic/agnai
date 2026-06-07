@@ -337,6 +337,7 @@ const imgProviderGuard = {
   type: ['agnai', 'swarm', 'sd', 'openai', 'horde', 'novel'],
   url: 'string',
   sampler: 'string',
+  scheduler: 'string?',
   model: 'string',
   providerId: 'string?',
   draftMode: 'boolean?',
@@ -353,7 +354,12 @@ export const upsertImageProvider = handle(async (req) => {
     throw new StatusError('Not found', 404)
   }
 
-  const next = await store.users.upsertImageProvider(user, req.body)
+  const update = {
+    ...req.body,
+    scheduler: req.body.scheduler || '',
+  }
+
+  const next = await store.users.upsertImageProvider(user, update)
   return next
 })
 

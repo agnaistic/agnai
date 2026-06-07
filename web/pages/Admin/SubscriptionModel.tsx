@@ -361,6 +361,7 @@ export const SubscriptionModel: Component = () => {
                   setters={setters}
                   disabled={params.id === 'default'}
                   noSave
+                  noModel
                 />
                 <div class="flex flex-row justify-end">
                   <Show when={state.current._id}>

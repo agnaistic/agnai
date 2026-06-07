@@ -95,7 +95,7 @@ export type GenerateOpts = { signal: AbortController; hint?: string; systemPromp
 )
 
 type ChatRequest = Awaited<ReturnType<typeof buildChatRequest>>
-type StreamOpts = { done?: boolean } & Exclude<
+type StreamOpts = { state?: 'error' | 'done' | 'complete' } & Exclude<
   GenerateOpts,
   { type: 'ooc' | 'send-noreply' | 'send-event:ooc' }
 > & {
@@ -281,6 +281,9 @@ async function handleStreamTick(
 
   switch (tick.state) {
     case 'error':
+      if (opts.state) return
+
+      opts.state = 'error'
       input.lazy.reject(tick.response)
       toastStore.error(tick.response)
       // waiting(undefined)
@@ -335,9 +338,9 @@ async function handleStreamTick(
     }
 
     case 'done': {
-      if (opts.done) return
+      if (!!opts.state) return
 
-      opts.done = true
+      opts.state = 'done'
       const trimmed = sanitize(prefix + tick.response)
       const hydrated = input.jsonCall ? req.schema?.hydrator?.(trimmed) : undefined
 
@@ -537,10 +540,11 @@ async function handlePostStreamResponse(input: {
     return
   }
 
-  const alreadyDone = !!req.request.response
+  const canCreate = opts.state === 'done'
   req.request.response = response
 
-  if (!alreadyDone) {
+  if (canCreate) {
+    opts.state = 'complete'
     await msgsApi.createMessage({
       kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
       chatId,

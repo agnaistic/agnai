@@ -111,6 +111,7 @@ const initState: EditorState = {
       url: '',
       model: '',
       sampler: '',
+      scheduler: '',
       draftMode: false,
     },
 
@@ -121,6 +122,7 @@ const initState: EditorState = {
       url: '',
       model: '',
       sampler: '',
+      scheduler: '',
     },
 
     novel: {
@@ -132,6 +134,7 @@ const initState: EditorState = {
       sampler: '',
       qualityTags: true,
       ucPreset: '0',
+      scheduler: '',
     },
 
     sd: {
@@ -141,6 +144,7 @@ const initState: EditorState = {
       url: '',
       sampler: '',
       model: '',
+      scheduler: '',
     },
 
     swarm: {
@@ -151,6 +155,7 @@ const initState: EditorState = {
       sampler: '',
       local: true,
       model: '',
+      scheduler: '',
     },
   },
   imageOverride: '',

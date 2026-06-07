@@ -101,10 +101,12 @@ export const responseStore = createStore<ResponseState>(
             }
           },
         })
-        .catch((err) => ({ error: err.message, result: undefined }))
+        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
 
       if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`)
+        toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`, {
+          stack: res.error.stack,
+        })
         yield { partial: undefined, retrying: undefined }
       }
     },
@@ -156,10 +158,12 @@ export const responseStore = createStore<ResponseState>(
 
       const res = await botGen
         .stream({ signal, kind: 'request', characterId })
-        .catch((err) => ({ error: err.message, result: undefined }))
+        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
 
       if (res.error) {
-        toastStore.error(`(Bot) Generation request failed: ${res.error}`)
+        toastStore.error(`(Bot) Generation request failed: ${res.error}`, {
+          stack: res.error.stack,
+        })
         yield { partial: undefined }
       }
 
@@ -235,7 +239,7 @@ export const responseStore = createStore<ResponseState>(
         case 'send-event:ooc':
           res = await botGen
             .stream({ signal, kind: opts.mode, text: opts.msg, messageId: created?.messageId })
-            .catch((err) => ({ error: err.message, result: undefined }))
+            .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
           if ('result' in res && !res.result?.generating) {
             yield { partial: undefined }
           }
@@ -247,7 +251,7 @@ export const responseStore = createStore<ResponseState>(
       }
 
       if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
+        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`, {})
         yield { partial: undefined }
       }
 
@@ -336,10 +340,12 @@ export const responseStore = createStore<ResponseState>(
           onTick,
           messageId: opts.messageId,
         })
-        .catch((err) => ({ error: err.message, result: undefined }))
+        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
 
       if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
+        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`, {
+          stack: res.error.stack,
+        })
       }
     },
 

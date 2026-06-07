@@ -8,6 +8,7 @@ export type Toast = {
   message: string
   type: 'default' | 'warn' | 'success' | 'error' | 'admin'
   ttl: number
+  stack?: any
 }
 
 let toastId = 0
@@ -26,7 +27,8 @@ export const toastStore = createStore<ToastState>('toasts', {
   modal: false,
 })((get, set) => {
   const addToast = (kind: Toast['type']) => {
-    return (_: ToastState, msg: string, ttl = 5) => {
+    return (_: ToastState, msg: string, ex?: { ttl?: number; stack?: string }) => {
+      let ttl = ex?.ttl ?? 5
       if (kind === 'admin') {
         ttl = 300
       }
@@ -42,6 +44,7 @@ export const toastStore = createStore<ToastState>('toasts', {
         type: kind,
         message: msg,
         ttl,
+        stack: ex?.stack,
       }
 
       setTimeout(() => {
@@ -110,15 +113,15 @@ setNotifier(toastStore)
 subscribe('notification', { level: 'string?', message: 'string', ttl: 'number?' }, (body) => {
   switch (body.level) {
     case 'error':
-      return toastStore.error(body.message, body.ttl)
+      return toastStore.error(body.message)
 
     case 'warn':
     case 'warning':
-      return toastStore.warn(body.message, body.ttl)
+      return toastStore.warn(body.message, { ttl: body.ttl })
 
     case 'normal':
     default:
-      return toastStore.normal(body.message, body.ttl)
+      return toastStore.normal(body.message, { ttl: body.ttl })
   }
 })
 

@@ -383,7 +383,7 @@ export const msgStore = createStore<MsgState>(
         const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, msg: text, retries } : m))
         yield { msgs: nextMsgs }
         onSuccess?.()
-        toastStore.success(`Swipe deleted`, 2)
+        toastStore.success(`Swipe deleted`, { ttl: 2 })
       }
     },
 

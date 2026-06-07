@@ -3,7 +3,7 @@ import { getStore } from '../create'
 import { toastStore } from '../toasts'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { AppSchema } from '/common/types'
-import { deepClone, trimSentence } from '/common/util'
+import { deepClone, inline, trimSentence } from '/common/util'
 import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
@@ -11,6 +11,7 @@ import { ChatMessageExt } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
 import { simplifyPreset } from '/common/prompt'
 import { resolveChatPath } from '/common/chat'
+import debug from 'debug'
 
 export type PromptEntities = NonNullable<Awaited<ReturnType<typeof getAuthedPromptEntities>>> & {
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
@@ -299,6 +300,9 @@ export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
     chat = details[lastChatId]?.chat
   }
 
+  const {
+    config: { subs },
+  } = getStore('settings').getState()
   if (!user) {
     user = getStore('user').getState().user!
   }
@@ -315,6 +319,19 @@ export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (preset.promptTemplateId) {
     const template = templates.find((t) => t._id === preset.promptTemplateId)
     preset.gaslight = template?.template || preset.gaslight
+  }
+
+  if (preset.providerId === 'agnaistic' && preset.providerModels?.agnaistic) {
+    const sub = subs.find((s) => s._id === preset.providerModels?.agnaistic)?.preset
+    const updates: any = {}
+    if (sub?.postUserRole) updates.postUserRole = sub.postUserRole
+    if (sub?.reasoning?.enabled) updates.reasoning = sub.reasoning
+    if (sub?.prefill) updates.prefill = sub.prefill
+    if (sub?.modelFormat) updates.modelFormat = sub.modelFormat
+    if (sub?.skipRoleMerging) updates.skipRoleMerging = sub.skipRoleMerging
+
+    Object.assign(preset, updates)
+    debug('bot-gen')('applying sub model specifics %s', inline(updates))
   }
 
   const json = user.jsonPreset ? presets.find((p) => p._id === user.jsonPreset) : undefined

@@ -58,6 +58,7 @@ export type ImageProviderSettings = {
   type: ImageProviderType
   url: string
   sampler: string
+  scheduler: string
   model: string
 
   // Inherit auth from Text Provider

@@ -1,5 +1,5 @@
 import { createStore } from 'solid-js/store'
-import { SD_SAMPLER } from '/common/image'
+import { SD_SAMPLER, SWARM_SCHEDULER } from '/common/image'
 import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
 import { createEffect, on } from 'solid-js'
 import { ImageDefaults, ImageSettings } from '/common/types/image-schema'
@@ -33,6 +33,7 @@ const init = (): ImageSettings => ({
     model: '',
     sampler: SD_SAMPLER['Euler a'],
     draftMode: false,
+    scheduler: '',
   },
   horde: {
     _id: 'horde',
@@ -40,6 +41,7 @@ const init = (): ImageSettings => ({
     name: 'Horde',
     url: '',
     sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
     model: '',
   },
   sd: {
@@ -49,6 +51,7 @@ const init = (): ImageSettings => ({
     model: '',
     url: '',
     sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
   },
   novel: {
     _id: 'novel',
@@ -57,6 +60,7 @@ const init = (): ImageSettings => ({
     url: '',
     model: '',
     sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
     ucPreset: '0',
     qualityTags: true,
   },
@@ -66,6 +70,7 @@ const init = (): ImageSettings => ({
     name: 'SwarmUI',
     model: '',
     sampler: SD_SAMPLER['Euler a'],
+    scheduler: SWARM_SCHEDULER['Normal'],
     url: 'http://localhost:7801',
     local: true,
   },

@@ -25,6 +25,8 @@ import {
   SD_SAMPLER_REV,
   SWARM_SAMPLER,
   SWARM_SAMPLER_REV,
+  SWARM_SCHED_REV,
+  SWARM_SCHEDULER,
 } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 import { ComponentSubscriber, createEmitter } from '/web/shared/util'
@@ -97,6 +99,7 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
       url: '',
       sampler: '',
       model: '',
+      scheduler: '',
     })
   }
 
@@ -180,6 +183,7 @@ export const EditCurrentImageProvider: Component = () => {
     url: '',
     sampler: '',
     model: '',
+    scheduler: '',
   })
 
   const setStoreWrapper: typeof setStore = (...args: any[]) => {
@@ -463,6 +467,11 @@ const SWARM_SAMPLERS = Object.entries(SWARM_SAMPLER_REV).map(([key, value]) => (
   value: key,
 }))
 
+const SWARM_SCHEDULERS = Object.entries(SWARM_SCHED_REV).map(([key, value]) => ({
+  label: `Scheduler: ${value}`,
+  value: key,
+}))
+
 export const SwarmSettings: Component<{
   cfg: ImageProviderSettings
   setter: SetStoreFunction<ImageProviderSettings>
@@ -551,6 +560,14 @@ export const SwarmSettings: Component<{
           class="!py-1"
           value={props.cfg.sampler || SWARM_SAMPLER['Euler a']}
           onChange={(ev) => props.setter('sampler', ev.value)}
+        />
+
+        <Select
+          items={SWARM_SCHEDULERS}
+          inline
+          class="!py-1"
+          value={props.cfg?.scheduler || SWARM_SCHEDULER['Normal']}
+          onChange={(ev) => props.setter('scheduler', ev.value)}
         />
 
         <Toggle

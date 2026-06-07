@@ -79,6 +79,20 @@ export const SWARM_SAMPLER_REV = {
   uni_pc: 'UniPC',
 } as const
 
+export const SWARM_SCHED_REV = {
+  normal: 'Normal',
+  beta: 'Beta',
+  karras: 'Karras',
+  exponential: 'Exponential',
+  simple: 'Simple',
+  ddim_uniform: 'DDMIN Uniform',
+  sgm_uniform: 'SGM Uniform',
+  turbo: 'Turbo (for turbo models, max 10 steps)',
+  linear_quadratic: 'Linear Quadratic',
+  'ltxv-image': 'LTXV-Image',
+  kl_optimal: 'KL Optimal',
+}
+
 export const SD_SAMPLER_OPTS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
   label: value,
   value: key,
@@ -86,6 +100,7 @@ export const SD_SAMPLER_OPTS = Object.entries(SD_SAMPLER_REV).map(([key, value])
 
 export const SD_SAMPLER = reverseKeyValue(SD_SAMPLER_REV)
 export const SWARM_SAMPLER = reverseKeyValue(SWARM_SAMPLER_REV)
+export const SWARM_SCHEDULER = reverseKeyValue(SWARM_SCHED_REV)
 
 type ReverseMap<T extends Record<keyof T, keyof any>> = {
   [P in T[keyof T]]: {
