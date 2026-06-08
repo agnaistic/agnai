@@ -29,6 +29,8 @@ import { genApi } from '/web/store/data/inference'
 import { getImagePromptEntities } from '/web/store/data/common'
 import { usePresetContext } from '/web/store/preset-context'
 import { useAppContext } from '/web/store/context'
+import { useImageContext } from '../Settings/Image/image-context'
+import { SelectImageProvider } from '../Settings/Image/ImageProvider'
 
 const log = debug('image-modal')
 
@@ -105,6 +107,7 @@ const ImageUrlModal: Component<{
 
 const ImageCollectionModal: Component<{}> = (props) => {
   const [context] = useAppContext()
+  const [imgctx] = useImageContext()
   const [presets] = usePresetContext()
 
   const reel = useImageCache()
@@ -333,6 +336,10 @@ const ImageCollectionModal: Component<{}> = (props) => {
 
   const GenerationActions = (
     <div class="flex flex-col gap-2">
+      <div class="flex w-full items-end justify-end">
+        <SelectImageProvider ctx={imgctx} />
+      </div>
+
       <div class="flex w-full items-end justify-end gap-2">
         <Button size="sm" onClick={generateImage} disabled={state.loading}>
           Generate Image

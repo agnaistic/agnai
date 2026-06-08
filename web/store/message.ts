@@ -723,6 +723,17 @@ async function onMessageReceived(body: {
   onCharacterMessageReceived(msg)
 }
 
+msgStore.subscribe((curr, prev) => {
+  if (prev.activeChatId === curr.activeChatId) return
+  const from = prev.activeChatId || 'none'
+  const to = curr.activeChatId || 'none'
+  if (from === 'none') {
+    const error = new Error()
+    console.log(error.stack)
+  }
+  debug('chat-id')('changed %s --> %s', from, to)
+})
+
 function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
   if (!msg.characterId || msg.event || msg.ooc) return
   const { msgs } = msgStore.getState()

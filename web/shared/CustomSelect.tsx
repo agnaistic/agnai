@@ -221,7 +221,6 @@ export const CustomSelect: Component<{
               size={props.size}
               alignLeft
               onClick={() => setOpen(true)}
-              class={props.buttonClass || ''}
               // class="w-fit max-w-fit"
               disabled={props.disabled}
             >

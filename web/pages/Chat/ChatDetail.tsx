@@ -7,6 +7,7 @@ import {
   Index,
   on,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -225,13 +226,14 @@ const ChatDetail: Component = () => {
             },
           })
         } else {
+          msgStore.setState({ activeChatId: params.id })
           characterStore.loadImpersonate()
         }
       }
     )
   )
 
-  createEffect(() => {
+  onMount(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName || '...'}` : 'Chat')
 

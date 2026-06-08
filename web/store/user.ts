@@ -1192,6 +1192,7 @@ async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user:
         url: '',
         model: config.defaultImageModel,
         sampler: 'k_euler_a',
+        scheduler: '',
         draftMode: false,
       }
     }

@@ -28,7 +28,7 @@ const sizes = {
   xs: 'py-0.5 text-xs',
 }
 
-const Button: Component<{
+export type ButtonProps = {
   children: JSX.Element
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent>
   schema?: ButtonSchema
@@ -41,7 +41,9 @@ const Button: Component<{
   classList?: { [key: string]: boolean }
   ariaLabel?: string
   href?: string
-}> = (props) => {
+}
+
+const Button: Component<ButtonProps> = (props) => {
   const nav = useNavigate()
   const schema = createMemo(() => kinds[props.schema || 'primary'])
   return (

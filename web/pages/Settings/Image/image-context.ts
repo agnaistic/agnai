@@ -10,6 +10,15 @@ import { AppSchema } from '/common/types'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
+const PROVIDER_TYPES = [
+  { label: 'Agnaistic', value: 'agnai' },
+  { label: 'Horde', value: 'horde' },
+  { label: 'NovelAI', value: 'novel' },
+  { label: 'SD WebUI', value: 'sd' },
+  { label: 'Swarm UI', value: 'swarm' },
+  { label: 'OpenAI-Compat', value: 'openai' },
+]
+
 const init = (): ImageSettings => ({
   summaryPresetId: '',
   cfg: 7,
@@ -233,7 +242,7 @@ export function useImageContext() {
   )
 
   const receiveUpdate = () => {
-    if (!page.open) return
+    // if (!page.open) return
 
     const hostingImages =
       !!settings.config.serverConfig?.imagesEnabled &&
@@ -242,10 +251,12 @@ export function useImageContext() {
     const hosts = [
       { label: 'Horde', value: 'horde' },
       { label: 'NovelAI', value: 'novel' },
-      { label: 'Stable Diffusion', value: 'sd' },
+      { label: 'SD WebUI', value: 'sd' },
       { label: 'Swarm UI', value: 'swarm' },
-      { label: 'OpenAI Compatible', value: 'openai' },
-    ].map((item) => ({ label: `${item.label}`, value: item.value }))
+      { label: 'OpenAI-Compat', value: 'openai' },
+    ]
+      .map((item) => ({ label: `${item.label}`, value: item.value }))
+      .filter((i) => i.value !== 'agnai')
 
     if (hostingImages) {
       hosts.unshift({ label: 'Agnaistic', value: 'agnai' })
@@ -271,6 +282,11 @@ export function useImageContext() {
       save,
     },
   ]
+}
+
+export function getImageProviderName(type: string) {
+  const opt = PROVIDER_TYPES.find((t) => t.value === type)
+  return opt?.label || 'None'
 }
 
 async function saveImageSettings(

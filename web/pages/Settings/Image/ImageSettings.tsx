@@ -134,7 +134,6 @@ export const ImageSettingsModal = () => {
             setPresetId={(id) => ctx.update('summaryPresetId', id)}
             selected={ctx.store.summaryPresetId}
           >
-            umm
             <Button disabled={!ctx.store.summaryPresetId} onClick={editPresetClicked}>
               <Pencil size={20} />
             </Button>
@@ -170,6 +169,7 @@ export const ImageSettingsModal = () => {
           </Accordian>
 
           <div class="flex gap-2">
+            <FormLabel label="Image Provider"></FormLabel>
             <SelectImageProvider ctx={ctx} />
           </div>
 

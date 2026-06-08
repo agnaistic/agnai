@@ -15,9 +15,9 @@ import {
 } from 'solid-js'
 import { pageStore, settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
-import { ImageContext, useImageContext } from './image-context'
+import { getImageProviderName, ImageContext, useImageContext } from './image-context'
 import { ImageProviderLora, ImageProviderSettings } from '/common/types/image-schema'
-import { createStore, SetStoreFunction } from 'solid-js/store'
+import { createStore } from 'solid-js/store'
 import {
   NOVEL_IMAGE_MODEL,
   NOVEL_SAMPLER_REV,
@@ -34,17 +34,18 @@ import { imageApi } from '/web/store/data/image'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import TextInput from '/web/shared/TextInput'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, RefreshCcw, SaveIcon, X } from 'lucide-solid'
+import { Info, RefreshCcw, Settings, X } from 'lucide-solid'
 import { useProviderList } from '../Provider/hooks'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
-import Modal from '/web/shared/Modal'
+import { ConditionalModal } from '/web/shared/Modal'
 
 export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => {
   const state = userStore((s) => ({ providers: s.user?.imageProviders || [] }))
 
+  const [open, setOpen] = createSignal(false)
   const [editPrv, setEditPrv] = createSignal<ImageProviderSettings | undefined>()
-  const [current, setCurrent] = createSignal({ id: '', model: '' })
+  const [_current, setCurrent] = createSignal({ id: '', model: '' })
 
   createEffect(
     on(
@@ -56,6 +57,11 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
         }
 
         const match = state.providers.find((s) => s._id === props.ctx.store.imageProviderId)
+
+        const editing = editPrv()
+        if (match && match._id !== editing?._id) {
+          setEditPrv(match)
+        }
 
         if (match?.type !== 'openai') {
           setCurrent({ id: '', model: '' })
@@ -79,9 +85,10 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
       } else {
         name = prv.name
       }
+      const type = getImageProviderName(prv.type)
 
       return {
-        label: name,
+        label: `${type}: ${name}`,
         value: prv._id || '',
         prv,
       }
@@ -101,72 +108,87 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
       model: '',
       scheduler: '',
     })
+    closeSub.emit.close()
+    setOpen(true)
   }
 
-  const saveModel = () => {
-    const curr = current()
-    if (!curr.id) return
-
-    const match = state.providers.find((p) => p._id === curr.id)
-    if (!match) return
-
-    const payload = { ...match, model: curr.model }
-    userStore.upsertImageProvider(payload)
+  const updateProvider: ProviderSetter = (value, key) => {
+    const prev = editPrv()
+    if (!prev) return
+    setEditPrv({ ...prev, [value]: key })
   }
+
+  // const saveModel = () => {
+  //   const curr = current()
+  //   if (!curr.id) return
+
+  //   const match = state.providers.find((p) => p._id === curr.id)
+  //   if (!match) return
+
+  //   const payload = { ...match, model: curr.model }
+  //   userStore.upsertImageProvider(payload)
+  // }
+
+  const editProvider = (providerId: string | undefined) => {
+    if (!providerId) {
+      setEditPrv()
+      return
+    }
+
+    const match = state.providers.find((prv) => prv._id === providerId)
+    setEditPrv(match ? { ...match } : undefined)
+  }
+
+  const closeSub = createEmitter('close')
 
   return (
     <>
-      <div class="flex w-full flex-col gap-2">
-        <div class="flex w-full items-end gap-2">
-          <Select
-            label={
-              <div class="mb-1 flex items-center gap-1">
-                Image Provider{' '}
-                <Button size="sm" onClick={newProvider}>
-                  New +
-                </Button>
-              </div>
-            }
-            items={providers()}
-            value={props.ctx.store.imageProviderId || ''}
-            onChange={(ev) => props.ctx.update('imageProviderId', ev.value)}
-          />
-          <Button
-            disabled={!props.ctx.store.imageProviderId}
-            onClick={() => {
-              if (!props.ctx.store.imageProviderId) return
-              const match = state.providers.find(
-                (prv) => prv._id === props.ctx.store.imageProviderId
-              )
-
-              if (!match) return
-              setEditPrv(match)
-            }}
-          >
-            Edit
-          </Button>
-        </div>
-
-        <Show when={current().id}>
-          <div class="flex w-full items-center gap-1">
-            <TextInput
-              parentClass="w-full"
-              class="w-full"
-              prelabel="Model ID"
-              value={current().model}
-              onChange={(ev) =>
-                setCurrent((prev) => ({ id: prev.id, model: ev.currentTarget.value }))
-              }
-            />
-            <Button class="!w-fit" onClick={saveModel}>
-              <SaveIcon size={24} />
+      <div class="w-fititems-end flex gap-2">
+        <CustomSelect
+          size="sm"
+          modalTitle="Select Image Provider"
+          buttonLabel={
+            <>
+              {editPrv()?._id
+                ? `${getImageProviderName(editPrv()?.type || '')}: ${
+                    editPrv()?.name || 'Unnamed Provider'
+                  }`
+                : 'No Provider'}{' '}
+            </>
+          }
+          options={providers()}
+          selected={props.ctx.store.imageProviderId || ''}
+          closeSub={closeSub.on}
+          onSelect={(ev) => {
+            props.ctx.update('imageProviderId', ev.value)
+            editProvider(ev.value)
+          }}
+          header={
+            <Button size="sm" onClick={newProvider}>
+              New +
             </Button>
-          </div>
-        </Show>
+          }
+        />
+        <Button
+          size="sm"
+          disabled={!editPrv()?._id}
+          onClick={() => {
+            editProvider(editPrv()?._id)
+            setOpen(true)
+          }}
+        >
+          <Settings size={20} />
+        </Button>
       </div>
 
-      <Show when={editPrv()}>
-        <EditImageProvider provider={editPrv()!} close={() => setEditPrv()} ctx={props.ctx} />
+      <Show when={open() && editPrv()}>
+        <EditImageProvider
+          noModal={false}
+          provider={editPrv()!}
+          setter={updateProvider}
+          close={() => setOpen(false)}
+          ctx={props.ctx}
+        />
       </Show>
     </>
   )
@@ -245,13 +267,13 @@ export const EditCurrentImageProvider: Component = () => {
 
 export const EditImageProvider: Component<{
   provider: ImageProviderSettings
+  setter: ProviderSetter
   ctx: ImageContext
+  noModal?: boolean
   close: () => void
 }> = (props) => {
-  const [store, setStore] = createStore({ ...props.provider })
-
   const save = async () => {
-    const payload = { ...store }
+    const payload = { ...props.provider }
     if (!payload._id) {
       payload._id = ''
     }
@@ -264,7 +286,8 @@ export const EditImageProvider: Component<{
   }
 
   return (
-    <Modal
+    <ConditionalModal
+      modal={props.noModal ? false : true}
       show
       close={props.close}
       footer={
@@ -278,51 +301,51 @@ export const EditImageProvider: Component<{
         </>
       }
     >
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 !text-sm">
         <Select
           label="Provider Type"
           items={props.ctx.state.hosts}
           value={props.provider.type}
-          onChange={(ev) => setStore('type', ev.value as any)}
+          onChange={(ev) => props.setter('type', ev.value as any)}
         />
         <TextInput
           label="Name"
-          value={store.name || ''}
-          onChange={(ev) => setStore('name', ev.currentTarget.value)}
+          value={props.provider.name || ''}
+          onChange={(ev) => props.setter('name', ev.currentTarget.value)}
         />
         <Switch>
-          <Match when={store.type === 'agnai'}>
-            <AgnaiSettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'agnai'}>
+            <AgnaiSettings cfg={props.provider} setter={props.setter} />
           </Match>
 
-          <Match when={store.type === 'swarm'}>
-            <SwarmSettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'swarm'}>
+            <SwarmSettings cfg={props.provider} setter={props.setter} />
           </Match>
 
-          <Match when={store.type === 'novel'}>
-            <NovelSettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'novel'}>
+            <NovelSettings cfg={props.provider} setter={props.setter} />
           </Match>
 
-          <Match when={store.type === 'horde'}>
-            <HordeSettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'horde'}>
+            <HordeSettings cfg={props.provider} setter={props.setter} />
           </Match>
 
-          <Match when={store.type === 'sd'}>
-            <SDSettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'sd'}>
+            <SDSettings cfg={props.provider} setter={props.setter} />
           </Match>
 
-          <Match when={store.type === 'openai'}>
-            <OpenAISettings cfg={store} setter={setStore} />
+          <Match when={props.provider.type === 'openai'}>
+            <OpenAISettings cfg={props.provider} setter={props.setter} />
           </Match>
         </Switch>
       </div>
-    </Modal>
+    </ConditionalModal>
   )
 }
 
 export const NovelSettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user }))
@@ -397,7 +420,7 @@ export const NovelSettings: Component<{
 
 export const HordeSettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const cfg = settingStore((s) => ({ imageWorkers: s.imageWorkers }))
@@ -474,7 +497,7 @@ const SWARM_SCHEDULERS = Object.entries(SWARM_SCHED_REV).map(([key, value]) => (
 
 export const SwarmSettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const emitter = createEmitter('open')
@@ -582,7 +605,7 @@ export const SwarmSettings: Component<{
 
 export const SDSettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const emitter = createEmitter('open')
@@ -665,7 +688,7 @@ export const SDSettings: Component<{
 
 export const OpenAISettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: boolean
 }> = (props) => {
   const [providers] = useProviderList(true)
@@ -716,9 +739,14 @@ export const OpenAISettings: Component<{
   )
 }
 
+type ProviderSetter = <T extends keyof ImageProviderSettings, K extends ImageProviderSettings[T]>(
+  key: T,
+  value: K
+) => void
+
 export const AgnaiSettings: Component<{
   cfg: ImageProviderSettings
-  setter: SetStoreFunction<ImageProviderSettings>
+  setter: ProviderSetter
   modelOnly?: ComponentSubscriber<'open'>
 }> = (props) => {
   const settings = settingStore((s) => {
@@ -897,10 +925,7 @@ type LoraHook = {
   update: (cfg: ImageProviderSettings, i: number, update: Partial<ImageProviderLora>) => void
 }
 
-function useLoras(
-  setter: SetStoreFunction<ImageProviderSettings>,
-  initial: ImageProviderLora[] | undefined
-): LoraHook {
+function useLoras(setter: ProviderSetter, initial: ImageProviderLora[] | undefined): LoraHook {
   const [loras, setLoras] = createSignal(initial || [])
 
   const addLora = (cfg: ImageProviderSettings) => {

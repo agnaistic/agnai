@@ -33,6 +33,19 @@ interface Props {
   contentClass?: string
 }
 
+export const ConditionalModal: Component<Props & { modal: boolean }> = (props) => {
+  return (
+    <>
+      <Switch>
+        <Match when={props.modal}>
+          <Modal {...props} />
+        </Match>
+        <Match when={!props.modal}>{props.children}</Match>
+      </Switch>
+    </>
+  )
+}
+
 const Modal: Component<Props> = (props) => {
   const mobile = useMobileDetect()
   const [full, setFull] = createSignal(false)
