@@ -10,7 +10,7 @@ import { announceStore, userStore } from './store'
 import { AppSchema } from '/common/types'
 import { markdown } from './shared/markdown'
 import { elapsedSince } from './shared/util'
-import Accordian from './shared/Accordian'
+import { Copy } from './shared/Copy'
 
 const bgColor = {
   default: 'bg-500',
@@ -123,9 +123,16 @@ const Notifications: Component = () => {
                       </Show>
                       <p>{toast.message}</p>
                       <Show when={toast.stack}>
-                        <Accordian titleClickOpen title="Stack">
+                        <TitleCard
+                          title=<>
+                            <div class="flex items-center">
+                              <Copy text={toast.stack} />
+                              &nbsp;Stacktrace
+                            </div>
+                          </>
+                        >
                           <pre>{toast.stack}</pre>
-                        </Accordian>
+                        </TitleCard>
                       </Show>
                     </TitleCard>
                   )}

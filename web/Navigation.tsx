@@ -422,15 +422,11 @@ const GuestNavigation: Component = () => {
   )
 }
 
-const NavIcons: Component<{
-  patreon?: boolean
-  supportEmail?: string
-  showMenu: boolean
-}> = (props) => {
-  const invites = inviteStore((s) => ({ invites: s.invites }))
+export const NotificationBell: Component<{ showMenu?: boolean; size?: number }> = (props) => {
   const toasts = toastStore((s) => ({ unseen: s.unseen }))
   const announce = announceStore((s) => ({ list: s.list }))
   const user = userStore((s) => ({ user: s.user, ui: s.ui }))
+  const invites = inviteStore((s) => ({ invites: s.invites }))
 
   const count = createMemo(() => {
     const threshold = new Date(user.user?.announcement || 0).toISOString()
@@ -440,6 +436,48 @@ const NavIcons: Component<{
 
     return unseen.length + toasts.unseen + invites.invites.length
   })
+
+  return (
+    <Item
+      onClick={() => {
+        if (props.showMenu) pageStore.closeMenu()
+        toastStore.modal(true)
+      }}
+      ariaLabel="Show notification list"
+    >
+      <Switch>
+        <Match when={count() > 0}>
+          <div
+            class="relative flex"
+            role="status"
+            aria-label={`Status: You have ${count()} new notifications`}
+          >
+            <Bell fill="var(--bg-100)" aria-hidden="true" size={props.size} />
+            <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
+              <Badge type="rose">{count() > 9 ? '9+' : count()}</Badge>
+            </span>
+          </div>
+        </Match>
+
+        <Match when={!count()}>
+          <Bell
+            color="var(--bg-500)"
+            role="status"
+            aria-label="Status: No new notifications"
+            size={props.size}
+          />
+        </Match>
+      </Switch>
+    </Item>
+  )
+}
+
+const NavIcons: Component<{
+  patreon?: boolean
+  supportEmail?: string
+  showMenu: boolean
+}> = (props) => {
+  const user = userStore((s) => ({ user: s.user, ui: s.ui }))
 
   return (
     <>
@@ -479,32 +517,7 @@ const NavIcons: Component<{
           </Show>
         </Item>
 
-        <Item
-          onClick={() => {
-            if (props.showMenu) pageStore.closeMenu()
-            toastStore.modal(true)
-          }}
-          ariaLabel="Show notification list"
-        >
-          <Switch>
-            <Match when={count() > 0}>
-              <div
-                class="relative flex"
-                role="status"
-                aria-label={`Status: You have ${count()} new notifications`}
-              >
-                <Bell fill="var(--bg-100)" aria-hidden="true" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
-                  <Badge type="rose">{count() > 9 ? '9+' : count()}</Badge>
-                </span>
-              </div>
-            </Match>
-
-            <Match when={!count()}>
-              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
-            </Match>
-          </Switch>
-        </Item>
+        <NotificationBell showMenu={props.showMenu} />
       </div>
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Show when={props.patreon}>

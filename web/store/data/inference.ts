@@ -334,19 +334,24 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   const conn = provider ? getProviderConnection(provider) : undefined
 
   const tickWrapper: TickHandler = (res, state, json) => {
-    if (state === 'partial') {
-      lastResponse = res
+    if (localStorage.error_test === 'gen-tick' && lazy.state === 'pending' && state !== 'error') {
+      lazy.reject(new Error(`Error test -- ${state}`))
+      opts.signal?.abort()
+      getStore('responses').setState({ waiting: undefined, partial: undefined })
+    } else {
+      if (state === 'partial') {
+        lastResponse = res
+      }
 
-      if (opts.jsonSchema) console.log(res, json)
-    }
+      if (state === 'done') {
+        if (typeof res !== 'string') lazy.resolve(res)
+        else lazy.resolve({ response: res })
+      }
 
-    if (state === 'done') {
-      if (typeof res !== 'string') lazy.resolve(res)
-      else lazy.resolve({ response: res })
-    }
-
-    if (state === 'error') {
-      lazy.reject(res)
+      if (state === 'error') {
+        lazy.reject(res)
+        getStore('responses').setState({ waiting: undefined, partial: undefined })
+      }
     }
 
     onTick?.(res, state, json)
@@ -356,7 +361,6 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     opts.signal.signal.onabort = () => {
       inferenceCallbacks.delete(requestId)
       tickWrapper(lastResponse, 'done')
-      // lazy.resolve({ response: lastResponse })
     }
   }
   if (conn?.local) {
@@ -393,6 +397,11 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
       signal: opts.signal,
       onTick: tickWrapper,
     })
+  }
+
+  if (localStorage.error_test === 'gen-cancel') {
+    setTimeout(() => opts.signal?.abort(), 0)
+    toastStore.error('Gen cancelled test', { stack: new Error('Test').stack })
   }
 
   return lazy.promise

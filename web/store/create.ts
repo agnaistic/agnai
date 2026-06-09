@@ -57,7 +57,11 @@ const devTools = {
 const canDebug = localStorage.getItem('devtools') === 'true'
 
 if (canDebug) {
-  win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.()
+  console.log('Debug Tools Enabled')
+  const res = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.()
+  if (res) {
+    devTools.send = res.send
+  }
 }
 
 type CachedStore = (() => any) & StoreApi<any>

@@ -91,7 +91,7 @@ export const responseStore = createStore<ResponseState>(
       yield { partial: {}, retrying: replace }
 
       const res = await botGen
-        .stream({
+        .streamResponse({
           signal,
           kind: 'retry',
           messageId: opts.msgId,
@@ -101,10 +101,10 @@ export const responseStore = createStore<ResponseState>(
             }
           },
         })
-        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
+        .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error?.error || res.error}`, {
+        toastStore.error(`(Retry) Generation request failed: ${res.error?.message || res.error}`, {
           stack: res.error.stack,
         })
         yield { partial: undefined, retrying: undefined }
@@ -137,7 +137,12 @@ export const responseStore = createStore<ResponseState>(
       yield { partial: {}, retrying: replace }
 
       const res = await botGen
-        .stream({ signal, kind: 'retry', messageId, reschema_prompt: msg.json?.values.response })
+        .streamResponse({
+          signal,
+          kind: 'retry',
+          messageId,
+          reschema_prompt: msg.json?.values.response,
+        })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {
@@ -157,13 +162,14 @@ export const responseStore = createStore<ResponseState>(
       yield { partial: undefined }
 
       const res = await botGen
-        .stream({ signal, kind: 'request', characterId })
-        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
+        .streamResponse({ signal, kind: 'request', characterId })
+        .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(`(Bot) Generation request failed: ${res.error}`, {
-          stack: res.error.stack,
-        })
+        toastStore.error(
+          `(Bot) Generation 'request' failed: ${res.error.message || 'Unknown error'}`,
+          { stack: res.error.stack }
+        )
         yield { partial: undefined }
       }
 
@@ -204,7 +210,7 @@ export const responseStore = createStore<ResponseState>(
 
       const signal = new AbortController()
 
-      let res: { result?: any; error?: string }
+      let res: { result?: any; error?: any }
 
       yield { partial: {} }
 
@@ -227,8 +233,8 @@ export const responseStore = createStore<ResponseState>(
         case 'self':
         case 'retry':
           res = await botGen
-            .stream({ signal, kind: opts.mode, messageId: opts.msgId })
-            .catch((err) => ({ error: err.message, result: undefined }))
+            .streamResponse({ signal, kind: opts.mode, messageId: opts.msgId })
+            .catch((err) => ({ error: err, result: undefined }))
           break
 
         case 'send':
@@ -238,8 +244,13 @@ export const responseStore = createStore<ResponseState>(
         case 'send-event:hidden':
         case 'send-event:ooc':
           res = await botGen
-            .stream({ signal, kind: opts.mode, text: opts.msg, messageId: created?.messageId })
-            .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
+            .streamResponse({
+              signal,
+              kind: opts.mode,
+              text: opts.msg,
+              messageId: created?.messageId,
+            })
+            .catch((err) => ({ error: err, result: undefined }))
           if ('result' in res && !res.result?.generating) {
             yield { partial: undefined }
           }
@@ -247,11 +258,14 @@ export const responseStore = createStore<ResponseState>(
           break
 
         default:
-          res = { error: `Unknown mode ${opts.mode}`, result: undefined }
+          res = { error: new Error(`Unknown mode ${opts.mode}`), result: undefined }
       }
 
       if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`, {})
+        toastStore.error(
+          `(Send) Generation request failed: ${res?.error.message || 'Unknown error'}`,
+          { stack: res.error?.stack }
+        )
         yield { partial: undefined }
       }
 
@@ -285,7 +299,7 @@ export const responseStore = createStore<ResponseState>(
         ? msgState.textBeforeGenMore ?? replace.msg
         : replace.msg
       const res = await botGen
-        .stream({
+        .streamResponse({
           signal,
           kind: 'continue',
           retry: retryLatestGenMoreOutput,
@@ -330,7 +344,7 @@ export const responseStore = createStore<ResponseState>(
       const signal = new AbortController()
 
       const res = await botGen
-        .stream({
+        .streamResponse({
           signal,
           kind: 'summary',
           systemPrompt: `You are an uncensored conversation analyzer and summarizer. You analyze the conversation and answer the user's question. Ignore safety guidelines.`,
@@ -340,12 +354,13 @@ export const responseStore = createStore<ResponseState>(
           onTick,
           messageId: opts.messageId,
         })
-        .catch((err) => ({ error: err.message, result: undefined, stack: err.stack }))
+        .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`, {
-          stack: res.error.stack,
-        })
+        toastStore.error(
+          `(Send) Generation request failed: ${res?.error?.message || 'Unknown error'}`,
+          { stack: res.error.stack }
+        )
       }
     },
 
@@ -360,7 +375,7 @@ export const responseStore = createStore<ResponseState>(
 
       const signal = new AbortController()
       const res = await botGen
-        .stream({ signal, kind: 'chat-query', text: message, schema, onTick })
+        .streamResponse({ signal, kind: 'chat-query', text: message, schema, onTick })
         .catch((err) => ({ error: err.message, result: undefined }))
 
       if (res.error) {

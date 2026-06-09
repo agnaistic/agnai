@@ -54,7 +54,7 @@ registerTemplateLocator((id: string) => {
 })
 
 export const botGen = {
-  stream: streamResponse,
+  streamResponse: streamResponse,
   getActivePromptOptions,
   getMessageParent,
 }
@@ -103,6 +103,7 @@ type StreamOpts = { state?: 'error' | 'done' | 'complete' } & Exclude<
   }
 
 async function streamResponse(opts: StreamOpts) {
+  debug('bot-gen')('request type: %s', opts.kind)
   const { details, lastChatId } = getStore('chat').getState()
   const active = details[lastChatId]
   if (!active) {
@@ -196,6 +197,7 @@ async function streamResponse(opts: StreamOpts) {
   }
 
   const messageId = req.request.replacing?._id || req.request.requestId
+  console.log('WAITING SET', lazy.state)
   waiting({
     mode: opts.kind,
     characterId: req.request.replyAs._id,
@@ -231,6 +233,8 @@ async function streamResponse(opts: StreamOpts) {
       )
     }
   )
+
+  console.log('INFERENCE CALLED', lazy.state)
 
   /** In development: Performing JSON output in a separate call if specified by the schema */
 
@@ -284,8 +288,7 @@ async function handleStreamTick(
       if (opts.state) return
 
       opts.state = 'error'
-      input.lazy.reject(tick.response)
-      toastStore.error(tick.response)
+      input.lazy.reject(new Error(tick.response))
       // waiting(undefined)
       break
 
@@ -690,6 +693,10 @@ type EventKind =
   | 'send-event:ooc'
 
 async function createActiveChatPrompt(opts: GenerateOpts) {
+  if (localStorage.error_test === 'gen-prompt') {
+    throw new Error(`Prompt error test`)
+  }
+
   const { details, lastChatId } = getStore('chat').getState()
   const active = details[lastChatId]
 

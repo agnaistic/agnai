@@ -890,17 +890,23 @@ export type LazyPromise<T = any> = {
 
 export function lazyPromise<T = any>() {
   const parts = {
+    state: 'pending' as 'pending' | 'resolved' | 'rejected',
     resolve: (result: T) => {},
     reject: (error: any) => {},
     promise: {} as any as Promise<{ result?: T; error?: any }>,
   }
 
-  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, _reject) => {
+  parts.promise = new Promise<{ result?: T; error?: any }>((resolve, reject) => {
     parts.resolve = (result: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'resolved'
+
       resolve({ result, error: undefined })
     }
     parts.reject = (error: any) => {
-      resolve({ result: undefined, error })
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'rejected'
+      reject(error)
     }
   })
 
@@ -909,6 +915,7 @@ export function lazyPromise<T = any>() {
 
 export function lazySimplePromise<T = any>() {
   const parts = {
+    state: 'pending' as 'pending' | 'resolved' | 'rejected',
     resolve: (result: T) => {},
     reject: (error: any) => {},
     promise: {} as any as Promise<T>,
@@ -916,9 +923,13 @@ export function lazySimplePromise<T = any>() {
 
   parts.promise = new Promise<T>((resolve, reject) => {
     parts.resolve = (result: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'resolved'
       resolve(result)
     }
     parts.reject = (error: any) => {
+      if (parts.state !== 'pending') return
+      if (parts.state === 'pending') parts.state = 'rejected'
       reject(error)
     }
   })

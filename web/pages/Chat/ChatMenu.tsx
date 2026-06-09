@@ -5,7 +5,7 @@ import { ChatModal } from './ChatOptions'
 import { usePaneManager } from '/web/shared/hooks'
 import { ContextState } from '/web/store/context'
 import { useSubNav } from '/web/subnav'
-import { Nav, UserProfile } from '/web/Navigation'
+import { Nav, NotificationBell, UserProfile } from '/web/Navigation'
 import {
   Book,
   Palette,
@@ -170,13 +170,13 @@ const ChatNav: Component<NavProps> = (props) => {
         >
           <ImagePlus size={size} aria-hidden="true" />
         </Nav.Item>
-        <Nav.Item
+        {/*<Nav.Item
           onClick={() => imageStore.imageSettings(true)}
           ariaLabel="Image Settings"
           tooltip="Image Settings"
         >
           <Image size={size} aria-hidden="true" />
-        </Nav.Item>
+        </Nav.Item>*/}
         <Nav.Item onClick={() => props.setModal('export')} tooltip="Download Chat">
           <Download size={size} />
         </Nav.Item>
@@ -186,6 +186,8 @@ const ChatNav: Component<NavProps> = (props) => {
         <Nav.Item onClick={() => props.setModal('delete')} tooltip="Delete Chat">
           <Trash size={size} />
         </Nav.Item>
+
+        <NotificationBell size={size} />
       </div>
     </>
   )
