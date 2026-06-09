@@ -18,7 +18,6 @@ import {
   RotateCcw,
   ChevronLeft,
   Pencil,
-  Image,
   ImagePlus,
 } from 'lucide-solid'
 import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
