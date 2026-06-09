@@ -222,7 +222,7 @@ function getAuthedPromptEntities(opts?: { messageId?: string }) {
 
   const { attachments, graph } = getStore('messages').getState()
   const path = resolveChatPath(graph.tree, opts?.messageId || chat.treeLeafId || '')
-  const presets = getActivePreset(chat, user)!
+  const presets = getActivePresets(chat, user)!
   const conn = getPresetConnection(presets.current, user.providers)
   const scenarios = getStore('scenario')
     .getState()
@@ -294,7 +294,7 @@ export function useActivePreset() {
   return preset
 }
 
-export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
+export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (!chat) {
     const { details, lastChatId } = getStore('chat').getState()
     chat = details[lastChatId]?.chat
@@ -325,7 +325,13 @@ export function getActivePreset(chat?: AppSchema.Chat, user?: AppSchema.User) {
     const sub = subs.find((s) => s._id === preset.providerModels?.agnaistic)?.preset
     const updates: any = {}
     if (sub?.postUserRole) updates.postUserRole = sub.postUserRole
-    if (sub?.reasoning?.enabled) updates.reasoning = sub.reasoning
+
+    const reasoningRequired = !!sub?.reasoning?.enabled
+    const reasoingRequested = !!preset.reasoning?.enabled && preset.reasoning?.effort !== 'none'
+    if (reasoingRequested && !reasoningRequired) {
+      updates.reasoning = sub?.reasoning!
+    }
+
     if (sub?.prefill) updates.prefill = sub.prefill
     if (sub?.modelFormat) updates.modelFormat = sub.modelFormat
     if (sub?.skipRoleMerging) updates.skipRoleMerging = sub.skipRoleMerging

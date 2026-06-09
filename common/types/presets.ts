@@ -122,6 +122,8 @@ export type Sampler =
 
 export type SamplerState = 'on' | 'off' | 'auto' | string
 
+export type ReasoningEffort = 'custom' | 'high' | 'medium' | 'low' | 'none'
+
 export interface GenSettings {
   name: string
   userId?: string
@@ -215,7 +217,7 @@ export interface GenSettings {
   reasoning?: {
     start: string
     end: string
-    effort: string
+    effort: ReasoningEffort
     enabled: boolean
     exclude: boolean
     maxTokens: number

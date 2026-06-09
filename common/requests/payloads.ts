@@ -567,8 +567,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 }
 
 function getReasoningParams(gen: Partial<AppSchema.GenSettings>) {
-  type Effort = 'none' | 'low' | 'medium' | 'high' | 'x-high' | 'custom'
-  let effort = (gen.reasoning?.effort || 'none') as Effort
+  let effort = gen.reasoning?.effort || 'none'
   let budget = 0
 
   if (!gen.reasoning?.enabled) {
@@ -577,11 +576,11 @@ function getReasoningParams(gen: Partial<AppSchema.GenSettings>) {
 
   let percent = 0
   switch (effort) {
-    case 'x-high': {
-      percent = 0.9
+    // case 'x-high': {
+    //   percent = 0.9
 
-      break
-    }
+    //   break
+    // }
 
     case 'custom':
     case 'high': {

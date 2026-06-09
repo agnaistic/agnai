@@ -20,7 +20,7 @@ import { ADAPTER_LABELS } from '/common/adapters'
 import { getStore } from '../store/create'
 import { clamp, hydrateTemplate, inline, tryParse } from '/common/util'
 import { debug } from '/common/debug'
-import { getActivePreset } from '../store/data/common'
+import { getActivePresets } from '../store/data/common'
 import { getAppContext } from '../store/context'
 
 const PANE_BREAKPOINT = 1280
@@ -44,7 +44,7 @@ export function getMessageImagePrompt(messageId: string) {
 
   if (!msg.msg.json?.values) return ''
 
-  const presets = getActivePreset()
+  const presets = getActivePresets()
   const schema = getJsonSchema({ characterId: msg.msg.characterId, preset: presets.current })
 
   if (!schema?.schema?.imageCaption) return ''
