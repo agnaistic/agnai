@@ -56,6 +56,7 @@ const tokenizers = [
   { label: 'Yi', value: 'yi' },
   { label: 'Cohere', value: 'cohere' },
   { label: 'Qwen2', value: 'qwen2' },
+  { label: 'Qwen3', value: 'qwen3' },
   { label: 'Gemma', value: 'gemma' },
 ]
 
