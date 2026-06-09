@@ -117,7 +117,7 @@ const RegisterForm: Component<FormProps> = (props) => {
 
     if (!handle || !username || !password) return
     if (password !== confirm) {
-      toastStore.warn('Passwords do not match', 2)
+      toastStore.warn('Passwords do not match', { ttl: 2 })
       return
     }
 

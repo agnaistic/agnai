@@ -201,11 +201,11 @@ export const settingStore = createStore<SettingState>(
         const maint = init.config?.maintenance
 
         if (!maint && prev.maintenance) {
-          toastStore.success(`Agnaistic is no longer in maintenance mode`, 10)
+          toastStore.success(`Agnaistic is no longer in maintenance mode`, { ttl: 10 })
         }
 
         if (maint && !prev.maintenance) {
-          toastStore.warn(`Agnaistic is in maintenance mode`, 20)
+          toastStore.warn(`Agnaistic is in maintenance mode`, { ttl: 20 })
         }
       }
 
@@ -442,10 +442,10 @@ subscribe('submodel-updated', { model: 'any' }, (body) => {
   if (!exists) {
     const isEligible = incoming.level <= userLevel || !!user?.admin
     if (isEligible) {
-      toastStore.success(`A new model has been added: "${incoming.name}"`, 30)
+      toastStore.success(`A new model has been added: "${incoming.name}"`, { ttl: 30 })
     }
   } else if (wasIneligible) {
-    toastStore.success(`A new model is now available to you: "${incoming.name}"`, 30)
+    toastStore.success(`A new model is now available to you: "${incoming.name}"`, { ttl: 30 })
   }
 
   settingStore.setState({ config: { ...config, subs: next, registered } })
