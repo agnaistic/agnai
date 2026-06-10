@@ -343,11 +343,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (res.result) {
-        const next = msgs.map((msg) => {
-          if (msgId !== msg._id) return msg
-          return { ...msg, msg: text, retries }
-        })
-        yield { msgs: next }
+        applyGraphUpdates({ updates: [{ _id: msgId, msg: text, retries }] })
         onSuccess?.()
       }
     },
@@ -380,8 +376,7 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to discard message: ${res.error}`)
       }
       if (res.result) {
-        const nextMsgs = msgs.map((m) => (m._id === msgId ? { ...m, msg: text, retries } : m))
-        yield { msgs: nextMsgs }
+        applyGraphUpdates({ updates: [{ _id: msgId, msg: text, retries }] })
         onSuccess?.()
         toastStore.success(`Swipe deleted`, { ttl: 2 })
       }
