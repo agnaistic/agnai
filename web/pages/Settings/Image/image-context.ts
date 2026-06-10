@@ -269,6 +269,11 @@ export function useImageContext() {
     saveImageSettings(tab.current(), cfg, entity, defaults)
   }
 
+  const changeProvider = (providerId: string) => {
+    setCfg('imageProviderId', providerId)
+    changeImageProvider(tab.current(), entity, providerId)
+  }
+
   return [
     {
       store: cfg,
@@ -280,6 +285,7 @@ export function useImageContext() {
       updateDefaults: setDefaults,
       tab,
       save,
+      changeProvider,
     },
   ]
 }
@@ -287,6 +293,41 @@ export function useImageContext() {
 export function getImageProviderName(type: string) {
   const opt = PROVIDER_TYPES.find((t) => t.value === type)
   return opt?.label || 'None'
+}
+
+async function changeImageProvider(tab: string, entity: any, providerId: string) {
+  switch (tab) {
+    case 'Shared': {
+      await userStore.updatePartialConfig({
+        imageProviderId: providerId,
+      })
+      imageStore.imageSettings(false)
+      return
+    }
+
+    case 'Chat': {
+      await Promise.all([
+        chatStore.editChat(entity.chat?._id!, {
+          imageProviderId: providerId,
+        }),
+      ])
+      imageStore.imageSettings(false)
+      return
+    }
+
+    case 'Character': {
+      await Promise.all([
+        characterStore.editPartialCharacter(entity.char?._id!, {
+          imageProviderId: providerId,
+        }),
+      ])
+      imageStore.imageSettings(false)
+      return
+    }
+
+    default:
+      return
+  }
 }
 
 async function saveImageSettings(

@@ -160,7 +160,7 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
           selected={props.ctx.store.imageProviderId || ''}
           closeSub={closeSub.on}
           onSelect={(ev) => {
-            props.ctx.update('imageProviderId', ev.value)
+            props.ctx.changeProvider(ev.value)
             editProvider(ev.value)
           }}
           header={
