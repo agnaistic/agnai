@@ -109,7 +109,7 @@ export async function generateField(opts: {
   ${infix}
 
   <instruct>${instruction}</instruct>
-  
+
   <assistant>${post || 'Response:'}</assistant>`.replace(/{{name}}/g, char.name)
 
   const { user } = userStore.getState()

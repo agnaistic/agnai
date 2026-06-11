@@ -160,7 +160,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
           await localApi.importGuestData(guestData())
           setImporting(false)
         } catch (ex: any) {
-          toastStore.error(`Import failed: ${ex?.message || ex}`)
+          toastStore.error(ex, { prefix: `Import failed` })
           setImporting(false)
         }
       },

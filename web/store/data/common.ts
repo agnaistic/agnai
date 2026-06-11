@@ -3,7 +3,7 @@ import { getStore } from '../create'
 import { toastStore } from '../toasts'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { AppSchema } from '/common/types'
-import { deepClone, inline, trimSentence } from '/common/util'
+import { deepClone, getSubscriptionModelLimits, inline, trimSentence } from '/common/util'
 import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
@@ -300,11 +300,12 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
     chat = details[lastChatId]?.chat
   }
 
+  const userState = getStore('user').getState()
   const {
     config: { subs },
   } = getStore('settings').getState()
   if (!user) {
-    user = getStore('user').getState().user!
+    user = userState.user!
   }
 
   if (!chat || !user) {
@@ -327,14 +328,23 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
     if (sub?.postUserRole) updates.postUserRole = sub.postUserRole
 
     const reasoningRequired = !!sub?.reasoning?.enabled
-    const reasoingRequested = !!preset.reasoning?.enabled && preset.reasoning?.effort !== 'none'
-    if (reasoingRequested && !reasoningRequired) {
+    const reasoningRequested = !!preset.reasoning?.enabled && preset.reasoning?.effort !== 'none'
+    if (reasoningRequired && !reasoningRequested) {
       updates.reasoning = sub?.reasoning!
     }
 
     if (sub?.prefill) updates.prefill = sub.prefill
     if (sub?.modelFormat) updates.modelFormat = sub.modelFormat
     if (sub?.skipRoleMerging) updates.skipRoleMerging = sub.skipRoleMerging
+
+    const limits = sub ? getSubscriptionModelLimits(sub, userState.userLevel) : null
+    if (limits?.maxContextLength) {
+      updates.maxContextLength = Math.min(preset.maxContextLength!, limits.maxContextLength!)
+    }
+
+    if (limits?.maxTokens) {
+      updates.maxTokens = Math.min(preset.maxTokens!, limits.maxTokens!)
+    }
 
     Object.assign(preset, updates)
     debug('bot-gen')('applying sub model specifics %s', inline(updates))
@@ -348,24 +358,7 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (summary?.providerId) summary.thirdPartyModel = summary.providerModels?.[summary.providerId]
   if (chargen?.providerId) chargen.thirdPartyModel = chargen.providerModels?.[chargen.providerId]
 
-  applySubscriptionAdjustment(preset)
-
   return { current: preset, json, summary, chargen }
-}
-
-function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
-  if (preset.service !== 'agnaistic') return preset
-
-  const subs = getStore('settings').getState().config.subs
-  const modelId = preset.providerModels?.agnaistic || preset.registered?.agnaistic?.subscriptionId
-  const match = subs.find((sub) => sub._id === modelId)
-  if (!match) return preset
-
-  return {
-    ...preset,
-    maxContextLength: Math.min(preset.maxContextLength!, match.preset.maxContextLength!),
-    maxTokens: Math.min(preset.maxTokens!, match.preset.maxTokens!),
-  }
 }
 
 // async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {

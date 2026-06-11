@@ -203,7 +203,7 @@ const ImportPreset: Component<{ close: () => void; success: () => void }> = (pro
       presetStore.setImportPreset(original as any)
       props.success()
     } catch (ex: any) {
-      toastStore.error(`Could not parse preset: ${ex.message}`)
+      toastStore.error(ex, { prefix: `Could not parse preset` })
       return
     }
   }

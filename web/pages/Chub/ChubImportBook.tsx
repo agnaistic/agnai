@@ -36,7 +36,7 @@ const ChubImportBookModal: Component<{
     try {
       memoryStore.create(state)
     } catch (error) {
-      toastStore.error(`Error importing ${state.name}! ${error}`)
+      toastStore.error(error, { prefix: `Error importing ${state.name}` })
     }
     props.close()
   }

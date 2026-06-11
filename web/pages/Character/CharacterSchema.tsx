@@ -630,7 +630,7 @@ const ImportModal: Component<{ show: boolean; close: (schema?: ResponseSchema) =
         jailbreak: json.jailbreak || '',
       })
     } catch (ex: any) {
-      toastStore.error(`Invalid JSON Schema: ${ex.message}`)
+      toastStore.error(ex, { prefix: `Invalid JSON Schema` })
       console.error(ex)
       console.log('Failed at', JSON.stringify(curr))
     }

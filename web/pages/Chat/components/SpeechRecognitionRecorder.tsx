@@ -85,7 +85,7 @@ export const SpeechRecognitionRecorder: Component<{
       if (!Speech) return
       speech = new Speech()
     } catch (e: any) {
-      toastStore.error(`Could not initialize speech recognition: ${e.message}`)
+      toastStore.error(e, { prefix: `Could not initialize speech recognition` })
       return
     }
 

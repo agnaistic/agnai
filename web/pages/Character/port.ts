@@ -41,7 +41,7 @@ export async function importCharacterFile(file: FileInputResult) {
       `Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`
     )
   } catch (ex: any) {
-    toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
+    toastStore.error(ex, { prefix: `Failed to import ${file.file.name}` })
     throw ex
   }
 }

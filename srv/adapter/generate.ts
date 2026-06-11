@@ -254,12 +254,12 @@ async function getRequestPreset(opts: InferenceRequest) {
   let preset: Partial<AppSchema.GenSettings> | undefined
   let notUserPreset = false
 
-  if (opts.settings?._id && opts.user && !opts.guest && !isDefaultPreset(opts.settings._id)) {
-    const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
-    if (userPreset && userPreset.userId === opts.user._id) {
-      opts.settings = userPreset
-    }
-  }
+  // if (opts.settings?._id && opts.user && !opts.guest && !isDefaultPreset(opts.settings._id)) {
+  //   const userPreset = await store.presets.getUserPresetInternal(opts.settings._id)
+  //   if (userPreset && userPreset.userId === opts.user._id) {
+  //     opts.settings = userPreset
+  //   }
+  // }
 
   if (opts.settings) {
     const model = getCachedSubscriptionModels().find((m) => m._id === opts.settings?._id)

@@ -29,7 +29,7 @@ const ChubImportCharModal: Component<{
     try {
       characterStore.createCharacter(props.char)
     } catch (error) {
-      toastStore.error(`Error importing ${props.char.name}! ${error}`)
+      toastStore.error(error, { prefix: `Error importing ${props.char.name}` })
     }
     props.close()
   }
