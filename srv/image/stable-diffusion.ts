@@ -297,7 +297,7 @@ function getBasePayload(config: InternalConfig, opts: ImageRequestOpts): SDReque
       steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
       model_override: temp ? temp.override : model?.override,
       denoise: temp ? temp.init.denoise : model?.init.denoise,
-      draft_mode: opts.provider.draftMode,
+      draft_mode: loras.length ? false : opts.provider.draftMode,
       loras,
       lora_strengths,
       sd_model_checkpoint: kind !== 'agnai' ? opts.provider.model : undefined,

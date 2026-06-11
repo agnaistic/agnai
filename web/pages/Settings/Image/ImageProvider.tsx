@@ -47,6 +47,14 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
   const [editPrv, setEditPrv] = createSignal<ImageProviderSettings | undefined>()
   const [_current, setCurrent] = createSignal({ id: '', model: '' })
 
+  const providerName = createMemo(() => {
+    const type = getImageProviderName(editPrv()?.type || '') || ''
+    const name = editPrv()?.name || ''
+
+    if (type || type === name.trim()) return `Provider: ${type}`
+    if (!name) return 'Provider: Unnamed'
+  })
+
   createEffect(
     on(
       () => props.ctx.store.imageProviderId,
@@ -147,15 +155,7 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
         <CustomSelect
           size="sm"
           modalTitle="Select Image Provider"
-          buttonLabel={
-            <>
-              {editPrv()?._id
-                ? `${getImageProviderName(editPrv()?.type || '')}: ${
-                    editPrv()?.name || 'Unnamed Provider'
-                  }`
-                : 'No Provider'}{' '}
-            </>
-          }
+          buttonLabel={<>{editPrv()?._id ? `${providerName()}` : 'No Provider'} </>}
           options={providers()}
           selected={props.ctx.store.imageProviderId || ''}
           closeSub={closeSub.on}
@@ -284,6 +284,11 @@ export const EditImageProvider: Component<{
 
     await userStore.upsertImageProvider(payload, props.close)
   }
+
+  createEffect(() => {
+    settingStore.getHordeImageWorkers()
+    settingStore.getImageLoras()
+  })
 
   return (
     <ConditionalModal
@@ -446,11 +451,6 @@ export const HordeSettings: Component<{
         value: name,
       }))
     return items
-  })
-
-  createEffect(() => {
-    settingStore.getHordeImageWorkers()
-    settingStore.getImageLoras()
   })
 
   const samplers = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
@@ -927,6 +927,7 @@ type LoraHook = {
 
 function useLoras(setter: ProviderSetter, initial: ImageProviderLora[] | undefined): LoraHook {
   const [loras, setLoras] = createSignal(initial || [])
+  // const cfg = settingStore((s) => ({ loras: s.loras }))
 
   const addLora = (cfg: ImageProviderSettings) => {
     const next = loras().concat({
@@ -935,6 +936,22 @@ function useLoras(setter: ProviderSetter, initial: ImageProviderLora[] | undefin
       modelStrength: 1.0,
       enabled: true,
     })
+
+    // switch (cfg.type) {
+    //   case 'agnai': {
+    //     for (const lora of cfg.loras || []) {
+    //       if (!lora.enabled) continue
+
+    //       next.push({
+    //         id: lora.id,
+    //         clipStrength: lora.clipStrength ?? 1,
+    //         modelStrength: lora.modelStrength ?? 1,
+    //         enabled: true,
+    //       })
+    //     }
+    //   }
+    // }
+
     setter('loras', next)
     setLoras(next)
   }

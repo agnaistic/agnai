@@ -104,8 +104,8 @@ export const responseStore = createStore<ResponseState>(
         .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(`(Retry) Generation request failed: ${res.error?.message || res.error}`, {
-          stack: res.error.stack,
+        toastStore.error(res.error, {
+          prefix: `(Retry) Generation request failed`,
         })
         yield { partial: undefined, retrying: undefined }
       }
@@ -166,10 +166,9 @@ export const responseStore = createStore<ResponseState>(
         .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(
-          `(Bot) Generation 'request' failed: ${res.error.message || 'Unknown error'}`,
-          { stack: res.error.stack }
-        )
+        toastStore.error(res.error, {
+          prefix: `(Bot) Generation request failed`,
+        })
         yield { partial: undefined }
       }
 
@@ -262,10 +261,7 @@ export const responseStore = createStore<ResponseState>(
       }
 
       if (res.error) {
-        toastStore.error(
-          `(Send) Generation request failed: ${res?.error.message || 'Unknown error'}`,
-          { stack: res.error?.stack }
-        )
+        toastStore.error(res.error, { prefix: `(Send) Generation request failed` })
         yield { partial: undefined }
       }
 
@@ -357,10 +353,7 @@ export const responseStore = createStore<ResponseState>(
         .catch((err) => ({ error: err, result: undefined }))
 
       if (res.error) {
-        toastStore.error(
-          `(Send) Generation request failed: ${res?.error?.message || 'Unknown error'}`,
-          { stack: res.error.stack }
-        )
+        toastStore.error(res.error, { prefix: `(Send) Generation request failed` })
       }
     },
 
