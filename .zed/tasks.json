@@ -1,0 +1,6 @@
+[
+  {
+    "label": "Type Check",
+    "command": "tsc -p tsconfig.json --noEmit"
+  }
+]
