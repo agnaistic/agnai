@@ -271,29 +271,6 @@ function tryReplaceCharacter(
   return replacement || char
 }
 
-export function useActivePreset() {
-  const chat = getStore('chat')((s) => ({ active: s.details[s.lastChatId] }))
-  const user = getStore('user')((s) => ({ user: s.user }))
-
-  const preset = createMemo(() => {
-    if (!chat.active?.chat || !user.user) return
-    const { presets, templates } = getStore('presets').getState()
-
-    const preset = deepClone(getChatPreset(chat.active.chat, user.user, presets))
-
-    if (preset.promptTemplateId) {
-      const template = templates.find((t) => t._id === preset.promptTemplateId)
-      preset.gaslight = template?.template || preset.gaslight
-    }
-
-    applySubscriptionAdjustment(preset)
-
-    return preset
-  })
-
-  return preset
-}
-
 export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (!chat) {
     const { details, lastChatId } = getStore('chat').getState()
@@ -301,9 +278,6 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   }
 
   const userState = getStore('user').getState()
-  const {
-    config: { subs },
-  } = getStore('settings').getState()
   if (!user) {
     user = userState.user!
   }
@@ -323,31 +297,7 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   }
 
   if (preset.providerId === 'agnaistic' && preset.providerModels?.agnaistic) {
-    const sub = subs.find((s) => s._id === preset.providerModels?.agnaistic)?.preset
-    const updates: any = {}
-    if (sub?.postUserRole) updates.postUserRole = sub.postUserRole
-
-    const reasoningRequired = !!sub?.reasoning?.enabled
-    const reasoningRequested = !!preset.reasoning?.enabled && preset.reasoning?.effort !== 'none'
-    if (reasoningRequired && !reasoningRequested) {
-      updates.reasoning = sub?.reasoning!
-    }
-
-    if (sub?.prefill) updates.prefill = sub.prefill
-    if (sub?.modelFormat) updates.modelFormat = sub.modelFormat
-    if (sub?.skipRoleMerging) updates.skipRoleMerging = sub.skipRoleMerging
-
-    const limits = sub ? getSubscriptionModelLimits(sub, userState.userLevel) : null
-    if (limits?.maxContextLength) {
-      updates.maxContextLength = Math.min(preset.maxContextLength!, limits.maxContextLength!)
-    }
-
-    if (limits?.maxTokens) {
-      updates.maxTokens = Math.min(preset.maxTokens!, limits.maxTokens!)
-    }
-
-    Object.assign(preset, updates)
-    debug('bot-gen')('applying sub model specifics %s', inline(updates))
+    applySubscriptionAdjustment(preset)
   }
 
   const json = user.jsonPreset ? presets.find((p) => p._id === user.jsonPreset) : undefined
@@ -359,6 +309,41 @@ export function getActivePresets(chat?: AppSchema.Chat, user?: AppSchema.User) {
   if (chargen?.providerId) chargen.thirdPartyModel = chargen.providerModels?.[chargen.providerId]
 
   return { current: preset, json, summary, chargen }
+}
+
+function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
+  const { userLevel } = getStore('user').getState()
+  const subs = getStore('settings').getState().config.subs
+
+  const modelId = preset.providerModels?.agnaistic || preset.registered?.agnaistic?.subscriptionId
+  const sub = subs.find((sub) => sub._id === modelId)?.preset
+
+  if (!sub) return
+
+  const updates: any = {}
+  if (sub?.postUserRole) updates.postUserRole = sub.postUserRole
+
+  const reasoningRequired = !!sub?.reasoning?.enabled
+  const reasoningRequested = !!preset.reasoning?.enabled && preset.reasoning?.effort !== 'none'
+  if (reasoningRequired && !reasoningRequested) {
+    updates.reasoning = sub?.reasoning!
+  }
+
+  if (sub?.prefill) updates.prefill = sub.prefill
+  if (sub?.modelFormat) updates.modelFormat = sub.modelFormat
+  if (sub?.skipRoleMerging) updates.skipRoleMerging = sub.skipRoleMerging
+
+  const limits = sub ? getSubscriptionModelLimits(sub, userLevel) : null
+  if (limits?.maxContextLength) {
+    updates.maxContextLength = Math.min(preset.maxContextLength!, limits.maxContextLength!)
+  }
+
+  if (limits?.maxTokens) {
+    updates.maxTokens = Math.min(preset.maxTokens!, limits.maxTokens!)
+  }
+
+  Object.assign(preset, updates)
+  debug('bot-gen')('applying sub model specifics %s', inline(updates))
 }
 
 // async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
