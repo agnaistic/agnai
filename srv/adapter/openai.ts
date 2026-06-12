@@ -102,8 +102,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   //   body.frequency_penalty = gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty
   // }
 
-  applyReasoningPayload(opts, body)
-
   if (opts.jsonSchema) {
     const base: any = {}
 
@@ -347,6 +345,8 @@ export function getCompletionContent(
 }
 
 function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<string>[]) {
+  applyReasoningPayload(opts, body)
+
   const { conn } = opts
   if (!conn.provider) return
 
@@ -386,9 +386,18 @@ function patchPayload(opts: AdapterProps, body: any, messages: CompletionItem<st
 
 function applyReasoningPayload(opts: AdapterProps, body: any) {
   const provider = opts.conn.provider?.provider
-  if (provider === 'known-zai' || provider === 'known-deepseek') {
-    body.thinking = { type: opts.gen.reasoning?.enabled ? 'enabled' : 'disabled' }
-    return
+
+  switch (provider) {
+    case 'known-zai':
+    case 'known-deepseek': {
+      body.thinking = { type: opts.gen.reasoning?.enabled ? 'enabled' : 'disabled' }
+      return
+    }
+
+    case 'known-nvidia': {
+      delete body.reasoning
+      return
+    }
   }
 
   if (!opts.gen.reasoning?.enabled) return

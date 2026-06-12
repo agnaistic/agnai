@@ -2,7 +2,7 @@ import { getStore } from '../create'
 import { toastStore } from '../toasts'
 import { ModelFormat, replaceTags } from '/common/presets/templates'
 import { AppSchema } from '/common/types'
-import { deepClone, getSubscriptionModelLimits, inline, trimSentence } from '/common/util'
+import { deepClone, getSubscriptionModelLimits, trimSentence } from '/common/util'
 import { getBotsForChat, getChatPreset } from '/web/pages/Chat/util'
 import { getUserPreset } from '/web/shared/adapter'
 import { getPresetConnection } from '/common/providers'
@@ -10,7 +10,6 @@ import { ChatMessageExt } from '../message'
 import { MsgAttachment } from '/srv/adapter/type'
 import { simplifyPreset } from '/common/prompt'
 import { resolveChatPath } from '/common/chat'
-import debug from 'debug'
 
 export type PromptEntities = NonNullable<Awaited<ReturnType<typeof getAuthedPromptEntities>>> & {
   lastMessage?: { msg: string; date: string; id: string; parent?: string }
@@ -342,7 +341,6 @@ function applySubscriptionAdjustment(preset: Partial<AppSchema.UserGenPreset>) {
   }
 
   Object.assign(preset, updates)
-  debug('bot-gen')('applying sub model specifics %s', inline(updates))
 }
 
 // async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {

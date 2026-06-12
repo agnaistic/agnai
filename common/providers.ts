@@ -109,6 +109,11 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     url: `https://api.x.ai/v1`,
     formats: [{ type: 'format', value: 'openai-chatv2' }],
   },
+  nvidia: {
+    name: 'Nvidia NIM',
+    url: `https://integrate.api.nvidia.com/v1`,
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {
