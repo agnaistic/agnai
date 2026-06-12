@@ -69,7 +69,7 @@ import { MessageAttachments } from './Attachments'
 import { ComponentEventEmitter, getJsonSchema, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
-import { PresetContext, PresetContext } from '/web/store/preset-context'
+import { ContextPreset, PresetContext } from '/web/store/preset-context'
 import { runPresetParsers } from '/common/chat'
 
 type MessageProps = {
@@ -1160,7 +1160,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
 
 function renderMessage(
   ctx: ChatContext,
-  preset: PresetContext | undefined,
+  preset: ContextPreset | undefined,
   text: string,
   isUser: boolean,
   adapter?: string
@@ -1240,7 +1240,7 @@ function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAc
 function parseMessage(
   msg: string,
   ctx: ChatContext,
-  preset: PresetContext | undefined,
+  preset: ContextPreset | undefined,
   isUser: boolean,
   adapter?: string
 ) {
@@ -1272,7 +1272,7 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
 
 function getMessageContent(
   ctx: ChatContext,
-  preset: PresetContext | undefined,
+  preset: ContextPreset | undefined,
   props: MessageProps,
   profiles: ChatState['chatProfiles'],
   msg: AppSchema.ChatMessage & { handle?: string }
@@ -1334,12 +1334,54 @@ function getMessageContent(
     message = trimSentence(message)
   }
 
+  const baseStops = preset?.stopSequences || []
+  const sender = msg.characterId
+    ? ctx.allBots[msg.characterId]?.name
+    : msg.userId
+    ? ctx.profileMap[msg.userId]?.handle
+    : ''
+
+  const allStops = (preset?.disableNameStops ? baseStops : baseStops.concat(ctx.nameStops)).filter(
+    (name) => name !== sender + ':'
+  )
+
+  const trimmed = stopResponse({ text: message, author: sender, stops: allStops })
+
   return {
     type: 'message' as const,
-    message: renderMessage(ctx, preset, message, !!msg.userId, msg.adapter),
+    message: renderMessage(ctx, preset, trimmed, !!msg.userId, msg.adapter),
     thoughts,
     class: 'not-streaming',
   }
+}
+
+function stopResponse(opts: { text: string; author: string; stops: string[] }) {
+  let generated = opts.text
+
+  let index = -1
+  let trimmed = opts.stops.reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
+
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  if (index === -1) {
+    if (generated.startsWith(`${opts.author}:`)) {
+      generated = generated.slice(opts.author.length + 1)
+    }
+
+    return generated.trim()
+  }
+
+  return trimmed || generated
 }
 
 function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {

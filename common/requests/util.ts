@@ -40,78 +40,9 @@ export function notify() {
   return notifier
 }
 
-type SanitiseOpts = {
-  text: string
-  char: AppSchema.Character
-  members: AppSchema.Profile[]
-  gen: Partial<AppSchema.GenSettings>
-  stops?: string[]
-}
-
-export function sanitiseAndTrim({ text, char, members, gen, stops }: SanitiseOpts) {
-  const parsed = sanitise(text)
-  return parsed
-}
-
 export function sanitise(generated: string) {
   // If want to support code blocks we need to remove the excess whitespace removal as it breaks indents
   return (generated || '').trim()
-}
-
-export function trimResponseV2(
-  generated: string,
-  char: AppSchema.Character,
-  gen: Partial<AppSchema.GenSettings> | undefined
-) {
-  const endTokens = gen?.stopSequences || []
-
-  // generated = generated.split(`${char.name} :`).join(`${char.name}:`)
-  if (gen?.reasoning?.start) {
-    generated = generated.replace(/\<think\>/g, gen.reasoning.start)
-  }
-
-  if (gen?.reasoning?.end) {
-    generated = generated.replace(/\<\/think\>/g, gen.reasoning.end)
-  }
-
-  // for (const member of members) {
-  //   if (!member.handle) continue
-  //   generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
-  // }
-
-  /** Do not always add character names as stop tokens here */
-  // if (bots) {
-  //   for (const bot of Object.values(bots)) {
-  //     if (!bot) continue
-  //     if (bot?._id === char._id) continue
-  //     endTokens.push(`${bot.name}:`)
-  //   }
-  // }
-
-  let index = -1
-  let trimmed = endTokens.reduce((prev, endToken) => {
-    const idx = generated.indexOf(endToken)
-
-    if (idx === -1) return prev
-
-    const text = generated.slice(0, idx)
-    if (index === -1 || idx < index) {
-      index = idx
-      return text
-    }
-
-    return prev
-  }, '')
-
-  if (index === -1) {
-    if (generated.startsWith(`${char.name}:`)) {
-      generated = generated.slice(char.name.length + 1)
-    }
-
-    return generated.trim()
-  }
-
-  return trimmed || generated
 }
 
 export function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {

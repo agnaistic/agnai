@@ -76,9 +76,6 @@ export const handleNovel: ModelAdapter = async function* (opts) {
 
   const body = getRequestBody(opts)
 
-  const baseStops = getStoppingStrings(opts, opts.gen)
-  const endTokens = baseStops.concat(['***', 'Scenario:', '----', '⁂'])
-
   if (opts.kind === 'plain' && body.parameters) {
     body.parameters.prefix = 'special_instruct'
     body.parameters.phrase_rep_pen = 'aggressive'

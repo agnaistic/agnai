@@ -19,17 +19,17 @@ import MultiDropdown from '../MultiDropdown'
 import { round } from '/common/util'
 import { createEmitter } from '../util'
 import { SubscriptionModelOption } from '/common/types/presets'
-import { PresetFuncs, PresetContext } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 
 type SelectorProps = {
-  state: PresetContext
+  state: ContextPreset
   setters: PresetFuncs
   page: string | undefined
 }
 type Selector = Component<SelectorProps>
 
 export const ThirdPartyModel: Component<{
-  state: PresetContext
+  state: ContextPreset
   setters: PresetFuncs
   page?: string
   sub?: SubscriptionModelOption
@@ -1177,10 +1177,10 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 function setProviderModel(
   { state, setters, page }: SelectorProps,
   model: string,
-  extras?: Partial<PresetContext>
+  extras?: Partial<ContextPreset>
 ) {
   console.log(`[model updated] ${model}`)
-  const update: Partial<PresetContext> = extras ?? {}
+  const update: Partial<ContextPreset> = extras ?? {}
   update.thirdPartyModel = ''
 
   const settings = state.providerSettings ? { ...state.providerSettings } : {}
@@ -1203,7 +1203,7 @@ function setProviderModel(
   }
 }
 
-const SelectorFooter: Component<{ children?: any; state: PresetContext; setters: PresetFuncs }> = (
+const SelectorFooter: Component<{ children?: any; state: ContextPreset; setters: PresetFuncs }> = (
   props
 ) => {
   return (

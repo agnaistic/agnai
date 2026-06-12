@@ -57,7 +57,7 @@ const REASONING_MODELS: Record<string, boolean> = {
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
+  const { user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getOaiCompatibleUrl(gen, isThirdParty)
 
   let oaiKey = gen.providerId ? gen.thirdPartyKey : gen.thirdPartyKey || user.oaiKey
@@ -70,7 +70,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const stops = getStoppingStrings(opts, opts.gen)
-  const allStops = stops.slice()
 
   if (!base.changed) {
     stops.splice(4, stops.length - 4)

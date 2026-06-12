@@ -16,6 +16,7 @@ import { PresetStateProvider } from './preset-context'
 import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 import { imageStore } from './images'
+import { getStoppingStrings } from '/common/requests/payloads'
 
 export type ChatContext = {
   appReady: boolean
@@ -33,10 +34,14 @@ export type ChatContext = {
   /** All bots from user, chats, current chat */
   allBots: Record<string, AppSchema.Character>
 
+  profileMap: Record<string, AppSchema.Profile>
+
   messages: {
     path: ChatMessageExt[]
     viewing: ChatMessageExt[]
   }
+
+  nameStops: string[]
 
   /** All user-owned bots */
   // botMap: Record<string, AppSchema.Character>
@@ -84,11 +89,14 @@ const initial: ChatContext = {
 
   activeMap: {},
   activeBots: [],
+  profileMap: {},
 
   messages: {
     path: [],
     viewing: [],
   },
+
+  nameStops: [],
 
   showMessageCount: 0,
   handle: 'You',
@@ -107,7 +115,7 @@ const initial: ChatContext = {
   // format: undefined,
 }
 
-const AppContext = createContext([initial, (next: Partial<ChatContext>) => {}] as const)
+const Context = createContext([initial, (next: Partial<ChatContext>) => {}] as const)
 
 export function ContextProvider(props: { children: any }) {
   const [state, setState] = createStore(initial)
@@ -220,6 +228,19 @@ export function ContextProvider(props: { children: any }) {
     return impersonate || handle || 'You'
   })
 
+  const nameStops = createMemo(() => {
+    const stops = getStoppingStrings(
+      {
+        user: users.user!,
+        char: chats.active?.char,
+        characters: chars.chatChars.map,
+        members: chats.chatProfiles.concat(users.profile!).filter((profile) => !!profile),
+      },
+      undefined
+    )
+    return stops
+  })
+
   createEffect(() => {
     // We will try to use our cache if it's available to speed some things up
     const chat =
@@ -245,11 +266,14 @@ export function ContextProvider(props: { children: any }) {
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),
       active: chats.active,
+      profileMap: toMap(chats.chatProfiles),
 
       messages: {
         path: pathMessages(),
         viewing: chatMsgs(),
       },
+
+      nameStops: nameStops(),
 
       msgDeleting: msgs.deleting,
       impersonate: chars.impersonating,
@@ -279,14 +303,14 @@ export function ContextProvider(props: { children: any }) {
   })
 
   return (
-    <AppContext.Provider value={[state, setState]}>
+    <Context.Provider value={[state, setState]}>
       <PresetStateProvider>{props.children}</PresetStateProvider>
-    </AppContext.Provider>
+    </Context.Provider>
   )
 }
 
 export function useAppContext() {
-  const [state, setState] = useContext(AppContext)
+  const [state, setState] = useContext(Context)
 
   return [state, { setState }] as const
 }

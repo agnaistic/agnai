@@ -2,7 +2,7 @@ import needle from 'needle'
 import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
-import { sanitise, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { sendMany } from '../api/ws'
 import { logger } from '../middleware'
 import { getTokenCounter } from '../tokenize'
@@ -274,15 +274,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       },
     }
     const parsed = sanitise(text)
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, [
-      '<|USER|>',
-      '<|ASSISTANT|>',
-      '[/LIST]',
-      '<|endoftext|>',
-      '<|prompter|>',
-      '<|assistant|>',
-    ])
-    yield trimmed || parsed
+    yield parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'Replicate failed to parse')
     yield { error: `Replicate request failed: ${ex.message}` }

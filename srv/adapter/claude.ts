@@ -22,7 +22,6 @@ import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
-import { getStoppingStrings } from '/common/requests/payloads'
 import { stripImageContent, toChatMessages } from '/common/template-messages'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
@@ -63,7 +62,7 @@ const TEMP_TOPP_EXCLUSIVE: Record<string, boolean> = {
 const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  let { members, user, log, guest, gen, isThirdParty } = opts
+  let { user, log, guest, gen, isThirdParty } = opts
   if (gen.providerId) {
     isThirdParty = true
   }
@@ -92,7 +91,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     ? 'v2'
     : 'v1'
   const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
-  const userStops = getStoppingStrings(opts, opts.gen)
 
   const payload: any = {
     model: claudeModel,

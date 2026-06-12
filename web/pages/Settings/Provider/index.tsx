@@ -12,11 +12,11 @@ import { ADAPTER_LABELS, FORMAT_LABEL, ThirdPartyFormat } from '/common/adapters
 import { ManageProvider } from './Manage'
 import { markdown } from '/web/shared/markdown'
 import { CustomSelect } from '/web/shared/CustomSelect'
-import { PresetFuncs, PresetContext } from '/web/store/preset-context'
+import { PresetFuncs, ContextPreset } from '/web/store/preset-context'
 import { useProviderList } from './hooks'
 
 export const PresetProvider: Component<{
-  state: PresetContext
+  state: ContextPreset
   setters: PresetFuncs
   page?: string
   openSub?: ComponentSubscriber<'open'>

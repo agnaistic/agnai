@@ -7,8 +7,12 @@ export function extractReasoning(
   let content = ''
 
   const display = opts?.display || 'all'
-  const open = opts?.tags?.start || '<think>'
-  const close = opts?.tags?.end || '</think>'
+  const defaults = {
+    open: '<think>',
+    close: '</think>',
+  }
+  const open = opts?.tags?.start || defaults.open
+  const close = opts?.tags?.end || defaults.close
 
   if (message && typeof message !== 'string') {
     if (message.thoughts) content = `${open}${message.thoughts}${close}${message.tokens || ''}`
@@ -43,8 +47,11 @@ export function extractReasoning(
   }
 
   while (true) {
-    const start = content.indexOf(open)
-    const end = content.indexOf(close)
+    let start = content.indexOf(open)
+    let end = content.indexOf(close)
+
+    if (open !== defaults.open) start = content.indexOf(defaults.open)
+    if (close !== defaults.close) end = content.indexOf(defaults.close)
 
     // Both present, but end comes before start
     if (start > -1 && end > -1 && start > end) {

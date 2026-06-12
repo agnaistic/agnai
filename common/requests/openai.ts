@@ -3,7 +3,7 @@ import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
 import { joinUrl } from './util'
 import { countTokens } from '../tokenize'
-import { getStoppingStrings, toImageJinjaTemplate } from './payloads'
+import { toImageJinjaTemplate } from './payloads'
 import { stripImageContent, toChatMessages } from '../template-messages'
 
 type Role = 'user' | 'assistant' | 'system'
@@ -25,7 +25,6 @@ type Completion<T = Inference> = {
 export async function* handleOAI(opts: PayloadOpts, signal: AbortController, payload: any) {
   const gen = opts.settings!
   const options = { ...opts, gen }
-  const stops = getStoppingStrings(opts, gen)
 
   const { messages } = await toChatMessages(options, countTokens)
 
