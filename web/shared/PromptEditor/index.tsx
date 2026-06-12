@@ -17,12 +17,12 @@ import { Toggle } from '/web/shared/Toggle'
 import { AutoEvent, PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggestions'
 import { Interp, Optionals, placeholders, v2placeholders, Placeholder } from './types'
 import { DefinitionsModal } from './Definitions'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, PresetContext } from '/web/store/preset-context'
 
 const PromptEditor: Component<
   {
     fieldName?: string
-    state?: PresetState
+    state?: PresetContext
     disabled?: boolean
     value: string
     onChange: (update: { prompt?: string; templateId?: string }) => void
@@ -322,7 +322,7 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
   .sort((l, r) => l.id - r.id)
 
 export const BasicPromptTemplate: Component<{
-  state: PresetState
+  state: PresetContext
   setters: PresetFuncs
   hide?: boolean
 }> = (props) => {
@@ -402,7 +402,7 @@ const PlaceholderPill: Component<
   )
 }
 
-async function getExampleOpts(inherit?: PresetState) {
+async function getExampleOpts(inherit?: PresetContext) {
   const char = toChar('Rory', {
     scenario: 'Rory is strolling in the park',
     persona: toPersona('Rory is very talkative.'),

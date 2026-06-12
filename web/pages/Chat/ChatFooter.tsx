@@ -12,11 +12,11 @@ import {
 } from '../../store'
 import { msgStore } from '../../store'
 import InputBar, { SendFunc } from './components/InputBar'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 
 export const ChatFooter: Component<{
-  ctx: ContextState
+  ctx: ChatContext
   isOwner: boolean
   pills: AppSchema.Character[]
   swipe: number

@@ -2,7 +2,6 @@ import needle from 'needle'
 import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
-import { sanitiseAndTrim } from '/common/requests/util'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
 import { createClaudeChatCompletionV2 } from './claude'
@@ -157,14 +156,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
     if ('token' in gen.value) {
       accum += gen.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accum,
-          char: opts.replyAs,
-          members: opts.members,
-          gen: opts.gen,
-        }),
-      }
+      yield { partial: accum }
     }
 
     if (typeof gen.value === 'string') {
@@ -189,14 +181,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     return
   }
 
-  const trimmed = sanitiseAndTrim({
-    text,
-    char: opts.replyAs,
-    members: opts.members,
-    gen: opts.gen,
-    stops,
-  })
-  yield trimmed
+  yield text
 }
 
 async function* getCompletion(

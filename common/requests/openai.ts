@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { streamGenerator } from './stream'
 import { PayloadOpts } from './types'
-import { joinUrl, sanitiseAndTrim } from './util'
+import { joinUrl } from './util'
 import { countTokens } from '../tokenize'
 import { getStoppingStrings, toImageJinjaTemplate } from './payloads'
 import { stripImageContent, toChatMessages } from '../template-messages'
@@ -71,34 +71,6 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
   console.log(`Prompt:\n`, JSON.stringify(stripImageContent(messages as any), null, 2))
   const fullUrl = joinUrl(gen.thirdPartyUrl || '', urlPath)
 
-  // if (!gen.streamResponse) {
-  //   const result = await requestFullCompletion(fullUrl, headers, payload, signal)
-  //   if ('error' in result) {
-  //     yield result
-  //     return
-  //   }
-
-  //   const text = getCompletionContent(result)
-  //   if (text instanceof Error) {
-  //     yield { error: `request returned an error: ${text.message}` }
-  //     return
-  //   }
-
-  //   if (!text?.length) {
-  //     yield { error: `[local] request failed: Received empty response. Try again.` }
-  //     return
-  //   }
-
-  //   yield sanitiseAndTrim({
-  //     text,
-  //     char: opts.replyAs,
-  //     members: opts.members,
-  //     gen: opts.settings || {},
-  //     stops,
-  //   })
-  //   return
-  // }
-
   const stream = streamGenerator({
     userId: opts.user._id,
     body: payload,
@@ -132,15 +104,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
       accumulated += generated.value.token
 
       if (gen.streamResponse) {
-        yield {
-          partial: sanitiseAndTrim({
-            text: accumulated,
-            char: opts.char,
-            members: opts.members,
-            gen: opts.settings || {},
-            stops,
-          }),
-        }
+        yield { partial: accumulated }
       }
     }
 
@@ -183,12 +147,7 @@ export async function* handleOAI(opts: PayloadOpts, signal: AbortController, pay
     }
   }
 
-  yield sanitiseAndTrim({
-    text: accumulated,
-    char: opts.replyAs,
-    members: opts.members,
-    gen: opts.settings || {},
-  })
+  yield accumulated
 }
 
 export async function requestFullCompletion(

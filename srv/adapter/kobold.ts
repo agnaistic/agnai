@@ -4,13 +4,7 @@ import { normalizeUrl } from '../api/chat/common'
 import { AdapterProps, CompletionGenerator, ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { toSamplerOrder } from '/common/sampler-order'
-import {
-  getOaiCompatibleUrl,
-  joinUrl,
-  sanitise,
-  sanitiseAndTrim,
-  trimResponseV2,
-} from '/common/requests/util'
+import { getOaiCompatibleUrl, joinUrl, sanitise } from '/common/requests/util'
 import { streamGenerator } from '/common/requests/stream'
 import { presetDefaults } from '/common/default-preset'
 import { round } from '/common/util'
@@ -39,8 +33,6 @@ const REQUIRED_SAMPLERS = presetDefaults.order!
 // }
 
 export const handleThirdParty: ModelAdapter = async function* (opts) {
-  const { members } = opts
-
   const body = getThirdPartyPayload(opts)
 
   // Kobold has a stop sequence parameter which automatically
@@ -99,15 +91,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
         wait = round((Date.now() - start) / 1000)
       }
       accum += generated.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accum,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-          stops: stop_sequence,
-        }),
-      }
+      yield { partial: accum }
     }
 
     if ('thoughts' in generated) {
@@ -134,9 +118,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
   yield { meta }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, stop_sequence)
-
-  yield trimmed || parsed
+  yield parsed
 }
 
 async function dispatch(opts: AdapterProps, body: any) {

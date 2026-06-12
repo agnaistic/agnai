@@ -2,7 +2,7 @@ import needle from 'needle'
 import { Completion, Inference, ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { requestFullCompletion } from './chat-completion'
 import { streamGenerator } from '/common/requests/stream'
 import { getCompletionContent } from './openai'
@@ -141,15 +141,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accumulated,
-          char: opts.char,
-          members: opts.members,
-          gen: opts.gen,
-          stops: body.stop,
-        }),
-      }
+      yield { partial: accumulated }
     }
   }
   try {
@@ -168,8 +160,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     accumulated = text
 
     const parsed = sanitise(accumulated.replace(opts.prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, body.stop)
-    yield trimmed || parsed
+    yield parsed
   } catch (ex: any) {
     opts.log.error({ err: ex }, 'Mancer failed to parse')
     yield { error: `Mancer request failed: ${ex.message}` }

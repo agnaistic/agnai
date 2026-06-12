@@ -1,11 +1,11 @@
 import { Component, createMemo, For, Show } from 'solid-js'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { imageStore, msgStore } from '/web/store'
 import { CircleX } from 'lucide-solid'
 import Tooltip from '/web/shared/Tooltip'
 
-export const MessageAttachments: Component<{ ctx: ContextState; msg: AppSchema.ChatMessage }> = (
+export const MessageAttachments: Component<{ ctx: ChatContext; msg: AppSchema.ChatMessage }> = (
   props
 ) => {
   const attachments = createMemo(() => {

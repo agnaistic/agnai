@@ -17,7 +17,7 @@ import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 import { imageStore } from './images'
 
-export type ContextState = {
+export type ChatContext = {
   appReady: boolean
   tooltip?: string | JSX.Element
   anonymize: boolean
@@ -74,7 +74,7 @@ export type ContextState = {
   providers?: AppSchema.Provider[]
 }
 
-const initial: ContextState = {
+const initial: ChatContext = {
   appReady: false,
   anonymize: false,
   tempMap: {},
@@ -107,7 +107,7 @@ const initial: ContextState = {
   // format: undefined,
 }
 
-const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
+const AppContext = createContext([initial, (next: Partial<ChatContext>) => {}] as const)
 
 export function ContextProvider(props: { children: any }) {
   const [state, setState] = createStore(initial)
@@ -232,7 +232,7 @@ export function ContextProvider(props: { children: any }) {
       ? chars.chatChars.map[chat.characterId] || chars.characters.map[chat.characterId]
       : undefined
 
-    const next: Partial<ContextState> = {
+    const next: Partial<ChatContext> = {
       bg: visuals(),
       appReady: cfg.inited,
       flags: page.flags,

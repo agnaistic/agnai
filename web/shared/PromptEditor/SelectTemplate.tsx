@@ -10,7 +10,7 @@ import { PromptSuggestions, onPromptAutoComplete, onPromptKey } from './Suggesti
 import { DefinitionsModal } from './Definitions'
 import { Interp, Placeholder, placeholders, v2placeholders } from './types'
 import { Pill } from '../Card'
-import { PresetState } from '/web/store/preset-context'
+import { PresetContext } from '/web/store/preset-context'
 import { getJsonSchema } from '../util'
 
 const builtinTemplates = Object.keys(templates).map((key) => ({
@@ -24,7 +24,7 @@ export const SelectTemplate: Component<{
   select: (id: string, template: string) => void
   currentTemplateId: string | undefined
   currentTemplate: string | undefined
-  preset: PresetState | undefined
+  preset: PresetContext | undefined
 }> = (props) => {
   let ref: HTMLTextAreaElement
   const state = presetStore((s) => ({ templates: s.templates }))

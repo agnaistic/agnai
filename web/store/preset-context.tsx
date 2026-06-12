@@ -24,7 +24,7 @@ import { prepareTokenizer } from '/common/tokenize'
 export { ContextState as PresetContext }
 
 export type PresetProps = {
-  state: PresetState
+  state: PresetContext
   setters: PresetFuncs
   page?: string
 
@@ -36,23 +36,23 @@ export type PresetProps = {
 export type PresetTab = 'General' | 'Prompt' | 'Memory' | 'Samplers' | 'Toggles'
 
 export type PresetTabProps = {
-  state: PresetState
+  state: PresetContext
   setters: PresetFuncs
   sub: SubscriptionModelOption | undefined
   tab: string
   page: string | undefined
 }
 
-export type PresetState = Omit<AppSchema.SubscriptionModel, 'kind'> & {
+export type PresetContext = Omit<AppSchema.SubscriptionModel, 'kind'> & {
   userId?: string
   disabled?: boolean
 }
 
 export type HideState = ReturnType<typeof usePresetContext>[0]['hides']
 
-export type SetPresetState = SetStoreFunction<PresetState>
+export type SetPresetState = SetStoreFunction<PresetContext>
 
-export function getPresetForm(state: PresetState) {
+export function getPresetForm(state: PresetContext) {
   const {
     disabled,
     subApiKey,
@@ -68,13 +68,13 @@ export function getPresetForm(state: PresetState) {
   return form
 }
 
-export function getSubPresetForm(state: PresetState) {
+export function getSubPresetForm(state: PresetContext) {
   const { disabled, subApiKeySet, ...form } = state
 
   return { ...form, kind: 'subscription-setting' as const }
 }
 
-const initPreset = (): PresetState => ({
+const initPreset = (): PresetContext => ({
   _id: '',
   ...agnaiPresets.agnai,
   reasoning: { enabled: false, effort: 'medium', exclude: true, start: '', end: '', maxTokens: 0 },
@@ -140,7 +140,7 @@ type ContextState = {
   sub?: SubscriptionModelOption
   hides: { [key in keyof AppSchema.GenSettings]?: boolean }
 
-  current: PresetState
+  current: PresetContext
   json: AppSchema.UserGenPreset | undefined
   summary: AppSchema.UserGenPreset | undefined
   chargen: AppSchema.UserGenPreset | undefined
@@ -168,7 +168,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
     ? createStore(initContext())
     : useContext(PresetContext)
 
-  const setState: SetStoreFunction<PresetState> = (...args: any[]) => {
+  const setState: SetStoreFunction<PresetContext> = (...args: any[]) => {
     const [first, second] = args
     if (args.length === 1) {
       setContext({ current: { ...context.current, ...first } })
@@ -501,7 +501,7 @@ export function usePresetContext(opts?: { anonymous: boolean }) {
   }
 
   const updateAndSave = async (
-    update: Partial<PresetState>,
+    update: Partial<PresetContext>,
     opts?: {
       quiet?: boolean
       onSuccess?: (preset: AppSchema.GenSettings) => void
@@ -566,7 +566,7 @@ export function getProvider(id: string | undefined) {
   return match
 }
 
-function createHides(store: PresetState, ctx: PresetConnection) {
+function createHides(store: PresetContext, ctx: PresetConnection) {
   const keys = Object.keys(ADAPTER_SETTINGS) as Array<keyof AppSchema.GenSettings>
   let hides: { [key in keyof AppSchema.GenSettings]?: boolean } = {}
 
@@ -595,7 +595,7 @@ function maybeDeepClone(obj: any | undefined) {
 }
 
 function hidePresetSetting(
-  state: Pick<PresetState, 'service' | 'thirdPartyFormat' | 'presetMode'>,
+  state: Pick<PresetContext, 'service' | 'thirdPartyFormat' | 'presetMode'>,
   prop?: keyof PresetAISettings
 ) {
   let hide = false

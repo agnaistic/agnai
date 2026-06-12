@@ -1,11 +1,11 @@
 import { Component, Show } from 'solid-js'
 import Message from './Message'
 import { PresetContext } from '/web/store/preset-context'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { responseStore } from '/web/store'
 
 export const PendingMessages: Component<{
-  ctx: ContextState
+  ctx: ChatContext
   impersonateId?: string
   userId?: string
   handle: string

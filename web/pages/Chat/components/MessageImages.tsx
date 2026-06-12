@@ -7,7 +7,7 @@ import { MessageImagePrompt } from './MessageMeta'
 import Button from '/web/shared/Button'
 import { ICON_SIZES } from '/web/icons/AppIcon'
 import { ImageButton, imageStore } from '/web/store/images'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { RelativeSpinner } from '/web/shared/Loading'
 
 type MessageImage = {
@@ -18,7 +18,7 @@ type MessageImage = {
 export const MessageImages: Component<{
   msg: AppSchema.ChatMessage
   onEditClick: () => void
-  ctx: ContextState
+  ctx: ChatContext
   messageId: string
 }> = (props) => {
   const [images, setImages] = createSignal<MessageImage[]>([])

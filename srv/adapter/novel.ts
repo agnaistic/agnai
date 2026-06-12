@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { AdapterProps, ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
@@ -61,7 +61,7 @@ const NEW_PARAMS: Record<string, 0 | 1 | 2> = {
 }
 
 export const handleNovel: ModelAdapter = async function* (opts) {
-  const { members, user, guest, log } = opts
+  const { user, guest, log } = opts
   const apiKey = opts.gen.thirdPartyKey || user.novelApiKey
   if (!apiKey) {
     yield { error: 'Novel API key not set' }
@@ -127,15 +127,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
       accum += generated.value.token as string
 
       if (opts.gen.streamResponse) {
-        yield {
-          partial: sanitiseAndTrim({
-            text: accum,
-            char: opts.replyAs,
-            members,
-            gen: opts.gen,
-            stops: endTokens,
-          }),
-        }
+        yield { partial: accum }
       }
     }
 
@@ -146,9 +138,7 @@ export const handleNovel: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, endTokens)
-
-  yield trimmed || parsed
+  yield parsed
 }
 
 function getRequestBody(opts: AdapterProps) {

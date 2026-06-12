@@ -402,6 +402,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
   if (localStorage.error_test === 'gen-cancel') {
     setTimeout(() => opts.signal?.abort(), 0)
     toastStore.error('Gen cancelled test', { stack: new Error('Test').stack })
+    return lazy.promise
   }
 
   return lazy.promise

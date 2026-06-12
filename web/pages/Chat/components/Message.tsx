@@ -50,7 +50,7 @@ import {
 } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
-import { ContextState, useAppContext } from '/web/store/context'
+import { ChatContext, useAppContext } from '/web/store/context'
 import { hydrateTemplate, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import { Pill } from '/web/shared/Card'
@@ -69,7 +69,7 @@ import { MessageAttachments } from './Attachments'
 import { ComponentEventEmitter, getJsonSchema, isToday, toShortDuration } from '/web/shared/util'
 import { extractReasoning } from '/common/reasoning'
 import { SendFunc } from './InputBar'
-import { PresetContext, PresetState } from '/web/store/preset-context'
+import { PresetContext, PresetContext } from '/web/store/preset-context'
 import { runPresetParsers } from '/common/chat'
 
 type MessageProps = {
@@ -751,7 +751,7 @@ const MessageOptions: Component<{
   textBeforeGenMore?: string
   onRemove: () => void
   showMore: Signal<boolean>
-  ctx: ContextState
+  ctx: ChatContext
   preset: PresetContext | undefined
   canUseAttachments: boolean | undefined
 }> = (props) => {
@@ -1159,8 +1159,8 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
 }
 
 function renderMessage(
-  ctx: ContextState,
-  preset: PresetState | undefined,
+  ctx: ChatContext,
+  preset: PresetContext | undefined,
   text: string,
   isUser: boolean,
   adapter?: string
@@ -1239,8 +1239,8 @@ function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAc
 
 function parseMessage(
   msg: string,
-  ctx: ContextState,
-  preset: PresetState | undefined,
+  ctx: ChatContext,
+  preset: PresetContext | undefined,
   isUser: boolean,
   adapter?: string
 ) {
@@ -1271,8 +1271,8 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
 }
 
 function getMessageContent(
-  ctx: ContextState,
-  preset: PresetState | undefined,
+  ctx: ChatContext,
+  preset: PresetContext | undefined,
   props: MessageProps,
   profiles: ChatState['chatProfiles'],
   msg: AppSchema.ChatMessage & { handle?: string }
@@ -1342,7 +1342,7 @@ function getMessageContent(
   }
 }
 
-function getJsonUpdate(ctx: ContextState, def: AppSchema.Character['json'], json: any) {
+function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {
   if (!def) return
   const hydration = hydrateTemplate(def, json, {
     char: ctx.char!,

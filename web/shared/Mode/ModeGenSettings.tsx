@@ -13,11 +13,11 @@ import TextInput from '/web/shared/TextInput'
 import PresetSettings from '/web/shared/PresetSettings'
 import { ADAPTER_SETTINGS } from '../PresetSettings/settings'
 import Divider from '../Divider'
-import { getPresetForm, PresetFuncs, PresetState, PresetTab } from '/web/store/preset-context'
+import { getPresetForm, PresetFuncs, PresetContext, PresetTab } from '/web/store/preset-context'
 import { deepClone } from '/common/util'
 
 export const ModeGenSettings: Component<{
-  preset: PresetState
+  preset: PresetContext
   setters: PresetFuncs
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined

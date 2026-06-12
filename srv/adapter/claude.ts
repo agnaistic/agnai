@@ -15,7 +15,7 @@ import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
 import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
-import { joinUrl, sanitiseAndTrim } from '/common/requests/util'
+import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
 import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
@@ -264,15 +264,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
     if ('token' in generated.value) {
       acc += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: acc,
-          char: opts.replyAs,
-          members,
-          gen: opts.gen,
-          stops: userStops,
-        }),
-      }
+      yield { partial: acc }
     }
 
     if ('thoughts' in generated.value) {
@@ -291,12 +283,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       log.error({ body: resp }, 'Claude request failed: Empty response')
       yield { error: `Claude request failed: Received empty response. Try again.` }
     } else {
-      yield sanitiseAndTrim({
-        text: completion,
-        char: opts.replyAs,
-        members,
-        gen: opts.gen,
-      })
+      yield completion
     }
   } catch (ex: any) {
     log.error({ err: ex }, 'Claude failed to parse')

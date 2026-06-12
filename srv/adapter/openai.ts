@@ -1,4 +1,4 @@
-import { getOaiCompatibleUrl, joinUrl, sanitiseAndTrim } from '/common/requests/util'
+import { getOaiCompatibleUrl, joinUrl } from '/common/requests/util'
 import { AdapterProps, ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppLog } from '../middleware'
@@ -275,15 +275,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accum.tokens += generated.value.token
-      yield {
-        partial: sanitiseAndTrim({
-          text: accum.tokens,
-          char,
-          members,
-          gen: opts.gen,
-          stops: allStops,
-        }),
-      }
+      yield { partial: accum.tokens }
     }
 
     if ('meta' in generated.value) {
@@ -310,29 +302,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (gen.swipesPerGeneration! > 1) {
-      yield sanitiseAndTrim({
-        text: accum.tokens,
-        char,
-        members,
-        gen: opts.gen,
-        stops: allStops,
-      })
+      yield accum.tokens
     } else if (text?.length) {
-      yield sanitiseAndTrim({
-        text,
-        char: opts.replyAs,
-        members,
-        gen: opts.gen,
-        stops: allStops,
-      })
+      yield text
     } else if (accum.thoughts) {
-      sanitiseAndTrim({
-        text: accum.thoughts,
-        char: opts.replyAs,
-        members,
-        gen: opts.gen,
-        stops: allStops,
-      })
+      // ??? This was a function call with no side-effects?
     }
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')

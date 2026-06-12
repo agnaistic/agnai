@@ -1,6 +1,6 @@
 import { decryptText } from '../db/util'
 import { ModelAdapter } from './type'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import {
   Content,
   GenerateContentConfig,
@@ -222,29 +222,13 @@ export const handleGemini: ModelAdapter = async function* (opts) {
         yield { thoughts: text }
       } else {
         accum += text || ''
-        yield {
-          partial: sanitiseAndTrim({
-            text: accum,
-            char: opts.replyAs,
-            members: opts.members,
-            gen: opts.gen,
-            stops: generationConfig.stopSequences,
-          }),
-        }
+        yield { partial: accum }
       }
     }
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(
-    parsed,
-    opts.replyAs,
-    opts.members,
-    opts.gen,
-    generationConfig.stopSequences
-  )
-
-  yield trimmed || parsed
+  yield parsed
 }
 
 const safetySettings: SafetySetting[] = [

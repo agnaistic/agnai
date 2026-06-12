@@ -7,7 +7,7 @@ import { Card } from '../Card'
 import Sortable, { SortItem } from '../Sortable'
 import { A } from '@solidjs/router'
 import { inverseSamplerServiceMap, samplerServiceMap } from '/common/sampler-order'
-import { PresetFuncs, PresetState, PresetTabProps } from '/web/store/preset-context'
+import { PresetFuncs, PresetContext, PresetTabProps } from '/web/store/preset-context'
 
 export const ToggleSettings: Component<PresetTabProps> = (props) => {
   return (
@@ -179,7 +179,7 @@ export const ToggleSettings: Component<PresetTabProps> = (props) => {
 }
 
 const SamplerOrder: Component<{
-  state: PresetState
+  state: PresetContext
   setters: PresetFuncs
 }> = (props) => {
   const updateValue = (next: SortItem[]) => {

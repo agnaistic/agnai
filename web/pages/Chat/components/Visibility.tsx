@@ -10,7 +10,7 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import Modal from '/web/shared/Modal'
 import { chatStore, msgStore } from '/web/store'
 import { ParticipantList, useParticipantList } from '../util'
@@ -21,7 +21,7 @@ import { Card, Pill } from '/web/shared/Card'
 import { Check, Minus, X } from 'lucide-solid'
 import { isMessageInvisible } from '/common/prompt'
 
-export const MessageVisibility: Component<{ ctx: ContextState; messageId: string }> = (props) => {
+export const MessageVisibility: Component<{ ctx: ChatContext; messageId: string }> = (props) => {
   const lists = useParticipantList()
   const [flags, setFlags] = createSignal<Record<string, boolean | undefined>>({})
 

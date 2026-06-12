@@ -3,7 +3,7 @@ import { Component, createMemo, JSX, Show } from 'solid-js'
 import { ChatRightPane, chatStore, imageStore, pageStore } from '../../store'
 import { ChatModal } from './ChatOptions'
 import { usePaneManager } from '/web/shared/hooks'
-import { ContextState } from '/web/store/context'
+import { ChatContext } from '/web/store/context'
 import { useSubNav } from '/web/subnav'
 import { Nav, NotificationBell, UserProfile } from '/web/Navigation'
 import {
@@ -27,14 +27,14 @@ import { usePresetContext } from '/web/store/preset-context'
 import { getStore } from '/web/store/create'
 
 type NavProps = {
-  ctx: ContextState
+  ctx: ChatContext
   togglePane: (paneType: ChatRightPane) => void
   setModal: (model: ChatModal) => void
   adapterLabel: string | JSX.Element
 }
 
 export const ChatMenu: Component<{
-  ctx: ContextState
+  ctx: ChatContext
   isOwner: boolean
 }> = (props) => {
   const pane = usePaneManager()

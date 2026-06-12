@@ -13,12 +13,12 @@ import { useAppContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { Pill } from '../Card'
 import { RootModal } from '../Modal'
-import { PresetFuncs, PresetState } from '/web/store/preset-context'
+import { PresetFuncs, PresetContext } from '/web/store/preset-context'
 
 const MODEL_NAMES = new Map<string, string>()
 
 export const AgnaisticSettings: Component<{
-  state: PresetState
+  state: PresetContext
   setters: PresetFuncs
   noSave: boolean
   page?: string

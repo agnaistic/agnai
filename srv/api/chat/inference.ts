@@ -69,6 +69,169 @@ const validInferenceApi = {
   json_schema: 'any?',
 } as const
 
+export const inferenceStream = wrap(async (req, res) => {
+  const { socketId, userId, body, log } = req
+  assertValid(
+    {
+      ...validInference,
+      stop: ['string?'],
+      messages: 'any?',
+      requestId: 'string',
+      broadcast: optional({ type: 'string', id: 'string', payload: 'any' }),
+    },
+    body
+  )
+
+  const isEventStream = req.headers.accept === 'text/event-stream'
+  const signal = new AbortController()
+
+  if (isEventStream) {
+    req.socket.on('end', () => {
+      if (signal.signal.aborted) return
+      signal.abort()
+      res.status(499).end()
+    })
+  }
+
+  if (userId) {
+    if (!req.authed) throw errors.Unauthorized
+    body.user = req.authed
+  }
+
+  /** @todo convert to event-stream hybrid */
+
+  const { stream, service } = await createInferenceStream({
+    user: body.user!,
+    log,
+    prompt: body.prompt,
+    messages: body.messages,
+    settings: body.settings,
+    guest: userId ? undefined : socketId,
+    jsonSchema: body.jsonSchema,
+    imageData: body.imageData,
+    stop: body.stop,
+    signal,
+    chatId: body.chatId,
+  })
+
+  const requestId = body.requestId || v4()
+
+  if (!isEventStream) {
+    res.json({ requestId, success: true, generating: true })
+  } else {
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders()
+    res.write(
+      `data: ${JSON.stringify({ generating: true, success: true, requestId: body.requestId })}\n\n`
+    )
+  }
+
+  let response = ''
+  let partial = ''
+
+  const broadcastMembers = body.broadcast
+    ? await getBroadcastMembers(req.userId, body.broadcast)
+    : []
+
+  const wrapped = (data: any) => {
+    const aborted = signal.signal.aborted
+    if (isEventStream && !aborted) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+
+    if (!userId) {
+      sendGuest(socketId, data)
+      return
+    }
+
+    if (body.broadcast) {
+      sendMany(broadcastMembers, { ...data, ...body.broadcast.payload })
+      return
+    }
+
+    if (userId) {
+      sendOne(userId, data)
+    }
+  }
+
+  const lockId = body.chatId ? body.chatId : userId ? userId : socketId
+
+  await obtainLock(lockId, 10)
+
+  let promptSent = false
+
+  try {
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        response = gen
+        continue
+      }
+
+      if ('prompt' in gen) {
+        if (promptSent) continue
+        promptSent = true
+        wrapped({ type: 'inference-prompt', prompt: gen.prompt })
+      }
+
+      if ('meta' in gen) {
+        wrapped({ type: 'inference-meta', meta: gen.meta, requestId })
+        continue
+      }
+
+      if ('partial' in gen) {
+        partial = gen.partial
+        wrapped({ type: 'inference-partial', partial, service, requestId })
+        continue
+      }
+
+      if ('error' in gen) {
+        wrapped({ type: 'inference-error', partial, error: gen.error, requestId })
+        continue
+      }
+
+      if ('warning' in gen) {
+        wrapped({ type: 'inference-warning', requestId, warning: gen.warning })
+        continue
+      }
+
+      if ('thoughts' in gen) {
+        wrapped({ type: 'inference-thought', requestId, thoughts: gen.thoughts })
+      }
+    }
+
+    if (!promptSent) {
+      wrapped({ type: 'inference-prompt', prompt: body.prompt })
+    }
+  } catch (ex: any) {
+    // User cancellation
+    if (ex?.name === 'AbortError') {
+      req.log.debug('user cancelled inference')
+      response = partial
+      signal.abort()
+    } else if (ex instanceof StatusError) {
+      wrapped({
+        type: 'inference-error',
+        partial,
+        error: `[${ex.status}] ${ex.message}`,
+        requestId,
+      })
+    } else {
+      wrapped({ type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
+    }
+  }
+
+  wrapped({ type: 'inference', requestId, response })
+  await releaseLock(lockId)
+
+  if (isEventStream) {
+    res.write(`data: [DONE]`)
+    res.end()
+  }
+})
+
 export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
   assertValid(
     {
@@ -375,169 +538,6 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
   res.removeListener('close', listener)
 
   return { response: inference.generated, meta: inference.meta }
-})
-
-export const inferenceStream = wrap(async (req, res) => {
-  const { socketId, userId, body, log } = req
-  assertValid(
-    {
-      ...validInference,
-      stop: ['string?'],
-      messages: 'any?',
-      requestId: 'string',
-      broadcast: optional({ type: 'string', id: 'string', payload: 'any' }),
-    },
-    body
-  )
-
-  const isEventStream = req.headers.accept === 'text/event-stream'
-  const signal = new AbortController()
-
-  if (isEventStream) {
-    req.socket.on('end', () => {
-      if (signal.signal.aborted) return
-      signal.abort()
-      res.status(499).end()
-    })
-  }
-
-  if (userId) {
-    if (!req.authed) throw errors.Unauthorized
-    body.user = req.authed
-  }
-
-  /** @todo convert to event-stream hybrid */
-
-  const { stream, service } = await createInferenceStream({
-    user: body.user!,
-    log,
-    prompt: body.prompt,
-    messages: body.messages,
-    settings: body.settings,
-    guest: userId ? undefined : socketId,
-    jsonSchema: body.jsonSchema,
-    imageData: body.imageData,
-    stop: body.stop,
-    signal,
-    chatId: body.chatId,
-  })
-
-  const requestId = body.requestId || v4()
-
-  if (!isEventStream) {
-    res.json({ requestId, success: true, generating: true })
-  } else {
-    res.setHeader('Cache-Control', 'no-cache')
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Connection', 'keep-alive')
-    res.flushHeaders()
-    res.write(
-      `data: ${JSON.stringify({ generating: true, success: true, requestId: body.requestId })}\n\n`
-    )
-  }
-
-  let response = ''
-  let partial = ''
-
-  const broadcastMembers = body.broadcast
-    ? await getBroadcastMembers(req.userId, body.broadcast)
-    : []
-
-  const wrapped = (data: any) => {
-    const aborted = signal.signal.aborted
-    if (isEventStream && !aborted) {
-      res.write(`data: ${JSON.stringify(data)}\n\n`)
-    }
-
-    if (!userId) {
-      sendGuest(socketId, data)
-      return
-    }
-
-    if (body.broadcast) {
-      sendMany(broadcastMembers, { ...data, ...body.broadcast.payload })
-      return
-    }
-
-    if (userId) {
-      sendOne(userId, data)
-    }
-  }
-
-  const lockId = body.chatId ? body.chatId : userId ? userId : socketId
-
-  await obtainLock(lockId, 10)
-
-  let promptSent = false
-
-  try {
-    for await (const gen of stream) {
-      if (typeof gen === 'string') {
-        response = gen
-        continue
-      }
-
-      if ('prompt' in gen) {
-        if (promptSent) continue
-        promptSent = true
-        wrapped({ type: 'inference-prompt', prompt: gen.prompt })
-      }
-
-      if ('meta' in gen) {
-        wrapped({ type: 'inference-meta', meta: gen.meta, requestId })
-        continue
-      }
-
-      if ('partial' in gen) {
-        partial = gen.partial
-        wrapped({ type: 'inference-partial', partial, service, requestId })
-        continue
-      }
-
-      if ('error' in gen) {
-        wrapped({ type: 'inference-error', partial, error: gen.error, requestId })
-        continue
-      }
-
-      if ('warning' in gen) {
-        wrapped({ type: 'inference-warning', requestId, warning: gen.warning })
-        continue
-      }
-
-      if ('thoughts' in gen) {
-        wrapped({ type: 'inference-thought', requestId, thoughts: gen.thoughts })
-      }
-    }
-
-    if (!promptSent) {
-      wrapped({ type: 'inference-prompt', prompt: body.prompt })
-    }
-  } catch (ex: any) {
-    // User cancellation
-    if (ex?.name === 'AbortError') {
-      req.log.debug('user cancelled inference')
-      response = partial
-      signal.abort()
-    } else if (ex instanceof StatusError) {
-      wrapped({
-        type: 'inference-error',
-        partial,
-        error: `[${ex.status}] ${ex.message}`,
-        requestId,
-      })
-    } else {
-      wrapped({ type: 'inference-error', partial, error: `${ex.message || ex}`, requestId })
-    }
-  }
-
-  wrapped({ type: 'inference', requestId, response })
-  await releaseLock(lockId)
-
-  if (isEventStream) {
-    res.write(`data: [DONE]`)
-    res.end()
-  }
 })
 
 async function getBroadcastMembers(userId: string, opts: { type: string; id: string }) {

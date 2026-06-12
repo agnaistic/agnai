@@ -49,10 +49,8 @@ type SanitiseOpts = {
 }
 
 export function sanitiseAndTrim({ text, char, members, gen, stops }: SanitiseOpts) {
-  let parsed = sanitise(text)
-
-  const trimmed = trimResponseV2(parsed, char, members, gen, stops).split(`${char.name}:`).join('')
-  return trimmed || parsed
+  const parsed = sanitise(text)
+  return parsed
 }
 
 export function sanitise(generated: string) {
@@ -63,13 +61,11 @@ export function sanitise(generated: string) {
 export function trimResponseV2(
   generated: string,
   char: AppSchema.Character,
-  members: AppSchema.Profile[],
-  gen: Partial<AppSchema.GenSettings> | undefined,
-  endTokens: string[] = []
+  gen: Partial<AppSchema.GenSettings> | undefined
 ) {
-  const allEndTokens = getEndTokens(null, members, endTokens)
+  const endTokens = gen?.stopSequences || []
 
-  generated = generated.split(`${char.name} :`).join(`${char.name}:`)
+  // generated = generated.split(`${char.name} :`).join(`${char.name}:`)
   if (gen?.reasoning?.start) {
     generated = generated.replace(/\<think\>/g, gen.reasoning.start)
   }
@@ -78,10 +74,10 @@ export function trimResponseV2(
     generated = generated.replace(/\<\/think\>/g, gen.reasoning.end)
   }
 
-  for (const member of members) {
-    if (!member.handle) continue
-    generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
-  }
+  // for (const member of members) {
+  //   if (!member.handle) continue
+  //   generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
+  // }
 
   /** Do not always add character names as stop tokens here */
   // if (bots) {
@@ -93,7 +89,7 @@ export function trimResponseV2(
   // }
 
   let index = -1
-  let trimmed = allEndTokens.concat(...endTokens).reduce((prev, endToken) => {
+  let trimmed = endTokens.reduce((prev, endToken) => {
     const idx = generated.indexOf(endToken)
 
     if (idx === -1) return prev
@@ -108,10 +104,14 @@ export function trimResponseV2(
   }, '')
 
   if (index === -1) {
-    return sanitise(generated.split(`${char.name}:`).join(''))
+    if (generated.startsWith(`${char.name}:`)) {
+      generated = generated.slice(char.name.length + 1)
+    }
+
+    return generated.trim()
   }
 
-  return sanitise(trimmed.split(`${char.name}:`).join(''))
+  return trimmed || generated
 }
 
 export function getChoiceProp<T = any>(json: any, prop: string, assign?: any) {

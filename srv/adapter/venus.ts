@@ -1,6 +1,6 @@
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { registerAdapter } from './register'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings } from '/common/requests/payloads'
@@ -76,23 +76,13 @@ export const handleVenus: ModelAdapter = async function* (opts) {
       accumulated += generated.value.token
 
       if (opts.gen.streamResponse) {
-        yield {
-          partial: sanitiseAndTrim({
-            text: accumulated,
-            char: opts.char,
-            members: opts.members,
-            gen: opts.gen,
-            stops: body.stop,
-          }),
-        }
+        yield { partial: accumulated }
       }
     }
   }
 
   const parsed = sanitise(accumulated)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.gen, body.stop)
-
-  yield trimmed || parsed
+  yield parsed
 }
 
 registerAdapter('venus', handleVenus, {

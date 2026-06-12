@@ -180,14 +180,7 @@ async function streamResponse(opts: StreamOpts) {
   }
 
   const stops = getStoppingStrings(req.request, req.entities.settings)
-  const sanitize = (text: string) =>
-    sanitiseAndTrim({
-      char: req.props.replyAs,
-      members: req.entities.members,
-      gen: req.request.settings!,
-      text,
-      stops,
-    })
+  const sanitize = (text: string) => (text || '').trim()
 
   const format = req.request.settings?.modelFormat
   if (stops.length < 4 && format) {
@@ -197,7 +190,7 @@ async function streamResponse(opts: StreamOpts) {
   }
 
   const messageId = req.request.replacing?._id || req.request.requestId
-  console.log('WAITING SET', lazy.state)
+
   waiting({
     mode: opts.kind,
     characterId: req.request.replyAs._id,
@@ -233,8 +226,6 @@ async function streamResponse(opts: StreamOpts) {
       )
     }
   )
-
-  console.log('INFERENCE CALLED', lazy.state)
 
   /** In development: Performing JSON output in a separate call if specified by the schema */
 

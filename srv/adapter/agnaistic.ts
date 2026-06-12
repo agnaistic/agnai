@@ -22,7 +22,7 @@ import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 import { getSubscriptionModelLimits, parseStops } from '/common/util'
 import { handleVenus } from './venus'
-import { sanitise, sanitiseAndTrim, trimResponseV2 } from '/common/requests/util'
+import { sanitise } from '/common/requests/util'
 import { obtainLock, releaseLock } from '../api/chat/lock'
 import { getServerConfiguration } from '../db/admin'
 import { handleGemini } from './gemini'
@@ -73,7 +73,7 @@ export async function getSubscriptionPreset(
 }
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
-  const { char, members, prompt, log, gen } = opts
+  const { prompt, log, gen } = opts
 
   if ('subscription' in opts === false) {
     opts.subscription = await getSubscriptionPreset(opts.user, !!opts.guest, opts.gen)
@@ -335,15 +335,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       else accumulated += generated.token
 
       if (gen.streamResponse) {
-        yield {
-          partial: sanitiseAndTrim({
-            text: accumulated,
-            char,
-            members,
-            gen: opts.gen,
-            stops: allStops,
-          }),
-        }
+        yield { partial: accumulated }
       }
     }
 
@@ -371,8 +363,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   const parsed = sanitise((result || accumulated).replace(prompt, ''))
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.gen, allStops)
-  yield trimmed || parsed
+  yield parsed
 }
 
 const settings: AdapterSetting[] = [
