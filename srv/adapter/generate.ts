@@ -49,7 +49,7 @@ export type InferenceRequest = {
   chatId?: string
   requestId?: string
   prompt: string
-  messages?: Array<any>
+  messages: Array<any>
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>

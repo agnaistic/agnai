@@ -13,11 +13,9 @@ import {
 } from '../../common/prompt'
 import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
-import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
 import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
-import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { remapMessages } from './template-chat-payload'
@@ -220,7 +218,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   log.debug({ ...payload, prompt: null, messages: null }, 'Claude payload')
   log.debug(`Prompt:\n${payload.prompt}`)
-  yield { prompt: payload.messages ? stripImageContent(payload.messages) : payload.prompt }
+  yield { prompt: payload.messages?.length ? stripImageContent(payload.messages) : payload.prompt }
 
   const iterator = payload.stream
     ? streamCompletion({
@@ -459,14 +457,6 @@ export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
     messages: opts.messages!,
-  }
-
-  if (!result.messages) {
-    result.messages = await toChatCompletionPayload(
-      opts,
-      getTokenCounter('openai', OPENAI_MODELS.Turbo),
-      opts.gen.maxTokens!
-    )
   }
 
   // Claude doesn't have a system role, so we extract the first message to put it in the system

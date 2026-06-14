@@ -290,6 +290,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }, res) => {
     lists: body.lists,
     reguidance: body.reguidance,
     requestId: body.requestId,
+    messages: [],
     jsonSchema: body.jsonSchema,
     signal,
   }
@@ -419,7 +420,7 @@ export const inferenceApi = wrap(async (req, res) => {
       : body.messages
       ? rendered?.prompt || ''
       : '',
-    messages: body.messages,
+    messages: body.messages || [],
     user: req.authed!,
     log: req.log,
     settings,
@@ -532,6 +533,7 @@ export const inference = wrap(async ({ socketId, userId, body, log, get }, res) 
     guest: userId ? undefined : socketId,
     jsonSchema: body.jsonSchema,
     imageData: body.imageData,
+    messages: [],
     signal,
   })
 

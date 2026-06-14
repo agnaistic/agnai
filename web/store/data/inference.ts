@@ -383,7 +383,7 @@ export async function inferenceStream(opts: InferenceOpts, onTick?: TickHandler)
     })
     api.localSSE({
       host: conn?.url,
-      path: payload.messages ? `/chat/completions` : '/completions',
+      path: payload.messages?.length ? `/chat/completions` : '/completions',
       body: opts.payload || fallback,
       headers,
       signal: opts.signal,

@@ -156,7 +156,7 @@ export type AdapterProps = {
   sender: AppSchema.Profile
 
   prompt: string
-  messages?: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>
 
   parts: PromptPlaceholders
 
