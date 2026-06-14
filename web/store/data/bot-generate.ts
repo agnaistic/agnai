@@ -36,7 +36,7 @@ import { msgsApi } from './messages'
 import { getProvider } from '../preset-context'
 import { getLocalPayload, getStoppingStrings } from '/common/requests/payloads'
 import { toastStore } from '../toasts'
-import { inline, LazyPromise, lazyPromise, round } from '/common/util'
+import { inline, LazyPromise, lazyPromise, round, stopResponse } from '/common/util'
 import type { ResponseState } from '../response'
 import { EVENTS, events } from '/web/emitter'
 import { debug } from '/common/debug'
@@ -178,10 +178,11 @@ async function streamResponse(opts: StreamOpts) {
     prefix += ' '
   }
 
-  const stops = getStoppingStrings(req.request, req.entities.settings)
   const sanitize = (text: string) => (text || '').trim()
 
   const format = req.request.settings?.modelFormat
+  const stops = req.props.stops
+
   if (stops.length < 4 && format) {
     const tags = BUILTIN_FORMATS[format]
     if (tags?.closeBot?.trim()) stops.push(tags.closeBot)
@@ -601,10 +602,11 @@ async function buildChatRequest(opts: GenerateOpts) {
     reschemaPrompt: props.reschemaPrompt,
     eventStream: true,
     jsonSchema: schema ? { fields: schema.schema, entities: schema.entities } : undefined,
+    stop: [],
   }
 
-  const stops = getStoppingStrings(request, request.settings)
-  request.settings!.stopSequences = stops
+  request.stop = getStoppingStrings(request, request.settings)
+  request.settings!.stopSequences = request.stop
 
   if (
     opts.kind === 'send' ||
@@ -909,6 +911,7 @@ export type GenerateProps = {
   parent?: AppSchema.ChatMessage
   json: Record<string, any>
   reschemaPrompt?: string
+  stops: string[]
 }
 
 async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
@@ -934,13 +937,36 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
     if (curr.characterId) return curr
   }, undefined)
 
+  const stops = getStoppingStrings(
+    {
+      user: entities.user,
+      char: entities.char,
+      characters: entities.characters,
+      impersonate: entities.impersonating,
+      replyAs: entities.char,
+      members: entities.members,
+      sender: entities.profile,
+    },
+    entities.conn.preset
+  )
+
+  entities.messages = entities.messages.map((msg) => {
+    if (!msg.characterId) return msg
+    if (msg.userId) return msg
+
+    const author = entities.characters[msg.characterId]?.name || ''
+    const text = stopResponse({ text: msg.msg, author, stops })
+    return { ...msg, msg: text }
+  })
+
   const props: GenerateProps = {
     entities,
     replyAs: entities.char,
-    messages: entities.messages.slice(),
+    messages: entities.messages,
     impersonate: entities.impersonating,
     parent: getMessageParent(opts.kind, entities.messages),
     json,
+    stops,
   }
 
   if (opts.kind === 'chat-query' && entities.presets.json) {

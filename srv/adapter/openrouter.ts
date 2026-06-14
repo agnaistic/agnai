@@ -4,7 +4,6 @@ import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { AppLog } from '../middleware'
 import { OpenRouterModel } from '/common/adapters'
-import { createClaudeChatCompletionV2 } from './claude'
 import { logPayload } from './template-chat-payload'
 import { streamGenerator } from '/common/requests/stream'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
@@ -73,16 +72,8 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.response_format = getJsonSchemaPayload(opts.jsonSchema, 'openai', opts)
   }
 
-  const useAnthropic =
-    opts.gen.service !== 'openrouter-completion' &&
-    (opts.gen.openRouterModel?.id || '').startsWith('anthropic')
-
   if (opts.gen.service === 'openrouter-completion') {
     payload.prompt = opts.prompt
-  } else if (useAnthropic) {
-    const messages = await createClaudeChatCompletionV2(opts)
-    payload.messages = messages
-    // payload.system = system
   } else if (opts.messages) {
     const last = opts.messages.slice(-1)[0]
     if (last && modelNeedsUserRoleLast(opts, payload.model)) {

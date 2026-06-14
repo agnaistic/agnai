@@ -56,6 +56,8 @@ export const promptStore = createStore<PromptState>(
       return { imageHint: opts.text }
     },
     loadImageHint: (_, chatId: string) => {
+      if (!chatId) return { imageHint: '' }
+
       const id = `image-hint-${chatId}`
       const prev = storage.localGetItem(id)
       if (prev) {

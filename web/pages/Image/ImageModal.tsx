@@ -1,5 +1,5 @@
 import './images.scss'
-import { Component, For, JSX, Show, createEffect, createMemo, on } from 'solid-js'
+import { Component, For, JSX, Show, createEffect, createMemo, on, onMount } from 'solid-js'
 import Modal from '../../shared/Modal'
 import {
   ConfirmAction,
@@ -465,6 +465,10 @@ const PromptSettings: Component<{
 
     if (msgs.message.msg.imagePrompt === fullImagePrompt()) return false
     return true
+  })
+
+  onMount(() => {
+    promptStore.loadImageHint(msgs.message.msg.chatId)
   })
 
   return (

@@ -88,6 +88,7 @@ export type GenerateRequestV2 = {
   user: AppSchema.User
   members: AppSchema.Profile[]
   sender: AppSchema.Profile
+  stop: string[]
 
   parts: PromptPlaceholders
 

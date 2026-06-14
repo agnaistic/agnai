@@ -6,6 +6,31 @@ import type { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 
+export function stopResponse(opts: { text: string; author: string; stops: string[] }) {
+  let generated = opts.text
+
+  if (opts.author) {
+    generated = generated.split(`${opts.author}:`).join('').trim()
+  }
+
+  let index = -1
+  let trimmed = opts.stops.reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
+
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  return trimmed || generated
+}
+
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
 export function incompleteJson(data: string) {
   if (data.startsWith('{') && !data.endsWith('}')) return true
