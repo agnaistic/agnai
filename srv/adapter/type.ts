@@ -88,6 +88,7 @@ export type GenerateRequestV2 = {
   user: AppSchema.User
   members: AppSchema.Profile[]
   sender: AppSchema.Profile
+  stop: string[]
 
   parts: PromptPlaceholders
 
@@ -155,7 +156,7 @@ export type AdapterProps = {
   sender: AppSchema.Profile
 
   prompt: string
-  messages?: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>
 
   parts: PromptPlaceholders
 

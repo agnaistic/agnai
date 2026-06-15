@@ -13,16 +13,14 @@ import {
 } from '../../common/prompt'
 import { AppLog } from '../middleware'
 import { getTokenCounter } from '../tokenize'
-import { toChatCompletionPayload } from './chat-completion'
 import { sendOne } from '../api/ws'
 import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
-import { OPENAI_MODELS } from '/common/presets/openai'
 import { CLAUDE_MODELS, CLAUDE_TEXT_MODELS } from '/common/presets/claude'
 import { fetchStream } from '/common/requests/stream'
 import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
-import { stripImageContent, toChatMessages } from '/common/template-messages'
+import { stripImageContent } from '/common/template-messages'
 
 const CHAT_URL = `https://api.anthropic.com/v1/messages`
 const TEXT_URL = `https://api.anthropic.com/v1/complete`
@@ -220,7 +218,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   log.debug({ ...payload, prompt: null, messages: null }, 'Claude payload')
   log.debug(`Prompt:\n${payload.prompt}`)
-  yield { prompt: payload.messages ? stripImageContent(payload.messages) : payload.prompt }
+  yield { prompt: payload.messages?.length ? stripImageContent(payload.messages) : payload.prompt }
 
   const iterator = payload.stream
     ? streamCompletion({
@@ -455,34 +453,10 @@ const streamCompletion: CompletionGenerator = async function* (opts) {
   return
 }
 
-export async function createClaudeChatCompletionV2(opts: AdapterProps) {
-  let messages = opts.messages
-  if (!messages) {
-    const result = await toChatMessages(opts, getTokenCounter('claude', ''))
-    messages = result.messages
-  }
-
-  // Last message must be 'thinking' block or role 'user'
-  const lastMsg = messages?.slice(-1)?.[0]
-  if (lastMsg?.role === 'assistant') {
-    lastMsg.role = 'user'
-  }
-
-  return messages
-}
-
 export async function createClaudeChatCompletion(opts: AdapterProps) {
   const result = {
     system: '',
     messages: opts.messages!,
-  }
-
-  if (!result.messages) {
-    result.messages = await toChatCompletionPayload(
-      opts,
-      getTokenCounter('openai', OPENAI_MODELS.Turbo),
-      opts.gen.maxTokens!
-    )
   }
 
   // Claude doesn't have a system role, so we extract the first message to put it in the system
@@ -603,11 +577,11 @@ async function createClaudePrompt(opts: AdapterProps) {
 
   for (const line of all) {
     const distanceFromBottom = all.length - 1 - i
-    const lineType: LineType = line.startsWith(sender)
+    const lineType: LineType = line?.startsWith(sender)
       ? 'user'
-      : line.startsWith('System:')
+      : line?.startsWith('System:')
       ? 'system'
-      : line.startsWith(sampleAmble)
+      : line?.startsWith(sampleAmble)
       ? 'example'
       : 'char'
     if (distanceFromBottom === examplePos) {

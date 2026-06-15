@@ -806,10 +806,10 @@ function getEntities(holder: IterableHolder, opts: TemplateOpts) {
         if (char.deletedAt) continue
 
         // Exclude temp characters that have been disabled/removed
-        if (char._id.startsWith('temp-') && char.favorite === false) continue
+        if (char._id?.startsWith('temp-') && char.favorite === false) continue
 
         // Exclude non-temp characters that have been removed from the chat
-        if (!char._id.startsWith('temp-') && !opts.chat?.characters?.[char._id]) continue
+        if (!char._id?.startsWith('temp-') && !opts.chat?.characters?.[char._id]) continue
         chars.push(char)
       }
       return chars
@@ -951,7 +951,7 @@ function getPlaceholder(
 ) {
   if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
 
-  if (node.value.startsWith('json.')) {
+  if (node.value?.startsWith('json.')) {
     const target = node.value.replace('json.', '')
 
     const jsonValues = opts.jsonValues || opts.history?.slice(-1)[0]?.json || {}
@@ -960,7 +960,7 @@ function getPlaceholder(
     return value
   }
 
-  if (node.value.startsWith('var.') || node.value.startsWith('vars.')) {
+  if (node.value?.startsWith('var.') || node.value?.startsWith('vars.')) {
     const name = node.value.replace('var.', '').replace('vars.', '')
     return opts.parts?.props?.[name] || ''
   }

@@ -51,7 +51,7 @@ import {
 import { markdown } from '../../../shared/markdown'
 import Button, { ButtonSchema } from '/web/shared/Button'
 import { ChatContext, useAppContext } from '/web/store/context'
-import { hydrateTemplate, trimSentence } from '/common/util'
+import { hydrateTemplate, stopResponse, trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import { Pill } from '/web/shared/Card'
 import { DropMenu } from '/web/shared/DropMenu'
@@ -1345,7 +1345,9 @@ function getMessageContent(
     (name) => name !== sender + ':'
   )
 
-  const trimmed = stopResponse({ text: message, author: sender, stops: allStops })
+  const trimmed = msg.userId
+    ? message
+    : stopResponse({ text: message, author: sender, stops: allStops })
 
   return {
     type: 'message' as const,
@@ -1353,35 +1355,6 @@ function getMessageContent(
     thoughts,
     class: 'not-streaming',
   }
-}
-
-function stopResponse(opts: { text: string; author: string; stops: string[] }) {
-  let generated = opts.text
-
-  let index = -1
-  let trimmed = opts.stops.reduce((prev, endToken) => {
-    const idx = generated.indexOf(endToken)
-
-    if (idx === -1) return prev
-
-    const text = generated.slice(0, idx)
-    if (index === -1 || idx < index) {
-      index = idx
-      return text
-    }
-
-    return prev
-  }, '')
-
-  if (index === -1) {
-    if (generated.startsWith(`${opts.author}:`)) {
-      generated = generated.slice(opts.author.length + 1)
-    }
-
-    return generated.trim()
-  }
-
-  return trimmed || generated
 }
 
 function getJsonUpdate(ctx: ChatContext, def: AppSchema.Character['json'], json: any) {

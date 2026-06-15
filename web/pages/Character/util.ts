@@ -250,7 +250,7 @@ export function charToJson(char: AppSchema.Character, format: string) {
 }
 
 function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
-  if (url.startsWith('data:')) {
+  if (url?.startsWith('data:')) {
     const [header] = url.split(',')
     const ext = header.slice(11, -7)
     return imageApi.ALLOWED_TYPES.has(ext)

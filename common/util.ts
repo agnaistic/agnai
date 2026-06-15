@@ -6,9 +6,34 @@ import type { GenerateRequestV2 } from '/srv/adapter/type'
 
 export const PING_INTERVAL_MS = 30000
 
+export function stopResponse(opts: { text: string; author: string; stops: string[] }) {
+  let generated = opts.text
+
+  if (opts.author) {
+    generated = generated.split(`${opts.author}:`).join('').trim()
+  }
+
+  let index = -1
+  let trimmed = opts.stops.reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
+
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  return trimmed || generated
+}
+
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
 export function incompleteJson(data: string) {
-  if (data.startsWith('{') && !data.endsWith('}')) return true
+  if (data?.startsWith('{') && !data.endsWith('}')) return true
   try {
     const parsed = JSON.parse(data)
     if (parsed && typeof parsed === 'object') {
@@ -53,7 +78,7 @@ export function parseEvent(msg: string) {
 
 export function getMimeTypeBase64(base64: string) {
   const [start, encode] = base64.split(';')
-  if (!start.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
+  if (!start?.startsWith('data:')) return { mimeType: 'image/jpeg', data: base64 }
 
   return { mimeType: start.slice(5), data: encode.replace('base64,', '') }
 }
@@ -195,7 +220,7 @@ export function toDuration(valueSecs: number, full?: boolean) {
 
   if (full) {
     return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`]
-      .filter((time) => !time.startsWith('0'))
+      .filter((time) => !time?.startsWith('0'))
       .join(':')
   }
 
@@ -394,7 +419,7 @@ export function getBotName(
   const charId = msg.characterId || ''
   if (!charId) return replyAs?.name || main.name
 
-  if (charId.startsWith('temp-')) {
+  if (charId?.startsWith('temp-')) {
     const temp = chat.tempCharacters?.[charId]
     if (!temp) return main.name
     return temp.name

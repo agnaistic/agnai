@@ -145,7 +145,7 @@ export async function generateImage(
     onTick,
   })
 
-  if (!image.text.startsWith('data:') && typeof window !== 'undefined') {
+  if (!image.text?.startsWith('data:') && typeof window !== 'undefined') {
     image.text = `data:image/png;base64,${image.text}`
   }
 

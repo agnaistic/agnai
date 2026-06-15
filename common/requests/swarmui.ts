@@ -235,7 +235,7 @@ async function getPayload(req: ImageRequestOpts) {
 
 function getUrl(opts: { host?: string; path: string; getter?: boolean }) {
   const affix = opts.getter ? '' : '/API'
-  const prefix = opts.path.startsWith('/') ? affix : `${affix}/`
+  const prefix = opts.path?.startsWith('/') ? affix : `${affix}/`
   const host = opts.host || 'http://localhost:7801'
 
   return `${host}${prefix}${opts.path}`

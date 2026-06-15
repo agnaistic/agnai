@@ -182,7 +182,7 @@ export function tryParseImport(content: string) {
     return json
   } catch (ex) {}
 
-  if (content.startsWith('data:')) {
+  if (content?.startsWith('data:')) {
     try {
       const index = content.indexOf(',')
       const data = decodeURIComponent(content.slice(index + 1))
@@ -358,8 +358,8 @@ export function getAssetPrefix() {
 }
 
 export function isBase64(file: string) {
-  if (file.startsWith('/') || file.startsWith('http')) return false
-  if (file.startsWith('data:')) return true
+  if (file?.startsWith('/') || file?.startsWith('http')) return false
+  if (file?.startsWith('data:')) return true
 
   return file.length > 500
 }

@@ -11,10 +11,8 @@ import {
 } from '@google/genai'
 import { remapMessages } from './template-chat-payload'
 import { getMimeTypeBase64 } from '/common/util'
-import { getEncoderByName } from '../tokenize'
 import { getJsonSchemaPayload } from '/common/guidance/json-schema'
 import { getStoppingStrings } from '/common/requests/payloads'
-import { toChatMessages } from '/common/template-messages'
 import { LLM_DEBUG } from './util'
 
 const SYSTEM_INCAPABLE: Record<string, boolean> = {
@@ -24,12 +22,7 @@ const SYSTEM_INCAPABLE: Record<string, boolean> = {
 export const handleGemini: ModelAdapter = async function* (opts) {
   const key = opts.guest ? opts.gen.thirdPartyKey : decryptText(opts.gen.thirdPartyKey!)
 
-  const counter = getEncoderByName('gemma')
-  let messages = opts.messages
-  if (!messages) {
-    const res = await toChatMessages(opts, counter.count)
-    messages = res.messages
-  }
+  let messages = opts.messages!
 
   const googleModel = opts.gen.thirdPartyModel || opts.gen.googleModel
 

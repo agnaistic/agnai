@@ -2,15 +2,9 @@ import { getOaiCompatibleUrl, joinUrl } from '/common/requests/util'
 import { AdapterProps, ChatRole, CompletionItem, ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppLog } from '../middleware'
-import {
-  modelNeedsUserRoleLast,
-  requestFullCompletion,
-  toChatCompletionPayload,
-} from './chat-completion'
+import { modelNeedsUserRoleLast, requestFullCompletion } from './chat-completion'
 import { decryptText } from '../db/util'
-import { getTokenCounter } from '../tokenize'
 import { ensureMessagesAlternate, stripImageContent } from '/common/template-messages'
-import { OPENAI_MODELS } from '/common/presets/openai'
 import { streamGenerator } from '/common/requests/stream'
 import { getStoppingStrings, toImageJinjaTemplate } from '/common/requests/payloads'
 import { JsonField } from '/common/prompt'
@@ -151,16 +145,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
-    const messages =
-      gen.thirdPartyFormat !== 'openai-chat' && opts.messages
-        ? opts.messages
-        : await toChatCompletionPayload(
-            opts,
-            getTokenCounter('openai', OPENAI_MODELS.Turbo),
-            body.max_tokens
-          )
-
-    body.messages = messages
+    const messages = opts.messages
+    body.messages = opts.messages
 
     /**
      * @todo provide an option for this

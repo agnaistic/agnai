@@ -623,7 +623,7 @@ export function toSafeUser(user: AppSchema.User, seed?: string) {
 
   if (user.providers) {
     for (const prov of user.providers) {
-      if (prov.provider.startsWith('self-') && prov.key) {
+      if (prov.provider?.startsWith('self-') && prov.key) {
         prov.userKey = decryptText(prov.key, true)
       }
 

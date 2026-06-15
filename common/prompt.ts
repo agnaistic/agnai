@@ -257,7 +257,9 @@ export async function createPromptParts(
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
       if (nextMsgs[i].userId) continue
-      nextMsgs[i] = { ...nextMsgs[i], msg: trimSentence(nextMsgs[i].msg) || nextMsgs[i].msg }
+      const text = trimSentence(nextMsgs[i].msg) || nextMsgs[i].msg
+
+      nextMsgs[i] = { ...nextMsgs[i], msg: text }
     }
 
     opts.messages = nextMsgs
@@ -315,11 +317,7 @@ export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export async function assemblePrompt(
-  opts: GenerateRequestV2,
-  encoder: TokenCounter,
-  chat?: boolean
-) {
+export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCounter) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
@@ -558,7 +556,7 @@ export async function buildPromptPlaceholders(
       const temp = opts.chat.tempCharacters?.[bot._id]
       if (temp?.deletedAt || temp?.favorite === false) continue
 
-      if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
+      if (!bot._id?.startsWith('temp-') && !chat.characters?.[bot._id]) {
         continue
       }
 

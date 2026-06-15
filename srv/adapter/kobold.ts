@@ -68,7 +68,7 @@ export const handleThirdParty: ModelAdapter = async function* (opts) {
 
   const start = Date.now()
   const stream = await dispatch(opts, body)
-  yield { prompt: body.messages ? stripImageContent(body.messages) : body.prompt }
+  yield { prompt: body.messages?.length ? stripImageContent(body.messages) : body.prompt }
 
   let accum = ''
   let wait = 0
@@ -187,7 +187,7 @@ async function dispatch(opts: AdapterProps, body: any) {
     case 'ollama': {
       body.messages = opts.messages
       body.prompt = undefined
-      const url = body.messages ? `${baseURL}/chat/completions` : `${baseURL}/completions`
+      const url = body.messages?.length ? `${baseURL}/chat/completions` : `${baseURL}/completions`
       return opts.gen.streamResponse
         ? streamGenerator({ ...base, url, format: opts.gen.thirdPartyFormat })
         : fullCompletion({ ...base, url, service: opts.gen.thirdPartyFormat })
@@ -472,10 +472,10 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       if (low.includes(':')) {
         const [name] = m.name.split(':')
         if (name === paylow) return true
-        if (name.startsWith(paylow)) return true
+        if (name?.startsWith(paylow)) return true
       }
 
-      return low.startsWith(paylow)
+      return low?.startsWith(paylow)
     })
     if (!match) {
       payload.model = models[0].name
