@@ -581,10 +581,10 @@ async function handleImage(body: {
   const { msgs, imagesSaved, activeChatId } = msgStore.getState()
 
   const isImageUrl =
-    image.startsWith('/asset') ||
-    image.startsWith('asset/') ||
-    image.endsWith('png') ||
-    image.endsWith('jpg') ||
+    image?.startsWith('/asset') ||
+    image?.startsWith('asset/') ||
+    image?.endsWith('png') ||
+    image?.endsWith('jpg') ||
     image.endsWith('jpeg')
 
   if (!imagesSaved && isImageUrl) {
@@ -596,7 +596,7 @@ async function handleImage(body: {
   }
 
   if (!isImageUrl) {
-    image = image.startsWith('data') ? image : `data:image/png;base64,${image}`
+    image = image?.startsWith('data') ? image : `data:image/png;base64,${image}`
   }
 
   const cacheId = imagesSaved ? '' : `cache:${requestId}`

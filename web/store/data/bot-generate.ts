@@ -540,7 +540,7 @@ async function handlePostStreamResponse(input: {
   if (canCreate) {
     opts.state = 'complete'
     await msgsApi.createMessage({
-      kind: opts.kind.startsWith('send-event') ? opts.kind : 'send-noreply',
+      kind: opts.kind?.startsWith('send-event') ? opts.kind : 'send-noreply',
       chatId,
       messageId: messageId, // Consider removing deterministic ID creation
       text: response,
@@ -993,13 +993,13 @@ async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
   }
 
   const getBot = (id: string) => {
-    if (!isLoggedIn() && !id.startsWith('temp-')) {
+    if (!isLoggedIn() && !id?.startsWith('temp-')) {
       const { characters } = getStore('character').getState()
       const char = characters.list.find((ch) => ch._id === id)
       if (char) return char
     }
 
-    if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
+    if (id?.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
 
     const { chatChars } = getStore('character').getState()
     const fullChar = chatChars.map[id]

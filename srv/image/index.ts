@@ -106,7 +106,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
   if (image) {
     // Guest images do not get saved under any circumstances
 
-    if (typeof image.content === 'string' && image.content.startsWith('http')) {
+    if (typeof image.content === 'string' && image.content?.startsWith('http')) {
       output = image.content
     }
 

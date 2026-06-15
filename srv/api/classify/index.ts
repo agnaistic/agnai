@@ -17,6 +17,6 @@ router.get(
 export default router
 
 function url(path: string) {
-  path = path.startsWith('/') ? path : `/${path}`
+  path = path?.startsWith('/') ? path : `/${path}`
   return `${config.classifyUrl}${path}`
 }

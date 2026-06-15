@@ -577,11 +577,11 @@ async function createClaudePrompt(opts: AdapterProps) {
 
   for (const line of all) {
     const distanceFromBottom = all.length - 1 - i
-    const lineType: LineType = line.startsWith(sender)
+    const lineType: LineType = line?.startsWith(sender)
       ? 'user'
-      : line.startsWith('System:')
+      : line?.startsWith('System:')
       ? 'system'
-      : line.startsWith(sampleAmble)
+      : line?.startsWith(sampleAmble)
       ? 'example'
       : 'char'
     if (distanceFromBottom === examplePos) {

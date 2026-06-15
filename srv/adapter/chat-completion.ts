@@ -47,9 +47,9 @@ export async function splitSampleChat(opts: SplitSampleChatProps, counter: Token
     }
 
     const sample = trimmed.toLowerCase().startsWith('system:') ? trimmed.slice(7).trim() : trimmed
-    const role = sample.startsWith(char + ':')
+    const role = sample?.startsWith(char + ':')
       ? 'assistant'
-      : sample.startsWith(sender + ':')
+      : sample?.startsWith(sender + ':')
       ? 'user'
       : 'system'
 

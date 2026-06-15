@@ -210,7 +210,7 @@ function isAllowedType(contentType: string) {
  */
 function safeRelativeResolve(root: string, filename: string) {
   const resolved_path = normalize(resolve(root, filename))
-  if (!resolved_path.startsWith(root)) {
+  if (!resolved_path?.startsWith(root)) {
     throw errors.BadRequest
   }
   return resolved_path

@@ -480,7 +480,7 @@ async function handlePreSend(opts: {
   onSuccess?: () => void
   onError?: (err?: string) => void
 }) {
-  const isEvent = opts.mode.startsWith('send-event:')
+  const isEvent = opts.mode?.startsWith('send-event:')
   if (!isEvent && opts.mode !== 'ooc' && opts.mode !== 'send' && opts.mode !== 'send-noreply') {
     return
   }

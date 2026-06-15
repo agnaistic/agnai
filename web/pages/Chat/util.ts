@@ -182,7 +182,7 @@ export function useEditableBots() {
 
     for (const bot of chats.activeBots) {
       if (bot.deletedAt) continue
-      if (bot._id.startsWith('temp-') && bot.favorite === false) continue
+      if (bot._id?.startsWith('temp-') && bot.favorite === false) continue
       ids.set(bot._id, bot)
     }
 
@@ -230,7 +230,7 @@ export function canConvertGaslightV2(preset: Partial<AppSchema.UserGenPreset>) {
 }
 
 function tempSort(a: AppSchema.Character, b: AppSchema.Character) {
-  return +!b._id.startsWith('temp-') - +!a._id.startsWith('temp-') || a.name.localeCompare(b.name)
+  return +!b._id?.startsWith('temp-') - +!a._id?.startsWith('temp-') || a.name.localeCompare(b.name)
 }
 
 export function isEligible() {

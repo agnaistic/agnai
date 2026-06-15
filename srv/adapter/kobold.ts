@@ -472,10 +472,10 @@ async function validateModel(opts: AdapterProps, baseURL: string, payload: any, 
       if (low.includes(':')) {
         const [name] = m.name.split(':')
         if (name === paylow) return true
-        if (name.startsWith(paylow)) return true
+        if (name?.startsWith(paylow)) return true
       }
 
-      return low.startsWith(paylow)
+      return low?.startsWith(paylow)
     })
     if (!match) {
       payload.model = models[0].name

@@ -556,7 +556,7 @@ export async function buildPromptPlaceholders(
       const temp = opts.chat.tempCharacters?.[bot._id]
       if (temp?.deletedAt || temp?.favorite === false) continue
 
-      if (!bot._id.startsWith('temp-') && !chat.characters?.[bot._id]) {
+      if (!bot._id?.startsWith('temp-') && !chat.characters?.[bot._id]) {
         continue
       }
 
