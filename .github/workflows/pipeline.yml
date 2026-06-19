@@ -6,6 +6,11 @@ permissions:
 
 on: pull_request
 
+concurrency:
+  group: pr-${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+
 env:
   node-version: '22.14.0'
   pnpm-version: 10.6.1
