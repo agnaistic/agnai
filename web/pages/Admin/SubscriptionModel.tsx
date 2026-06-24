@@ -45,7 +45,7 @@ const emptyPreset: AppSchema.GenSettings = {
 }
 
 const tokenizers = [
-  { label: 'None', value: '' },
+  { label: '无', value: '' },
   { label: 'Llama', value: 'llama' },
   { label: 'Llama 3', value: 'llama3' },
   { label: 'Turbo', value: 'turbo' },
@@ -61,7 +61,7 @@ const tokenizers = [
 ]
 
 export const SubscriptionModel: Component = () => {
-  const { updateTitle } = setComponentPageTitle('Subscription Model')
+  const { updateTitle } = setComponentPageTitle('订阅模型')
   let ref: any
 
   const params = useParams()
@@ -100,9 +100,9 @@ export const SubscriptionModel: Component = () => {
     if (params.id === 'new') {
       const copySource = query.preset
       if (copySource) {
-        updateTitle(`Copy subscription ${copySource}`)
+        updateTitle(`复制订阅 ${copySource}`)
       } else {
-        updateTitle(`Create subscription`)
+        updateTitle(`创建订阅`)
       }
 
       const importing = presets.subs.find((p) => p._id === query.preset)
@@ -144,7 +144,7 @@ export const SubscriptionModel: Component = () => {
     }
 
     if (params.id && state.current._id) {
-      updateTitle(`Edit subscription ${state.current.name}`)
+      updateTitle(`编辑订阅 ${state.current.name}`)
     }
   })
 
@@ -165,7 +165,7 @@ export const SubscriptionModel: Component = () => {
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
     if (!body.service) {
-      toastStore.error(`You must select an AI service before saving`)
+      toastStore.error(`保存前必须选择一个 AI 服务`)
       return
     }
 
@@ -188,7 +188,7 @@ export const SubscriptionModel: Component = () => {
       <PageHeader
         title={
           <A class="link" href="/admin/subscriptions">
-            Subscription Model
+            订阅模型
           </A>
         }
       />
@@ -202,18 +202,18 @@ export const SubscriptionModel: Component = () => {
               <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
                 <div class="flex gap-4">
                   <Show when={presets.subs.length > 1}>
-                    <Button onClick={() => setEdit(true)}>Load Preset</Button>
+                    <Button onClick={() => setEdit(true)}>加载预设</Button>
                   </Show>
                   <Button onClick={startNew}>
                     <Plus />
-                    New Subscription
+                    新订阅
                   </Button>
                   <Button onClick={() => setReplacing(true)} schema="red">
-                    Replace/Supercede
+                    替换/取代
                   </Button>
                 </div>
                 <div class="flex flex-col">
-                  <div>ID: {state.current._id || 'New Subscription'}</div>
+                  <div>ID: {state.current._id || '新订阅'}</div>
                   <TextInput
                     fieldName="id"
                     value={state.current._id || ''}
@@ -222,9 +222,9 @@ export const SubscriptionModel: Component = () => {
                   />
                   <TextInput
                     fieldName="name"
-                    label="Name"
-                    helperText="Name of the model"
-                    placeholder="E.g. Mythomax"
+                    label="名称"
+                    helperText="模型名称"
+                    placeholder="例如：Mythomax"
                     value={state.current.name}
                     onChange={(ev) => setters.setState({ name: ev.currentTarget.value })}
                     required
@@ -233,9 +233,9 @@ export const SubscriptionModel: Component = () => {
 
                   <TextInput
                     fieldName="description"
-                    label="Description"
-                    helperText="A short description of your model"
-                    placeholder="E.g. LLama 3.1 8B fine-tune"
+                    label="描述"
+                    helperText="模型的简短描述"
+                    placeholder="例如：Llama 3.1 8B 微调版"
                     value={state.current.description}
                     onChange={(ev) => setters.setState({ description: ev.currentTarget.value })}
                     required
@@ -244,10 +244,10 @@ export const SubscriptionModel: Component = () => {
 
                   <TextInput
                     fieldName="subApiKey"
-                    label="API Key"
-                    helperText="(Optional) API Key for your AI service if applicable."
+                    label="API 密钥"
+                    helperText="可选：如果 AI 服务需要，请填写 API 密钥。"
                     placeholder={
-                      state.current.subApiKeySet ? 'API Key is set' : 'API Key is not set'
+                      state.current.subApiKeySet ? '已设置 API 密钥' : '未设置 API 密钥'
                     }
                     value={state.current.subApiKey}
                     onChange={(ev) => setters.setState({ subApiKey: ev.currentTarget.value })}
@@ -259,8 +259,8 @@ export const SubscriptionModel: Component = () => {
                     <TextInput
                       type="number"
                       fieldName="subLevel"
-                      label="Subscription Level"
-                      helperText='Anything above -1 requires a "subscription". All users by default are -1.'
+                      label="订阅等级"
+                      helperText='大于 -1 的值都需要“订阅”。所有用户默认都是 -1。'
                       placeholder="0"
                       value={state.current.subLevel ?? 0}
                       onChange={(ev) => setters.setState({ subLevel: +ev.currentTarget.value })}
@@ -276,8 +276,8 @@ export const SubscriptionModel: Component = () => {
                   <Card class="mt-4">
                     <TextInput
                       fieldName="subModel"
-                      label="Model"
-                      helperText="Agnaistic service only"
+                      label="模型"
+                      helperText="仅 Agnaistic 服务"
                       placeholder=""
                       value={state.current.subModel}
                       onChange={(ev) => setters.setState({ subModel: ev.currentTarget.value })}
@@ -287,8 +287,8 @@ export const SubscriptionModel: Component = () => {
 
                     <TextInput
                       fieldName="subServiceUrl"
-                      label="Model Service URL"
-                      helperText="Agnaistic service only"
+                      label="模型服务 URL"
+                      helperText="仅 Agnaistic 服务"
                       placeholder="https://..."
                       value={state.current.subServiceUrl}
                       onChange={(ev) => setters.setState({ subServiceUrl: ev.currentTarget.value })}
@@ -298,8 +298,8 @@ export const SubscriptionModel: Component = () => {
 
                     <Toggle
                       fieldName="guidanceCapable"
-                      label="Guidance Capable"
-                      helperText="Agnaistic service only"
+                      label="支持 Guidance"
+                      helperText="仅 Agnaistic 服务"
                       value={state.current.guidanceCapable}
                       onChange={(ev) => setters.setState({ guidanceCapable: ev })}
                     />
@@ -308,39 +308,39 @@ export const SubscriptionModel: Component = () => {
                   <Card class="mt-4 flex flex-col gap-2">
                     <Toggle
                       fieldName="subDisabled"
-                      label="Subscription Disabled"
-                      helperText="Disable the use of this subscription"
+                      label="禁用订阅"
+                      helperText="禁止使用这个订阅"
                       value={state.current.subDisabled ?? false}
                       onChange={(ev) => setters.setState('subDisabled', ev)}
                     />
                     <Toggle
                       fieldName="isDefaultSub"
-                      label="Is Default Subscription"
-                      helperText="Is chosen as fallback when no subscription is provided with a request"
+                      label="设为默认订阅"
+                      helperText="请求未指定订阅时作为备用项"
                       value={state.current.isDefaultSub ?? false}
                       onChange={(ev) => setters.setState('isDefaultSub', ev)}
                     />
 
                     <Toggle
                       fieldName="jsonSchemaCapable"
-                      label="JSON Schema Capable (Structured Responses)"
+                      label="支持 JSON Schema（结构化响应）"
                       value={state.current.jsonSchemaCapable}
                       onChange={(ev) => setters.setState('jsonSchemaCapable', ev)}
                     />
 
                     <Toggle
                       fieldName="subVisionModel"
-                      label="Vision Model"
-                      helperText="Agnaistic service only"
+                      label="视觉模型"
+                      helperText="仅 Agnaistic 服务"
                       value={state.current.subVisionModel}
                       onChange={(ev) => setters.setState('subVisionModel', ev)}
                     />
 
                     <Toggle
                       fieldName="allowGuestUsage"
-                      label="Allow Guest Usage"
+                      label="允许访客使用"
                       helperText={
-                        'Typically for default subscriptions. Require users to sign in to use this subscription.'
+                        '通常用于默认订阅。关闭后需要用户登录才能使用。'
                       }
                       value={state.current.allowGuestUsage === false ? false : true}
                       onChange={(ev) => setters.setState('allowGuestUsage', ev)}
@@ -352,8 +352,8 @@ export const SubscriptionModel: Component = () => {
                   fieldName="tokenizer"
                   items={tokenizers}
                   value={state.current.tokenizer}
-                  label="Tokenizer Override"
-                  helperText="Optional. For use with custom models."
+                  label="覆盖 Tokenizer"
+                  helperText="可选。用于自定义模型。"
                   onChange={(ev) => setters.setState('tokenizer', ev.value)}
                 />
 
@@ -367,12 +367,12 @@ export const SubscriptionModel: Component = () => {
                 <div class="flex flex-row justify-end">
                   <Show when={state.current._id}>
                     <Button disabled={presets.saving} onClick={onSave}>
-                      <Save /> Save
+                      <Save /> 保存
                     </Button>
                   </Show>
                   <Show when={!state.current._id}>
                     <Button disabled={presets.saving} onClick={onSave}>
-                      <Save /> Create
+                      <Save /> 创建
                     </Button>
                   </Show>
                 </div>
@@ -388,7 +388,7 @@ export const SubscriptionModel: Component = () => {
         show={deleting()}
         close={() => setDeleting(false)}
         confirm={deletePreset}
-        message="Are you sure you wish to delete this preset?"
+        message="确定要删除这个预设吗？"
       />
     </Page>
   )
@@ -415,7 +415,7 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
     const subscriptionId = params.id
 
     if (!replaceId()) {
-      toastStore.warn('Replacement ID not set')
+      toastStore.warn('未设置替换订阅 ID')
       return
     }
 
@@ -428,22 +428,22 @@ const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) 
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
-        Cancel
+        取消
       </Button>
       <Button schema="green" onClick={onSubmit}>
-        Replace
+        替换
       </Button>
     </>
   )
 
   return (
-    <Modal show={props.show} close={props.close} title="Replace Subscription" footer={Footer}>
+    <Modal show={props.show} close={props.close} title="替换订阅" footer={Footer}>
       <form ref={form}>
         <Select
           items={replacements()}
           fieldName="replacementId"
-          label="Replacement Subscription"
-          helperText="The subscription that will supercede the current subscription"
+          label="替换为订阅"
+          helperText="将取代当前订阅的订阅"
           onChange={(ev) => setReplaceId(ev.value)}
         />
       </form>
@@ -485,7 +485,7 @@ const Levels: Component<{
         <FormLabel
           label={
             <div class="flex items-center gap-2">
-              Levels{' '}
+              层级{' '}
               <Button size="sm" onClick={add}>
                 <Plus size={12} />
               </Button>
@@ -500,7 +500,7 @@ const Levels: Component<{
             <TextInput
               fieldName={`level.threshold.${i}`}
               type="number"
-              helperText="Sub Level"
+              helperText="订阅等级"
               value={level().level}
               onChange={(ev) => change(i, { level: +ev.currentTarget.value })}
             />
@@ -508,7 +508,7 @@ const Levels: Component<{
             <TextInput
               fieldName={`level.maxtokens.${i}`}
               type="number"
-              helperText="Tokens"
+              helperText="Token 数"
               value={level().maxTokens}
               onChange={(ev) => change(i, { maxTokens: +ev.currentTarget.value })}
             />
@@ -516,7 +516,7 @@ const Levels: Component<{
             <TextInput
               fieldName={`level.maxcontext.${i}`}
               type="number"
-              helperText="Context"
+              helperText="上下文"
               value={level().maxContextLength}
               onChange={(ev) => change(i, { maxContextLength: +ev.currentTarget.value })}
             />
@@ -550,22 +550,22 @@ const EditPreset: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Load Preset"
+      title="加载预设"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
+            <X /> 取消
           </Button>
           <Button onClick={select}>
-            <Edit /> Load Preset
+            <Edit /> 加载预设
           </Button>
         </>
       }
     >
       <form>
         <Select
-          label="Preset"
-          helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
+          label="预设"
+          helperText="选择一个预设开始编辑。当前正在编辑的预设不会出现在列表中。"
           value={id()}
           onChange={(ev) => setId(ev.value)}
           items={state.subs

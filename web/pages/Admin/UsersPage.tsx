@@ -18,7 +18,7 @@ import { RelativeSpinner } from '/web/shared/Loading'
 
 const UsersPage: Component = () => {
   let ref: any
-  setComponentPageTitle('Users')
+  setComponentPageTitle('用户管理')
   const state = adminStore((s) => ({ users: s.users }))
   const config = userStore((s) => ({ tiers: s.tiers }))
 
@@ -44,10 +44,10 @@ const UsersPage: Component = () => {
   })
 
   const subTiers = createMemo(() => {
-    const base = [{ label: '[-1] None', value: '-1' }]
+    const base = [{ label: '[-1] 无', value: '-1' }]
     const tiers =
       config.tiers.map((tier) => ({
-        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(disabled)' : ''}`,
+        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(已禁用)' : ''}`,
         value: tier._id,
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
@@ -55,10 +55,10 @@ const UsersPage: Component = () => {
 
   return (
     <Page>
-      <PageHeader title="User Management" />
+      <PageHeader title="用户管理" />
 
       <A href="/admin/metrics" class="link">
-        ← Back to Manage
+        ← 返回管理后台
       </A>
 
       <div class="flex flex-col gap-2 pb-4">
@@ -66,14 +66,14 @@ const UsersPage: Component = () => {
           <div class="flex flex-wrap gap-2">
             <TextInput
               class="text-xs"
-              placeholder="Username"
+              placeholder="用户名"
               onChange={(ev) => setStore('username', ev.currentTarget.value)}
               onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
             />
             <TextInput
               class="text-xs"
               fieldName="customerId"
-              placeholder="Customer ID"
+              placeholder="客户 ID"
               onChange={(ev) => setStore('customerId', ev.currentTarget.value)}
               onKeyUp={(ev) => (ev.key === 'Enter' ? search() : null)}
             />
@@ -82,12 +82,12 @@ const UsersPage: Component = () => {
               fieldName="subscribed"
               onChange={(ev) => setStore('subscribed', ev)}
             >
-              Subscribed
+              已订阅
             </ToggleButton>
           </div>
           <Button size="sm" onClick={search} disabled={loading()}>
             <Show when={!loading()} fallback={<RelativeSpinner size={20} />}>
-              Search
+              搜索
             </Show>
           </Button>
         </form>
@@ -112,10 +112,10 @@ const UsersPage: Component = () => {
                   }}
                 />
                 <Button size="sm" onClick={() => setCode(user)}>
-                  Reset
+                  重置
                 </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
-                  Info
+                  信息
                 </Button>
                 <Button size="sm" onClick={() => adminStore.impersonate(user._id)}>
                   <HatGlasses size={20} />
@@ -150,10 +150,10 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   const [ban, setBan] = createSignal(false)
 
   const subTiers = createMemo(() => {
-    const base = [{ label: '[-1] None', value: '-1' }]
+    const base = [{ label: '[-1] 无', value: '-1' }]
     const list =
       tiers.list.map((tier) => ({
-        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(disabled)' : ''}`,
+        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(已禁用)' : ''}`,
         value: tier._id,
       })) || []
 
@@ -163,7 +163,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   const assignSub = () => {
     const id = subId.value
     if (!id) {
-      return toastStore.error(`No subscription ID`)
+      return toastStore.error(`没有订阅 ID`)
     }
 
     adminStore.assignSubscription(props.userId, id)
@@ -175,7 +175,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
         show={props.show}
         close={props.close}
         title={`${props.name}: ${state.info?.handle || '...'}`}
-        footer={<Button onClick={props.close}>Close</Button>}
+        footer={<Button onClick={props.close}>关闭</Button>}
         maxWidth="half"
       >
         <div class="flex flex-col items-center gap-4">
@@ -187,10 +187,10 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
 
           <div class="flex gap-2">
             <Button size="sm" onClick={() => adminStore.impersonate(state.info?.userId!)}>
-              Impersonate
+              模拟登录
             </Button>
             <Button disabled={!!state.info?.banned} size="sm" onClick={() => setBan(true)}>
-              Ban User
+              封禁用户
             </Button>
 
             <Button
@@ -198,46 +198,46 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               size="sm"
               onClick={() => adminStore.unbanUser(props.userId)}
             >
-              Unban User
+              解除封禁
             </Button>
           </div>
 
           <table class="w-full table-auto">
             <tbody>
               <tr>
-                <th>User ID</th>
+                <th>用户 ID</th>
                 <td>{state.info?.userId}</td>
               </tr>
 
               <Show when={state.info?.banned}>
-                <th>Banned</th>
+                <th>已封禁</th>
                 <td>
                   {new Date(state.info?.banned?.at!).toDateString()}:{' '}
-                  {state.info?.banned?.reason || 'No reason given'}
+                  {state.info?.banned?.reason || '未填写原因'}
                 </td>
               </Show>
 
               <tr>
-                <th>Handle</th>
+                <th>昵称</th>
                 <td>{state.info?.handle}</td>
               </tr>
 
               <tr>
-                <th>Characters</th>
+                <th>角色</th>
                 <td>{state.info?.characters}</td>
               </tr>
               <tr>
-                <th>Chats</th>
+                <th>聊天</th>
                 <td>{state.info?.chats}</td>
               </tr>
 
               <tr>
                 <td colSpan={2}>
-                  <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
+                  <div class="bg-700 mt-4 flex justify-center">订阅详情</div>
                 </td>
               </tr>
               <tr>
-                <th>Gift</th>
+                <th>赠送</th>
                 <td>
                   <div class="flex gap-1">
                     <Select
@@ -259,28 +259,28 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                       size="sm"
                       class="h-[36px]"
                     >
-                      Apply
+                      应用
                     </Button>
                   </div>
                 </td>
               </tr>
               <tr>
-                <th>Assign Sub</th>
+                <th>分配订阅</th>
                 <td>
                   <div class="flex gap-1">
                     <TextInput
                       ref={subId}
                       parentClass="w-full"
                       fieldName="subscriptionId"
-                      placeholder="Stripe Subscription ID"
+                      placeholder="Stripe 订阅 ID"
                     />
-                    <Button onClick={assignSub}>Assign</Button>
+                    <Button onClick={assignSub}>分配</Button>
                   </div>
                 </td>
               </tr>
               <Show when={state.info?.stripeSessions?.length}>
                 <tr>
-                  <th>Session IDs</th>
+                  <th>会话 ID</th>
                   <td class="flex flex-wrap items-center gap-1">
                     <For each={state.info?.stripeSessions}>
                       {(id) => (
@@ -293,34 +293,34 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                 </tr>
               </Show>
               <tr>
-                <th>Subscription Level</th>
+                <th>订阅等级</th>
                 <td>
-                  Native:{state.info?.sub?.level ?? '-1'} / Patreon:
-                  {state.info?.patreon?.sub?.level ?? '-1'} / Manual:
+                  原生:{state.info?.sub?.level ?? '-1'} / Patreon:
+                  {state.info?.patreon?.sub?.level ?? '-1'} / 手动:
                   {state.info?.manualSub?.level ?? '-1'}
                 </td>
               </tr>
 
               <Show when={state.info?.billing}>
                 <tr>
-                  <th>Customer ID</th>
+                  <th>客户 ID</th>
                   <td>{state.info?.billing?.customerId}</td>
                 </tr>
 
                 <tr>
-                  <th>Period Start</th>
+                  <th>周期开始</th>
                   <td>{new Date(state.info?.billing?.lastRenewed!).toLocaleString()}</td>
                 </tr>
 
                 <tr>
                   <th>
                     {state.info?.state.downgrade
-                      ? 'Downgrading at'
+                      ? '降级时间'
                       : state.info?.state.state === 'cancelled'
-                      ? 'Cancelled at'
+                      ? '取消时间'
                       : state.info?.billing?.cancelling
-                      ? 'Cancels at'
-                      : 'Renews at'}
+                      ? '将于此时取消'
+                      : '续订时间'}
                   </th>
                   <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
                 </tr>
@@ -328,12 +328,12 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
 
               <Show when={state.info?.state.history.length ?? 0 > 0}>
                 <tr>
-                  <th>State</th>
+                  <th>状态</th>
                   <td>{state.info?.state.state}</td>
                 </tr>
                 <tr>
                   <td colSpan={2}>
-                    <div class="bg-700 mt-4 flex justify-center">History</div>
+                    <div class="bg-700 mt-4 flex justify-center">历史</div>
                   </td>
                 </tr>
                 <For each={state.info?.state.history}>
@@ -346,7 +346,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
                         <th class="flex flex-col">
                           <div>{new Date(item.time).toLocaleString()} </div>
                           <div class="text-500 text-xs">
-                            {elapsedSince(new Date(item.time!))} ago
+                            {elapsedSince(new Date(item.time!))} 前
                           </div>
                         </th>
                         <td>
@@ -363,7 +363,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               <Show when={!!session()}>
                 <tr>
                   <td colSpan={2}>
-                    <div class="bg-700 mt-4 flex justify-center">Session: {session()?.id}</div>
+                    <div class="bg-700 mt-4 flex justify-center">会话：{session()?.id}</div>
                   </td>
                 </tr>
                 <tr>
@@ -399,15 +399,15 @@ const BanModal: Component<{ userId: string; show: boolean; close: () => void }> 
       footer={
         <>
           <Button onClick={props.close} schema="secondary">
-            Cancel
+            取消
           </Button>
           <Button schema="red" disabled={!reason().trim()} onClick={ban}>
-            Ban
+            封禁
           </Button>
         </>
       }
     >
-      <TextInput label="Ban Reason" onChange={(ev) => setReason(ev.currentTarget.value)} />
+      <TextInput label="封禁原因" onChange={(ev) => setReason(ev.currentTarget.value)} />
     </Modal>
   )
 }
@@ -431,7 +431,7 @@ const PasswordModal: Component<{ user?: AppSchema.User; show: boolean; close: ()
     <Modal
       show={props.show}
       close={props.close}
-      title="Change Password"
+      title="修改密码"
       footer={
         <>
           {' '}
@@ -442,20 +442,20 @@ const PasswordModal: Component<{ user?: AppSchema.User; show: boolean; close: ()
               props.close()
             }}
           >
-            <X /> Close
+            <X /> 关闭
           </Button>
           <Button schema="warning" onClick={resetPassword}>
-            Reset
+            重置
           </Button>
         </>
       }
     >
       <div class="flex flex-col items-center gap-2">
-        <div>Reset Link: {props.user?.username}</div>
+        <div>重置链接：{props.user?.username}</div>
 
         <Show when={!code()}>
           <div class="link" onClick={resetPassword}>
-            Generate Link
+            生成链接
           </div>
         </Show>
 

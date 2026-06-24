@@ -39,7 +39,7 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
 
     base.sort((l, r) => l.label.localeCompare(r.label))
 
-    base.unshift({ label: 'Unset', value: '' })
+    base.unshift({ label: '未设置', value: '' })
     return base
   })
 
@@ -50,7 +50,7 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
         label={
           <>
             <div class="flex gap-2">
-              <div>Images Host (A1111 Compatible)</div>
+              <div>图像服务地址（兼容 A1111）</div>
               <Toggle
                 fieldName="imagesEnabled"
                 value={state.config?.imagesEnabled}
@@ -66,14 +66,14 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
 
       <TextInput
         fieldName="imagesLoraUrl"
-        label="Images LoRA URL"
+        label="图像 LoRA URL"
         value={state.config?.imagesLoraUrl}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
         onChange={(ev) => props.setters('imagesLoraUrl', ev.currentTarget.value)}
       />
 
       <Select
-        label="Default Image Model"
+        label="默认图像模型"
         fieldName="defaultImageModel"
         items={models()}
         value={state.config?.defaultImageModel}
@@ -116,10 +116,10 @@ const ImageModels: Component<{ state: ConfigState; setters: ConfigSetters }> = (
   return (
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2">
-        Image Models {props.state.imagesModels?.length}
+        图像模型 {props.state.imagesModels?.length}
         <Button size="sm" onClick={rows.add}>
           <Plus size={12} />
-          Add
+          添加
         </Button>
       </div>
       <div class="flex flex-col gap-3">
@@ -130,7 +130,7 @@ const ImageModels: Component<{ state: ConfigState; setters: ConfigSetters }> = (
         </Index>
       </div>
       <Button size="sm" onClick={rows.add}>
-        Add Model
+        添加模型
       </Button>
     </div>
   )
@@ -156,8 +156,8 @@ const Model: Component<{
         >
           <div class="flex gap-3">
             <TextInput
-              prelabel="Description"
-              placeholder="Model Description..."
+              prelabel="描述"
+              placeholder="模型描述..."
               onChange={props.updater(props.index, 'desc')}
               parentClass="h-8 w-1/2"
               value={props.item.desc}
@@ -178,14 +178,14 @@ const Model: Component<{
               value={props.item.lora ?? false}
               onChange={props.updater(props.index, 'lora')}
             >
-              LoRA Support
+              支持 LoRA
             </ToggleButton>
           </div>
 
           <div class="flex gap-2 text-sm font-normal">
             <TextInput
-              prelabel="Host"
-              placeholder="Model Name..."
+              prelabel="主机"
+              placeholder="模型名称..."
               onChange={props.updater(props.index, 'name')}
               value={props.item.name}
               parentClass="h-8 w-1/3"
@@ -193,16 +193,16 @@ const Model: Component<{
             />
 
             <TextInput
-              prelabel="Override"
+              prelabel="覆盖"
               fieldName="model.override"
-              placeholder="Override..."
+              placeholder="覆盖..."
               onChange={props.updater(props.index, 'override')}
               parentClass="h-8 w-1/3"
               value={props.item.override || ''}
               variant="outline"
             />
             <TextInput
-              prelabel="Level"
+              prelabel="等级"
               type="number"
               parentClass="w-32 h-8 min-w-[7rem]"
               onChange={props.updater(props.index, 'level')}
@@ -212,21 +212,21 @@ const Model: Component<{
 
             <Select
               value={props.item.init.sampler}
-              items={[{ label: 'None', value: '' }].concat(SD_SAMPLER_OPTS)}
+              items={[{ label: '无', value: '' }].concat(SD_SAMPLER_OPTS)}
               onChange={props.updater(props.index, 'init.sampler')}
             ></Select>
           </div>
 
           <div class="flex w-full gap-3">
             <TextInput
-              prelabel="Prefix"
+              prelabel="前缀"
               onChange={props.updater(props.index, 'init.prefix')}
               value={props.item.init.prefix}
               variant="outline"
               parentClass="w-1/3 h-8"
             />
             <TextInput
-              prelabel="Suffix"
+              prelabel="后缀"
               onChange={props.updater(props.index, 'init.suffix')}
               value={props.item.init.suffix}
               variant="outline"
@@ -234,7 +234,7 @@ const Model: Component<{
             />
 
             <TextInput
-              prelabel="Negative"
+              prelabel="负面提示"
               onChange={props.updater(props.index, 'init.negative')}
               value={props.item.init.negative}
               variant="outline"
@@ -247,12 +247,12 @@ const Model: Component<{
 
           <div class="flex flex-wrap gap-2">
             <Card class="flex flex-col gap-1" bgOpacity={opacity} bg={bg} size={size}>
-              <div class="flex justify-center">Steps</div>
+              <div class="flex justify-center">步数</div>
               <div class="flex gap-1">
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Init"
+                  prelabel="初始"
                   onChange={props.updater(props.index, 'init.steps')}
                   value={props.item.init.steps}
                   variant="outline"
@@ -260,7 +260,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Max"
+                  prelabel="最大"
                   onChange={props.updater(props.index, 'limit.steps')}
                   value={props.item.limit.steps}
                   variant="outline"
@@ -274,7 +274,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Init"
+                  prelabel="初始"
                   onChange={props.updater(props.index, 'init.cfg')}
                   value={props.item.init.cfg}
                   variant="outline"
@@ -282,7 +282,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Max"
+                  prelabel="最大"
                   onChange={props.updater(props.index, 'limit.cfg')}
                   value={props.item.limit.cfg}
                   variant="outline"
@@ -291,12 +291,12 @@ const Model: Component<{
             </Card>
 
             <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
-              <div class="flex justify-center">Width</div>
+              <div class="flex justify-center">宽度</div>
               <div class="flex gap-1">
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Init"
+                  prelabel="初始"
                   onChange={props.updater(props.index, 'init.width')}
                   value={props.item.init.width}
                   variant="outline"
@@ -304,7 +304,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Max"
+                  prelabel="最大"
                   onChange={props.updater(props.index, 'limit.width')}
                   value={props.item.limit.width}
                   variant="outline"
@@ -313,12 +313,12 @@ const Model: Component<{
             </Card>
 
             <Card class="flex flex-col gap-2" bgOpacity={opacity} bg={bg} size={size}>
-              <div class="flex justify-center">Height</div>
+              <div class="flex justify-center">高度</div>
               <div class="flex gap-1">
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Init"
+                  prelabel="初始"
                   onChange={props.updater(props.index, 'init.height')}
                   value={props.item.init.height}
                   variant="outline"
@@ -326,7 +326,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Max"
+                  prelabel="最大"
                   onChange={props.updater(props.index, 'limit.height')}
                   value={props.item.limit.height}
                   variant="outline"
@@ -340,7 +340,7 @@ const Model: Component<{
                 <TextInput
                   type="number"
                   parentClass="w-32 h-8"
-                  prelabel="Init"
+                  prelabel="初始"
                   onChange={props.updater(props.index, 'init.clipSkip')}
                   value={props.item.init.clipSkip ?? 2}
                   variant="outline"

@@ -19,16 +19,16 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
       <Card bg="bg-500">
         <TextInput
           fieldName="supportEmail"
-          label="Support Email"
-          helperText="If provided, a link to this email will be added to the main navigation"
+          label="支持邮箱"
+          helperText="填写后会在主导航添加此邮箱链接"
           value={props.state.supportEmail}
           onChange={(ev) => props.setters('supportEmail', ev.currentTarget.value)}
         />
 
         <Toggle
           fieldName="maintenance"
-          label="Maintenace Mode Enabled"
-          helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
+          label="启用维护模式"
+          helperText="注意：如果数据库不可用，此开关不会生效，请改用环境变量。"
           value={props.state.maintenance}
           onChange={(ev) => props.setters('maintenance', ev)}
         />
@@ -36,15 +36,15 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
         <TextInput
           fieldName="maintenanceMessage"
           isMultiline
-          label="Maintenance Message"
-          helperText="Markdown is supported"
+          label="维护提示"
+          helperText="支持 Markdown"
           value={props.state.maintenanceMessage}
           onChange={(ev) => props.setters('maintenanceMessage', ev.currentTarget.value)}
         />
 
         <TextInput
           fieldName="stripeCustomerPortal"
-          label="Stripe Customer Portal"
+          label="Stripe 客户门户"
           value={props.state.stripeCustomerPortal}
           onChange={(ev) => props.setters('stripeCustomerPortal', ev.currentTarget.value)}
         />
@@ -52,8 +52,8 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
         <TextInput
           fieldName="lockSeconds"
           type="number"
-          label="Lock Duration (seconds)"
-          helperText="Maximum TTL of user-level lock - Set to zero (0) to disable"
+          label="锁定时长（秒）"
+          helperText="用户级锁的最大 TTL，设为 0 可禁用"
           value={props.state.lockSeconds ?? 0}
           onChange={(ev) => props.setters('lockSeconds', +ev.currentTarget.value)}
         />
@@ -64,11 +64,11 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
           fieldName="googleClientId"
           label={
             <div class="flex gap-4">
-              <div>Google Client ID</div>
+              <div>Google 客户端 ID</div>
               <Toggle fieldName="googleEnabled" value={props.state.googleEnabled} />
             </div>
           }
-          helperText="Used for Sign In"
+          helperText="用于登录"
           value={props.state.googleClientId}
           onChange={(ev) => props.setters('googleClientId', ev.currentTarget.value)}
         />
@@ -77,13 +77,13 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
           fieldName="slots"
           label={
             <div class="flex items-center gap-2">
-              Slots Configuration{' '}
+              Slots 配置{' '}
               <Pill small onClick={updateSlots}>
-                Format
+                格式化
               </Pill>
             </div>
           }
-          helperText="Must be JSON. Merged with remote slots config -- This config overrides slots.txt"
+          helperText="必须是 JSON。会与远程 slots 配置合并，并覆盖 slots.txt。"
           value={props.state.slots}
           onChange={(ev) => props.setters('slots', ev.currentTarget.value)}
           isMultiline
@@ -93,8 +93,8 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
       <Card bg="bg-500">
         <Toggle
           fieldName="policiesEnabled"
-          label="Enable Policies"
-          helperText="Display TOS and Privacy Statements"
+          label="启用政策条款"
+          helperText="显示服务条款和隐私声明"
           disabled
           class="hidden"
           onChange={(ev) => props.setters('policiesEnabled', ev)}
@@ -102,16 +102,16 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
 
         <TextInput
           fieldName="termsOfService"
-          label="Terms of Service"
-          helperText="Not yet implemented"
+          label="服务条款"
+          helperText="尚未实现"
           isMultiline
           disabled
           onChange={(ev) => props.setters('termsOfService', ev.currentTarget.value)}
         />
         <TextInput
           fieldName="privacyStatement"
-          label="PrivacyStatement"
-          helperText="Not yet implemented"
+          label="隐私声明"
+          helperText="尚未实现"
           isMultiline
           disabled
           onChange={(ev) => props.setters('privacyStatement', ev.currentTarget.value)}
@@ -120,12 +120,12 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
 
       <Select
         fieldName="apiAccess"
-        label="API Access Level"
+        label="API 访问等级"
         items={[
-          { label: 'Off', value: 'off' },
-          { label: 'All Users', value: 'users' },
-          { label: 'Subscribers', value: 'subscribers' },
-          { label: 'Adminstrators', value: 'admins' },
+          { label: '关闭', value: 'off' },
+          { label: '所有用户', value: 'users' },
+          { label: '订阅用户', value: 'subscribers' },
+          { label: '管理员', value: 'admins' },
         ]}
         value={props.state.apiAccess || 'off'}
         onChange={(ev) => props.setters('apiAccess', ev.value as any)}
@@ -134,16 +134,16 @@ export const General: Component<{ state: ConfigState; setters: ConfigSetters }> 
       <Card bg="bg-500">
         <TextInput
           fieldName="maxGuidanceTokens"
-          label="Max Guidance Tokens"
-          helperText="Max number of tokens a saga/guidance template can reques. Set to 0 to disable."
+          label="最大 Guidance Token 数"
+          helperText="Saga/Guidance 模板可请求的最大 Token 数，设为 0 可禁用。"
           type="number"
           value={props.state.maxGuidanceTokens ?? 1000}
           onChange={(ev) => props.setters('maxGuidanceTokens', +ev.currentTarget.value)}
         />
         <TextInput
           fieldName="maxGuidanceVariables"
-          label="Max Guidance Variables"
-          helperText="Max number of variables a saga/guidance template can request. Set to 0 to disable."
+          label="最大 Guidance 变量数"
+          helperText="Saga/Guidance 模板可请求的最大变量数，设为 0 可禁用。"
           type="number"
           value={props.state.maxGuidanceVariables ?? 15}
           onChange={(ev) => props.setters('maxGuidanceVariables', +ev.currentTarget.value)}

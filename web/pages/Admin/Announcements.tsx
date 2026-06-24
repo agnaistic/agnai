@@ -51,10 +51,10 @@ const AnnoucementList: Component = (props) => {
 
   return (
     <Page>
-      <PageHeader title="Manage Announcements" />
+      <PageHeader title="公告管理" />
       <div class="flex w-full justify-end">
         <Button onClick={() => nav('/admin/announcements/new')}>
-          Create <Plus />
+          创建 <Plus />
         </Button>
       </div>
 
@@ -75,25 +75,25 @@ const AnnoucementList: Component = (props) => {
                 <div class="font-bold">
                   {item.title}{' '}
                   <span class="text-500 text-xs font-light italic">
-                    {item.location === 'notification' ? 'notify' : 'home'}
+                    {item.location === 'notification' ? '通知' : '首页'}
                   </span>
                 </div>
                 <div class="flex gap-1">
-                  <Pill inverse>Created: {new Date(item.showAt).toLocaleString()}</Pill>
-                  <Pill inverse>{elapsedSince(new Date(item.showAt))} ago</Pill>
+                  <Pill inverse>创建时间：{new Date(item.showAt).toLocaleString()}</Pill>
+                  <Pill inverse>{elapsedSince(new Date(item.showAt))} 前</Pill>
                   {Label(item)}
                 </div>
               </div>
               <div class="flex min-w-fit gap-2">
                 <Show when={!item.hide}>
                   <Button onClick={() => hide(item._id)}>
-                    <Eye /> Hide
+                    <Eye /> 隐藏
                   </Button>
                 </Show>
 
                 <Show when={item.hide}>
                   <Button schema="gray" onClick={() => unhide(item._id)}>
-                    <EyeOff /> Unhide
+                    <EyeOff /> 取消隐藏
                   </Button>
                 </Show>
               </div>
@@ -108,12 +108,12 @@ const AnnoucementList: Component = (props) => {
 function Label(item: AppSchema.Announcement) {
   const date = new Date(item.showAt)
 
-  if (item.deletedAt) return <Pill type="rose">Deleted</Pill>
-  if (item.hide) return <Pill type="coolgray">Hidden</Pill>
-  if (date.valueOf() >= Date.now()) return <Pill type="premium">Pending</Pill>
+  if (item.deletedAt) return <Pill type="rose">已删除</Pill>
+  if (item.hide) return <Pill type="coolgray">已隐藏</Pill>
+  if (date.valueOf() >= Date.now()) return <Pill type="premium">待发布</Pill>
   return (
     <Pill inverse type="green">
-      Active
+      已生效
     </Pill>
   )
 }
@@ -152,7 +152,7 @@ const Announcement: Component<{}> = (props) => {
   const onSave = () => {
     const showAt = new Date(state.showAt)
     if (isNaN(showAt.valueOf())) {
-      toastStore.error(`"Display At" is required`)
+      toastStore.error(`必须填写“显示时间”`)
       return
     }
     const body = { ...state, showAt: new Date(showAt).toISOString() }
@@ -168,48 +168,48 @@ const Announcement: Component<{}> = (props) => {
 
   return (
     <Page>
-      <PageHeader title="Announcement" />
+      <PageHeader title="公告" />
 
       <form class="flex flex-col gap-2">
         <TextInput fieldName="id" disabled value={params.id} label="ID" />
 
         <TextInput
-          label="Title"
+          label="标题"
           value={state.title}
           onChange={(ev) => setState('title', ev.currentTarget.value)}
         />
         <Select
           items={[
-            { label: 'Home', value: 'home' },
-            { label: 'Notification', value: 'notification' },
+            { label: '首页', value: 'home' },
+            { label: '通知', value: 'notification' },
           ]}
-          label="Location"
-          helperText="Appear on the homepage or notifications list"
+          label="位置"
+          helperText="显示在首页或通知列表"
           value={state.location || 'home'}
           onChange={(ev) => setState('location', ev.value as any)}
         />
 
         <TextInput
           type="number"
-          label="User Level (Threshold)"
+          label="用户等级（阈值）"
           helperMarkdown={
-            'Announce to users with a tier level or greater `All Users = -1` `Subscribed = 0`'
+            '向达到指定层级及以上的用户公告：`全部用户 = -1`，`已订阅 = 0`'
           }
           value={state.userLevel}
           onChange={(ev) => setState('userLevel', +ev.currentTarget.value)}
         />
 
         <TextInput
-          label="Content"
+          label="内容"
           value={state.content}
           isMultiline
           class="min-h-[80px]"
           onChange={(ev) => setState('content', ev.currentTarget.value)}
         />
-        <Toggle fieldName="hide" label="Hide Announcement" value={state.hide} />
+        <Toggle fieldName="hide" label="隐藏公告" value={state.hide} />
         <ButtonInput
           type="datetime-local"
-          label="Display At"
+          label="显示时间"
           value={state.showAt}
           onChange={(ev) => setState('showAt', ev.currentTarget.value)}
         >
@@ -221,20 +221,20 @@ const Announcement: Component<{}> = (props) => {
               setState('showAt', toLocalTime(now()))
             }}
           >
-            Now
+            现在
           </Button>
         </ButtonInput>
 
         <div class="flex justify-end gap-2">
           <Button onClick={onSave}>
-            <Save /> {params.id === 'new' ? 'Create' : 'Update'}
+            <Save /> {params.id === 'new' ? '创建' : '更新'}
           </Button>
         </div>
 
         <div class="w-full rounded-md border-[1px] border-[var(--bg-600)] sm:w-1/2">
           <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
             <div class="text-lg font-bold">{state.title}</div>
-            <div class="text-700 text-xs">{elapsedSince(new Date(state.showAt))} ago</div>
+            <div class="text-700 text-xs">{elapsedSince(new Date(state.showAt))} 前</div>
           </div>
           <div
             class="rendered-markdown bg-900 rounded-b-md p-2"

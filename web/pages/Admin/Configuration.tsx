@@ -66,7 +66,7 @@ const ServerConfiguration: Component = () => {
 
   return (
     <Page>
-      <PageHeader title="Server Configuration" />
+      <PageHeader title="服务器配置" />
 
       <Switch>
         <Match when={!state.config}>
@@ -95,7 +95,7 @@ const ServerConfiguration: Component = () => {
 
             <div class="flex justify-end" classList={{ hidden: tab.current() === 'Embeddings' }}>
               <Button onClick={submit} class="w-fit">
-                <SaveIcon /> Save
+                <SaveIcon /> 保存
               </Button>
             </div>
           </form>

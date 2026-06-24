@@ -46,6 +46,7 @@ import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
 import { pageStore } from './store'
+import AdminChineseLocalizer from './shared/AdminChineseLocalizer'
 
 const App: Component = () => {
   const state = userStore((s) => ({ user: s.user, loggedIn: s.loggedIn }))
@@ -93,6 +94,7 @@ const App: Component = () => {
       <Show when={state.loggedIn}>
         <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
         <Show when={state.user?.admin}>
+          <Route path="/admin" component={() => <Redirect internal="/admin/metrics" />} />
           <Route path="/admin/metrics" component={lazy(() => import('./pages/Admin/Metrics'))} />
 
           <Route
@@ -163,6 +165,7 @@ const Layout: Component<{ children?: any }> = (props) => {
 
   return (
     <ContextProvider>
+      <AdminChineseLocalizer />
       <style>{css}</style>
       <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
         <NavBar />

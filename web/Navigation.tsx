@@ -316,22 +316,22 @@ const UserNavigation: Component = () => {
         </Show>
 
         <Show when={user.user?.admin}>
-          <Item href="/admin/metrics" ariaLabel="Manage">
+          <Item href="/admin/metrics" ariaLabel="管理后台">
             <Activity aria-hidden="true" />
-            <span aria-hidden="true">Manage</span>
+            <span aria-hidden="true">管理后台</span>
           </Item>
           <SubMenu>
-            <SubItem href="/admin/configuration" parent="/" ariaLabel="Configuration">
-              Configuration
+            <SubItem href="/admin/configuration" parent="/" ariaLabel="服务器配置">
+              服务器配置
             </SubItem>
-            <SubItem href="/admin/users" parent="/" ariaLabel="Users">
-              Users
+            <SubItem href="/admin/users" parent="/" ariaLabel="用户管理">
+              用户管理
             </SubItem>
-            <SubItem href="/admin/subscriptions" parent="/" ariaLabel="Subscriptions">
-              Subscriptions
+            <SubItem href="/admin/subscriptions" parent="/" ariaLabel="订阅与模型">
+              订阅与模型
             </SubItem>
-            <SubItem href="/admin/announcements" parent="/" ariaLabel="Announcements">
-              Announcements
+            <SubItem href="/admin/announcements" parent="/" ariaLabel="公告管理">
+              公告管理
             </SubItem>
           </SubMenu>
         </Show>

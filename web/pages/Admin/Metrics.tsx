@@ -13,7 +13,7 @@ import { createStore } from 'solid-js/store'
 const MetricsPage: Component = () => {
   let refForm: any
 
-  setComponentPageTitle('Metrics')
+  setComponentPageTitle('指标')
   const admin = adminStore((s) => ({ metrics: s.metrics }))
   const [refMsg, setRefMsg] = createSignal<any>()
   const [confirm, setConfirm] = createSignal(false)
@@ -37,20 +37,20 @@ const MetricsPage: Component = () => {
 
   return (
     <Page>
-      <PageHeader title="Metrics" />
+      <PageHeader title="指标" />
       <div class="mb-4 flex gap-4">
-        <Button onClick={adminStore.getMetrics}>Refresh</Button>
+        <Button onClick={adminStore.getMetrics}>刷新</Button>
       </div>
 
       <div class="flex flex-col gap-2 text-xl">
         <FormLabel
           fieldName="active"
-          label="Online Users"
+          label="在线用户"
           helperText={admin.metrics?.connected || '...'}
         />
 
         <div class="flex flex-col gap-1">
-          <div class="font-bold">Versions</div>
+          <div class="font-bold">版本</div>
 
           <For each={shas()}>
             {(each) => (
@@ -63,21 +63,21 @@ const MetricsPage: Component = () => {
 
         <FormLabel
           fieldName="active"
-          label="Max Online Users"
+          label="最高在线用户"
           helperText={admin.metrics?.maxLiveCount || '...'}
         />
 
         <FormLabel
           fieldName="totalUsers"
-          label="Registered Users"
+          label="注册用户"
           helperText={admin.metrics?.totalUsers || '...'}
         />
 
-        <FormLabel fieldName="services" label="Services" helperText={admin.metrics?.each.length} />
+        <FormLabel fieldName="services" label="服务" helperText={admin.metrics?.each.length} />
 
         <Card>
           <form ref={refForm} class="flex flex-col gap-1">
-            <FormLabel label="Message All Users" />
+            <FormLabel label="向所有用户发送消息" />
             <TextInput
               ref={setRefMsg}
               isMultiline
@@ -89,7 +89,7 @@ const MetricsPage: Component = () => {
               value={store.userLevel}
               onChange={(ev) => setStore('userLevel', +ev.currentTarget.value)}
             />
-            <Button onClick={() => setConfirm(true)}>Send</Button>
+            <Button onClick={() => setConfirm(true)}>发送</Button>
           </form>
         </Card>
       </div>
@@ -98,7 +98,7 @@ const MetricsPage: Component = () => {
         show={confirm()}
         close={() => setConfirm(false)}
         confirm={sendAll}
-        message="Are you sure you wish to send a message to all users?"
+        message="确定要向所有用户发送消息吗？"
       />
     </Page>
   )

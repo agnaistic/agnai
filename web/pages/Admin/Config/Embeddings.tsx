@@ -24,7 +24,7 @@ export const EmbeddingConfig: Component = () => {
   })
 
   const availableEmbeds = createMemo(() => {
-    const list: Array<{ label: string; value: string }> = [{ label: 'None', value: '' }]
+    const list: Array<{ label: string; value: string }> = [{ label: '无', value: '' }]
     if (!state.config?.embeddings?.length) return list
 
     for (const embed of state.config.embeddings) {
@@ -44,7 +44,7 @@ export const EmbeddingConfig: Component = () => {
 
   const editableEmbeds = createMemo(() => {
     const list = availableEmbeds().slice(1)
-    list.unshift({ label: 'New Embedding', value: '' })
+    list.unshift({ label: '新建嵌入', value: '' })
     return list
   })
 
@@ -66,7 +66,7 @@ export const EmbeddingConfig: Component = () => {
 
   const createEmbed = () => {
     if (!newEmbed.url || !newEmbed.key || !newEmbed.model) {
-      toastStore.error(`Missing required fields (url, key, model)`)
+      toastStore.error(`缺少必填字段（url、key、model）`)
       return
     }
 
@@ -77,12 +77,12 @@ export const EmbeddingConfig: Component = () => {
 
   const updateEmbed = () => {
     if (!editId()) {
-      toastStore.error(`Cannot update embedding: Has no ID`)
+      toastStore.error(`无法更新嵌入：没有 ID`)
       return
     }
 
     if (!newEmbed.url || !newEmbed.model) {
-      toastStore.error(`Missing required fields (url, key, model)`)
+      toastStore.error(`缺少必填字段（url、key、model）`)
       return
     }
 
@@ -109,30 +109,30 @@ export const EmbeddingConfig: Component = () => {
     <>
       <Card class="bg-500">
         <Select
-          label="Embeddings Access Level"
+          label="嵌入访问等级"
           value={state.config?.embeddingsAccess}
           items={[
-            { label: 'None', value: 'off' },
-            { label: 'All', value: 'all' },
-            { label: 'Users', value: 'users' },
-            { label: 'Subscribers', value: 'subscribers' },
-            { label: 'Admins', value: 'admins' },
+            { label: '无', value: 'off' },
+            { label: '全部', value: 'all' },
+            { label: '用户', value: 'users' },
+            { label: '订阅用户', value: 'subscribers' },
+            { label: '管理员', value: 'admins' },
           ]}
           onChange={(ev) =>
             adminStore.updateConfigPartial({ embeddingsAccess: ev.value as FeatureAccess })
           }
         />
-        <TextInput disabled label="Selected Embedding" value={current().label} />
+        <TextInput disabled label="当前嵌入" value={current().label} />
 
         <div class="flex items-end gap-1">
           <Select
             items={availableEmbeds()}
             value={selected()}
             onChange={(item) => setSelected(item.value)}
-            label="Embeddings"
+            label="嵌入"
           />
           <Button onClick={() => assignEmbedding()}>
-            <SaveIcon size={20} /> Assign
+            <SaveIcon size={20} /> 分配
           </Button>
         </div>
       </Card>
@@ -144,7 +144,7 @@ export const EmbeddingConfig: Component = () => {
           onChange={(ev) => selectEmbed(ev.value)}
         />
         <TextInput
-          label="Model ID"
+          label="模型 ID"
           value={newEmbed.model}
           onChange={(ev) => setNewEmbed('model', ev.currentTarget.value)}
         />
@@ -154,31 +154,31 @@ export const EmbeddingConfig: Component = () => {
           onChange={(ev) => setNewEmbed('url', ev.currentTarget.value)}
         />
         <TextInput
-          label="API Key"
+          label="API 密钥"
           value={newEmbed.key}
           onChange={(ev) => setNewEmbed('key', ev.currentTarget.value)}
           type="password"
         />
         <TextInput
           value={newEmbed.inputProp}
-          label="Input Property"
-          helperMarkdown={'Optional: Override for `input` property if needed'}
+          label="输入字段"
+          helperMarkdown={'可选：需要时覆盖 `input` 字段名'}
           onChange={(ev) => setNewEmbed('inputProp', ev.currentTarget.value)}
         />
         <Toggle
-          label="Batch Supported"
+          label="支持批量"
           value={newEmbed.batch}
           onChange={(ev) => setNewEmbed('batch', ev)}
         />
         <Show when={editId() === ''}>
           <Button onClick={() => createEmbed()}>
-            <SaveIcon size={20} /> Create
+            <SaveIcon size={20} /> 创建
           </Button>
         </Show>
 
         <Show when={editId() !== ''}>
           <Button onClick={() => updateEmbed()}>
-            <SaveIcon size={20} /> Update
+            <SaveIcon size={20} /> 更新
           </Button>
         </Show>
       </Card>
@@ -186,7 +186,7 @@ export const EmbeddingConfig: Component = () => {
   )
 }
 
-const noneSelected = { label: 'None selected', value: '' }
+const noneSelected = { label: '未选择', value: '' }
 
 // curl -N -X POST 'https://api.featherless.ai/v1/embeddings' \
 //   -H 'Authorization: Bearer rc_949b352861e4ada69e864a5dc405ecd4323bda5ce1ee0af2cc1427591a8bca8d' \

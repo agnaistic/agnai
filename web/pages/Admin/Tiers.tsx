@@ -34,7 +34,7 @@ const TiersPage: Component = (props) => {
       }
     })
 
-    return [{ label: 'No payment required', value: '' }].concat(list)
+    return [{ label: '无需付款', value: '' }].concat(list)
   })
 
   const [editing, setEditing] = createSignal(
@@ -53,7 +53,7 @@ const TiersPage: Component = (props) => {
   })
 
   const patreonTiers = createMemo(() => {
-    const items = [{ label: 'None', value: '' }]
+    const items = [{ label: '无', value: '' }]
 
     for (const tier of admin.patreonTiers) {
       items.push({
@@ -88,7 +88,7 @@ const TiersPage: Component = (props) => {
 
     if (!product) {
       if (data.productId) {
-        toastStore.error(`Cannot submit: Product "${data.productId}" not found`)
+        toastStore.error(`无法提交：找不到产品“${data.productId}”`)
         return
       }
     }
@@ -96,12 +96,12 @@ const TiersPage: Component = (props) => {
     const priceId = product ? (product.default_price as string) : ''
 
     if (!product?.default_price && data.productId) {
-      toastStore.error(`Cannot submit: Product "${data.productId}" does not have a price`)
+      toastStore.error(`无法提交：产品“${data.productId}”没有价格`)
       return
     }
 
     if (!price && data.productId) {
-      toastStore.error(`Cannot submit: Price "${product?.default_price}" not found`)
+      toastStore.error(`无法提交：找不到价格“${product?.default_price}”`)
       return
     }
 
@@ -133,10 +133,10 @@ const TiersPage: Component = (props) => {
 
   return (
     <Page>
-      <PageHeader title="Subscription Tier" />
+      <PageHeader title="订阅层级" />
 
       <A href="/admin/subscriptions" class="link">
-        ← Back to Subscriptions
+        ← 返回订阅与模型
       </A>
 
       <Card>
@@ -145,15 +145,15 @@ const TiersPage: Component = (props) => {
 
           <TextInput
             fieldName="name"
-            label="Name"
+            label="名称"
             value={editing()?.name}
             onChange={(ev) => setName(ev.currentTarget.value)}
           />
 
           <TextInput
             fieldName="description"
-            label="Description"
-            helperText="This is be rendered using the markdown renderer. HTML is also supported here."
+            label="描述"
+            helperText="这里会使用 Markdown 渲染器渲染，也支持 HTML。"
             value={editing()?.description}
             isMultiline
             onChange={(ev) => setDesc(ev.currentTarget.value)}
@@ -161,36 +161,36 @@ const TiersPage: Component = (props) => {
 
           <Toggle
             fieldName="apiAccess"
-            label="API Access Capable"
-            helperText="If enabled, this tier can use API access if the server allows it"
+            label="可使用 API 访问"
+            helperText="启用后，如果服务器允许，此层级可使用 API 访问。"
             value={editing()?.apiAccess ?? false}
           />
 
           <Toggle
             fieldName="guidanceAccess"
-            label="Guidance (V2) Access Capable"
-            helperText="If enabled, this tier can use GuidanceV2 if the server/preset allows it"
+            label="可使用 Guidance（V2）"
+            helperText="启用后，如果服务器或预设允许，此层级可使用 GuidanceV2。"
             value={editing()?.guidanceAccess ?? false}
             classList={{ hidden: !settings.config.adapters.includes('agnaistic') }}
           />
 
           <Toggle
             fieldName="imagesAccess"
-            label="Image Generation Access"
-            helperText="If enabled, this tier can use Agnaistic Image Generation"
+            label="图像生成访问"
+            helperText="启用后，此层级可使用 Agnaistic 图像生成。"
             value={editing()?.imagesAccess ?? false}
             classList={{ hidden: !settings.config.adapters.includes('agnaistic') }}
           />
 
           <Select
             fieldName="patreonTier"
-            label="Patreon Tier"
-            helperText="If Patreon is linked, the minimum tier is required"
+            label="Patreon 层级"
+            helperText="如果已关联 Patreon，则需要满足最低层级。"
             value={editing()?.patreon?.tierId}
             items={patreonTiers()}
           />
 
-          <div class="text-lg font-bold">Preview</div>
+          <div class="text-lg font-bold">预览</div>
 
           <TierCard
             tier={{
@@ -207,32 +207,32 @@ const TiersPage: Component = (props) => {
 
           <Select
             fieldName="productId"
-            label="Stripe Product"
+            label="Stripe 产品"
             items={products()}
             value={editing()?.productId}
             onChange={(ev) => setProductId(ev.value)}
           />
 
-          <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />
+          <TextInput type="number" fieldName="level" label="等级" value={editing()?.level ?? -1} />
 
           <Toggle
             fieldName="enabled"
-            label="Enabled"
-            helperText="If disabled, this tier will not be available to users for selection."
+            label="启用"
+            helperText="禁用后，用户将无法选择此层级。"
             value={editing()?.enabled}
           />
 
           <Show when={!!settings.slots.publisherId}>
             <Toggle
               fieldName="disableSlots"
-              label="Disable Slots"
-              helperText="This tier will prevent slots from rendering"
+              label="禁用 Slots"
+              helperText="此层级会阻止 Slots 渲染。"
               value={editing()?.disableSlots}
             />
           </Show>
 
           <div class="flex w-full justify-end">
-            <Button onClick={onSubmit}>Save</Button>
+            <Button onClick={onSubmit}>保存</Button>
           </div>
         </form>
       </Card>

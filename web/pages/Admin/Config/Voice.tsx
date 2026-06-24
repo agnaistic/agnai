@@ -13,12 +13,12 @@ export const Voice: Component<{ state: ConfigState; setters: ConfigSetters }> = 
     <Card bg="bg-500">
       <Select
         fieldName="ttsAccess"
-        label="Voice Access Level"
+        label="语音访问等级"
         items={[
-          { label: 'Off', value: 'off' },
-          { label: 'All Users', value: 'users' },
-          { label: 'Subscribers', value: 'subscribers' },
-          { label: 'Adminstrators', value: 'admins' },
+          { label: '关闭', value: 'off' },
+          { label: '所有用户', value: 'users' },
+          { label: '订阅用户', value: 'subscribers' },
+          { label: '管理员', value: 'admins' },
         ]}
         value={state.config?.ttsAccess || 'off'}
         onChange={(ev) => props.setters('ttsAccess', ev.value as any)}
@@ -26,8 +26,8 @@ export const Voice: Component<{ state: ConfigState; setters: ConfigSetters }> = 
 
       <TextInput
         fieldName="ttsHost"
-        label="Voice Host"
-        helperText="Full URL with Path - Include any query parameters"
+        label="语音服务地址"
+        helperText="包含路径的完整 URL，可包含查询参数"
         value={state.config?.ttsHost}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
         onChange={(ev) => props.setters('ttsHost', ev.currentTarget.value)}
@@ -35,7 +35,7 @@ export const Voice: Component<{ state: ConfigState; setters: ConfigSetters }> = 
 
       <TextInput
         fieldName="ttsApiKey"
-        label="Voice API Key"
+        label="语音 API 密钥"
         value={''}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
         onChange={(ev) => props.setters('ttsApiKey', ev.currentTarget.value)}

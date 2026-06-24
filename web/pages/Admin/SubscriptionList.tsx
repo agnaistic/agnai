@@ -13,7 +13,7 @@ import { Page } from '/web/Layout'
 import { SubscriptionModel, SubscriptionModelLevel } from '/common/types/presets'
 
 const SubscriptionList: Component = () => {
-  setComponentPageTitle('Subscriptions')
+  setComponentPageTitle('订阅与模型')
   const nav = useNavigate()
   const state = presetStore((s) => {
     return {
@@ -57,11 +57,11 @@ const SubscriptionList: Component = () => {
     const all = Array.from(cats.entries())
       .sort((l, r) => l[0] - r[0])
       .map(([level, list]) => ({
-        name: `Tier ${level}`,
+        name: `层级 ${level}`,
         list: list.sort((l, r) => l.name.localeCompare(r.name)),
       }))
 
-    all.push({ name: 'Disabled', list: state.disabled })
+    all.push({ name: '已禁用', list: state.disabled })
     return all
   })
 
@@ -80,27 +80,27 @@ const SubscriptionList: Component = () => {
 
   return (
     <Page>
-      <PageHeader title="Subscriptions" />
+      <PageHeader title="订阅与模型" />
       <A href="/admin/metrics" class="link">
-        ← Back to Manage
+        ← 返回管理后台
       </A>
       <div class="mb-4 flex w-full justify-end gap-2">
         <Button href="/admin/tiers/new">
           <Plus />
-          Tier
+          层级
         </Button>
 
         <Button href="/admin/subscriptions/new">
           <Plus />
-          Model
+          模型
         </Button>
       </div>
       <div class="flex flex-col items-center gap-2">
         <Show when={cfg.tiers.length === 0}>
-          <div class="flex justify-center text-xl font-bold">No Tiers</div>
+          <div class="flex justify-center text-xl font-bold">没有层级</div>
         </Show>
         <Show when={cfg.tiers.length > 0}>
-          <div class="flex justify-center text-xl font-bold">Tiers</div>
+          <div class="flex justify-center text-xl font-bold">层级</div>
           <div class="flex w-full flex-col gap-2">
             <For each={cfg.tiers}>
               {(each) => (
@@ -123,7 +123,7 @@ const SubscriptionList: Component = () => {
                       </Show>
 
                       <Show when={!each.enabled}>
-                        <span class="text-600 ml-2 text-xs italic">disabled</span>
+                        <span class="text-600 ml-2 text-xs italic">已禁用</span>
                       </Show>
                     </SolidCard>
                   </A>
@@ -133,7 +133,7 @@ const SubscriptionList: Component = () => {
                         schema="green"
                         onClick={() => adminStore.updateTier(each._id, { enabled: false })}
                       >
-                        Enabled
+                        已启用
                       </Button>
                     </Show>
                     <Show when={!each.enabled}>
@@ -141,7 +141,7 @@ const SubscriptionList: Component = () => {
                         schema="red"
                         onClick={() => adminStore.updateTier(each._id, { enabled: true })}
                       >
-                        Disabled
+                        已禁用
                       </Button>
                     </Show>
                   </div>
@@ -151,7 +151,7 @@ const SubscriptionList: Component = () => {
           </div>
         </Show>
         <Divider />
-        <div class="flex justify-center font-bold">Models</div>
+        <div class="flex justify-center font-bold">模型</div>
         <For each={subCats()}>
           {(item) => (
             <>
@@ -190,12 +190,12 @@ const SubscriptionList: Component = () => {
                           <span class="mr-1 text-xs italic text-[var(--text-600)]">
                             <Show when={sub.isDefaultSub}>
                               <Pill inverse small>
-                                default
+                                默认
                               </Pill>
                             </Show>
                             <Show when={sub.subDisabled}>
                               <Pill inverse small type="rose">
-                                disabled
+                                已禁用
                               </Pill>
                             </Show>
                           </span>
@@ -239,7 +239,7 @@ const SubscriptionList: Component = () => {
         show={!!deleting()}
         close={() => setDeleting()}
         confirm={deleteSub}
-        message="Are you sure you wish to delete this subscription?"
+        message="确定要删除这个订阅吗？"
       />
     </Page>
   )
