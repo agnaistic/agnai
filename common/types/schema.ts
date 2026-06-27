@@ -265,6 +265,22 @@ export namespace AppSchema {
     kind: 'saga-session'
   }
 
+  export type SceneClockDateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' | 'Long'
+  export type SceneClockTimeFormat = '12h' | '24h'
+
+  export interface SceneClock {
+    enabled: boolean
+    date: string
+    time: string
+    dateFormat: SceneClockDateFormat
+    timeFormat: SceneClockTimeFormat
+    calendarName?: string
+    notes?: string
+    allowAssistantUpdates?: boolean
+    lastUpdatedBy?: 'user' | 'assistant' | 'system'
+    lastUpdatedAt?: string
+  }
+
   export interface Chat {
     _id: string
     kind: 'chat'
@@ -297,6 +313,7 @@ export namespace AppSchema {
 
     scenarioIds?: string[]
     scenarioStates?: string[]
+    sceneClock?: SceneClock
 
     treeLeafId?: string
 

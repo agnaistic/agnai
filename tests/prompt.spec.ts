@@ -201,6 +201,56 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
+  it('will include scene clock for saved prompt orders without the scene clock placeholder', async () => {
+    const actual = await build([botMsg('first')], {
+      chat: toChat(main, {
+        sceneClock: {
+          enabled: true,
+          date: '2026-06-27',
+          time: '11:30',
+          dateFormat: 'YYYY-MM-DD',
+          timeFormat: '24h',
+          calendarName: 'Imperial calendar',
+        },
+      }),
+      settings: {
+        useAdvancedPrompt: 'basic',
+        modelFormat: 'None',
+        promptOrder: [
+          { placeholder: 'system_prompt', enabled: true },
+          { placeholder: 'scenario', enabled: true },
+          { placeholder: 'personality', enabled: true },
+          { placeholder: 'example_dialogue', enabled: true },
+          { placeholder: 'history', enabled: true },
+        ],
+      },
+    })
+
+    expect(actual.template.parsed).to.include('[Scene Clock]')
+    expect(actual.template.parsed).to.include('Current in-scene date and time: 2026-06-27 11:30.')
+    expect(actual.template.parsed).to.include('Calendar: Imperial calendar.')
+  })
+
+  it('will include scene clock for custom gaslights without the scene clock placeholder', async () => {
+    const actual = await build([botMsg('first')], {
+      chat: toChat(main, {
+        sceneClock: {
+          enabled: true,
+          date: '2026-06-27',
+          time: '11:30',
+          dateFormat: 'YYYY-MM-DD',
+          timeFormat: '24h',
+        },
+      }),
+      settings: {
+        gaslight: `The scenario of the conversation:\n{{scenario}}\n\n{{char}}'s personality:\n{{personality}}`,
+      },
+    })
+
+    expect(actual.template.parsed).to.include('[Scene Clock]')
+    expect(actual.template.parsed).to.include('Current in-scene date and time: 2026-06-27 11:30.')
+  })
+
   it('will use currently speaking character book', async () => {
     const actual = await build([toMsg('TRIGGER')], {
       char: { ...main, characterBook: toBook('main char book', []) },

@@ -42,6 +42,7 @@ export type PromptLine = {
 
 export type PromptPlaceholders = {
   scenario?: string
+  sceneClock?: string
   greeting?: string
   sampleChat?: string[]
   persona: string
@@ -138,6 +139,7 @@ const HOLDER_NAMES = {
   memory: 'memory',
   post: 'post',
   scenario: 'scenario',
+  sceneClock: 'scene_clock',
   history: 'history',
   systemPrompt: 'system_prompt',
   linebreak: 'br',
@@ -154,6 +156,7 @@ export const HOLDERS = {
   ujb: /{{ujb}}/gi,
   sampleChat: /{{example_dialogue}}/gi,
   scenario: /{{scenario}}/gi,
+  sceneClock: /{{scene_clock}}/gi,
   memory: /{{memory}}/gi,
   persona: /{{personality}}/gi,
   allPersonas: /{{all_personalities}}/gi,
@@ -405,7 +408,7 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) 
   }
 
   // Deprecated
-  return ensureValidTemplate(template)
+  return ensureValidTemplate(template, opts.chat.sceneClock?.enabled ? undefined : ['sceneClock'])
 }
 
 type InjectOpts = {
@@ -466,14 +469,21 @@ function replaceSectionTags(sections: Record<string, string[] | any>, format: Mo
  */
 export function ensureValidTemplate(
   template: string,
-  skip?: Array<'history' | 'post' | 'persona' | 'scenario' | 'userEmbed' | 'chatEmbed'>
+  skip?: Array<
+    'history' | 'post' | 'persona' | 'scenario' | 'sceneClock' | 'userEmbed' | 'chatEmbed'
+  >
 ) {
   const skips = new Set(skip || [])
 
   let hasHistory = !!template.match(HOLDERS.history) || !!template.match(/{{\#each msg}}/gi)
   let hasPost = !!template.match(HOLDERS.post)
+  let hasSceneClock = !!template.match(HOLDERS.sceneClock)
 
   let modified = template
+
+  if (!skips.has('sceneClock') && !hasSceneClock) {
+    modified = insertSceneClockHolder(modified)
+  }
 
   if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {
     modified += `\n{{history}}\n{{post}}`
@@ -484,6 +494,20 @@ export function ensureValidTemplate(
   }
 
   return modified
+}
+
+function insertSceneClockHolder(template: string) {
+  const sceneClock = `{{${HOLDER_NAMES.sceneClock}}}`
+
+  if (template.match(HOLDERS.persona)) {
+    return template.replace(HOLDERS.persona, `${sceneClock}{{${HOLDER_NAMES.persona}}}`)
+  }
+
+  if (template.match(HOLDERS.history)) {
+    return template.replace(HOLDERS.history, `${sceneClock}{{${HOLDER_NAMES.history}}}`)
+  }
+
+  return `${template}${sceneClock}`
 }
 
 type PromptPartsOptions = Pick<
@@ -575,6 +599,7 @@ export async function buildPromptPlaceholders(
     // replyAs instead of the main character
     // (we always use the main character's scenario, not replyAs)
     parts.scenario = replace(opts.resolvedScenario, char.name)
+    parts.sceneClock = getSceneClockPrompt(chat.sceneClock)
 
     const sampleChat =
       replyAs._id === char._id && !!chat.overrides
@@ -641,6 +666,37 @@ export async function buildPromptPlaceholders(
   } catch (ex) {
     throw ex
   }
+}
+
+function getSceneClockPrompt(clock?: AppSchema.SceneClock) {
+  if (!clock?.enabled) return ''
+
+  const date = clock.date?.trim()
+  const time = clock.time?.trim()
+  const current = [date, time].filter(Boolean).join(' ')
+  if (!current && !clock.calendarName?.trim() && !clock.notes?.trim()) return ''
+
+  const lines = ['[Scene Clock]']
+  if (current) {
+    lines.push(`Current in-scene date and time: ${current}.`)
+    lines.push('Treat this as the authoritative current RP scene time unless the user changes it.')
+  }
+  if (clock.calendarName?.trim()) {
+    lines.push(`Calendar: ${clock.calendarName.trim()}.`)
+  }
+  if (clock.notes?.trim()) {
+    lines.push(`Notes: ${clock.notes.trim()}`)
+  }
+  if (clock.allowAssistantUpdates) {
+    lines.push(
+      'When the in-scene date or time changes, append exactly one hidden control tag at the end of your response:',
+      '<scene_clock_update>{"date":"NEW_DATE","time":"NEW_TIME"}</scene_clock_update>',
+      'The opening and closing scene_clock_update tags are mandatory. Use valid JSON inside them. You may include date, time, calendarName, or notes; omit unchanged fields. Do not mention this tag in the dialogue.'
+    )
+  }
+  lines.push('[/Scene Clock]')
+
+  return `${lines.join('\n')}\n`
 }
 
 function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {

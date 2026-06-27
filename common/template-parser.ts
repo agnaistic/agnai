@@ -164,6 +164,7 @@ type Holder =
   | 'char'
   | 'user'
   | 'scenario'
+  | 'scene_clock'
   | 'personality'
   | 'example_dialogue'
   | 'history'
@@ -1002,6 +1003,9 @@ function getPlaceholder(
 
     case 'scenario':
       return opts.parts?.scenario || opts.chat?.scenario || opts.char?.scenario || ''
+
+    case 'scene_clock':
+      return opts.parts?.sceneClock || ''
 
     case 'memory':
       return opts.parts?.memory || ''

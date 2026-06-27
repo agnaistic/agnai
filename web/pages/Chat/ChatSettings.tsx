@@ -236,6 +236,7 @@ const ChatSettings: Component<{
   }
 
   const onSave = () => {
+    const sceneClock = getInitSceneClock(state.active?.chat?.sceneClock)
     const payload = {
       name: edit.name,
       greeting: edit.greeting,
@@ -250,6 +251,12 @@ const ChatSettings: Component<{
       imageSource: edit.imageSource,
       scenarioIds: edit.scenarioId ? [edit.scenarioId] : [],
       scenarioStates: edit.scenarioStates,
+      sceneClock: {
+        ...sceneClock,
+        enabled: edit.sceneClock.enabled,
+        lastUpdatedBy: 'user' as const,
+        lastUpdatedAt: new Date().toISOString(),
+      },
     }
     chatStore.editChat(state.active?.chat?._id!, payload, {
       useOverrides: edit.useOverrides,
@@ -508,6 +515,15 @@ const ChatSettings: Component<{
         </Card>
       </Show>
 
+      <Card>
+        <Toggle
+          value={edit.sceneClock.enabled}
+          onChange={(ev) => setEdit('sceneClock', 'enabled', ev)}
+          label="Scene Clock"
+          helperText="Keeps the fictional scene date and time with this chat and includes it in prompts. Edit the clock details from the Chat Menu."
+        />
+      </Card>
+
       <Divider />
 
       <FormLabel
@@ -577,6 +593,7 @@ function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
     useOverrides: !!chat?.overrides,
     scenarioId: chat?.scenarioIds?.[0] || '',
     scenarioStates: chat?.scenarioStates || [],
+    sceneClock: getInitSceneClock(chat?.sceneClock),
 
     greeting: chat?.greeting || char?.greeting || '',
     scenario: chat?.scenario || char?.scenario || '',
@@ -586,6 +603,21 @@ function getInitState(chat?: AppSchema.Chat, char?: AppSchema.Character) {
 
     personaKind: chat?.overrides?.kind || char?.persona.kind || 'text',
     personaAttrs: toAttrs(chat?.overrides?.attributes || char?.persona.attributes),
+  }
+}
+
+function getInitSceneClock(clock?: AppSchema.SceneClock): AppSchema.SceneClock {
+  return {
+    enabled: clock?.enabled || false,
+    date: clock?.date || '',
+    time: clock?.time || '',
+    dateFormat: clock?.dateFormat || 'YYYY-MM-DD',
+    timeFormat: clock?.timeFormat || '24h',
+    calendarName: clock?.calendarName || '',
+    notes: clock?.notes || '',
+    allowAssistantUpdates: clock?.allowAssistantUpdates || false,
+    lastUpdatedBy: clock?.lastUpdatedBy,
+    lastUpdatedAt: clock?.lastUpdatedAt,
   }
 }
 

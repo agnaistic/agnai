@@ -203,6 +203,7 @@ Object {
       "SAMPLECHAT OtherBot",
     ],
     "scenario": "MAIN MainChar",
+    "sceneClock": "",
     "systemPrompt": undefined,
     "ujb": "!!UJB_PROMPT!!",
     "userEmbeds": Array [],
