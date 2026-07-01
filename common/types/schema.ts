@@ -274,6 +274,7 @@ export namespace AppSchema {
     time: string
     dateFormat: SceneClockDateFormat
     timeFormat: SceneClockTimeFormat
+    dayOfWeek?: string
     calendarName?: string
     notes?: string
     allowAssistantUpdates?: boolean

@@ -4,11 +4,15 @@ import { parseSceneClockUpdate } from '../common/scene-clock'
 describe('Scene Clock assistant updates', () => {
   it('extracts a valid partial update and removes the markup', () => {
     const result = parseSceneClockUpdate(
-      'The bells ring at midnight.\n<scene_clock_update>{"date":"2026-06-29","time":"00:00"}</scene_clock_update>'
+      'The bells ring at midnight.\n<scene_clock_update>{"date":"2026-06-29","time":"00:00","dayOfWeek":"Monday"}</scene_clock_update>'
     )
 
     expect(result.text).to.equal('The bells ring at midnight.')
-    expect(result.update).to.deep.equal({ date: '2026-06-29', time: '00:00' })
+    expect(result.update).to.deep.equal({
+      date: '2026-06-29',
+      time: '00:00',
+      dayOfWeek: 'Monday',
+    })
   })
 
   it('removes malformed markup without updating the clock', () => {

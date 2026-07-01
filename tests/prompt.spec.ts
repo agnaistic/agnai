@@ -210,6 +210,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
           time: '11:30',
           dateFormat: 'YYYY-MM-DD',
           timeFormat: '24h',
+          dayOfWeek: 'Saturday',
           calendarName: 'Imperial calendar',
         },
       }),
@@ -228,6 +229,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 
     expect(actual.template.parsed).to.include('[Scene Clock]')
     expect(actual.template.parsed).to.include('Current in-scene date and time: 2026-06-27 11:30.')
+    expect(actual.template.parsed).to.include('Day of week: Saturday.')
     expect(actual.template.parsed).to.include('Calendar: Imperial calendar.')
   })
 

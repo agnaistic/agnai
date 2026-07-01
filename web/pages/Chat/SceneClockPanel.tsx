@@ -37,6 +37,7 @@ export const SceneClockPanel: Component<{ chat?: AppSchema.Chat }> = (props) => 
           ...clock,
           date: clock.date.trim(),
           time: clock.time.trim(),
+          dayOfWeek: clock.dayOfWeek?.trim(),
           calendarName: clock.calendarName?.trim(),
           notes: clock.notes?.trim(),
           lastUpdatedBy: 'user',
@@ -59,6 +60,14 @@ export const SceneClockPanel: Component<{ chat?: AppSchema.Chat }> = (props) => 
             <Save size={14} />
           </Button>
         </div>
+
+        <TextInput
+          class="text-xs"
+          label="Day of Week"
+          value={clock.dayOfWeek}
+          placeholder="Tuesday"
+          onChange={(ev) => setClock('dayOfWeek', ev.currentTarget.value)}
+        />
 
         <div class="grid grid-cols-2 gap-2">
           <TextInput
@@ -127,6 +136,7 @@ function getInitSceneClock(clock?: AppSchema.SceneClock): AppSchema.SceneClock {
     time: clock?.time || '',
     dateFormat: clock?.dateFormat || 'YYYY-MM-DD',
     timeFormat: clock?.timeFormat || '24h',
+    dayOfWeek: clock?.dayOfWeek || '',
     calendarName: clock?.calendarName || '',
     notes: clock?.notes || '',
     allowAssistantUpdates: clock?.allowAssistantUpdates || false,

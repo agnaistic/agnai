@@ -28,6 +28,7 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
         time: 'string',
         dateFormat: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'Long'],
         timeFormat: ['12h', '24h'],
+        dayOfWeek: 'string?',
         calendarName: 'string?',
         notes: 'string?',
         allowAssistantUpdates: 'boolean?',

@@ -4,7 +4,7 @@ export const SCENE_CLOCK_UPDATE_TAG =
   /<scene_clock_update>\s*([\s\S]*?)\s*<\/scene_clock_update>/gi
 
 type SceneClockUpdate = Partial<
-  Pick<AppSchema.SceneClock, 'date' | 'time' | 'calendarName' | 'notes'>
+  Pick<AppSchema.SceneClock, 'date' | 'time' | 'dayOfWeek' | 'calendarName' | 'notes'>
 >
 
 export function parseSceneClockUpdate(response: string): {
@@ -41,7 +41,7 @@ function parseUpdateJson(value: string): SceneClockUpdate | undefined {
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return
 
     const update: SceneClockUpdate = {}
-    for (const key of ['date', 'time', 'calendarName', 'notes'] as const) {
+    for (const key of ['date', 'time', 'dayOfWeek', 'calendarName', 'notes'] as const) {
       const next = parsed[key]
       if (next === undefined) continue
       if (typeof next !== 'string') return

@@ -613,6 +613,7 @@ function getInitSceneClock(clock?: AppSchema.SceneClock): AppSchema.SceneClock {
     time: clock?.time || '',
     dateFormat: clock?.dateFormat || 'YYYY-MM-DD',
     timeFormat: clock?.timeFormat || '24h',
+    dayOfWeek: clock?.dayOfWeek || '',
     calendarName: clock?.calendarName || '',
     notes: clock?.notes || '',
     allowAssistantUpdates: clock?.allowAssistantUpdates || false,
