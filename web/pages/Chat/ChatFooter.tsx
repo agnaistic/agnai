@@ -23,7 +23,7 @@ export const ChatFooter: Component<{
   requestMessage: (characterId: string) => void
   sendMessage: SendFunc
 }> = (props) => {
-  const user = userStore((s) => ({ profile: s.profile }))
+  const user = userStore((s) => ({ profile: s.profile, user: s.user }))
   const response = responseStore((s) => ({ waiting: s.waiting }))
   const msgs = msgStore((s) => ({ attachments: s.attachments, cutoff: s.showMessageCount }))
   const chars = characterStore((s) => ({ botMap: s.characters.map }))
@@ -52,7 +52,8 @@ export const ChatFooter: Component<{
 
     const isMember =
       props.ctx.active?.chat?.userId === user.profile.userId ||
-      chats.members.some((mem) => mem.userId === user.profile?.userId)
+      chats.members.some((mem) => mem.userId === user.profile?.userId) ||
+      user.user?.admin
 
     return !isMember
   })

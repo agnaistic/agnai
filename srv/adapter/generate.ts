@@ -308,7 +308,7 @@ async function getRequestPreset(opts: InferenceRequest) {
       throw new StatusError(`[2] Could not locate preset for inference request`, 402)
     const members = await store.chats.getActiveMembers(opts.chatId)
 
-    const isMember = members.some((id) => id === opts.user._id)
+    const isMember = opts.user.admin || members.some((id) => id === opts.user._id)
     if (!isMember) throw new StatusError(`[3] Could not locate preset for inference request`, 402)
   }
 

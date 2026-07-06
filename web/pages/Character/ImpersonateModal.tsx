@@ -7,8 +7,10 @@ import Button from '/web/shared/Button'
 import PageHeader from '/web/shared/PageHeader'
 import { HeartPlus, X } from 'lucide-solid'
 import { isChatPageMemo } from '/web/shared/hooks'
+import { useAppContext } from '/web/store/context'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  const [ctx] = useAppContext()
   const isChat = isChatPageMemo()
 
   const state = characterStore((s) => ({
@@ -51,9 +53,17 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
 
   const options = createMemo(() => {
     const curr = currentChar()
-    const items = state.chars.list
-      .filter((ch) => ch.userId === user.user?._id)
+    const combined = state.chars.list.concat(ctx.activeBots)
+
+    const seen = new Set<string>()
+    const items = combined
+      .filter((ch) => {
+        if (seen.has(ch._id)) return false
+        seen.add(ch._id)
+        return ch.userId === user.user?._id || user.user?.admin
+      })
       .map((char) => {
+        if (user.user?._id !== char.userId) return { ...char, name: `${char.name} (User)` }
         if (curr?._id !== char._id) return char
         return { ...char, name: `${char.name} (Current)` }
       })

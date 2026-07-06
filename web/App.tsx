@@ -180,9 +180,11 @@ const Layout: Component<{ children?: any }> = (props) => {
             style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
           >
             <div
-              class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
+              class={`h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
               classList={{
                 'content-background': !isChat(),
+                'mx-auto': !state.ui.contentAlign || state.ui.contentAlign === 'center',
+                'sm:ml-2': state.ui.contentAlign === 'left',
               }}
             >
               <Switch>

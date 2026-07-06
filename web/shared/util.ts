@@ -138,6 +138,9 @@ export function createEmitter<T extends string>(...events: T[]) {
   return { emit, on, off } as ComponentEventEmitter<T>
 }
 
+/**
+ * Automatically calls JSON.parse() on data
+ */
 async function userCacheGet<T = any>(key: string) {
   const prop = getUserCacheKey(key)
   if (!prop) return
@@ -153,9 +156,10 @@ async function userCacheGet<T = any>(key: string) {
   return json as T
 }
 
+/**
+ * Automatically calls JSON.stringify() on data
+ */
 async function userCacheSet(key: string, data: any) {
-  if (!isLoggedIn()) return
-
   const prop = getUserCacheKey(key)
   if (!prop) return
 
@@ -164,7 +168,10 @@ async function userCacheSet(key: string, data: any) {
 }
 
 function getUserCacheKey(key: string) {
-  if (!isLoggedIn()) return
+  if (!isLoggedIn()) {
+    return `user-anon_${key}`
+  }
+
   const userId = getUserId()
   if (!userId) return
   return `user-${userId}_${key}`

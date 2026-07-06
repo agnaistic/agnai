@@ -336,16 +336,64 @@ const imgProviderGuard = {
   name: 'string',
   type: ['agnai', 'swarm', 'sd', 'openai', 'horde', 'novel'],
   url: 'string',
+  presetId: 'string?',
+  providerId: 'string?',
+
+  // We will hide the sampler/scheduler if the presetId is set
   sampler: 'string',
   scheduler: 'string?',
+
   model: 'string',
-  providerId: 'string?',
   draftMode: 'boolean?',
   local: 'boolean?',
   loras: ['any?'],
   ucPreset: 'string?',
   qualityTags: 'boolean?',
 } as const
+
+const imgPresetGuard = {
+  _id: 'string',
+  name: 'string',
+  sampler: 'string',
+  scheduler: 'string',
+  summaryPrompt: 'string',
+  autofix: 'boolean',
+  prefix: 'string',
+  suffix: 'string',
+  negative: 'string',
+  steps: 'number',
+  width: 'number',
+  height: 'number',
+  cfg: 'number',
+  seed: 'number',
+} as const
+
+export const upsertImageSettings = handle(async (req) => {
+  const guard = {
+    provider: optional(imgProviderGuard),
+    preset: optional(imgPresetGuard),
+  } as const
+
+  const user = await getSafeUserConfig(req.userId)
+  if (!user) {
+    throw new StatusError('Not found', 404)
+  }
+
+  assertValid(guard, req.body)
+
+  const next: any = {}
+
+  if (req.body.provider) {
+    const update = { ...req.body.provider, scheduler: req.body.provider.scheduler || '' }
+    next.provider = await store.users.upsertImageProvider(user, update)
+  }
+
+  if (req.body.preset) {
+    const update = { ...req.body.preset }
+  }
+
+  return next
+})
 
 export const upsertImageProvider = handle(async (req) => {
   assertValid(imgProviderGuard, req.body)

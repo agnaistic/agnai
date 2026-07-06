@@ -84,6 +84,14 @@ export const MessageMeta: Component = () => {
                 </td>
                 <td>{state.msg?.chatId}</td>
               </tr>
+              <Show when={state.msg?.userId}>
+                <tr>
+                  <td class="pr-2">
+                    <b>author</b>
+                  </td>
+                  <td>{state.msg?.userId}</td>
+                </tr>
+              </Show>
               <tr>
                 <td class="pr-2">
                   <b>created</b>

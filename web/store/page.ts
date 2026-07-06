@@ -17,6 +17,11 @@ export type PageState = {
   showImpersonate: boolean
   showSettings: boolean
 
+  capture?: {
+    show: boolean
+    callback: (result: { file: File; image: string }) => void
+  }
+
   confirm?: {
     title?: string
     message: string | JSX.Element
@@ -89,6 +94,14 @@ export const pageStore = createStore<PageState>('page', {
     },
     toggleOverlay({ showOverlay }, next?: boolean) {
       return { showOverlay: next === undefined ? !showOverlay : next }
+    },
+
+    closeCapture() {
+      return { capture: undefined }
+    },
+
+    openCapture(_, callback: (result: { file: File; image: string }) => void) {
+      return { capture: { show: true, callback } }
     },
 
     openConfirm(

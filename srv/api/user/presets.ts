@@ -42,7 +42,7 @@ export const testConnectionUrl = handle(async ({ body, userId, authed }) => {
   return { success: false, url: '' }
 })
 
-export const getThirdPartyPresetModels = handle(async ({ userId, body, authed }) => {
+export const getThirdPartyPresetModels = handle(async ({ userId, body, authed, user }) => {
   assertValid(
     {
       id: 'string?',
@@ -80,7 +80,7 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body, authed })
     throw new StatusError(`Preset not found`, 404)
   }
 
-  if (preset.userId !== userId) {
+  if (preset.userId !== userId && !user?.admin) {
     throw new StatusError(`Invalid preset ID`, 403)
   }
 
@@ -89,17 +89,21 @@ export const getThirdPartyPresetModels = handle(async ({ userId, body, authed })
   return models?.data ? models : { data: [] }
 })
 
-export const getUserPreset = handle(async ({ userId, params }) => {
+export const getUserPreset = handle(async ({ userId, params, user }) => {
   const preset = await store.presets.getSafeUserPreset(params.id, userId)
 
-  if (!preset || preset.userId !== userId) {
+  if (!preset) {
+    throw new StatusError('Preset not found', 404)
+  }
+
+  if (preset.userId !== userId && !user?.admin) {
     throw new StatusError('Preset not found', 404)
   }
 
   return preset
 })
 
-export const getChatPreset = handle(async ({ userId, params }) => {
+export const getChatPreset = handle(async ({ userId, params, user }) => {
   const chat = await store.chats.getChatOnly(params.id)
   if (!chat) {
     throw new StatusError(`Preset not found (Invalid chat id)`, 404)
@@ -120,7 +124,7 @@ export const getChatPreset = handle(async ({ userId, params }) => {
     return fallback
   }
 
-  if (userId === preset.userId) {
+  if (userId === preset.userId || user?.admin) {
     return preset
   }
 

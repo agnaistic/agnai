@@ -131,8 +131,12 @@ export const msgStore = createStore<MsgState>(
     msgStore.setState(initState)
   })
 
-  events.on(EVENTS.init, (init) => {
+  events.on(EVENTS.init, async (init) => {
     msgStore.setState({ imagesSaved: init.config.imagesSaved })
+    const cached = await storage.userCacheGet(`message-attachments`)
+    if (cached) {
+      msgStore.setState({ attachments: cached })
+    }
   })
 
   events.on(EVENTS.clearMsgs, (chatId: string) => {
@@ -725,6 +729,11 @@ msgStore.subscribe((curr, prev) => {
     console.log(error.stack)
   }
   debug('chat-id')('changed %s --> %s', from, to)
+})
+
+msgStore.subscribe(async (curr, prev) => {
+  if (prev.attachments === curr.attachments) return
+  await storage.userCacheSet(`message-attachments`, curr.attachments)
 })
 
 function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {

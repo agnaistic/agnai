@@ -627,6 +627,19 @@ export function isLoggedIn() {
   return !!getAuth()
 }
 
+export function isAdmin() {
+  const data = getUserToken()
+  return !!data?.admin
+}
+
+export function getUserToken() {
+  const auth = getAuth()
+  if (!auth) return
+
+  const data = getTokenBody(auth)
+  return data
+}
+
 export function getUserId() {
   const auth = getAuth()
   if (!auth) return 'anon'

@@ -5,6 +5,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   PlusCircle,
+  ScanFaceIcon,
   Send,
   StopCircle,
   X,
@@ -267,36 +268,44 @@ const InputBar: Component<{
     await attach(files.map((f) => f.file))
   }
 
+  const onCapture = (image: string) => {
+    msgStore.addAttachment(props.chat._id, [{ type: 'image', image }])
+  }
+
   const attach = async (files: File[]) => {
-    setMenu(false)
-    const toAttach: MsgAttachment[] = []
+    try {
+      setMenu(false)
+      const toAttach: MsgAttachment[] = []
 
-    for (const file of files) {
-      const ext = file.name.split('.').slice(-1)[0].toLowerCase()
-      const isAllowed = ALLOWED_TYPES.has(ext)
-      if (!isAllowed) {
-        toastStore.warn(`Invalid file type: Must be an image`)
-        return
+      for (const file of files) {
+        const ext = file.name.split('.').slice(-1)[0].toLowerCase()
+        const isAllowed = ALLOWED_TYPES.has(ext)
+        if (!isAllowed) {
+          toastStore.warn(`Invalid file type: Must be an image`)
+          return
+        }
+
+        if (file.size > 1024 * 1024 * 1024) {
+          toastStore.warn(`Attachment exceeds size limit (1MB)`)
+          return
+        }
+
+        const proc = await imageApi.processImageFile(file)
+        const resized = await resizeImage(proc, { type: 'fit', max: 768 })
+        debug('resize')(
+          'Orig: %sx%s, New: %sx%s',
+          resized.original.w,
+          resized.original.h,
+          resized.w,
+          resized.h
+        )
+        toAttach.push({ type: 'image', image: resized.content })
       }
 
-      if (file.size > 1024 * 1024 * 1024) {
-        toastStore.warn(`Attachment exceeds size limit (1MB)`)
-        return
-      }
-
-      const proc = await imageApi.processImageFile(file)
-      const resized = await resizeImage(proc, { type: 'fit', max: 768 })
-      debug('resize')(
-        'Orig: %sx%s, New: %sx%s',
-        resized.original.w,
-        resized.original.h,
-        resized.w,
-        resized.h
-      )
-      toAttach.push({ type: 'image', image: resized.content })
+      msgStore.addAttachment(props.chat._id, toAttach)
+    } catch (ex: any) {
+      toastStore.error(`Failed to attach`, { stack: ex.stack })
     }
-
-    msgStore.addAttachment(props.chat._id, toAttach)
   }
 
   return (
@@ -530,6 +539,14 @@ const InputBar: Component<{
                 Attach Image
               </LabelButton>
             </Show>
+            <Button
+              schema="secondary"
+              class="w-full"
+              onClick={() => pageStore.openCapture((res) => onCapture(res.image))}
+            >
+              <ScanFaceIcon size={18} />
+              Attach from Camera
+            </Button>
           </div>
         </DropMenu>
         <Switch>

@@ -135,6 +135,16 @@ export const ThemeUISettings: Component = (props) => {
         value={state.ui.font}
         onChange={(item) => userStore.saveUI({ font: item.value as any })}
       />
+      <Select
+        label="Content Alignment"
+        helperText="Alignment of main content area"
+        items={[
+          { label: 'Left', value: 'left' },
+          { label: 'Center', value: 'center' },
+        ]}
+        onChange={(item) => userStore.saveUI({ contentAlign: item.value as any })}
+        value={state.ui.contentAlign || 'center'}
+      />
     </>
   )
 }

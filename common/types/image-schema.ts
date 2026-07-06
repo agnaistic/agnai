@@ -23,12 +23,20 @@ export type BaseImageSettings = {
 }
 
 export type ImagePresetSettings = {
+  _id: string
+  name: string
   clipSkip?: number
   width: number
   height: number
   steps: number
   cfg: number
-  seed?: number
+  seed: number
+  prefix: string
+  suffix: string
+  summaryPrompt: string
+  autofix: boolean
+  sampler: string
+  scheduler: string
 }
 
 export type ImageDefaults = {

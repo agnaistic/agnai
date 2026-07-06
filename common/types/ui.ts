@@ -83,6 +83,7 @@ export type UISettings = {
   themeBg?: string
 
   mode: ThemeMode
+  contentAlign?: 'left' | 'center'
 
   bgCustomGradient: string
 
@@ -155,6 +156,7 @@ export const defaultUIsettings: UISettings = {
   theme: 'sky',
   themeBg: 'truegray',
 
+  contentAlign: 'center',
   bgCustomGradient: '',
 
   mode: 'dark',

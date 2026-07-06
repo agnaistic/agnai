@@ -12,13 +12,13 @@ export const getCharacterChats = handle(async (req) => {
   return { character, chats: list }
 })
 
-export const getChatDetail = handle(async ({ userId, params, query }) => {
+export const getChatDetail = handle(async ({ userId, params, query, user }) => {
   const id = params.id
   const detail = await store.chats.getChat(id, query.impersonating as string)
 
   if (!detail) throw errors.NotFound
 
-  const canView = await store.chats.canViewChat(userId, detail.chat)
+  const canView = user?.admin ? true : await store.chats.canViewChat(userId, detail.chat)
   if (!canView) {
     throw errors.Forbidden
   }

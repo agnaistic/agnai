@@ -457,6 +457,7 @@ async function handlePostStreamResponse(input: {
   const { replacing, parent, replyAs, continuing } = req.request
   const messageId = replacing?._id || req.request.requestId
   const chatId = req.request.chat._id
+  const dryrun = req.entities.user.admin && req.entities.chat.userId !== req.entities.user._id
 
   /**
    * Handle exceptions to message creations in here
@@ -477,7 +478,7 @@ async function handlePostStreamResponse(input: {
         meta,
       }
 
-      await msgsApi.editMessageProps(replacing, { ...payload, assignTree: true })
+      await msgsApi.editMessageProps(replacing, { ...payload, assignTree: true }, dryrun)
       return
     }
 
@@ -504,7 +505,7 @@ async function handlePostStreamResponse(input: {
         update.imagePrompt = input.json.imageCaption
       }
 
-      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, update)
+      await msgsApi.editMessageProps({ _id: opts.messageId, chatId }, update, dryrun)
       return
     }
 
@@ -526,7 +527,7 @@ async function handlePostStreamResponse(input: {
   }
 
   if (input.jsonCall) {
-    await msgsApi.editMessageProps({ _id: messageId, chatId }, { json })
+    await msgsApi.editMessageProps({ _id: messageId, chatId }, { json }, dryrun)
     getStore('responses').setState({
       retrying: undefined,
       partial: undefined,
@@ -549,6 +550,7 @@ async function handlePostStreamResponse(input: {
       bot: true,
       meta,
       json,
+      dryrun,
     })
   }
 

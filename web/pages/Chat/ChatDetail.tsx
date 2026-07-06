@@ -51,6 +51,7 @@ import { SendFunc } from './components/InputBar'
 import { MessageVisibility } from './components/Visibility'
 import { PendingMessages } from './components/Pending'
 import { debug } from '/common/debug'
+import { CaptureModal } from './components/Attachments'
 
 export { ChatDetail as default }
 
@@ -172,7 +173,7 @@ const ChatDetail: Component = () => {
       </>
     )
   })
-  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id || !!user.user?.admin)
   const tts = createMemo(
     () => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice?.service
   )
@@ -558,6 +559,7 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
+      <CaptureModal />
 
       <ConfirmModal
         message={

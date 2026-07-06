@@ -1,7 +1,12 @@
 import type { AIAdapter, ChatAdapter, ThirdPartyFormat } from '../adapters'
 import * as Memory from './memory'
 import type { GenerationPreset } from '../presets'
-import type { BaseImageSettings, ImageProviderSettings, ImageSettings } from './image-schema'
+import type {
+  BaseImageSettings,
+  ImagePresetSettings,
+  ImageProviderSettings,
+  ImageSettings,
+} from './image-schema'
 import type { TTSSettings } from './texttospeech-schema'
 import type { UISettings } from './ui'
 import * as Saga from './saga'
@@ -160,6 +165,7 @@ export namespace AppSchema {
     images?: ImageSettings & {}
 
     imageProviders?: ImageProviderSettings[]
+    imagePresets?: ImagePresetSettings[]
     imageProviderId?: string
 
     imageDefaults?: {

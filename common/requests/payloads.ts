@@ -30,10 +30,8 @@ export function getLocalPayload(opts: MinOpts, stops: string[] = []) {
   const gen = opts.settings!
   const body = getBasePayload(opts, stops)
 
-  opts.characters
-
   // Always add baseline OpenAI format properties
-  body.model ??= gen.thirdPartyModel || ''
+  body.model ??= body.model || gen.thirdPartyModel || ''
   body.temperature ??= gen.temp
   body.top_p ??= gen.topP
   body.stop ??= getStoppingStrings(opts, opts.settings)
@@ -107,6 +105,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   const format = opts.subscription?.preset?.thirdPartyFormat || conn.format
 
   const json_schema = opts.jsonSchema ? toJsonSchema(opts.jsonSchema.fields) : undefined
+  const providerModel = gen.providerModels?.[gen.providerId || ''] || gen.thirdPartyModel
 
   const characterNames = Object.values(opts.characters || {})
     .map((c) => c.name.split(' '))
@@ -138,7 +137,8 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     format === 'lm-studio' ||
     format === 'kobold'
   ) {
-    const model = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+    const model =
+      providerModel || gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
     const body: any = {
       model,
@@ -169,7 +169,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'arli') {
     const body: any = {
-      model: gen.providerId ? gen.thirdPartyModel : gen.arliModel || gen.thirdPartyModel,
+      model: gen.providerId ? providerModel : gen.arliModel || gen.thirdPartyModel,
       prompt: messages ? undefined : prompt,
       messages,
       stop: getStoppingStrings(opts, opts.settings, stops),
@@ -233,7 +233,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
       n: 1,
       prompt: messages ? undefined : prompt,
       messages,
-      model: gen.thirdPartyModel,
+      model: providerModel,
       stream: true,
       temperature: gen.temp ?? 0.5,
       max_tokens: gen.maxTokens ?? 200,
@@ -279,7 +279,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
     const payload: any = {
       prompt: messages ? undefined : prompt,
       messages,
-      model: gen.thirdPartyModel,
+      model: providerModel,
       stream: !!gen.streamResponse,
       seed: Math.trunc(Math.random() * 1_000_000_000),
       max_tokens: gen.maxTokens,
@@ -318,7 +318,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'mistral') {
     const body = {
       messages: messages || [{ role: 'user', content: prompt }],
-      model: gen.mistralModel!,
+      model: providerModel,
       temperature: clamp(gen.temp!, 0.01, 1),
       top_p: clamp(gen.topP!, 0, 1),
       max_tokens: gen.maxTokens!,
@@ -368,6 +368,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'llamacpp') {
     const body: any = {
+      model: providerModel,
       prompt: messages ? undefined : prompt,
       messages,
       temperature: gen.temp,
@@ -414,6 +415,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'ooba') {
     const body: any = {
+      model: providerModel,
       prompt: messages ? undefined : prompt,
       messages,
       temperature: gen.temp,
@@ -453,7 +455,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'aphrodite') {
     const body: any = {
-      model: gen.thirdPartyModel || '',
+      model: providerModel,
       stream: true,
       temperature: gen.temp ?? 0.5,
       max_tokens: gen.maxTokens ?? 200,
@@ -497,6 +499,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
   if (format === 'exllamav2') {
     const body = {
       request_id: opts.requestId,
+      model: providerModel,
       action: 'infer',
       text: prompt,
       stream: true,
@@ -517,6 +520,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'koboldcpp') {
     const body = {
+      model: providerModel,
       n: 1,
       max_context_length: gen.maxContextLength,
       prompt: messages ? undefined : prompt,
@@ -542,7 +546,7 @@ function getBasePayload(opts: MinOpts, stops: string[] = []) {
 
   if (format === 'featherless') {
     const payload: any = {
-      model: gen.providerId ? gen.thirdPartyModel : gen.featherlessModel || gen.thirdPartyModel,
+      model: providerModel,
       prompt: messages ? undefined : prompt,
       messages,
       stop: getStoppingStrings(opts, opts.settings, stops),

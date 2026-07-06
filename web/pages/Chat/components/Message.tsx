@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   BracesIcon,
+  ImageUpIcon,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -509,7 +510,7 @@ const Message: Component<MessageProps> = (props) => {
                   when={
                     !edit() &&
                     !props.swipe &&
-                    user.user?._id === ctx.chat?.userId &&
+                    (user.user?._id === ctx.chat?.userId || user.user?.admin) &&
                     ctx.chat?.mode !== 'companion'
                   }
                 >
@@ -832,8 +833,8 @@ const MessageOptions: Component<{
         key: 'attach',
         class: '',
         label: 'Attach',
-        outer: { outer: false, pos: 0 },
-        icon: ImagePlus,
+        outer: { outer: props.ui.msgOptsInline.attach?.outer, pos: 0 },
+        icon: ImageUpIcon,
         show:
           !!props.canUseAttachments &&
           (props.msg.userId === props.ctx.user?._id ||

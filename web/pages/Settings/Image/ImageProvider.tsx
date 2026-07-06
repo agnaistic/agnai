@@ -402,11 +402,11 @@ export const NovelSettings: Component<{
           onChange={(ev) => props.setter('ucPreset', ev.value)}
         />
       </Show>
-      <CustomSelect
-        options={models}
-        selected={props.cfg.model}
-        onSelect={(ev) => props.setter('model', ev.value)}
-        openSub={props.modelOnly}
+      <Select
+        items={models}
+        value={props.cfg.model}
+        onChange={(ev) => props.setter('model', ev.value)}
+        // openSub={props.modelOnly}
       />
 
       <Show when={!props.modelOnly}>

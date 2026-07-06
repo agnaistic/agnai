@@ -121,6 +121,12 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative },
     )
   }
 
+  if (result.body.images?.length) {
+    const base64 = result.body.images[0].image
+    const buffer = Buffer.from(base64, 'base64')
+    return { ext: 'png', content: buffer }
+  }
+
   const zip = new Zip(result.body).getEntries()
   const entry = zip.find((entry) => entry.entryName.endsWith('.png'))
 

@@ -380,6 +380,7 @@ function applyReasoningPayload(opts: AdapterProps, body: any) {
       return
     }
 
+    case 'known-mistral':
     case 'known-nvidia': {
       delete body.reasoning
       return

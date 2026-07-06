@@ -17,6 +17,7 @@ import { EVENTS, events } from '../emitter'
 import { getScenarioEventType } from '/common/scenario'
 import { imageApi } from './data/image'
 import { resolveChatPath } from '/common/chat'
+import { getUserToken } from './api'
 
 export type VoiceState = 'generating' | 'playing'
 
@@ -501,6 +502,7 @@ async function handlePreSend(opts: {
 
   const parent = botGen.getMessageParent(opts.mode, msgs)
 
+  const user = getUserToken()
   const res = await msgsApi.createMessage({
     kind: isEvent ? getScenarioEventType(opts.mode) : 'send-noreply',
     chatId: opts.chatId,
@@ -509,6 +511,7 @@ async function handlePreSend(opts: {
     parent: parent?._id,
     character: impersonating,
     bot: isEvent ? true : false,
+    dryrun: !!user?.admin && active.chat.userId !== user?.userId,
   })
 
   if (res.result) {

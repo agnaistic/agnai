@@ -205,6 +205,8 @@ async function getPayload(req: ImageRequestOpts) {
   const payload: any = {
     session_id,
     prompt: req.prompt,
+    automaticvae: true,
+    modelspecificenhancements: true,
     negativeprompt: req.negative || '',
     cfgscale: `${req.settings?.cfg || 5}`,
     steps: `${req.settings?.steps || 20}`,

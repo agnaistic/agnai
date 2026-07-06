@@ -186,7 +186,13 @@ export function ContextProvider(props: { children: any }) {
 
     if (!chat) return []
 
-    const leafId = chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+    let leafId = chat?.treeLeafId || msgs.msgs.slice(-1)[0]?._id || ''
+
+    const leafNode = msgs.graph.tree[leafId]
+    if (!leafNode) {
+      leafId = msgs.msgs.slice(-1)[0]?._id
+    }
+
     const path = resolveChatPath(msgs.graph.tree, leafId)
     return path
   })

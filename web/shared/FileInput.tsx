@@ -22,6 +22,7 @@ const FileInput: Component<{
 }> = (props) => {
   let inputRef: HTMLInputElement
   const [selected, setSelected] = createSignal<FileInputResult[]>([])
+  const [value, setValue] = createSignal<any>()
 
   const onFile = async (list: FileList | null) => {
     try {
@@ -35,7 +36,7 @@ const FileInput: Component<{
       setSelected(files)
       props.onUpdate(files)
     } finally {
-      inputRef.value = ''
+      setValue('none')
     }
   }
 
@@ -70,6 +71,7 @@ const FileInput: Component<{
         accept={props.accept}
         class={`hidden`}
         onChange={(ev) => onFile(ev.currentTarget.files)}
+        value={value()}
         {...(props.multiple ? { multiple: true } : {})}
         {...(props.required ? { required: true } : {})}
       />
