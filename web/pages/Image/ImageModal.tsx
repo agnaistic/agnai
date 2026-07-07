@@ -18,19 +18,18 @@ import TextInput from '/web/shared/TextInput'
 import { ArrowLeft, ArrowRight, Download, SettingsIcon, Trash, WandSparkles } from 'lucide-solid'
 import { cleanPrompt, hydrateTemplate } from '/common/util'
 import { RelativeSpinner } from '/web/shared/Loading'
-import { imageApi } from '/web/store/data/image'
+import { createCaptionInferenceSignal, imageApi } from '/web/store/data/image'
 import { getStore } from '/web/store/create'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import { ChatImageSettings, useCurrentChatImageSettings } from '../Settings/Image/ImageSettings'
 import { Copy } from '/web/shared/Copy'
 import { downloadImage } from '../Character/util'
 import { debug } from '/common/debug'
-import { genApi } from '/web/store/data/inference'
-import { getImagePromptEntities } from '/web/store/data/common'
 import { usePresetContext } from '/web/store/preset-context'
 import { useAppContext } from '/web/store/context'
 import { useImageContext } from '../Settings/Image/image-context'
 import { SelectImageProvider } from '../Settings/Image/ImageProvider'
+import { TickHandler } from '/common/prompt'
 
 const log = debug('image-modal')
 
@@ -417,12 +416,12 @@ const PromptSettings: Component<{
   const persist = promptStore((s) => ({ imageHint: s.imageHint }))
   const msgs = msgStore((s) => ({ message: s.graph.tree[props.messageId || ''] }))
 
-  const gen = genApi.inferenceSignal({
-    onTick: (res, state) => {
-      if (state === 'partial') props.update('prompt', res)
-      if (state === 'done' || state === 'error') props.update('promptLoading', false)
-    },
-  })
+  const onPromptTick: TickHandler = (res, state) => {
+    if (state === 'partial') props.update('prompt', res)
+    if (state === 'done' || state === 'error') props.update('promptLoading', false)
+  }
+
+  const gen = createCaptionInferenceSignal({ onTick: onPromptTick })
 
   const fullImagePrompt = createMemo(() => {
     const parts = [props.settings?.prefix, props.state.prompt, props.settings?.suffix]
@@ -433,20 +432,23 @@ const PromptSettings: Component<{
   })
 
   const generatePrompt = async () => {
-    if (gen.state.status === 'loading') {
+    if (!props.messageId) return
+    if (gen && gen.state.status === 'loading') {
       gen.cancel()
       return
     }
 
-    const ents = await getImagePromptEntities(props.messageId)
+    await gen.generate(props.messageId)
+    // await generateImagePrompt({ messageId: props.messageId, onTick: onPromptTick, question: persist.imageHint })
+    // const ents = await getImagePromptEntities(props.messageId)
 
-    const template = imageApi.getSummaryTemplate({
-      task: ents.summary,
-      generate: 'Image Caption',
-      focus: persist.imageHint,
-    })
+    // const template = imageApi.getSummaryTemplate({
+    //   task: ents.summary,
+    //   generate: 'Image Caption',
+    //   focus: persist.imageHint,
+    // })
 
-    await gen.send({ prompt: template, preset: ents.preset })
+    // await gen.send({ prompt: template, preset: ents.preset })
   }
 
   const onCleanPrompt = () => {
@@ -462,8 +464,9 @@ const PromptSettings: Component<{
   const canSave = createMemo(() => {
     if (!props.messageId) return false
     if (!msgs.message) return false
+    if (!fullImagePrompt().trim()) return true
 
-    if (msgs.message.msg.imagePrompt === fullImagePrompt()) return false
+    if (msgs.message.msg.imagePrompt?.trim() === fullImagePrompt().trim()) return false
     return true
   })
 

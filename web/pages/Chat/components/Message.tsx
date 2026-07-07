@@ -625,14 +625,6 @@ const Message: Component<MessageProps> = (props) => {
                     </span>
                   </Show>
 
-                  <MessageImages
-                    messageId={props.messageId}
-                    msg={msg()}
-                    onEditClick={editMessageMeta}
-                    ctx={ctx}
-                  />
-                  <MessageAttachments msg={msg()} ctx={ctx} />
-
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={msg().actions}>
@@ -674,6 +666,13 @@ const Message: Component<MessageProps> = (props) => {
               </Switch>
             </div>
           </div>
+          <MessageImages
+            messageId={props.messageId}
+            msg={msg()}
+            onEditClick={editMessageMeta}
+            ctx={ctx}
+          />
+          <MessageAttachments msg={msg()} ctx={ctx} />
           <Show when={!edit()}>{props.last && props.children}</Show>
         </div>
       </div>

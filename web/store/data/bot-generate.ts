@@ -917,7 +917,7 @@ export type GenerateProps = {
 }
 
 async function getGenerateProps(opts: GenerateOpts, active: ChatDetail) {
-  const entities = await getPromptEntities('messageId' in opts ? { messageId: opts.messageId } : {})
+  const entities = getPromptEntities('messageId' in opts ? { messageId: opts.messageId } : {})
 
   const json = entities.messages.reduce<Record<string, any>>(
     (prev, curr) => Object.assign(prev, curr.json?.values || {}),

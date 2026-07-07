@@ -34,8 +34,8 @@ export function getInferencePreset(
   return preset || fallback?.preset || {}
 }
 
-export async function getImagePromptEntities(messageId?: string) {
-  const entities = await getPromptEntities({ messageId })
+export function getImagePromptEntities(messageId?: string) {
+  const entities = getPromptEntities({ messageId })
   const source = entities.chat.imageSource || 'settings'
 
   let summary = ''
@@ -62,16 +62,16 @@ export async function getImagePromptEntities(messageId?: string) {
     }
   }
 
-  if (!presetId) return { entities, summary, preset: undefined }
+  if (!presetId) return { entities, summary, preset: entities.settings }
 
   const preset = getStore('presets')
     .getState()
     .presets.find((p) => p._id === presetId)
 
-  return { entities, summary, preset }
+  return { entities, summary, preset: preset || entities.settings }
 }
 
-export async function getPromptEntities(opts?: { messageId?: string }): Promise<PromptEntities> {
+export function getPromptEntities(opts?: { messageId?: string }): PromptEntities {
   const promptState = getStore('prompt').getState()
 
   const props = {

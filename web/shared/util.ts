@@ -21,6 +21,10 @@ const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
 
+export type Require<T extends object, U extends keyof T> = Omit<T, U> & {
+  [key in U]-?: NonNullable<T[U]>
+}
+
 export type ExtractProps<TComponent> = TComponent extends Component<infer TProps>
   ? TProps
   : TComponent

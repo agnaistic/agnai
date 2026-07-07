@@ -1,9 +1,8 @@
-import { Component, createEffect, createMemo, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, For } from 'solid-js'
 import { ChatContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { imageStore, msgStore, pageStore, toastStore } from '/web/store'
 import { CircleX } from 'lucide-solid'
-import Tooltip from '/web/shared/Tooltip'
 import Modal from '/web/shared/Modal'
 import Button from '/web/shared/Button'
 
@@ -29,28 +28,36 @@ export const MessageAttachments: Component<{ ctx: ChatContext; msg: AppSchema.Ch
       <div class="flex flex-wrap gap-2">
         <For each={attachments()}>
           {(image, index) => (
-            <img
-              class="max-h-8 cursor-pointer rounded-md sm:max-h-12"
-              src={image}
-              onClick={() =>
-                imageStore.showImage({
-                  src: { type: 'url', id: image },
-                  actions: [
-                    {
-                      schema: 'warning',
-                      text: 'Remove',
-                      onClick: () => {
-                        imageStore.clearImage()
-                        msgStore.removeAttachment(props.msg._id, index())
+            <div class="relative inline-block">
+              <img
+                class="max-h-8 cursor-pointer rounded-md sm:max-h-12"
+                src={image}
+                onClick={() =>
+                  imageStore.showImage({
+                    src: { type: 'url', id: image },
+                    actions: [
+                      {
+                        schema: 'warning',
+                        text: 'Remove',
+                        onClick: () => {
+                          imageStore.clearImage()
+                          msgStore.removeAttachment(props.msg._id, index())
+                        },
                       },
-                    },
-                  ],
-                })
-              }
-            />
+                    ],
+                  })
+                }
+              />
+              <button
+                class="icon-button absolute right-[-4px] top-[-4px] rounded-lg  bg-[#000]"
+                onClick={() => msgStore.removeAttachment(props.msg._id, index())}
+              >
+                <CircleX size={16} />
+              </button>
+            </div>
           )}
         </For>
-        <Show when={attachments().length > 0}>
+        {/*<Show when={attachments().length > 0}>
           <div
             class="icon-button flex items-center"
             onClick={() => msgStore.removeAttachment(props.msg._id, -1)}
@@ -59,7 +66,7 @@ export const MessageAttachments: Component<{ ctx: ChatContext; msg: AppSchema.Ch
               <CircleX size={20} />
             </Tooltip>
           </div>
-        </Show>
+        </Show>*/}
       </div>
     </>
   )

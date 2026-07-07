@@ -236,7 +236,7 @@ export const MessageImagePrompt: Component<{
   }
 
   return (
-    <div class="flex flex-col gap-3">
+    <Card border class="flex flex-col gap-3">
       <TextInput
         helperText="Caption Hint: What to focus on when generating the caption?"
         placeholder="Caption Hint: What to focus on?"
@@ -309,6 +309,6 @@ export const MessageImagePrompt: Component<{
         value={prompt()}
         onChange={(ev) => receivePrompt(ev.currentTarget.value)}
       />
-    </div>
+    </Card>
   )
 }

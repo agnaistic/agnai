@@ -386,7 +386,7 @@ export const responseStore = createStore<ResponseState>(
       _,
       opts: {
         chatId: string
-        messageId?: string
+        messageId: string
         onSummary?: (summary: string) => void
         onTick?: TickHandler
         question?: string

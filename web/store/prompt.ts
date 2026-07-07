@@ -1,5 +1,5 @@
 import { storage } from '../shared/util'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 
 export type PromptState = {
   hintsEnabled: boolean
@@ -58,23 +58,37 @@ export const promptStore = createStore<PromptState>(
     loadImageHint: (_, chatId: string) => {
       if (!chatId) return { imageHint: '' }
 
-      const id = `image-hint-${chatId}`
-      const prev = storage.localGetItem(id)
+      const prev = getChatImageHint(chatId)
       if (prev) {
         return { imageHint: prev }
       }
 
+      // Backwards compat
       const fallback = storage.localGetItem(KEYS.LAST_IMAGE_HINT)
-      if (fallback) {
-        storage.localSetItem(id, fallback)
-        return { imageHint: fallback }
+      if (!fallback) {
+        return { imageHint: '' }
       }
 
-      return { imageHint: '' }
+      const id = `image-hint-${chatId}`
+      storage.localSetItem(id, fallback)
+      return { imageHint: fallback }
     },
   }
 })
 
 function hintKey(chatId: string) {
   return `${KEYS.LAST_HINT}_${chatId}`
+}
+
+export function getChatImageHint(chatId?: string) {
+  if (!chatId) {
+    const { lastChatId } = getStore('chat').getState()
+    chatId = lastChatId
+  }
+
+  if (!chatId) return ''
+
+  const id = `image-hint-${chatId}`
+  const prev = storage.localGetItem(id)
+  return prev || ''
 }
