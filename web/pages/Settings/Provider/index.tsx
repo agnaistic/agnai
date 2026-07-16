@@ -296,6 +296,7 @@ const EditConnectionDetails: Field<{ show: boolean; close: () => void }> = (prop
       'featherless',
       'arli',
       'gemini',
+      'orcarouter',
     ]
 
     const options = formats.map((id) => ({ label: FORMAT_LABEL[id], value: id as string }))

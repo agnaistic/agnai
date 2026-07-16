@@ -147,7 +147,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const isChatFormat =
     gen.thirdPartyFormat === 'openai-chat' ||
     gen.thirdPartyFormat == 'openai-chatv2' ||
-    gen.thirdPartyFormat === 'lm-studio'
+    gen.thirdPartyFormat === 'lm-studio' ||
+    gen.thirdPartyFormat === 'orcarouter'
   const useChat = (isThirdParty && isChatFormat) || gen.service === 'openai'
 
   if (useChat) {
