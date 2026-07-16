@@ -204,6 +204,13 @@ export function getOaiCompatibleUrl(
   preset: Partial<AppSchema.GenSettings>,
   isThirdParty?: boolean
 ) {
+  // OrcaRouter is an OpenAI-compatible gateway with a fixed endpoint. When its
+  // format is selected without a custom URL, default to the OrcaRouter API so
+  // users only need to provide their API key.
+  if (isThirdParty && preset.thirdPartyFormat === 'orcarouter' && !preset.thirdPartyUrl) {
+    return { url: 'https://api.orcarouter.ai/v1', changed: true }
+  }
+
   if (isThirdParty && preset.thirdPartyUrl) {
     if (!preset.providerId && preset.thirdPartyUrlNoSuffix) {
       return { url: preset.thirdPartyUrl, changed: true }

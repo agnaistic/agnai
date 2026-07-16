@@ -150,6 +150,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   gemini: 'kobold',
   arli: 'kobold',
   'lm-studio': 'openai',
+  orcarouter: 'openai',
 }
 
 export const BASIC_PROMPT_ONLY: { [svc in ThirdPartyFormat]?: boolean } = {
@@ -176,6 +177,7 @@ export const THIRDPARTY_FORMATS = [
   'arli',
   'gemini',
   'lm-studio',
+  'orcarouter',
 ] as const
 
 export const AI_ADAPTERS = [
@@ -382,6 +384,7 @@ export const FORMAT_LABEL: { [key in ThirdPartyFormat]: string } = {
   tabby: 'TabbyAPI',
   vllm: 'vLLM',
   'lm-studio': 'LM Studio',
+  orcarouter: 'OrcaRouter',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
