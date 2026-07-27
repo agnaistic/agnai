@@ -674,18 +674,15 @@ function getSceneClockPrompt(clock?: AppSchema.SceneClock) {
   const date = clock.date?.trim()
   const time = clock.time?.trim()
   const current = [date, time].filter(Boolean).join(' ')
-  if (
-    !current &&
-    !clock.dayOfWeek?.trim() &&
-    !clock.calendarName?.trim() &&
-    !clock.notes?.trim()
-  )
+  if (!current && !clock.dayOfWeek?.trim() && !clock.calendarName?.trim() && !clock.notes?.trim())
     return ''
 
   const lines = ['[Scene Clock]']
   if (current) {
     lines.push(`Current in-scene date and time: ${current}.`)
-    lines.push('Treat this as the authoritative current RP scene time unless the user changes it.')
+    lines.push(
+      'Use this as the current in-scene time, not a fixed value. Advance or change it whenever the narrative or user indicates that time passes.'
+    )
   }
   if (clock.dayOfWeek?.trim()) {
     lines.push(`Day of week: ${clock.dayOfWeek.trim()}.`)
@@ -698,9 +695,9 @@ function getSceneClockPrompt(clock?: AppSchema.SceneClock) {
   }
   if (clock.allowAssistantUpdates) {
     lines.push(
-      'When the in-scene date or time changes, append exactly one hidden control tag at the end of your response:',
+      'When your response will change the in-scene date or time, begin the response with exactly one hidden control tag before any dialogue:',
       '<scene_clock_update>{"date":"NEW_DATE","time":"NEW_TIME"}</scene_clock_update>',
-      'The opening and closing scene_clock_update tags are mandatory. Use valid JSON inside them. You may include date, time, dayOfWeek, calendarName, or notes; omit unchanged fields. Do not mention this tag in the dialogue.'
+      'The opening and closing scene_clock_update tags are mandatory. Use valid JSON inside them. You may include date, time, dayOfWeek, calendarName, or notes; omit unchanged fields. Place the tag at the very start, never at the end, and do not mention it in the dialogue.'
     )
   }
   lines.push('[/Scene Clock]')

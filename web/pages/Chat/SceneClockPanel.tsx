@@ -21,17 +21,22 @@ const timeFormats: Array<{ value: AppSchema.SceneClockTimeFormat; label: string 
 ]
 
 export const SceneClockPanel: Component<{ chat?: AppSchema.Chat }> = (props) => {
-  const [clock, setClock] = createStore(getInitSceneClock(props.chat?.sceneClock))
+  const chats = chatStore((state) => ({
+    chat: props.chat?._id ? state.details[props.chat._id]?.chat : undefined,
+  }))
+  const activeChat = () => chats.chat || props.chat
+  const [clock, setClock] = createStore(getInitSceneClock(activeChat()?.sceneClock))
 
   createEffect(() => {
-    setClock(getInitSceneClock(props.chat?.sceneClock))
+    setClock(getInitSceneClock(activeChat()?.sceneClock))
   })
 
   const save = () => {
-    if (!props.chat) return
+    const chat = activeChat()
+    if (!chat) return
 
     chatStore.editChat(
-      props.chat._id,
+      chat._id,
       {
         sceneClock: {
           ...clock,
@@ -49,7 +54,7 @@ export const SceneClockPanel: Component<{ chat?: AppSchema.Chat }> = (props) => 
   }
 
   return (
-    <Show when={props.chat?.sceneClock?.enabled}>
+    <Show when={activeChat()?.sceneClock?.enabled}>
       <section class="bg-900 border-700 flex flex-col gap-2 rounded-md border p-2 text-sm">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 font-semibold">
