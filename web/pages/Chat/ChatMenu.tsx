@@ -25,6 +25,7 @@ import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
 import { usePresetContext } from '/web/store/preset-context'
 import { getStore } from '/web/store/create'
+import { SceneClockPanel } from './SceneClockPanel'
 
 type NavProps = {
   ctx: ChatContext
@@ -188,6 +189,8 @@ const ChatNav: Component<NavProps> = (props) => {
 
         <NotificationBell size={size} />
       </div>
+
+      <SceneClockPanel chat={props.ctx.chat} />
     </>
   )
 }

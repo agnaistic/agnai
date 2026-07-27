@@ -135,6 +135,7 @@ MainCharacter "main-character" = ("mainchar"i / "mainbot"i) { return "main-char"
 Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
+SceneClock "scene-clock" = ("scene_clock"i / "sceneclock"i) { return "scene_clock" }
 Impersonate "impersonating" = ("impersonate"i / "impersonating"i / "impersonality"i) { return "impersonating" }
 Persona "personality" = ("personality"i / "persona"i) { return "personality" }
 AllPersona "all_personalities" = ("all_personas"i / "all_personalities"i) { return "all_personalities" }
@@ -173,6 +174,7 @@ Interp "interp"
   / UserEmbed
   / User
   / Scenario
+  / SceneClock
   / Persona
   / Impersonate
   / AllPersona

@@ -15,9 +15,10 @@ export function promptOrderToTemplate(
 ) {
   const parts: string[] = []
   const preamble = getOrderHolder(format, 'preamble')
+  const normalized = withSceneClock(order)
   if (preamble) parts.push(preamble)
 
-  for (const item of order) {
+  for (const item of normalized) {
     if (!item.enabled) continue
 
     const text = getOrderHolder(format, item.placeholder)
@@ -36,7 +37,7 @@ export function promptOrderToTemplate(
 }
 
 export function promptOrderToSections(opts: OrderOptions) {
-  const order = (opts.order || SIMPLE_ORDER).filter(
+  const order = withSceneClock(opts.order || SIMPLE_ORDER).filter(
     (o) =>
       o.placeholder !== 'system_prompt' &&
       o.placeholder !== 'ujb' &&
@@ -75,9 +76,23 @@ function getOrderHolder(format: string, holder: string) {
   return formatHolders[format]?.[holder] || formatHolders.Universal[holder] || ''
 }
 
+function withSceneClock(order: NonNullable<AppSchema.GenSettings['promptOrder']>) {
+  if (order.some((item) => item.placeholder === 'scene_clock')) return order
+
+  const index = order.findIndex((item) => item.placeholder === 'scenario')
+  const sceneClock = { placeholder: 'scene_clock', enabled: true }
+
+  if (index === -1) {
+    return [sceneClock, ...order]
+  }
+
+  return order.slice(0, index + 1).concat(sceneClock, order.slice(index + 1))
+}
+
 export const SIMPLE_ORDER: NonNullable<AppSchema.GenSettings['promptOrder']> = [
   'system_prompt',
   'scenario',
+  'scene_clock',
   'personality',
   'chat_embed',
   'memory',
@@ -89,6 +104,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
   Universal: {
     system_prompt: neat`<system>{{#if system_prompt}}{{value}}{{#else}}${defaultSystemPrompt}{{/else}}{{/if}}</system>`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
+    scene_clock: `{{scene_clock}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,
     impersonating: neat`{{#if impersonating}}{{user}}'s personality:\n{{impersonating}}\n{{/if}}`,
@@ -145,6 +161,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     system_prompt: neat`<|im_start|>system
     {{#if system_prompt}}{{value}}<|im_end|>{{#else}}${defaultSystemPrompt}<|im_end|>{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
+    scene_clock: `{{scene_clock}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}{{char}}'s personality:\n{{personality}}\n{{/if}}`,
     impersonating: neat`{{#if impersonating}}{{user}}'s personality:\n{{impersonating}}\n{{/if}}`,
@@ -162,6 +179,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
     system_prompt: neat`<|begin_of_text|><|start_header_id|>system
     {{#if system_prompt}}{{value}}<|eot_id|>{{#else}}${defaultSystemPrompt}<|eot_id|>{{/else}}{{/if}}`,
     scenario: neat`{{#if scenario}}The scenario of the conversation:\n{{scenario}}\n{{/if}}`,
+    scene_clock: `{{scene_clock}}`,
     memory: neat`{{#if memory}}"{{char}}'s" memories:\n{{memory}}\n{{/if}}`,
     personality: neat`{{#if personality}}"{{char}}'s" personality:\n{{personality}}\n{{/if}}`,
     impersonating: neat`{{#if impersonating}}"{{user}}'s" personality:\n{{impersonating}}\n{{/if}}`,
@@ -178,6 +196,7 @@ export const formatHolders: Record<string, Record<string, string>> = {
   'Pyg/Simple': {
     history: `Start of the conversation:\n\n{{history}}`,
     scenario: `{{#if scenario}}Scenario: {{scenario}}{{/if}}`,
+    scene_clock: `{{scene_clock}}`,
   },
 }
 

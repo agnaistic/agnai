@@ -43,6 +43,7 @@ import { debug } from '/common/debug'
 import { formatJsonSchemaVars, prepareJsonSchema } from '/common/guidance/json-schema'
 import { getJsonSchema } from '/web/shared/util'
 import { ResponseSchema } from '/common/types/library'
+import { parseSceneClockUpdate } from '/common/scene-clock'
 
 iconv.enableStreamingAPI(require('stream'))
 
@@ -438,7 +439,29 @@ async function handlePostStreamResponse(input: {
   json?: JsonOutput
   jsonCall?: boolean
 }) {
-  const { req, opts, response, json, meta } = input
+  const { req, opts, json, meta } = input
+  let { response } = input
+
+  const sceneClock = req.request.chat.sceneClock
+  if (sceneClock?.enabled && sceneClock.allowAssistantUpdates) {
+    const parsed = parseSceneClockUpdate(response)
+    response = parsed.text
+
+    if (parsed.update) {
+      await getStore('chat').editChat(
+        req.request.chat._id,
+        {
+          sceneClock: {
+            ...sceneClock,
+            ...parsed.update,
+            lastUpdatedBy: 'assistant',
+            lastUpdatedAt: new Date().toISOString(),
+          },
+        },
+        { quiet: true }
+      )
+    }
+  }
 
   if (opts.signal.signal.aborted) {
     getStore('responses').setState({
