@@ -845,6 +845,21 @@ const MessageOptions: Component<{
           ),
       },
 
+      camera: {
+        key: 'camera',
+        class: '',
+        label: 'Attach from Camera',
+        outer: { outer: props.ui.msgOptsInline.attach?.outer, pos: 0 },
+        icon: ImageUpIcon,
+        show: !!props.canUseAttachments,
+        onClick: () =>
+          pageStore.openCapture(
+            
+            (res) => msgStore.addAttachment(props.msg._id, { t})
+          ),
+      },
+
+
       visible: {
         key: 'visible',
         class: '',
