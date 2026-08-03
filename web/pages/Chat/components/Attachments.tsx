@@ -1,10 +1,11 @@
-import { Component, createEffect, createMemo, For } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { ChatContext } from '/web/store/context'
 import { AppSchema } from '/common/types'
 import { imageStore, msgStore, pageStore, toastStore } from '/web/store'
 import { CircleX } from 'lucide-solid'
 import Modal from '/web/shared/Modal'
 import Button from '/web/shared/Button'
+import { round } from '/common/util'
 
 export const MessageAttachments: Component<{ ctx: ChatContext; msg: AppSchema.ChatMessage }> = (
   props
@@ -75,8 +76,12 @@ export const MessageAttachments: Component<{ ctx: ChatContext; msg: AppSchema.Ch
 export const CaptureModal = () => {
   const page = pageStore()
 
+  const [countdown, setCountdown] = createSignal(0)
+  const [time, setTime] = createSignal(0)
+
   let videoRef: HTMLVideoElement | undefined
   let canvasRef: HTMLCanvasElement | undefined
+  let interval: NodeJS.Timeout
 
   const dims = { w: 1280, h: 720 }
 
@@ -85,7 +90,30 @@ export const CaptureModal = () => {
     if (!window.navigator.mediaDevices.getUserMedia) return false
   })
 
+  const captureTimer = (secs = 5) => {
+    setCountdown(Date.now() + secs * 1000)
+    if (interval) clearInterval(interval)
+
+    interval = setInterval(() => {
+      if (countdown() < Date.now()) {
+        clearInterval(interval)
+        capture()
+        return
+      }
+
+      const left = (Date.now() - countdown()) / 1000
+      setTime(round(left, 1))
+    }, 1000 / 60)
+  }
+
+  onCleanup(() => {
+    if (!interval) return
+    clearInterval(interval)
+  })
+
   const capture = () => {
+    setCountdown(0)
+    setTime(0)
     if (!videoRef || !canvasRef) return
     canvasRef.width = dims.w
     canvasRef.height = dims.h
@@ -130,7 +158,16 @@ export const CaptureModal = () => {
       show={!!page.capture?.show}
       close={() => pageStore.closeCapture()}
       maxWidth="half"
-      footer={<Button onClick={capture}>Capture</Button>}
+      footer={
+        <>
+          <Button onClick={() => captureTimer()} disabled={countdown() > 0}>
+            <Show when={countdown() > 0} fallback={'Capture in 5'}>
+              Capturing in {time().toFixed(1)}...
+            </Show>
+          </Button>
+          <Button onClick={capture}>Capture</Button>
+        </>
+      }
     >
       <video ref={videoRef} class="max-w max-h" autoplay></video>
       <canvas ref={canvasRef} class="hidden"></canvas>

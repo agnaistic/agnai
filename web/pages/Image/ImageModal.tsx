@@ -424,7 +424,7 @@ const PromptSettings: Component<{
   const gen = createCaptionInferenceSignal({ onTick: onPromptTick })
 
   const fullImagePrompt = createMemo(() => {
-    const parts = [props.settings?.prefix, props.state.prompt, props.settings?.suffix]
+    const parts = [props.state.prompt]
       .filter((c) => !!c?.trim())
       .join(', ')
     const cleaned = cleanPrompt(parts)

@@ -91,7 +91,30 @@ export type ImagePromptOpts = {
 
 export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messageId'>) {
   const imgEnts = getImagePromptEntities()
-  const helper = inferenceSignal({ preset: imgEnts.preset, onTick: opts.onTick })
+  const task = 'Image Caption'
+
+  const onTick: TickHandler = (response, state) => {
+    switch (state) {
+      case 'done':
+      case 'partial': {
+        if (!response.startsWith(task + ':')) {
+          opts.onTick?.(response, state)
+          return
+        }
+
+        const parsed = response.slice(task.length + 1).trim()
+        opts.onTick?.(parsed, state)
+        return
+      }
+
+      default: {
+        opts.onTick?.(response, state)
+        return
+      }
+    }
+  }
+
+  const helper = inferenceSignal({ preset: imgEnts.preset, onTick })
 
   const generate = async (messageId: string, signal?: AbortController) => {
     const ents = getImagePromptEntities(messageId)
@@ -101,7 +124,7 @@ export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messag
       focus = getChatImageHint()
     }
 
-    const template = getSummaryTemplate({ task: imgEnts.summary, generate: 'Image Caption', focus })
+    const template = getSummaryTemplate({ task: ents.summary, generate: task, focus })
 
     console.log(
       'Using',
@@ -113,7 +136,7 @@ export function createCaptionInferenceSignal(opts: Omit<ImagePromptOpts, 'messag
 
     const stream = await helper.send({
       prompt: template,
-      preset: imgEnts.preset,
+      preset: ents.preset,
       signal,
     })
 
@@ -431,6 +454,7 @@ subscribe('image-failed', { requestId: 'string', error: 'string' }, (body) => {
 })
 
 function getSummaryTemplate(opts: { task: string | undefined; focus?: string; generate?: string }) {
+  const generate = opts.generate || 'Chat Summary'
   let prompt =
     opts.task ||
     neat`Write an image caption of the current scene using physical descriptions without names. Respond using comma-separate BOORU TAGS.`
@@ -439,7 +463,6 @@ function getSummaryTemplate(opts: { task: string | undefined; focus?: string; ge
     prompt += `\nSpecifically focus on: ${opts.focus}`
   }
 
-  const generate = opts.generate || 'Chat Summary'
   const prefix = ['a', 'e', 'i', 'o', 'u'].includes(generate[0].toLowerCase()) ? 'an' : 'a'
 
   return neat`

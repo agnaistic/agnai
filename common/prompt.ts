@@ -5,7 +5,7 @@ import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
 import { getFallbackPreset } from './presets'
-import { parseTemplate } from './template-parser'
+import { parseInterps, parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence, neat } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate, SIMPLE_ORDER } from './prompt-order'
@@ -515,7 +515,7 @@ export async function buildPromptPlaceholders(
     const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
     const replace = (value: string, botName?: string) =>
-      placeholderReplace(value, botName || opts.replyAs.name, sender)
+      parseInterps(placeholderReplace(value, botName || opts.replyAs.name, sender), opts)
 
     const parts: PromptPlaceholders = {
       systemPrompt: opts.settings?.systemPrompt || '',
@@ -532,6 +532,8 @@ export async function buildPromptPlaceholders(
       userEmbeds: [],
       props: opts.props,
     }
+
+    parts.persona = parseInterps(parts.persona, opts)
 
     const personalities = new Set([replyAs._id])
 

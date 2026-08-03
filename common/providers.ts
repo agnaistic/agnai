@@ -114,6 +114,11 @@ export const KNOWN_PROVIDERS: Record<string, ProviderDefinition> = {
     url: `https://integrate.api.nvidia.com/v1`,
     formats: [{ type: 'format', value: 'openai-chatv2' }],
   },
+  orcarouter: {
+    name: 'OrcaRouter',
+    url: 'https://api.orcarouter.ai/v1',
+    formats: [{ type: 'format', value: 'openai-chatv2' }],
+  },
 }
 
 export const KNOWN_SELF_HOST: Record<string, ProviderDefinition> = {

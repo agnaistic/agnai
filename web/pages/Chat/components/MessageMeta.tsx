@@ -224,6 +224,7 @@ export const MessageImagePrompt: Component<{
 
     responseStore.generateImagePrompt({
       chatId: ctx.chat?._id!,
+      messageId: props.msg._id,
       question: persist.imageHint,
       onSummary: (summary) => receivePrompt(summary),
       onTick: (res, state) => (state === 'partial' ? setPrompt(res) : null),

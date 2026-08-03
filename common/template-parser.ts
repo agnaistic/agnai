@@ -204,6 +204,21 @@ type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParsedTemplate = Awaited<ReturnType<typeof parseTemplate>>
 
+export function parseInterps(
+  template: string,
+  opts: Pick<TemplateOpts, 'impersonate' | 'char' | 'replyAs' | 'chat' | 'characters'> = {}
+) {
+  const flags: InternalState = { is_final: true, jsonAliases: {}, messages: [] }
+  const ast = parser.parse(template, {}) as PNode[]
+  const result = render(template, opts, flags, ast)
+    .replace(/\r\n/g, '\n')
+    .replace(/\n\n+/g, '\n\n')
+    .trim()
+  flags.is_final = false
+
+  return result
+}
+
 /**
  * This function also returns inserts because Chat and Claude discard the
  * parsed string and use the inserts for their own prompt builders

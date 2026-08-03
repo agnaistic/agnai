@@ -347,7 +347,7 @@ export function slugify(str: string) {
 
 export function cleanPrompt(prompt: string) {
   const next = prompt
-    .replace(/[^0-9a-z_\-,\s\.\(\)\[\]]/gi, '')
+    .replace(/[^0-9a-z_\-,\s\.\(\)\[\]]\:/gi, '')
     .trim()
     .split('\n')
     .map((line) => line.trim())

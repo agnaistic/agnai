@@ -165,7 +165,16 @@ async function initialVerifyPatron(userId: string, code: string) {
 
   const existing = await store.users.findByPatreonUserId(patron.user.id)
   if (existing && existing._id !== userId) {
-    throw new StatusError(`This Patreon account is already attributed to another user`, 400)
+    sendOne(userId, {
+      type: 'notification',
+      level: 'warn',
+      message:
+        'Your patreon account was already assigned to an account. It has been unlinked from that account.',
+      ttl: 20,
+    })
+
+    await store.users.unlinkPatreonAccount(existing._id, `attributing to user ${userId}`)
+    // throw new StatusError(`This Patreon account is already attributed to another user`, 400)
   }
 
   const next = await store.users.updateUser(userId, {

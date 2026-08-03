@@ -20,6 +20,7 @@ import {
   EyeOff,
   BracesIcon,
   ImageUpIcon,
+  ScanFaceIcon,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -834,10 +835,7 @@ const MessageOptions: Component<{
         label: 'Attach',
         outer: { outer: props.ui.msgOptsInline.attach?.outer, pos: 0 },
         icon: ImageUpIcon,
-        show:
-          !!props.canUseAttachments &&
-          (props.msg.userId === props.ctx.user?._id ||
-            props.ctx.impersonate?._id === props.msg.characterId),
+        show: !!props.canUseAttachments,
         onClick: () =>
           pageStore.openAttach(
             { multiple: true, accept: 'image/jpg,image/png,image/jpeg' },
@@ -849,16 +847,14 @@ const MessageOptions: Component<{
         key: 'camera',
         class: '',
         label: 'Attach from Camera',
-        outer: { outer: props.ui.msgOptsInline.attach?.outer, pos: 0 },
-        icon: ImageUpIcon,
+        outer: { outer: props.ui.msgOptsInline.camera?.outer, pos: 0 },
+        icon: ScanFaceIcon,
         show: !!props.canUseAttachments,
         onClick: () =>
-          pageStore.openCapture(
-            
-            (res) => msgStore.addAttachment(props.msg._id, { t})
+          pageStore.openCapture((res) =>
+            msgStore.addAttachment(props.msg._id, [{ type: 'image', image: res.image }])
           ),
       },
-
 
       visible: {
         key: 'visible',
@@ -1294,16 +1290,20 @@ function getMessageContent(
 ) {
   const isRetry = props.retrying?._id === msg._id
   const isPartial = msg._id === 'partial-response'
+  // const bot = msg.characterId ? ctx.allBots[msg.characterId] : null
 
   if (isRetry || isPartial) {
     const { thoughts, content } = extractReasoning(props.partial ? props.partial : msg.msg, {
       tags: preset?.reasoning,
       display: ctx.ui.displayReasoning,
     })
+
+    const message = removeAssistantName(ctx, msg, content)
+
     if (props.partial) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, preset, content, false, 'partial'),
+        message: renderMessage(ctx, preset, message, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1313,7 +1313,7 @@ function getMessageContent(
     if (isPartial && msg.msg) {
       return {
         type: 'partial' as const,
-        message: renderMessage(ctx, preset, content, false, 'partial'),
+        message: renderMessage(ctx, preset, message, false, 'partial'),
         thoughts,
         class: 'streaming-markdown',
         generating: true,
@@ -1334,7 +1334,7 @@ function getMessageContent(
     display: ctx.ui.displayReasoning,
   })
 
-  let message = content
+  let message = removeAssistantName(ctx, msg, content)
 
   if (props.last && props.swipe) message = props.swipe
   if (msg.event && !props.showHiddenEvents) {
@@ -1434,4 +1434,17 @@ async function attachImages(msgId: string, files: FileInputResult[]) {
   }
 
   msgStore.addAttachment(msgId, add)
+}
+
+function removeAssistantName(ctx: ChatContext, msg: AppSchema.ChatMessage, message?: string) {
+  if (!msg.characterId) return msg.msg
+
+  message ??= msg.msg
+
+  const bot = ctx.allBots[msg.characterId]
+  if (!bot) return message
+
+  if (!message.startsWith(`${bot.name}:`)) return message
+
+  return message.slice(bot.name.length + 1)
 }
