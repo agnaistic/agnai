@@ -558,7 +558,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const detail = details[msg.chatId]
       if (!detail) return
 
-      const entities = await getPromptEntities()
+      const entities = getPromptEntities()
 
       const encoder = await getEncoder()
       const replyAs = detail.replyAs?.startsWith('temp-')

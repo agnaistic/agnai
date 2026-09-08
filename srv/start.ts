@@ -43,7 +43,7 @@ export async function start() {
   server.listen(config.port, config.host, async () => {
     logger.info(
       { port: config.port, version: pkg.version },
-      `Server started http://127.0.0.1:${config.port} (Listening: ${config.host})`
+      `Server started http://127.0.0.1:${config.port} (Listening: ${config.host}) | Node.js ${process.version}`
     )
 
     if (config.publicTunnel) {

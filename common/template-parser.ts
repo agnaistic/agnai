@@ -748,7 +748,7 @@ function renderCondition(
   opts: TemplateOpts,
   flags: InternalState
 ) {
-  if (opts.repeatable) return ''
+  // if (opts.repeatable) return ''
 
   if (node.value === 'example_dialogue') {
     flags.sample_chat = true

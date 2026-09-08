@@ -11,7 +11,7 @@ const baseUrl = `https://image.novelai.net/ai`
 
 const defaultSettings: NovelSettings = {
   type: 'novel',
-  model: NOVEL_IMAGE_MODEL.Anime_v4_Curated,
+  model: NOVEL_IMAGE_MODEL.Anime_v5_Full,
   sampler: NOVEL_SAMPLER['DPM++ 2M'],
   ucPreset: '0',
   qualityTags: true,

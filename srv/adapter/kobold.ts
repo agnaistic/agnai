@@ -401,12 +401,21 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
     return
   }
 
-  if ('choices' in resp.body) {
-    const first = resp.body.choices[0]
+  let body = resp.body
+  if (typeof body === 'string') {
+    try {
+      const json = body.slice(body.indexOf('{'))
+      body = JSON.parse(json)
+    } catch (ex) {}
+  }
+
+  const choices = body?.choices || body?.data?.choices
+  if (choices?.length) {
+    const first = choices[0]
     const text = first.message ? first.message.content : first.text
 
     const gens: string[] = []
-    for (const choice of resp.body.choices) {
+    for (const choice of choices) {
       if (!choice.index || choice.index === 0) continue
       const text = choice.message ? choice.message.content : choice.text
       gens.push(text)
@@ -420,7 +429,7 @@ const fullCompletion: CompletionGenerator<any> = async function* (opts) {
     return
   }
 
-  const text = resp.body.results?.[0]?.text as string
+  const text = body.results?.[0]?.text as string
 
   if (text) {
     yield { tokens: text }

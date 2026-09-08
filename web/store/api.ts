@@ -205,7 +205,7 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
   const resp = needle.post(joinUrl(opts.host, opts.path), JSON.stringify(opts.body), {
     parse: false,
     signal: opts.signal?.signal,
-
+    open_timeout: 0,
     headers: {
       ...opts.headers,
       Accept: 'text/event-stream',

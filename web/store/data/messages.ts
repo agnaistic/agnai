@@ -66,7 +66,7 @@ export async function createMessage(opts: {
 
   dryrun?: boolean
 }) {
-  const props = await getPromptEntities()
+  const props = getPromptEntities()
   const messageId = opts.messageId || v4()
 
   const text = await parseTemplate(opts.text, {

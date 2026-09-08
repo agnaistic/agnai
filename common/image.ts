@@ -14,6 +14,8 @@ export type ImageAdapter = (typeof IMAGE_ADAPTERS)[number]
 export type NovelImageModel = (typeof NOVEL_IMAGE_MODEL)[keyof typeof NOVEL_IMAGE_MODEL]
 
 export const NOVEL_IMAGE_MODEL = {
+  Anime_v5_Full: 'nai-diffusion-5-full',
+  Anime_v5_Curated: 'nai-diffusion-5-curated',
   Anime_v45_Full: 'nai-diffusion-4-5-full',
   Anime_v45_Curated: 'nai-diffusion-4-5-curated',
   Anime_v4_Curated: 'nai-diffusion-4-curated-preview',

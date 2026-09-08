@@ -36,7 +36,7 @@ export function getInferencePreset(
 
 export function getImagePromptEntities(messageId?: string) {
   const entities = getPromptEntities({ messageId })
-  const source = entities.chat.imageSource || 'settings'
+  const source = messageId && entities.chat.imageSource ? entities.chat.imageSource : 'settings'
 
   let summary = ''
   let presetId = ''
@@ -204,11 +204,12 @@ function getChatAttachments(
 
 function getAuthedPromptEntities(opts?: { messageId?: string }) {
   const { details, chatProfiles: members, lastChatId } = getStore('chat').getState()
-  const active = details[lastChatId]
-  if (!active) return
 
   const { profile, user } = getStore('user').getState()
   if (!profile || !user) return
+
+  const active = details[lastChatId]
+  if (!active) return
 
   const chat = active.chat
   const char = active.char

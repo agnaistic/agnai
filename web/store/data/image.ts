@@ -217,7 +217,7 @@ export async function generateImage(
   opts: Require<GenerateOpts, 'messageId'>,
   callbacks?: { onSummary?: (summary: string) => void; onTick?: TickHandler }
 ) {
-  const entities = await getPromptEntities({ messageId: opts.messageId })
+  const entities = getPromptEntities({ messageId: opts.messageId })
   const result = opts.prompt
     ? await localApi.result({ response: opts.prompt })
     : await generateImagePrompt({

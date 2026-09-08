@@ -46,6 +46,7 @@ import { ResetPasswordPage } from './pages/Login/ResetPassword'
 import { api } from './store/api'
 import { GlobalFileInput } from './shared/GlobalFileInput'
 import { pageStore } from './store'
+import { PresetModal } from './shared/PresetSelect'
 
 const App: Component = () => {
   const state = userStore((s) => ({ user: s.user, loggedIn: s.loggedIn }))
@@ -161,6 +162,11 @@ const Layout: Component<{ children?: any }> = (props) => {
 
   const bgStyles = useCharacterBg('layout')
 
+  const alignment = createMemo(() => {
+    if (!state.ui.contentAlign || state.ui.contentAlign === 'center') return 'mx-auto'
+    return 'sm:ml-2'
+  })
+
   return (
     <ContextProvider>
       <style>{css}</style>
@@ -180,11 +186,11 @@ const Layout: Component<{ children?: any }> = (props) => {
             style={{ ...bgStyles(), 'scrollbar-gutter': 'stable' }}
           >
             <div
-              class={`h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'}`}
+              class={`h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} ${alignment()}`}
               classList={{
                 'content-background': !isChat(),
-                'mx-auto': !state.ui.contentAlign || state.ui.contentAlign === 'center',
-                'sm:ml-2': state.ui.contentAlign === 'left',
+                // 'mx-auto': !state.ui.contentAlign || state.ui.contentAlign !== 'left',
+                // 'sm:ml-2': state.ui.contentAlign === 'left',
               }}
             >
               <Switch>
@@ -248,6 +254,7 @@ const Layout: Component<{ children?: any }> = (props) => {
       <ImageModal />
       <ImageSettingsModal />
       <SettingsModal />
+      <PresetModal />
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-20 sm:hidden"
         classList={{ hidden: !page.showMenu }}

@@ -47,7 +47,7 @@ export const TierCard: Component<{
     <SolidCard
       border
       class={`flex w-full flex-col justify-between gap-0.5 sm:w-1/2 ${props.class || ''}`}
-      title={props.tier.name}
+      title={props.tier?.name || ''}
       size="sm"
     >
       <div>

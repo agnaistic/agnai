@@ -421,7 +421,7 @@ const PromptSettings: Component<{
     if (state === 'done' || state === 'error') props.update('promptLoading', false)
   }
 
-  const gen = createCaptionInferenceSignal({ onTick: onPromptTick })
+  const gen = props.messageId ? createCaptionInferenceSignal({ onTick: onPromptTick }) : null
 
   const fullImagePrompt = createMemo(() => {
     const parts = [props.state.prompt]
@@ -439,16 +439,6 @@ const PromptSettings: Component<{
     }
 
     await gen.generate(props.messageId)
-    // await generateImagePrompt({ messageId: props.messageId, onTick: onPromptTick, question: persist.imageHint })
-    // const ents = await getImagePromptEntities(props.messageId)
-
-    // const template = imageApi.getSummaryTemplate({
-    //   task: ents.summary,
-    //   generate: 'Image Caption',
-    //   focus: persist.imageHint,
-    // })
-
-    // await gen.send({ prompt: template, preset: ents.preset })
   }
 
   const onCleanPrompt = () => {
@@ -471,6 +461,7 @@ const PromptSettings: Component<{
   })
 
   onMount(() => {
+    if (!props.messageId) return
     promptStore.loadImageHint(msgs.message.msg.chatId)
   })
 
@@ -507,10 +498,10 @@ const PromptSettings: Component<{
           </Copy>
 
           <div class="flex-end flex gap-2">
-            <Show when={props.messageId}>
+            <Show when={!!gen && props.messageId}>
               <Button size="sm" onClick={generatePrompt}>
                 <Show
-                  when={gen.state.status !== 'loading'}
+                  when={gen?.state.status !== 'loading'}
                   fallback={
                     <>
                       <RelativeSpinner size={20} />

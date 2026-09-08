@@ -15,8 +15,8 @@ import TextInput from './TextInput'
 import Button from './Button'
 import Modal, { RootModal } from './Modal'
 import { FormLabel } from './FormLabel'
-import { exportPreset, presetStore, toastStore } from '../store'
-import { DownloadIcon, PlusIcon } from 'lucide-solid'
+import { exportPreset, pageStore, presetStore, toastStore } from '../store'
+import { DownloadIcon, PencilIcon, PlusIcon } from 'lucide-solid'
 import { AppSchema } from '/common/types'
 import { createStore } from 'solid-js/store'
 import { getStore } from '../store/create'
@@ -24,6 +24,50 @@ import { getProviderConnection } from '/common/providers'
 import Select from './Select'
 import { ManageProvider } from '../pages/Settings/Provider/Manage'
 import { defaultPresets } from '/common/presets'
+import { ModeGenSettings } from './Mode/ModeGenSettings'
+import { usePresetContext } from '../store/preset-context'
+
+export const PresetModal: Component = () => {
+  const state = pageStore((s) => ({ preset: s.preset }))
+  const [footer, setFooter] = createSignal<any>()
+  const [preset, presetSetters] = usePresetContext({ anonymous: true })
+
+  createEffect(
+    on(
+      () => state.preset?.presetId,
+      () => {
+        if (!state.preset?.presetId) {
+          presetSetters.clear()
+          return
+        }
+
+        presetSetters.load(state.preset.presetId)
+      }
+    )
+  )
+
+  return (
+    <Show when={!!state.preset}>
+      <Modal
+        show
+        title={state.preset?.title}
+        close={() => pageStore.closePreset()}
+        maxWidth="half"
+        footer={footer()}
+      >
+        <ModeGenSettings
+          page={state.preset?.page || ''}
+          close={() => pageStore.closePreset()}
+          preset={preset.current}
+          setters={presetSetters}
+          presetId={state.preset?.presetId || ''}
+          onPresetChanged={() => pageStore.closePreset()}
+          footer={setFooter}
+        />
+      </Modal>
+    </Show>
+  )
+}
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -34,7 +78,9 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
   children?: any
+  downloadable?: boolean
   noneOption?: { label: string; value: string }
+  editable?: { title: string }
 }> = (props) => {
   const [filter, setFilter] = createSignal('')
   const [newPreset, setNewPreset] = createSignal(false)
@@ -86,39 +132,62 @@ export const PresetSelect: Component<{
 
   return (
     <>
-      <div class="flex flex-col text-sm">
-        <Switch>
-          <Match when={props.label && props.helperText}>
-            <FormLabel label={props.label} helperText={props.helperText} />
-          </Match>
+      <div class="flex flex-col">
+        <Show when={!!props.label || !!props.helperText}>
+          <div class="flex text-sm">
+            <Switch>
+              <Match when={props.label && props.helperText}>
+                <FormLabel label={props.label} helperText={props.helperText} />
+              </Match>
 
-          <Match when={props.label}>
-            <div class="font-bold">{props.label || ''}</div>
-          </Match>
+              <Match when={props.label}>
+                <div class="font-bold">{props.label || ''}</div>
+              </Match>
 
-          <Match when={props.helperText}>
-            <div class="text-500 text-sm">{props.helperText || ''}</div>
-          </Match>
-        </Switch>
-
-        <Show when={props.fieldName}>
-          <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
+              <Match when={props.helperText}>
+                <div class="text-500 text-sm">{props.helperText || ''}</div>
+              </Match>
+            </Switch>
+          </div>
         </Show>
 
-        <div class="flex w-full items-center gap-2">
-          <Button onClick={() => setShowSelectModal(true)} class="w-fit !py-0">
-            {selectedLabel()}
-          </Button>
+        <div class="flex gap-2 text-sm">
+          <Show when={props.fieldName}>
+            <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
+          </Show>
 
-          <Button onClick={downloadPreset} disabled={!props.selected}>
-            <DownloadIcon size={20} />
-          </Button>
+          <div class="flex w-full items-center gap-2">
+            <Button onClick={() => setShowSelectModal(true)} class="w-fit !py-0">
+              {selectedLabel()}
+            </Button>
 
-          <Show when={props.children}>{props.children}</Show>
+            <Show when={props.downloadable !== false}>
+              <Button onClick={downloadPreset} disabled={!props.selected}>
+                <DownloadIcon size={20} />
+              </Button>
+            </Show>
+
+            <Show when={props.editable}>
+              <Button
+                onClick={() =>
+                  pageStore.openPreset({
+                    presetId: props.selected || '',
+                    title: props.editable?.title || '',
+                  })
+                }
+                disabled={!props.selected}
+              >
+                <PencilIcon size={20} />
+              </Button>
+            </Show>
+
+            <Show when={props.children}>{props.children}</Show>
+          </div>
+
+          {props.warning ?? <></>}
         </div>
-
-        {props.warning ?? <></>}
       </div>
+
       <RootModal
         show={showSelectModal()}
         close={() => setShowSelectModal(false)}
