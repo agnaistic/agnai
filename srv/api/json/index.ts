@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { readFile, writeFile } from 'fs/promises'
-import { resolve } from 'path'
+import { normalize, resolve } from 'path'
 import { handle } from '../wrap'
 import { getAppConfig } from '../settings'
 import { v4 } from 'uuid'
@@ -99,7 +99,7 @@ router.post('/messages/:id', saveMessages)
 export default router
 
 async function read(file: string) {
-  const content = await readFile(resolve(config.jsonFolder, file)).catch(() => null)
+  const content = await readFile(safeRelativeResolve(config.jsonFolder, file)).catch(() => null)
   if (!content) return
   try {
     const json = JSON.parse(content.toString())
@@ -141,4 +141,13 @@ async function saveAvatar(avatar: string) {
 
   const outname = await saveBase64File(filename, data)
   return outname
+}
+
+// Copied from api/upload.ts
+function safeRelativeResolve(root: string, filename: string) {
+  const resolved_path = normalize(resolve(root, filename))
+  if (!resolved_path.startsWith(root)) {
+    throw errors.BadRequest
+  }
+  return resolved_path
 }
