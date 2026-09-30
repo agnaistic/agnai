@@ -1,0 +1,109 @@
+import { Component } from 'solid-js'
+import { ImageContext } from './image-context'
+import { InlineRangeInput } from '/web/shared/RangeInput'
+import TextInput from '/web/shared/TextInput'
+import { Toggle } from '/web/shared/Toggle'
+
+export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
+  return (
+    <div class="flex flex-col gap-4">
+      <InlineRangeInput
+        fieldName="imageSteps"
+        min={5}
+        max={128}
+        step={1}
+        value={props.ctx.store.steps ?? props.ctx.state.agnaiModel?.init.steps ?? 50}
+        label="Sampling Steps"
+        onChange={(ev) => props.ctx.update('steps', ev)}
+      />
+
+      <InlineRangeInput
+        fieldName="imageClipSkip"
+        min={0}
+        max={4}
+        step={1}
+        value={props.ctx.store.clipSkip ?? props.ctx.state.agnaiModel?.init.clipSkip ?? 0}
+        label="Clip Skip"
+        onChange={(ev) => props.ctx.update('clipSkip', ev)}
+      />
+
+      <InlineRangeInput
+        fieldName="imageWidth"
+        min={256}
+        max={1280}
+        step={128}
+        value={props.ctx.store.width ?? props.ctx.state.agnaiModel?.init.width ?? 1024}
+        label="Image Width"
+        onChange={(ev) => props.ctx.update('width', ev)}
+      />
+
+      <InlineRangeInput
+        fieldName="imageHeight"
+        min={256}
+        max={1280}
+        step={128}
+        value={props.ctx.store.height ?? props.ctx.state.agnaiModel?.init.height ?? 1024}
+        label="Image Height"
+        onChange={(ev) => props.ctx.update('height', ev)}
+      />
+
+      <InlineRangeInput
+        fieldName="imageCfg"
+        value={props.ctx.store.cfg ?? props.ctx.state.agnaiModel?.init.cfg ?? 9}
+        label="Guidance Scale"
+        min={1}
+        max={10}
+        step={0.2}
+        onChange={(ev) => props.ctx.update('cfg', ev)}
+      />
+
+      <Toggle
+        label="Auto-santisize Prompt"
+        helperText="Prompts have underscores replaced and excess whitespace/commas removed"
+        value={props.ctx.store.autofix ?? false}
+        onChange={(ev) => props.ctx.update('autofix', ev)}
+      />
+
+      <TextInput
+        fieldName="seed"
+        value={props.ctx.store.seed ?? 0}
+        label="Seed"
+        type="number"
+        helperText="Seed number (0 = random). Note: The seed will not be consistent across different servers."
+        onChange={(ev) =>
+          props.ctx.update(
+            'seed',
+            Math.max(0, Math.min(+ev.currentTarget.value, Number.MAX_SAFE_INTEGER))
+          )
+        }
+      />
+
+      <TextInput
+        fieldName="imagePrefix"
+        value={props.ctx.store.prefix}
+        label="Prompt Prefix"
+        helperText="(Optional) Text to prepend to your image prompt"
+        placeholder={`E.g.: best quality, masterpiece`}
+        onChange={(ev) => props.ctx.update('prefix', ev.currentTarget.value)}
+      />
+
+      <TextInput
+        fieldName="imageSuffix"
+        value={props.ctx.store.suffix}
+        label="Prompt Suffix"
+        helperText="(Optional) Text to append to your image prompt"
+        placeholder={`E.g.: full body, visible legs, dramatic lighting`}
+        onChange={(ev) => props.ctx.update('suffix', ev.currentTarget.value)}
+      />
+
+      <TextInput
+        fieldName="imageNegative"
+        label="Negative Prompt"
+        helperText="(Optional) Negative Prompt"
+        placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
+        value={props.ctx.store.negative}
+        onChange={(ev) => props.ctx.update('negative', ev.currentTarget.value)}
+      />
+    </div>
+  )
+}

@@ -56,7 +56,6 @@ export const PresetModal: Component = () => {
         footer={footer()}
       >
         <ModeGenSettings
-          page={state.preset?.page || ''}
           close={() => pageStore.closePreset()}
           preset={preset.current}
           setters={presetSetters}

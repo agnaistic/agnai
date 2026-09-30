@@ -34,7 +34,7 @@ import { imageApi } from '/web/store/data/image'
 import { CustomOption, CustomSelect } from '/web/shared/CustomSelect'
 import TextInput from '/web/shared/TextInput'
 import Button, { ToggleButton } from '/web/shared/Button'
-import { Info, RefreshCcw, Settings, X } from 'lucide-solid'
+import { Info, RefreshCcw, SlidersVertical, X } from 'lucide-solid'
 import { useProviderList } from '../Provider/hooks'
 import { Card, Pill } from '/web/shared/Card'
 import { InlineRangeInput } from '/web/shared/RangeInput'
@@ -177,7 +177,7 @@ export const SelectImageProvider: Component<{ ctx: ImageContext }> = (props) => 
             setOpen(true)
           }}
         >
-          <Settings size={20} />
+          <SlidersVertical size={20} />
         </Button>
       </div>
 

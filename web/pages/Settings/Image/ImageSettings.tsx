@@ -73,7 +73,7 @@ export const ImageSettingsModal = () => {
             <Match when={ctx.tab.current() === 'Shared'}>
               <SolidCard type="hl">
                 <div>Shared Settings</div>
-                <div class="text-500 text-sm italic">
+                <div class="text-600 text-sm italic">
                   <Show
                     when={!isChat()}
                     fallback={
@@ -107,18 +107,16 @@ export const ImageSettingsModal = () => {
           <Show when={isChat()}>
             <div class="flex flex-col gap-1">
               <FormLabel
-                label={`Current Chat Image Settings Source`}
-                helperText='Control which image settings are used when generating "Chat Images"'
+                label={`Chat Image Generation Settings Source`}
+                helperText='Control which image generation settings are used when generating "Chat Images"'
               />
               <Button
                 size="sm"
                 class="w-fit"
-                onClick={() =>
-                  chatStore.editChat(entity.chat?._id!, { imageSource: ctx.state.editing })
-                }
+                onClick={() => ctx.changeChatSource(entity.chat?._id!)}
               >
                 <Show
-                  when={ctx.state.source === ctx.state.editing}
+                  when={ctx.state.source === ctx.editingSource().source}
                   fallback={`Use ${ctx.tab.current()} Settings`}
                 >
                   Use {ctx.tab.current()} Settings (Active)

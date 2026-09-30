@@ -16,7 +16,7 @@ import { getUserSubscriptionTier } from '/common/util'
 import { command } from '../domains'
 import { getRegisteredAdapters } from '../adapter/register'
 import { NOVEL_MODELS } from '/common/presets/novel'
-import { ImageProviderSettings } from '/common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 export type NewUser = {
   username: string
@@ -332,6 +332,23 @@ export async function upsertImageProvider(user: AppSchema.User, provider: ImageP
 
   await db('user').updateOne({ _id: user._id }, { $set: { imageProviders: next } })
   user.imageProviders = next
+  return user
+}
+
+export async function upsertImagePreset(user: AppSchema.User, preset: ImagePresetSettings) {
+  if (!preset._id) {
+    preset._id = v4()
+  }
+
+  const presets = user.imagePresets || []
+  const isUpdate = presets.some((p) => p._id === preset._id)
+
+  const next = isUpdate
+    ? presets.map((p) => (p._id === preset._id ? { ...p, ...preset } : p))
+    : presets.concat(preset)
+
+  await db('user').updateOne({ _id: user._id }, { $set: { imagePresets: next } })
+  user.imagePresets = presets
   return user
 }
 

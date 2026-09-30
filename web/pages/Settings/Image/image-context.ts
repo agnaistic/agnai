@@ -1,7 +1,7 @@
 import { createStore } from 'solid-js/store'
 import { SD_SAMPLER, SWARM_SCHEDULER } from '/common/image'
 import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
-import { createEffect, on } from 'solid-js'
+import { createEffect, createMemo, on } from 'solid-js'
 import { ImageDefaults, ImageSettings } from '/common/types/image-schema'
 import { isChatPageMemo } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
@@ -106,7 +106,6 @@ export function useImageContext() {
     canUseImages: false,
     hosts: [] as Array<{ label: string; value: string }>,
     source: 'settings' as AppSchema.ImageSettingsSource,
-    editing: 'settings' as 'main-character' | 'settings' | 'chat',
   })
 
   const [defaults, setDefaults] = createStore(
@@ -183,7 +182,6 @@ export function useImageContext() {
           ...entity.chat?.imageSettings,
           imageProviderId: entity.char.imageProviderId || entity.char.imageSettings?.type,
         })
-        setState('editing', 'main-character')
         break
 
       case 'Chat':
@@ -192,7 +190,6 @@ export function useImageContext() {
           ...entity.char?.imageSettings,
           imageProviderId: entity.chat.imageProviderId || entity.chat.imageSettings?.type,
         })
-        setState('editing', 'chat')
         break
 
       default:
@@ -201,7 +198,6 @@ export function useImageContext() {
           ...user.user?.images,
           imageProviderId: user.user?.imageProviderId || user.user?.images?.type,
         })
-        setState('editing', 'settings')
         break
     }
 
@@ -274,6 +270,27 @@ export function useImageContext() {
     changeImageProvider(tab.current(), entity, providerId)
   }
 
+  const tabSource = createMemo(() => {
+    const current = tab.current()
+    const source = current === 'Character' ? 'main-character' : current === 'Shared' ? 'settings' : 'chat'
+    return { neat: current, source } as const
+  })
+
+  const changeChatSource = (chatId: string) => {
+    if (!chatId) return
+    const {source} = tabSource()
+    chatStore.editChat(chatId, { imageSource: source }, {
+      onSuccess: () => {
+        setState({ source })
+      }
+    })
+  }
+
+  const editing = createMemo(() => {
+    const source = tabSource()
+    return source
+  })
+
   return [
     {
       store: cfg,
@@ -286,6 +303,8 @@ export function useImageContext() {
       tab,
       save,
       changeProvider,
+      changeChatSource,
+      editingSource: editing,
     },
   ]
 }
@@ -301,8 +320,7 @@ async function changeImageProvider(tab: string, entity: any, providerId: string)
       await userStore.updatePartialConfig({
         imageProviderId: providerId,
       })
-      imageStore.imageSettings(false)
-      return
+      break
     }
 
     case 'Chat': {
@@ -311,8 +329,7 @@ async function changeImageProvider(tab: string, entity: any, providerId: string)
           imageProviderId: providerId,
         }),
       ])
-      imageStore.imageSettings(false)
-      return
+      break
     }
 
     case 'Character': {
@@ -321,13 +338,14 @@ async function changeImageProvider(tab: string, entity: any, providerId: string)
           imageProviderId: providerId,
         }),
       ])
-      imageStore.imageSettings(false)
-      return
+      break
     }
 
     default:
-      return
+      break
   }
+
+  // imageStore.imageSettings(false)
 }
 
 async function saveImageSettings(

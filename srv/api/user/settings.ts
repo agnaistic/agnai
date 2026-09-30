@@ -390,6 +390,7 @@ export const upsertImageSettings = handle(async (req) => {
 
   if (req.body.preset) {
     const update = { ...req.body.preset }
+    next.preset = await store.users.upsertImagePreset(user, update)
   }
 
   return next

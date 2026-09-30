@@ -1,5 +1,5 @@
 {
-  // "version": "2.0.0",
+  "version": "2.0.0",
   "tasks": [
     // {
     //   "type": "typescript",
@@ -31,9 +31,9 @@
     // },
     {
       "type": "shell",
-      "command": "echo $PATH",
-      // "command": "pnpm",
-      // "args": ["tsc", "-p", "tsconfig.json", "--noEmit", "-w"],
+      // "command": "echo $PATH",
+      "command": "pnpm",
+      "args": ["tsc", "-p", "tsconfig.json", "--noEmit", "-w"],
 
       "problemMatcher": "$tsc-watch",
       "label": "tsc: watch no-emit",

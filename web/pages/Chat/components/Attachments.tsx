@@ -85,10 +85,10 @@ export const CaptureModal = () => {
 
   const dims = { w: 1280, h: 720 }
 
-  const canCapture = createMemo(() => {
-    if (!page.capture?.show) return false
-    if (!window.navigator.mediaDevices.getUserMedia) return false
-  })
+  // const canCapture = createMemo(() => {
+  //   if (!page.capture?.show) return false
+  //   if (!window.navigator.mediaDevices.getUserMedia) return false
+  // })
 
   const captureTimer = (secs = 5) => {
     setCountdown(Date.now() + secs * 1000)

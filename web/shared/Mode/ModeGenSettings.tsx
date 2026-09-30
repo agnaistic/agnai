@@ -21,7 +21,7 @@ export const ModeGenSettings: Component<{
   setters: PresetFuncs
   onPresetChanged: (presetId: string) => void
   presetId: string | undefined
-  page: string
+  page?: string
   hideTabs?: PresetTab[]
   close?: () => void
   footer?: (children: JSX.Element) => void
@@ -210,7 +210,6 @@ export const ModeGenSettings: Component<{
           setters={props.setters}
           hideTabs={props.hideTabs}
           noSave={false}
-          page={props.page}
         />
       </form>
     </div>

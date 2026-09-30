@@ -424,16 +424,16 @@ const PromptSettings: Component<{
   const gen = props.messageId ? createCaptionInferenceSignal({ onTick: onPromptTick }) : null
 
   const fullImagePrompt = createMemo(() => {
-    const parts = [props.state.prompt]
-      .filter((c) => !!c?.trim())
-      .join(', ')
+    const parts = [props.state.prompt].filter((c) => !!c?.trim()).join(', ')
     const cleaned = cleanPrompt(parts)
     return cleaned
   })
 
   const generatePrompt = async () => {
     if (!props.messageId) return
-    if (gen && gen.state.status === 'loading') {
+    if (!gen) return
+
+    if (gen.state.status === 'loading') {
       gen.cancel()
       return
     }
