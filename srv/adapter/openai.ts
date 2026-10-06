@@ -398,6 +398,14 @@ function applyReasoningPayload(opts: AdapterProps, body: any) {
       delete body.reasoning
       return
     }
+
+    case 'known-spicyapi': {
+      // SpicyAPI takes the OpenAI `reasoning_effort` field, not an OpenRouter-style `reasoning` object
+      if (opts.gen.reasoning?.enabled && opts.gen.reasoning.effort !== 'custom') {
+        body.reasoning_effort = opts.gen.reasoning.effort || 'low'
+      }
+      return
+    }
   }
 
   if (!opts.gen.reasoning?.enabled) return
