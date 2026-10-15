@@ -269,7 +269,8 @@ async function dispatchImage(req: ImageRequestEntities, opts: GenerateOpts, requ
       const { text: image } = await horde.generateImage(
         req.entities.user,
         req.request.prompt,
-        req.request.negative,
+        req.settings!,
+        req.provider,
         (status) => {}
       )
 
@@ -547,14 +548,14 @@ export async function createImageRequest(input: {
 }) {
   const ents = getImageEntities()
   const { user } = getStore('user').getState()
-  const { settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
+  const { preset: settings, provider } = getImageSettings(ents.chat, ents.char, ents.user)
   const { rawPrompt, prompt } = getImagePrompt(input, settings)
 
   const opts: ImageRequestOpts = {
     negative: settings?.negative || '',
     prompt,
     raw_prompt: rawPrompt,
-    settings,
+    settings: settings!,
     user: user!,
     override: '',
     provider,

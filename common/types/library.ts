@@ -1,6 +1,6 @@
 import { PersonaFormat } from '../adapters'
 import { JsonField } from '../prompt'
-import { BaseImageSettings, ImagePresetSettings } from './image-schema'
+import { ImagePresetSettings } from './image-schema'
 import { MemoryBook } from './memory'
 import { FullSprite } from './sprite'
 import { VoiceSettings } from './texttospeech-schema'

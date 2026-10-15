@@ -24,7 +24,6 @@ import { ThirdPartyModel } from '/web/shared/PresetSettings/ThirdPartyModel'
 import { PresetProvider } from '../Settings/Provider'
 import { createEmitter } from '/web/shared/util'
 import { usePresetContext } from '/web/store/preset-context'
-import { getStore } from '/web/store/create'
 
 type NavProps = {
   ctx: ChatContext

@@ -6,7 +6,7 @@ import { defaultCulture } from '/web/shared/CultureCodes'
 import { fromAttrs, toAttrs } from '/web/shared/PersonaAttributes'
 import { NewCharacter, characterStore, toastStore, userStore } from '/web/store'
 import { generateField } from './generate-char'
-import { ImageSettings } from '/common/types/image-schema'
+import { ImagePresetSettings } from '/common/types/image-schema'
 import { useImageCache } from '/web/shared/hooks'
 import { imageApi } from '/web/store/data/image'
 import { v4 } from 'uuid'
@@ -51,7 +51,7 @@ export type EditorState = {
   alternateGreetings: string[]
   persona: AppSchema.Persona
 
-  imageSettings?: ImageSettings
+  imageSettings?: ImagePresetSettings
   json?: ResponseSchema
   imageOverride: string
   flags: Record<string, any>
@@ -89,7 +89,14 @@ const initState: EditorState = {
   book: undefined,
   persona: { kind: 'text', attributes: { text: [''] } },
   imageSettings: {
-    type: 'sd',
+    _id: '',
+    name: '',
+    imageProviderId: '',
+    sampler: 'k_euler_a',
+    scheduler: 'normal',
+    seed: 0,
+    autofix: true,
+    summaryPresetId: '',
     width: 512,
     height: 512,
     steps: 10,
@@ -100,63 +107,6 @@ const initState: EditorState = {
     suffix: '',
     summariseChat: true,
     summaryPrompt: '',
-    template: '',
-    imageProviderId: '',
-    openai: {} as any,
-
-    agnai: {
-      _id: 'agnai',
-      name: 'Agnaistic',
-      type: 'agnai',
-      url: '',
-      model: '',
-      sampler: '',
-      scheduler: '',
-      draftMode: false,
-    },
-
-    horde: {
-      _id: 'horde',
-      name: 'Horde',
-      type: 'horde',
-      url: '',
-      model: '',
-      sampler: '',
-      scheduler: '',
-    },
-
-    novel: {
-      _id: 'novel',
-      name: 'NovelAI',
-      type: 'novel',
-      url: '',
-      model: '',
-      sampler: '',
-      qualityTags: true,
-      ucPreset: '0',
-      scheduler: '',
-    },
-
-    sd: {
-      _id: 'sd',
-      name: 'Stable Diffusion',
-      type: 'sd',
-      url: '',
-      sampler: '',
-      model: '',
-      scheduler: '',
-    },
-
-    swarm: {
-      _id: 'swarm',
-      name: 'SwarmUI',
-      type: 'swarm',
-      url: '',
-      sampler: '',
-      local: true,
-      model: '',
-      scheduler: '',
-    },
   },
   imageOverride: '',
   flags: {},
