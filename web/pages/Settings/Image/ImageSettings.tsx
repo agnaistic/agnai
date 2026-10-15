@@ -1,6 +1,5 @@
 import { Match, Show, Switch, createMemo, createSignal } from 'solid-js'
 import Divider from '../../../shared/Divider'
-import { InlineRangeInput } from '../../../shared/RangeInput'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, imageStore, presetStore, userStore } from '../../../store'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
@@ -42,8 +41,8 @@ export const ImageSettingsModal = () => {
   const isAllEnabled = createMemo(() => Array.from(Object.values(ctx.defaults)).every((v) => !!v))
 
   const editPresetClicked = () => {
-    if (!ctx.store.summaryPresetId) return
-    presetSetters.load(ctx.store.summaryPresetId)
+    if (!ctx.preset.summaryPresetId) return
+    presetSetters.load(ctx.preset.summaryPresetId)
     setEditPreset(true)
   }
 
@@ -129,10 +128,10 @@ export const ImageSettingsModal = () => {
             label={<span class="!text-lg">Summary Preset</span>}
             helperText="Choose which service and model is used for creating summaries for chat images"
             options={presetOptions()}
-            setPresetId={(id) => ctx.update('summaryPresetId', id)}
-            selected={ctx.store.summaryPresetId}
+            setPresetId={(id) => ctx.updatePreset({ summaryPresetId: id })}
+            selected={ctx.preset.summaryPresetId}
           >
-            <Button disabled={!ctx.store.summaryPresetId} onClick={editPresetClicked}>
+            <Button disabled={!ctx.preset.summaryPresetId} onClick={editPresetClicked}>
               <Pencil size={20} />
             </Button>
           </PresetSelect>
@@ -142,8 +141,8 @@ export const ImageSettingsModal = () => {
               fieldName="summariseChat"
               label="Summarise Chat"
               helperText="Use your AI service to summarise the chat into an image prompt."
-              value={ctx.store.summariseChat}
-              onChange={(ev) => ctx.update('summariseChat', ev)}
+              value={ctx.preset.summariseChat}
+              onChange={(ev) => ctx.updatePreset({ summariseChat: ev })}
             />
 
             <TextInput
@@ -152,26 +151,29 @@ export const ImageSettingsModal = () => {
               isMultiline
               helperText='When summarising the chat to an image caption, this is the "prompt" is used summarise your conversation into an image prompt.'
               placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
-              value={ctx.store.summaryPrompt}
-              onChange={(ev) => ctx.update('summaryPrompt', ev.currentTarget.value)}
+              value={ctx.preset.summaryPrompt}
+              onChange={(ev) => ctx.updatePreset({ summaryPrompt: ev.currentTarget.value })}
             />
 
             <div class="flex gap-1">
-              <Button size="sm" onClick={() => ctx.update('summaryPrompt', SUMMARY_PROMPTS.booru)}>
+              <Button
+                size="sm"
+                onClick={() => ctx.updatePreset({ summaryPrompt: SUMMARY_PROMPTS.booru })}
+              >
                 Booru/Tag Style
               </Button>
-              <Button size="sm" onClick={() => ctx.update('summaryPrompt', SUMMARY_PROMPTS.plain)}>
+              <Button
+                size="sm"
+                onClick={() => ctx.updatePreset({ summaryPrompt: SUMMARY_PROMPTS.plain })}
+              >
                 Flux/Plain Style
               </Button>
             </div>
           </Accordian>
 
-          <div class="flex gap-2">
-            <FormLabel label="Image Provider"></FormLabel>
-            <SelectImageProvider ctx={ctx} />
-          </div>
+          <SelectImageProvider ctx={ctx} editable />
 
-          <Show when={ctx.state.canUseImages && ctx.store.type === 'agnai'}>
+          <Show when={ctx.state.canUseImages && ctx.provider.type === 'agnai'}>
             <FormLabel
               label="Use Recommended Settings"
               helperText="Use the image model's recommended settings when available."
@@ -230,13 +232,13 @@ export const ImageSettingsModal = () => {
           </Show>
           <Divider />
 
-          <Show when={ctx.store.type === 'agnai'}>
+          <Show when={ctx.provider.type === 'agnai'}>
             <SolidCard bg="rose-600">
               Refer to the recommended settings when using Agnaistic image models
             </SolidCard>
           </Show>
 
-          <InlineRangeInput
+          {/*<InlineRangeInput
             fieldName="imageSteps"
             min={5}
             max={128}
@@ -332,7 +334,7 @@ export const ImageSettingsModal = () => {
             placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
             value={ctx.store.negative}
             onChange={(ev) => ctx.update('negative', ev.currentTarget.value)}
-          />
+          />*/}
         </form>
       </RootModal>
 
@@ -348,7 +350,7 @@ export const ImageSettingsModal = () => {
           preset={summaryPreset.current}
           setters={presetSetters}
           close={() => setEditPreset(false)}
-          presetId={ctx.store.summaryPresetId}
+          presetId={ctx.preset.summaryPresetId}
           onPresetChanged={() => setEditPreset(false)}
           footer={setPresetFooter}
         />

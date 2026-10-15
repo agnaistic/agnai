@@ -9,7 +9,6 @@ import {
   toUser,
   toUserMsg,
 } from '../common/dummy'
-import { getTokenCounter } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
 import { createPromptParts, buildPromptPlaceholders } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
@@ -113,7 +112,7 @@ export async function build(
       resolvedScenario: opts.resolvedScenario ?? overChar.scenario,
       jsonValues: {},
     },
-    getTokenCounter('main', undefined)
+    undefined
   )
 
   return result
@@ -168,8 +167,7 @@ async function getParseOpts(
         userEmbeds: [],
         resolvedScenario: overChar.scenario,
       },
-      overrides.lines || lines,
-      getTokenCounter('main', undefined)
+      overrides.lines || lines
     ))
 
   const base: TemplateOpts = {

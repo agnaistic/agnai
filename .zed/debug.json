@@ -12,6 +12,9 @@
     "request": "launch",
     "trace": true,
     "type": "node",
+    "skipFiles": [
+      "<node_internals>/**"
+    ],
     "outFiles": [
       "${ZED_WORKTREE_ROOT}/srv/**/*.js",
       "${ZED_WORKTREE_ROOT}/common/**/*.js",

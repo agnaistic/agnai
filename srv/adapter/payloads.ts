@@ -1,6 +1,5 @@
 import { AdapterProps } from './type'
 import { JsonSchema, toJsonSchema } from '/common/prompt'
-import { getEncoderByName } from '../tokenize'
 import { decryptText } from '../db/util'
 import {
   getStoppingStrings,
@@ -75,17 +74,6 @@ function getBasePayload(opts: AdapterProps, stops: string[] = []) {
 
   if (!gen.temp) {
     gen.temp = 0.75
-  }
-
-  // Agnaistic
-
-  if (!opts.contextSize) {
-    const encoder = getEncoderByName(opts.subscription?.preset?.tokenizer as any)
-    const context = encoder?.count(prompt)
-
-    if (context) {
-      opts.contextSize = context
-    }
   }
 
   const body: any = {

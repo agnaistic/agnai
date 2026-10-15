@@ -5,7 +5,7 @@ import { AppSchema, TokenCounter } from './types'
 import { findLast } from './util'
 import { GenerateRequestV2 } from '/srv/adapter/type'
 
-export async function toChatMessages(req: GenerateRequestV2, counter: TokenCounter) {
+export async function toChatMessages(req: GenerateRequestV2, counter?: TokenCounter) {
   const assembled = await assemblePrompt(req, counter)
 
   const { sections } = assembled

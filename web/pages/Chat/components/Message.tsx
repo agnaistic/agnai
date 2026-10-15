@@ -21,6 +21,7 @@ import {
   BracesIcon,
   ImageUpIcon,
   ScanFaceIcon,
+  LucideProps,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -59,7 +60,7 @@ import { Pill } from '/web/shared/Card'
 import { DropMenu } from '/web/shared/DropMenu'
 import { Portal } from 'solid-js/web'
 import { UI } from '/common/types'
-import { LucideProps } from 'lucide-solid/dist/types/types'
+// import { LucideProps } from 'lucide-solid/dist/types/types'
 import { createStore } from 'solid-js/store'
 import { MessageImages } from './MessageImages'
 import Select from '/web/shared/Select'

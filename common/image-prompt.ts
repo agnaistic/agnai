@@ -106,19 +106,7 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
 }
 
 export function getMaxImageContext(user: AppSchema.User) {
-  const type = user.images?.type || 'horde'
-
-  switch (type) {
-    case 'novel':
-      return 225
-
-    case 'sd':
-      return 512
-
-    case 'horde':
-    default:
-      return 512
-  }
+  return 1024
 }
 
 function tokenizeMessage(line: string) {

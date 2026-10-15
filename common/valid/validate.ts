@@ -1,7 +1,9 @@
 import { UnwrapBody, Validator } from './types'
 import {
   isObjectOptional,
+  isObjectUnion,
   isOptionalArray,
+  isOptionalObjectUnion,
   isOptionalPrimitive,
   isOptionalUnion,
   isPrimitive,
@@ -12,6 +14,7 @@ import {
 } from './util'
 
 const OPTIONAL_SYMBOL = '__optional__'
+const UNION_SYMBOL = '__union__'
 
 export function isValid<T extends Validator>(type: T, compare: any): compare is UnwrapBody<T> {
   const valid = validateBody(type, compare, { notThrow: true })
@@ -26,6 +29,22 @@ export function assertValid<T extends Validator>(
   const { errors } = validateBody(type, compare, { notThrow: true, partial })
   if (errors.length) {
     throw new Error(`Request body is invalid: ${errors.join(', ')}`)
+  }
+}
+
+export function assertUnion<T extends Validator[] | readonly Validator[]>(
+  types: T,
+  compare: any
+): asserts compare is UnwrapBody<T[number]> {
+  const allErrors: string[] = []
+  for (const guard of types) {
+    const { errors } = validateBody(guard, compare, { notThrow: true })
+    if (!errors.length) return
+    allErrors.push(...errors)
+  }
+
+  if (allErrors.length) {
+    throw new Error(`Request body[union] is invalid: ${allErrors.length}`)
   }
 }
 
@@ -95,7 +114,7 @@ export function validateBody<T extends Validator>(
     let value
     try {
       value = compare?.[key]
-      if (key !== OPTIONAL_SYMBOL && value !== undefined) {
+      if (key !== OPTIONAL_SYMBOL && key !== UNION_SYMBOL && value !== undefined) {
         actual[key] = value
       }
     } catch (ex: any) {
@@ -103,6 +122,7 @@ export function validateBody<T extends Validator>(
     }
 
     if (value === undefined) {
+      if (isOptionalObjectUnion(bodyType)) continue
       if (isOptionalPrimitive(bodyType)) continue
       if (isTupleOptional(bodyType)) continue
       if (isOptionalArray(bodyType)) continue
@@ -114,6 +134,38 @@ export function validateBody<T extends Validator>(
     }
 
     if (bodyType === 'any' || bodyType === 'unknown') continue
+
+    if (isOptionalObjectUnion(bodyType)) {
+      if (value === undefined || value === null) continue
+      // We intentionally don't compare the guard and the value here, we fall-through to the isObjectUnion check
+    }
+
+    if (isObjectUnion(bodyType)) {
+      if (typeof value !== 'object') {
+        errors.push(`.${prop} is ${typeof value}, expected object [member of union]`)
+        continue
+      }
+
+      let match = false
+      for (const entry of bodyType) {
+        const valid = validateBody(entry as any, value, {
+          prefix: prop,
+          partial: opts.partial,
+          notThrow: true,
+        })
+
+        if (!valid.errors.length) {
+          match = true
+          break
+        }
+      }
+
+      if (!match) {
+        errors.push(`.${prop} is not a member of union`)
+      }
+
+      continue
+    }
 
     if (isPrimitive(bodyType) && typeof value !== bodyType) {
       errors.push(`.${prop} is ${typeof value}, expected ${bodyType}`)

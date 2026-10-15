@@ -178,16 +178,12 @@ async function generateImage(req: ImageRequestOpts, events?: { signal?: AbortCon
 }
 
 async function processImage(baseUrl: string | undefined, imagePath: string) {
-  const image = await fetch(getUrl({ host: baseUrl, path: imagePath, getter: true }), {
-    headers: { accept: 'image/png' },
+  const image = await fetchImage(baseUrl, imagePath).then(async (blob) => {
+    const buf = await blob.arrayBuffer()
+    const buffer = Buffer.from(buf)
+    const base64 = `data:image/png;base64,` + buffer.toString('base64')
+    return { content: base64, blob, buffer }
   })
-    .then((res) => res.blob())
-    .then(async (blob) => {
-      const buf = await blob.arrayBuffer()
-      const buffer = Buffer.from(buf)
-      const base64 = `data:image/png;base64,` + buffer.toString('base64')
-      return { content: base64, blob, buffer }
-    })
 
   const file = new File([image.blob], `swarm_${Date.now()}.png`, { type: image.blob.type })
   return { content: image.content, file, buffer: image.buffer }
@@ -198,6 +194,18 @@ async function processBase64(base64: string) {
   const blob = new Blob([full])
   const file = new File([blob], `swarm_${Date.now()}.png`, { type: 'image/png' })
   return { base64: full, file }
+}
+
+async function fetchImage(baseUrl: string | undefined, imagePath: string) {
+  if (imagePath.startsWith('data:')) {
+    const fetched = await fetch(imagePath).then((res) => res.blob())
+    return fetched
+  }
+
+  const image = await fetch(getUrl({ host: baseUrl, path: imagePath, getter: true }), {
+    headers: { accept: 'image/png' },
+  }).then((res) => res.blob())
+  return image
 }
 
 async function getPayload(req: ImageRequestOpts) {
@@ -228,7 +236,7 @@ async function getPayload(req: ImageRequestOpts) {
 
     if (loras.length) {
       payload.loras = loras.join(',')
-      payload.loraweighs = weights.join(',')
+      payload.loraweights = weights.join(',')
     }
   }
 

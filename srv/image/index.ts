@@ -16,24 +16,21 @@ import { StatusError } from '../api/wrap'
 const DEFAULT_NEGATIVE = ``
 
 export async function generateImageSync(opts: ImageGenerateRequest, log: AppLog) {
-  const imageSettings = opts.user.images
-  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
-  opts.raw_prompt = rawPrompt
+  const providerId = opts.user.imageProviderId || (opts.user.images as any)?.type || 'horde'
+  const presetId = opts.user.imagePresetId
 
-  const id = opts.user.imageProviderId || opts.user.images?.type || 'horde'
-  let provider = opts.user.imageProviders?.find((i) => i._id === id)
+  const preset = opts.user.imagePresets?.find((p) => p._id === presetId)
+  const provider = opts.user.imageProviders?.find((i) => i._id === providerId)
 
-  if (!provider) {
-    const type = opts.user.images?.type || 'horde'
-    provider = opts.user.images?.[type] as any
-  }
-
-  if (!provider) {
+  if (!provider || !preset) {
     throw new StatusError('Cannot locate Image Provider settings', 500)
   }
 
+  const { prompt, rawPrompt } = getImagePrompt(opts, preset)
+  opts.raw_prompt = rawPrompt
+
   let { error, image } = await runImageGenerate({
-    imageSettings,
+    imageSettings: preset,
     provider,
     user: opts.user,
     prompt,
@@ -67,29 +64,32 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
     }
   }
 
-  const { settings: imageSettings, provider } = getImageSettings(chat, character, user)
+  const { preset, provider } = getImageSettings(chat, character, user)
 
   if (!provider) {
     throw new StatusError('Cannot locate Image Provider', 500)
   }
 
-  const { prompt, rawPrompt } = getImagePrompt(opts, imageSettings)
+  if (!preset) {
+    throw new StatusError('Cannot locate Image Preset', 500)
+  }
+
+  const { prompt, rawPrompt } = getImagePrompt(opts, preset)
   opts.raw_prompt = rawPrompt
 
-  log.debug({ prompt, type: imageSettings?.type, source: chat?.imageSource }, 'Image prompt')
+  log.debug({ prompt, source: chat?.imageSource }, 'Image prompt')
 
   if (!guestId && !opts.sync) {
     sendOne(user._id, {
       type: 'image-generation-started',
       prompt,
-      negative: imageSettings?.negative || '',
-      service: imageSettings?.type,
+      negative: preset?.negative || '',
       requestId: opts.requestId,
     })
   }
 
   let { image, output, error } = await runImageGenerate({
-    imageSettings,
+    imageSettings: preset,
     provider,
     user,
     prompt,
@@ -130,7 +130,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
           messageId: messageId || opts.parentId!,
           imagePrompt: opts.prompt,
           append: opts.append,
-          meta: { negative: imageSettings?.negative },
+          meta: { negative: preset?.negative },
         })
 
         if (msg) return { output }
@@ -184,7 +184,7 @@ export async function generateImage(opts: ImageGenerateRequest, log: AppLog, gue
 }
 
 async function runImageGenerate(options: {
-  imageSettings: BaseImageSettings | undefined
+  imageSettings: BaseImageSettings
   provider: ImageProviderSettings
   user: AppSchema.User
   prompt: string
@@ -275,7 +275,7 @@ async function runImageGenerate(options: {
   } catch (ex: any) {
     log.error(
       { err: ex, body: ex.body },
-      `[${imageSettings?.type || 'default'}] Image generation failed `
+      `[${provider?.type || 'default'}] Image generation failed `
     )
 
     error = `Request failed: ${ex.message || ex}`

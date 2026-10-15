@@ -7,6 +7,7 @@ import { storage } from '/web/shared/util'
 import { HORDE_SEED } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 import { v4 } from 'uuid'
+import { ImagePresetSettings, ImageProviderSettings } from 'common/types/image-schema'
 
 export type InitEntities = {
   profile: AppSchema.Profile
@@ -40,6 +41,7 @@ export const usersApi = {
   saveProvider,
   deleteProvider,
   deleteProviderKey,
+  upsertImageSettings,
 }
 
 export async function getInit(caches?: { presets?: any[]; books?: any[]; templates?: any[] }) {
@@ -81,6 +83,20 @@ async function deleteProviderKey(providerId: string) {
   user.providers = next
   await localApi.saveConfig(user)
   return { result: user, error: undefined }
+}
+
+async function upsertImageSettings(update: {
+  target: { type: string; id?: string; imagePresetId: string }
+  preset?: ImagePresetSettings
+  provider?: ImageProviderSettings
+}) {
+  if (isLoggedIn()) {
+    const res = await api.post('/user/image-settings', update)
+    return res
+  }
+
+  
+  return { result: true, error: undefined }
 }
 
 async function saveProvider(provider: AppSchema.Provider) {

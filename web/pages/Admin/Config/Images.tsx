@@ -30,7 +30,6 @@ type Model = {
 
 export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> = (props) => {
   const settings = settingStore((s) => s.config)
-  const state = adminStore((s) => ({ config: s.config }))
 
   const models = createMemo(() => {
     if (!props.state?.imagesModels) return []
@@ -53,13 +52,13 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
               <div>Images Host (A1111 Compatible)</div>
               <Toggle
                 fieldName="imagesEnabled"
-                value={state.config?.imagesEnabled}
+                value={props.state.imagesEnabled}
                 onChange={(ev) => props.setters('imagesEnabled', ev)}
               />
             </div>
           </>
         }
-        value={state.config?.imagesHost}
+        value={props.state.imagesHost}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
         onChange={(ev) => props.setters('imagesHost', ev.currentTarget.value)}
       />
@@ -67,7 +66,7 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
       <TextInput
         fieldName="imagesLoraUrl"
         label="Images LoRA URL"
-        value={state.config?.imagesLoraUrl}
+        value={props.state.imagesLoraUrl}
         classList={{ hidden: !settings.adapters.includes('agnaistic') }}
         onChange={(ev) => props.setters('imagesLoraUrl', ev.currentTarget.value)}
       />
@@ -76,7 +75,7 @@ export const Images: Component<{ state: ConfigState; setters: ConfigSetters }> =
         label="Default Image Model"
         fieldName="defaultImageModel"
         items={models()}
-        value={state.config?.defaultImageModel}
+        value={props.state.defaultImageModel}
         onChange={(ev) => props.setters('defaultImageModel', ev.value)}
       />
 

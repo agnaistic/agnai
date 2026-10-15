@@ -5,7 +5,6 @@ import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { AdapterProps, ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../middleware'
-import { getEncoder } from '../tokenize'
 import { toSamplerOrder } from '/common/sampler-order'
 import { NOVEL_ALIASES, NOVEL_MODELS } from '/common/presets/novel'
 import { fetchStream } from '/common/requests/stream'
@@ -144,27 +143,25 @@ function getRequestBody(opts: AdapterProps) {
   const version = NEW_PARAMS[model] ?? 0
 
   const baseStops = getStoppingStrings(opts, opts.gen)
-  const { encode } = getEncoder('novel', model)
   const stops: Array<number[]> = []
-  const biases: any[] = []
 
-  for (const { bias, seq } of opts.gen.phraseBias || []) {
-    biases.push({
-      // Range from -2 to 2
-      bias: Math.min(Math.max(bias, -2), 2),
-      sequence: encode(seq),
-      generate_once: true,
-      ensure_sequence_finish: false,
-    })
-  }
+  // const { encode } = getEncoder('novel', model)
+  // const biases: any[] = []
+  // for (const { bias, seq } of opts.gen.phraseBias || []) {
+  //   biases.push({
+  //     // Range from -2 to 2
+  //     bias: Math.min(Math.max(bias, -2), 2),
+  //     sequence: encode(seq),
+  //     generate_once: true,
+  //     ensure_sequence_finish: false,
+  //   })
+  // }
 
-  const logit_bias_exp = biases
+  // const all = ['***', 'Scenario:', '----', '⁂'].concat(baseStops).map(encode)
 
-  const all = ['***', 'Scenario:', '----', '⁂'].concat(baseStops).map(encode)
-
-  for (const stop of all) {
-    stops.push(stop)
-  }
+  // for (const stop of all) {
+  //   stops.push(stop)
+  // }
 
   const endTokens = baseStops.concat(['***', 'Scenario:', '----', '⁂'])
 
@@ -173,11 +170,11 @@ function getRequestBody(opts: AdapterProps) {
       return {
         input: processNovelAIPrompt(opts.prompt),
         model,
-        parameters: { ...base, ...opts.mappedSettings, logit_bias_exp, stop_sequences: stop },
+        parameters: { ...base, ...opts.mappedSettings, logit_bias_exp: [], stop_sequences: stop },
       }
 
     case 1:
-      const parameters = { ...getModernParams(opts.gen), logit_bias_exp, stop_sequences: stops }
+      const parameters = { ...getModernParams(opts.gen), logit_bias_exp: [], stop_sequences: stops }
       return { input: processNovelAIPrompt(opts.prompt), model, parameters }
 
     case 2:

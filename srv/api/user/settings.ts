@@ -19,9 +19,14 @@ import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
-import { optional } from '/common/valid/types'
+import { optional, union } from '/common/valid/types'
 import { assertStrict } from '/common/valid/validate'
-import { ImageProviderSettings, ImageProviderType } from '/common/types/image-schema'
+import {
+  BaseImageSettings,
+  ImagePresetSettings,
+  ImageProviderSettings,
+  ImageProviderType,
+} from '/common/types/image-schema'
 
 export const getInitialLoad = handle(async ({ userId, query }) => {
   const replicate = await getLanguageModels()
@@ -353,6 +358,7 @@ const imgProviderGuard = {
 
 const imgPresetGuard = {
   _id: 'string',
+  imageProviderId: 'string',
   name: 'string',
   sampler: 'string',
   scheduler: 'string',
@@ -368,32 +374,55 @@ const imgPresetGuard = {
   seed: 'number',
 } as const
 
-export const upsertImageSettings = handle(async (req) => {
-  const guard = {
-    provider: optional(imgProviderGuard),
-    preset: optional(imgPresetGuard),
-  } as const
+const targets = {
+  type: ['chat', 'character', 'preset'],
+  id: 'string',
+  imagePresetId: 'string',
+} as const
 
-  const user = await getSafeUserConfig(req.userId)
+const imgGuardV2 = {
+  target: union([targets, { type: ['user'], imagePresetId: 'string' }]),
+  preset: optional(imgPresetGuard),
+  provider: optional(imgProviderGuard),
+} as const
+
+export const upsertImageSettings = handle(async ({ body, userId }) => {
+  assertValid(imgGuardV2, body)
+  const { provider, preset } = body
+
+  let user = await getSafeUserConfig(userId)
   if (!user) {
     throw new StatusError('Not found', 404)
   }
 
-  assertValid(guard, req.body)
-
-  const next: any = {}
-
-  if (req.body.provider) {
-    const update = { ...req.body.provider, scheduler: req.body.provider.scheduler || '' }
-    next.provider = await store.users.upsertImageProvider(user, update)
+  if (provider || preset) {
+    await store.users.upsertImageSettings(user, { provider, preset })
   }
 
-  if (req.body.preset) {
-    const update = { ...req.body.preset }
-    next.preset = await store.users.upsertImagePreset(user, update)
-  }
+  if (!preset) return
 
-  return next
+  switch (body.target.type) {
+    case 'chat': {
+      await store.chats.assertChatOwner({ userId, chatId: body.target.id })
+      await store.chats.update(body.target.id, {
+        imagePresetId: body.target.imagePresetId,
+      })
+      break
+    }
+
+    case 'character': {
+      await store.characters.partialUpdateCharacter(body.target.id, userId, {
+        imagePresetId: body.target.imagePresetId,
+      })
+      break
+    }
+
+    case 'user': {
+      await store.users.updateUser(userId, {
+        imagePresetId: body.target.imagePresetId,
+      })
+    }
+  }
 })
 
 export const upsertImageProvider = handle(async (req) => {
@@ -408,7 +437,7 @@ export const upsertImageProvider = handle(async (req) => {
     scheduler: req.body.scheduler || '',
   }
 
-  const next = await store.users.upsertImageProvider(user, update)
+  const next = await store.users.upsertImageSettings(user, { provider: update })
   return next
 })
 
@@ -694,25 +723,87 @@ export async function getSafeUserConfig(userId: string, seed?: string) {
   const sub = getUserSubscriptionTier(user, getCachedTiers())
   const next = sub ? { type: sub?.type, level: sub?.level, tierId: sub.tier._id } : undefined
 
+  const legacyImages: any = user.images
+
   if (!user.imageProviders) {
     const list: ImageProviderSettings[] = []
-    user.imageProviderId = user.images?.type || ''
-    addImageProvider(list, 'agnai', 'Agnaistic', user.images?.agnai)
-    addImageProvider(list, 'novel', 'Novel', user.images?.novel)
-    addImageProvider(list, 'horde', 'Horde', user.images?.horde)
-    addImageProvider(list, 'swarm', 'SwarmUI', user.images?.swarm)
-    addImageProvider(list, 'sd', 'Stable Diffusion', user.images?.sd)
-    user.imageProviders = list
+    user.imageProviderId = legacyImages?.type || ''
+
+    if (user.images) {
+      addImageProvider(list, 'agnai', 'Agnaistic', legacyImages.agnai)
+      addImageProvider(list, 'novel', 'Novel', legacyImages.novel)
+      addImageProvider(list, 'horde', 'Horde', legacyImages.horde)
+      addImageProvider(list, 'swarm', 'SwarmUI', legacyImages.swarm)
+      addImageProvider(list, 'sd', 'Stable Diffusion', legacyImages.sd)
+      user.imageProviders = list
+    }
   }
+
+  if (!user.imagePresets) {
+    addImagePreset(user)
+  }
+
+  // if (legacyImages.agnai) {
+  //   legacyImages.agnai = undefined
+  //   legacyImages.novel = undefined
+  //   legacyImages.horde = undefined
+  //   legacyImages.swarm = undefined
+  //   legacyImages.openai = undefined
+  //   legacyImages.sd = undefined
+  // }
 
   await store.users.updateUser(userId, {
     sub: next,
     imageProviders: user.imageProviders,
+    imagePresets: user.imagePresets,
     imageProviderId: user.imageProviderId,
+    imagePresetId: user.imagePresetId,
+    images: user.images,
   })
+
   user.sub = next
 
   return toSafeUser(user, seed)
+}
+
+function addImagePreset(user: AppSchema.User) {
+  const providers = user.imageProviders || []
+  const presets = user.imagePresets || []
+
+  const legacy = (user.images || {}) as any as Record<string, ImageProviderSettings> &
+    BaseImageSettings
+
+  const providerId = user.imageProviderId || ''
+  const provider = providers.find((p) => p._id === providerId) || legacy[providerId] || {}
+
+  const preset: ImagePresetSettings = {
+    _id: v4(),
+    imageProviderId: provider._id || '',
+    name: '',
+    autofix: legacy.autofix ?? true,
+    cfg: legacy.cfg ?? 5,
+    height: legacy.height ?? 1024,
+    width: legacy.width ?? 1024,
+    steps: legacy.steps ?? 20,
+    clipSkip: legacy.clipSkip ?? 0,
+    negative: legacy.negative || '',
+    prefix: legacy.prefix || '',
+    suffix: legacy.suffix || '',
+    sampler: provider.sampler || 'k_euler_a',
+    scheduler: provider.scheduler || 'normal',
+    seed: legacy.seed ?? 0,
+    summaryPrompt: legacy.summaryPrompt || '',
+    summariseChat: legacy.summariseChat ?? true,
+    summaryPresetId: legacy.summaryPresetId || '',
+  }
+
+  user.imagePresetId = preset._id
+
+  presets.push(preset)
+  user.imagePresets = presets
+
+  delete user.images
+  return { preset, user }
 }
 
 function addImageProvider(

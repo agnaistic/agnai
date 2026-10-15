@@ -21,6 +21,7 @@ const encoderModels: { [encoder in EncoderType]?: string } = {
   llama: 'Xenova/llama3-tokenizer',
   mistral: 'mistralai/Mistral-Medium-3.5-128B',
   turbo: 'openai/gpt-oss-20b',
+  glm: 'zai-org/GLM-5.3',
 }
 
 const encoders: Record<string, AsyncEncoder> = {}

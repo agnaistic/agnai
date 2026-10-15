@@ -226,7 +226,7 @@ function titlize(str: string) {
   return `${str[0].toUpperCase()}${str.slice(1).toLowerCase()}`
 }
 
-export async function getPromptHistory(opts: PromptOpts, encoder: TokenCounter) {
+export async function getPromptHistory(opts: PromptOpts, encoder?: TokenCounter) {
   /**
    * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
    * are retrieved based on the number of history messages we return here.
@@ -250,7 +250,7 @@ export async function getPromptHistory(opts: PromptOpts, encoder: TokenCounter) 
  */
 export async function createPromptParts(
   opts: PromptOpts,
-  encoder: TokenCounter,
+  encoder: TokenCounter | undefined,
   history?: HistoryLine[]
 ) {
   if (opts.trimSentences || opts.user.ui?.trimSentences) {
@@ -317,7 +317,7 @@ export type AssembledPrompt = Awaited<ReturnType<typeof assemblePrompt>>
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export async function assemblePrompt(opts: GenerateRequestV2, encoder: TokenCounter) {
+export async function assemblePrompt(opts: GenerateRequestV2, encoder?: TokenCounter) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts)
 
@@ -414,7 +414,7 @@ type InjectOpts = {
   jsonValues: Record<string, any> | undefined
   lines?: string[]
   history?: HistoryLine[]
-  encoder: TokenCounter
+  encoder?: TokenCounter
   format?: ModelFormat
 }
 
@@ -508,7 +508,7 @@ type PromptPartsOptions = Pick<
 export async function buildPromptPlaceholders(
   opts: PromptPartsOptions,
   lines: string[] | HistoryLine[],
-  encoder: TokenCounter
+  encoder?: TokenCounter
 ) {
   try {
     const { chat, char, replyAs } = opts
@@ -716,7 +716,7 @@ function removeEmpty(value?: string) {
  */
 export async function getLinesForPrompt(
   opts: PromptOpts,
-  encoder: TokenCounter,
+  encoder: TokenCounter | undefined,
   maxContext?: number
 ): Promise<{ lines: HistoryLine[] }> {
   const { settings, members, messages } = opts
@@ -840,7 +840,7 @@ export function formatInsert(insert: string): PromptLine {
  * - srv/adapter/claude.ts createClaudePrompt
  */
 export async function fillPromptWithLines(opts: {
-  encoder: TokenCounter
+  encoder?: TokenCounter
   tokenLimit: number
   context: string
   lines: string[] | HistoryLine[]
@@ -852,7 +852,7 @@ export async function fillPromptWithLines(opts: {
   marker?: string
 }) {
   const { encoder, tokenLimit, context, lines, inserts = new Map(), optional = [] } = opts
-  const insertsCost = await encoder(Array.from(inserts.values()).join(' '))
+  const insertsCost = (await encoder?.(Array.from(inserts.values()).join(' '))) ?? 0
   const tokenLimitMinusInserts = tokenLimit - insertsCost
 
   /**
@@ -864,7 +864,7 @@ export async function fillPromptWithLines(opts: {
     cleanContext = cleanContext.replace(opts.marker, '')
   }
 
-  let count = await encoder(cleanContext)
+  let count = (await encoder?.(cleanContext)) ?? 0
   const adding: PromptLine[] = []
 
   let linesAddedCount = 0
@@ -876,7 +876,7 @@ export async function fillPromptWithLines(opts: {
 
     const id = typeof line === 'string' ? rawLine?._id : line._id
     const text = typeof line === 'string' ? line : line.msg
-    const tokens = await encoder(text)
+    const tokens = (await encoder?.(text)) ?? 0
     if (tokens + count > tokenLimitMinusInserts) {
       break
     }

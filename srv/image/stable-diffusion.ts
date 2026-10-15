@@ -113,8 +113,8 @@ async function getConfig(opts: ImageRequestOpts): Promise<{
   temp?: AppSchema.ImageModel
   provider?: AppSchema.Provider
 }> {
-  const { user, settings, override } = opts
-  const type = opts.provider.type || settings?.type || user.images?.type
+  const { user, override } = opts
+  const type = opts.provider.type
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
 
   const userHost = getUserHostUrl(opts)

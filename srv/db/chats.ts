@@ -13,6 +13,12 @@ export async function getChatOnly(id: string) {
   return chat
 }
 
+export async function assertChatOwner(opts: { userId: string; chatId: string }) {
+  const chat = await getChatOnly(opts.chatId)
+
+  if (!chat || chat.userId !== opts.userId) throw new StatusError(`Chat - Not allowed`, 405)
+}
+
 export async function getChatGraph(id: string) {
   const chat = await getChatOnly(id)
   const messages = (await db('chat-message')

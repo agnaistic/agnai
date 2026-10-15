@@ -1,5 +1,4 @@
 import 'module-alias/register'
-import { prepareTokenizers } from './tokenize'
 import lt from 'localtunnel'
 import * as os from 'os'
 import throng from 'throng'
@@ -32,7 +31,6 @@ export async function start() {
     logger.error({ msg: ex?.message, err: ex, stack: ex.stack }, 'Unhandled rejection')
   })
 
-  prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
   await Promise.allSettled([prepSubscriptionCache(true), prepTierCache(true)])
 

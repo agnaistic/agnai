@@ -51,7 +51,7 @@ export type TemplateOpts = {
   /** If present, history will be rendered last */
   limit?: {
     context: number
-    encoder: TokenCounter
+    encoder?: TokenCounter
     output?: Record<string, { src: string; lines: string[]; raw?: string[] }>
   }
 
@@ -320,7 +320,7 @@ export async function parseTemplate(
       sizes.push(`limit: ${opts.limit.context}, words: ${words}`)
     }
 
-    const tokens = await opts.limit.encoder(prompt)
+    const tokens = (await opts.limit.encoder?.(prompt)) ?? 0
     tally += tokens
     sizes.push(`${label}: ${tokens}/${tally}`)
   }
@@ -360,7 +360,7 @@ export async function parseTemplate(
     // This is based on the idea that the template author knows that 'the bottom of the prompt is more important'
     // Therefore we will prioritise low-priority blocks at the bottom of the prompt higher than the top of the prompt.
     for (const { id, content } of (opts.lowpriority ?? []).reverse()) {
-      const contentLength = await opts.limit.encoder(content)
+      const contentLength = (await opts.limit.encoder?.(content)) ?? 0
       if (contentLength > unusedTokens) {
         output = output.replace(id, '')
         replaceSections(sections, id, '')

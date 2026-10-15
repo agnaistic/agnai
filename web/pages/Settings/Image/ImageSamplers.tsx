@@ -12,9 +12,9 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         min={5}
         max={128}
         step={1}
-        value={props.ctx.store.steps ?? props.ctx.state.agnaiModel?.init.steps ?? 50}
+        value={props.ctx.preset.steps ?? props.ctx.state.agnaiModel?.init.steps ?? 50}
         label="Sampling Steps"
-        onChange={(ev) => props.ctx.update('steps', ev)}
+        onChange={(ev) => props.ctx.updatePreset({ steps: ev })}
       />
 
       <InlineRangeInput
@@ -22,9 +22,9 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         min={0}
         max={4}
         step={1}
-        value={props.ctx.store.clipSkip ?? props.ctx.state.agnaiModel?.init.clipSkip ?? 0}
+        value={props.ctx.preset.clipSkip ?? props.ctx.state.agnaiModel?.init.clipSkip ?? 0}
         label="Clip Skip"
-        onChange={(ev) => props.ctx.update('clipSkip', ev)}
+        onChange={(ev) => props.ctx.updatePreset({ clipSkip: ev })}
       />
 
       <InlineRangeInput
@@ -32,9 +32,9 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         min={256}
         max={1280}
         step={128}
-        value={props.ctx.store.width ?? props.ctx.state.agnaiModel?.init.width ?? 1024}
+        value={props.ctx.preset.width ?? props.ctx.state.agnaiModel?.init.width ?? 1024}
         label="Image Width"
-        onChange={(ev) => props.ctx.update('width', ev)}
+        onChange={(ev) => props.ctx.updatePreset({ width: ev })}
       />
 
       <InlineRangeInput
@@ -42,58 +42,57 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         min={256}
         max={1280}
         step={128}
-        value={props.ctx.store.height ?? props.ctx.state.agnaiModel?.init.height ?? 1024}
+        value={props.ctx.preset.height ?? props.ctx.state.agnaiModel?.init.height ?? 1024}
         label="Image Height"
-        onChange={(ev) => props.ctx.update('height', ev)}
+        onChange={(ev) => props.ctx.updatePreset({ height: ev })}
       />
 
       <InlineRangeInput
         fieldName="imageCfg"
-        value={props.ctx.store.cfg ?? props.ctx.state.agnaiModel?.init.cfg ?? 9}
+        value={props.ctx.preset.cfg ?? props.ctx.state.agnaiModel?.init.cfg ?? 9}
         label="Guidance Scale"
         min={1}
         max={10}
         step={0.2}
-        onChange={(ev) => props.ctx.update('cfg', ev)}
+        onChange={(ev) => props.ctx.updatePreset({ cfg: ev })}
       />
 
       <Toggle
         label="Auto-santisize Prompt"
         helperText="Prompts have underscores replaced and excess whitespace/commas removed"
-        value={props.ctx.store.autofix ?? false}
-        onChange={(ev) => props.ctx.update('autofix', ev)}
+        value={props.ctx.preset.autofix ?? false}
+        onChange={(ev) => props.ctx.updatePreset({ autofix: ev })}
       />
 
       <TextInput
         fieldName="seed"
-        value={props.ctx.store.seed ?? 0}
+        value={props.ctx.preset.seed ?? 0}
         label="Seed"
         type="number"
         helperText="Seed number (0 = random). Note: The seed will not be consistent across different servers."
         onChange={(ev) =>
-          props.ctx.update(
-            'seed',
-            Math.max(0, Math.min(+ev.currentTarget.value, Number.MAX_SAFE_INTEGER))
-          )
+          props.ctx.updatePreset({
+            seed: Math.max(0, Math.min(+ev.currentTarget.value, Number.MAX_SAFE_INTEGER)),
+          })
         }
       />
 
       <TextInput
         fieldName="imagePrefix"
-        value={props.ctx.store.prefix}
+        value={props.ctx.preset.prefix}
         label="Prompt Prefix"
         helperText="(Optional) Text to prepend to your image prompt"
         placeholder={`E.g.: best quality, masterpiece`}
-        onChange={(ev) => props.ctx.update('prefix', ev.currentTarget.value)}
+        onChange={(ev) => props.ctx.updatePreset({ prefix: ev.currentTarget.value })}
       />
 
       <TextInput
         fieldName="imageSuffix"
-        value={props.ctx.store.suffix}
+        value={props.ctx.preset.suffix}
         label="Prompt Suffix"
         helperText="(Optional) Text to append to your image prompt"
         placeholder={`E.g.: full body, visible legs, dramatic lighting`}
-        onChange={(ev) => props.ctx.update('suffix', ev.currentTarget.value)}
+        onChange={(ev) => props.ctx.updatePreset({ suffix: ev.currentTarget.value })}
       />
 
       <TextInput
@@ -101,8 +100,8 @@ export const ImageSamplers: Component<{ ctx: ImageContext }> = (props) => {
         label="Negative Prompt"
         helperText="(Optional) Negative Prompt"
         placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
-        value={props.ctx.store.negative}
-        onChange={(ev) => props.ctx.update('negative', ev.currentTarget.value)}
+        value={props.ctx.preset.negative}
+        onChange={(ev) => props.ctx.updatePreset({ negative: ev.currentTarget.value })}
       />
     </div>
   )

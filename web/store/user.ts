@@ -23,7 +23,7 @@ import {
 } from '../shared/colors'
 import { UserType } from '/common/types/admin'
 import { EMBED_MODELS, embedApi } from './embeddings'
-import { ImageProviderSettings } from '/common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -313,6 +313,21 @@ export const userStore = createStore<UserState>(
       const res = await usersApi.deleteProviderKey(providerId)
       if (res.result) {
         return { user: { ...user!, providers: res.result.providers } }
+      }
+    },
+
+    async *upsertImageSettings(
+      _,
+      update: {
+        target: { type: string; id?: string; imagePresetId: string }
+        preset?: ImagePresetSettings
+        provider?: ImageProviderSettings
+      },
+      onSuccess?: () => void
+    ) {
+      const res = await usersApi.upsertImageSettings(update)
+      if (res.result) {
+        onSuccess?.()
       }
     },
 
@@ -1161,44 +1176,45 @@ function getInitialEmbeddingsModel(user: AppSchema.User) {
 }
 
 async function autoSwitchImageService(init: { config: AppSchema.AppConfig; user: AppSchema.User }) {
-  // If it's already set, ignore
-  if (!init.user || !init.config) return
+  return
+  // // If it's already set, ignore
+  // if (!init.user || !init.config) return
 
-  const config = init.config.serverConfig
-  if (init.user.images?.type === 'agnai') return
+  // const config = init.config.serverConfig
+  // if (init.user.images?.type === 'agnai') return
 
-  // If we've changed from the default, ignore
-  if (init.user.images?.type !== 'horde') return
+  // // If we've changed from the default, ignore
+  // if (init.user.images?.type !== 'horde') return
 
-  if (!config?.imagesEnabled) return
-  if (!config?.imagesModels?.length) return
+  // if (!config?.imagesEnabled) return
+  // if (!config?.imagesModels?.length) return
 
-  const { tiers } = userStore.getState()
+  // const { tiers } = userStore.getState()
 
-  const sub = getUserSubscriptionTier(init.user, tiers)
-  if (!sub?.tier?.imagesAccess) return
+  // const sub = getUserSubscriptionTier(init.user, tiers)
+  // if (!sub?.tier?.imagesAccess) return
 
-  const next = { ...init.user.images }
-  next.type = 'agnai'
+  // const next = { ...init.user.images }
+  // next.type = 'agnai'
 
-  if (config?.defaultImageModel) {
-    if (next.agnai) {
-      next.agnai.model = config.defaultImageModel
-    } else {
-      next.agnai = {
-        _id: 'agnai',
-        name: 'Agnaistic',
-        type: 'agnai',
-        url: '',
-        model: config.defaultImageModel,
-        sampler: 'k_euler_a',
-        scheduler: '',
-        draftMode: false,
-      }
-    }
-  }
+  // if (config?.defaultImageModel) {
+  //   if (next.agnai) {
+  //     next.agnai.model = config.defaultImageModel
+  //   } else {
+  //     next.agnai = {
+  //       _id: 'agnai',
+  //       name: 'Agnaistic',
+  //       type: 'agnai',
+  //       url: '',
+  //       model: config.defaultImageModel,
+  //       sampler: 'k_euler_a',
+  //       scheduler: '',
+  //       draftMode: false,
+  //     }
+  //   }
+  // }
 
-  userStore.updateConfig({ images: next })
+  // userStore.updateConfig({ images: next })
 }
 
 userStore.subscribe((next, prev) => {

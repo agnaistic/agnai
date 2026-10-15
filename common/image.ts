@@ -1,4 +1,4 @@
-import { BaseImageSettings } from './types/image-schema'
+import { BaseImageSettings, ImageProviderSettings, ImageProviderType } from './types/image-schema'
 import { AppSchema } from './types/schema'
 
 export const IMAGE_SUMMARY_PROMPT = {
@@ -93,7 +93,7 @@ export const SWARM_SCHED_REV = {
   linear_quadratic: 'Linear Quadratic',
   'ltxv-image': 'LTXV-Image',
   kl_optimal: 'KL Optimal',
-}
+} as const
 
 export const SD_SAMPLER_OPTS = Object.entries(SD_SAMPLER_REV).map(([key, value]) => ({
   label: value,
@@ -123,55 +123,12 @@ export function getImageSettings(
   character: AppSchema.Character | undefined,
   user: AppSchema.User
 ) {
-  let imageSettings =
-    chat?.imageSource === 'main-character' || chat?.imageSource === 'last-character'
-      ? character?.imageSettings
-      : chat?.imageSource === 'chat'
-      ? chat?.imageSettings
-      : user?.images
+  const src = getImageSource(chat, character, user)
 
-  if (!imageSettings) {
-    imageSettings = user?.images
-  }
+  const provider = user.imageProviders?.find((prov) => prov._id === src.providerId)
+  const preset = user.imagePresets?.find((prv) => prv._id === src.presetId)
 
-  const { id } = getImageSource(chat, character, user)
-
-  let provider = user.imageProviders?.find((prov) => prov._id === id)
-  if (provider) {
-    return { settings: imageSettings, provider }
-  }
-
-  switch (imageSettings?.type) {
-    case 'agnai':
-      provider = user.images?.agnai
-      break
-
-    case 'horde':
-      provider = user.images?.horde
-      break
-
-    case 'novel':
-      provider = user.images?.novel
-      break
-
-    case 'sd':
-      provider = user.images?.sd
-      break
-
-    case 'swarm':
-      provider = user.images?.swarm
-      break
-  }
-
-  if (provider && imageSettings?.type) {
-    provider.type = imageSettings.type
-  }
-
-  if (!provider) {
-    throw new Error('Cannot locate Image Provider for request')
-  }
-
-  return { settings: imageSettings, provider }
+  return { preset: preset || src.settings, provider: provider || IMG_PROVIDER_DEFAULTS.horde }
 }
 
 function getImageSource(
@@ -183,27 +140,39 @@ function getImageSource(
 
   switch (source) {
     case 'chat': {
-      return { source, id: chat?.imageProviderId || chat?.imageSettings?.type }
+      return {
+        source,
+        providerId: chat?.imageProviderId || (chat?.imageSettings as any)?.type,
+        presetId: chat?.imagePresetId,
+        settings: chat?.imageSettings,
+      }
     }
 
     case 'main-character':
     case 'last-character': {
       return {
         source: 'character',
-        id: char?.imageProviderId || char?.imageSettings?.type,
+        providerId: char?.imageProviderId || (char?.imageSettings as any)?.type,
+        presetId: char?.imagePresetId,
+        settings: char?.imageSettings,
       }
     }
 
     case 'settings':
     default: {
-      return { source: 'character', id: user.imageProviderId || user.images?.type }
+      return {
+        source: 'settings',
+        presetId: user.imagePresetId,
+        providerId: user.imageProviderId,
+        settings: null,
+      }
     }
   }
 }
 
 export function getImagePrompt(
   opts: { prompt: string; noAffix?: boolean },
-  imageSettings: BaseImageSettings | undefined
+  imageSettings: Optional<BaseImageSettings>
 ) {
   let parsed = opts.prompt.replace(/\{\{prompt\}\}/g, ' ')
   let prompt = parsed
@@ -239,4 +208,57 @@ export function getImagePrompt(
   }
 
   return { prompt, rawPrompt }
+}
+
+export const IMG_PROVIDER_DEFAULTS: Record<ImageProviderType, ImageProviderSettings> = {
+  openai: {} as any,
+  agnai: {
+    _id: 'agnai',
+    type: 'agnai',
+    name: 'Agnaistic',
+    url: '',
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+    draftMode: false,
+    scheduler: '',
+  },
+  horde: {
+    _id: 'horde',
+    type: 'horde',
+    name: 'Horde',
+    url: '',
+    sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
+    model: '',
+  },
+  sd: {
+    _id: 'sd',
+    type: 'sd',
+    name: 'Stable Diffusion',
+    model: '',
+    url: '',
+    sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
+  },
+  novel: {
+    _id: 'novel',
+    type: 'novel',
+    name: 'NovelAI',
+    url: '',
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+    scheduler: '',
+    ucPreset: '0',
+    qualityTags: true,
+  },
+  swarm: {
+    _id: 'swarm',
+    type: 'swarm',
+    name: 'SwarmUI',
+    model: '',
+    sampler: SD_SAMPLER['Euler a'],
+    scheduler: SWARM_SCHEDULER['Normal'],
+    url: 'http://localhost:7801',
+    local: true,
+  },
 }

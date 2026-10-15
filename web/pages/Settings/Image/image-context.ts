@@ -1,8 +1,8 @@
 import { createStore } from 'solid-js/store'
-import { SD_SAMPLER, SWARM_SCHEDULER } from '/common/image'
+import { getImageSettings, IMG_PROVIDER_DEFAULTS, SD_SAMPLER, SWARM_SCHEDULER } from '/common/image'
 import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
 import { createEffect, createMemo, on } from 'solid-js'
-import { ImageDefaults, ImageSettings } from '/common/types/image-schema'
+import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 import { isChatPageMemo } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
@@ -19,7 +19,9 @@ const PROVIDER_TYPES = [
   { label: 'OpenAI-Compat', value: 'openai' },
 ]
 
-const init = (): ImageSettings => ({
+const init = (): ImagePresetSettings => ({
+  _id: '',
+  imageProviderId: '',
   summaryPresetId: '',
   cfg: 7,
   height: 1216,
@@ -30,59 +32,12 @@ const init = (): ImageSettings => ({
   suffix: '',
   summariseChat: true,
   summaryPrompt: '',
-  template: '',
-  type: 'horde',
-  imageProviderId: '',
-  openai: {} as any,
-  agnai: {
-    _id: 'agnai',
-    type: 'agnai',
-    name: 'Agnaistic',
-    url: '',
-    model: '',
-    sampler: SD_SAMPLER['Euler a'],
-    draftMode: false,
-    scheduler: '',
-  },
-  horde: {
-    _id: 'horde',
-    type: 'horde',
-    name: 'Horde',
-    url: '',
-    sampler: SD_SAMPLER['Euler a'],
-    scheduler: '',
-    model: '',
-  },
-  sd: {
-    _id: 'sd',
-    type: 'sd',
-    name: 'Stable Diffusion',
-    model: '',
-    url: '',
-    sampler: SD_SAMPLER['Euler a'],
-    scheduler: '',
-  },
-  novel: {
-    _id: 'novel',
-    type: 'novel',
-    name: 'NovelAI',
-    url: '',
-    model: '',
-    sampler: SD_SAMPLER['Euler a'],
-    scheduler: '',
-    ucPreset: '0',
-    qualityTags: true,
-  },
-  swarm: {
-    _id: 'swarm',
-    type: 'swarm',
-    name: 'SwarmUI',
-    model: '',
-    sampler: SD_SAMPLER['Euler a'],
-    scheduler: SWARM_SCHEDULER['Normal'],
-    url: 'http://localhost:7801',
-    local: true,
-  },
+  autofix: true,
+  name: '',
+  prefix: '',
+  sampler: SD_SAMPLER['Euler a'],
+  scheduler: SWARM_SCHEDULER.Normal,
+  seed: 0,
 })
 
 export type ImageContext = ReturnType<typeof useImageContext>[0]
@@ -98,8 +53,23 @@ export function useImageContext() {
     char: s.details[s.lastChatId]?.char,
   }))
 
-  const [cfg, setCfg] = createStore(init())
-  const [currentCfg, setCurrentCfg] = createStore(init())
+  const [edit, setEdit] = createStore({
+    preset: init(),
+    provider: IMG_PROVIDER_DEFAULTS.horde,
+  })
+
+  const [current, setCurrent] = createStore({
+    preset: init(),
+    provider: IMG_PROVIDER_DEFAULTS.horde,
+  })
+
+  const editPreset = (update: Partial<ImagePresetSettings>) => {
+    setEdit({ preset: { ...edit.preset, ...update } })
+  }
+
+  const editProvider = (update: Partial<ImageProviderSettings>) => {
+    setEdit({ provider: { ...edit.provider, ...update } })
+  }
 
   const [state, setState] = createStore({
     agnaiModel: undefined as ImageModel | undefined,
@@ -172,31 +142,51 @@ export function useImageContext() {
         ? 'Character'
         : 'Shared'
 
+    const settings = getImageSettings(entity.chat, entity.char, user.user!)
+
     const view = current ? currentTarget : tab.current()
-    const setter = current ? setCurrentCfg : setCfg
+    const setter = current ? setCurrent : setEdit
 
     switch (view) {
       case 'Character':
         setter({
-          ...init(),
-          ...entity.chat?.imageSettings,
-          imageProviderId: entity.char.imageProviderId || entity.char.imageSettings?.type,
+          provider: { ...settings.provider },
+          preset: {
+            ...init(),
+            ...settings.preset,
+            imageProviderId:
+              settings.preset?.imageProviderId ||
+              entity.char.imageProviderId ||
+              (entity.char.imageSettings as any)?.type,
+          },
         })
         break
 
       case 'Chat':
         setter({
-          ...init(),
-          ...entity.char?.imageSettings,
-          imageProviderId: entity.chat.imageProviderId || entity.chat.imageSettings?.type,
+          provider: { ...settings.provider },
+          preset: {
+            ...init(),
+            ...settings.preset,
+            imageProviderId:
+              settings.preset?.imageProviderId ||
+              entity.chat.imageProviderId ||
+              (entity.chat.imageSettings as any)?.type,
+          },
         })
         break
 
       default:
         setter({
-          ...init(),
-          ...user.user?.images,
-          imageProviderId: user.user?.imageProviderId || user.user?.images?.type,
+          provider: { ...settings.provider },
+          preset: {
+            ...init(),
+            ...settings.preset,
+            imageProviderId:
+              settings.preset?.imageProviderId ||
+              user.user?.imageProviderId ||
+              (user.user?.images as any)?.type,
+          },
         })
         break
     }
@@ -237,6 +227,46 @@ export function useImageContext() {
     )
   )
 
+  createEffect(
+    on(
+      () => current.preset.imageProviderId,
+      () => {
+        if (!current.preset.imageProviderId) {
+          setCurrent({ provider: IMG_PROVIDER_DEFAULTS.horde })
+          return
+        }
+
+        const match = user.user?.imageProviders?.find(
+          (s) => s._id === current.preset.imageProviderId
+        )
+
+        if (match && match._id !== current.provider?._id) {
+          setCurrent({ provider: match })
+          return
+        }
+      }
+    )
+  )
+
+  createEffect(
+    on(
+      () => edit.preset.imageProviderId,
+      () => {
+        if (!edit.preset.imageProviderId) {
+          setEdit({ provider: IMG_PROVIDER_DEFAULTS.horde })
+          return
+        }
+
+        const match = user.user?.imageProviders?.find((s) => s._id === edit.preset.imageProviderId)
+
+        if (match && match._id !== edit.provider?._id) {
+          setEdit({ provider: match })
+          return
+        }
+      }
+    )
+  )
+
   const receiveUpdate = () => {
     // if (!page.open) return
 
@@ -262,28 +292,33 @@ export function useImageContext() {
   }
 
   const save = () => {
-    saveImageSettings(tab.current(), cfg, entity, defaults)
+    saveImageSettings(tab.current(), edit, entity)
   }
 
   const changeProvider = (providerId: string) => {
-    setCfg('imageProviderId', providerId)
+    editPreset({ imageProviderId: providerId })
     changeImageProvider(tab.current(), entity, providerId)
   }
 
   const tabSource = createMemo(() => {
     const current = tab.current()
-    const source = current === 'Character' ? 'main-character' : current === 'Shared' ? 'settings' : 'chat'
+    const source =
+      current === 'Character' ? 'main-character' : current === 'Shared' ? 'settings' : 'chat'
     return { neat: current, source } as const
   })
 
   const changeChatSource = (chatId: string) => {
     if (!chatId) return
-    const {source} = tabSource()
-    chatStore.editChat(chatId, { imageSource: source }, {
-      onSuccess: () => {
-        setState({ source })
+    const { source } = tabSource()
+    chatStore.editChat(
+      chatId,
+      { imageSource: source },
+      {
+        onSuccess: () => {
+          setState({ source })
+        },
       }
-    })
+    )
   }
 
   const editing = createMemo(() => {
@@ -293,9 +328,11 @@ export function useImageContext() {
 
   return [
     {
-      store: cfg,
-      current: currentCfg,
-      update: setCfg,
+      preset: edit.preset,
+      provider: edit.provider,
+      current: current.preset,
+      updatePreset: editPreset,
+      updateProvider: editProvider,
       state: state,
       defaults,
       toggleDefaults,
@@ -350,46 +387,27 @@ async function changeImageProvider(tab: string, entity: any, providerId: string)
 
 async function saveImageSettings(
   tab: string,
-  store: ImageSettings,
-  entity: any,
-  defaults: ImageDefaults
+  store: { preset: ImagePresetSettings; provider: ImageProviderSettings },
+  entity: any
 ) {
+  const target = getImageTarget(tab, entity)
+  await userStore.upsertImageSettings({ target, preset: store.preset, provider: store.provider })
+  imageStore.imageSettings(false)
+}
+
+function getImageTarget(tab: string, entity: any) {
   switch (tab) {
     case 'Shared': {
-      await userStore.updatePartialConfig({
-        images: store,
-        imageDefaults: defaults,
-        imageProviderId: store.imageProviderId,
-      })
-      imageStore.imageSettings(false)
-      return
-    }
-
-    case 'Chat': {
-      await Promise.all([
-        chatStore.editChat(entity.chat?._id!, {
-          imageSettings: store,
-          imageProviderId: store.imageProviderId,
-        }),
-        userStore.updatePartialConfig({ imageDefaults: defaults }),
-      ])
-      imageStore.imageSettings(false)
-      return
+      return { type: 'user', imagePresetId: '' }
     }
 
     case 'Character': {
-      await Promise.all([
-        characterStore.editPartialCharacter(entity.char?._id!, {
-          imageSettings: store,
-          imageProviderId: store.imageProviderId,
-        }),
-        userStore.updatePartialConfig({ imageDefaults: defaults }),
-      ])
-      imageStore.imageSettings(false)
-      return
+      return { type: 'character', id: entity._id, imagePresetId: '' }
     }
 
-    default:
-      return
+    case 'Chat':
+    default: {
+      return { type: 'chat', id: entity._id, imagePresetId: '' }
+    }
   }
 }

@@ -20,9 +20,11 @@ const print = debug('slots')
 const win: any = window
 win.enableSticky = JSON.parse(localStorage.getItem('agnai-sticky') || 'true')
 
-window.googletag = window.googletag || { cmd: [] }
-window.ezstandalone = window.ezstandalone || { cmd: [] }
-window.fusetag = window.fusetag || { que: [] }
+win.googletag = win.googletag || { cmd: [] }
+win.ezstandalone = win.ezstandalone || { cmd: [] }
+win.fusetag = win.fusetag || { que: [] }
+
+const googletag = win.googletag
 
 let slotCounter = 200
 
@@ -123,7 +125,7 @@ const Slot: Component<{
   const [uniqueId, setUniqueId] = createSignal<number>()
 
   const [done, setDone] = createSignal(false)
-  const [adslot, setSlot] = createSignal<googletag.Slot>()
+  const [adslot, setSlot] = createSignal<any>()
   const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
   const [slotId, setSlotId] = createSignal<string>()
@@ -220,11 +222,11 @@ const Slot: Component<{
       tryRefresh()
     }, 15000)
 
-    const onLoaded = (evt: googletag.events.SlotOnloadEvent) => {
+    const onLoaded = (evt: any) => {
       if (evt.slot.getSlotElementId() !== id()) return
     }
 
-    const onView = (evt: googletag.events.ImpressionViewableEvent) => {
+    const onView = (evt: any) => {
       if (evt.slot.getSlotElementId() !== id()) return
 
       log('Viewable')
@@ -232,7 +234,7 @@ const Slot: Component<{
       // TODO: Start refresh timer
     }
 
-    const onVisChange = (evt: googletag.events.SlotVisibilityChangedEvent) => {
+    const onVisChange = (evt: any) => {
       if (evt.slot.getSlotElementId() !== id()) return
       setVisible((prev) => {
         const next = evt.inViewPercentage >= 50
@@ -243,12 +245,12 @@ const Slot: Component<{
       })
     }
 
-    const onRequested = (evt: googletag.events.SlotRequestedEvent) => {
+    const onRequested = (evt: any) => {
       if (evt.slot.getSlotElementId() !== id()) return
       log('Requested', slotId())
     }
 
-    const onResponse = (evt: googletag.events.SlotResponseReceived) => {
+    const onResponse = (evt: any) => {
       if (evt.slot.getSlotElementId() !== id()) return
     }
 

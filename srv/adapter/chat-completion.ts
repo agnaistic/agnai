@@ -11,10 +11,6 @@ type SplitSampleChatProps = {
   budget?: number
 }
 
-// We only ever use the OpenAI gpt-3 encoder
-// Don't bother passing it around since we know this already
-// const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
-
 const sampleChatMarkerCompletionItem: CompletionItem = {
   role: 'system',
   content: SAMPLE_CHAT_MARKER.replace('System: ', ''),

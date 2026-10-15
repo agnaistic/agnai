@@ -12,7 +12,7 @@ import {
   insertsDeeperThanConvoHistory,
 } from '../../common/prompt'
 import { AppLog } from '../middleware'
-import { getTokenCounter } from '../tokenize'
+
 import { sendOne } from '../api/ws'
 import { joinUrl } from '/common/requests/util'
 import { GenSettings } from '/common/types/presets'
@@ -55,9 +55,6 @@ const TEMP_TOPP_EXCLUSIVE: Record<string, boolean> = {
   'claude-sonnet-4-20250514': false,
   'claude-3-haiku-20240307': false,
 }
-
-// There's no tokenizer for Claude, we use OpenAI's as an estimation
-const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   let { user, log, guest, gen, isThirdParty } = opts
@@ -521,8 +518,6 @@ async function createClaudePrompt(opts: AdapterProps) {
   // Some API keys require that prompts start with this
   const mandatoryPrefix = '\n\nHuman: '
 
-  const enc = encoder()
-
   const { parsed: rawGaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, ['history', 'post']),
     {
@@ -530,16 +525,14 @@ async function createClaudePrompt(opts: AdapterProps) {
       parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: enc,
       jsonValues: opts.jsonValues,
     }
   )
   const gaslight = processLine('system', rawGaslight)
-  const gaslightCost = await encoder()(mandatoryPrefix + gaslight)
+  const gaslightCost = 0
   const { parsed } = await injectPlaceholders(parts.ujb ?? '', {
     opts,
     parts,
-    encoder: enc,
     characters: opts.characters || {},
     jsonValues: opts.jsonValues,
   })
@@ -547,16 +540,12 @@ async function createClaudePrompt(opts: AdapterProps) {
   const ujb = parsed ? processLine('system', parsed) : ''
 
   const prefill = opts.parts.prefill ? opts.parts.prefill + '\n' : ''
-  const prefillCost = await enc(prefill)
+  const prefillCost = 0
 
-  const maxBudget =
-    maxContextLength -
-    maxResponseTokens -
-    gaslightCost -
-    prefillCost -
-    (await enc(ujb)) -
-    (await enc(opts.replyAs.name + ':')) -
-    (await enc([...inserts.values()].join(' ')))
+  const maxBudget = maxContextLength - maxResponseTokens - gaslightCost - prefillCost
+  // (await enc(ujb)) -
+  // (await enc(opts.replyAs.name + ':')) -
+  // (await enc([...inserts.values()].join(' ')))
 
   let tokens = 0
   const history: string[] = []
@@ -590,7 +579,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     }
 
     const processedLine = processLine(lineType, line)
-    const cost = await enc(processedLine)
+    const cost = 0 // await enc(processedLine)
     if (cost + tokens >= maxBudget) break
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push(processLine('system', insert))

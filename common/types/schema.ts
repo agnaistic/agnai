@@ -1,12 +1,7 @@
 import type { AIAdapter, ChatAdapter, ThirdPartyFormat } from '../adapters'
 import * as Memory from './memory'
 import type { GenerationPreset } from '../presets'
-import type {
-  BaseImageSettings,
-  ImagePresetSettings,
-  ImageProviderSettings,
-  ImageSettings,
-} from './image-schema'
+import type { BaseImageSettings, ImagePresetSettings, ImageProviderSettings } from './image-schema'
 import type { TTSSettings } from './texttospeech-schema'
 import type { UISettings } from './ui'
 import * as Saga from './saga'
@@ -162,11 +157,12 @@ export namespace AppSchema {
 
     texttospeech?: TTSSettings
 
-    images?: ImageSettings & {}
+    images?: BaseImageSettings
 
     imageProviders?: ImageProviderSettings[]
     imagePresets?: ImagePresetSettings[]
     imageProviderId?: string
+    imagePresetId?: string
 
     imageDefaults?: {
       size: boolean
@@ -307,8 +303,9 @@ export namespace AppSchema {
     treeLeafId?: string
 
     imageSource?: ImageSettingsSource
-    imageSettings?: BaseImageSettings
+    imageSettings?: ImagePresetSettings
     imageProviderId?: string
+    imagePresetId?: string
 
     background?: string
     localSettings?: { bgFormat?: 'contain' | 'cover' | 'auto' }

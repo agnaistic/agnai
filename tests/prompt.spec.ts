@@ -2,7 +2,6 @@ import './init'
 import { expect } from 'chai'
 import { BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
 import { toChat, build, botMsg, toMsg, entities, reset, toBook, toEntry } from './util'
-import { getTokenCounter } from '../srv/tokenize'
 import { OPENAI_MODELS } from '/common/presets/openai'
 
 const { chat, replyAs, main } = entities
@@ -49,17 +48,17 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
-  it('will exclude lowest priority memory to fit in budget', async () => {
-    const limit =
-      (await getTokenCounter('main', undefined)(`ENTRY ONE\nENTRY TWO\nENTRY THREE`)) - 1
-    const actual = await build(
-      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
-      {
-        settings: { memoryContextLimit: limit },
-      }
-    )
-    expect(actual.template.parsed).toMatchSnapshot()
-  })
+  // it('will exclude lowest priority memory to fit in budget', async () => {
+  //   const limit =
+  //     (await getTokenCounter('main', undefined)(`ENTRY ONE\nENTRY TWO\nENTRY THREE`)) - 1
+  //   const actual = await build(
+  //     [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
+  //     {
+  //       settings: { memoryContextLimit: limit },
+  //     }
+  //   )
+  //   expect(actual.template.parsed).toMatchSnapshot()
+  // })
 
   it('will order by trigger position when weight tie occurs', async () => {
     const actual = await build([

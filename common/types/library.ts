@@ -1,6 +1,6 @@
 import { PersonaFormat } from '../adapters'
 import { JsonField } from '../prompt'
-import { ImageSettings } from './image-schema'
+import { BaseImageSettings, ImagePresetSettings } from './image-schema'
 import { MemoryBook } from './memory'
 import { FullSprite } from './sprite'
 import { VoiceSettings } from './texttospeech-schema'
@@ -58,8 +58,9 @@ export interface Character extends BaseCharacter {
   characterVersion?: string
   prefill?: string
 
-  imageSettings?: ImageSettings
+  imageSettings?: ImagePresetSettings
   imageProviderId?: string
+  imagePresetId?: string
 }
 
 export interface LibraryCharacter extends Omit<Character, 'kind' | 'tags'> {

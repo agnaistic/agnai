@@ -86,7 +86,7 @@ const ChatNav: Component<NavProps> = (props) => {
   const openProviders = createEmitter('open')
 
   const openMessageImages = () => {
-    const last = getStore('messages').getState().msgs.slice(-1)[0]
+    const last = props.ctx.messages.viewing.slice(-1)[0]
 
     if (!last) {
       imageStore.openImageGen()

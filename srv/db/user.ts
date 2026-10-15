@@ -318,24 +318,29 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   return { profile, token, user: toSafeUser(user) }
 }
 
-export async function upsertImageProvider(user: AppSchema.User, provider: ImageProviderSettings) {
-  if (!provider._id) {
-    provider._id = v4()
+export async function upsertImageSettings(
+  user: AppSchema.User,
+  settings: { preset?: ImagePresetSettings; provider?: ImageProviderSettings }
+) {
+  const { preset, provider } = settings
+
+  const updates: Partial<AppSchema.User> = {}
+
+  if (preset) {
+    const presets = patchImagePresets(user, preset)
+    updates.imagePresets = presets
   }
 
-  const providers = user.imageProviders || []
-  const isUpdate = providers.some((prv) => prv._id === provider._id)
+  if (provider) {
+    const providers = patchImageProviders(user, provider)
+    updates.imageProviders = providers
+  }
 
-  const next = isUpdate
-    ? providers.map((prv) => (prv._id === provider._id ? { ...prv, ...provider } : prv))
-    : providers.concat(provider)
-
-  await db('user').updateOne({ _id: user._id }, { $set: { imageProviders: next } })
-  user.imageProviders = next
+  await db('user').updateOne({ _id: user._id }, { $set: updates })
   return user
 }
 
-export async function upsertImagePreset(user: AppSchema.User, preset: ImagePresetSettings) {
+function patchImagePresets(user: AppSchema.User, preset: ImagePresetSettings) {
   if (!preset._id) {
     preset._id = v4()
   }
@@ -347,9 +352,24 @@ export async function upsertImagePreset(user: AppSchema.User, preset: ImagePrese
     ? presets.map((p) => (p._id === preset._id ? { ...p, ...preset } : p))
     : presets.concat(preset)
 
-  await db('user').updateOne({ _id: user._id }, { $set: { imagePresets: next } })
-  user.imagePresets = presets
-  return user
+  user.imagePresets = next
+  return next
+}
+
+function patchImageProviders(user: AppSchema.User, provider: ImageProviderSettings) {
+  if (!provider._id) {
+    provider._id = v4()
+  }
+
+  const providers = user.imageProviders || []
+  const isUpdate = providers.some((prv) => prv._id === provider._id)
+
+  const next = isUpdate
+    ? providers.map((prv) => (prv._id === provider._id ? { ...prv, ...provider } : prv))
+    : providers.concat(provider)
+
+  user.imageProviders = next
+  return next
 }
 
 export async function createAccessToken(username: string, user: AppSchema.User) {
