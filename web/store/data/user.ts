@@ -86,7 +86,7 @@ async function deleteProviderKey(providerId: string) {
 }
 
 async function upsertImageSettings(update: {
-  target: { type: string; id?: string; imagePresetId: string }
+  target?: { type: string; id?: string; imagePresetId: string }
   preset?: ImagePresetSettings
   provider?: ImageProviderSettings
 }) {
@@ -95,7 +95,6 @@ async function upsertImageSettings(update: {
     return res
   }
 
-  
   return { result: true, error: undefined }
 }
 

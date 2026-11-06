@@ -113,16 +113,6 @@ export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: bool
     return list
   })
 
-  const editProvider = (providerId: string | undefined) => {
-    if (!providerId) {
-      // setNextProvider()
-      return
-    }
-
-    const match = state.providers.find((prv) => prv._id === providerId)
-    // setNextProvider(match ? { ...match } : undefined)
-  }
-
   const newProvider = () => {
     props.ctx.newProvider()
     // setOpen(true)
@@ -140,7 +130,6 @@ export const SelectImageProvider: Component<{ ctx: ImageContext; editable?: bool
       closeSub={closeSub.on}
       onSelect={(ev) => {
         props.ctx.changeProvider(ev.value)
-        editProvider(ev.value)
       }}
       header={
         <Button size="sm" onClick={newProvider}>

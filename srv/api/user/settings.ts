@@ -19,7 +19,7 @@ import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
-import { optional, optionalUnion, union } from '/common/valid/types'
+import { optional, optionalUnion } from '/common/valid/types'
 import { assertStrict } from '/common/valid/validate'
 import {
   BaseImageSettings,
