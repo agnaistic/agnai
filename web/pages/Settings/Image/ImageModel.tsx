@@ -7,9 +7,17 @@ export const ImageModel: Component<{ ctx: ImageContext }> = (props) => {
     props.ctx.changeModel(id)
   }
 
+  const modelId = createMemo(() => {
+    const providerId = props.ctx.current.provider._id
+    const providerModel = props.ctx.current.preset.models?.[providerId]
+    if (!providerModel) return props.ctx.current.provider.model
+
+    return providerModel
+  })
+
   const selected = createMemo(() => {
     const list = props.ctx.models() || []
-    const match = list.find((l) => l.value === props.ctx.current.provider.model)
+    const match = list.find((l) => l.value === modelId())
 
     if (!match) {
       return { label: 'None', value: '' }

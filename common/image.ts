@@ -154,7 +154,13 @@ export function getImageSettings(
     return { preset: undefined, provider: IMG_PROVIDER_DEFAULTS.horde, src }
   }
 
-  const provider = user.imageProviders?.find((prov) => prov._id === preset.imageProviderId)
+  const provider =
+    user.imageProviders?.find((prov) => prov._id === preset.imageProviderId) ||
+    IMG_PROVIDER_DEFAULTS.horde
+
+  const providerModel = preset.models?.[provider._id] || provider.model
+  debug('img-ctx')(`assigned prov model ${provider.model} --> ${providerModel}`)
+  provider.model = providerModel
 
   return { preset: preset || src.settings, provider: provider || IMG_PROVIDER_DEFAULTS.horde, src }
 }

@@ -213,6 +213,7 @@ const validConfig = {
 export const updatePartialConfig = handle(async ({ userId, body, authed }) => {
   assertValid(
     {
+      imagePresetId: 'string?',
       imageProviderId: 'string?',
       novelApiKey: 'string?',
       thirdPartyPassword: 'string?',
@@ -243,6 +244,10 @@ export const updatePartialConfig = handle(async ({ userId, body, authed }) => {
       throw new StatusError(`Invalid preset`, 403)
     }
     update.defaultPreset = body.defaultPreset
+  }
+
+  if (body.imagePresetId !== undefined) {
+    update.imagePresetId = body.imagePresetId
   }
 
   if (body.imageProviderId !== undefined) {

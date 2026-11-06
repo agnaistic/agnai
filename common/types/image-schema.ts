@@ -28,6 +28,8 @@ export type ImagePresetSettings = BaseImageSettings & {
   name: string
   imageProviderId: string
 
+  models?: { [providerId: string]: string }
+
   summaryPresetId?: string
   summariseChat?: boolean
   summaryPrompt: string

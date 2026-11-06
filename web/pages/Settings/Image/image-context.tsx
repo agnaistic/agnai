@@ -347,9 +347,15 @@ function initImageContext() {
     saveImageSettings(tab.current(), edit, entity)
   }
 
-  const saveProvider = async () => {
-    await userStore.upsertImageSettings({ provider: edit.provider }, () => {
-      setCurrent({ provider: { ...edit.provider } })
+  // const saveProvider = async () => {
+  //   await userStore.upsertImageSettings({ provider: edit.provider }, () => {
+  //     setCurrent({ provider: { ...edit.provider } })
+  //   })
+  // }
+
+  const savePreset = async () => {
+    await userStore.upsertImageSettings({ preset: edit.preset }, () => {
+      setCurrent({ preset: { ...current.preset } })
     })
   }
 
@@ -360,8 +366,10 @@ function initImageContext() {
   }
 
   const changeModel = async (model: string) => {
-    editProvider({ model })
-    await saveProvider()
+    const models = { ...(current.preset.models || {}) }
+    models[current.provider._id] = model
+    editPreset({ models })
+    await savePreset()
   }
 
   const changeImagePreset = async (presetId: string) => {
@@ -499,10 +507,6 @@ async function saveImageSettings(
 
   await userStore.upsertImageSettings({ target, preset: store.preset, provider: store.provider })
   imageStore.imageSettings(false)
-}
-
-async function saveProvider(provider: ImageProviderSettings) {
-  await userStore.upsertImageProvider(provider)
 }
 
 function getImageTarget(tab: string, entity: any) {
