@@ -1,12 +1,21 @@
 import { createStore } from 'solid-js/store'
 import { getImageSettings, IMG_PROVIDER_DEFAULTS, SD_SAMPLER, SWARM_SCHEDULER } from '/common/image'
-import { characterStore, chatStore, imageStore, settingStore, userStore } from '/web/store'
-import { createEffect, createMemo, on } from 'solid-js'
+import {
+  characterStore,
+  chatStore,
+  imageStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from '/web/store'
+import { createContext, createEffect, createMemo, createResource, on, useContext } from 'solid-js'
 import { ImagePresetSettings, ImageProviderSettings } from '/common/types/image-schema'
 import { isChatPageMemo } from '/web/shared/hooks'
 import { useTabs } from '/web/shared/Tabs'
 import { ImageModel } from '/common/types/admin'
 import { AppSchema } from '/common/types'
+import { retrieveImageModels } from './image-hooks'
+import { debug } from 'common/debug'
 
 type SettingSource = 'Shared' | 'Character' | 'Chat'
 
@@ -19,7 +28,7 @@ const PROVIDER_TYPES = [
   { label: 'OpenAI-Compat', value: 'openai' },
 ]
 
-const init = (): ImagePresetSettings => ({
+const initPreset = (): ImagePresetSettings => ({
   _id: '',
   imageProviderId: '',
   summaryPresetId: '',
@@ -40,9 +49,32 @@ const init = (): ImagePresetSettings => ({
   seed: 0,
 })
 
-export type ImageContext = ReturnType<typeof useImageContext>[0]
+const initProvider = (): ImageProviderSettings => ({
+  _id: '',
+  name: '',
+  type: 'agnai',
+  url: '',
+  sampler: SD_SAMPLER['Euler a'],
+  model: '',
+  scheduler: SWARM_SCHEDULER.Normal,
+})
+
+export type ImageContext = ReturnType<typeof initImageContext>
+
+const Context = createContext([{} as any as ImageContext] as const)
 
 export function useImageContext() {
+  const [ctx] = useContext(Context)
+  return [ctx]
+}
+
+export function ImageContextProvider(props: { children: any }) {
+  const ctx = initImageContext()
+
+  return <Context.Provider value={[ctx]}>{props.children}</Context.Provider>
+}
+
+function initImageContext() {
   const isChat = isChatPageMemo(true)
 
   const page = imageStore((s) => ({ open: s.showImgSettings }))
@@ -54,12 +86,12 @@ export function useImageContext() {
   }))
 
   const [edit, setEdit] = createStore({
-    preset: init(),
+    preset: initPreset(),
     provider: IMG_PROVIDER_DEFAULTS.horde,
   })
 
   const [current, setCurrent] = createStore({
-    preset: init(),
+    preset: initPreset(),
     provider: IMG_PROVIDER_DEFAULTS.horde,
   })
 
@@ -67,8 +99,10 @@ export function useImageContext() {
     setEdit({ preset: { ...edit.preset, ...update } })
   }
 
-  const editProvider = (update: Partial<ImageProviderSettings>) => {
+  const editProvider = (update: Partial<ImageProviderSettings>, saveChanges?: boolean) => {
     setEdit({ provider: { ...edit.provider, ...update } })
+    if (saveChanges) {
+    }
   }
 
   const [state, setState] = createStore({
@@ -77,6 +111,14 @@ export function useImageContext() {
     hosts: [] as Array<{ label: string; value: string }>,
     source: 'settings' as AppSchema.ImageSettingsSource,
   })
+
+  const [models, { refetch: refetchModels }] = createResource(
+    async () => {
+      const list = await retrieveImageModels(edit.provider)
+      return list
+    },
+    { initialValue: [{ label: 'Loading...', value: '' }] }
+  )
 
   const [defaults, setDefaults] = createStore(
     user.user?.imageDefaults || {
@@ -152,7 +194,7 @@ export function useImageContext() {
         setter({
           provider: { ...settings.provider },
           preset: {
-            ...init(),
+            ...initPreset(),
             ...settings.preset,
             imageProviderId:
               settings.preset?.imageProviderId ||
@@ -166,7 +208,7 @@ export function useImageContext() {
         setter({
           provider: { ...settings.provider },
           preset: {
-            ...init(),
+            ...initPreset(),
             ...settings.preset,
             imageProviderId:
               settings.preset?.imageProviderId ||
@@ -180,7 +222,7 @@ export function useImageContext() {
         setter({
           provider: { ...settings.provider },
           preset: {
-            ...init(),
+            ...initPreset(),
             ...settings.preset,
             imageProviderId:
               settings.preset?.imageProviderId ||
@@ -192,6 +234,8 @@ export function useImageContext() {
     }
 
     if (!current) {
+      debug('img-ctx')('hydrate: %s', edit.provider._id)
+      refetchModels()
       hydrateConfig(true)
     }
   }
@@ -211,8 +255,15 @@ export function useImageContext() {
 
   createEffect(
     on(
-      () => [tab.current(), page.open],
-      () => hydrateConfig()
+      () => [tab.current(), page.open, user.user],
+      () => {
+        if (!user.user) {
+          debug('img-ctx')('cannot hydrate image context yet')
+          return
+        }
+        debug('img-ctx')('hydrating image context')
+        hydrateConfig()
+      }
     )
   )
   // onMount(hydrateConfig)
@@ -241,7 +292,8 @@ export function useImageContext() {
         )
 
         if (match && match._id !== current.provider?._id) {
-          setCurrent({ provider: match })
+          setCurrent({ provider: { ...match } })
+          setEdit({ provider: { ...match } })
           return
         }
       }
@@ -295,9 +347,57 @@ export function useImageContext() {
     saveImageSettings(tab.current(), edit, entity)
   }
 
-  const changeProvider = (providerId: string) => {
+  const saveProvider = async () => {
+    await userStore.upsertImageSettings({ provider: edit.provider }, () => {
+      setCurrent({ provider: { ...edit.provider } })
+    })
+  }
+
+  const changeProvider = async (providerId: string) => {
     editPreset({ imageProviderId: providerId })
-    changeImageProvider(tab.current(), entity, providerId)
+    await changeImageProvider(tab.current(), entity, providerId)
+    refetchModels()
+  }
+
+  const changeModel = async (model: string) => {
+    editProvider({ model })
+    await saveProvider()
+  }
+
+  const changeImagePreset = async (presetId: string) => {
+    const target = getImageTarget(tab.current(), edit)
+
+    const preset = user.user?.imagePresets?.find((p) => p._id === presetId)
+    if (!preset) {
+      toastStore.error('Could not change preset: Preset not found')
+      return
+    }
+
+    switch (target.type) {
+      case 'user': {
+        await userStore.updatePartialConfig({
+          imagePresetId: presetId,
+        })
+        break
+      }
+
+      case 'chat': {
+        await chatStore.editChat(entity.chat?._id!, {
+          imagePresetId: presetId,
+        })
+        break
+      }
+
+      case 'character': {
+        await characterStore.editPartialCharacter(entity.char?._id!, {
+          imagePresetId: presetId,
+        })
+        break
+      }
+    }
+
+    setCurrent({ preset })
+    setEdit({ preset })
   }
 
   const tabSource = createMemo(() => {
@@ -326,24 +426,30 @@ export function useImageContext() {
     return source
   })
 
-  return [
-    {
-      preset: edit.preset,
-      provider: edit.provider,
-      current: current.preset,
-      updatePreset: editPreset,
-      updateProvider: editProvider,
-      state: state,
-      defaults,
-      toggleDefaults,
-      updateDefaults: setDefaults,
-      tab,
-      save,
-      changeProvider,
-      changeChatSource,
-      editingSource: editing,
+  const imageContext = {
+    edit,
+    current,
+    updatePreset: editPreset,
+    updateProvider: editProvider,
+    state: state,
+    defaults,
+    toggleDefaults,
+    updateDefaults: setDefaults,
+    tab,
+    save,
+    newProvider: () => {
+      setEdit({ provider: initProvider() })
     },
-  ]
+    changeImagePreset,
+    changeProvider,
+    changeModel,
+    changeChatSource,
+    editingSource: editing,
+    models: models,
+    refetchModels: refetchModels,
+  }
+
+  return imageContext
 }
 
 export function getImageProviderName(type: string) {
@@ -381,8 +487,6 @@ async function changeImageProvider(tab: string, entity: any, providerId: string)
     default:
       break
   }
-
-  // imageStore.imageSettings(false)
 }
 
 async function saveImageSettings(
@@ -391,23 +495,29 @@ async function saveImageSettings(
   entity: any
 ) {
   const target = getImageTarget(tab, entity)
+  target.imagePresetId = store.preset._id
+
   await userStore.upsertImageSettings({ target, preset: store.preset, provider: store.provider })
   imageStore.imageSettings(false)
+}
+
+async function saveProvider(provider: ImageProviderSettings) {
+  await userStore.upsertImageProvider(provider)
 }
 
 function getImageTarget(tab: string, entity: any) {
   switch (tab) {
     case 'Shared': {
-      return { type: 'user', imagePresetId: '' }
+      return { type: 'user' as const, imagePresetId: '' }
     }
 
     case 'Character': {
-      return { type: 'character', id: entity._id, imagePresetId: '' }
+      return { type: 'character' as const, id: entity._id, imagePresetId: '' }
     }
 
     case 'Chat':
     default: {
-      return { type: 'chat', id: entity._id, imagePresetId: '' }
+      return { type: 'chat' as const, id: entity._id, imagePresetId: '' }
     }
   }
 }

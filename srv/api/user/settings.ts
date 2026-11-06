@@ -19,7 +19,7 @@ import { UI } from '/common/types'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { getUser, toSafeUser } from '/srv/db/user'
 import { getCachedTiers } from '/srv/db/subscriptions'
-import { optional, union } from '/common/valid/types'
+import { optional, optionalUnion, union } from '/common/valid/types'
 import { assertStrict } from '/common/valid/validate'
 import {
   BaseImageSettings,
@@ -381,7 +381,7 @@ const targets = {
 } as const
 
 const imgGuardV2 = {
-  target: union([targets, { type: ['user'], imagePresetId: 'string' }]),
+  target: optionalUnion([targets, { type: ['user'], imagePresetId: 'string' }]),
   preset: optional(imgPresetGuard),
   provider: optional(imgProviderGuard),
 } as const
@@ -395,11 +395,18 @@ export const upsertImageSettings = handle(async ({ body, userId }) => {
     throw new StatusError('Not found', 404)
   }
 
-  if (provider || preset) {
-    await store.users.upsertImageSettings(user, { provider, preset })
+  let result: any = {
+    user: {},
   }
 
-  if (!preset) return
+  if (provider || preset) {
+    const update = await store.users.upsertImageSettings(user, { provider, preset })
+    result.user = update
+  }
+
+  if (!body.target) {
+    return result
+  }
 
   switch (body.target.type) {
     case 'chat': {
@@ -407,6 +414,7 @@ export const upsertImageSettings = handle(async ({ body, userId }) => {
       await store.chats.update(body.target.id, {
         imagePresetId: body.target.imagePresetId,
       })
+      result.chat = { _id: body.target.id, imagePresetId: body.target.imagePresetId }
       break
     }
 
@@ -414,6 +422,7 @@ export const upsertImageSettings = handle(async ({ body, userId }) => {
       await store.characters.partialUpdateCharacter(body.target.id, userId, {
         imagePresetId: body.target.imagePresetId,
       })
+      result.character = { _id: body.target.id, imagePresetId: body.target.imagePresetId }
       break
     }
 
@@ -421,8 +430,12 @@ export const upsertImageSettings = handle(async ({ body, userId }) => {
       await store.users.updateUser(userId, {
         imagePresetId: body.target.imagePresetId,
       })
+      result.user.imagePresetId = body.target.imagePresetId
+      break
     }
   }
+
+  return result
 })
 
 export const upsertImageProvider = handle(async (req) => {
@@ -793,7 +806,7 @@ function addImagePreset(user: AppSchema.User) {
     scheduler: provider.scheduler || 'normal',
     seed: legacy.seed ?? 0,
     summaryPrompt: legacy.summaryPrompt || '',
-    summariseChat: legacy.summariseChat ?? true,
+    summariseChat: true,
     summaryPresetId: legacy.summaryPresetId || '',
   }
 

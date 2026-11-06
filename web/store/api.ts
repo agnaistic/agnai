@@ -206,6 +206,7 @@ export function localSSE(opts: SSEOpts<{ host: string }>) {
     parse: false,
     signal: opts.signal?.signal,
     open_timeout: 0,
+    read_timeout: 0,
     headers: {
       ...opts.headers,
       Accept: 'text/event-stream',
@@ -331,6 +332,8 @@ export function fetchSSE(opts: SSEOpts) {
   let resp = needle.post(api.toApiUrl(path), JSON.stringify(body), {
     parse: false,
     signal: signal?.signal,
+    open_timeout: 120_000,
+    read_timeout: 180_000,
 
     headers: {
       ...headers,

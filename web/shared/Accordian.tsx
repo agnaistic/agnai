@@ -8,6 +8,7 @@ const Accordian: Component<{
   class?: string
   titleClickOpen?: boolean
   onChange?: (open: boolean) => boolean
+  sections?: { subtitle?: JSX.Element }
 }> = (props) => {
   const [open, setOpen] = createSignal(props.open ?? true)
   const cls = createMemo(() => (open() ? '' : 'hidden'))
@@ -35,7 +36,9 @@ const Accordian: Component<{
           {props.title}
         </div>
       </div>
-      <div class={`border-t border-[var(--bg-600)] pt-1 ${cls()}`}>{props.children}</div>
+      <div class="border-t border-[var(--bg-600)] pt-1"></div>
+      <Show when={props.sections?.subtitle}>{props.sections?.subtitle}</Show>
+      <div class={`${cls()}`}>{props.children}</div>
     </div>
   )
 }

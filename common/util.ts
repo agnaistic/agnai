@@ -31,6 +31,20 @@ export function stopResponse(opts: { text: string; author: string; stops: string
   return trimmed || generated
 }
 
+export function uniqueBy<T>(list: T[], key: keyof T) {
+  const set = new Set<any>()
+  const next: T[] = []
+
+  for (const item of list) {
+    if (!set.has(item[key])) {
+      next.push(item)
+      set.add(item[key])
+    }
+  }
+
+  return next
+}
+
 // this is an edited and inverted ver of https://stackoverflow.com/a/70385497
 export function incompleteJson(data: string) {
   if (data?.startsWith('{') && !data.endsWith('}')) return true
@@ -83,11 +97,23 @@ export function getMimeTypeBase64(base64: string) {
   return { mimeType: start.slice(5), data: encode.replace('base64,', '') }
 }
 
+/** Update or append an item in a list */
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
 
-export function updateList<T extends { _id: string }>(original: T[], incoming: T[]) {
+/**
+ * Updates items in an array.
+ *
+ * **Does not append new entries**
+ * @param original
+ * @param incoming
+ * @returns
+ */
+export function updateList<T extends { _id: string }>(
+  original: T[],
+  incoming: Array<Partial<T> & { _id: string }>
+) {
   const map = toMap(incoming)
   const next: T[] = []
 

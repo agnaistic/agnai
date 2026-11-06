@@ -317,9 +317,9 @@ export const userStore = createStore<UserState>(
     },
 
     async *upsertImageSettings(
-      _,
+      prev,
       update: {
-        target: { type: string; id?: string; imagePresetId: string }
+        target?: { type: string; id?: string; imagePresetId: string }
         preset?: ImagePresetSettings
         provider?: ImageProviderSettings
       },
@@ -327,6 +327,10 @@ export const userStore = createStore<UserState>(
     ) {
       const res = await usersApi.upsertImageSettings(update)
       if (res.result) {
+        if (res.result.chat) events.emit(EVENTS.chatUpdated, res.result.chat)
+        if (res.result.character) events.emit(EVENTS.charUpdated, res.result.character)
+        if (res.result.user) yield { user: { ...prev.user, ...res.result.user } }
+
         onSuccess?.()
       }
     },

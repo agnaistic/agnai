@@ -28,6 +28,7 @@ export type CustomOption = {
 
 export const CustomSelect: Component<{
   buttonLabel?: string | JSX.Element | ((opt: CustomOption) => JSX.Element | string)
+  forceButton?: boolean
   onSelect: (opt: CustomOption) => void
   options?: CustomOption[]
   categories?: Array<{ name: string; options: CustomOption[] }>
@@ -112,12 +113,25 @@ export const CustomSelect: Component<{
 
   const buttonLabel = createMemo(() => {
     const opt = props.selected
+    const content =
+      typeof props.buttonLabel === 'function' ? props.buttonLabel(opt) : props.buttonLabel
 
-    if (typeof props.buttonLabel !== 'function') {
-      return props.buttonLabel
+    if (props.forceButton || typeof content === 'string') {
+      return (
+        <Button
+          schema={props.schema}
+          size={props.size}
+          alignLeft
+          onClick={() => setOpen(true)}
+          // class="w-fit max-w-fit"
+          disabled={props.disabled}
+        >
+          {content}
+        </Button>
+      )
     }
 
-    return props.buttonLabel(opt)
+    return content
   })
 
   const [updateFiltering, unsub] = createDebounce(() => {
@@ -215,18 +229,7 @@ export const CustomSelect: Component<{
         <FormLabel label={props.label} helperText={props.helperText} />
 
         <div class="flex gap-1">
-          <Show when={props.buttonLabel}>
-            <Button
-              schema={props.schema}
-              size={props.size}
-              alignLeft
-              onClick={() => setOpen(true)}
-              // class="w-fit max-w-fit"
-              disabled={props.disabled}
-            >
-              {buttonLabel()}
-            </Button>
-          </Show>
+          <Show when={props.buttonLabel}>{buttonLabel()}</Show>
           {props.children}
         </div>
       </div>

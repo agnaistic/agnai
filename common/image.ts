@@ -1,3 +1,4 @@
+import { debug } from './debug'
 import { BaseImageSettings, ImageProviderSettings, ImageProviderType } from './types/image-schema'
 import { AppSchema } from './types/schema'
 
@@ -125,10 +126,37 @@ export function getImageSettings(
 ) {
   const src = getImageSource(chat, character, user)
 
-  const provider = user.imageProviders?.find((prov) => prov._id === src.providerId)
-  const preset = user.imagePresets?.find((prv) => prv._id === src.presetId)
+  if (!user) {
+    debug('img-models')('user not ready')
+    return { preset: undefined, provider: IMG_PROVIDER_DEFAULTS.horde, src }
+  }
 
-  return { preset: preset || src.settings, provider: provider || IMG_PROVIDER_DEFAULTS.horde }
+  debug('img-ctx')(
+    'retrieving settings for %s',
+    src.source,
+    src.presetId?.slice(0, 4),
+    src.providerId?.slice(0, 4)
+  )
+
+  let preset = user.imagePresets?.find((prv) => prv._id === src.presetId)
+
+  // Fallback to global settings if configured
+  if (!preset && user.imagePresetId) {
+    preset = user.imagePresets?.find((prv) => prv._id === user.imagePresetId)
+  }
+
+  // Fallback to first available preset if available
+  if (!preset && user.imagePresets?.length) {
+    preset = user.imagePresets[0]
+  }
+
+  if (!preset) {
+    return { preset: undefined, provider: IMG_PROVIDER_DEFAULTS.horde, src }
+  }
+
+  const provider = user.imageProviders?.find((prov) => prov._id === preset.imageProviderId)
+
+  return { preset: preset || src.settings, provider: provider || IMG_PROVIDER_DEFAULTS.horde, src }
 }
 
 function getImageSource(
@@ -162,8 +190,8 @@ function getImageSource(
     default: {
       return {
         source: 'settings',
-        presetId: user.imagePresetId,
-        providerId: user.imageProviderId,
+        presetId: user?.imagePresetId,
+        providerId: user?.imageProviderId,
         settings: null,
       }
     }

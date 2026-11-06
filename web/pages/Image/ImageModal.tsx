@@ -30,6 +30,8 @@ import { useAppContext } from '/web/store/context'
 import { useImageContext } from '../Settings/Image/image-context'
 import { SelectImageProvider } from '../Settings/Image/ImageProvider'
 import { TickHandler } from '/common/prompt'
+import { ImageModel } from '../Settings/Image/ImageModel'
+import { ImagePreset } from '../Settings/Image/ImagePreset'
 
 const log = debug('image-modal')
 
@@ -334,11 +336,12 @@ const ImageCollectionModal: Component<{}> = (props) => {
   )
 
   const GenerationActions = (
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col items-end gap-2">
+      <ImagePreset ctx={imgctx} />
+      <ImageModel ctx={imgctx} />
       <div class="flex w-full items-end justify-end">
         <SelectImageProvider ctx={imgctx} />
       </div>
-
       <div class="flex w-full items-end justify-end gap-2">
         <Button size="sm" onClick={generateImage} disabled={state.loading}>
           Generate Image
@@ -356,7 +359,6 @@ const ImageCollectionModal: Component<{}> = (props) => {
           )}
         </For>
       </div>
-
       <div class="flex w-full justify-center">
         <Show when={store.preview}>
           <img src={store.preview?.base64} />

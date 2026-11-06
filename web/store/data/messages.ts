@@ -17,6 +17,7 @@ import { getScenarioEventType } from '/common/scenario'
 import { getStore } from '../create'
 import { getDeletionChanges, toQuickGraph } from '/common/chat'
 import { chatsApi } from './chats'
+import { debug } from 'common/debug'
 
 export const msgsApi = {
   createMessage,
@@ -349,6 +350,7 @@ subscribe('inference', { requestId: 'string', response: 'string', output: 'any?'
   if (!cb) return
 
   cb(body.response, 'done', body.output)
+  debug('gen')(body.output)
   genApi.callbacks.delete(body.requestId)
 })
 

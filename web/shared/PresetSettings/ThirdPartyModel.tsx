@@ -405,6 +405,7 @@ const OpenRouterModels: Selector = (props) => {
             setProviderModel(props, model?.model.id, { openRouterModel: model.model })
           }
         }}
+        forceButton
         buttonLabel={label()}
         preoptions={ManualModel}
         footer={<SelectorFooter state={props.state} setters={props.setters} />}

@@ -337,7 +337,7 @@ export async function upsertImageSettings(
   }
 
   await db('user').updateOne({ _id: user._id }, { $set: updates })
-  return user
+  return { ...updates }
 }
 
 function patchImagePresets(user: AppSchema.User, preset: ImagePresetSettings) {

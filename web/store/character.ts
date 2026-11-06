@@ -26,6 +26,8 @@ type CharacterState = {
   hordeStatus?: HordeCheck
   defaultImpersonateId: string
   impersonating?: AppSchema.Character
+
+  // All characters owned by the user -- specifically shallow versions of characters for listing purposes
   characters: {
     loaded: number
     list: AppSchema.Character[]
@@ -33,6 +35,8 @@ type CharacterState = {
   }
   editing?: AppSchema.Character
   activeChatId: string
+
+  // Detailed version of the characters for chat purposes - may contain characters not in the current chat
   chatChars: {
     chatId: string
     list: AppSchema.Character[]
@@ -93,34 +97,6 @@ export const characterStore = createStore<CharacterState>(
   'character',
   initState
 )((get, set) => {
-  // events.on(EVENTS.init, async (data) => {
-  //   const allChars = Array.isArray(data.allChars)
-  //     ? data.allChars
-  //     : Array.isArray(data.allChars?.list)
-  //     ? data.allChars.list
-  //     : null
-
-  //   log('receiving #%s', allChars?.length)
-  //   if (!allChars) return
-
-  //   replaceCharacters(allChars)
-
-  //   await Promise.resolve()
-
-  //   /**
-  //    * The chat list relies on the characters being available
-  //    * We handle the chat-init here to prevent any race conditions
-  //    */
-  //   getStore('chat').setState({
-  //     allChats: (data.allChats || []).sort(sortDesc),
-  //     lastFetched: 0,
-  //     lastChatId: '',
-  //   })
-
-  //   // If we loaded cached chats/characters, forcibly get the latest after we've hydrated the cached data
-  //   // characterStore.getAllChats(true) // We currently do this in the handlePostInit
-  // })
-
   return {
     clearCharacter() {
       return { editing: undefined }
@@ -290,7 +266,6 @@ export const characterStore = createStore<CharacterState>(
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)
-        events.emit(EVENTS.charUpdated, res.result, 'created')
         yield {
           characters: {
             list: list.concat(res.result),
@@ -313,7 +288,6 @@ export const characterStore = createStore<CharacterState>(
 
       if (res.result) {
         const next: AppSchema.Character = res.result
-        events.emit(EVENTS.charUpdated, res.result, 'updated')
         toastStore.success(`Successfully updated character`)
 
         const isChatChar = !!chatChars.map[next._id]
@@ -371,7 +345,6 @@ export const characterStore = createStore<CharacterState>(
       if (res.error) toastStore.error(`Failed to update character: ${res.error}`)
       if (res.result) {
         const next: AppSchema.Character = res.result
-        events.emit(EVENTS.charUpdated, res.result, 'updated')
         toastStore.success(`Successfully updated character`)
 
         const isChatChar = !!chatChars.map[next._id]
@@ -405,7 +378,6 @@ export const characterStore = createStore<CharacterState>(
 
         const nextChar = { ...prev }
         nextChar.favorite = favorite
-        events.emit('character-updated', nextChar, 'updated')
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? nextChar : ch)),
@@ -609,6 +581,26 @@ events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
   })
 })
 
+events.on(EVENTS.charUpdated, async (id: string, update: Partial<AppSchema.Character>) => {
+  log('single char updated')
+  const prev = characterStore.getState()
+  const edit = [{ _id: id, ...update }]
+  characterStore.setState({
+    chatChars: reconcileCharacters(prev.chatChars, {
+      edit,
+      concat: false,
+      owned: false,
+      extra: { chatId: prev.chatChars.chatId },
+    }),
+    characters: reconcileCharacters(prev.characters, {
+      edit,
+      concat: false,
+      owned: true,
+      extra: { loaded: Date.now() },
+    }),
+  })
+})
+
 events.on(
   EVENTS.charsReceived,
   async (chatId: string, chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
@@ -655,46 +647,52 @@ function replaceChar(
 }
 
 function replaceCharacters(incoming: AppSchema.Character[]) {
-  log('received list')
-  const { characters: prevList, chatChars: prevChat } = characterStore.getState()
-  const nextList = reconcileCharacters(prevList, incoming, { concat: true, owned: true })
-  const nextChat = reconcileCharacters(prevChat, incoming, { concat: false, owned: false })
+  log('received character list')
+  const prevState = characterStore.getState()
+  const nextList = reconcileCharacters(prevState.characters, {
+    add: incoming,
+    concat: true,
+    owned: true,
+  })
+  const nextChat = reconcileCharacters(prevState.chatChars, {
+    add: incoming,
+    concat: false,
+    owned: false,
+  })
 
   characterStore.setState({
     characters: { loaded: Date.now(), ...nextList },
-    chatChars: { chatId: prevChat.chatId, ...nextChat },
+    chatChars: { chatId: prevState.chatChars.chatId, ...nextChat },
   })
 }
 
-function reconcileCharacters(
+function reconcileCharacters<T extends {} = {}>(
   previous: { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> },
-  incoming: AppSchema.Character[],
   opts: {
+    add?: AppSchema.Character[]
+    edit?: Array<Partial<AppSchema.Character> & { _id: string }>
+
     /** If character is absent from the list/map, add it  */
     concat: boolean
 
     /** Omit characters not owned by this user */
     owned: boolean
-  }
-) {
-  const userId = getUserId()
-  const nextMap: Record<string, AppSchema.Character> = { ...previous.map }
-  const nextList = opts.concat
-    ? combine(previous.list, incoming)
-    : updateList(previous.list, incoming)
 
-  for (const char of incoming) {
+    extra?: T
+  }
+): { list: AppSchema.Character[]; map: Record<string, AppSchema.Character> } & T {
+  const userId = getUserId()
+
+  const nextList = (
+    opts.concat
+      ? updateList(combine(previous.list, opts.add || []), opts.edit || [])
+      : updateList(updateList(previous.list, opts.add || []), opts.edit || [])
+  )
     // Exclude unowned characters if specified
     // Typically used for the 'all character' list
-    if (opts.owned && char.userId !== userId) continue
+    .filter((char) => (opts.owned ? char.userId === userId : true))
 
-    const prev = previous.map[char._id]
-    if (!opts.concat && !prev) continue
-
-    nextMap[char._id] = { ...prev, ...char }
-  }
-
-  return { list: nextList, map: nextMap }
+  return { list: nextList, map: toMap(nextList), ...opts.extra! }
 }
 
 function removeCharacters(
@@ -719,15 +717,10 @@ subscribe('horde-status', { status: 'any' }, (body) => {
 
 async function getCharacterDetail(characterId: string) {
   const char = await charsApi.getCharacterDetail(characterId)
-
   if (!char.result) return
 
-  const detail = characterStore.getState().characters
-  const nextList = combine(detail.list, [char.result])
+  replaceCharacters([char.result])
 
-  const nextMap = replaceChar(detail.map, characterId, char.result)
-
-  characterStore.setState({ characters: { list: nextList, map: nextMap, loaded: detail.loaded } })
   return char.result
 }
 

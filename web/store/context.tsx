@@ -17,6 +17,7 @@ import { pageStore } from './page'
 import { ResponseState, responseStore } from './response'
 import { imageStore } from './images'
 import { getStoppingStrings } from '/common/requests/payloads'
+import { ImageContextProvider } from 'web/pages/Settings/Image/image-context'
 
 export type ChatContext = {
   appReady: boolean
@@ -310,7 +311,9 @@ export function ContextProvider(props: { children: any }) {
 
   return (
     <Context.Provider value={[state, setState]}>
-      <PresetStateProvider>{props.children}</PresetStateProvider>
+      <ImageContextProvider>
+        <PresetStateProvider>{props.children}</PresetStateProvider>
+      </ImageContextProvider>
     </Context.Provider>
   )
 }
