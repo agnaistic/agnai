@@ -7,7 +7,7 @@ import { StatusError, errors } from '../api/wrap'
 import { parseTemplate } from '/common/template-parser'
 import { config } from '../config'
 import { sortAsc } from '/common/chat'
-import { toMap } from 'common/util'
+import { toMap } from '/common/util'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })

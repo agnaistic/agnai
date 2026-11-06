@@ -1,6 +1,6 @@
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
-import { uniqueBy } from 'common/util'
+import { uniqueBy } from '/common/util'
 
 export const getCharacterChats = handle(async (req) => {
   const character = await store.characters.getCharacter(req.userId!, req.params.id)
