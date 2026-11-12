@@ -1254,7 +1254,8 @@ function outerAsterikPairing(line: string) {
  * Nested emphasis: remaining `*…*` pairs inside the outer <em> become <eem>…</eem>
  * (styled separately from normal <em> / quote <qem>).
  *
- * /\*(.*?)\*/g  — non-greedy pair of asterisks; $1 is the inner text.
+ * Pattern: slash, star, (.*?), star, slash, g — non-greedy `*` pairs; $1 is the inner text.
+ * (Written out so this JSDoc does not contain a premature block-comment terminator.)
  * Odd leftover `*` count → leave the chunk alone (can't form complete pairs).
  */
 function innerAsterikPairing(line: string) {
