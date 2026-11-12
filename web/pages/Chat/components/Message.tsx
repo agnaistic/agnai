@@ -603,7 +603,7 @@ const Message: Component<MessageProps> = (props) => {
                   <Show
                     when={(content().generating || props.last) && +ctx.ui.textSpeed! > 0}
                     fallback={
-                      <p
+                      <div
                         class={`rendered-markdown pr-1 ${content().class}`}
                         data-bot-message={!msg().userId}
                         data-user-message={!!msg().userId}
@@ -1093,7 +1093,7 @@ export const Typewriter: Component<{
 
   return (
     <>
-      <p
+      <div
         class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
         data-partial
         innerHTML={markup()}
@@ -1158,6 +1158,15 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   }
 }
 
+// Same tag list as below; outer (…) so .split() keeps those tags as their own chunks.
+const ASTERISK_SPLIT_DELIMS = /((?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>))/i
+// Same tags, no capture — used with .test() to detect a delimiter chunk.
+const ASTERISK_SPLIT_DELIM_TEST = /(?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>)/i
+// True when a segment still has an open <pre> or <code> tag — leave its * alone.
+const HAS_CODE_OR_PRE = /<(?:pre|code)(?:\s[^>]*)?>/i
+
+/** Convert Markdown to HTML for chat messages. */
+// *waves* "hello *there*" -> <em>waves</em> <q>"hello <qem>there</qem>"</q>
 function renderMessage(
   ctx: ChatContext,
   preset: ContextPreset | undefined,
@@ -1165,72 +1174,105 @@ function renderMessage(
   isUser: boolean,
   adapter?: string
 ) {
-  // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
-  // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
-  // https://github.com/showdownjs/showdown/issues/669
+  text = parseMessage(text, ctx, preset, isUser, adapter)
+  text = ProtectEmphasisAsterisks(text)
 
-  // we sanizize user input to prevent XSS attacks
-  // DomPurify has an implicit list of allowed Tags, when we add our own we have to use ADD_TAGS
-  const html = Purify.sanitize(
-    wrapWithQuoteElement(
-      markdown
-        .makeHtml(parseMessage(text, ctx, preset, isUser, adapter))
-        .replace(/&amp;nbsp;/g, '&nbsp;')
-    ),
-    {
-      ADD_TAGS: ['qem'],
-    }
-  )
+  let html = markdownToHtml(text)
 
+  html = normalizeQuotes(html)
+  html = convertCodeAndDialogue(html)
+  html = convertAsterisks(html)
+  html = sanitizeMessageHtml(html)
   return html
 }
 
-/**
- * Markup beautification. Lets us control color of diffrent HTML tags, expands on the markdown functionality
- * Especially useful for quotes, which are wrapped in <q> tags
- * and emphasis, which is wrapped in <qem> tags.
- */
-function wrapWithQuoteElement(str: string) {
-  // Replace all non-regular double quotes with double regular quotes
-  // Unicode double quote characters: https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
-  str = str.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-
-  return str.replace(
-    /*
-    Regex magic explained:
-    <[\s\S]*?>      - skip all HTML tags   eg. <sumting>
-    ```[\s\S]*?```  - skip all code blocks eg. <pre>/``` markdown transform <pre><code> to ```
-    ``[\s\S]*?``    - skip all inline code eg. <code>/`` markdown transform <code> to `` | this is a non standard markup
-    `[\s\S]*?`      - skip all inline code eg. <code>/` markdown transform <code> to `
-
-    (\".+?\")       - capture all regular double quotes, which are not part of HTML tags or code blocks
-    All captured groups are passed to the wrapCaptureGroupQuotes function
-    */
-    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")/gm,
-    wrapCaptureGroupQuotes
-  )
+// *wave* -> \*wave\* so Showdown ignores them
+function ProtectEmphasisAsterisks(text: string) {
+  return text.replace(/(?<!\*)\*(?!\*)/g, '\\*')
 }
 
-/** Processes capture group from above */
-function wrapCaptureGroupQuotes(match: string, regularQuoted?: string) {
-  if (regularQuoted) {
-    /*If we have a valid string then we are within a quote
-    ([\s\S]*?) - we ignore all characters between <em> and </em>
-    a valid capure will look like this: "lets have some <em>fun</em>"
-    we then pass the capture group to wrapCaptureGroupEmphasis function, which will replace <em> with <qem>
-    */
-    regularQuoted = regularQuoted.replace(/<em>([\s\S]*?)<\/em>/gm, wrapCaptureGroupEmphasis)
-    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
-  }
-  return match
+// hello -> <p>hello</p> (also fixes encoded nbsp in code)
+function markdownToHtml(text: string) {
+  // Showdown turns code-block spaces into nbsp, then encodes & -> visible &amp;nbsp;
+  // https://github.com/showdownjs/showdown/issues/669
+  return markdown.makeHtml(text).replace(/&amp;nbsp;/g, '&nbsp;')
 }
 
-/** Replaces all <em> tags within a <q> tag with <qem> tags */
-function wrapCaptureGroupEmphasis(match: string, emphasisQuote?: string) {
-  if (emphasisQuote) {
-    return '<qem>' + emphasisQuote.replace(/\"/g, '') + '</qem>'
+// “hello” -> "hello"
+function normalizeQuotes(html: string) {
+  // https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
+  return html.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+}
+
+// <code>*nod*</code> "hi" -> <code><em>nod</em></code> <q>"hi"</q> (code wins over dialogue)
+function convertCodeAndDialogue(html: string) {
+  return html.replace(/(<code>[\s\S]*?<\/code>)|(".*?")/gm, (match, codeBlock, quoted) => {
+    if (codeBlock) return convertCodeBlock(codeBlock)
+    if (quoted) return wrapDialogueQuotes(quoted)
+    return match
+  })
+}
+
+// *wave* "hi *there*" -> <em>wave</em> <q>"hi <qem>there</qem>"</q>
+function convertPlainText(text: string) {
+  return convertAsterisks(wrapDialogueQuotes(text))
+}
+
+// <code>\*nod\*</code> -> <code><em>nod</em></code>
+function convertCodeBlock(codeBlock: string) {
+  const unescaped = codeBlock.replace(/\\\*/g, '*')
+  return unescaped.replace(/^(<code[^>]*>)([\s\S]*)(<\/code>)$/i, (_m, open, inner, close) => {
+    return open + convertPlainText(inner) + close
+  })
+}
+
+// "hello *there*" -> <q>"hello <qem>there</qem>"</q>
+function wrapDialogueQuotes(text: string) {
+  return text.replace(/(".*?")/gm, (quoted) => {
+    const inner = quoted.slice(1, -1).replace(/\*(.*?)\*/g, '<qem>$1</qem>')
+    return `<q>"${inner}"</q>`
+  })
+}
+
+// *wave and *nod* happily* -> <em>wave and <eem>nod</eem> happily</em>
+function convertAsterisks(text: string) {
+  let result = ''
+  for (const chunk of text.split(ASTERISK_SPLIT_DELIMS)) {
+    if (ASTERISK_SPLIT_DELIM_TEST.test(chunk)) {
+      result += chunk
+      continue
+    }
+    result += wrapNestedEmphasis(wrapOuterEmphasis(chunk))
   }
-  return match
+  return result
+}
+
+// *wave and *nod* happily* -> <em>wave and *nod* happily</em>
+function wrapOuterEmphasis(chunk: string) {
+  if (HAS_CODE_OR_PRE.test(chunk)) return chunk
+
+  const first = chunk.indexOf('*')
+  const last = chunk.lastIndexOf('*')
+  if (first === -1 || last === -1 || first === last) return chunk
+
+  // +1 skips each * so the markers are replaced by <em></em>, not copied inside them
+  return chunk.slice(0, first) + '<em>' + chunk.slice(first + 1, last) + '</em>' + chunk.slice(last + 1)
+}
+
+// <em>wave and *nod* happily</em> -> <em>wave and <eem>nod</eem> happily</em>
+function wrapNestedEmphasis(chunk: string) {
+  if (HAS_CODE_OR_PRE.test(chunk)) return chunk
+
+  const count = (chunk.match(/\*/g) || []).length
+  if (count % 2 !== 0) return chunk
+  return chunk.replace(/\*(.*?)\*/g, '<eem>$1</eem>')
+}
+
+// keeps <eem>nod</eem> (DOMPurify would strip custom tags without ADD_TAGS)
+function sanitizeMessageHtml(html: string) {
+  return Purify.sanitize(html, {
+    ADD_TAGS: ['qem', 'eem'],
+  })
 }
 
 function sendAction(_send: MessageProps['sendMessage'], action: AppSchema.ChatAction) {

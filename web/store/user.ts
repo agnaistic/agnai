@@ -1034,10 +1034,19 @@ async function updateTheme(ui: UI.UISettings) {
 
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
-  setRootVariable('text-quote-color', getSettingColor(mode.chatQuoteColor || 'text-800'))
+  setRootVariable(
+    'text-quote-color',
+    getSettingColor(mode.chatQuoteColor || (ui.mode === 'light' ? 'green-700' : 'green-400'))
+  )
   setRootVariable(
     'text-quote-emphasis-color',
-    getSettingColor(mode.chatQuoteEmphasisColor || 'text-800')
+    getSettingColor(
+      mode.chatQuoteEmphasisColor || (ui.mode === 'light' ? 'green-800' : 'green-500')
+    )
+  )
+  setRootVariable(
+    'text-emphasis-emphasis-color',
+    getSettingColor(mode.chatEmphasisEmphasisColor || 'text-500')
   )
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))
 
@@ -1045,6 +1054,12 @@ async function updateTheme(ui: UI.UISettings) {
     'text-quote-emphasis-weight',
     mode.chatQuoteEmphasisWeight
   ) /*Controls the thickness of the font. default: 'unset'*/
+  setRootVariable(
+    'text-emphasis-emphasis-weight',
+    mode.chatEmphasisEmphasisWeight
+  ) /*Controls the thickness of the font. default: 'unset'*/
+  setRootVariable('text-code-color', getSettingColor(mode.chatCodeColor || 'text-900'))
+  setRootVariable('text-code-background', getSettingColor(mode.chatCodeBackground || 'bg-600'))
 
   const font = FONT_FACES[ui.font]
   root.style.setProperty(`--sitewide-font`, font?.face)

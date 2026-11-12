@@ -13,6 +13,7 @@ import Message from '../../Chat/components/Message'
 import { defaultUIsettings } from '/common/types/ui'
 import { toInlineList } from './common'
 import { Card } from '/web/shared/Card'
+import Button from '/web/shared/Button'
 
 export const MessageUISettings: Component = (props) => {
   const state = userStore((s) => ({
@@ -34,6 +35,7 @@ export const MessageUISettings: Component = (props) => {
   onCleanup(() => unsubCustomUi())
 
   const [inline, setInline] = createSignal<SortItem[]>([])
+  const [showTextColors, setShowTextColors] = createSignal(false)
 
   createEffect(
     on(
@@ -121,99 +123,6 @@ export const MessageUISettings: Component = (props) => {
         </div>
       </Card>
 
-      <ColorPicker
-        label="Message Background Color"
-        fieldName="messageColor"
-        helperText={
-          <span class="link" onClick={() => userStore.saveCustomUI({ msgBackground: 'bg-800' })}>
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ msgBackground: color })}
-        onChange={(color) => userStore.saveCustomUI({ msgBackground: color })}
-        value={state.current.msgBackground}
-      />
-      <ColorPicker
-        label="Bot Message Background Color"
-        fieldName="botMessageColor"
-        helperText={
-          <>
-            <span class="link" onClick={() => userStore.saveCustomUI({ botBackground: 'bg-800' })}>
-              Reset to Default
-            </span>
-          </>
-        }
-        onInput={(color) => tryCustomUI({ botBackground: color })}
-        onChange={(color) => userStore.saveCustomUI({ botBackground: color })}
-        value={state.current.botBackground}
-      />
-      <ColorPicker
-        label="Chat Text Color"
-        fieldName="chatTextColor"
-        helperText={
-          <span class="link" onClick={() => userStore.saveCustomUI({ chatTextColor: 'text-800' })}>
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ chatTextColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatTextColor: color })}
-        value={state.current.chatTextColor}
-      />
-      <ColorPicker
-        label="Chat Emphasis Color"
-        fieldName="chatEmphasisColor"
-        helperText={
-          <span
-            class="link"
-            onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}
-          >
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ chatEmphasisColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatEmphasisColor: color })}
-        value={state.current.chatEmphasisColor}
-      />
-      <ColorPicker
-        label="Chat Quote Color"
-        fieldName="chatQuoteColor"
-        helperText={
-          <span class="link" onClick={() => userStore.saveCustomUI({ chatQuoteColor: 'text-800' })}>
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
-        value={state.current.chatQuoteColor || '--text-800'}
-      />
-      <ColorPicker
-        label="Chat Quote Emphasis Color"
-        fieldName="chatQuoteEmphasisColor"
-        helperText={
-          <span
-            class="link"
-            onClick={() => userStore.saveCustomUI({ chatQuoteEmphasisColor: 'text-800' })}
-          >
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ chatQuoteEmphasisColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatQuoteEmphasisColor: color })}
-        value={state.current.chatQuoteEmphasisColor || '--text-800'}
-      />
-      <Select
-        fieldName="chatQuoteEmphasisWeight"
-        label="Chat Quote Emphasis Weight"
-        inline
-        items={[
-          { label: 'None', value: 'unset' },
-          { label: 'Bold', value: 'bold' },
-        ]}
-        onChange={(item) =>
-          userStore.saveCustomUI({ chatQuoteEmphasisWeight: item.value as string })
-        }
-        value={state.current.chatQuoteEmphasisWeight || 'unset'}
-      />
       <Select
         fieldName="chatWidth"
         label="Content Width"
@@ -248,14 +157,201 @@ export const MessageUISettings: Component = (props) => {
         <Sortable items={inline()} onChange={updateInline} />
       </Show>
       <Divider />
-      <div class="text-lg font-bold">Preview</div>
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-lg font-bold">Preview</div>
+        <Button class="w-fit" onClick={() => setShowTextColors(!showTextColors())}>
+          {showTextColors() ? 'Hide Colors' : 'Colors'}
+        </Button>
+      </div>
+      <Show when={showTextColors()}>
+        <div class="flex flex-col gap-1">
+          <ColorPicker
+            label="Message Background"
+            fieldName="messageColor"
+            helperText={
+              <span
+                class="link"
+                onClick={() => userStore.saveCustomUI({ msgBackground: 'bg-800' })}
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ msgBackground: color })}
+            onChange={(color) => userStore.saveCustomUI({ msgBackground: color })}
+            value={state.current.msgBackground}
+          />
+          <ColorPicker
+            label="Bot Background"
+            fieldName="botMessageColor"
+            helperText={
+              <span class="link" onClick={() => userStore.saveCustomUI({ botBackground: 'bg-800' })}>
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ botBackground: color })}
+            onChange={(color) => userStore.saveCustomUI({ botBackground: color })}
+            value={state.current.botBackground}
+          />
+          <ColorPicker
+            label="Text"
+            fieldName="chatTextColor"
+            helperText={
+              <span
+                class="link"
+                onClick={() => userStore.saveCustomUI({ chatTextColor: 'text-800' })}
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ chatTextColor: color })}
+            onChange={(color) => userStore.saveCustomUI({ chatTextColor: color })}
+            value={state.current.chatTextColor}
+          />
+          <ColorPicker
+            label="Emphasis"
+            fieldName="chatEmphasisColor"
+            helperText={
+              <span
+                class="link"
+                onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ chatEmphasisColor: color })}
+            onChange={(color) => userStore.saveCustomUI({ chatEmphasisColor: color })}
+            value={state.current.chatEmphasisColor}
+          />
+          <ColorPicker
+            label="Quote"
+            fieldName="chatQuoteColor"
+            helperText={
+              <span
+                class="link"
+                onClick={() =>
+                  userStore.saveCustomUI({
+                    chatQuoteColor: state.ui.mode === 'light' ? 'green-700' : 'green-400',
+                  })
+                }
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
+            onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
+            value={
+              state.current.chatQuoteColor ||
+              (state.ui.mode === 'light' ? '--green-700' : '--green-400')
+            }
+          />
+          <div class="flex flex-wrap items-center gap-3">
+            <ColorPicker
+              label="Quote Emphasis"
+              fieldName="chatQuoteEmphasisColor"
+              helperText={
+                <span
+                  class="link"
+                  onClick={() =>
+                    userStore.saveCustomUI({
+                      chatQuoteEmphasisColor: state.ui.mode === 'light' ? 'green-800' : 'green-500',
+                    })
+                  }
+                >
+                  Default
+                </span>
+              }
+              onInput={(color) => tryCustomUI({ chatQuoteEmphasisColor: color })}
+              onChange={(color) => userStore.saveCustomUI({ chatQuoteEmphasisColor: color })}
+              value={
+                state.current.chatQuoteEmphasisColor ||
+                (state.ui.mode === 'light' ? '--green-800' : '--green-500')
+              }
+            />
+            <Select
+              fieldName="chatQuoteEmphasisWeight"
+              inline
+              class="!py-1 !pl-2 !pr-6 text-sm"
+              items={[
+                { label: 'None', value: 'unset' },
+                { label: 'Bold', value: 'bold' },
+              ]}
+              onChange={(item) =>
+                userStore.saveCustomUI({ chatQuoteEmphasisWeight: item.value as string })
+              }
+              value={state.current.chatQuoteEmphasisWeight || 'unset'}
+            />
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <ColorPicker
+              label="Nested Emphasis"
+              fieldName="chatEmphasisEmphasisColor"
+              helperText={
+                <span
+                  class="link"
+                  onClick={() => userStore.saveCustomUI({ chatEmphasisEmphasisColor: 'text-500' })}
+                >
+                  Default
+                </span>
+              }
+              onInput={(color) => tryCustomUI({ chatEmphasisEmphasisColor: color })}
+              onChange={(color) => userStore.saveCustomUI({ chatEmphasisEmphasisColor: color })}
+              value={state.current.chatEmphasisEmphasisColor || '--text-500'}
+            />
+            <Select
+              fieldName="chatEmphasisEmphasisWeight"
+              inline
+              class="!py-1 !pl-2 !pr-6 text-sm"
+              items={[
+                { label: 'None', value: 'unset' },
+                { label: 'Bold', value: 'bold' },
+              ]}
+              onChange={(item) =>
+                userStore.saveCustomUI({ chatEmphasisEmphasisWeight: item.value as string })
+              }
+              value={state.current.chatEmphasisEmphasisWeight || 'unset'}
+            />
+          </div>
+          <ColorPicker
+            label="Code"
+            fieldName="chatCodeColor"
+            helperText={
+              <span
+                class="link"
+                onClick={() => userStore.saveCustomUI({ chatCodeColor: 'text-900' })}
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ chatCodeColor: color })}
+            onChange={(color) => userStore.saveCustomUI({ chatCodeColor: color })}
+            value={state.current.chatCodeColor || '--text-900'}
+          />
+          <ColorPicker
+            label="Code Background"
+            fieldName="chatCodeBackground"
+            helperText={
+              <span
+                class="link"
+                onClick={() => userStore.saveCustomUI({ chatCodeBackground: 'bg-600' })}
+              >
+                Default
+              </span>
+            }
+            onInput={(color) => tryCustomUI({ chatCodeBackground: color })}
+            onChange={(color) => userStore.saveCustomUI({ chatCodeBackground: color })}
+            value={state.current.chatCodeBackground || '--bg-600'}
+          />
+        </div>
+      </Show>
       <Show when={chars.characters.list.length > 0}>
         <div class="bg-600 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
             index={-1}
             editing={false}
             messageId={'example-msg-1'}
-            content={'*I wave excitedly* Hello world!\nHow are you today?'}
+            content={
+              '*I wave excitedly* Hello world!\n*I lean closer and *whisper* softly*\nHow are you today?'
+            }
             characterId={chars.characters.list[0]?._id}
             onRemove={noop}
             sendMessage={() => {}}
@@ -268,7 +364,9 @@ export const MessageUISettings: Component = (props) => {
               index={-1}
               editing={false}
               messageId={'example-msg-2'}
-              content='*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"'
+              content={
+                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"\n```\n*He watched her* for a long moment.\n"Something *unreadable* flickered behind his eyes."\n```'
+              }
               characterId={chars.impersonating?._id}
               userId={state.user?._id}
               onRemove={noop}

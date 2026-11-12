@@ -26,7 +26,7 @@ const ColorPicker: Component<{
       <input
         ref={ref}
         type="color"
-        class="rounded-sm"
+        class="h-6 w-8 rounded-sm p-0"
         value={getSettingColor(props.value || '')}
         onChange={onChange}
         onInput={(ev) => props.onInput?.(ev.currentTarget.value)}
@@ -34,12 +34,12 @@ const ColorPicker: Component<{
       />
 
       <Show when={!!props.label || !!props.helperText}>
-        <label for={props.fieldName}>
+        <label for={props.fieldName} class="flex flex-wrap items-baseline gap-x-2">
           <Show when={!!props.label}>
-            <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
+            <span>{props.label}</span>
           </Show>
           <Show when={!!props.helperText}>
-            <p class="helper-text mt-[-0.125rem] pb-2 text-sm">{props.helperText}</p>
+            <span class="helper-text text-sm">{props.helperText}</span>
           </Show>
         </label>
       </Show>
