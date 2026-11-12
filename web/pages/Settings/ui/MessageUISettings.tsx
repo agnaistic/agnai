@@ -186,61 +186,94 @@ export const MessageUISettings: Component = (props) => {
         onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
         value={state.current.chatQuoteColor || '--text-800'}
       />
+      <div class="flex flex-wrap items-center gap-3">
+        <ColorPicker
+          label="Quote Emphasis"
+          fieldName="chatQuoteEmphasisColor"
+          helperText={
+            <span
+              class="link"
+              onClick={() => userStore.saveCustomUI({ chatQuoteEmphasisColor: 'text-800' })}
+            >
+              Reset to Default
+            </span>
+          }
+          onInput={(color) => tryCustomUI({ chatQuoteEmphasisColor: color })}
+          onChange={(color) => userStore.saveCustomUI({ chatQuoteEmphasisColor: color })}
+          value={state.current.chatQuoteEmphasisColor || '--text-800'}
+        />
+        <Select
+          fieldName="chatQuoteEmphasisWeight"
+          label="Weight"
+          inline
+          class="!py-1 !pl-2 !pr-6 text-sm"
+          items={[
+            { label: 'None', value: 'unset' },
+            { label: 'Bold', value: 'bold' },
+          ]}
+          onChange={(item) =>
+            userStore.saveCustomUI({ chatQuoteEmphasisWeight: item.value as string })
+          }
+          value={state.current.chatQuoteEmphasisWeight || 'unset'}
+        />
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <ColorPicker
+          label="Emphasis Emphasis"
+          fieldName="chatEmphasisEmphasisColor"
+          helperText={
+            <span
+              class="link"
+              onClick={() => userStore.saveCustomUI({ chatEmphasisEmphasisColor: 'text-800' })}
+            >
+              Reset to Default
+            </span>
+          }
+          onInput={(color) => tryCustomUI({ chatEmphasisEmphasisColor: color })}
+          onChange={(color) => userStore.saveCustomUI({ chatEmphasisEmphasisColor: color })}
+          value={state.current.chatEmphasisEmphasisColor || '--text-800'}
+        />
+        <Select
+          fieldName="chatEmphasisEmphasisWeight"
+          label="Weight"
+          inline
+          class="!py-1 !pl-2 !pr-6 text-sm"
+          items={[
+            { label: 'None', value: 'unset' },
+            { label: 'Bold', value: 'bold' },
+          ]}
+          onChange={(item) =>
+            userStore.saveCustomUI({ chatEmphasisEmphasisWeight: item.value as string })
+          }
+          value={state.current.chatEmphasisEmphasisWeight || 'unset'}
+        />
+      </div>
       <ColorPicker
-        label="Chat Quote Emphasis Color"
-        fieldName="chatQuoteEmphasisColor"
+        label="Chat Code Color"
+        fieldName="chatCodeColor"
+        helperText={
+          <span class="link" onClick={() => userStore.saveCustomUI({ chatCodeColor: 'text-900' })}>
+            Reset to Default
+          </span>
+        }
+        onInput={(color) => tryCustomUI({ chatCodeColor: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatCodeColor: color })}
+        value={state.current.chatCodeColor || '--text-900'}
+      />
+      <ColorPicker
+        label="Chat Code Background"
+        fieldName="chatCodeBackground"
         helperText={
           <span
             class="link"
-            onClick={() => userStore.saveCustomUI({ chatQuoteEmphasisColor: 'text-800' })}
+            onClick={() => userStore.saveCustomUI({ chatCodeBackground: 'bg-600' })}
           >
             Reset to Default
           </span>
         }
-        onInput={(color) => tryCustomUI({ chatQuoteEmphasisColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatQuoteEmphasisColor: color })}
-        value={state.current.chatQuoteEmphasisColor || '--text-800'}
-      />
-      <Select
-        fieldName="chatQuoteEmphasisWeight"
-        label="Chat Quote Emphasis Weight"
-        inline
-        items={[
-          { label: 'None', value: 'unset' },
-          { label: 'Bold', value: 'bold' },
-        ]}
-        onChange={(item) =>
-          userStore.saveCustomUI({ chatQuoteEmphasisWeight: item.value as string })
-        }
-        value={state.current.chatQuoteEmphasisWeight || 'unset'}
-      />
-      <ColorPicker
-        label="Chat Emphasis Emphasis Color"
-        fieldName="chatEmphasisEmphasisColor"
-        helperText={
-          <span
-            class="link"
-            onClick={() => userStore.saveCustomUI({ chatEmphasisEmphasisColor: 'text-800' })}
-          >
-            Reset to Default
-          </span>
-        }
-        onInput={(color) => tryCustomUI({ chatEmphasisEmphasisColor: color })}
-        onChange={(color) => userStore.saveCustomUI({ chatEmphasisEmphasisColor: color })}
-        value={state.current.chatEmphasisEmphasisColor || '--text-800'}
-      />
-      <Select
-        fieldName="chatEmphasisEmphasisWeight"
-        label="Chat Emphasis Emphasis Weight"
-        inline
-        items={[
-          { label: 'None', value: 'unset' },
-          { label: 'Bold', value: 'bold' },
-        ]}
-        onChange={(item) =>
-          userStore.saveCustomUI({ chatEmphasisEmphasisWeight: item.value as string })
-        }
-        value={state.current.chatEmphasisEmphasisWeight || 'unset'}
+        onInput={(color) => tryCustomUI({ chatCodeBackground: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatCodeBackground: color })}
+        value={state.current.chatCodeBackground || '--bg-600'}
       />
       <Select
         fieldName="chatWidth"
@@ -296,7 +329,9 @@ export const MessageUISettings: Component = (props) => {
               index={-1}
               editing={false}
               messageId={'example-msg-2'}
-              content='*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"'
+              content={
+                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"\n"How about we have some *fun* today?"\n```\nHe watched her for a long moment, something unreadable flickering behind his eyes.\n```'
+              }
               characterId={chars.impersonating?._id}
               userId={state.user?._id}
               onRemove={noop}

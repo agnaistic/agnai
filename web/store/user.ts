@@ -1053,6 +1053,8 @@ async function updateTheme(ui: UI.UISettings) {
     'text-emphasis-emphasis-weight',
     mode.chatEmphasisEmphasisWeight
   ) /*Controls the thickness of the font. default: 'unset'*/
+  setRootVariable('text-code-color', getSettingColor(mode.chatCodeColor || 'text-900'))
+  setRootVariable('text-code-background', getSettingColor(mode.chatCodeBackground || 'bg-600'))
 
   const font = FONT_FACES[ui.font]
   root.style.setProperty(`--sitewide-font`, font?.face)

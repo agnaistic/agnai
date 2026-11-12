@@ -26,7 +26,7 @@ const ColorPicker: Component<{
       <input
         ref={ref}
         type="color"
-        class="rounded-sm"
+        class="h-6 w-8 rounded-sm p-0"
         value={getSettingColor(props.value || '')}
         onChange={onChange}
         onInput={(ev) => props.onInput?.(ev.currentTarget.value)}

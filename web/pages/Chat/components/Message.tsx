@@ -603,7 +603,7 @@ const Message: Component<MessageProps> = (props) => {
                   <Show
                     when={(content().generating || props.last) && +ctx.ui.textSpeed! > 0}
                     fallback={
-                      <p
+                      <div
                         class={`rendered-markdown pr-1 ${content().class}`}
                         data-bot-message={!msg().userId}
                         data-user-message={!!msg().userId}
@@ -1093,7 +1093,7 @@ export const Typewriter: Component<{
 
   return (
     <>
-      <p
+      <div
         class={`rendered-markdown streaming-markdown pr-1 ${props.class || ''}`}
         data-partial
         innerHTML={markup()}
@@ -1169,8 +1169,8 @@ function renderMessage(
   // Pipeline:
   //   1) Escape lone `*` so Showdown leaves them alone (but leave `**bold**` alone).
   //   2) Let Showdown produce HTML.
-  //   3) makeTextLookNice: wrap "quotes" / restore `*` inside <code>.
-  //   4) asterikPairing: turn remaining `*` into <em> (outer) and <eem> (nested).
+  //   3) makeTextLookNice: wrap "quotes"; inside <code>, unescape `*` then run quote + asterik pairing.
+  //   4) asterikPairing: turn remaining `*` (outside <code>) into <em> / <eem>.
   //   5) DOMPurify: allow custom tags qem/eem (Purify's default allow-list would strip them).
 
   // /(?<!\*)\*(?!\*)/g  — a single `*` that is NOT part of `**`
@@ -1268,6 +1268,30 @@ function innerAsterikPairing(line: string) {
 }
 
 /**
+ * Wrap ASCII `"..."` dialogue in <q>, with *…* inside quotes as <qem>.
+ * Used for normal text and for the inner text of <code> blocks.
+ */
+function wrapDialogueQuotes(text: string) {
+  return text.replace(/(".*?")/gm, (quoted) => {
+    const innerContent = quoted.slice(1, -1).replace(/\*(.*?)\*/g, '<qem>$1</qem>')
+    return `<q>"${innerContent}"</q>`
+  })
+}
+
+/**
+ * Beautify the inner HTML of a <code>…</code> block: restore escaped asterisks,
+ * then apply the same quote + asterik pairing used for normal message text.
+ */
+function beautifyCodeBlock(codeBlock: string) {
+  const unescaped = codeBlock.replace(/\\\*/g, '*')
+  return unescaped.replace(/^(<code[^>]*>)([\s\S]*)(<\/code>)$/i, (_m, open, inner, close) => {
+    // Quotes first (splits on <q> inside asterikPairing), then *…* → <em>/<eem>
+    const nice = asterikPairing(wrapDialogueQuotes(inner))
+    return open + nice + close
+  })
+}
+
+/**
  * Post-markdown beautify for quotes (emphasis outside quotes is handled by asterikPairing).
  *
  * 1) Normalize curly/smart quotes to ASCII `"` so one regex can find them.
@@ -1277,14 +1301,15 @@ function innerAsterikPairing(line: string) {
  * 2) Single-pass replace with alternation (left alternative wins first):
  *    /(<code>[\s\S]*?<\/code>)|(".*?")/gm
  *      group 1  <code>…</code>  — [\s\S]*? any chars incl. newlines, non-greedy
- *      group 2  "…"'            — shortest quote on this line (.*?, /m)
+ *      group 2  "…"             — shortest quote on this line (.*?, /m)
  *
- *    Why alternation matters: if `"foo"` appears inside <code>, group 1 consumes the
- *    whole code block first, so we never wrap those quotes as dialogue.
+ *    Why alternation matters: group 1 claims the whole <code> first so we can
+ *    run makeTextLookNice-style processing on its inner text (quotes + asterisks)
+ *    without the outer "…" branch stealing dialogue that belongs inside code.
  *
  *    Callback args mirror the groups: (match, codeBlock, quoted)
- *      - codeBlock: undo the `\*` escapes from renderMessage (code should show real `*`)
- *      - quoted:    strip surrounding `"`, turn inner *…* into <qem>, wrap in <q>"…"</q>
+ *      - codeBlock: beautifyCodeBlock (unescape + quotes + asterikPairing)
+ *      - quoted:    wrapDialogueQuotes path for normal (non-code) dialogue
  */
 function makeTextLookNice(str: string) {
   const normalizedStr = str.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
@@ -1293,13 +1318,11 @@ function makeTextLookNice(str: string) {
     /(<code>[\s\S]*?<\/code>)|(".*?")/gm,
     (match, codeBlock, quoted) => {
       if (codeBlock) {
-        return codeBlock.replace(/\\\*/g, '*')
+        return beautifyCodeBlock(codeBlock)
       }
 
       if (quoted) {
-        // /\*(.*?)\*/g inside the quote body only — dialogue emphasis uses <qem>, not <em>/<eem>
-        const innerContent = quoted.slice(1, -1).replace(/\*(.*?)\*/g, '<qem>$1</qem>')
-        return `<q>"${innerContent}"</q>`
+        return wrapDialogueQuotes(quoted)
       }
 
       return match

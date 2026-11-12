@@ -10,6 +10,8 @@
   --text-quote-emphasis-weight: unset;
   --text-emphasis-emphasis-color: unset;
   --text-emphasis-emphasis-weight: unset;
+  --text-code-color: unset;
+  --text-code-background: unset;
 
   --tooltip-x: 0;
   --tooltip-y: 0;
