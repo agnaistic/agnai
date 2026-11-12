@@ -1158,16 +1158,15 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   }
 }
 
-/** Structural tags we never pair `*` across (kept as their own split tokens). */
+// Same tag list as below; outer (…) so .split() keeps those tags as their own chunks.
 const ASTERISK_SPLIT_DELIMS = /((?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>))/i
+// Same tags, no capture — used with .test() to detect a delimiter chunk.
 const ASTERISK_SPLIT_DELIM_TEST = /(?:<\/p>|<\/pre>|<br\s*\/?>|<q>|<\/q>)/i
-/** Skip asterisk rewrite on chunks that still contain raw code/pre open tags. */
+// True when a segment still has an open <pre> or <code> tag — leave its * alone.
 const HAS_CODE_OR_PRE = /<(?:pre|code)(?:\s[^>]*)?>/i
 
-/**
- * Showdown mishandles roleplay `*emphasis*`, so we own that formatting.
- * Read this top-to-bottom — each step is a named transform.
- */
+/** Convert Markdown to HTML for chat messages. */
+// *waves* "hello *there*" -> <em>waves</em> <q>"hello <qem>there</qem>"</q>
 function renderMessage(
   ctx: ChatContext,
   preset: ContextPreset | undefined,
@@ -1175,69 +1174,59 @@ function renderMessage(
   isUser: boolean,
   adapter?: string
 ) {
-  // 1) Protect lone `*` from Showdown (leave `**bold**` alone).
-  text = escapeLoneAsterisks(text)
   text = parseMessage(text, ctx, preset, isUser, adapter)
+  text = ProtectEmphasisAsterisks(text)
 
-  // 2) Markdown → HTML
   let html = markdownToHtml(text)
 
-  // 3) Smart quotes → ASCII, then beautify <code> insides and wrap dialogue "…"
-  //    (must be one pass so quotes inside <code> are not double-processed)
-  html = normalizeSmartQuotes(html)
-  html = beautifyCodeAndDialogue(html)
-
-  // 4) Remaining `*` outside <code> → <em> / nested <eem>
-  html = pairAsterisks(html)
-
-  // 5) XSS sanitize; allow our custom emphasis tags
-  return sanitizeMessageHtml(html)
+  html = normalizeQuotes(html)
+  html = convertCodeAndDialogue(html)
+  html = convertAsterisks(html)
+  html = sanitizeMessageHtml(html)
+  return html
 }
 
-/** Lone `*` → `\*` so Showdown ignores them. `**bold**` unchanged. */
-function escapeLoneAsterisks(text: string) {
-  // (?<!*)\* (?!*)  — asterisk not part of a `**` pair
+// *wave* -> \*wave\* so Showdown ignores them
+function ProtectEmphasisAsterisks(text: string) {
   return text.replace(/(?<!\*)\*(?!\*)/g, '\\*')
 }
 
+// hello -> <p>hello</p> (also fixes encoded nbsp in code)
 function markdownToHtml(text: string) {
-  // Showdown turns code-block spaces into nbsp, then encodes `&` → visible `&amp;nbsp;`
+  // Showdown turns code-block spaces into nbsp, then encodes & -> visible &amp;nbsp;
   // https://github.com/showdownjs/showdown/issues/669
   return markdown.makeHtml(text).replace(/&amp;nbsp;/g, '&nbsp;')
 }
 
-/** “ ” „ ‟ → plain `"` so one dialogue regex works. */
-function normalizeSmartQuotes(html: string) {
+// “hello” -> "hello"
+function normalizeQuotes(html: string) {
   // https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
   return html.replace(/[\u201C\u201D\u201E\u201F]/g, '"')
 }
 
-/**
- * One pass over HTML: either a whole <code>…</code> block, or a "dialogue" span.
- * Left alternative wins, so dialogue inside code is handled only via beautifyCodeBlock.
- */
-function beautifyCodeAndDialogue(html: string) {
+// <code>*nod*</code> "hi" -> <code><em>nod</em></code> <q>"hi"</q> (code wins over dialogue)
+function convertCodeAndDialogue(html: string) {
   return html.replace(/(<code>[\s\S]*?<\/code>)|(".*?")/gm, (match, codeBlock, quoted) => {
-    if (codeBlock) return beautifyCodeBlock(codeBlock)
+    if (codeBlock) return convertCodeBlock(codeBlock)
     if (quoted) return wrapDialogueQuotes(quoted)
     return match
   })
 }
 
-/** Same quote + asterisk treatment used for normal text and for <code> interiors. */
-function beautifyPlainText(text: string) {
-  return pairAsterisks(wrapDialogueQuotes(text))
+// *wave* "hi *there*" -> <em>wave</em> <q>"hi <qem>there</qem>"</q>
+function convertPlainText(text: string) {
+  return convertAsterisks(wrapDialogueQuotes(text))
 }
 
-/** Unescape `\*` inside <code>, then run beautifyPlainText on the inner text. */
-function beautifyCodeBlock(codeBlock: string) {
+// <code>\*nod\*</code> -> <code><em>nod</em></code>
+function convertCodeBlock(codeBlock: string) {
   const unescaped = codeBlock.replace(/\\\*/g, '*')
   return unescaped.replace(/^(<code[^>]*>)([\s\S]*)(<\/code>)$/i, (_m, open, inner, close) => {
-    return open + beautifyPlainText(inner) + close
+    return open + convertPlainText(inner) + close
   })
 }
 
-/** `"hello *there*"` → `<q>"hello <qem>there</qem>"</q>` */
+// "hello *there*" -> <q>"hello <qem>there</qem>"</q>
 function wrapDialogueQuotes(text: string) {
   return text.replace(/(".*?")/gm, (quoted) => {
     const inner = quoted.slice(1, -1).replace(/\*(.*?)\*/g, '<qem>$1</qem>')
@@ -1245,11 +1234,8 @@ function wrapDialogueQuotes(text: string) {
   })
 }
 
-/**
- * Turn `*…*` into <em> / nested <eem>, without crossing p/pre/br/q boundaries.
- * Chunks that still contain <pre>/<code> open tags are left alone (already handled).
- */
-function pairAsterisks(text: string) {
+// *wave and *nod* happily* -> <em>wave and <eem>nod</eem> happily</em>
+function convertAsterisks(text: string) {
   let result = ''
   for (const chunk of text.split(ASTERISK_SPLIT_DELIMS)) {
     if (ASTERISK_SPLIT_DELIM_TEST.test(chunk)) {
@@ -1261,7 +1247,7 @@ function pairAsterisks(text: string) {
   return result
 }
 
-/** First `*` … last `*` on this chunk → one <em>…</em> (inners still literal `*`). */
+// *wave and *nod* happily* -> <em>wave and *nod* happily</em>
 function wrapOuterEmphasis(chunk: string) {
   if (HAS_CODE_OR_PRE.test(chunk)) return chunk
 
@@ -1269,20 +1255,20 @@ function wrapOuterEmphasis(chunk: string) {
   const last = chunk.lastIndexOf('*')
   if (first === -1 || last === -1 || first === last) return chunk
 
+  // +1 skips each * so the markers are replaced by <em></em>, not copied inside them
   return chunk.slice(0, first) + '<em>' + chunk.slice(first + 1, last) + '</em>' + chunk.slice(last + 1)
 }
 
-/** Remaining even `*…*` pairs → <eem>…</eem>. Odd leftover `*` → leave chunk unchanged. */
+// <em>wave and *nod* happily</em> -> <em>wave and <eem>nod</eem> happily</em>
 function wrapNestedEmphasis(chunk: string) {
   if (HAS_CODE_OR_PRE.test(chunk)) return chunk
 
   const count = (chunk.match(/\*/g) || []).length
   if (count % 2 !== 0) return chunk
-
-  // non-greedy star-pair → eem (avoid writing star-slash in a block comment)
   return chunk.replace(/\*(.*?)\*/g, '<eem>$1</eem>')
 }
 
+// keeps <eem>nod</eem> (DOMPurify would strip custom tags without ADD_TAGS)
 function sanitizeMessageHtml(html: string) {
   return Purify.sanitize(html, {
     ADD_TAGS: ['qem', 'eem'],
